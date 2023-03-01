@@ -27,11 +27,11 @@ import {TimelineComponentStub} from './components/timeline/timeline_component_st
 import {UploadTracesComponentStub} from './components/upload_traces_component_stub';
 import {Mediator} from './mediator';
 import {TimelineData} from './timeline_data';
-import {TraceData} from './trace_data';
+import {TracePipeline} from './trace_pipeline';
 
 describe('Mediator', () => {
   const viewerStub = new ViewerStub('Title');
-  let traceData: TraceData;
+  let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: AbtChromeExtensionProtocolStub;
   let crossToolProtocol: CrossToolProtocolStub;
@@ -45,7 +45,7 @@ describe('Mediator', () => {
 
   beforeEach(async () => {
     timelineComponent = new TimelineComponentStub();
-    traceData = new TraceData();
+    tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = new AbtChromeExtensionProtocolStub();
     crossToolProtocol = new CrossToolProtocolStub();
@@ -53,7 +53,7 @@ describe('Mediator', () => {
     timelineComponent = new TimelineComponentStub();
     uploadTracesComponent = new UploadTracesComponentStub();
     mediator = new Mediator(
-      traceData,
+      tracePipeline,
       timelineData,
       abtChromeExtensionProtocol,
       crossToolProtocol,
@@ -208,7 +208,7 @@ describe('Mediator', () => {
         )
       ),
     ];
-    const errors = await traceData.loadTraces(traces);
+    const errors = await tracePipeline.loadTraces(traces);
     expect(errors).toEqual([]);
   };
 });

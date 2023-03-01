@@ -26,8 +26,8 @@ import {createCustomElement} from '@angular/elements';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
-import {TraceData} from 'app/trace_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -122,13 +122,13 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [traceData]="traceData"
+              [tracePipeline]="tracePipeline"
               (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
               [store]="store"></collect-traces>
 
             <upload-traces
               class="upload-traces-card homepage-card"
-              [traceData]="traceData"
+              [tracePipeline]="tracePipeline"
               (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"></upload-traces>
           </div>
         </div>
@@ -186,12 +186,12 @@ import {UploadTracesComponent} from './upload_traces_component';
 export class AppComponent implements TraceDataListener {
   title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
-  traceData = new TraceData();
+  tracePipeline = new TracePipeline();
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
   mediator = new Mediator(
-    this.traceData,
+    this.tracePipeline,
     this.timelineData,
     this.abtChromeExtensionProtocol,
     this.crossToolProtocol,
@@ -273,7 +273,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.traceData.getLoadedTraces().map((trace) => trace.type);
+    return this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
   }
 
   getVideoData(): Blob | undefined {
@@ -324,7 +324,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   private makeActiveTraceFileInfo(view: View): string {
-    const traceFile = this.traceData
+    const traceFile = this.tracePipeline
       .getLoadedTraces()
       .find((trace) => trace.type === view.dependencies[0])?.traceFile;
 
@@ -340,7 +340,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.traceData.getLoadedTraces().map((trace) => {
+    return this.tracePipeline.getLoadedTraces().map((trace) => {
       const traceType = TRACE_INFO[trace.type].name;
       const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
       return new File([trace.traceFile.file], newName);

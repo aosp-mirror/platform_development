@@ -27,7 +27,7 @@ import {TraceType} from 'trace/trace_type';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {TimelineData} from './timeline_data';
-import {TraceData} from './trace_data';
+import {TracePipeline} from './trace_pipeline';
 
 export type CrossToolProtocolDependencyInversion = RemoteBugreportReceiver &
   RemoteTimestampReceiver &
@@ -46,7 +46,7 @@ export class Mediator {
   private appComponent: AppComponentDependencyInversion;
   private storage: Storage;
 
-  private traceData: TraceData;
+  private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
   private viewers: Viewer[] = [];
   private isChangingCurrentTimestamp = false;
@@ -54,14 +54,14 @@ export class Mediator {
   private lastRemoteToolTimestampReceived: Timestamp | undefined;
 
   constructor(
-    traceData: TraceData,
+    tracePipeline: TracePipeline,
     timelineData: TimelineData,
     abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion,
     crossToolProtocol: CrossToolProtocolDependencyInversion,
     appComponent: AppComponentDependencyInversion,
     storage: Storage
   ) {
-    this.traceData = traceData;
+    this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
     this.abtChromeExtensionProtocol = abtChromeExtensionProtocol;
     this.crossToolProtocol = crossToolProtocol;
@@ -117,7 +117,7 @@ export class Mediator {
 
   onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
-      const entries = this.traceData.getTraceEntries(timestamp);
+      const entries = this.tracePipeline.getTraceEntries(timestamp);
       this.viewers.forEach((viewer) => {
         viewer.notifyCurrentTraceEntries(entries);
       });
@@ -175,7 +175,7 @@ export class Mediator {
         return; // no timestamp change
       }
 
-      const entries = this.traceData.getTraceEntries(timestamp);
+      const entries = this.tracePipeline.getTraceEntries(timestamp);
       this.viewers.forEach((viewer) => {
         viewer.notifyCurrentTraceEntries(entries);
       });
@@ -192,8 +192,8 @@ export class Mediator {
 
   private processTraceData() {
     this.timelineData.initialize(
-      this.traceData.getTimelines(),
-      this.traceData.getScreenRecordingVideo()
+      this.tracePipeline.getTimelines(),
+      this.tracePipeline.getScreenRecordingVideo()
     );
     this.createViewers();
     this.appComponent.onTraceDataLoaded(this.viewers);
@@ -205,7 +205,7 @@ export class Mediator {
   }
 
   private createViewers() {
-    const traceTypes = this.traceData.getLoadedTraces().map((trace) => trace.type);
+    const traceTypes = this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), this.storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
@@ -227,7 +227,7 @@ export class Mediator {
   }
 
   private resetAppToInitialState() {
-    this.traceData.clear();
+    this.tracePipeline.clear();
     this.timelineData.clear();
     this.viewers = [];
     this.isTraceDataVisualized = false;

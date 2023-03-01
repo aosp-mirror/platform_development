@@ -23,8 +23,8 @@ import {
   Output,
 } from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {TraceData} from 'app/trace_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils, OnFile} from 'common/file_utils';
 import {FilesDownloadListener} from 'interfaces/files_download_listener';
 import {Trace, TraceFile} from 'trace/trace';
@@ -58,9 +58,9 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
         </load-progress>
 
         <mat-list
-          *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
+          *ngIf="!isLoadingFiles && this.tracePipeline.getLoadedTraces().length > 0"
           class="uploaded-files">
-          <mat-list-item *ngFor="let trace of this.traceData.getLoadedTraces()">
+          <mat-list-item *ngFor="let trace of this.tracePipeline.getLoadedTraces()">
             <mat-icon matListIcon>
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
@@ -73,7 +73,9 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
           </mat-list-item>
         </mat-list>
 
-        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0" class="drop-info">
+        <div
+          *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraces().length === 0"
+          class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
           </p>
@@ -82,7 +84,7 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
       </mat-card-content>
 
       <div
-        *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0"
+        *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraces().length > 0"
         class="trace-actions-container">
         <button
           color="primary"
@@ -173,7 +175,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
   progressMessage = '';
   progressPercentage?: number;
 
-  @Input() traceData!: TraceData;
+  @Input() tracePipeline!: TracePipeline;
   @Output() traceDataLoaded = new EventEmitter<void>();
 
   constructor(
@@ -183,7 +185,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
   ) {}
 
   ngOnInit() {
-    this.traceData.clear();
+    this.tracePipeline.clear();
   }
 
   onFilesDownloadStart() {
@@ -207,7 +209,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
   }
 
   onClearButtonClick() {
-    this.traceData.clear();
+    this.tracePipeline.clear();
     this.changeDetectorRef.detectChanges();
   }
 
@@ -232,7 +234,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
   onRemoveTrace(event: MouseEvent, trace: Trace) {
     event.preventDefault();
     event.stopPropagation();
-    this.traceData.removeTrace(trace.type);
+    this.tracePipeline.removeTrace(trace.type);
     this.changeDetectorRef.detectChanges();
   }
 
@@ -265,7 +267,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
 
     this.progressMessage = 'Parsing files...';
     this.changeDetectorRef.detectChanges();
-    const parserErrors = await this.traceData.loadTraces(traceFiles, onProgressUpdate);
+    const parserErrors = await this.tracePipeline.loadTraces(traceFiles, onProgressUpdate);
 
     this.isLoadingFiles = false;
     this.changeDetectorRef.detectChanges();

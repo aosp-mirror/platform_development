@@ -17,19 +17,19 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
-import {TraceData} from './trace_data';
+import {TracePipeline} from './trace_pipeline';
 
-describe('TraceData', () => {
-  let traceData: TraceData;
+describe('TracePipeline', () => {
+  let tracePipeline: TracePipeline;
 
   beforeEach(async () => {
-    traceData = new TraceData();
+    tracePipeline = new TracePipeline();
   });
 
   it('can load valid trace files', async () => {
-    expect(traceData.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
     await loadValidSfWmTraces();
-    expect(traceData.getLoadedTraces().length).toEqual(2);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
   });
 
   it('is robust to invalid trace files', async () => {
@@ -37,19 +37,19 @@ describe('TraceData', () => {
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
     ];
 
-    const errors = await traceData.loadTraces(invalidTraceFiles);
+    const errors = await tracePipeline.loadTraces(invalidTraceFiles);
     expect(errors.length).toEqual(1);
-    expect(traceData.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
-    expect(traceData.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
     const traces = [
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
     ];
-    const errors = await traceData.loadTraces(traces);
-    expect(traceData.getLoadedTraces().length).toEqual(1);
+    const errors = await tracePipeline.loadTraces(traces);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
     expect(errors.length).toEqual(1);
   });
 
@@ -58,32 +58,32 @@ describe('TraceData', () => {
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb')),
     ];
 
-    const errors = await traceData.loadTraces(traceFilesWithNoEntries);
+    const errors = await tracePipeline.loadTraces(traceFilesWithNoEntries);
 
     expect(errors.length).toEqual(0);
 
-    expect(traceData.getLoadedTraces().length).toEqual(1);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
 
-    const timelines = traceData.getTimelines();
+    const timelines = tracePipeline.getTimelines();
     expect(timelines.length).toEqual(1);
     expect(timelines[0].timestamps).toEqual([]);
   });
 
   it('can remove traces', async () => {
     await loadValidSfWmTraces();
-    expect(traceData.getLoadedTraces().length).toEqual(2);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
 
-    traceData.removeTrace(TraceType.SURFACE_FLINGER);
-    expect(traceData.getLoadedTraces().length).toEqual(1);
+    tracePipeline.removeTrace(TraceType.SURFACE_FLINGER);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
 
-    traceData.removeTrace(TraceType.WINDOW_MANAGER);
-    expect(traceData.getLoadedTraces().length).toEqual(0);
+    tracePipeline.removeTrace(TraceType.WINDOW_MANAGER);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
   });
 
   it('gets loaded traces', async () => {
     await loadValidSfWmTraces();
 
-    const traces = traceData.getLoadedTraces();
+    const traces = tracePipeline.getLoadedTraces();
     expect(traces.length).toEqual(2);
     expect(traces[0].traceFile.file).toBeTruthy();
 
@@ -102,16 +102,16 @@ describe('TraceData', () => {
       ),
     ];
 
-    const errors = await traceData.loadTraces(traceFiles);
+    const errors = await tracePipeline.loadTraces(traceFiles);
     expect(errors.length).toEqual(0);
 
     {
-      const entries = traceData.getTraceEntries(undefined);
+      const entries = tracePipeline.getTraceEntries(undefined);
       expect(entries.size).toEqual(0);
     }
     {
       const timestamp = new Timestamp(TimestampType.REAL, 0n);
-      const entries = traceData.getTraceEntries(timestamp);
+      const entries = tracePipeline.getTraceEntries(timestamp);
       expect(entries.size).toEqual(0);
     }
     {
@@ -119,7 +119,7 @@ describe('TraceData', () => {
         TimestampType.REAL,
         200n * 365n * 24n * 60n * 3600n * 1000000000n
       );
-      const entries = traceData.getTraceEntries(twoHundredYearsTimestamp);
+      const entries = tracePipeline.getTraceEntries(twoHundredYearsTimestamp);
       expect(entries.size).toEqual(2);
     }
   });
@@ -127,7 +127,7 @@ describe('TraceData', () => {
   it('gets timelines', async () => {
     await loadValidSfWmTraces();
 
-    const timelines = traceData.getTimelines();
+    const timelines = tracePipeline.getTimelines();
 
     const actualTraceTypes = new Set(timelines.map((timeline) => timeline.traceType));
     const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
@@ -139,7 +139,7 @@ describe('TraceData', () => {
   });
 
   it('gets screenrecording data', async () => {
-    expect(traceData.getScreenRecordingVideo()).toBeUndefined();
+    expect(tracePipeline.getScreenRecordingVideo()).toBeUndefined();
 
     const traceFiles = [
       new TraceFile(
@@ -148,21 +148,21 @@ describe('TraceData', () => {
         )
       ),
     ];
-    await traceData.loadTraces(traceFiles);
+    await tracePipeline.loadTraces(traceFiles);
 
-    const video = traceData.getScreenRecordingVideo();
+    const video = tracePipeline.getScreenRecordingVideo();
     expect(video).toBeDefined();
     expect(video!.size).toBeGreaterThan(0);
   });
 
   it('can be cleared', async () => {
     await loadValidSfWmTraces();
-    expect(traceData.getLoadedTraces().length).toBeGreaterThan(0);
-    expect(traceData.getTimelines().length).toBeGreaterThan(0);
+    expect(tracePipeline.getLoadedTraces().length).toBeGreaterThan(0);
+    expect(tracePipeline.getTimelines().length).toBeGreaterThan(0);
 
-    traceData.clear();
-    expect(traceData.getLoadedTraces().length).toEqual(0);
-    expect(traceData.getTimelines().length).toEqual(0);
+    tracePipeline.clear();
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getTimelines().length).toEqual(0);
   });
 
   const loadValidSfWmTraces = async () => {
@@ -175,7 +175,7 @@ describe('TraceData', () => {
       ),
     ];
 
-    const errors = await traceData.loadTraces(traceFiles);
+    const errors = await tracePipeline.loadTraces(traceFiles);
     expect(errors.length).toEqual(0);
   };
 });

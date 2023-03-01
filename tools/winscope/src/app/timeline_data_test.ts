@@ -17,7 +17,7 @@
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {TimelineData} from './timeline_data';
-import {Timeline} from './trace_data';
+import {Timeline} from './trace_pipeline';
 
 class TimestampChangedObserver {
   onCurrentTimestampChanged(timestamp: Timestamp | undefined) {

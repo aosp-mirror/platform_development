@@ -28,7 +28,7 @@ interface Timeline {
   timestamps: Timestamp[];
 }
 
-class TraceData {
+class TracePipeline {
   private parserFactory = new ParserFactory();
   private parsers: Parser[] = [];
   private commonTimestampType?: TimestampType;
@@ -137,4 +137,4 @@ class TraceData {
   }
 }
 
-export {Timeline, TraceData};
+export {Timeline, TracePipeline};

@@ -20,7 +20,7 @@ import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Timeline} from './trace_data';
+import {Timeline} from './trace_pipeline';
 
 export type TimestampCallbackType = (timestamp: Timestamp | undefined) => void;
 export interface TimeRange {

@@ -27,7 +27,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {TraceData} from 'app/trace_data';
+import {TracePipeline} from 'app/trace_pipeline';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceFile} from 'trace/trace';
 import {Connection} from 'trace_collection/connection';
@@ -359,7 +359,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   loadProgress = 0;
 
   @Input() store!: PersistentStore;
-  @Input() traceData!: TraceData;
+  @Input() tracePipeline!: TracePipeline;
 
   @Output() traceDataLoaded = new EventEmitter<void>();
 
@@ -437,7 +437,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     if (dumpSuccessful) {
       await this.loadFiles();
     } else {
-      this.traceData.clear();
+      this.tracePipeline.clear();
     }
   }
 
@@ -516,9 +516,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private async loadFiles() {
     console.log('loading files', this.connect.adbData());
-    this.traceData.clear();
+    this.tracePipeline.clear();
     const traceFiles = this.connect.adbData().map((file) => new TraceFile(file));
-    const parserErrors = await this.traceData.loadTraces(traceFiles);
+    const parserErrors = await this.tracePipeline.loadTraces(traceFiles);
     ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
     console.log('finished loading data!');
