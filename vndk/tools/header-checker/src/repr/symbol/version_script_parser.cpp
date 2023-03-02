@@ -103,7 +103,7 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
       } else {
         if (!has_introduced_arch_tags) {
           result.has_introduced_tags_ = true;
-          result.introduced_ = intro.value();
+          result.introduced_ = intro.getValue();
         }
       }
       continue;
@@ -117,7 +117,7 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
       } else {
         has_introduced_arch_tags = true;
         result.has_introduced_tags_ = true;
-        result.introduced_ = intro.value();
+        result.introduced_ = intro.getValue();
       }
       continue;
     }
