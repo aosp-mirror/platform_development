@@ -772,6 +772,23 @@ TEST_MODULES = [
         linker_flags=['-output-format', 'Json'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libunion',
+        arch='arm64',
+        srcs=['integration/union/include/base.h'],
+        version_script='integration/union/map.txt',
+        export_include_dirs=['integration/union/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='libunion_diff',
+        arch='arm64',
+        srcs=['integration/union/include/diff.h'],
+        version_script='integration/union/map.txt',
+        export_include_dirs=['integration/union/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
