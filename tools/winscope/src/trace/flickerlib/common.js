@@ -24,7 +24,8 @@ const WindowManagerTraceEntryBuilder =
   require('flicker').android.tools.common.traces.wm.WindowManagerTraceEntryBuilder;
 const Activity = require('flicker').android.tools.common.traces.wm.Activity;
 const Configuration = require('flicker').android.tools.common.traces.wm.Configuration;
-const ConfigurationContainer = require('flicker').android.tools.common.traces.wm.ConfigurationContainer;
+const ConfigurationContainer =
+  require('flicker').android.tools.common.traces.wm.ConfigurationContainer;
 const DisplayArea = require('flicker').android.tools.common.traces.wm.DisplayArea;
 const DisplayContent = require('flicker').android.tools.common.traces.wm.DisplayContent;
 const DisplayCutout = require('flicker').android.tools.common.traces.wm.DisplayCutout;
@@ -42,8 +43,10 @@ const WindowToken = require('flicker').android.tools.common.traces.wm.WindowToke
 
 // SF
 const Layer = require('flicker').android.tools.common.traces.surfaceflinger.Layer;
-const LayerProperties = require('flicker').android.tools.common.traces.surfaceflinger.LayerProperties;
-const LayerTraceEntry = require('flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntry;
+const LayerProperties =
+  require('flicker').android.tools.common.traces.surfaceflinger.LayerProperties;
+const LayerTraceEntry =
+  require('flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntry;
 const LayerTraceEntryBuilder =
   require('flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntryBuilder;
 const LayersTrace = require('flicker').android.tools.common.traces.surfaceflinger.LayersTrace;
