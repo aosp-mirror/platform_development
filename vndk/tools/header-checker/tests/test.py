@@ -474,6 +474,17 @@ class HeaderCheckerTest(unittest.TestCase):
             self.assertIn(f'"{type_id}"', diff,
                           f'"{type_id}" should be in the diff report.')
 
+    def test_union_diff(self):
+        diff = self.prepare_and_run_abi_diff_all_archs(
+            "libunion", "libunion_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=True)
+        self.assertIn('"ChangeType"', diff)
+        self.assertIn('"ChangeTypeInStruct"', diff)
+        self.assertEqual(2, diff.count("fields_diff"))
+        self.assertNotIn("fields_added", diff)
+        self.assertNotIn("fields_removed", diff)
+
 
 if __name__ == '__main__':
     unittest.main()
