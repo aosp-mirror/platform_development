@@ -273,11 +273,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
-  }
-
-  getVideoData(): Blob | undefined {
-    return this.timelineData.getScreenRecordingVideo();
+    return this.tracePipeline.getLoadedTraceFiles().map((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -325,8 +321,8 @@ export class AppComponent implements TraceDataListener {
 
   private makeActiveTraceFileInfo(view: View): string {
     const traceFile = this.tracePipeline
-      .getLoadedTraces()
-      .find((trace) => trace.type === view.dependencies[0])?.traceFile;
+      .getLoadedTraceFiles()
+      .find((file) => file.type === view.dependencies[0])?.traceFile;
 
     if (!traceFile) {
       return '';
@@ -340,7 +336,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.tracePipeline.getLoadedTraces().map((trace) => {
+    return this.tracePipeline.getLoadedTraceFiles().map((trace) => {
       const traceType = TRACE_INFO[trace.type].name;
       const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
       return new File([trace.traceFile.file], newName);

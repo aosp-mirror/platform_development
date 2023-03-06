@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {TracePipeline} from './trace_pipeline';
 
@@ -27,9 +28,15 @@ describe('TracePipeline', () => {
   });
 
   it('can load valid trace files', async () => {
-    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+
     await loadValidSfWmTraces();
-    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
+
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(2);
+
+    const traceEntries = TracesUtils.extractEntries(tracePipeline.getTraces());
+    expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(0);
+    expect(traceEntries.get(TraceType.SURFACE_FLINGER)?.length).toBeGreaterThan(0);
   });
 
   it('is robust to invalid trace files', async () => {
@@ -37,19 +44,21 @@ describe('TracePipeline', () => {
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
     ];
 
-    const errors = await tracePipeline.loadTraces(invalidTraceFiles);
+    const errors = await tracePipeline.loadTraceFiles(invalidTraceFiles);
+    tracePipeline.buildTraces();
     expect(errors.length).toEqual(1);
-    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
-    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
-    const traces = [
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    const files = [
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
     ];
-    const errors = await tracePipeline.loadTraces(traces);
-    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
+    const errors = await tracePipeline.loadTraceFiles(files);
+    tracePipeline.buildTraces();
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
     expect(errors.length).toEqual(1);
   });
 
@@ -58,89 +67,48 @@ describe('TracePipeline', () => {
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb')),
     ];
 
-    const errors = await tracePipeline.loadTraces(traceFilesWithNoEntries);
+    const errors = await tracePipeline.loadTraceFiles(traceFilesWithNoEntries);
+    tracePipeline.buildTraces();
 
     expect(errors.length).toEqual(0);
 
-    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
-
-    const timelines = tracePipeline.getTimelines();
-    expect(timelines.length).toEqual(1);
-    expect(timelines[0].timestamps).toEqual([]);
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
   });
 
   it('can remove traces', async () => {
     await loadValidSfWmTraces();
-    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(2);
 
-    tracePipeline.removeTrace(TraceType.SURFACE_FLINGER);
-    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
+    tracePipeline.removeTraceFile(TraceType.SURFACE_FLINGER);
+    tracePipeline.buildTraces();
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
 
-    tracePipeline.removeTrace(TraceType.WINDOW_MANAGER);
-    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
+    tracePipeline.removeTraceFile(TraceType.WINDOW_MANAGER);
+    tracePipeline.buildTraces();
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
   });
 
-  it('gets loaded traces', async () => {
+  it('gets loaded trace files', async () => {
     await loadValidSfWmTraces();
 
-    const traces = tracePipeline.getLoadedTraces();
-    expect(traces.length).toEqual(2);
-    expect(traces[0].traceFile.file).toBeTruthy();
+    const files = tracePipeline.getLoadedTraceFiles();
+    expect(files.length).toEqual(2);
+    expect(files[0].traceFile).toBeTruthy();
 
-    const actualTraceTypes = new Set(traces.map((trace) => trace.type));
+    const actualTraceTypes = new Set(files.map((file) => file.type));
     const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
     expect(actualTraceTypes).toEqual(expectedTraceTypes);
   });
 
-  it('gets trace entries for a given timestamp', async () => {
-    const traceFiles = [
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb')
-      ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/WindowManager.pb')
-      ),
-    ];
-
-    const errors = await tracePipeline.loadTraces(traceFiles);
-    expect(errors.length).toEqual(0);
-
-    {
-      const entries = tracePipeline.getTraceEntries(undefined);
-      expect(entries.size).toEqual(0);
-    }
-    {
-      const timestamp = new Timestamp(TimestampType.REAL, 0n);
-      const entries = tracePipeline.getTraceEntries(timestamp);
-      expect(entries.size).toEqual(0);
-    }
-    {
-      const twoHundredYearsTimestamp = new Timestamp(
-        TimestampType.REAL,
-        200n * 365n * 24n * 60n * 3600n * 1000000000n
-      );
-      const entries = tracePipeline.getTraceEntries(twoHundredYearsTimestamp);
-      expect(entries.size).toEqual(2);
-    }
-  });
-
-  it('gets timelines', async () => {
+  it('builds traces', async () => {
     await loadValidSfWmTraces();
+    const traces = tracePipeline.getTraces();
 
-    const timelines = tracePipeline.getTimelines();
-
-    const actualTraceTypes = new Set(timelines.map((timeline) => timeline.traceType));
-    const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
-    expect(actualTraceTypes).toEqual(expectedTraceTypes);
-
-    timelines.forEach((timeline) => {
-      expect(timeline.timestamps.length).toBeGreaterThan(0);
-    });
+    expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeDefined();
+    expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeDefined();
   });
 
   it('gets screenrecording data', async () => {
-    expect(tracePipeline.getScreenRecordingVideo()).toBeUndefined();
-
     const traceFiles = [
       new TraceFile(
         await UnitTestUtils.getFixtureFile(
@@ -148,7 +116,8 @@ describe('TracePipeline', () => {
         )
       ),
     ];
-    await tracePipeline.loadTraces(traceFiles);
+    await tracePipeline.loadTraceFiles(traceFiles);
+    tracePipeline.buildTraces();
 
     const video = tracePipeline.getScreenRecordingVideo();
     expect(video).toBeDefined();
@@ -157,12 +126,25 @@ describe('TracePipeline', () => {
 
   it('can be cleared', async () => {
     await loadValidSfWmTraces();
-    expect(tracePipeline.getLoadedTraces().length).toBeGreaterThan(0);
-    expect(tracePipeline.getTimelines().length).toBeGreaterThan(0);
+    expect(tracePipeline.getLoadedTraceFiles().length).toBeGreaterThan(0);
 
     tracePipeline.clear();
-    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
-    expect(tracePipeline.getTimelines().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(() => {
+      tracePipeline.getTraces();
+    }).toThrow();
+    expect(() => {
+      tracePipeline.getScreenRecordingVideo();
+    }).toThrow();
+  });
+
+  it('throws if accessed before traces are built', async () => {
+    expect(() => {
+      tracePipeline.getTraces();
+    }).toThrow();
+    expect(() => {
+      tracePipeline.getScreenRecordingVideo();
+    }).toThrow();
   });
 
   const loadValidSfWmTraces = async () => {
@@ -175,7 +157,9 @@ describe('TracePipeline', () => {
       ),
     ];
 
-    const errors = await tracePipeline.loadTraces(traceFiles);
+    const errors = await tracePipeline.loadTraceFiles(traceFiles);
     expect(errors.length).toEqual(0);
+
+    tracePipeline.buildTraces();
   };
 });

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'trace/timestamp';
+import {TracePosition} from 'trace/trace_position';
 
-export interface TimestampChangeListener {
-  onCurrentTimestampChanged(timestamp: Timestamp | undefined): void;
+export interface TracePositionUpdateListener {
+  onTracePositionUpdate(position: TracePosition): void;
 }

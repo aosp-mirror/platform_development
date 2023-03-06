@@ -14,90 +14,89 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceEntry} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {Timeline} from './trace_pipeline';
+import {assertDefined} from '../common/assert_utils';
 
-export type TimestampCallbackType = (timestamp: Timestamp | undefined) => void;
+export type TracePositionCallbackType = (position: TracePosition) => void;
 export interface TimeRange {
   from: Timestamp;
   to: Timestamp;
 }
-interface TimestampWithIndex {
-  index: number;
-  timestamp: Timestamp;
-}
 
 export class TimelineData {
-  private timelines = new Map<TraceType, Timestamp[]>();
-  private timestampType?: TimestampType = undefined;
-  private explicitlySetTimestamp?: Timestamp = undefined;
-  private explicitlySetSelection?: TimeRange = undefined;
-  private screenRecordingVideo?: Blob = undefined;
+  private traces = new Traces();
+  private screenRecordingVideo?: Blob;
+  private timestampType?: TimestampType;
+  private firstEntry?: TraceEntry<{}>;
+  private lastEntry?: TraceEntry<{}>;
+  private explicitlySetPosition?: TracePosition;
+  private explicitlySetSelection?: TimeRange;
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
-  private onCurrentTimestampChanged: TimestampCallbackType = FunctionUtils.DO_NOTHING;
+  private onTracePositionUpdate: TracePositionCallbackType = FunctionUtils.DO_NOTHING;
 
-  initialize(timelines: Timeline[], screenRecordingVideo: Blob | undefined) {
+  initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
     this.clear();
 
+    this.traces = traces;
     this.screenRecordingVideo = screenRecordingVideo;
+    this.firstEntry = this.findFirstEntry();
+    this.lastEntry = this.findLastEntry();
+    this.timestampType = this.firstEntry?.getTimestamp().getType();
 
-    const allTimestamps = timelines.flatMap((timeline) => timeline.timestamps);
-    if (allTimestamps.some((timestamp) => timestamp.getType() !== allTimestamps[0].getType())) {
-      throw Error('Added timeline has inconsistent timestamps.');
+    const position = this.getCurrentPosition();
+    if (position) {
+      this.onTracePositionUpdate(position);
     }
-
-    if (allTimestamps.length > 0) {
-      this.timestampType = allTimestamps[0].getType();
-    }
-
-    timelines.forEach((timeline) => {
-      this.timelines.set(timeline.traceType, timeline.timestamps);
-    });
-
-    this.onCurrentTimestampChanged(this.getCurrentTimestamp());
   }
 
-  setOnCurrentTimestampChanged(callback: TimestampCallbackType) {
-    this.onCurrentTimestampChanged = callback;
+  setOnTracePositionUpdate(callback: TracePositionCallbackType) {
+    this.onTracePositionUpdate = callback;
   }
 
-  getCurrentTimestamp(): Timestamp | undefined {
-    if (this.explicitlySetTimestamp !== undefined) {
-      return this.explicitlySetTimestamp;
+  getCurrentPosition(): TracePosition | undefined {
+    if (this.explicitlySetPosition) {
+      return this.explicitlySetPosition;
     }
-    if (this.getFirstTimestampOfActiveViewTraces() !== undefined) {
-      return this.getFirstTimestampOfActiveViewTraces();
+    const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
+    if (firstActiveEntry) {
+      return TracePosition.fromTraceEntry(firstActiveEntry);
     }
-    return this.getFirstTimestamp();
+    if (this.firstEntry) {
+      return TracePosition.fromTraceEntry(this.firstEntry);
+    }
+    return undefined;
   }
 
-  setCurrentTimestamp(timestamp: Timestamp | undefined) {
+  setPosition(position: TracePosition | undefined) {
     if (!this.hasTimestamps()) {
-      console.warn('Attempted to set timestamp on traces with no timestamps/entries...');
+      console.warn('Attempted to set position on traces with no timestamps/entries...');
       return;
     }
 
-    if (timestamp !== undefined) {
+    if (position) {
       if (this.timestampType === undefined) {
-        throw Error('Attempted to set explicit timestamp but no timestamp type is available');
+        throw Error('Attempted to set explicit position but no timestamp type is available');
       }
-      if (timestamp.getType() !== this.timestampType) {
-        throw Error('Attempted to set explicit timestamp with incompatible type');
+      if (position.timestamp.getType() !== this.timestampType) {
+        throw Error('Attempted to set explicit position with incompatible timestamp type');
       }
     }
 
-    this.applyOperationAndNotifyIfCurrentTimestampChanged(() => {
-      this.explicitlySetTimestamp = timestamp;
+    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
+      this.explicitlySetPosition = position;
     });
   }
 
   setActiveViewTraceTypes(types: TraceType[]) {
-    this.applyOperationAndNotifyIfCurrentTimestampChanged(() => {
+    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
       this.activeViewTraceTypes = types;
     });
   }
@@ -106,130 +105,125 @@ export class TimelineData {
     return this.timestampType;
   }
 
-  getFullRange(): TimeRange {
-    if (!this.hasTimestamps()) {
-      throw Error('Trying to get full range when there are no timestamps');
+  getFullTimeRange(): TimeRange {
+    if (!this.firstEntry || !this.lastEntry) {
+      throw Error('Trying to get full time range when there are no timestamps');
     }
     return {
-      from: this.getFirstTimestamp()!,
-      to: this.getLastTimestamp()!,
+      from: this.firstEntry.getTimestamp(),
+      to: this.lastEntry.getTimestamp(),
     };
   }
 
-  getSelectionRange(): TimeRange {
+  getSelectionTimeRange(): TimeRange {
     if (this.explicitlySetSelection === undefined) {
-      return this.getFullRange();
+      return this.getFullTimeRange();
     } else {
       return this.explicitlySetSelection;
     }
   }
 
-  setSelectionRange(selection: TimeRange) {
+  setSelectionTimeRange(selection: TimeRange) {
     this.explicitlySetSelection = selection;
   }
 
-  getTimelines(): Map<TraceType, Timestamp[]> {
-    return this.timelines;
+  getTraces(): Traces {
+    return this.traces;
   }
 
   getScreenRecordingVideo(): Blob | undefined {
     return this.screenRecordingVideo;
   }
 
-  searchCorrespondingScreenRecordingTimeSeconds(timestamp: Timestamp): number | undefined {
-    const timestamps = this.timelines.get(TraceType.SCREEN_RECORDING);
-    if (!timestamps) {
+  searchCorrespondingScreenRecordingTimeSeconds(position: TracePosition): number | undefined {
+    const trace = this.traces.getTrace(TraceType.SCREEN_RECORDING);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
-    const firstTimestamp = timestamps[0];
-
-    const correspondingTimestamp = this.searchCorrespondingTimestampFor(
-      TraceType.SCREEN_RECORDING,
-      timestamp
-    )?.timestamp;
-    if (correspondingTimestamp === undefined) {
+    const firstTimestamp = trace.getEntry(0).getTimestamp();
+    const entry = TraceEntryFinder.findCorrespondingEntry(trace, position);
+    if (!entry) {
       return undefined;
     }
 
-    return ScreenRecordingUtils.timestampToVideoTimeSeconds(firstTimestamp, correspondingTimestamp);
+    return ScreenRecordingUtils.timestampToVideoTimeSeconds(firstTimestamp, entry.getTimestamp());
   }
 
   hasTimestamps(): boolean {
-    return Array.from(this.timelines.values()).some((timestamps) => timestamps.length > 0);
+    return this.firstEntry !== undefined;
   }
 
   hasMoreThanOneDistinctTimestamp(): boolean {
-    return this.hasTimestamps() && this.getFirstTimestamp() !== this.getLastTimestamp();
+    return (
+      this.hasTimestamps() &&
+      this.firstEntry?.getTimestamp().getValueNs() !== this.lastEntry?.getTimestamp().getValueNs()
+    );
   }
 
-  getCurrentTimestampFor(type: TraceType): Timestamp | undefined {
-    return this.searchCorrespondingTimestampFor(type, this.getCurrentTimestamp())?.timestamp;
+  getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
+    const trace = assertDefined(this.traces.getTrace(type));
+    if (trace.lengthEntries === 0) {
+      return undefined;
+    }
+
+    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
+    if (currentIndex === undefined || currentIndex === 0) {
+      return undefined;
+    }
+
+    return trace.getEntry(currentIndex - 1);
   }
 
-  getPreviousTimestampFor(type: TraceType): Timestamp | undefined {
-    const currentIndex = this.searchCorrespondingTimestampFor(
-      type,
-      this.getCurrentTimestamp()
-    )?.index;
+  getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
+    const trace = assertDefined(this.traces.getTrace(type));
+    if (trace.lengthEntries === 0) {
+      return undefined;
+    }
 
+    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
     if (currentIndex === undefined) {
-      // Only acceptable reason for this to be undefined is if we are before the first entry for this type
-      if (
-        this.timelines.get(type)!.length === 0 ||
-        this.getCurrentTimestamp()!.getValueNs() < this.timelines.get(type)![0].getValueNs()
-      ) {
-        return undefined;
-      }
-      throw Error(`Missing active timestamp for trace type ${type}`);
+      return trace.getEntry(0);
     }
 
-    const previousIndex = currentIndex - 1;
-    if (previousIndex < 0) {
+    if (currentIndex + 1 >= trace.lengthEntries) {
       return undefined;
     }
 
-    return this.timelines.get(type)?.[previousIndex];
+    return trace.getEntry(currentIndex + 1);
   }
 
-  getNextTimestampFor(type: TraceType): Timestamp | undefined {
-    const currentIndex =
-      this.searchCorrespondingTimestampFor(type, this.getCurrentTimestamp())?.index ?? -1;
-
-    if (this.timelines.get(type)?.length === 0 ?? true) {
-      throw Error(`Missing active timestamp for trace type ${type}`);
-    }
-
-    const timestamps = this.timelines.get(type);
-    if (timestamps === undefined) {
-      throw Error('Timestamps for tracetype not found');
-    }
-    const nextIndex = currentIndex + 1;
-    if (nextIndex >= timestamps.length) {
+  findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
+    const position = this.getCurrentPosition();
+    if (!position) {
       return undefined;
     }
-
-    return timestamps[nextIndex];
+    return TraceEntryFinder.findCorrespondingEntry(
+      assertDefined(this.traces.getTrace(type)),
+      position
+    );
   }
 
-  moveToPreviousTimestampFor(type: TraceType) {
-    const prevTimestamp = this.getPreviousTimestampFor(type);
-    if (prevTimestamp !== undefined) {
-      this.setCurrentTimestamp(prevTimestamp);
+  moveToPreviousEntryFor(type: TraceType) {
+    const prevEntry = this.getPreviousEntryFor(type);
+    if (prevEntry !== undefined) {
+      this.setPosition(TracePosition.fromTraceEntry(prevEntry));
     }
   }
 
-  moveToNextTimestampFor(type: TraceType) {
-    const nextTimestamp = this.getNextTimestampFor(type);
-    if (nextTimestamp !== undefined) {
-      this.setCurrentTimestamp(nextTimestamp);
+  moveToNextEntryFor(type: TraceType) {
+    const nextEntry = this.getNextEntryFor(type);
+    if (nextEntry !== undefined) {
+      this.setPosition(TracePosition.fromTraceEntry(nextEntry));
     }
   }
 
   clear() {
-    this.applyOperationAndNotifyIfCurrentTimestampChanged(() => {
-      this.timelines.clear();
-      this.explicitlySetTimestamp = undefined;
+    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
+      this.traces = new Traces();
+      this.firstEntry = undefined;
+      this.lastEntry = undefined;
+      this.explicitlySetPosition = undefined;
       this.timestampType = undefined;
       this.explicitlySetSelection = undefined;
       this.screenRecordingVideo = undefined;
@@ -237,71 +231,58 @@ export class TimelineData {
     });
   }
 
-  private getFirstTimestamp(): Timestamp | undefined {
-    if (!this.hasTimestamps()) {
-      return undefined;
-    }
+  private findFirstEntry(): TraceEntry<{}> | undefined {
+    let first: TraceEntry<{}> | undefined = undefined;
 
-    return Array.from(this.timelines.values())
-      .map((timestamps) => timestamps[0])
-      .filter((timestamp) => timestamp !== undefined)
-      .reduce((prev, current) => (prev < current ? prev : current));
+    this.traces.forEachTrace((trace) => {
+      if (trace.lengthEntries === 0) {
+        return;
+      }
+      const candidate = trace.getEntry(0);
+      if (!first || candidate.getTimestamp() < first.getTimestamp()) {
+        first = candidate;
+      }
+    });
+
+    return first;
   }
 
-  private getLastTimestamp(): Timestamp | undefined {
-    if (!this.hasTimestamps()) {
-      return undefined;
-    }
+  private findLastEntry(): TraceEntry<{}> | undefined {
+    let last: TraceEntry<{}> | undefined = undefined;
 
-    return Array.from(this.timelines.values())
-      .map((timestamps) => timestamps[timestamps.length - 1])
-      .filter((timestamp) => timestamp !== undefined)
-      .reduce((prev, current) => (prev > current ? prev : current));
+    this.traces.forEachTrace((trace) => {
+      if (trace.lengthEntries === 0) {
+        return;
+      }
+      const candidate = trace.getEntry(trace.lengthEntries - 1);
+      if (!last || candidate.getTimestamp() > last.getTimestamp()) {
+        last = candidate;
+      }
+    });
+
+    return last;
   }
 
-  private searchCorrespondingTimestampFor(
-    type: TraceType,
-    timestamp: Timestamp | undefined
-  ): TimestampWithIndex | undefined {
-    if (timestamp === undefined) {
+  private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
+    const activeEntries = this.activeViewTraceTypes
+      .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
+      .filter((trace) => trace.lengthEntries > 0)
+      .map((trace) => trace.getEntry(0))
+      .sort((a, b) => {
+        return TimeUtils.compareFn(a.getTimestamp(), b.getTimestamp());
+      });
+    if (activeEntries.length === 0) {
       return undefined;
     }
-
-    if (timestamp.getType() !== this.timestampType) {
-      throw Error('Invalid timestamp type');
-    }
-
-    const timeline = this.timelines.get(type);
-    if (timeline === undefined) {
-      throw Error(`No timeline for requested trace type ${type}`);
-    }
-    const index = ArrayUtils.binarySearchLowerOrEqual(timeline, timestamp);
-    if (index === undefined) {
-      return undefined;
-    }
-    return {index, timestamp: timeline[index]};
+    return activeEntries[0];
   }
 
-  private getFirstTimestampOfActiveViewTraces(): Timestamp | undefined {
-    if (this.activeViewTraceTypes.length === 0) {
-      return undefined;
-    }
-    const activeTimestamps = this.activeViewTraceTypes
-      .map((traceType) => this.timelines.get(traceType)!)
-      .map((timestamps) => timestamps[0])
-      .filter((timestamp) => timestamp !== undefined)
-      .sort(TimeUtils.compareFn);
-    if (activeTimestamps.length === 0) {
-      return undefined;
-    }
-    return activeTimestamps[0];
-  }
-
-  private applyOperationAndNotifyIfCurrentTimestampChanged(op: () => void) {
-    const prevTimestamp = this.getCurrentTimestamp();
+  private applyOperationAndNotifyIfCurrentPositionChanged(op: () => void) {
+    const prevPosition = this.getCurrentPosition();
     op();
-    if (prevTimestamp !== this.getCurrentTimestamp()) {
-      this.onCurrentTimestampChanged(this.getCurrentTimestamp());
+    const currentPosition = this.getCurrentPosition();
+    if (currentPosition && (!prevPosition || !currentPosition.isEqual(prevPosition))) {
+      this.onTracePositionUpdate(currentPosition);
     }
   }
 }

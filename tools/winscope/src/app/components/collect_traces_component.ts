@@ -29,7 +29,7 @@ import {
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TracePipeline} from 'app/trace_pipeline';
 import {PersistentStore} from 'common/persistent_store';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -518,7 +518,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     console.log('loading files', this.connect.adbData());
     this.tracePipeline.clear();
     const traceFiles = this.connect.adbData().map((file) => new TraceFile(file));
-    const parserErrors = await this.tracePipeline.loadTraces(traceFiles);
+    const parserErrors = await this.tracePipeline.loadTraceFiles(traceFiles);
     ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
     console.log('finished loading data!');

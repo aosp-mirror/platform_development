@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {Parser} from 'parsers/parser';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
-import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {Trace, TraceFile} from 'trace/trace';
+import {FrameMapper} from 'trace/frame_mapper';
+import {Parser} from 'trace/parser';
+import {TimestampType} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {LoadedTraceFile, TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-
-interface Timeline {
-  traceType: TraceType;
-  timestamps: Timestamp[];
-}
 
 class TracePipeline {
   private parserFactory = new ParserFactory();
-  private parsers: Parser[] = [];
+  private parsers: Array<Parser<object>> = [];
+  private traces?: Traces;
   private commonTimestampType?: TimestampType;
 
-  async loadTraces(
+  async loadTraceFiles(
     traceFiles: TraceFile[],
     onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
   ): Promise<ParserError[]> {
@@ -45,78 +42,51 @@ class TracePipeline {
     return parserErrors;
   }
 
-  removeTrace(type: TraceType) {
+  removeTraceFile(type: TraceType) {
     this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== type);
   }
 
-  getLoadedTraces(): Trace[] {
-    return this.parsers.map((parser: Parser) => parser.getTrace());
+  getLoadedTraceFiles(): LoadedTraceFile[] {
+    return this.parsers.map(
+      (parser: Parser<object>) => new LoadedTraceFile(parser.getTraceFile(), parser.getTraceType())
+    );
   }
 
-  getTraceEntries(timestamp: Timestamp | undefined): Map<TraceType, any> {
-    const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
+  buildTraces() {
+    const commonTimestampType = this.getCommonTimestampType();
 
-    if (!timestamp) {
-      return traceEntries;
-    }
-
+    this.traces = new Traces();
     this.parsers.forEach((parser) => {
-      const targetTimestamp = timestamp;
-      const entry = parser.getTraceEntry(targetTimestamp);
-      let prevEntry = null;
-
-      const parserTimestamps = parser.getTimestamps(timestamp.getType());
-      if (parserTimestamps === undefined) {
-        throw new Error(
-          `Unexpected timestamp type ${timestamp.getType()}.` +
-            ` Not supported by parser for trace type: ${parser.getTraceType()}`
-        );
-      }
-
-      const index = ArrayUtils.binarySearchLowerOrEqual(parserTimestamps, targetTimestamp);
-      if (index !== undefined && index > 0) {
-        prevEntry = parser.getTraceEntry(parserTimestamps[index - 1]);
-      }
-
-      if (entry !== undefined) {
-        traceEntries.set(parser.getTraceType(), [entry, prevEntry]);
-      }
+      const trace = new Trace(
+        parser.getTraceType(),
+        parser.getTraceFile(),
+        undefined,
+        parser,
+        commonTimestampType,
+        {start: 0, end: parser.getLengthEntries()}
+      );
+      this.traces?.setTrace(parser.getTraceType(), trace);
     });
-
-    return traceEntries;
+    new FrameMapper(this.traces).computeMapping();
   }
 
-  getTimelines(): Timeline[] {
-    const timelines = this.parsers.map((parser): Timeline => {
-      const timestamps = parser.getTimestamps(this.getCommonTimestampType());
-      if (timestamps === undefined) {
-        throw Error('Failed to get timestamps from parser');
-      }
-      return {traceType: parser.getTraceType(), timestamps};
-    });
-
-    return timelines;
+  getTraces(): Traces {
+    this.checkTracesWereBuilt();
+    return this.traces!;
   }
 
   getScreenRecordingVideo(): undefined | Blob {
-    const parser = this.parsers.find(
-      (parser) => parser.getTraceType() === TraceType.SCREEN_RECORDING
-    );
-    if (!parser) {
+    const screenRecording = this.getTraces().getTrace(TraceType.SCREEN_RECORDING);
+    if (!screenRecording || screenRecording.lengthEntries === 0) {
       return undefined;
     }
-
-    const timestamps = parser.getTimestamps(this.getCommonTimestampType());
-    if (!timestamps || timestamps.length === 0) {
-      return undefined;
-    }
-
-    return (parser.getTraceEntry(timestamps[0]) as ScreenRecordingTraceEntry)?.videoData;
+    return screenRecording.getEntry(0).getValue().videoData;
   }
 
   clear() {
     this.parserFactory = new ParserFactory();
     this.parsers = [];
+    this.traces = undefined;
     this.commonTimestampType = undefined;
   }
 
@@ -135,6 +105,14 @@ class TracePipeline {
 
     throw Error('Failed to find common timestamp type across all traces');
   }
+
+  private checkTracesWereBuilt() {
+    if (!this.traces) {
+      throw new Error(
+        `Can't access traces before building them. Did you forget to call '${this.buildTraces.name}'?`
+      );
+    }
+  }
 }
 
-export {Timeline, TracePipeline};
+export {TracePipeline};

@@ -20,9 +20,10 @@ import {RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
 import {RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
 import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
 import {Runnable} from 'interfaces/runnable';
-import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -35,7 +36,7 @@ export type CrossToolProtocolDependencyInversion = RemoteBugreportReceiver &
 export type AbtChromeExtensionProtocolDependencyInversion = BuganizerAttachmentsDownloadEmitter &
   Runnable;
 export type AppComponentDependencyInversion = TraceDataListener;
-export type TimelineComponentDependencyInversion = TimestampChangeListener;
+export type TimelineComponentDependencyInversion = TracePositionUpdateListener;
 export type UploadTracesComponentDependencyInversion = FilesDownloadListener;
 
 export class Mediator {
@@ -68,8 +69,8 @@ export class Mediator {
     this.appComponent = appComponent;
     this.storage = storage;
 
-    this.timelineData.setOnCurrentTimestampChanged((timestamp) => {
-      this.onWinscopeCurrentTimestampChanged(timestamp);
+    this.timelineData.setOnTracePositionUpdate((position) => {
+      this.onWinscopeTracePositionUpdate(position);
     });
 
     this.crossToolProtocol.setOnBugreportReceived(
@@ -112,29 +113,25 @@ export class Mediator {
   }
 
   onWinscopeTraceDataLoaded() {
-    this.processTraceData();
+    this.processTraces();
   }
 
-  onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
+  onWinscopeTracePositionUpdate(position: TracePosition) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
-      const entries = this.tracePipeline.getTraceEntries(timestamp);
-      this.viewers.forEach((viewer) => {
-        viewer.notifyCurrentTraceEntries(entries);
-      });
+      this.updateViewersTracePosition(position);
 
-      if (timestamp) {
-        if (timestamp.getType() !== TimestampType.REAL) {
-          console.warn(
-            'Cannot propagate timestamp change to remote tool.' +
-              ` Remote tool expects timestamp type ${TimestampType.REAL},` +
-              ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
-          );
-        } else {
-          this.crossToolProtocol.sendTimestamp(timestamp);
-        }
+      const timestamp = position.timestamp;
+      if (timestamp.getType() !== TimestampType.REAL) {
+        console.warn(
+          'Cannot propagate timestamp change to remote tool.' +
+            ` Remote tool expects timestamp type ${TimestampType.REAL},` +
+            ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
+        );
+      } else {
+        this.crossToolProtocol.sendTimestamp(timestamp);
       }
 
-      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+      this.timelineComponent?.onTracePositionUpdate(position);
     });
   }
 
@@ -171,17 +168,16 @@ export class Mediator {
         return;
       }
 
-      if (this.timelineData.getCurrentTimestamp() === timestamp) {
+      if (
+        this.timelineData.getCurrentPosition()?.timestamp.getValueNs() === timestamp.getValueNs()
+      ) {
         return; // no timestamp change
       }
 
-      const entries = this.tracePipeline.getTraceEntries(timestamp);
-      this.viewers.forEach((viewer) => {
-        viewer.notifyCurrentTraceEntries(entries);
-      });
-
-      this.timelineData.setCurrentTimestamp(timestamp);
-      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+      const position = TracePosition.fromTimestamp(timestamp);
+      this.updateViewersTracePosition(position);
+      this.timelineData.setPosition(position);
+      this.timelineComponent?.onTracePositionUpdate(position); //TODO: is this redundant?
     });
   }
 
@@ -190,9 +186,10 @@ export class Mediator {
     this.uploadTracesComponent?.onFilesDownloaded(files);
   }
 
-  private processTraceData() {
+  private processTraces() {
+    this.tracePipeline.buildTraces();
     this.timelineData.initialize(
-      this.tracePipeline.getTimelines(),
+      this.tracePipeline.getTraces(),
       this.tracePipeline.getScreenRecordingVideo()
     );
     this.createViewers();
@@ -205,13 +202,24 @@ export class Mediator {
   }
 
   private createViewers() {
-    const traceTypes = this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), this.storage);
+    const traces = this.tracePipeline.getTraces();
+    const traceTypes = new Set<TraceType>();
+    traces.forEachTrace((trace) => {
+      traceTypes.add(trace.type);
+    });
+    this.viewers = new ViewerFactory().createViewers(traceTypes, traces, this.storage);
 
-    // Make sure to update the viewers active entries as soon as they are created.
-    if (this.timelineData.getCurrentTimestamp()) {
-      this.onWinscopeCurrentTimestampChanged(this.timelineData.getCurrentTimestamp());
+    // Update the viewers as soon as they are created
+    const position = this.timelineData.getCurrentPosition();
+    if (position) {
+      this.onWinscopeTracePositionUpdate(position);
     }
+  }
+
+  private updateViewersTracePosition(position: TracePosition) {
+    this.viewers.forEach((viewer) => {
+      viewer.onTracePositionUpdate(position);
+    });
   }
 
   private executeIgnoringRecursiveTimestampNotifications(op: () => void) {
