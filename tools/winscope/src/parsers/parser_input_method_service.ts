@@ -16,14 +16,14 @@
 
 import {TimeUtils} from 'common/time_utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {ImeUtils} from 'viewers/common/ime_utils';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {InputMethodServiceTraceFileProto} from './proto_types';
 
-class ParserInputMethodService extends Parser {
+class ParserInputMethodService extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;

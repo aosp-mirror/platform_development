@@ -18,15 +18,15 @@ import {ArrayUtils} from 'common/array_utils';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 
 class ScreenRecordingMetadataEntry {
   constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {}
 }
 
-class ParserScreenRecording extends Parser {
+class ParserScreenRecording extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
   }
@@ -99,7 +99,7 @@ class ParserScreenRecording extends Parser {
       initialTimestamp,
       currentTimestamp
     );
-    const videoData = this.trace.file;
+    const videoData = this.traceFile.file;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 
