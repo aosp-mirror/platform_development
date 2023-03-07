@@ -134,6 +134,8 @@ function addAttributes(entry: WindowState, proto: any) {
   entry.rect.ref = entry;
   entry.rect.label = entry.name;
   entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
   entry.shortName = shortenName(entry.name);
 }
 
