@@ -29,15 +29,11 @@ namespace utils {
 static const std::vector<std::string> header_extensions{
     ".h", ".hh", ".hpp", ".hxx", ".h++", ".inl", ".inc", ".ipp", ".h.generic"};
 
-static bool ShouldSkipFile(llvm::StringRef &file_name) {
-  // Look for header files only
-  if (file_name.empty() || file_name.startswith(".")) {
-    return true;
-  }
+static bool HasHeaderExtension(llvm::StringRef &file_name) {
   return std::find_if(header_extensions.begin(), header_extensions.end(),
                       [file_name](const std::string &e) {
                         return file_name.endswith(e);
-                      }) == header_extensions.end();
+                      }) != header_extensions.end();
 }
 
 static std::string GetCwd() {
@@ -135,9 +131,12 @@ static bool CollectExportedHeaderSet(const std::string &dir_name,
     const std::string &file_path = walker->path();
 
     llvm::StringRef file_name(llvm::sys::path::filename(file_path));
-    // Ignore non header files.
-    if (ShouldSkipFile(file_name)) {
+    if (file_name.empty() || file_name.startswith(".")) {
+      // Ignore hidden files and directories.
       walker.no_push();
+      continue;
+    }
+    if (!HasHeaderExtension(file_name)) {
       continue;
     }
 

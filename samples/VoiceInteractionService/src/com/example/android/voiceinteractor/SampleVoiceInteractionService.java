@@ -32,9 +32,11 @@ import android.os.IBinder;
 import android.os.Trace;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
+import android.service.voice.DetectorFailure;
 import android.service.voice.HotwordDetector;
 import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
+import android.service.voice.SandboxedDetectionInitializer;
 import android.service.voice.VisualQueryDetector;
 import android.service.voice.VoiceInteractionService;
 import android.util.Log;
@@ -100,10 +102,9 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         Log.i(TAG, "onReady");
         mHotwordDetectorCallback = new Callback();
         mVisualQueryDetectorCallback = new VisualQueryDetectorCallback();
-        mHotwordDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE, DSP_MODEL_LOCALE, null, null,
-                mHotwordDetectorCallback);
-        mVisualQueryDetector = createVisualQueryDetector(null, null,
-                Executors.newSingleThreadExecutor(), mVisualQueryDetectorCallback);
+        mHotwordDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE,
+                        DSP_MODEL_LOCALE, null, null, mHotwordDetectorCallback);
+
     }
 
     @Override
@@ -119,7 +120,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         }
     }
 
-    static class VisualQueryDetectorCallback implements VisualQueryDetector.Callback {
+    class VisualQueryDetectorCallback implements VisualQueryDetector.Callback {
             @Override
             public void onQueryDetected(@NonNull String partialQuery) {
                 Log.i(TAG, "VQD partial query detected: "+ partialQuery);
@@ -137,16 +138,28 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
             @Override
             public void onVisualQueryDetectionServiceInitialized(int status) {
-                Log.i(TAG,  "VQD init: "+ status);
+                Log.i(TAG, "VQD init: "+ status);
+                if (status == SandboxedDetectionInitializer.INITIALIZATION_STATUS_SUCCESS) {
+                    try {
+                        mVisualQueryDetector.startRecognition();
+                    } catch (IllegalDetectorStateException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
             @Override
             public void onVisualQueryDetectionServiceRestarted() {
                 Log.i(TAG, "VQD restarted");
+                try {
+                    mVisualQueryDetector.startRecognition();
+                } catch (IllegalDetectorStateException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
-            public void onError() {
+            public void onFailure(@NonNull DetectorFailure detectorFailure) {
                 Log.i(TAG, "VQD error");
             }
         };
@@ -307,6 +320,9 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                     e.printStackTrace();
                 }
             }
+            //TODO(b/265535257): Provide two services independent lifecycle.
+            mVisualQueryDetector = createVisualQueryDetector(null, null,
+                Executors.newSingleThreadExecutor(), mVisualQueryDetectorCallback);
         }
     }
 }

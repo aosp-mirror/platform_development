@@ -63,18 +63,26 @@ class DiffStatus {
   Status status_;
 };
 
-template <typename T>
-using DiffStatusPair = std::pair<DiffStatus, T>;
-
-template <typename GenericField, typename GenericFieldDiff>
-struct GenericFieldDiffInfo {
-  DiffStatus diff_status_ = DiffStatus::kNoDiff;
-  std::vector<GenericFieldDiff> diffed_fields_;
-  std::vector<const GenericField *> removed_fields_;
-  std::vector<const GenericField *> added_fields_;
+struct RecordFieldDiffResult {
+  DiffStatus status = DiffStatus::kNoDiff;
+  std::vector<RecordFieldDiffIR> diffed_fields;
+  std::vector<const RecordFieldIR *> removed_fields;
+  std::vector<const RecordFieldIR *> added_fields;
 };
 
-std::string Unwind(const std::deque<std::string> *type_queue);
+class TypeStackGuard {
+ public:
+  TypeStackGuard(std::deque<std::string> &type_stack,
+                 const std::string &type_name)
+      : type_stack_(type_stack) {
+    type_stack_.push_back(type_name);
+  }
+
+  ~TypeStackGuard() { type_stack_.pop_back(); }
+
+ private:
+  std::deque<std::string> &type_stack_;
+};
 
 struct DiffPolicyOptions {
   DiffPolicyOptions(bool consider_opaque_types_different)
@@ -97,66 +105,57 @@ class AbiDiffHelper {
         ignored_linker_set_keys_(ignored_linker_set_keys),
         ir_diff_dumper_(ir_diff_dumper) {}
 
+  // Concatenate the strings in type_stack.
+  std::string UnwindTypeStack();
+
   bool AreOpaqueTypesEqual(const std::string &old_type_str,
                            const std::string &new_type_str) const;
 
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
-      std::deque<std::string> *type_queue = nullptr,
       IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
 
   DiffStatus CompareAndDumpTypeDiff(
-      const TypeIR *old_type, const TypeIR *new_type,
-      LinkableMessageKind kind,
-      std::deque<std::string> *type_queue = nullptr,
+      const TypeIR *old_type, const TypeIR *new_type, LinkableMessageKind kind,
       IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
-
 
   DiffStatus CompareRecordTypes(const RecordTypeIR *old_type,
                                 const RecordTypeIR *new_type,
-                                std::deque<std::string> *type_queue,
                                 IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareEnumTypes(const EnumTypeIR *old_type,
                               const EnumTypeIR *new_type,
-                              std::deque<std::string> *type_queue,
                               IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareFunctionTypes(const CFunctionLikeIR *old_type,
                                   const CFunctionLikeIR *new_type,
-                                  std::deque<std::string> *type_queue,
                                   DiffMessageIR::DiffKind diff_kind);
 
   DiffStatus CompareTemplateInfo(
       const std::vector<TemplateElementIR> &old_template_elements,
       const std::vector<TemplateElementIR> &new_template_elements,
-      std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
-
 
  private:
   DiffStatus CompareQualifiedTypes(const QualifiedTypeIR *old_type,
                                    const QualifiedTypeIR *new_type,
-                                   std::deque<std::string> *type_queue,
                                    IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareArrayTypes(const ArrayTypeIR *old_type,
+                               const ArrayTypeIR *new_type,
+                               IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus ComparePointerTypes(const PointerTypeIR *old_type,
                                  const PointerTypeIR *new_type,
-                                 std::deque<std::string> *type_queue,
                                  IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareLvalueReferenceTypes(
-      const LvalueReferenceTypeIR *old_type,
-      const LvalueReferenceTypeIR *new_type,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
+  DiffStatus CompareLvalueReferenceTypes(const LvalueReferenceTypeIR *old_type,
+                                         const LvalueReferenceTypeIR *new_type,
+                                         IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareRvalueReferenceTypes(
-      const RvalueReferenceTypeIR *old_type,
-      const RvalueReferenceTypeIR *new_type,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
-
+  DiffStatus CompareRvalueReferenceTypes(const RvalueReferenceTypeIR *old_type,
+                                         const RvalueReferenceTypeIR *new_type,
+                                         IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareBuiltinTypes(const BuiltinTypeIR *old_type,
                                  const BuiltinTypeIR *new_type);
@@ -177,51 +176,44 @@ class AbiDiffHelper {
   FixupDiffedFieldTypeIds(
       const std::vector<RecordFieldDiffIR> &field_diffs);
 
-  DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
-  CompareCommonRecordFields(
-      const RecordFieldIR *old_field,
-      const RecordFieldIR *new_field,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
+  DiffStatus CompareCommonRecordFields(const RecordFieldIR *old_field,
+                                       const RecordFieldIR *new_field,
+                                       IRDiffDumper::DiffKind diff_kind);
 
-  GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
-      CompareRecordFields(
+  DiffStatus FilterOutRenamedRecordFields(
+      DiffMessageIR::DiffKind diff_kind,
+      std::vector<const RecordFieldIR *> &old_fields,
+      std::vector<const RecordFieldIR *> &new_fields);
+
+  RecordFieldDiffResult CompareRecordFields(
       const std::vector<RecordFieldIR> &old_fields,
       const std::vector<RecordFieldIR> &new_fields,
-      std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
 
   bool CompareBaseSpecifiers(
       const std::vector<CXXBaseSpecifierIR> &old_base_specifiers,
       const std::vector<CXXBaseSpecifierIR> &new_base_specifiers,
-      std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareFunctionParameters(
       const std::vector<ParamIR> &old_parameters,
       const std::vector<ParamIR> &new_parameters,
-      std::deque<std::string> *type_queue, IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareParameterTypes(const std::string &old_type_id,
                                    const std::string &new_type_id,
-                                   std::deque<std::string> *type_queue,
                                    IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareReturnTypes(const std::string &old_type_id,
                                 const std::string &new_type_id,
-                                std::deque<std::string> *type_queue,
                                 IRDiffDumper::DiffKind diff_kind);
-
-  template <typename DiffType, typename DiffElement>
-  bool AddToDiff(DiffType *mutable_diff, const DiffElement *oldp,
-                 const DiffElement *newp,
-                 std::deque<std::string> *type_queue = nullptr);
 
  protected:
   const AbiElementMap<const TypeIR *> &old_types_;
   const AbiElementMap<const TypeIR *> &new_types_;
   const DiffPolicyOptions &diff_policy_options_;
   std::set<std::string> *type_cache_;
+  std::deque<std::string> type_stack_;
   const std::set<std::string> &ignored_linker_set_keys_;
   IRDiffDumper *ir_diff_dumper_;
 };
