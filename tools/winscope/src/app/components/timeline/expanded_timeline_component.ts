@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { KeyValue } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -28,25 +29,23 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {Timestamp} from 'trace/timestamp';
+import { TraceType } from 'trace/trace_type';
 import {SingleTimelineComponent} from './single_timeline_component';
 
 @Component({
   selector: 'expanded-timeline',
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
-      <div *ngFor="let timeline of this.data | keyvalue" class="timeline">
+      <div *ngFor="let timeline of this.data | keyvalue; trackBy: getTimelineTrackByValue" class="timeline">
         <div class="icon-wrapper">
           <mat-icon class="icon" [style]="{color: TRACE_INFO[timeline.key].color}">
             {{ TRACE_INFO[timeline.key].icon }}
           </mat-icon>
         </div>
-        <!-- TODO: Timestamp variables are passed to single-timeline, but single-timeline takes bigint parameters. Why the heck is this working??? -->
         <single-timeline
           [color]="TRACE_INFO[timeline.key].color"
           [entries]="timeline.value"
-          [selected]="
-            timelineData.getCurrentTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined
-          "
+          [selected]="selectedTimestampFor(timeline.key)"
           [start]="start"
           [end]="end"
           (onTimestampChanged)="onTimestampChanged.emit($event)"
@@ -172,6 +171,14 @@ export class ExpandedTimelineComponent {
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     this.resizeCanvases();
+  }
+
+  public selectedTimestampFor(traceType: TraceType): bigint|undefined {
+    return this.timelineData.getCurrentTimestampFor(traceType)?.getValueNs() ?? undefined
+  }
+
+  getTimelineTrackByValue = (index: number, value: KeyValue<TraceType, Timestamp[]>) => {
+    return this.selectedTimestampFor(value.key)
   }
 
   private resizeCanvases() {
