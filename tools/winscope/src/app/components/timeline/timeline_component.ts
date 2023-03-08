@@ -311,6 +311,8 @@ export class TimelineComponent implements TimestampChangeListener {
       this.selectedTraces = this.selectedTraces.slice(1, 1 + this.MAX_SELECTED_TRACES);
     }
 
+    // Create new object to make sure we trigger an update on Mini Timeline child component
+    this.selectedTraces = [...this.selectedTraces]
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
   internalActiveTrace: TraceType | undefined = undefined;
