@@ -14,12 +14,58 @@
 
 #include "utils/source_path_utils.h"
 
+#include <android-base/file.h>
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <vector>
 
 namespace header_checker {
 namespace utils {
 
+TEST(SourcePathUtilsTest, CollectAllExportedHeaders) {
+  // Prepare a header directory.
+  TemporaryDir temp_dir;
+  const std::filesystem::path header_dir = temp_dir.path;
+
+  const std::filesystem::path header = header_dir / "header.h";
+  ASSERT_TRUE(android::base::WriteStringToFile("// test", header));
+
+  std::error_code ec;
+  const std::filesystem::path subdir = header_dir / "subdir";
+  ASSERT_TRUE(std::filesystem::create_directory(subdir, ec));
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path subdir_link = header_dir / "subdir_link";
+  std::filesystem::create_directory_symlink(subdir, subdir_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path hidden_subdir_link = header_dir / ".subdir_link";
+  std::filesystem::create_directory_symlink(subdir, hidden_subdir_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path header_link = subdir / "header_link.h";
+  std::filesystem::create_symlink(header, header_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path hidden_header_link = subdir / ".header_link.h";
+  std::filesystem::create_symlink(header, hidden_header_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path non_header_link = subdir / "header_link.txt";
+  std::filesystem::create_symlink(header, non_header_link, ec);
+  ASSERT_FALSE(ec);
+  // Test the function.
+  std::vector<std::string> exported_header_dirs{header_dir};
+  std::vector<RootDir> root_dirs{{header_dir, "include"}};
+  std::set<std::string> headers =
+      CollectAllExportedHeaders(exported_header_dirs, root_dirs);
+
+  std::set<std::string> expected_headers{"include/header.h",
+                                         "include/subdir/header_link.h",
+                                         "include/subdir_link/header_link.h"};
+  ASSERT_EQ(headers, expected_headers);
+}
 
 TEST(SourcePathUtilsTest, NormalizeAbsolutePaths) {
   const std::vector<std::string> args{"/root/dir"};
