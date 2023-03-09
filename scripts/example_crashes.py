@@ -84,32 +84,6 @@ backtrace:
     #07 pc 0000000000014e90  /system/lib64/libc.so (__start_thread+16)
 """
 
-mips = """
-Build fingerprint: 'Android/aosp_mips/generic_mips:4.4.3.43.43.43/AOSP/enh06302258:eng/test-keys'
-Revision: '0'
-ABI: 'mips'
-pid: 958, tid: 960, name: crasher  >>> crasher <<<
-signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------
- zr 00000000  at 802babc0  v0 00000000  v1 77b99dd0
- a0 000003be  a1 000003c0  a2 00000006  a3 00000000
- t0 00000000  t1 9e7f5440  t2 00000020  t3 ffffff18
- t4 77a9c000  t5 00000001  t6 00000000  t7 00000000
- s0 000003c0  s1 77b99dd8  s2 00000000  s3 00000006
- s4 77db2028  s5 000003be  s6 77c39fa8  s7 77b99dd0
- t8 00000000  t9 77c89e80  k0 00000000  k1 00000000
- gp 77cce350  sp 77b99c78  s8 77db2020  ra 77c3b48c
- hi 00000000  lo 00000008 bva 7fff7008 epc 77c89e94
-
-backtrace:
-    #00 pc 00067e94  /system/lib/libc.so (tgkill+20)
-    #01 pc 0001948c  /system/lib/libc.so (pthread_kill+244)
-    #02 pc 0001b0e8  /system/lib/libc.so (raise+60)
-    #03 pc 00012908  /system/lib/libc.so (abort+104)
-    #04 pc 000012a4  /system/xbin/crasher
-    #05 pc 00018008  /system/lib/libc.so (__pthread_start(void*)+96)
-    #06 pc 00013198  /system/lib/libc.so (__start_thread+36)
-"""
-
 x86 = """
 Build fingerprint: 'Android/aosp_x86_64/generic_x86_64:4.4.3.43.43.43/AOSP/enh06302258:eng/test-keys'
 Revision: '0'
