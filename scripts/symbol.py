@@ -522,7 +522,7 @@ def GetAbiFromToolchain(toolchain_var, bits):
   if not toolchain:
     return None
 
-  toolchain_match = re.search("\/(aarch64|arm|mips|x86)\/", toolchain)
+  toolchain_match = re.search("\/(aarch64|arm|x86)\/", toolchain)
   if toolchain_match:
     abi = toolchain_match.group(1)
     if abi == "aarch64":
@@ -530,8 +530,6 @@ def GetAbiFromToolchain(toolchain_var, bits):
     elif bits == 64:
       if abi == "x86":
         return "x86_64"
-      elif abi == "mips":
-        return "mips64"
     return abi
   return None
 
@@ -600,7 +598,6 @@ class FindToolchainTests(unittest.TestCase):
   def test_toolchains_found(self):
     self.assert_toolchain_found("arm")
     self.assert_toolchain_found("arm64")
-    self.assert_toolchain_found("mips")
     self.assert_toolchain_found("x86")
     self.assert_toolchain_found("x86_64")
 
@@ -618,11 +615,6 @@ class SetArchTests(unittest.TestCase):
     SetAbi(["ABI: 'arm64'"])
     self.assertEqual(ARCH, "arm64")
 
-    SetAbi(["ABI: 'mips'"])
-    self.assertEqual(ARCH, "mips")
-    SetAbi(["ABI: 'mips64'"])
-    self.assertEqual(ARCH, "mips64")
-
     SetAbi(["ABI: 'x86'"])
     self.assertEqual(ARCH, "x86")
     SetAbi(["ABI: 'x86_64'"])
@@ -635,11 +627,6 @@ class SetArchTests(unittest.TestCase):
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/arm/arm-linux-androideabi-4.9/bin"
     SetAbi(["#00 pc 000374e0"])
     self.assertEqual(ARCH, "arm")
-
-    os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
-    SetAbi(["#00 pc 000374e0"])
-    self.assertEqual(ARCH, "mips")
 
     os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
@@ -656,12 +643,6 @@ class SetArchTests(unittest.TestCase):
     self.assertEqual(ARCH, "arm")
 
     os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/mips/mips-linux-androideabi-4.9/bin"
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
-    SetAbi(["#00 pc 000374e0"])
-    self.assertEqual(ARCH, "mips")
-
-    os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/x86/x86-linux-androideabi-4.9/bin"
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
     SetAbi(["#00 pc 000374e0"])
@@ -674,11 +655,6 @@ class SetArchTests(unittest.TestCase):
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/aarch/aarch-linux-androideabi-4.9/bin"
     SetAbi(["#00 pc 00000000000374e0"])
     self.assertEqual(ARCH, "arm64")
-
-    os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
-    SetAbi(["#00 pc 00000000000374e0"])
-    self.assertEqual(ARCH, "mips64")
 
     os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
@@ -703,11 +679,6 @@ class SetArchTests(unittest.TestCase):
     self.assertEqual(ARCH, "arm")
 
     os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
-    SetAbi(["#10 0xb5eeba5d  (/system/vendor/lib/egl/libGLESv1_CM_adreno.so+0xfa5d)"])
-    self.assertEqual(ARCH, "mips")
-
-    os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
     SetAbi(["#10 0xb5eeba5d  (/system/vendor/lib/egl/libGLESv1_CM_adreno.so+0xfa5d)"])
     self.assertEqual(ARCH, "x86")
@@ -722,12 +693,6 @@ class SetArchTests(unittest.TestCase):
     self.assertEqual(ARCH, "arm")
 
     os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/mips/mips-linux-androideabi-4.9/bin"
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
-    SetAbi(["#3 0xae1725b5  (/system/vendor/lib/libllvm-glnext.so+0x6435b5)"])
-    self.assertEqual(ARCH, "mips")
-
-    os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN_2ND_ARCH"] = "linux-x86/x86/x86-linux-androideabi-4.9/bin"
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/unknown/unknown-linux-androideabi-4.9/bin"
     SetAbi(["#3 0xae1725b5  (/system/vendor/lib/libllvm-glnext.so+0x6435b5)"])
@@ -740,11 +705,6 @@ class SetArchTests(unittest.TestCase):
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/aarch/aarch-linux-androideabi-4.9/bin"
     SetAbi(["#0 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
     self.assertEqual(ARCH, "arm64")
-
-    os.environ.clear()
-    os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/mips/arm-linux-androideabi-4.9/bin"
-    SetAbi(["#1 0x11b35d33bf  (/system/lib/libclang_rt.asan-arm-android.so+0x823bf)"])
-    self.assertEqual(ARCH, "mips64")
 
     os.environ.clear()
     os.environ["ANDROID_TOOLCHAIN"] = "linux-x86/x86/arm-linux-androideabi-4.9/bin"
