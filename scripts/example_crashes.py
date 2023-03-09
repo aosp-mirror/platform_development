@@ -110,33 +110,6 @@ backtrace:
     #06 pc 00013198  /system/lib/libc.so (__start_thread+36)
 """
 
-mips64 = """
-Build fingerprint: 'Android/aosp_mips64/generic_mips64:5.1.51/AOSP/agampe05040015:userdebug/test-keys'
-Revision: '1'
-ABI: 'mips64'
-pid: 342, tid: 342, name: crasher64  >>> crasher64 <<<
-signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------
- zr 0000000000000000  at 0000000000000001  v0 0000000000000000  v1 000000ffec1c6528
- a0 0000000000000156  a1 0000000000000156  a2 0000000000000006  a3 0000000000000000
- a4 000000000000ffff  a5 fffffffffffffffc  a6 0000000000000000  a7 0000000000000001
- t0 0000000000000001  t1 0000000000000000  t2 0000000000000001  t3 0000000000000001
- s0 0000000000000002  s1 000000ffec1c6538  s2 000000ffec1c6478  s3 0000000000000006
- s4 0000000000100000  s5 000000fff1d44f98  s6 000000fff186c488  s7 0000000000000000
- t8 ffffffffffff0000  t9 000000ffec01c2a0  k0 0000000000000000  k1 0000000000000000
- gp 000000ffec0a6680  sp 000000ffff8c7150  s8 0000000000100206  ra 000000ffec016684
- hi 0000000000000000  lo 0000000000000000 bva 000000ffffffe010 epc 000000ffec01c2a8
-
-backtrace:
-    #00 pc 00000000000832a8  /system/lib64/libc.so (tgkill+8)
-    #01 pc 000000000007d684  /system/lib64/libc.so (pthread_kill+116)
-    #02 pc 000000000002dd78  /system/lib64/libc.so (raise+56)
-    #03 pc 000000000002684c  /system/lib64/libc.so (abort+92)
-    #04 pc 000000000000199c  /system/xbin/crasher64
-    #05 pc 000000000002595c  /system/lib64/libc.so (__libc_init+140)
-    #06 pc 0000000000000fd4  /system/xbin/crasher64
-    #07 pc 0000000000000f80  /system/xbin/crasher64
-"""
-
 x86 = """
 Build fingerprint: 'Android/aosp_x86_64/generic_x86_64:4.4.3.43.43.43/AOSP/enh06302258:eng/test-keys'
 Revision: '0'
@@ -182,6 +155,31 @@ backtrace:
     #06 pc 00000000000215ae  /system/lib64/libc.so (__pthread_start(void*)+46)
     #07 pc 000000000001d3eb  /system/lib64/libc.so (__start_thread+11)
     #08 pc 00000000000138f5  /system/lib64/libc.so (__bionic_clone+53)
+"""
+
+riscv64 = """
+Build fingerprint: 'generic/aosp_riscv64/vsoc_riscv64:4.4.3.43.43.43/AOSP/eng.prasha.20230307.172954:eng/test-keys'
+Revision: '0'
+ABI: 'riscv64'
+pid: 794, tid: 794, name: crasher64  >>> crasher64 <<<
+signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------
+    gp  ffffffff81dabe60  tp  00ffffff1aae0050  t0  000000000002ba76  t1  00ffffff140d598c
+    t2  00000000d82989b1  t3  00ffffff1407e570  t4  00ffffff1ac2d000  t5  0000000000000018
+    t6  0000000000000018  s0  000000000000031a  s1  000000000000031a  s2  ffffffffffffffff
+    s3  00ffffffca72dd20  s4  0000000000000000  s5  00fffff499ead378  s6  00fffff469ea7b90
+    s7  00aaaaaba6d2b2c8  s8  00fffff5fa3a1588  s9  0000000000000000  s10 0000000000000000
+    s11 0000000000000000  a0  0000000000000000  a1  000000000000031a  a2  0000000000000006
+    a3  00ffffffca72da00  a4  0000000000000000  a5  000000007fffffff  a6  000000007fffffff
+    a7  00000000000000f0
+    pc  00ffffff1407e582  ra  00ffffff140811d2  sp  00ffffffca72d9d0
+
+backtrace:
+      #00 pc 0000000000049582  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+18)
+      #01 pc 000000000004c1ce  /apex/com.android.runtime/lib64/bionic/libc.so (abort+98)
+      #02 pc 0000000000004012  /system/bin/crasher64 (maybe_abort+40)
+      #03 pc 000000000000457c  /system/bin/crasher64 (do_action+966)
+      #04 pc 0000000000005528  /system/bin/crasher64 (main+78)
+      #05 pc 0000000000047cd4  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+80)
 """
 
 libmemunreachable = """
