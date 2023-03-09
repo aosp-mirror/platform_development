@@ -1778,7 +1778,7 @@ def get_parser():
   parser.add_argument(
       '--product-available',
       action='store_true',
-      default=False,
+      default=True,
       help='Mark the main library as product_available.')
   parser.add_argument(
       '--recovery-available',
@@ -1788,7 +1788,7 @@ def get_parser():
   parser.add_argument(
       '--vendor-available',
       action='store_true',
-      default=False,
+      default=True,
       help='Mark the main library as vendor_available.')
   parser.add_argument(
       '--vendor-ramdisk-available',
