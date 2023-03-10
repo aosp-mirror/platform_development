@@ -77,7 +77,7 @@ function addAttributes(entry: LayerTraceEntry, protos: object[], useElapsedTime 
 
 function newDisplay(proto: any): Display {
   return new Display(
-    proto.id,
+    `${proto.id}`,
     proto.name,
     proto.layerStack,
     toSize(proto.size),
