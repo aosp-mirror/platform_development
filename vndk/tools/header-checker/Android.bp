@@ -198,10 +198,12 @@ cc_test_host {
     ],
 
     static_libs: [
+        "libbase",
         "libgtest",
         "libgtest_main",
         "libheader-checker",
         "libjsoncpp",
+        "liblog",
     ],
 
     shared_libs: [
