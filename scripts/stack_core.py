@@ -76,15 +76,14 @@ class TraceConverter:
                               r"Build ID:\s*(?P<build_id>[0-9a-f]+)",
                               flags=re.DOTALL)
 
-  def UpdateAbiRegexes(self):
-    if symbol.ARCH == "arm64" or symbol.ARCH == "x86_64" or symbol.ARCH == "riscv64":
-      self.width = "{16}"
-      self.spacing = "        "
-    else:
+  def UpdateBitnessRegexes(self):
+    if symbol.ARCH_IS_32BIT:
       self.width = "{8}"
       self.spacing = ""
-
-    self.register_line = re.compile("(([ ]*\\b(" + self.register_names[symbol.ARCH] + ")\\b +[0-9a-f]" + self.width + "){1,5}$)")
+    else:
+      self.width = "{16}"
+      self.spacing = "        "
+    self.register_line = re.compile("    (([ ]*\\b(\S*)\\b +[0-9a-f]" + self.width + "){1,5}$)")
 
     # Note that both trace and value line matching allow for variable amounts of
     # whitespace (e.g. \t). This is because the we want to allow for the stack
@@ -183,9 +182,9 @@ class TraceConverter:
   def ConvertTrace(self, lines):
     lines = [self.CleanLine(line) for line in lines]
     try:
-      if not symbol.ARCH:
-        symbol.SetAbi(lines)
-      self.UpdateAbiRegexes()
+      if symbol.ARCH_IS_32BIT is None:
+        symbol.SetBitness(lines)
+      self.UpdateBitnessRegexes()
       for line in lines:
         self.ProcessLine(line)
       self.PrintOutput(self.trace_lines, self.value_lines)
@@ -371,11 +370,11 @@ class TraceConverter:
     test_name = lib.rsplit("/", 1)[-1]
     test_dir = "/data/nativetest"
     test_dir_bitness = ""
-    if symbol.ARCH.endswith("64"):
+    if symbol.ARCH_IS_32BIT:
+      bitness = "32"
+    else:
       bitness = "64"
       test_dir_bitness = "64"
-    else:
-      bitness = "32"
 
     # Unfortunately, the location of the real symbol file is not
     # standardized, so we need to go hunting for it.
@@ -540,7 +539,7 @@ class TraceConverter:
           if nest_count > 0:
             nest_count = nest_count - 1
             arrow = "v------>"
-            if symbol.ARCH == "arm64" or symbol.ARCH == "x86_64" or symbol.ARCH == "riscv64":
+            if not symbol.ARCH_IS_32BIT:
               arrow = "v-------------->"
             self.trace_lines.append((arrow, source_symbol, source_location))
           else:
@@ -583,8 +582,12 @@ class RegisterPatternTests(unittest.TestCase):
   def assert_register_matches(self, abi, example_crash, stupid_pattern):
     tc = TraceConverter()
     lines = example_crash.split('\n')
-    symbol.SetAbi(lines)
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    tc.UpdateBitnessRegexes()
+    if symbol.ARCH_IS_32BIT:
+      print("32 Bit Arch")
+    else:
+      print("64 Bit Arch")
     for line in lines:
       tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
@@ -593,10 +596,10 @@ class RegisterPatternTests(unittest.TestCase):
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
   def test_arm_registers(self):
-    self.assert_register_matches("arm", example_crashes.arm, '\\b(r0|r4|r8|ip)\\b')
+    self.assert_register_matches("arm", example_crashes.arm, '\\b(r0|r4|r8|ip|scr)\\b')
 
   def test_arm64_registers(self):
-    self.assert_register_matches("arm64", example_crashes.arm64, '\\b(x0|x4|x8|x12|x16|x20|x24|x28|sp)\\b')
+    self.assert_register_matches("arm64", example_crashes.arm64, '\\b(x0|x4|x8|x12|x16|x20|x24|x28|sp|v[1-3]?[0-9])\\b')
 
   def test_x86_registers(self):
     self.assert_register_matches("x86", example_crashes.x86, '\\b(eax|esi|xcs|eip)\\b')
@@ -612,10 +615,9 @@ class LibmemunreachablePatternTests(unittest.TestCase):
     tc = TraceConverter()
     lines = example_crashes.libmemunreachable.split('\n')
 
-    symbol.SetAbi(lines)
-    self.assertEqual(symbol.ARCH, "arm")
-
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    self.assertTrue(symbol.ARCH_IS_32BIT)
+    tc.UpdateBitnessRegexes()
     header_lines = 0
     trace_lines = 0
     for line in lines:
@@ -635,8 +637,8 @@ class LongASANStackTests(unittest.TestCase):
   def test_long_asan_crash(self):
     tc = TraceConverter()
     lines = example_crashes.long_asan_crash.splitlines()
-    symbol.SetAbi(lines)
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    tc.UpdateBitnessRegexes()
     # Test by making sure trace_line_count is monotonically non-decreasing. If the stack trace
     # is split, a separator is printed and trace_lines is flushed.
     trace_line_count = 0
@@ -652,8 +654,8 @@ class LongASANStackTests(unittest.TestCase):
 class ValueLinesTest(unittest.TestCase):
   def test_value_line_skipped(self):
     tc = TraceConverter()
-    symbol.SetAbi(["ABI: 'arm'"])
-    tc.UpdateAbiRegexes()
+    symbol.ARCH_IS_32BIT = True
+    tc.UpdateBitnessRegexes()
     tc.ProcessLine("    12345678  00001000  .")
     self.assertEqual([], tc.value_lines)
 
