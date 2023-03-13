@@ -32,11 +32,11 @@ import android.os.IBinder;
 import android.os.Trace;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
-import android.service.voice.DetectorFailure;
 import android.service.voice.HotwordDetector;
 import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
 import android.service.voice.SandboxedDetectionInitializer;
+import android.service.voice.VisualQueryDetectionServiceFailure;
 import android.service.voice.VisualQueryDetector;
 import android.service.voice.VoiceInteractionService;
 import android.util.Log;
@@ -158,10 +158,17 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                 }
             }
 
-            @Override
-            public void onFailure(@NonNull DetectorFailure detectorFailure) {
-                Log.i(TAG, "VQD error");
-            }
+        @Override
+        public void onFailure(
+                VisualQueryDetectionServiceFailure visualQueryDetectionServiceFailure) {
+            Log.i(TAG, "VQD onFailure visualQueryDetectionServiceFailure: "
+                    + visualQueryDetectionServiceFailure);
+        }
+
+        @Override
+        public void onUnknownFailure(String errorMessage) {
+            Log.i(TAG, "VQD onUnknownFailure errorMessage: " + errorMessage);
+        }
         };
 
     class Callback extends AlwaysOnHotwordDetector.Callback {
