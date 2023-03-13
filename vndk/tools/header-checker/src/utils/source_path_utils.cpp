@@ -29,11 +29,30 @@ namespace utils {
 static const std::vector<std::string> header_extensions{
     ".h", ".hh", ".hpp", ".hxx", ".h++", ".inl", ".inc", ".ipp", ".h.generic"};
 
-static bool HasHeaderExtension(llvm::StringRef &file_name) {
+static const std::vector<std::string> libcxx_include_dir{"libcxx", "include"};
+
+static bool HasHeaderExtension(llvm::StringRef file_name) {
   return std::find_if(header_extensions.begin(), header_extensions.end(),
                       [file_name](const std::string &e) {
                         return file_name.endswith(e);
                       }) != header_extensions.end();
+}
+
+static bool PathEndsWith(llvm::StringRef path,
+                         const std::vector<std::string> &suffix) {
+  auto path_it = llvm::sys::path::rbegin(path);
+  auto suffix_it = suffix.rbegin();
+  while (suffix_it != suffix.rend()) {
+    if (path_it == llvm::sys::path::rend(path)) {
+      return false;
+    }
+    if (*path_it != *suffix_it) {
+      return false;
+    }
+    ++path_it;
+    ++suffix_it;
+  }
+  return true;
 }
 
 static std::string GetCwd() {
@@ -117,6 +136,11 @@ std::string NormalizePath(std::string_view path, const RootDirs &root_dirs) {
 static bool CollectExportedHeaderSet(const std::string &dir_name,
                                      std::set<std::string> *exported_headers,
                                      const RootDirs &root_dirs) {
+  // Bazel creates temporary files in header directories. To avoid race
+  // condition, this function filters headers by name extensions.
+  // An exception is that libc++ headers do not have extensions.
+  bool collect_headers_without_extensions =
+      PathEndsWith(dir_name, libcxx_include_dir);
   std::error_code ec;
   llvm::sys::fs::recursive_directory_iterator walker(dir_name, ec);
   // Default construction - end of directory.
@@ -136,7 +160,11 @@ static bool CollectExportedHeaderSet(const std::string &dir_name,
       walker.no_push();
       continue;
     }
-    if (!HasHeaderExtension(file_name)) {
+    if (!file_name.contains(".")) {
+      if (!collect_headers_without_extensions) {
+        continue;
+      }
+    } else if (!HasHeaderExtension(file_name)) {
       continue;
     }
 
