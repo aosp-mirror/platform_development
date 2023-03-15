@@ -580,7 +580,7 @@ class FormatSymbolWithoutParametersTests(unittest.TestCase):
   def test_nested(self):
     self.assertEqual(FormatSymbolWithoutParameters("foo(int i)::bar(int j)"), "foo::bar")
 
-  def test_unballanced(self):
+  def test_unbalanced(self):
     self.assertEqual(FormatSymbolWithoutParameters("foo(bar(int i)"), "foo(bar(int i)")
     self.assertEqual(FormatSymbolWithoutParameters("foo)bar(int i)"), "foo)bar(int i)")
     self.assertEqual(FormatSymbolWithoutParameters("foo<bar(int i)"), "foo<bar(int i)")
