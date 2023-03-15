@@ -34,7 +34,6 @@ import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
 import android.service.voice.DetectorFailure;
 import android.service.voice.HotwordDetector;
-import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
 import android.service.voice.SandboxedDetectionInitializer;
 import android.service.voice.VisualQueryDetector;
@@ -140,22 +139,14 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             public void onVisualQueryDetectionServiceInitialized(int status) {
                 Log.i(TAG, "VQD init: "+ status);
                 if (status == SandboxedDetectionInitializer.INITIALIZATION_STATUS_SUCCESS) {
-                    try {
-                        mVisualQueryDetector.startRecognition();
-                    } catch (IllegalDetectorStateException e) {
-                        e.printStackTrace();
-                    }
+                    mVisualQueryDetector.startRecognition();
                 }
             }
 
             @Override
             public void onVisualQueryDetectionServiceRestarted() {
                 Log.i(TAG, "VQD restarted");
-                try {
-                    mVisualQueryDetector.startRecognition();
-                } catch (IllegalDetectorStateException e) {
-                    e.printStackTrace();
-                }
+                mVisualQueryDetector.startRecognition();
             }
 
             @Override
@@ -182,11 +173,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             }
             if (status == STATE_KEYPHRASE_UNENROLLED) {
                 Intent enrollIntent = null;
-                try {
-                    enrollIntent = ((AlwaysOnHotwordDetector) mHotwordDetector).createEnrollIntent();
-                } catch (IllegalDetectorStateException e) {
-                    e.printStackTrace();
-                }
+                enrollIntent = ((AlwaysOnHotwordDetector) mHotwordDetector).createEnrollIntent();
                 if (enrollIntent == null) {
                     Log.w(TAG, "No enroll intent found. Try enrolling the keyphrase using the"
                             + " device's default assistant.");
@@ -203,11 +190,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
         @Override
         public void onRejected(@NonNull HotwordRejectedResult result) {
-            try {
-                mHotwordDetector.startRecognition();
-            } catch (IllegalDetectorStateException e) {
-                e.printStackTrace();
-            }
+            mHotwordDetector.startRecognition();
         }
 
         @Override
@@ -249,11 +232,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                 Trace.setCounter("VIS AudioRecord.getState",
                         record.getState());
                 Log.e(TAG, "Failed to init first AudioRecord.");
-                try {
-                    mHotwordDetector.startRecognition();
-                } catch (IllegalDetectorStateException e) {
-                    e.printStackTrace();
-                }
+                mHotwordDetector.startRecognition();
                 return;
             }
 
@@ -281,22 +260,13 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             mData.putByteArray("1", buffer);
             mAudioFormat = eventPayload.getCaptureAudioFormat();
             mLastPayload = eventPayload;
-
-            try {
-                mHotwordDetector.startRecognition();
-            } catch (IllegalDetectorStateException e) {
-                e.printStackTrace();
-            }
+            mHotwordDetector.startRecognition();
         }
 
         @Override
         public void onError() {
             Log.i(TAG, "onError");
-            try {
-                mHotwordDetector.startRecognition();
-            } catch (IllegalDetectorStateException e) {
-                e.printStackTrace();
-            }
+            mHotwordDetector.startRecognition();
         }
 
         @Override
@@ -314,11 +284,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             Log.i(TAG, "onHotwordDetectionServiceInitialized: " + status
                     + ". mAvailable=" + mAvailable);
             if (mAvailable) {
-                try {
-                    mHotwordDetector.startRecognition();
-                } catch (IllegalDetectorStateException e) {
-                    e.printStackTrace();
-                }
+                mHotwordDetector.startRecognition();
             }
             //TODO(b/265535257): Provide two services independent lifecycle.
             mVisualQueryDetector = createVisualQueryDetector(null, null,
