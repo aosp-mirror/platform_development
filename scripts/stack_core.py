@@ -584,10 +584,6 @@ class RegisterPatternTests(unittest.TestCase):
     lines = example_crash.split('\n')
     symbol.SetBitness(lines)
     tc.UpdateBitnessRegexes()
-    if symbol.ARCH_IS_32BIT:
-      print("32 Bit Arch")
-    else:
-      print("64 Bit Arch")
     for line in lines:
       tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
