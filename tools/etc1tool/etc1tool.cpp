@@ -489,7 +489,6 @@ int main(int argc, char** argv) {
     bool bEncodeDecodeSeen = false;
     bool bEncode = false;
     bool bEncodeHeader = false;
-    bool bDecode = false;
     bool bShowDifference = false;
 
     for (int i = 1; i < argc; i++) {
@@ -517,7 +516,6 @@ int main(int argc, char** argv) {
                     bEncodeHeader = false;
                 } else if (strcmp(pArg, "--decode") == 0) {
                     multipleEncodeDecodeCheck(&bEncodeDecodeSeen);
-                    bDecode = true;
                 } else if (strcmp(pArg, "--showDifference") == 0) {
                     if (bShowDifference) {
                         usage("Only one --showDifference option allowed.\n");
