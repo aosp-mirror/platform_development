@@ -24,8 +24,10 @@ import {
   ViewChild,
 } from '@angular/core';
 import {Color} from 'app/colors';
-
-export type entry = bigint;
+import {TimeRange} from 'app/timeline_data';
+import {Timestamp} from 'trace/timestamp';
+import {Trace, TraceEntry} from 'trace/trace';
+import {TracePosition} from 'trace/trace_position';
 
 @Component({
   selector: 'single-timeline',
@@ -44,18 +46,17 @@ export type entry = bigint;
   ],
 })
 export class SingleTimelineComponent {
-  @Input() selected: bigint | undefined = undefined;
   @Input() color = '#AF5CF7';
-  @Input() start!: bigint;
-  @Input() end!: bigint;
-  @Input() entries!: Array<bigint>;
+  @Input() trace!: Trace<{}>;
+  @Input() selectedEntry: TraceEntry<{}> | undefined = undefined;
+  @Input() selectionRange!: TimeRange;
 
-  @Output() onTimestampChanged = new EventEmitter<bigint>();
+  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
   @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;
 
-  hoveringEntry: entry | null = null;
+  hoveringEntry?: Timestamp;
 
   private viewInitialized = false;
 
@@ -74,7 +75,7 @@ export class SingleTimelineComponent {
   }
 
   ngOnInit() {
-    if (this.start === undefined || this.end === undefined || this.entries === undefined) {
+    if (!this.trace || !this.selectionRange) {
       throw Error('Not all required inputs have been set');
     }
   }
@@ -137,11 +138,11 @@ export class SingleTimelineComponent {
   }
 
   private handleMouseOut(e: MouseEvent) {
-    if (this.hoveringEntry !== null) {
-      // If null there is no current hover effect so no need to clear
+    if (this.hoveringEntry) {
+      // If undefined there is no current hover effect so no need to clear
       this.redraw();
     }
-    this.hoveringEntry = null;
+    this.hoveringEntry = undefined;
   }
 
   getXScale(): number {
@@ -168,7 +169,7 @@ export class SingleTimelineComponent {
       return;
     }
 
-    if (this.hoveringEntry != null) {
+    if (this.hoveringEntry) {
       // If null there is no current hover effect so no need to clear
       this.clearCanvas();
       this.drawTimeline();
@@ -176,7 +177,7 @@ export class SingleTimelineComponent {
 
     this.hoveringEntry = currentHoverEntry;
 
-    if (this.hoveringEntry == null) {
+    if (!this.hoveringEntry) {
       return;
     }
 
@@ -201,20 +202,21 @@ export class SingleTimelineComponent {
     this.ctx.clearRect(0, 0, this.getScaledCanvasWidth(), this.getScaledCanvasHeight());
   }
 
-  private getEntryAt(mouseX: number, mouseY: number) {
+  private getEntryAt(mouseX: number, mouseY: number): Timestamp | undefined {
     // TODO: This can be optimized if it's laggy
-    for (const entry of this.entries) {
-      this.defineEntryPath(entry);
+    for (let i = 0; i < this.trace.lengthEntries; ++i) {
+      const timestamp = this.trace.getEntry(i).getTimestamp();
+      this.defineEntryPath(timestamp);
       if (this.ctx.isPointInPath(mouseX, mouseY)) {
         this.canvas.style.cursor = 'pointer';
-        return entry;
+        return timestamp;
       }
     }
-    return null;
+    return undefined;
   }
 
   private updateCursor(mouseX: number, mouseY: number) {
-    if (this.getEntryAt(mouseX, mouseY) !== null) {
+    if (this.getEntryAt(mouseX, mouseY)) {
       this.canvas.style.cursor = 'pointer';
     }
     this.canvas.style.cursor = 'auto';
@@ -226,13 +228,17 @@ export class SingleTimelineComponent {
     const mouseX = e.offsetX * this.getXScale();
     const mouseY = e.offsetY * this.getYScale();
 
-    const clickedEntry = this.getEntryAt(mouseX, mouseY);
+    const clickedTimestamp = this.getEntryAt(mouseX, mouseY);
 
-    if (clickedEntry != null) {
-      if (this.selected !== clickedEntry) {
-        this.selected = clickedEntry;
-        this.redraw();
-        this.onTimestampChanged.emit(clickedEntry);
+    if (
+      clickedTimestamp &&
+      clickedTimestamp.getValueNs() !== this.selectedEntry?.getTimestamp().getValueNs()
+    ) {
+      this.redraw();
+      const entry = this.trace.findClosestEntry(clickedTimestamp);
+      if (entry) {
+        this.selectedEntry = entry;
+        this.onTracePositionUpdate.emit(TracePosition.fromTraceEntry(entry));
       }
     }
   }
@@ -253,9 +259,12 @@ export class SingleTimelineComponent {
     return Math.floor(this.getScaledCanvasWidth() - this.entryWidth);
   }
 
-  private defineEntryPath(entry: entry, padding = 0) {
+  private defineEntryPath(entry: Timestamp, padding = 0) {
+    const start = this.selectionRange.from.getValueNs();
+    const end = this.selectionRange.to.getValueNs();
+
     const xPos = Number(
-      (BigInt(this.availableWidth) * (entry - this.start)) / (this.end - this.start)
+      (BigInt(this.availableWidth) * (entry.getValueNs() - start)) / (end - start)
     );
 
     rect(
@@ -273,13 +282,13 @@ export class SingleTimelineComponent {
   }
 
   private drawTimeline() {
-    for (const entry of this.entries) {
+    this.trace.forEachTimestamp((entry) => {
       this.drawEntry(entry);
-    }
+    });
     this.drawSelectedEntry();
   }
 
-  private drawEntry(entry: entry) {
+  private drawEntry(entry: Timestamp) {
     this.ctx.globalAlpha = 0.2;
 
     this.defineEntryPath(entry);
@@ -290,12 +299,12 @@ export class SingleTimelineComponent {
   }
 
   private drawSelectedEntry() {
-    if (this.selected === undefined) {
+    if (this.selectedEntry === undefined) {
       return;
     }
 
     this.ctx.globalAlpha = 1.0;
-    this.defineEntryPath(this.selected, 1);
+    this.defineEntryPath(this.selectedEntry.getTimestamp(), 1);
     this.ctx.fillStyle = this.color;
     this.ctx.strokeStyle = Color.ACTIVE_BORDER;
     this.ctx.lineWidth = 3;
