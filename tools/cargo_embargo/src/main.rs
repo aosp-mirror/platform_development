@@ -360,7 +360,14 @@ fn write_android_bp(
     };
 
     for c in crates {
-        modules.extend(crate_to_bp_modules(c, cfg, package_cfg, &extra_srcs)?);
+        modules.extend(crate_to_bp_modules(c, cfg, package_cfg, &extra_srcs).with_context(
+            || {
+                format!(
+                    "failed to generate bp module for crate \"{}\" with package name \"{}\"",
+                    c.name, c.package_name
+                )
+            },
+        )?);
     }
     if modules.is_empty() {
         return Ok(());
@@ -444,10 +451,17 @@ fn crate_to_bp_modules(
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_proc_macro".to_string(), stem.clone(), stem)
             }
-            CrateType::Test => {
+            CrateType::Test | CrateType::TestNoHarness => {
                 let suffix = crate_.main_src.to_string_lossy().into_owned();
                 let suffix = suffix.replace('/', "_").replace(".rs", "");
                 let stem = crate_.package_name.clone() + "_test_" + &suffix;
+                if crate_type == &CrateType::TestNoHarness {
+                    eprintln!(
+                        "WARNING: ignoring test \"{}\" with harness=false. not supported yet",
+                        stem
+                    );
+                    return Ok(Vec::new());
+                }
                 ("rust_test".to_string() + host, stem.clone(), stem)
             }
         };
