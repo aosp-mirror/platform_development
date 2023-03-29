@@ -22,6 +22,21 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 
+/// Combined representation of --crate-type and --test flags.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CrateType {
+    // --crate-type types
+    Bin,
+    Lib,
+    RLib,
+    DyLib,
+    CDyLib,
+    StaticLib,
+    ProcMacro,
+    // --test
+    Test,
+}
+
 /// Info extracted from `CargoOut` for a crate.
 ///
 /// Note that there is a 1-to-many relationship between a Cargo.toml file and these `Crate`
@@ -32,11 +47,7 @@ pub struct Crate {
     pub name: String,
     pub package_name: String,
     pub version: Option<String>,
-    // cargo calls rustc with multiple --crate-type flags.
-    // rustc can accept:
-    //   --crate-type [bin|lib|rlib|dylib|cdylib|staticlib|proc-macro]
-    pub types: Vec<String>,
-    pub test: bool,                             // --test
+    pub types: Vec<CrateType>,
     pub target: Option<String>,                 // --target
     pub features: Vec<String>,                  // --cfg feature=
     pub cfgs: Vec<String>,                      // non-feature --cfg
@@ -219,6 +230,21 @@ impl CargoOut {
     }
 }
 
+impl CrateType {
+    fn from_str(s: &str) -> CrateType {
+        match s {
+            "bin" => CrateType::Bin,
+            "lib" => CrateType::Lib,
+            "rlib" => CrateType::RLib,
+            "dylib" => CrateType::DyLib,
+            "cdylib" => CrateType::CDyLib,
+            "staticlib" => CrateType::StaticLib,
+            "proc-macro" => CrateType::ProcMacro,
+            _ => panic!("unexpected --crate-type: {}", s),
+        }
+    }
+}
+
 impl Crate {
     fn from_rustc_invocation(rustc: &str, metadata: &WorkspaceMetadata) -> Result<Crate> {
         let mut out = Crate::default();
@@ -239,8 +265,10 @@ impl Crate {
         while let Some(arg) = arg_iter.next() {
             match arg {
                 "--crate-name" => out.name = arg_iter.next().unwrap().to_string(),
-                "--crate-type" => out.types.push(arg_iter.next().unwrap().to_string()),
-                "--test" => out.test = true,
+                "--crate-type" => out
+                    .types
+                    .push(CrateType::from_str(arg_iter.next().unwrap().to_string().as_str())),
+                "--test" => out.types.push(CrateType::Test),
                 "--target" => out.target = Some(arg_iter.next().unwrap().to_string()),
                 "--cfg" => {
                     // example: feature=\"sink\"
@@ -355,10 +383,13 @@ impl Crate {
         if out.main_src.as_os_str().is_empty() {
             bail!("missing main source file");
         }
-        if out.types.is_empty() != out.test {
-            bail!("expected exactly one of either --crate-type or --test");
+        if out.types.is_empty() {
+            bail!("must specify one of --test or --crate-type");
         }
-        if out.types.iter().any(|x| x == "lib") && out.types.iter().any(|x| x == "rlib") {
+        if out.types.contains(&CrateType::Test) && out.types.len() != 1 {
+            bail!("cannot specify both --test and --crate-type");
+        }
+        if out.types.contains(&CrateType::Lib) && out.types.contains(&CrateType::RLib) {
             bail!("cannot both have lib and rlib crate types");
         }
 
