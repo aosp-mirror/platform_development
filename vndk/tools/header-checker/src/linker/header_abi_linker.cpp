@@ -432,7 +432,7 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
 
   repr::VersionScriptParser parser;
   parser.SetArch(arch_);
-  parser.SetApiLevel(api_level.value());
+  parser.SetApiLevel(api_level.getValue());
   for (auto &&version : excluded_symbol_versions_) {
     parser.AddExcludedSymbolVersion(version);
   }
