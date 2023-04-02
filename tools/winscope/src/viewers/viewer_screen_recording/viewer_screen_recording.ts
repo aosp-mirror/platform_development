@@ -13,21 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {assertDefined} from 'common/assert_utils';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
+import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
 
 class ViewerScreenRecording implements Viewer {
-  constructor() {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
+  private readonly trace: Trace<ScreenRecordingTraceEntry>;
+  private readonly htmlElement: HTMLElement;
+
+  constructor(traces: Traces) {
+    this.trace = assertDefined(traces.getTrace(TraceType.SCREEN_RECORDING));
     this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    const entry: undefined | ScreenRecordingTraceEntry = entries.get(TraceType.SCREEN_RECORDING)
-      ? entries.get(TraceType.SCREEN_RECORDING)[0]
-      : undefined;
-
-    (this.htmlElement as any).currentTraceEntry = entry;
+  onTracePositionUpdate(position: TracePosition) {
+    const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
+    (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
+      entry?.getValue();
   }
 
   getViews(): View[] {
@@ -39,9 +49,6 @@ class ViewerScreenRecording implements Viewer {
   getDependencies(): TraceType[] {
     return ViewerScreenRecording.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
-  private htmlElement: HTMLElement;
 }
 
 export {ViewerScreenRecording};

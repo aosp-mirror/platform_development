@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from 'trace/parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserScreenRecordingLegacy', () => {
-  let parser: Parser;
+  let parser: Parser<ScreenRecordingTraceEntry>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/screen_recording.mp4');
+    parser = (await UnitTestUtils.getParser(
+      'traces/elapsed_timestamp/screen_recording.mp4'
+    )) as Parser<ScreenRecordingTraceEntry>;
   });
 
   it('has expected trace type', () => {
@@ -56,15 +58,12 @@ describe('ParserScreenRecordingLegacy', () => {
 
   it('retrieves trace entry', () => {
     {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 19446131807000n);
-      const entry = parser.getTraceEntry(timestamp)!;
+      const entry = parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
-
     {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 19448501007000n);
-      const entry = parser.getTraceEntry(timestamp)!;
+      const entry = parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }

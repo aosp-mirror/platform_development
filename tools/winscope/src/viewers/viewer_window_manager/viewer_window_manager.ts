@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {MockStorage} from 'test/unit/mock_storage';
+
+import {Traces} from 'trace/traces';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -21,15 +23,11 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerWindowManager implements Viewer {
-  constructor() {
+  constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-window-manager');
-    this.presenter = new Presenter((uiData: UiData) => {
-      // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
-      // automatically ensures that the UI will change via the Angular change detection cycle. Without
-      // resetting, Angular does not auto-detect that inputData has changed.
-      (this.htmlElement as any).inputData = null;
+    this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
-    }, new MockStorage());
+    });
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
       this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
     );
@@ -53,8 +51,8 @@ class ViewerWindowManager implements Viewer {
     );
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    this.presenter.notifyCurrentTraceEntries(entries);
+  onTracePositionUpdate(position: TracePosition) {
+    this.presenter.onTracePositionUpdate(position);
   }
 
   getViews(): View[] {
