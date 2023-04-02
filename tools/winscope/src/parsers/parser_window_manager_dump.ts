@@ -16,12 +16,12 @@
 
 import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {WindowManagerServiceDumpProto} from './proto_types';
 
-class ParserWindowManagerDump extends Parser {
+class ParserWindowManagerDump extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
   }

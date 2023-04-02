@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
-import {Timestamp} from 'trace/timestamp';
+import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
+import {TracePosition} from 'trace/trace_position';
 
-export class TimelineComponentStub implements TimestampChangeListener {
-  onCurrentTimestampChanged(timestamp: Timestamp | undefined) {
+export class TimelineComponentStub implements TracePositionUpdateListener {
+  onTracePositionUpdate(position: TracePosition) {
     // do nothing
   }
 }

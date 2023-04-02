@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
-
 export interface Segment {
   from: number;
   to: number;
 }
-export interface BigIntSegment {
-  from: bigint;
-  to: bigint;
-}
-export type TimelineData = Map<TraceType, Array<bigint>>;

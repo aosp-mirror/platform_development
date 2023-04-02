@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'trace/timestamp';
+import {Trace, TraceEntry} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {TransactionsTraceEntry} from 'trace/transactions';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
 export class Presenter {
-  private entry?: TransactionsTraceEntry;
+  private trace: Trace<object>;
+  private entry?: TraceEntry<object>;
   private originalIndicesOfUiDataEntries: number[];
-  private uiData: UiData;
+  private uiData = UiData.EMPTY;
   private readonly notifyUiDataCallback: (data: UiData) => void;
   private static readonly VALUE_NA = 'N/A';
   private vsyncIdFilter: string[] = [];
@@ -36,31 +41,26 @@ export class Presenter {
   private idFilter: string[] = [];
   private whatSearchString = '';
 
-  constructor(notifyUiDataCallback: (data: UiData) => void) {
+  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
+    this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.originalIndicesOfUiDataEntries = [];
-    this.uiData = UiData.EMPTY;
+    this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  //TODO: replace input with something like iterator/cursor (same for other viewers/presenters)
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    this.entry = entries.get(TraceType.TRANSACTIONS)
-      ? entries.get(TraceType.TRANSACTIONS)[0]
-      : undefined;
-    if (this.uiData === UiData.EMPTY) {
-      this.computeUiData();
-    } else {
-      // update only "position" data
-      this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-      this.uiData.selectedEntryIndex = undefined;
-      this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-      this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
-        this.uiData.entries,
-        this.uiData.currentEntryIndex,
-        this.uiData.selectedEntryIndex
-      );
-    }
+  onTracePositionUpdate(position: TracePosition) {
+    this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
+
+    this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
+    this.uiData.selectedEntryIndex = undefined;
+    this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
+    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+      this.uiData.entries,
+      this.uiData.currentEntryIndex,
+      this.uiData.selectedEntryIndex
+    );
+
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -119,11 +119,7 @@ export class Presenter {
   }
 
   private computeUiData() {
-    if (!this.entry) {
-      return;
-    }
-
-    const entries = this.makeUiDataEntries(this.entry!);
+    const entries = this.makeUiDataEntries();
 
     const allVSyncIds = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) =>
       entry.vsyncId.toString()
@@ -190,9 +186,15 @@ export class Presenter {
       return undefined;
     }
 
-    return ArrayUtils.binarySearchLowerOrEqual(
-      this.originalIndicesOfUiDataEntries,
-      this.entry.currentEntryIndex
+    if (this.originalIndicesOfUiDataEntries.length === 0) {
+      return undefined;
+    }
+
+    return (
+      ArrayUtils.binarySearchFirstGreaterOrEqual(
+        this.originalIndicesOfUiDataEntries,
+        this.entry.getIndex()
+      ) ?? this.originalIndicesOfUiDataEntries.length - 1
     );
   }
 
@@ -210,23 +212,23 @@ export class Presenter {
     return undefined;
   }
 
-  private makeUiDataEntries(entry: TransactionsTraceEntry): UiDataEntry[] {
-    const entriesProto: any[] = entry.entriesProto;
-    const timestampType = entry.timestampType;
-    const realToElapsedTimeOffsetNs = entry.realToElapsedTimeOffsetNs;
+  private makeUiDataEntries(): UiDataEntry[] {
     const treeGenerator = new PropertiesTreeGenerator();
-
     const entries: UiDataEntry[] = [];
-
     const formattingOptions = ObjectFormatter.displayDefaults;
     ObjectFormatter.displayDefaults = false;
-    for (const [originalIndex, entryProto] of entriesProto.entries()) {
+
+    this.trace.forEachEntry((entry, originalIndex) => {
+      const timestampType = entry.getTimestamp().getType();
+      const entryProto = entry.getValue() as any;
+      const realToElapsedTimeOffsetNs = entryProto.realToElapsedTimeOffsetNs;
+
       for (const transactionStateProto of entryProto.transactions) {
         for (const layerStateProto of transactionStateProto.layerChanges) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+              TimeUtils.format(entry.getTimestamp()),
               Number(entryProto.vsyncId),
               transactionStateProto.pid.toString(),
               transactionStateProto.uid.toString(),
@@ -242,7 +244,7 @@ export class Presenter {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+              TimeUtils.format(entry.getTimestamp()),
               Number(entryProto.vsyncId),
               transactionStateProto.pid.toString(),
               transactionStateProto.uid.toString(),
@@ -259,7 +261,7 @@ export class Presenter {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+            TimeUtils.format(entry.getTimestamp()),
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
@@ -278,7 +280,7 @@ export class Presenter {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+            TimeUtils.format(entry.getTimestamp()),
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
@@ -294,7 +296,7 @@ export class Presenter {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+            TimeUtils.format(entry.getTimestamp()),
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
@@ -310,7 +312,7 @@ export class Presenter {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+            TimeUtils.format(entry.getTimestamp()),
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
@@ -326,7 +328,7 @@ export class Presenter {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
+            TimeUtils.format(entry.getTimestamp()),
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
@@ -340,24 +342,11 @@ export class Presenter {
           )
         );
       }
-    }
+    });
+
     ObjectFormatter.displayDefaults = formattingOptions;
 
     return entries;
-  }
-
-  private formatTime(
-    entryProto: any,
-    timestampType: TimestampType,
-    realToElapsedTimeOffsetNs: bigint | undefined
-  ): string {
-    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined) {
-      return TimeUtils.format(
-        new RealTimestamp(BigInt(entryProto.elapsedRealtimeNanos) + realToElapsedTimeOffsetNs)
-      );
-    } else {
-      return TimeUtils.format(new ElapsedTimestamp(BigInt(entryProto.elapsedRealtimeNanos)));
-    }
   }
 
   private getUniqueUiDataEntryValues<T>(
