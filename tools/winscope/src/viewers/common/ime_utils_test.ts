@@ -21,7 +21,7 @@ describe('ImeUtils', () => {
   it('processes WindowManager trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processed = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)[0]
+      entries.get(TraceType.WINDOW_MANAGER)
     );
 
     expect(processed.focusedApp).toEqual(
@@ -59,10 +59,10 @@ describe('ImeUtils', () => {
   it('processes SurfaceFlinger trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)[0]
+      entries.get(TraceType.WINDOW_MANAGER)
     );
     const layers = ImeUtils.getImeLayers(
-      entries.get(TraceType.SURFACE_FLINGER)[0],
+      entries.get(TraceType.SURFACE_FLINGER),
       processedWindowManagerState
     )!;
 

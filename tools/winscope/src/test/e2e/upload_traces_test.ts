@@ -54,17 +54,17 @@ describe('Upload traces', () => {
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('unsupported file format');
   };
 
   const checkEmitsOverriddenTracesMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('overridden by another trace');
   };
 
   const areMessagesEmitted = async (): Promise<boolean> => {
-    return element(by.css('upload-snack-bar')).isPresent();
+    return element(by.css('snack-bar')).isPresent();
   };
 
   const checkRendersSurfaceFlingerView = async () => {

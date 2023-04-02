@@ -65,4 +65,15 @@ import {Component, Input} from '@angular/core';
 export class LoadProgressComponent {
   @Input() progressPercentage?: number;
   @Input() message = 'Loading...';
+  private static readonly MIN_UI_UPDATE_PERIOD_MS = 200;
+
+  static canUpdateComponent(lastUpdateTimeMs: number | undefined): boolean {
+    if (lastUpdateTimeMs === undefined) {
+      return true;
+    }
+    // Limit the amount of UI updates, because the progress bar component
+    // renders weird stuff when updated too frequently.
+    // Also, this way we save some resources.
+    return Date.now() - lastUpdateTimeMs >= LoadProgressComponent.MIN_UI_UPDATE_PERIOD_MS;
+  }
 }

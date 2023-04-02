@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Traces} from 'trace/traces';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
@@ -20,14 +23,14 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
 
 abstract class ViewerInputMethod implements Viewer {
-  constructor(storage: Storage) {
+  constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-input-method');
-    this.presenter = this.initialisePresenter(storage);
+    this.presenter = this.initialisePresenter(traces, storage);
     this.addViewerEventListeners();
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    this.presenter.notifyCurrentTraceEntries(entries);
+  onTracePositionUpdate(position: TracePosition) {
+    this.presenter.onTracePositionUpdate(position);
   }
 
   abstract getViews(): View[];
@@ -68,7 +71,7 @@ abstract class ViewerInputMethod implements Viewer {
     );
   }
 
-  protected abstract initialisePresenter(storage: Storage): PresenterInputMethod;
+  protected abstract initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethod;
 
   protected htmlElement: HTMLElement;
   protected presenter: PresenterInputMethod;

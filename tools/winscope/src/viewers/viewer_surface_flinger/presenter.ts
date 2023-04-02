@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {Layer, LayerTraceEntry} from 'trace/flickerlib/common';
+import {Layer} from 'trace/flickerlib/layers/Layer';
+import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
 import {TreeGenerator} from 'viewers/common/tree_generator';
@@ -27,9 +34,91 @@ import {UiData} from './ui_data';
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
+  private readonly notifyViewCallback: NotifyViewCallbackType;
+  private readonly trace: Trace<LayerTraceEntry>;
+  private uiData: UiData;
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private highlightedItems: string[] = [];
+  private displayIds: number[] = [];
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedIds: string[] = [];
+  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private selectedLayer: LayerTraceEntry | Layer | null = null;
+  private previousEntry: LayerTraceEntry | null = null;
+  private entry: LayerTraceEntry | null = null;
+  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfHierarchyOptions',
+    {
+      showDiff: {
+        name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
+        enabled: false,
+      },
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: true,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
+    },
+    this.storage
+  );
+
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfPropertyOptions',
+    {
+      showDiff: {
+        name: 'Show diff',
+        enabled: false,
+      },
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    },
+    this.storage
+  );
+
+  constructor(
+    traces: Traces,
+    private readonly storage: Storage,
+    notifyViewCallback: NotifyViewCallbackType
+  ) {
+    this.trace = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
+    this.copyUiDataAndNotifyView();
+  }
+
+  onTracePositionUpdate(position: TracePosition) {
+    this.uiData = new UiData();
+    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+
+    const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
+    const prevEntry =
+      entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
+
+    this.entry = entry?.getValue() ?? null;
+    this.previousEntry = prevEntry?.getValue() ?? null;
+    if (this.entry) {
+      this.uiData.highlightedItems = this.highlightedItems;
+      this.uiData.rects = this.generateRects();
+      this.uiData.displayIds = this.displayIds;
+      this.uiData.tree = this.generateTree();
+    }
+
     this.copyUiDataAndNotifyView();
   }
 
@@ -83,24 +172,6 @@ export class Presenter {
   newPropertiesTree(selectedItem: HierarchyTreeNode) {
     this.selectedHierarchyTree = selectedItem;
     this.updateSelectedTreeUiData();
-  }
-
-  notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
-    this.uiData = new UiData();
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-
-    const sfEntries = entries.get(TraceType.SURFACE_FLINGER);
-    if (sfEntries) {
-      [this.entry, this.previousEntry] = sfEntries;
-      if (this.entry) {
-        this.uiData.highlightedItems = this.highlightedItems;
-        this.uiData.rects = this.generateRects();
-        this.uiData.displayIds = this.displayIds;
-        this.uiData.tree = this.generateTree();
-      }
-    }
-    this.copyUiDataAndNotifyView();
   }
 
   private generateRects(): Rectangle[] {
@@ -273,59 +344,4 @@ export class Presenter {
     const copy = Object.assign({}, this.uiData);
     this.notifyViewCallback(copy);
   }
-
-  private readonly notifyViewCallback: NotifyViewCallbackType;
-  private uiData: UiData;
-  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private highlightedItems: string[] = [];
-  private displayIds: number[] = [];
-  private pinnedItems: HierarchyTreeNode[] = [];
-  private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
-  private selectedLayer: LayerTraceEntry | Layer | null = null;
-  private previousEntry: LayerTraceEntry | null = null;
-  private entry: LayerTraceEntry | null = null;
-  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'SfHierarchyOptions',
-    {
-      showDiff: {
-        name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
-        enabled: false,
-      },
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: true,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: false,
-      },
-    },
-    this.storage
-  );
-
-  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'SfPropertyOptions',
-    {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: false,
-        tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
-      },
-    },
-    this.storage
-  );
 }
