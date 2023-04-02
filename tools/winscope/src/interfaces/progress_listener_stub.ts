@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {FilesDownloadListener} from 'interfaces/files_download_listener';
+import {ProgressListener} from 'interfaces/progress_listener';
 
-export class UploadTracesComponentStub implements FilesDownloadListener {
-  onFilesDownloadStart() {
+export class ProgressListenerStub implements ProgressListener {
+  onProgressUpdate() {
     // do nothing
   }
 
-  async onFilesDownloaded(files: File[]) {
+  onOperationFinished() {
     // do nothing
   }
 }

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {Viewer} from './viewer';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
@@ -39,7 +41,7 @@ class ViewerFactory {
     ViewerScreenRecording,
   ];
 
-  createViewers(activeTraceTypes: Set<TraceType>, storage: Storage): Viewer[] {
+  createViewers(activeTraceTypes: Set<TraceType>, traces: Traces, storage: Storage): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
@@ -48,7 +50,7 @@ class ViewerFactory {
       );
 
       if (areViewerDepsSatisfied) {
-        viewers.push(new Viewer(storage));
+        viewers.push(new Viewer(traces, storage));
       }
     }
 

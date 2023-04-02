@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,61 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject, NgZone} from '@angular/core';
-import {MatSnackBar, MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
-import {TRACE_INFO} from 'app/trace_info';
-import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 
-@Component({
-  selector: 'upload-snack-bar',
-  template: `
-    <div class="snack-bar-container">
-      <p *ngFor="let message of messages" class="mat-body-1">
-        {{ message }}
-      </p>
-      <button color="primary" mat-button class="snack-bar-action" (click)="snackBarRef.dismiss()">
-        Close
-      </button>
-    </div>
-  `,
-  styles: [
-    `
-      .snack-bar-container {
-        display: flex;
-        flex-direction: column;
-      }
-      .snack-bar-action {
-        margin-left: 12px;
-      }
-    `,
-  ],
-})
-export class ParserErrorSnackBarComponent {
+import {Inject, Injectable, NgZone} from '@angular/core';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TRACE_INFO} from 'app/trace_info';
+import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {ParserError, ParserErrorType} from 'parsers/parser_factory';
+import {SnackBarComponent} from './snack_bar_component';
+
+@Injectable({providedIn: 'root'})
+export class SnackBarOpener implements UserNotificationListener {
   constructor(
-    @Inject(MatSnackBarRef) public snackBarRef: MatSnackBarRef<ParserErrorSnackBarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) public messages: string[]
+    @Inject(NgZone) private ngZone: NgZone,
+    @Inject(MatSnackBar) private snackBar: MatSnackBar
   ) {}
 
-  static showIfNeeded(ngZone: NgZone, snackBar: MatSnackBar, errors: ParserError[]) {
-    const messages = ParserErrorSnackBarComponent.convertErrorsToMessages(errors);
+  onParserErrors(errors: ParserError[]) {
+    const messages = this.convertErrorsToMessages(errors);
 
     if (messages.length === 0) {
       return;
     }
 
-    ngZone.run(() => {
+    this.ngZone.run(() => {
       // The snackbar needs to be opened within ngZone,
       // otherwise it will first display on the left and then will jump to the center
-      snackBar.openFromComponent(ParserErrorSnackBarComponent, {
+      this.snackBar.openFromComponent(SnackBarComponent, {
         data: messages,
         duration: 10000,
       });
     });
   }
 
-  private static convertErrorsToMessages(errors: ParserError[]): string[] {
+  private convertErrorsToMessages(errors: ParserError[]): string[] {
     const messages: string[] = [];
-    const groups = ParserErrorSnackBarComponent.groupErrorsByType(errors);
+    const groups = this.groupErrorsByType(errors);
 
     for (const [type, groupedErrors] of groups) {
       const CROP_THRESHOLD = 5;
@@ -75,18 +55,18 @@ export class ParserErrorSnackBarComponent {
       const countCropped = groupedErrors.length - countUsed;
 
       groupedErrors.slice(0, countUsed).forEach((error) => {
-        messages.push(ParserErrorSnackBarComponent.convertErrorToMessage(error));
+        messages.push(this.convertErrorToMessage(error));
       });
 
       if (countCropped > 0) {
-        messages.push(ParserErrorSnackBarComponent.makeCroppedMessage(type, countCropped));
+        messages.push(this.makeCroppedMessage(type, countCropped));
       }
     }
 
     return messages;
   }
 
-  private static convertErrorToMessage(error: ParserError): string {
+  private convertErrorToMessage(error: ParserError): string {
     const fileName = error.trace !== undefined ? error.trace.name : '<no file name>';
     const traceTypeName =
       error.traceType !== undefined ? TRACE_INFO[error.traceType].name : '<unknown>';
@@ -104,7 +84,7 @@ export class ParserErrorSnackBarComponent {
     }
   }
 
-  private static makeCroppedMessage(type: ParserErrorType, count: number): string {
+  private makeCroppedMessage(type: ParserErrorType, count: number): string {
     switch (type) {
       case ParserErrorType.OVERRIDE:
         return `... (cropped ${count} overridden trace messages)`;
@@ -115,7 +95,7 @@ export class ParserErrorSnackBarComponent {
     }
   }
 
-  private static groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
+  private groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
     const groups = new Map<ParserErrorType, ParserError[]>();
 
     errors.forEach((error) => {
