@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';
@@ -34,11 +36,12 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
     return ViewerInputMethodManagerService.DEPENDENCIES;
   }
 
-  override initialisePresenter(storage: Storage) {
+  override initialisePresenter(traces: Traces, storage: Storage) {
     return new PresenterInputMethodManagerService(
-      this.imeUiCallback,
+      traces,
+      storage,
       this.getDependencies(),
-      storage
+      this.imeUiCallback
     );
   }
 

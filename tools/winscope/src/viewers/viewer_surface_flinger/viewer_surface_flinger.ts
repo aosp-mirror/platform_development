@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Traces} from 'trace/traces';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -21,15 +24,15 @@ import {UiData} from './ui_data';
 
 class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
 
-  constructor(storage: Storage) {
+  constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
-    this.presenter = new Presenter((uiData: UiData) => {
+    this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
-    }, storage);
+    });
 
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
       this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
@@ -54,8 +57,8 @@ class ViewerSurfaceFlinger implements Viewer {
     );
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    this.presenter.notifyCurrentTraceEntries(entries);
+  onTracePositionUpdate(position: TracePosition) {
+    this.presenter.onTracePositionUpdate(position);
   }
 
   getViews(): View[] {

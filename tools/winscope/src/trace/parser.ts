@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'trace/timestamp';
+import {Timestamp, TimestampType} from './timestamp';
+import {TraceFile} from './trace_file';
+import {TraceType} from './trace_type';
 
-export interface TimestampChangeListener {
-  onCurrentTimestampChanged(timestamp: Timestamp | undefined): void;
+export interface Parser<T> {
+  getTraceType(): TraceType;
+  getTraceFile(): TraceFile;
+  getLengthEntries(): number;
+  getTimestamps(type: TimestampType): Timestamp[] | undefined;
+  getEntry(index: number, timestampType: TimestampType): T;
 }
