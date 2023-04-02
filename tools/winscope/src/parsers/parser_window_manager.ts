@@ -15,12 +15,12 @@
  */
 import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {WindowManagerTraceFileProto} from './proto_types';
 
-class ParserWindowManager extends Parser {
+class ParserWindowManager extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
