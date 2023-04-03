@@ -14,62 +14,67 @@
  * limitations under the License.
  */
 
+import {FileUtils, OnFile} from 'common/file_utils';
 import {BuganizerAttachmentsDownloadEmitter} from 'interfaces/buganizer_attachments_download_emitter';
-import {FilesDownloadListener} from 'interfaces/files_download_listener';
+import {ProgressListener} from 'interfaces/progress_listener';
 import {RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
 import {RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
 import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
 import {Runnable} from 'interfaces/runnable';
-import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
+import {UserNotificationListener} from 'interfaces/user_notification_listener';
 import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace_file';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {TimelineData} from './timeline_data';
-import {TraceData} from './trace_data';
+import {TracePipeline} from './trace_pipeline';
 
-export type CrossToolProtocolDependencyInversion = RemoteBugreportReceiver &
+type CrossToolProtocolInterface = RemoteBugreportReceiver &
   RemoteTimestampReceiver &
   RemoteTimestampSender;
-export type AbtChromeExtensionProtocolDependencyInversion = BuganizerAttachmentsDownloadEmitter &
-  Runnable;
-export type AppComponentDependencyInversion = TraceDataListener;
-export type TimelineComponentDependencyInversion = TimestampChangeListener;
-export type UploadTracesComponentDependencyInversion = FilesDownloadListener;
+type AbtChromeExtensionProtocolInterface = BuganizerAttachmentsDownloadEmitter & Runnable;
 
 export class Mediator {
-  private abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion;
-  private crossToolProtocol: CrossToolProtocolDependencyInversion;
-  private uploadTracesComponent?: UploadTracesComponentDependencyInversion;
-  private timelineComponent?: TimelineComponentDependencyInversion;
-  private appComponent: AppComponentDependencyInversion;
+  private abtChromeExtensionProtocol: AbtChromeExtensionProtocolInterface;
+  private crossToolProtocol: CrossToolProtocolInterface;
+  private uploadTracesComponent?: ProgressListener;
+  private collectTracesComponent?: ProgressListener;
+  private timelineComponent?: TracePositionUpdateListener;
+  private appComponent: TraceDataListener;
+  private userNotificationListener: UserNotificationListener;
   private storage: Storage;
 
-  private traceData: TraceData;
+  private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
   private viewers: Viewer[] = [];
   private isChangingCurrentTimestamp = false;
   private isTraceDataVisualized = false;
   private lastRemoteToolTimestampReceived: Timestamp | undefined;
+  private currentProgressListener?: ProgressListener;
 
   constructor(
-    traceData: TraceData,
+    tracePipeline: TracePipeline,
     timelineData: TimelineData,
-    abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion,
-    crossToolProtocol: CrossToolProtocolDependencyInversion,
-    appComponent: AppComponentDependencyInversion,
+    abtChromeExtensionProtocol: AbtChromeExtensionProtocolInterface,
+    crossToolProtocol: CrossToolProtocolInterface,
+    appComponent: TraceDataListener,
+    userNotificationListener: UserNotificationListener,
     storage: Storage
   ) {
-    this.traceData = traceData;
+    this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
     this.abtChromeExtensionProtocol = abtChromeExtensionProtocol;
     this.crossToolProtocol = crossToolProtocol;
     this.appComponent = appComponent;
+    this.userNotificationListener = userNotificationListener;
     this.storage = storage;
 
-    this.timelineData.setOnCurrentTimestampChanged((timestamp) => {
-      this.onWinscopeCurrentTimestampChanged(timestamp);
+    this.timelineData.setOnTracePositionUpdate((position) => {
+      this.onWinscopeTracePositionUpdate(position);
     });
 
     this.crossToolProtocol.setOnBugreportReceived(
@@ -93,13 +98,15 @@ export class Mediator {
     );
   }
 
-  setUploadTracesComponent(
-    uploadTracesComponent: UploadTracesComponentDependencyInversion | undefined
-  ) {
+  setUploadTracesComponent(uploadTracesComponent: ProgressListener | undefined) {
     this.uploadTracesComponent = uploadTracesComponent;
   }
 
-  setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion | undefined) {
+  setCollectTracesComponent(collectTracesComponent: ProgressListener | undefined) {
+    this.collectTracesComponent = collectTracesComponent;
+  }
+
+  setTimelineComponent(timelineComponent: TracePositionUpdateListener | undefined) {
     this.timelineComponent = timelineComponent;
   }
 
@@ -111,43 +118,53 @@ export class Mediator {
     this.resetAppToInitialState();
   }
 
-  onWinscopeTraceDataLoaded() {
-    this.processTraceData();
+  async onWinscopeFilesUploaded(files: File[]) {
+    this.currentProgressListener = this.uploadTracesComponent;
+    await this.processFiles(files);
   }
 
-  onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
-    this.executeIgnoringRecursiveTimestampNotifications(() => {
-      const entries = this.traceData.getTraceEntries(timestamp);
-      this.viewers.forEach((viewer) => {
-        viewer.notifyCurrentTraceEntries(entries);
-      });
+  async onWinscopeFilesCollected(files: File[]) {
+    this.currentProgressListener = this.collectTracesComponent;
+    await this.processFiles(files);
+    await this.processLoadedTraceFiles();
+  }
 
-      if (timestamp) {
-        if (timestamp.getType() !== TimestampType.REAL) {
-          console.warn(
-            'Cannot propagate timestamp change to remote tool.' +
-              ` Remote tool expects timestamp type ${TimestampType.REAL},` +
-              ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
-          );
-        } else {
-          this.crossToolProtocol.sendTimestamp(timestamp);
-        }
+  async onWinscopeViewTracesRequest() {
+    await this.processLoadedTraceFiles();
+  }
+
+  onWinscopeTracePositionUpdate(position: TracePosition) {
+    this.executeIgnoringRecursiveTimestampNotifications(() => {
+      this.updateViewersTracePosition(position);
+
+      const timestamp = position.timestamp;
+      if (timestamp.getType() !== TimestampType.REAL) {
+        console.warn(
+          'Cannot propagate timestamp change to remote tool.' +
+            ` Remote tool expects timestamp type ${TimestampType.REAL},` +
+            ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
+        );
+      } else {
+        this.crossToolProtocol.sendTimestamp(timestamp);
       }
 
-      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+      this.timelineComponent?.onTracePositionUpdate(position);
     });
   }
 
   private onBuganizerAttachmentsDownloadStart() {
     this.resetAppToInitialState();
-    this.uploadTracesComponent?.onFilesDownloadStart();
+    this.currentProgressListener = this.uploadTracesComponent;
+    this.currentProgressListener?.onProgressUpdate('Downloading files...', undefined);
   }
 
   private async onBuganizerAttachmentsDownloaded(attachments: File[]) {
+    this.currentProgressListener = this.uploadTracesComponent;
     await this.processRemoteFilesReceived(attachments);
   }
 
   private async onRemoteBugreportReceived(bugreport: File, timestamp?: Timestamp) {
+    this.currentProgressListener = this.uploadTracesComponent;
     await this.processRemoteFilesReceived([bugreport]);
     if (timestamp !== undefined) {
       this.onRemoteTimestampReceived(timestamp);
@@ -171,29 +188,58 @@ export class Mediator {
         return;
       }
 
-      if (this.timelineData.getCurrentTimestamp() === timestamp) {
+      if (
+        this.timelineData.getCurrentPosition()?.timestamp.getValueNs() === timestamp.getValueNs()
+      ) {
         return; // no timestamp change
       }
 
-      const entries = this.traceData.getTraceEntries(timestamp);
-      this.viewers.forEach((viewer) => {
-        viewer.notifyCurrentTraceEntries(entries);
-      });
-
-      this.timelineData.setCurrentTimestamp(timestamp);
-      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+      const position = TracePosition.fromTimestamp(timestamp);
+      this.updateViewersTracePosition(position);
+      this.timelineData.setPosition(position);
+      this.timelineComponent?.onTracePositionUpdate(position); //TODO: is this redundant?
     });
   }
 
   private async processRemoteFilesReceived(files: File[]) {
     this.resetAppToInitialState();
-    this.uploadTracesComponent?.onFilesDownloaded(files);
+    this.processFiles(files);
   }
 
-  private processTraceData() {
+  private async processFiles(files: File[]) {
+    let progressMessage = '';
+    const onProgressUpdate = (progressPercentage: number) => {
+      this.currentProgressListener?.onProgressUpdate(progressMessage, progressPercentage);
+    };
+
+    const traceFiles: TraceFile[] = [];
+    const onFile: OnFile = (file: File, parentArchive?: File) => {
+      traceFiles.push(new TraceFile(file, parentArchive));
+    };
+
+    progressMessage = 'Unzipping files...';
+    this.currentProgressListener?.onProgressUpdate(progressMessage, 0);
+    await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
+
+    progressMessage = 'Parsing files...';
+    this.currentProgressListener?.onProgressUpdate(progressMessage, 0);
+    const parserErrors = await this.tracePipeline.loadTraceFiles(traceFiles, onProgressUpdate);
+    this.currentProgressListener?.onOperationFinished();
+    this.userNotificationListener?.onParserErrors(parserErrors);
+  }
+
+  private async processLoadedTraceFiles() {
+    this.currentProgressListener?.onProgressUpdate('Computing frame mapping...', undefined);
+
+    // allow the UI to update before making the main thread very busy
+    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+
+    this.tracePipeline.buildTraces();
+    this.currentProgressListener?.onOperationFinished();
+
     this.timelineData.initialize(
-      this.traceData.getTimelines(),
-      this.traceData.getScreenRecordingVideo()
+      this.tracePipeline.getTraces(),
+      this.tracePipeline.getScreenRecordingVideo()
     );
     this.createViewers();
     this.appComponent.onTraceDataLoaded(this.viewers);
@@ -205,13 +251,24 @@ export class Mediator {
   }
 
   private createViewers() {
-    const traceTypes = this.traceData.getLoadedTraces().map((trace) => trace.type);
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), this.storage);
+    const traces = this.tracePipeline.getTraces();
+    const traceTypes = new Set<TraceType>();
+    traces.forEachTrace((trace) => {
+      traceTypes.add(trace.type);
+    });
+    this.viewers = new ViewerFactory().createViewers(traceTypes, traces, this.storage);
 
-    // Make sure to update the viewers active entries as soon as they are created.
-    if (this.timelineData.getCurrentTimestamp()) {
-      this.onWinscopeCurrentTimestampChanged(this.timelineData.getCurrentTimestamp());
+    // Update the viewers as soon as they are created
+    const position = this.timelineData.getCurrentPosition();
+    if (position) {
+      this.onWinscopeTracePositionUpdate(position);
     }
+  }
+
+  private updateViewersTracePosition(position: TracePosition) {
+    this.viewers.forEach((viewer) => {
+      viewer.onTracePositionUpdate(position);
+    });
   }
 
   private executeIgnoringRecursiveTimestampNotifications(op: () => void) {
@@ -227,7 +284,7 @@ export class Mediator {
   }
 
   private resetAppToInitialState() {
-    this.traceData.clear();
+    this.tracePipeline.clear();
     this.timelineData.clear();
     this.viewers = [];
     this.isTraceDataVisualized = false;

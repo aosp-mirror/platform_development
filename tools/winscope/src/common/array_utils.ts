@@ -61,7 +61,10 @@ class ArrayUtils {
     return undefined;
   }
 
-  static binarySearchLowerOrEqual<T>(values: T[] | TypedArray, target: T): number | undefined {
+  static binarySearchFirstGreaterOrEqual<T>(
+    values: T[] | TypedArray,
+    target: T
+  ): number | undefined {
     if (values.length === 0) {
       return undefined;
     }
@@ -75,15 +78,43 @@ class ArrayUtils {
       const mid = (low + high) >> 1;
 
       if (values[mid] < target) {
-        if (result === undefined || result < mid) {
-          result = mid;
-        }
         low = mid + 1;
       } else if (values[mid] > target) {
+        if (result === undefined || result > mid) {
+          result = mid;
+        }
         high = mid - 1;
       } else {
         result = mid;
         high = mid - 1;
+      }
+    }
+
+    return result;
+  }
+
+  static binarySearchFirstGreater<T>(values: T[] | TypedArray, target: T): number | undefined {
+    if (values.length === 0) {
+      return undefined;
+    }
+
+    let low = 0;
+    let high = values.length - 1;
+
+    let result: number | undefined = undefined;
+
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+
+      if (values[mid] < target) {
+        low = mid + 1;
+      } else if (values[mid] > target) {
+        if (result === undefined || result > mid) {
+          result = mid;
+        }
+        high = mid - 1;
+      } else {
+        low = mid + 1;
       }
     }
 
