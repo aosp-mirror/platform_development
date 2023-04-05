@@ -29,6 +29,7 @@ const ACCESSIBILITY_ICON = "accessibility_new";
 const TAG_ICON = "details";
 const TRACE_ERROR_ICON = "warning";
 const EVENT_LOG_ICON = "description";
+const TRANSITION_ICON = "animation";
 
 interface TraceInfoMap {
   [key: number]: {
@@ -123,5 +124,10 @@ export const TRACE_INFO: TraceInfoMap = {
     name: "Event Log",
     icon: EVENT_LOG_ICON,
     color: "#fdd663",
+  },
+  [TraceType.TRANSITION]: {
+    name: "Transition Trace",
+    icon: TRANSITION_ICON,
+    color: "#EC407A",
   }
 };
