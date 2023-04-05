@@ -192,6 +192,11 @@ TRACE_TARGETS = {
         'su root service call Wayland 26 i32 1 >/dev/null\necho "Wayland trace started."',
         'su root service call Wayland 26 i32 0 >/dev/null'
     ),
+    "eventlog": TraceTarget(
+        WinscopeFileMatcher("/data/local/tmp", "eventlog", "eventlog"),
+        'rm -f /data/local/tmp/eventlog.winscope && EVENT_LOG_TRACING_START_TIME=$EPOCHREALTIME\necho "Event Log trace started."',
+        'echo "EventLog\\n" > /data/local/tmp/eventlog.winscope && su root logcat -b events -v threadtime -v printable -v uid -v nsec -v epoch -b events -t $EVENT_LOG_TRACING_START_TIME >> /data/local/tmp/eventlog.winscope',
+    )
 }
 
 
