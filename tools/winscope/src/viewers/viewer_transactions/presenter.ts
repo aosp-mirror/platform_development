@@ -276,7 +276,7 @@ export class Presenter {
         );
       }
 
-      for (const removedLayerId of entryProto.removedLayers) {
+      for (const destroyedLayerId of entryProto.destroyedLayers) {
         entries.push(
           new UiDataEntry(
             originalIndex,
@@ -284,10 +284,10 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.LAYER_REMOVED,
-            removedLayerId.toString(),
+            UiDataEntryType.LAYER_DESTROYED,
+            destroyedLayerId.toString(),
             '',
-            treeGenerator.generate('RemovedLayerId', ObjectFormatter.format(removedLayerId))
+            treeGenerator.generate('DestroyedLayerId', ObjectFormatter.format(destroyedLayerId))
           )
         );
       }
@@ -324,7 +324,7 @@ export class Presenter {
         );
       }
 
-      for (const removedLayerHandleId of entryProto.removedLayerHandles) {
+      for (const destroyedLayerHandleId of entryProto.destroyedLayerHandles) {
         entries.push(
           new UiDataEntry(
             originalIndex,
@@ -332,12 +332,12 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.LAYER_HANDLE_REMOVED,
-            removedLayerHandleId.toString(),
+            UiDataEntryType.LAYER_HANDLE_DESTROYED,
+            destroyedLayerHandleId.toString(),
             '',
             treeGenerator.generate(
-              'RemovedLayerHandleId',
-              ObjectFormatter.format(removedLayerHandleId)
+              'DestroyedLayerHandleId',
+              ObjectFormatter.format(destroyedLayerHandleId)
             )
           )
         );
