@@ -73,12 +73,12 @@ describe('PresenterTransactions', () => {
       'DISPLAY_CHANGED',
       'LAYER_ADDED',
       'LAYER_CHANGED',
-      'LAYER_HANDLE_REMOVED',
-      'LAYER_REMOVED',
+      'LAYER_DESTROYED',
+      'LAYER_HANDLE_DESTROYED',
     ]);
-    expect(outputUiData!.allIds.length).toEqual(115);
+    expect(outputUiData?.allIds.length).toEqual(116);
 
-    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    expect(outputUiData?.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
     expect(outputUiData?.currentEntryIndex).toEqual(0);
     expect(outputUiData?.selectedEntryIndex).toBeUndefined();
@@ -144,8 +144,8 @@ describe('PresenterTransactions', () => {
         UiDataEntryType.DISPLAY_CHANGED,
         UiDataEntryType.LAYER_ADDED,
         UiDataEntryType.LAYER_CHANGED,
-        UiDataEntryType.LAYER_REMOVED,
-        UiDataEntryType.LAYER_HANDLE_REMOVED,
+        UiDataEntryType.LAYER_DESTROYED,
+        UiDataEntryType.LAYER_HANDLE_DESTROYED,
       ])
     );
 
@@ -154,9 +154,9 @@ describe('PresenterTransactions', () => {
       new Set([UiDataEntryType.LAYER_ADDED])
     );
 
-    presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_REMOVED]);
+    presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_DESTROYED]);
     expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
-      new Set([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_REMOVED])
+      new Set([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_DESTROYED])
     );
   });
 
