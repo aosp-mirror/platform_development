@@ -456,6 +456,35 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertEqual(1, diff.count('function_extension_diffs'))
         self.assertEqual(5, diff.count('function_diffs'))
 
+    def test_array_diff(self):
+        self.prepare_and_absolute_diff_all_archs("libarray", "libarray")
+        self.prepare_and_absolute_diff_all_archs(
+            "libarray_diff", "libarray_diff")
+        diff = self.prepare_and_run_abi_diff_all_archs(
+            "libarray", "libarray_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+        for type_id in ["StructMember", "Pointer", "DoublePointer"]:
+            self.assertNotIn(f'"{type_id}"', diff,
+                             f'"{type_id}" should not be in the diff report.')
+
+        for type_id in ["Struct", "PointerToArray", "PointerTo2DArray",
+                        "Reference", "Element"]:
+            self.assertIn(f'"{type_id}"', diff,
+                          f'"{type_id}" should be in the diff report.')
+
+    def test_union_diff(self):
+        diff = self.prepare_and_run_abi_diff_all_archs(
+            "libunion", "libunion_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=True)
+        self.assertIn('"ChangeType"', diff)
+        self.assertIn('"ChangeTypeInStruct"', diff)
+        self.assertEqual(2, diff.count("fields_diff"))
+        self.assertNotIn("fields_added", diff)
+        self.assertNotIn("fields_removed", diff)
+
 
 if __name__ == '__main__':
     unittest.main()

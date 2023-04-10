@@ -71,6 +71,7 @@ RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
     'libash': 'libash_rust',
+    'libatomic': 'libatomic_rust',
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
     'libbase64': 'libbase64_rust',
@@ -141,7 +142,7 @@ CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests?, (\d+) benchmarks$')
 CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
 
 # Rust package name with suffix -d1.d2.d3(+.*)?.
-VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
+VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:-(alpha|beta)\.[0-9]+)?(?:\+.*)?$')
 
 # Crate types corresponding to a C ABI library
 C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
@@ -1200,7 +1201,7 @@ class Runner(object):
     if os.path.isfile(path2global):
       # try to find: RustDefaultVersion = "1.44.0"
       version_pat = re.compile(
-          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)".*$')
+          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+).*"')
       with open(path2global, 'r') as inf:
         for line in inf:
           result = version_pat.match(line)
@@ -1777,7 +1778,7 @@ def get_parser():
   parser.add_argument(
       '--product-available',
       action='store_true',
-      default=False,
+      default=True,
       help='Mark the main library as product_available.')
   parser.add_argument(
       '--recovery-available',
@@ -1787,7 +1788,7 @@ def get_parser():
   parser.add_argument(
       '--vendor-available',
       action='store_true',
-      default=False,
+      default=True,
       help='Mark the main library as vendor_available.')
   parser.add_argument(
       '--vendor-ramdisk-available',

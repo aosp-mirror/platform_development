@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {TracePosition} from 'trace/trace_position';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
@@ -27,7 +29,7 @@ class ViewerStub implements Viewer {
     }
   }
 
-  notifyCurrentTraceEntries(entries: any) {
+  onTracePositionUpdate(position: TracePosition) {
     // do nothing
   }
 

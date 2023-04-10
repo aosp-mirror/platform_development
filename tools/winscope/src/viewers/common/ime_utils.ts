@@ -129,7 +129,7 @@ class ImeUtils {
       return undefined;
     }
 
-    const isTaskLayer = TreeUtils.makeNodeFilter('Task, ImePlaceholder');
+    const isTaskLayer = TreeUtils.makeNodeFilter('Task|ImePlaceholder');
     const taskLayer = TreeUtils.findAncestorNode(imeLayer, isTaskLayer) as Layer;
     if (!taskLayer) {
       return undefined;

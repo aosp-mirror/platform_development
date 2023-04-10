@@ -26,10 +26,8 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {TraceData} from 'app/trace_data';
 import {PersistentStore} from 'common/persistent_store';
-import {TraceFile} from 'trace/trace';
+import {ProgressListener} from 'interfaces/progress_listener';
 import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
@@ -40,7 +38,7 @@ import {
   traceConfigurations,
 } from 'trace_collection/trace_collection_utils';
 import {TracingConfig} from 'trace_collection/tracing_config';
-import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
+import {LoadProgressComponent} from './load_progress_component';
 
 @Component({
   selector: 'collect-traces',
@@ -102,7 +100,7 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
 
         <div
           *ngIf="
-            connect.isStartTraceState() || connect.isEndTraceState() || connect.isLoadDataState()
+            connect.isStartTraceState() || connect.isEndTraceState() || isOperationInProgress()
           "
           class="trace-collection-config">
           <mat-list>
@@ -116,7 +114,7 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                   class="change-btn"
                   mat-button
                   (click)="connect.resetLastDevice()"
-                  [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+                  [disabled]="connect.isEndTraceState() || isOperationInProgress()">
                   Change device
                 </button>
               </p>
@@ -126,22 +124,15 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
           <mat-tab-group class="tracing-tabs">
             <mat-tab
               label="Trace"
-              [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+              [disabled]="connect.isEndTraceState() || isOperationInProgress()">
               <div class="tabbed-section">
-                <div
-                  class="trace-section"
-                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
-                  <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
+                <div class="trace-section" *ngIf="connect.isStartTraceState()">
+                  <trace-config></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-stroked-button (click)="startTracing()">
                       Start trace
                     </button>
                   </div>
-                </div>
-                <div
-                  class="loading-info"
-                  *ngIf="!tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
-                  <p class="mat-body-1">Loading tracing config...</p>
                 </div>
 
                 <div *ngIf="connect.isEndTraceState()" class="end-tracing">
@@ -157,8 +148,10 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                   </div>
                 </div>
 
-                <div *ngIf="connect.isLoadDataState()" class="load-data">
-                  <load-progress [progressPercentage]="loadProgress" [message]="'Loading data...'">
+                <div *ngIf="isOperationInProgress()" class="load-data">
+                  <load-progress
+                    [progressPercentage]="progressPercentage"
+                    [message]="progressMessage">
                   </load-progress>
                   <div class="end-btn">
                     <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">
@@ -168,13 +161,9 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                 </div>
               </div>
             </mat-tab>
-            <mat-tab
-              label="Dump"
-              [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+            <mat-tab label="Dump" [disabled]="connect.isEndTraceState() || isOperationInProgress()">
               <div class="tabbed-section">
-                <div
-                  class="dump-section"
-                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div class="dump-section" *ngIf="connect.isStartTraceState()">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -192,14 +181,10 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                   </div>
                 </div>
 
-                <div class="loading-info" *ngIf="!tracingConfig.tracingConfigIsSet()">
-                  <p class="mat-body-1">Loading dumping config...</p>
-                </div>
-
                 <load-progress
-                  *ngIf="connect.isLoadDataState()"
-                  [progressPercentage]="loadProgress"
-                  [message]="'Loading data...'">
+                  *ngIf="isOperationInProgress()"
+                  [progressPercentage]="progressPercentage"
+                  [message]="progressMessage">
                 </load-progress>
               </div>
             </mat-tab>
@@ -363,21 +348,22 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
   ],
   encapsulation: ViewEncapsulation.None,
 })
-export class CollectTracesComponent implements OnInit, OnDestroy {
+export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListener {
   objectKeys = Object.keys;
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
   connect: Connection;
   tracingConfig = TracingConfig.getInstance();
-  loadProgress = 0;
+
+  isExternalOperationInProgress = false;
+  progressMessage = 'Fetching...';
+  progressPercentage: number | undefined;
+  lastUiProgressUpdateTimeMs?: number;
 
   @Input() store!: PersistentStore;
-  @Input() traceData!: TraceData;
-
-  @Output() traceDataLoaded = new EventEmitter<void>();
+  @Output() filesCollected = new EventEmitter<File[]>();
 
   constructor(
-    @Inject(MatSnackBar) private snackBar: MatSnackBar,
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
     @Inject(NgZone) private ngZone: NgZone
   ) {
@@ -404,6 +390,27 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.connect.proxy?.removeOnProxyChange(this.onProxyChange);
+  }
+
+  onProgressUpdate(message: string, progressPercentage: number | undefined) {
+    if (!LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)) {
+      return;
+    }
+    this.isExternalOperationInProgress = true;
+    this.progressMessage = message;
+    this.progressPercentage = progressPercentage;
+    this.lastUiProgressUpdateTimeMs = Date.now();
+    this.changeDetectorRef.detectChanges();
+  }
+
+  onOperationFinished() {
+    this.isExternalOperationInProgress = false;
+    this.lastUiProgressUpdateTimeMs = undefined;
+    this.changeDetectorRef.detectChanges();
+  }
+
+  isOperationInProgress(): boolean {
+    return this.connect.isLoadDataState() || this.isExternalOperationInProgress;
   }
 
   onAddKey(key: string) {
@@ -448,16 +455,14 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.tracingConfig.requestedDumps = this.requestedDumps();
     const dumpSuccessful = await this.connect.dumpState();
     if (dumpSuccessful) {
-      await this.loadFiles();
-    } else {
-      this.traceData.clear();
+      this.filesCollected.emit(this.connect.adbData());
     }
   }
 
   async endTrace() {
     console.log('end tracing');
     await this.connect.endTrace();
-    await this.loadFiles();
+    this.filesCollected.emit(this.connect.adbData());
   }
 
   tabClass(adbTab: boolean) {
@@ -476,7 +481,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedTraces() {
     const tracesFromCollection: string[] = [];
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     const req = Object.keys(tracingConfig).filter((traceKey: string) => {
       const traceConfig = tracingConfig[traceKey];
       if (traceConfig.isTraceCollection) {
@@ -501,7 +506,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedEnableConfig(): string[] {
     const req: string[] = [];
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
       if (!trace.isTraceCollection && trace.run && trace.config && trace.config.enableConfigs) {
@@ -516,7 +521,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedSelection(traceType: string): ConfigMap | undefined {
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     if (!tracingConfig[traceType].run) {
       return undefined;
     }
@@ -527,18 +532,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     return selected;
   }
 
-  private async loadFiles() {
-    console.log('loading files', this.connect.adbData());
-    this.traceData.clear();
-    const traceFiles = this.connect.adbData().map((file) => new TraceFile(file));
-    const parserErrors = await this.traceData.loadTraces(traceFiles);
-    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
-    this.traceDataLoaded.emit();
-    console.log('finished loading data!');
-  }
-
-  private onLoadProgressUpdate(progress: number) {
-    this.loadProgress = progress;
+  private onLoadProgressUpdate(progressPercentage: number) {
+    this.progressPercentage = progressPercentage;
     this.changeDetectorRef.detectChanges();
   }
 }

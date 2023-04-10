@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {DisplayContent, DisplayCutout, PlatformConsts, Rect, toInsets, toRect} from '../common';
+import {DisplayContent, DisplayCutout, Rect, Rotation, toInsets, toRect} from '../common';
 import {shortenName} from '../mixin';
 import {WindowContainer} from './WindowContainer';
 
@@ -56,7 +56,7 @@ DisplayContent.fromProto = (
       proto.focusedApp,
       proto.appTransition?.lastUsedAppTransition ?? '',
       proto.appTransition?.appTransitionState ?? '',
-      PlatformConsts.Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
+      Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
       proto.displayRotation?.lastOrientation ?? 0,
       createDisplayCutout(proto.displayInfo?.cutout),
       windowContainer

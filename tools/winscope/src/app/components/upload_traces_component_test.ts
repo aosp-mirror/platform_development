@@ -16,7 +16,7 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
-import {TraceData} from 'app/trace_data';
+import {TracePipeline} from 'app/trace_pipeline';
 import {UploadTracesComponent} from './upload_traces_component';
 
 describe('UploadTracesComponent', () => {
@@ -36,8 +36,8 @@ describe('UploadTracesComponent', () => {
     fixture = TestBed.createComponent(UploadTracesComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    const traceData = new TraceData();
-    component.traceData = traceData;
+    const tracePipeline = new TracePipeline();
+    component.tracePipeline = tracePipeline;
   });
 
   it('can be created', () => {

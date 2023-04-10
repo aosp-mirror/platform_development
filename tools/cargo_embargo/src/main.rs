@@ -103,6 +103,9 @@ struct Config {
     /// Modules in this list will not be generated.
     #[serde(default)]
     module_blocklist: Vec<String>,
+    /// Modules name => Soong "visibility" property.
+    #[serde(default)]
+    module_visibility: BTreeMap<String, Vec<String>>,
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
@@ -162,7 +165,7 @@ fn main() -> Result<()> {
         let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
         paths.push_front(cargo_bin);
         let new_path = std::env::join_paths(paths)?;
-        std::env::set_var("PATH", &new_path);
+        std::env::set_var("PATH", new_path);
     }
 
     let cargo_out_path = "cargo.out";
@@ -236,7 +239,7 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
     let target_dir_args = ["--target-dir", "target.tmp"];
 
     // cargo clean
-    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(&target_dir_args))?;
+    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))?;
 
     let default_target = "x86_64-unknown-linux-gnu";
     let feature_args = if cfg.features.is_empty() {
@@ -274,8 +277,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
         &mut cargo_out_file,
         Command::new("cargo")
             .args(["build", "--target", default_target])
-            .args(&verbose_args)
-            .args(&target_dir_args)
+            .args(verbose_args)
+            .args(target_dir_args)
             .args(&workspace_args)
             .args(&feature_args),
     )?;
@@ -286,8 +289,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             &mut cargo_out_file,
             Command::new("cargo")
                 .args(["build", "--target", default_target, "--tests"])
-                .args(&verbose_args)
-                .args(&target_dir_args)
+                .args(verbose_args)
+                .args(target_dir_args)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
@@ -339,7 +342,7 @@ fn write_android_bp(
             let mut outs: Vec<String> = Vec::new();
             for f in out_files.iter() {
                 let dest = out_dir.join(f.file_name().unwrap());
-                std::fs::copy(&f, &dest).expect("failed to copy out file");
+                std::fs::copy(f, dest).expect("failed to copy out file");
                 outs.push(f.file_name().unwrap().to_str().unwrap().to_string());
             }
 
@@ -357,7 +360,14 @@ fn write_android_bp(
     };
 
     for c in crates {
-        modules.extend(crate_to_bp_modules(c, cfg, package_cfg, &extra_srcs)?);
+        modules.extend(crate_to_bp_modules(c, cfg, package_cfg, &extra_srcs).with_context(
+            || {
+                format!(
+                    "failed to generate bp module for crate \"{}\" with package name \"{}\"",
+                    c.name, c.package_name
+                )
+            },
+        )?);
     }
     if modules.is_empty() {
         return Ok(());
@@ -414,42 +424,46 @@ fn crate_to_bp_modules(
     extra_srcs: &[String],
 ) -> Result<Vec<BpModule>> {
     let mut modules = Vec::new();
-    let mut types = crate_.types.clone();
-    if crate_.test {
-        types.push("test".to_string());
-    }
-    for crate_type in types {
+    for crate_type in &crate_.types {
         let host = if package_cfg.device_supported.unwrap_or(true) { "" } else { "_host" };
         let rlib = if package_cfg.force_rlib { "_rlib" } else { "" };
-        let (module_type, module_name, stem) = match crate_type.as_str() {
-            "bin" => ("rust_binary".to_string() + host, crate_.name.clone(), crate_.name.clone()),
-            "lib" | "rlib" => {
+        let (module_type, module_name, stem) = match crate_type {
+            CrateType::Bin => {
+                ("rust_binary".to_string() + host, crate_.name.clone(), crate_.name.clone())
+            }
+            CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_library".to_string() + rlib + host, stem.clone(), stem)
             }
-            "dylib" => {
+            CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_library".to_string() + host + "_dylib", stem.clone() + "_dylib", stem)
             }
-            "cdylib" => {
+            CrateType::CDyLib => {
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_ffi".to_string() + host + "_shared", stem.clone() + "_shared", stem)
             }
-            "staticlib" => {
+            CrateType::StaticLib => {
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_ffi".to_string() + host + "_static", stem.clone() + "_static", stem)
             }
-            "proc-macro" => {
+            CrateType::ProcMacro => {
                 let stem = "lib".to_string() + &crate_.name;
                 ("rust_proc_macro".to_string(), stem.clone(), stem)
             }
-            "test" => {
-                let suffix = crate_.main_src.to_string_lossy().to_owned();
+            CrateType::Test | CrateType::TestNoHarness => {
+                let suffix = crate_.main_src.to_string_lossy().into_owned();
                 let suffix = suffix.replace('/', "_").replace(".rs", "");
                 let stem = crate_.package_name.clone() + "_test_" + &suffix;
+                if crate_type == &CrateType::TestNoHarness {
+                    eprintln!(
+                        "WARNING: ignoring test \"{}\" with harness=false. not supported yet",
+                        stem
+                    );
+                    return Ok(Vec::new());
+                }
                 ("rust_test".to_string() + host, stem.clone(), stem)
             }
-            _ => panic!("unexpected crate type: {}", crate_type),
         };
 
         let mut m = BpModule::new(module_type.clone());
@@ -480,7 +494,7 @@ fn crate_to_bp_modules(
             m.props.set("cargo_pkg_version", version.clone());
         }
 
-        if crate_.test {
+        if crate_.types.contains(&CrateType::Test) {
             m.props.set("test_suites", vec!["general-tests"]);
             m.props.set("auto_gen_config", true);
             if package_cfg.host_supported.unwrap_or(true) {
@@ -564,9 +578,20 @@ fn crate_to_bp_modules(
         }
 
         if !cfg.apex_available.is_empty()
-            && ["lib", "rlib", "dylib", "staticlib", "cdylib"].contains(&crate_type.as_str())
+            && [
+                CrateType::Lib,
+                CrateType::RLib,
+                CrateType::DyLib,
+                CrateType::CDyLib,
+                CrateType::StaticLib,
+            ]
+            .contains(crate_type)
         {
             m.props.set("apex_available", cfg.apex_available.clone());
+        }
+
+        if let Some(visibility) = cfg.module_visibility.get(module_name) {
+            m.props.set("visibility", visibility.clone());
         }
 
         if let Some(path) = &package_cfg.add_module_block {

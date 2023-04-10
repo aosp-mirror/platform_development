@@ -26,16 +26,19 @@
             android:name=".SampleHotwordDetectionService"
             android:permission="android.permission.BIND_HOTWORD_DETECTION_SERVICE"
             android:isolatedProcess="true"
+            android:allowSharedIsolatedProcess="true"
             android:exported="true">
         </service>
         <service
             android:name=".SampleVisualQueryDetectionService"
             android:permission="android.permission.BIND_VISUAL_QUERY_DETECTION_SERVICE"
             android:isolatedProcess="true"
+            android:allowSharedIsolatedProcess="true"
             android:exported="true">
         </service>
     </application>
 
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.RECORD_BACKGROUND_AUDIO" />
     <uses-permission android:name="android.permission.CAPTURE_AUDIO_HOTWORD" />

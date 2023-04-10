@@ -26,8 +26,8 @@ import {createCustomElement} from '@angular/elements';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
-import {TraceData} from 'app/trace_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -35,7 +35,6 @@ import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {Timestamp} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
-import {TracingConfig} from 'trace_collection/tracing_config';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {View, Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
@@ -43,6 +42,8 @@ import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/vi
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
+import {CollectTracesComponent} from './collect_traces_component';
+import {SnackBarOpener} from './snack_bar_opener';
 import {TimelineComponent} from './timeline/timeline_component';
 import {UploadTracesComponent} from './upload_traces_component';
 
@@ -74,7 +75,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         mat-icon-button
         matTooltip="Report bug"
         (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
-        <mat-icon> bug_report </mat-icon>
+        <mat-icon> bug_report</mat-icon>
       </button>
 
       <button
@@ -123,14 +124,14 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              [traceData]="traceData"
-              (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
+              (filesCollected)="mediator.onWinscopeFilesCollected($event)"
               [store]="store"></collect-traces>
 
             <upload-traces
               class="upload-traces-card homepage-card"
-              [traceData]="traceData"
-              (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"></upload-traces>
+              [tracePipeline]="tracePipeline"
+              (filesUploaded)="mediator.onWinscopeFilesUploaded($event)"
+              (viewTracesButtonClick)="mediator.onWinscopeViewTracesRequest()"></upload-traces>
           </div>
         </div>
       </div>
@@ -187,18 +188,12 @@ import {UploadTracesComponent} from './upload_traces_component';
 export class AppComponent implements TraceDataListener {
   title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
-  traceData = new TraceData();
+  snackbarOpener: SnackBarOpener;
+  tracePipeline = new TracePipeline();
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
-  mediator = new Mediator(
-    this.traceData,
-    this.timelineData,
-    this.abtChromeExtensionProtocol,
-    this.crossToolProtocol,
-    this,
-    localStorage
-  );
+  mediator: Mediator;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
@@ -209,13 +204,25 @@ export class AppComponent implements TraceDataListener {
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
+  @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
   constructor(
     @Inject(Injector) injector: Injector,
-    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef
+    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
+    @Inject(SnackBarOpener) snackBar: SnackBarOpener
   ) {
     this.changeDetectorRef = changeDetectorRef;
+    this.snackbarOpener = snackBar;
+    this.mediator = new Mediator(
+      this.tracePipeline,
+      this.timelineData,
+      this.abtChromeExtensionProtocol,
+      this.crossToolProtocol,
+      this,
+      this.snackbarOpener,
+      localStorage
+    );
 
     const storeDarkMode = this.store.get('dark-mode');
     const prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
@@ -257,16 +264,15 @@ export class AppComponent implements TraceDataListener {
         createCustomElement(ViewerWindowManagerComponent, {injector})
       );
     }
-
-    TracingConfig.getInstance().initialize(localStorage);
   }
 
   ngAfterViewInit() {
-    this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
     this.mediator.onWinscopeInitialized();
   }
 
   ngAfterViewChecked() {
+    this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
+    this.mediator.setCollectTracesComponent(this.collectTracesComponent);
     this.mediator.setTimelineComponent(this.timelineComponent);
   }
 
@@ -276,11 +282,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.traceData.getLoadedTraces().map((trace) => trace.type);
-  }
-
-  getVideoData(): Blob | undefined {
-    return this.timelineData.getScreenRecordingVideo();
+    return this.tracePipeline.getLoadedTraceFiles().map((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -327,9 +329,9 @@ export class AppComponent implements TraceDataListener {
   }
 
   private makeActiveTraceFileInfo(view: View): string {
-    const traceFile = this.traceData
-      .getLoadedTraces()
-      .find((trace) => trace.type === view.dependencies[0])?.traceFile;
+    const traceFile = this.tracePipeline
+      .getLoadedTraceFiles()
+      .find((file) => file.type === view.dependencies[0])?.traceFile;
 
     if (!traceFile) {
       return '';
@@ -343,7 +345,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.traceData.getLoadedTraces().map((trace) => {
+    return this.tracePipeline.getLoadedTraceFiles().map((trace) => {
       const traceType = TRACE_INFO[trace.type].name;
       const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
       return new File([trace.traceFile.file], newName);

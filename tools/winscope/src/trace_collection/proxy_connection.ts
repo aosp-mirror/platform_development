@@ -182,7 +182,7 @@ export class ProxyConnection implements Connection {
     }
     if (newState === ProxyState.START_TRACE) {
       const isWaylandAvailable = await this.isWaylandAvailable();
-      TracingConfig.getInstance().setTracingConfigForAvailableTraces(isWaylandAvailable);
+      TracingConfig.getInstance().setTraceConfigForAvailableTraces(isWaylandAvailable);
     }
     this.proxyStateChangeCallback(newState);
   }

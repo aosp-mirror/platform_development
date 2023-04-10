@@ -15,13 +15,12 @@
  */
 
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {TransactionsTraceEntry} from 'trace/transactions';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {TransactionsTraceFileProto} from './proto_types';
 
-class ParserTransactions extends Parser {
+class ParserTransactions extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
@@ -109,14 +108,9 @@ class ParserTransactions extends Parser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: any
-  ): TransactionsTraceEntry {
-    return new TransactionsTraceEntry(
-      this.decodedEntries,
-      timestampType,
-      this.realToElapsedTimeOffsetNs,
-      index
-    );
+    entryProto: object
+  ): object {
+    return entryProto;
   }
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
