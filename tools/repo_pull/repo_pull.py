@@ -409,6 +409,9 @@ def _parse_args():
     parser.add_argument('-j', '--parallel', default=1, type=int,
                         help='Number of parallel running commands')
 
+    parser.add_argument('--current-branch', action='store_true',
+                        help='Pull commits to the current branch')
+
     return parser.parse_args()
 
 
@@ -421,7 +424,7 @@ def _get_change_lists_from_args(args):
 
 def _get_local_branch_name_from_args(args):
     """Get the local branch name from args."""
-    if not args.branch and not _confirm(
+    if not args.branch and not args.current_branch and not _confirm(
             'Do you want to continue without local branch name?', False):
         print('error: `-b` or `--branch` must be specified', file=sys.stderr)
         sys.exit(1)
