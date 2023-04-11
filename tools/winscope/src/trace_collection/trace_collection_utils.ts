@@ -202,6 +202,18 @@ export const traceConfigurations: TraceConfigurationMap = {
     run: false,
     config: undefined,
   },
+  eventlog: {
+    name: "Event Log",
+    isTraceCollection: undefined,
+    run: false,
+    config: undefined,
+  },
+  transition_trace: {
+    name: "Shell Transitions",
+    isTraceCollection: undefined,
+    run: false,
+    config: undefined,
+  },
 };
 
 export const TRACES: {[key: string]: TraceConfigurationMap} = {
@@ -213,6 +225,8 @@ export const TRACES: {[key: string]: TraceConfigurationMap} = {
     proto_log: traceConfigurations['proto_log'],
     screen_recording: traceConfigurations['screen_recording'],
     ime_tracing: traceConfigurations['ime_tracing'],
+    eventlog: traceConfigurations["eventlog"],
+    transition_trace: traceConfigurations["transition_trace"],
   },
   arc: {
     wayland_trace: traceConfigurations['wayland_trace'],
