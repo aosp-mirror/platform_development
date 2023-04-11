@@ -13,8 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
+import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
+import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Trace, TraceEntry} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
@@ -29,14 +36,88 @@ import {UserOptions} from 'viewers/common/user_options';
 type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
 export abstract class PresenterInputMethod {
+  private readonly imeTrace: Trace<object>;
+  private readonly wmTrace?: Trace<WindowManagerState>;
+  private readonly sfTrace?: Trace<LayerTraceEntry>;
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedIds: string[] = [];
+  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+
+  readonly notifyViewCallback: NotifyImeViewCallbackType;
+  protected readonly dependencies: TraceType[];
+  protected uiData: ImeUiData;
+  protected highlightedItems: string[] = [];
+  protected entry: TraceTreeNode | null = null;
+  protected additionalPropertyEntry: TraceTreeNode | null = null;
+  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'ImeHierarchyOptions',
+    {
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: true,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
+    },
+    this.storage
+  );
+  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'ImePropertiesOptions',
+    {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    },
+    this.storage
+  );
+
   constructor(
-    notifyViewCallback: NotifyImeViewCallbackType,
+    traces: Traces,
+    private storage: Storage,
     dependencies: TraceType[],
-    private storage: Storage
+    notifyViewCallback: NotifyImeViewCallbackType
   ) {
-    this.notifyViewCallback = notifyViewCallback;
+    this.imeTrace = traces.getTrace(dependencies[0]) as Trace<TraceTreeNode>;
+    this.sfTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
+    this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
+
     this.dependencies = dependencies;
+    this.notifyViewCallback = notifyViewCallback;
     this.uiData = new ImeUiData(dependencies);
+    this.notifyViewCallback(this.uiData);
+  }
+
+  onTracePositionUpdate(position: TracePosition) {
+    this.uiData = new ImeUiData(this.dependencies);
+    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+
+    const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(position);
+
+    if (imeEntry) {
+      this.entry = imeEntry.getValue() as TraceTreeNode;
+      this.uiData.highlightedItems = this.highlightedItems;
+      this.uiData.additionalProperties = this.getAdditionalProperties(
+        wmEntry?.getValue(),
+        sfEntry?.getValue()
+      );
+      this.uiData.tree = this.generateTree();
+      this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
+    }
     this.notifyViewCallback(this.uiData);
   }
 
@@ -109,30 +190,6 @@ export abstract class PresenterInputMethod {
     this.updateSelectedTreeUiData();
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
-    this.uiData = new ImeUiData(this.dependencies);
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-
-    const imEntries = entries.get(this.dependencies[0]);
-    if (imEntries && imEntries[0]) {
-      this.entry = imEntries[0];
-      this.uiData.highlightedItems = this.highlightedItems;
-
-      const wmEntries = entries.get(TraceType.WINDOW_MANAGER);
-      const sfEntries = entries.get(TraceType.SURFACE_FLINGER);
-
-      this.uiData.additionalProperties = this.getAdditionalProperties(
-        wmEntries ? wmEntries[0] : undefined,
-        sfEntries ? sfEntries[0] : undefined
-      );
-
-      this.uiData.tree = this.generateTree();
-      this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
-    }
-    this.notifyViewCallback(this.uiData);
-  }
-
   protected getAdditionalProperties(
     wmEntry: TraceTreeNode | undefined,
     sfEntry: TraceTreeNode | undefined
@@ -201,51 +258,33 @@ export abstract class PresenterInputMethod {
     return transformedTree;
   }
 
-  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private pinnedItems: HierarchyTreeNode[] = [];
-  private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private findTraceEntries(
+    position: TracePosition
+  ): [
+    TraceEntry<object> | undefined,
+    TraceEntry<LayerTraceEntry> | undefined,
+    TraceEntry<WindowManagerState> | undefined
+  ] {
+    const imeEntry = TraceEntryFinder.findCorrespondingEntry(this.imeTrace, position);
+    if (!imeEntry) {
+      return [undefined, undefined, undefined];
+    }
 
-  readonly notifyViewCallback: NotifyImeViewCallbackType;
-  protected readonly dependencies: TraceType[];
-  protected uiData: ImeUiData;
-  protected highlightedItems: string[] = [];
-  protected entry: TraceTreeNode | null = null;
-  protected additionalPropertyEntry: TraceTreeNode | null = null;
-  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'ImeHierarchyOptions',
-    {
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: true,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: false,
-      },
-    },
-    this.storage
-  );
-  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'ImePropertiesOptions',
-    {
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: false,
-        tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
-      },
-    },
-    this.storage
-  );
+    if (!this.imeTrace.hasFrameInfo()) {
+      return [imeEntry, undefined, undefined];
+    }
+
+    const frames = imeEntry.getFramesRange();
+    if (!frames || frames.start === frames.end) {
+      return [imeEntry, undefined, undefined];
+    }
+
+    const frame = frames.start;
+    const sfEntry = this.sfTrace?.getFrame(frame)?.findClosestEntry(imeEntry.getTimestamp());
+    const wmEntry = this.wmTrace?.getFrame(frame)?.findClosestEntry(imeEntry.getTimestamp());
+
+    return [imeEntry, sfEntry, wmEntry];
+  }
 
   protected abstract updateHierarchyTableProperties(): TableProperties;
 }

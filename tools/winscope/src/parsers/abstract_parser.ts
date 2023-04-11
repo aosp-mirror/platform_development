@@ -15,21 +15,22 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {Trace, TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
-abstract class Parser {
-  protected trace: TraceFile;
+abstract class AbstractParser implements Parser<object> {
+  protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 
   protected constructor(trace: TraceFile) {
-    this.trace = trace;
+    this.traceFile = trace;
   }
 
   async parse() {
-    const traceBuffer = new Uint8Array(await this.trace.file.arrayBuffer());
+    const traceBuffer = new Uint8Array(await this.traceFile.file.arrayBuffer());
 
     const magicNumber = this.getMagicNumber();
     if (magicNumber !== undefined) {
@@ -61,6 +62,24 @@ abstract class Parser {
         this.timestamps.set(type, timestamps);
       }
     }
+  }
+
+  abstract getTraceType(): TraceType;
+
+  getTraceFile(): TraceFile {
+    return this.traceFile;
+  }
+
+  getLengthEntries(): number {
+    return this.decodedEntries.length;
+  }
+
+  getTimestamps(type: TimestampType): undefined | Timestamp[] {
+    return this.timestamps.get(type);
+  }
+
+  getEntry(index: number, timestampType: TimestampType): object {
+    return this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
   }
 
   // Add default values to the proto objects.
@@ -97,40 +116,6 @@ abstract class Parser {
     return protoObj;
   }
 
-  abstract getTraceType(): TraceType;
-
-  getTrace(): Trace {
-    return {
-      type: this.getTraceType(),
-      traceFile: this.trace,
-    };
-  }
-
-  getTimestamps(type: TimestampType): undefined | Timestamp[] {
-    return this.timestamps.get(type);
-  }
-
-  //TODO (b/256564627): include this into the new type/abstraction passed to viewers
-  getEntriesLength(): number {
-    return this.decodedEntries.length;
-  }
-
-  //TODO (b/256564627):
-  // - factor out timestamp search policy. Receive index parameter instead.
-  // - make async for possible lazy disk reads in the future
-  getTraceEntry(timestamp: Timestamp): undefined | any {
-    const timestamps = this.getTimestamps(timestamp.getType());
-    if (timestamps === undefined) {
-      throw TypeError(`Timestamps with type "${timestamp.getType()}" not available`);
-    }
-
-    const index = ArrayUtils.binarySearchLowerOrEqual(timestamps, timestamp);
-    if (index === undefined) {
-      return undefined;
-    }
-    return this.processDecodedEntry(index, timestamp.getType(), this.decodedEntries[index]);
-  }
-
   protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
   protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
@@ -141,4 +126,4 @@ abstract class Parser {
   ): any;
 }
 
-export {Parser};
+export {AbstractParser};

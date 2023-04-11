@@ -20,6 +20,9 @@ export enum TimestampType {
 }
 
 export class Timestamp {
+  private readonly type: TimestampType;
+  private readonly valueNs: bigint;
+
   constructor(type: TimestampType, valueNs: bigint) {
     this.type = type;
     this.valueNs = valueNs;
@@ -55,8 +58,9 @@ export class Timestamp {
     return this.getValueNs();
   }
 
-  private readonly type: TimestampType;
-  private readonly valueNs: bigint;
+  add(nanoseconds: bigint): Timestamp {
+    return new Timestamp(this.type, this.valueNs + nanoseconds);
+  }
 }
 
 export class RealTimestamp extends Timestamp {
