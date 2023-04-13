@@ -51,6 +51,7 @@ describe('Upload traces', () => {
     expect(text).toContain('layers_trace_from_transactions.winscope (Surface Flinger)');
     expect(text).toContain('ime_trace_clients.winscope (IME Clients)');
     expect(text).toContain('transactions_trace.winscope (Transactions)');
+    expect(text).toContain('transition_trace.winscope (Transitions)');
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {
