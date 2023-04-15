@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-// This class is needed for testing because Node.js doesn't provide the Web API's Blob type
-class Blob {
-  constructor(buffer: ArrayBuffer) {
-    this.size = buffer.byteLength;
-    this.type = 'application/octet-stream';
+// This class is needed for unit tests because Node.js doesn't provide
+// an implementation of the Web API's File type
+class FileImpl {
+  readonly size: number;
+  readonly type: string;
+  readonly name: string;
+  readonly lastModified: number = 0;
+  readonly webkitRelativePath: string = '';
+  private readonly buffer: ArrayBuffer;
+
+  constructor(buffer: ArrayBuffer, fileName: string) {
     this.buffer = buffer;
+    this.size = this.buffer.byteLength;
+    this.type = 'application/octet-stream';
+    this.name = fileName;
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {
-    return new Promise<ArrayBuffer>((resolve, reject) => {
+    return new Promise<ArrayBuffer>((resolve) => {
       resolve(this.buffer);
     });
   }
@@ -39,10 +48,6 @@ class Blob {
   text(): Promise<string> {
     throw new Error('Not implemented!');
   }
-
-  readonly size: number;
-  readonly type: string;
-  private readonly buffer: ArrayBuffer;
 }
 
-export {Blob};
+export {FileImpl};
