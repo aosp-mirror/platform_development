@@ -54,6 +54,15 @@ const Transform = require('flicker').android.tools.common.traces.surfaceflinger.
 const Display = require('flicker').android.tools.common.traces.surfaceflinger.Display;
 const Region = require('flicker').android.tools.common.datatypes.Region;
 
+// Event Log
+const EventLog = require('flicker').android.tools.common.traces.events.EventLog;
+const CujEvent = require('flicker').android.tools.common.traces.events.CujEvent;
+const CujType = require('flicker').android.tools.common.traces.events.CujType;
+const Event = require('flicker').android.tools.common.traces.events.Event;
+const FlickerEvent = require('flicker').android.tools.common.traces.events.FlickerEvent;
+const FocusEvent = require('flicker').android.tools.common.traces.events.FocusEvent;
+const EventLogParser = require('flicker').android.tools.common.parsers.events.EventLogParser;
+
 // Common
 const Size = require('flicker').android.tools.common.datatypes.Size;
 const ActiveBuffer = require('flicker').android.tools.common.datatypes.ActiveBuffer;
@@ -285,6 +294,14 @@ export {
   Matrix22,
   Matrix33,
   Display,
+  // Eventlog
+  EventLog,
+  CujEvent,
+  CujType,
+  Event,
+  FlickerEvent,
+  FocusEvent,
+  EventLogParser,
   // Common
   Size,
   ActiveBuffer,

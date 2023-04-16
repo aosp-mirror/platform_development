@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Event} from 'trace/flickerlib/common';
 import {LayerTraceEntry} from './flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from './flickerlib/windows/WindowManagerState';
 import {LogMessage} from './protolog';
@@ -55,6 +56,7 @@ export interface TraceEntryTypeMap {
   [TraceType.INPUT_METHOD_CLIENTS]: object;
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: object;
   [TraceType.INPUT_METHOD_SERVICE]: object;
+  [TraceType.EVENT_LOG]: Event;
   [TraceType.TAG]: object;
   [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
