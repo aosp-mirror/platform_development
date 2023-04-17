@@ -447,20 +447,29 @@ class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
 
 class EnumFieldIR {
  public:
-  EnumFieldIR(const std::string &name, int value)
-      : name_(name), value_(value) {}
+  EnumFieldIR(const std::string &name, int64_t value)
+      : name_(name), signed_value_(value), is_signed_(true) {}
+
+  EnumFieldIR(const std::string &name, uint64_t value)
+      : name_(name), unsigned_value_(value), is_signed_(false) {}
 
   const std::string &GetName() const {
     return name_;
   }
 
-  int GetValue() const {
-    return value_;
-  }
+  bool IsSigned() const { return is_signed_; }
+
+  int64_t GetSignedValue() const { return signed_value_; }
+
+  uint64_t GetUnsignedValue() const { return unsigned_value_; }
 
  protected:
   std::string name_;
-  int value_ = 0;
+  union {
+    int64_t signed_value_;
+    uint64_t unsigned_value_;
+  };
+  bool is_signed_;
 };
 
 class EnumTypeIR : public TypeIR {
