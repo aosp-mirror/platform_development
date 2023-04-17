@@ -882,8 +882,12 @@ bool EnumDeclWrapper::SetupEnumFields(repr::EnumTypeIR *enump) {
   clang::EnumDecl::enumerator_iterator enum_it = enum_decl_->enumerator_begin();
   while (enum_it != enum_decl_->enumerator_end()) {
     std::string name = enum_it->getQualifiedNameAsString();
-    uint64_t field_value = enum_it->getInitVal().getExtValue();
-    enump->AddEnumField(repr::EnumFieldIR(name, field_value));
+    const llvm::APSInt &value = enum_it->getInitVal();
+    if (value.isUnsigned()) {
+      enump->AddEnumField(repr::EnumFieldIR(name, value.getZExtValue()));
+    } else {
+      enump->AddEnumField(repr::EnumFieldIR(name, value.getSExtValue()));
+    }
     enum_it++;
   }
   return true;
