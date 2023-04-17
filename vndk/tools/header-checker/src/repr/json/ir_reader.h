@@ -46,6 +46,9 @@ class JsonObjectRef {
   // Default to 0.
   uint64_t GetUint(const std::string &key) const;
 
+  // Default to 0.
+  const Json::Value &GetIntegralValue(const std::string &key) const;
+
   // Default to "".
   std::string GetString(const std::string &key) const;
 
