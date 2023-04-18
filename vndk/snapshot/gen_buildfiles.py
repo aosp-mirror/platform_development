@@ -16,6 +16,7 @@
 #
 
 import argparse
+from collections import defaultdict
 import glob
 import json
 import logging
@@ -68,27 +69,6 @@ class GenBuildFile(object):
         'vndkproduct.libraries.txt',
     ]
 
-    """Some vendor prebuilts reference libprotobuf-cpp-lite.so and
-    libprotobuf-cpp-full.so and expect the 3.0.0-beta3 version.
-    The new version of protobuf will be installed as
-    /vendor/lib64/libprotobuf-cpp-lite-3.9.1.so.  The VNDK doesn't
-    help here because we compile old devices against the current
-    branch and not an old VNDK snapshot.  We need to continue to
-    provide a vendor libprotobuf-cpp-lite.so until all products in
-    the current branch get updated prebuilts or are obsoleted.
-
-    VENDOR_COMPAT is a dictionary that has VNDK versions as keys and
-    the list of (library name string, shared libs list) as values.
-    """
-    VENDOR_COMPAT = {
-        28: [
-            ('libprotobuf-cpp-lite',
-                ['libc++', 'libc', 'libdl', 'liblog', 'libm', 'libz']),
-            ('libprotobuf-cpp-full',
-                ['libc++', 'libc', 'libdl', 'liblog', 'libm', 'libz']),
-        ]
-    }
-
     def __init__(self, install_dir, vndk_version):
         """GenBuildFile constructor.
 
@@ -114,6 +94,10 @@ class GenBuildFile(object):
         self._vndk_product = self._parse_lib_list(
             os.path.basename(self._etc_paths['vndkproduct.libraries.txt']))
         self._modules_with_notice = self._get_modules_with_notice()
+        self._license_in_json = not self._modules_with_notice
+        self._license_kinds_map = defaultdict(set)
+        self._license_texts_map = defaultdict(set)
+        self.modules_with_restricted_lic = set()
 
     def _get_etc_paths(self):
         """Returns a map of relative file paths for each ETC module."""
@@ -164,13 +148,6 @@ class GenBuildFile(object):
         for prebuilt in self.ETC_MODULES:
             prebuilt_buildrules.append(self._gen_etc_prebuilt(prebuilt))
 
-        if self._vndk_version in self.VENDOR_COMPAT:
-            prebuilt_buildrules.append('// Defining prebuilt libraries '
-                        'for the compatibility of old vendor modules')
-            for vendor_compat_lib_info in self.VENDOR_COMPAT[self._vndk_version]:
-                prebuilt_buildrules.append(
-                    self._gen_prebuilt_library_shared(vendor_compat_lib_info))
-
         with open(self._root_bpfile, 'w') as bpfile:
             bpfile.write(self._gen_autogen_msg('/'))
             bpfile.write('\n')
@@ -192,9 +169,14 @@ class GenBuildFile(object):
             bpfile.write(self._gen_autogen_msg('/'))
             bpfile.write('\n')
             bpfile.write(self._gen_license_package())
-            for module in self._modules_with_notice:
-                bpfile.write('\n')
-                bpfile.write(self._gen_notice_license(module))
+            if self._license_in_json:
+                for name in self._license_kinds_map:
+                    bpfile.write('\n')
+                    bpfile.write(self._gen_notice_license(name))
+            else:
+                for module in self._modules_with_notice:
+                    bpfile.write('\n')
+                    bpfile.write(self._gen_notice_license(module))
 
     def generate_android_bp(self):
         """Autogenerates Android.bp."""
@@ -301,16 +283,37 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     version=self._vndk_version))
 
-    def _get_license_kinds(self, license_text_path=''):
+    def _get_license_kinds(self, module=''):
         """ Returns a set of license kinds
 
         Args:
-          license_text_path: path to the license text file to check.
-                             If empty, check all license files.
+          module: module name to find the license kind.
+                  If empty, check all license files.
         """
+        if self._license_in_json:
+            license_kinds = set()
+            if module == '':
+                # collect all license kinds
+                for kinds in self._license_kinds_map.values():
+                    license_kinds.update(kinds)
+                return license_kinds
+            else:
+                return self._license_kinds_map[module]
+
         license_collector = collect_licenses.LicenseCollector(self._install_dir)
-        license_collector.run(license_text_path)
+        license_collector.run(module)
         return license_collector.license_kinds
+
+    def _get_license_texts(self, module):
+        if self._license_in_json:
+            return {'{notice_dir}/{license_text}'.format(
+                        notice_dir=utils.NOTICE_FILES_DIR_NAME,
+                        license_text=license_text)
+                        for license_text in self._license_texts_map[module]}
+        else:
+            return {'{notice_dir}/{module}.txt'.format(
+                        notice_dir=utils.NOTICE_FILES_DIR_NAME,
+                        module=module)}
 
     def _gen_license(self):
         """ Generates license module.
@@ -333,7 +336,7 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     version=self._vndk_version,
                     license_kinds=license_kinds_string,
-                    notice_files=os.path.join(utils.NOTICE_FILES_DIR_PATH, '*.txt')))
+                    notice_files=os.path.join(utils.NOTICE_FILES_DIR_PATH, '**', '*')))
 
     def _get_versioned_name(self,
                             prebuilt,
@@ -451,29 +454,43 @@ class GenBuildFile(object):
 
     def _gen_notice_license(self, module):
         """Generates a notice license build rule for a given module.
+        When genererating each notice license, collect
+        modules_with_restricted_lic, the list of modules that are under the GPL.
 
         Args:
-          notice: string, module name
+          module: string, module name
         """
-        license_kinds = self._get_license_kinds('{notice_dir}/{module}.txt'.format(
-            notice_dir=utils.NOTICE_FILES_DIR_NAME,
-            module=module))
+        def has_restricted_license(license_kinds):
+            for lic in license_kinds:
+                if 'GPL' in lic:
+                    return True
+            return False
+
+        license_kinds = self._get_license_kinds(module)
+        if has_restricted_license(license_kinds):
+            self.modules_with_restricted_lic.add(module)
         license_kinds_string = ''
         for license_kind in sorted(license_kinds):
             license_kinds_string += '{ind}{ind}"{license_kind}",\n'.format(
                                     ind=self.INDENT, license_kind=license_kind)
+        license_texts = self._get_license_texts(module)
+        license_texts_string = ''
+        for license_text in sorted(license_texts):
+            license_texts_string += '{ind}{ind}"{license_text}",\n'.format(
+                                    ind=self.INDENT, license_text=license_text)
         return ('license {{\n'
                 '{ind}name: "{license_name}",\n'
                 '{ind}license_kinds: [\n'
                 '{license_kinds}'
                 '{ind}],\n'
-                '{ind}license_text: ["{notice_dir}/{module}.txt"],\n'
+                '{ind}license_text: [\n'
+                '{license_texts}'
+                '{ind}],\n'
                 '}}\n'.format(
                     ind=self.INDENT,
                     license_name=self._get_notice_license_name(module),
                     license_kinds=license_kinds_string,
-                    module=module,
-                    notice_dir=utils.NOTICE_FILES_DIR_NAME))
+                    license_texts=license_texts_string))
 
     def _get_notice_license_name(self, module):
         """ Gets a notice license module name for a given module.
@@ -551,6 +568,18 @@ class GenBuildFile(object):
                     return True
             return False
 
+        def get_license_prop(name):
+            """Returns the license prop build rule.
+
+            Args:
+              name: string, name of the module
+            """
+            if name in self._license_kinds_map:
+                return '{ind}licenses: ["{license}"],\n'.format(
+                        ind=self.INDENT,
+                        license=self._get_notice_license_name(name))
+            return ''
+
         def get_notice_file(prebuilts):
             """Returns build rule for notice file (attribute 'licenses').
 
@@ -607,7 +636,7 @@ class GenBuildFile(object):
                             name=name))
 
             def rename_generated_dirs(dirs):
-                # Reame out/soong/.intermedaites to generated-headers for better readability.
+                # Rename out/soong/.intermediates to generated-headers for better readability.
                 return [d.replace(utils.SOONG_INTERMEDIATES_DIR, utils.GENERATED_HEADERS_DIR, 1) for d in dirs]
 
             for src in sorted(src_paths):
@@ -640,6 +669,10 @@ class GenBuildFile(object):
                         'relative_install_path: "{path}",\n').format(
                             ind=self.INDENT,
                             path=props['RelativeInstallPath'])
+                if 'LicenseKinds' in props:
+                    self._license_kinds_map[name].update(props['LicenseKinds'])
+                if 'LicenseTexts' in props:
+                    self._license_texts_map[name].update(props['LicenseTexts'])
 
                 arch_props += ('{ind}{ind}{arch}: {{\n'
                                '{include_dirs}'
@@ -700,8 +733,11 @@ class GenBuildFile(object):
                               vndk_sp=vndk_sp,
                               vndk_private=vndk_private))
 
-        notice = get_notice_file(srcs)
         arch_props = get_arch_props(name, arch, src_paths)
+        if self._license_in_json:
+            license = get_license_prop(name)
+        else:
+            license = get_notice_file(srcs)
 
         binder32bit = ''
         if is_binder32:
@@ -715,7 +751,7 @@ class GenBuildFile(object):
                 '{ind}vendor_available: true,\n'
                 '{product_available}'
                 '{vndk_props}'
-                '{notice}'
+                '{license}'
                 '{arch_props}'
                 '}}\n'.format(
                     ind=self.INDENT,
@@ -725,7 +761,7 @@ class GenBuildFile(object):
                     binder32bit=binder32bit,
                     product_available=product_available,
                     vndk_props=vndk_props,
-                    notice=notice,
+                    license=license,
                     arch_props=arch_props))
 
 
@@ -765,9 +801,11 @@ def main():
     utils.set_logging_config(args.verbose)
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
+    # To parse json information, read and generate arch android.bp using
+    # generate_android_bp() first.
+    buildfile_generator.generate_android_bp()
     buildfile_generator.generate_root_android_bp()
     buildfile_generator.generate_common_android_bp()
-    buildfile_generator.generate_android_bp()
 
     logging.info('Done.')
 
