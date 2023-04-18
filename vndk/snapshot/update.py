@@ -114,11 +114,13 @@ def gather_notice_files(install_dir):
         notices_dir_per_arch = os.path.join(arch, utils.NOTICE_FILES_DIR_NAME)
         if os.path.isdir(notices_dir_per_arch):
             for notice_file in glob.glob(
-                    '{}/*.txt'.format(notices_dir_per_arch)):
-                if not os.path.isfile(
-                        os.path.join(common_notices_dir,
-                                     os.path.basename(notice_file))):
-                    shutil.copy(notice_file, common_notices_dir)
+                    '{}/**'.format(notices_dir_per_arch), recursive=True):
+                if os.path.isfile(notice_file):
+                    rel_path = os.path.relpath(notice_file, notices_dir_per_arch)
+                    target_path = os.path.join(common_notices_dir, rel_path)
+                    if not os.path.isfile(target_path):
+                        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                        shutil.copy(notice_file, target_path)
             shutil.rmtree(notices_dir_per_arch)
 
 
@@ -156,14 +158,16 @@ def post_processe_files_if_needed(vndk_version):
 
 
 def update_buildfiles(buildfile_generator):
+    # To parse json information, read and generate arch android.bp using
+    # generate_android_bp() first.
+    logging.info('Generating Android.bp files...')
+    buildfile_generator.generate_android_bp()
+
     logging.info('Generating root Android.bp file...')
     buildfile_generator.generate_root_android_bp()
 
     logging.info('Generating common/Android.bp file...')
     buildfile_generator.generate_common_android_bp()
-
-    logging.info('Generating Android.bp files...')
-    buildfile_generator.generate_android_bp()
 
 def copy_owners(root_dir, install_dir):
     path = os.path.dirname(__file__)
@@ -257,6 +261,7 @@ def run(vndk_version, branch, build_id, local, use_current_branch, remote,
 
         if not local_path and not branch.startswith('android'):
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
+                                         buildfile_generator.modules_with_restricted_lic,
                                          temp_artifact_dir, remote)
             check_gpl_license(license_checker)
             logging.info(
