@@ -76,11 +76,16 @@ bool JsonObjectRef::GetBool(const std::string &key) const {
 }
 
 int64_t JsonObjectRef::GetInt(const std::string &key) const {
-  return Get(key, json_0, &Json::Value::isIntegral).asInt64();
+  return Get(key, json_0, &Json::Value::isInt64).asInt64();
 }
 
 uint64_t JsonObjectRef::GetUint(const std::string &key) const {
-  return Get(key, json_0, &Json::Value::isIntegral).asUInt64();
+  return Get(key, json_0, &Json::Value::isUInt64).asUInt64();
+}
+
+const Json::Value &JsonObjectRef::GetIntegralValue(
+    const std::string &key) const {
+  return Get(key, json_0, &Json::Value::isIntegral);
 }
 
 std::string JsonObjectRef::GetString(const std::string &key) const {
@@ -248,9 +253,13 @@ void JsonIRReader::ReadVTableLayout(const JsonObjectRef &record_type,
 void JsonIRReader::ReadEnumFields(const JsonObjectRef &enum_type,
                                   EnumTypeIR *enum_ir) {
   for (auto &&field : enum_type.GetObjects("enum_fields")) {
-    EnumFieldIR enum_field_ir(field.GetString("name"),
-                              field.GetInt("enum_field_value"));
-    enum_ir->AddEnumField(std::move(enum_field_ir));
+    std::string name = field.GetString("name");
+    const Json::Value &value = field.GetIntegralValue("enum_field_value");
+    if (value.isUInt64()) {
+      enum_ir->AddEnumField(EnumFieldIR(name, value.asUInt64()));
+    } else {
+      enum_ir->AddEnumField(EnumFieldIR(name, value.asInt64()));
+    }
   }
 }
 

@@ -485,6 +485,9 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertNotIn("fields_added", diff)
         self.assertNotIn("fields_removed", diff)
 
+    def test_enum_diff(self):
+        self.prepare_and_absolute_diff_all_archs("libenum", "libenum")
+
 
 if __name__ == '__main__':
     unittest.main()

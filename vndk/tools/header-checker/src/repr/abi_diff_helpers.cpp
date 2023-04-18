@@ -147,9 +147,10 @@ void AbiDiffHelper::CompareEnumFields(
       utils::FindCommonElements(old_fields_map, new_fields_map);
   std::vector<EnumFieldDiffIR> enum_field_diffs;
   for (auto &&common_fields : cf) {
-    if (common_fields.first->GetValue() != common_fields.second->GetValue()) {
+    if (common_fields.first->GetSignedValue() !=
+        common_fields.second->GetSignedValue()) {
       EnumFieldDiffIR enum_field_diff_ir(common_fields.first,
-                                                   common_fields.second);
+                                         common_fields.second);
       enum_field_diffs.emplace_back(std::move(enum_field_diff_ir));
     }
   }
