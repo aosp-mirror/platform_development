@@ -74,6 +74,15 @@
     <string name="label_exit_position">Exit position</string>
     <string name="label_position_start">Start</string>
     <string name="label_position_end">End</string>
+    <string name="label_aspect_ratio">Aspect Ratio</string>
+    <!-- List of aspect ratio to demo, we use Rational.parseRational to parse what's inside () -->
+    <string-array name="aspect_ratio_list">
+        <item>Extreme wide (21/9)</item>
+        <item>Video (16/9)</item>
+        <item>Square (1/1)</item>
+        <item>Video call (9/16)</item>
+        <item>Extreme tall (9/21)</item>
+    </string-array>
 
     <string name="activity_keep_clear">App/Activity/Keep Clear Rects</string>
     <string name="keep_clear_property_set">
