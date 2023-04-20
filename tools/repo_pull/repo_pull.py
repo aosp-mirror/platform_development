@@ -301,7 +301,7 @@ def _main_bash(args):
     print(_sh_quote_command(['popd']))
 
 
-def _do_pull_change_lists_for_project(task):
+def _do_pull_change_lists_for_project(task, ignore_unknown_changes):
     """Pick a list of changes (usually under a project directory)."""
     changes, task_opts = task
 
@@ -317,6 +317,9 @@ def _do_pull_change_lists_for_project(task):
         except KeyError:
             err_msg = 'error: project "{}" cannot be found in manifest.xml\n'
             err_msg = err_msg.format(change.project).encode('utf-8')
+            if ignore_unknown_changes:
+                print(err_msg)
+                continue
             return (change, changes[i + 1:], [], err_msg)
 
         print(change.commit_sha1[0:10], i + 1, cwd)
@@ -368,12 +371,14 @@ def _main_pull(args):
 
     # Run the commands to pull the change lists
     if args.parallel <= 1:
-        results = [_do_pull_change_lists_for_project((changes, task_opts))
+        results = [_do_pull_change_lists_for_project(
+            (changes, task_opts), args.ignore_unknown_changes)
                    for changes in change_list_groups]
     else:
         pool = multiprocessing.Pool(processes=args.parallel)
         results = pool.map(_do_pull_change_lists_for_project,
-                           zip(change_list_groups, itertools.repeat(task_opts)))
+                           zip(change_list_groups, itertools.repeat(task_opts)),
+                           args.ignore_unknown_changes)
 
     # Print failures and tracebacks
     failures = [result for result in results if result]
@@ -411,6 +416,9 @@ def _parse_args():
 
     parser.add_argument('--current-branch', action='store_true',
                         help='Pull commits to the current branch')
+
+    parser.add_argument('--ignore-unknown-changes', action='store_true',
+                        help='Ignore changes whose repo is not in the manifest')
 
     return parser.parse_args()
 
