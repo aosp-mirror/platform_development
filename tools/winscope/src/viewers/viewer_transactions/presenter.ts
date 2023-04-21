@@ -216,7 +216,7 @@ export class Presenter {
     const treeGenerator = new PropertiesTreeGenerator();
     const entries: UiDataEntry[] = [];
     const formattingOptions = ObjectFormatter.displayDefaults;
-    ObjectFormatter.displayDefaults = false;
+    ObjectFormatter.displayDefaults = true;
 
     this.trace.forEachEntry((entry, originalIndex) => {
       const timestampType = entry.getTimestamp().getType();
