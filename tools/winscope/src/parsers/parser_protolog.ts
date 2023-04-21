@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-import {
-  FormattedLogMessage,
-  LogMessage,
-  ProtoLogTraceEntry,
-  UnformattedLogMessage,
-} from 'trace/protolog';
+import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from 'trace/protolog';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {ProtoLogFileProto} from './proto_types';
 
-class ParserProtoLog extends Parser {
+class ParserProtoLog extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
   }
@@ -80,20 +75,9 @@ class ParserProtoLog extends Parser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: any
-  ): ProtoLogTraceEntry {
-    if (!this.decodedMessages || this.decodedTimestampType !== timestampType) {
-      this.decodedTimestampType = timestampType;
-      this.decodedMessages = this.decodedEntries.map((entryProto: any) => {
-        return this.decodeProtoLogMessage(entryProto, timestampType);
-      });
-    }
-
-    return new ProtoLogTraceEntry(this.decodedMessages, index);
-  }
-
-  private decodeProtoLogMessage(entryProto: any, timestampType: TimestampType): LogMessage {
-    const message = (configJson as any).messages[entryProto.messageHash];
+    entryProto: object
+  ): LogMessage {
+    const message = (configJson as any).messages[(entryProto as any).messageHash];
     if (!message) {
       return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
     }
@@ -113,8 +97,6 @@ class ParserProtoLog extends Parser {
     }
   }
 
-  private decodedMessages?: LogMessage[];
-  private decodedTimestampType?: TimestampType;
   private realToElapsedTimeOffsetNs: undefined | bigint = undefined;
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = '1.0.0';

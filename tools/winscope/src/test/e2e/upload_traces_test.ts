@@ -51,20 +51,21 @@ describe('Upload traces', () => {
     expect(text).toContain('layers_trace_from_transactions.winscope (Surface Flinger)');
     expect(text).toContain('ime_trace_clients.winscope (IME Clients)');
     expect(text).toContain('transactions_trace.winscope (Transactions)');
+    expect(text).toContain('transition_trace.winscope (Transitions)');
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('unsupported file format');
   };
 
   const checkEmitsOverriddenTracesMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('overridden by another trace');
   };
 
   const areMessagesEmitted = async (): Promise<boolean> => {
-    return element(by.css('upload-snack-bar')).isPresent();
+    return element(by.css('snack-bar')).isPresent();
   };
 
   const checkRendersSurfaceFlingerView = async () => {

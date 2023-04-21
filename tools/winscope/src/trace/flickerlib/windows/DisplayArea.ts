@@ -43,6 +43,8 @@ DisplayArea.fromProto = (
 
 function addAttributes(entry: DisplayArea, proto: any) {
   entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
   entry.kind = entry.constructor.name;
   entry.shortName = shortenName(entry.name);
 }

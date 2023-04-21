@@ -53,11 +53,7 @@ public class MainActivity extends Activity {
                     Log.e(TAG, "No service");
                     return;
                 }
-                try {
-                    mService.mHotwordDetector.startRecognition();
-                } catch (HotwordDetector.IllegalDetectorStateException e) {
-                    e.printStackTrace();
-                }
+                mService.mHotwordDetector.startRecognition();
             }
         });
         button = (Button) findViewById(R.id.directRecord);

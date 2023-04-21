@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
+import {TimeRange} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {Color} from '../../colors';
 import {CanvasDrawer} from '../canvas/canvas_drawer';
 import {CanvasMouseHandler} from '../canvas/canvas_mouse_handler';
 import {DraggableCanvasObject} from '../canvas/draggable_canvas_object';
-import {BigIntSegment, Segment, TimelineData} from './utils';
+import {Segment} from './utils';
 
 export class MiniCanvasDrawerInput {
   constructor(
-    public fullRange: BigIntSegment,
-    public selectedPosition: bigint,
-    public selection: BigIntSegment,
-    public timelineEntries: TimelineData
+    public fullRange: TimeRange,
+    public selectedPosition: Timestamp,
+    public selection: TimeRange,
+    public traces: Traces
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
@@ -38,58 +42,70 @@ export class MiniCanvasDrawerInput {
         from: transformer.transform(this.selection.from),
         to: transformer.transform(this.selection.to),
       },
-      this.computeTransformedTraceSegments(transformer),
+      this.transformTracesTimestamps(transformer),
       transformer
     );
   }
 
-  private computeTransformedTraceSegments(transformer: Transformer): Map<TraceType, number[]> {
+  private transformTracesTimestamps(transformer: Transformer): Map<TraceType, number[]> {
     const transformedTraceSegments = new Map<TraceType, number[]>();
 
-    this.timelineEntries.forEach((entries, traceType) => {
-      transformedTraceSegments.set(
-        traceType,
-        entries.map((entry) => transformer.transform(entry))
-      );
+    this.traces.forEachTrace((trace) => {
+      transformedTraceSegments.set(trace.type, this.transformTraceTimestamps(transformer, trace));
     });
 
     return transformedTraceSegments;
   }
+
+  private transformTraceTimestamps(transformer: Transformer, trace: Trace<{}>): number[] {
+    const result: number[] = [];
+
+    trace.forEachTimestamp((timestamp) => {
+      result.push(transformer.transform(timestamp));
+    });
+
+    return result;
+  }
 }
 
 export class Transformer {
+  private timestampType: TimestampType;
+
   private fromWidth: bigint;
   private targetWidth: number;
 
   private fromOffset: bigint;
   private toOffset: number;
 
-  constructor(private fromRange: BigIntSegment, private toRange: Segment) {
-    this.fromWidth = this.fromRange.to - this.fromRange.from;
+  constructor(private fromRange: TimeRange, private toRange: Segment) {
+    this.timestampType = fromRange.from.getType();
+
+    this.fromWidth = this.fromRange.to.getValueNs() - this.fromRange.from.getValueNs();
     // Needs to be a whole number to be compatible with bigints
     this.targetWidth = Math.round(this.toRange.to - this.toRange.from);
 
-    this.fromOffset = this.fromRange.from;
+    this.fromOffset = this.fromRange.from.getValueNs();
     // Needs to be a whole number to be compatible with bigints
     this.toOffset = Math.round(this.toRange.from);
   }
 
-  transform(x: bigint): number {
+  transform(x: Timestamp): number {
     return (
-      this.toOffset + (this.targetWidth * Number(x - this.fromOffset)) / Number(this.fromWidth)
+      this.toOffset +
+      (this.targetWidth * Number(x.getValueNs() - this.fromOffset)) / Number(this.fromWidth)
     );
   }
 
-  untransform(x: number): bigint {
+  untransform(x: number): Timestamp {
     x = Math.round(x);
-    return (
-      this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth)
-    );
+    const valueNs =
+      this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
+    return new Timestamp(this.timestampType, valueNs);
   }
 }
 
 class MiniCanvasDrawerOutput {
-  constructor(public selectedPosition: bigint, public selection: BigIntSegment) {}
+  constructor(public selectedPosition: Timestamp, public selection: TimeRange) {}
 }
 
 class MiniCanvasDrawerData {
@@ -150,10 +166,10 @@ export class MiniCanvasDrawer implements CanvasDrawer {
   constructor(
     public canvas: HTMLCanvasElement,
     private inputGetter: () => MiniCanvasDrawerInput,
-    private onPointerPositionDragging: (pos: bigint) => void,
-    private onPointerPositionChanged: (pos: bigint) => void,
-    private onSelectionChanged: (selection: BigIntSegment) => void,
-    private onUnhandledClick: (pos: bigint) => void
+    private onPointerPositionDragging: (pos: Timestamp) => void,
+    private onPointerPositionChanged: (pos: Timestamp) => void,
+    private onSelectionChanged: (selection: TimeRange) => void,
+    private onUnhandledClick: (pos: Timestamp) => void
   ) {
     const ctx = canvas.getContext('2d');
 

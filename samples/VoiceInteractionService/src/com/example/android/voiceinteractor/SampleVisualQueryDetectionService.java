@@ -57,9 +57,6 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
 
     private final String FAKE_QUERY = "What is the weather today?";
 
-    // Service related variables
-    private Callback mCallback;
-
     // Camera module related variables
     // Set this to different values for different modes
     private final int CAPTURE_MODE = CameraDevice.TEMPLATE_RECORD;
@@ -82,9 +79,8 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
 
 
     @Override
-    public void onStartDetection(@NonNull Callback callback) {
+    public void onStartDetection() {
         Log.i(TAG, "onStartDetection");
-        mCallback = callback;
         startBackgroundThread();
         openCamera();
         mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
@@ -94,7 +90,6 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
     @Override
     public void onStopDetection() {
         Log.i(TAG, "onStopDetection");
-        mCallback = null;
         releaseResources();
         stopBackgroundThread();
     }
@@ -126,7 +121,7 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
             buffer.get(bytes);
             // Camera frame triggers attention
             Log.i(TAG, "Image bytes received: " + Arrays.toString(bytes));
-            mCallback.onAttentionGained();
+            gainedAttention();
             openMicrophone();
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,7 +132,7 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
         }
         SystemClock.sleep(2_000); // wait 2 second to turn off attention
         closeMicrophone();
-        mCallback.onAttentionLost();
+        lostAttention();
     }
 
     private void onReceiveAudio(){
@@ -147,8 +142,8 @@ public class SampleVisualQueryDetectionService extends VisualQueryDetectionServi
             if (result != AudioRecord.ERROR_INVALID_OPERATION) {
                 // The buffer can be all zeros due to initialization and reading delay
                 Log.i(TAG, "Audio bytes received: " + Arrays.toString(bytes));
-                mCallback.onQueryDetected(FAKE_QUERY);
-                mCallback.onQueryFinished();
+                streamQuery(FAKE_QUERY);
+                finishQuery();
             }
         } catch (Exception e) {
             e.printStackTrace();

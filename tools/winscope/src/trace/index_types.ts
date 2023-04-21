@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-// This class is needed for testing because Node.js doesn't provide the Web API's File type
-import {Blob} from './blob';
+export type RelativeEntryIndex = number;
+export type AbsoluteEntryIndex = number;
+export type AbsoluteFrameIndex = number;
 
-class File extends Blob {
-  constructor(buffer: ArrayBuffer, fileName: string) {
-    super(buffer);
-    this.name = fileName;
-  }
-
-  readonly lastModified: number = 0;
-  readonly name: string;
-  readonly webkitRelativePath: string = '';
+// entries = [start; end[ (end not included)
+export interface EntriesRange {
+  start: AbsoluteEntryIndex;
+  end: AbsoluteEntryIndex;
 }
 
-export {File};
+// frames = [start; end[ (end not included)
+export interface FramesRange {
+  start: AbsoluteFrameIndex;
+  end: AbsoluteFrameIndex;
+}

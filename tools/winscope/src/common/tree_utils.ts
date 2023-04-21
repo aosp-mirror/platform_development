@@ -56,9 +56,7 @@ class TreeUtils {
     const filter = (item: TreeNode | undefined | null) => {
       if (item) {
         const regex = new RegExp(filterString, 'i');
-        return (
-          (filterString.length === 0 || regex.test(`${item.name}`))
-        );
+        return filterString.length === 0 || regex.test(`${item.name}`);
       }
       return false;
     };

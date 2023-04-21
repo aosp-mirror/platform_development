@@ -15,13 +15,13 @@
  */
 import {UnitTestUtils} from 'test/unit/utils';
 import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserWindowManager', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/WindowManager.pb');
@@ -49,31 +49,21 @@ describe('ParserWindowManager', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry from elapsed timestamp', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 15398076788n);
-      const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
-      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
-    });
-
-    it('retrieves trace entry from real timestamp', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
-      const entry = parser.getTraceEntry(timestamp)!;
+    it('retrieves trace entry', () => {
+      const entry = parser.getEntry(1, TimestampType.REAL);
       expect(entry).toBeInstanceOf(WindowManagerState);
       expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
     });
 
     it('formats entry timestamps', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
-      const entry = parser.getTraceEntry(timestamp)!;
+      const entry = parser.getEntry(1, TimestampType.REAL);
       expect(entry.name).toEqual('2022-07-29T15:04:49.999048960');
     });
   });
 
-  describe('trace elapsed timestamp', () => {
-    let parser: Parser;
+  describe('trace elapsed (only) timestamp', () => {
+    let parser: Parser<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/WindowManager.pb');
@@ -93,20 +83,13 @@ describe('ParserWindowManager', () => {
     });
 
     it('retrieves trace entry', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
-      const entry = parser.getTraceEntry(timestamp)!;
+      const entry = parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(WindowManagerState);
       expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850254319343n);
     });
 
     it('formats entry timestamps', () => {
-      expect(() => {
-        const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
-        parser.getTraceEntry(timestamp);
-      }).toThrow(Error('Timestamps with type "REAL" not available'));
-
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
-      const entry = parser.getTraceEntry(timestamp)!;
+      const entry = parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry.name).toEqual('14m10s254ms319343ns');
     });
   });

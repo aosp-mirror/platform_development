@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from 'trace/parser';
 import {LogMessage} from 'trace/protolog';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserProtoLog', () => {
-  let parser: Parser;
+  let parser: Parser<LogMessage>;
 
   const expectedFirstLogMessageElapsed = {
     text: 'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
@@ -41,11 +41,17 @@ describe('ParserProtoLog', () => {
   };
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/ProtoLog.pb');
+    parser = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/ProtoLog.pb'
+    )) as Parser<LogMessage>;
   });
 
   it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.PROTO_LOG);
+  });
+
+  it('has expected length', () => {
+    expect(parser.getLengthEntries()).toEqual(50);
   });
 
   it('provides elapsed timestamps', () => {
@@ -73,28 +79,15 @@ describe('ParserProtoLog', () => {
   });
 
   it('reconstructs human-readable log message (ELAPSED time)', () => {
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 850746266486n);
-    const entry = parser.getTraceEntry(timestamp)!;
+    const message = parser.getEntry(0, TimestampType.ELAPSED);
 
-    expect(entry.currentMessageIndex).toEqual(0);
-
-    expect(entry.messages.length).toEqual(50);
-    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessageElapsed);
-    entry.messages.forEach((message: any) => {
-      expect(message).toBeInstanceOf(LogMessage);
-    });
+    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageElapsed);
+    expect(message).toBeInstanceOf(LogMessage);
   });
 
   it('reconstructs human-readable log message (REAL time)', () => {
-    const timestamp = new Timestamp(TimestampType.REAL, 1655727125377266486n);
-    const entry = parser.getTraceEntry(timestamp)!;
+    const message = parser.getEntry(0, TimestampType.REAL)!;
 
-    expect(entry.currentMessageIndex).toEqual(0);
-
-    expect(entry.messages.length).toEqual(50);
-    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessageReal);
-    entry.messages.forEach((message: any) => {
-      expect(message).toBeInstanceOf(LogMessage);
-    });
+    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageReal);
   });
 });
