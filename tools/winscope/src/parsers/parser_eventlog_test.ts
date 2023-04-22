@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import { CujEvent } from 'trace/flickerlib/common';
+import {CujEvent} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
@@ -51,7 +51,7 @@ describe('ParserEventLog', () => {
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(undefined);
   });
 
-  it("contains parsed jank CUJ events", () => {
+  it('contains parsed jank CUJ events', () => {
     const entry = parser.getEntry(18, TimestampType.REAL);
     expect(entry instanceof CujEvent).toBeTrue();
   });
