@@ -31,10 +31,6 @@ import json
 INDENT = ' ' * 4
 
 
-def get_notice_path(module_name):
-    return os.path.join('NOTICE_FILES', module_name + '.txt')
-
-
 def get_target_arch(json_rel_path):
     return json_rel_path.split('/')[0]
 
@@ -116,6 +112,13 @@ JSON_TO_BP = {
     'MinSdkVersion': 'min_sdk_version',
 }
 
+LICENSE_KEYS = {
+    'LicenseKinds': 'license_kinds',
+    'LicenseTexts': 'license_text',
+}
+
+NOTICE_DIR = 'NOTICE_FILES'
+
 SANITIZER_VARIANT_PROPS = {
     'export_include_dirs',
     'export_system_include_dirs',
@@ -141,6 +144,7 @@ def convert_json_to_bp_prop(json_path, bp_dir):
 # files while converting.
 def convert_json_data_to_bp_prop(prop, bp_dir):
     ret = {}
+    lic_ret = {}
 
     module_name = prop['ModuleName']
     ret['name'] = module_name
@@ -156,11 +160,18 @@ def convert_json_data_to_bp_prop(prop, bp_dir):
     for key in prop:
         if key in JSON_TO_BP:
             ret[JSON_TO_BP[key]] = prop[key]
+        elif key in LICENSE_KEYS:
+            if key == 'LicenseTexts':
+                # Add path prefix
+                lic_ret[LICENSE_KEYS[key]] = [os.path.join(NOTICE_DIR, lic_path)
+                                              for lic_path in prop[key]]
+            else:
+                lic_ret[LICENSE_KEYS[key]] = prop[key]
         else:
             logging.warning('Unknown prop "%s" of module "%s"', key,
                             module_name)
 
-    return ret
+    return ret, lic_ret
 
 def is_64bit_arch(arch):
     return '64' in arch # arm64, x86_64
@@ -183,6 +194,13 @@ def gen_bp_module(image, variation, name, version, target_arch, vndk_list, arch_
     # Generate Android.bp module for given snapshot.
     # If a vndk library with the same name exists, reuses exported flags of the vndk library,
     # instead of the snapshot's own flags.
+
+    if variation == 'license':
+        bp = 'license {\n'
+        bp += gen_bp_prop(arch_props, INDENT)
+        bp += '}\n\n'
+        return bp
+
     prop = {
         # These are common for all snapshot modules.
         image: True,
@@ -344,8 +362,8 @@ def gen_bp_list_module(image, snapshot_version, vndk_list, target_arch, arch_pro
     bp += '}\n\n'
     return bp
 
-def build_props(install_dir):
-    # props[target_arch]["static"|"shared"|"binary"|"header"][name][arch] : json
+def build_props(install_dir, image='', version=0 ):
+    # props[target_arch]["static"|"shared"|"binary"|"header"|"license"][name][arch] : json
     props = dict()
 
     # {target_arch}/{arch}/{variation}/{module}.json
@@ -363,11 +381,12 @@ def build_props(install_dir):
 
             if not target_arch in props:
                 props[target_arch] = dict()
+                props[target_arch]['license'] = dict()
             if not variation in props[target_arch]:
                 props[target_arch][variation] = dict()
 
             with open(full_path, 'r') as f:
-                prop = convert_json_to_bp_prop(f, bp_dir)
+                prop, lic_prop = convert_json_to_bp_prop(f, bp_dir)
                 # Remove .json after parsing?
                 # os.unlink(full_path)
 
@@ -389,9 +408,23 @@ def build_props(install_dir):
                         del prop[k]
                 prop = {'name': module_name, sanitizer_type: prop}
 
-            notice_path = 'NOTICE_FILES/' + module_name + '.txt'
-            if os.path.exists(os.path.join(bp_dir, notice_path)):
-                prop['notice'] = notice_path
+            if not lic_prop:
+                # This for the backward compatibility with the old snapshots
+                notice_path = os.path.join(NOTICE_DIR, module_name + '.txt')
+                if os.path.exists(os.path.join(bp_dir, notice_path)):
+                    lic_prop['license_text'] = [notice_path]
+
+            # Update license props
+            if lic_prop and image and version:
+                lic_name = '{image}-v{version}-{name}-license'.format(
+                    image=image, version=version, name=module_name)
+                if lic_name not in props[target_arch]['license']:
+                    lic_prop['name'] = lic_name
+                    props[target_arch]['license'][lic_name] = lic_prop
+                else:
+                    props[target_arch]['license'][lic_name].update(lic_prop)
+
+                prop['licenses'] = [lic_name]
 
             variation_dict = props[target_arch][variation]
             if not module_name in variation_dict:
@@ -403,7 +436,7 @@ def build_props(install_dir):
 
     return props
 
-def convert_json_host_data_to_bp(mod, install_dir):
+def convert_json_host_data_to_bp(mod, install_dir, version):
     """Create blueprint definition for a given host module.
 
     All host modules are created as a cc_prebuilt_binary
@@ -414,9 +447,10 @@ def convert_json_host_data_to_bp(mod, install_dir):
     Args:
       mod: JSON definition of the module
       install_dir: installation directory of the host snapshot
+      version: the version of the host snapshot
     """
     rust_proc_macro = mod.pop('RustProcMacro', False)
-    prop = convert_json_data_to_bp_prop(mod, install_dir)
+    prop, lic_prop = convert_json_data_to_bp_prop(mod, install_dir)
     if 'prebuilt' in prop:
         return
 
@@ -432,15 +466,25 @@ def convert_json_host_data_to_bp(mod, install_dir):
     prop['target']['host']['srcs'] = [prop['filename']]
     del prop['filename']
 
+    bp = ''
+    if lic_prop:
+        lic_name = 'host-v{version}-{name}-license'.format(
+                    version=version, name=prop['name'])
+        lic_prop['name'] = lic_name
+        prop['licenses'] = [lic_name]
+        bp += 'license {\n'
+        bp += gen_bp_prop(lic_prop, INDENT)
+        bp += '}\n\n'
+
     mod_type = 'cc_prebuilt_binary'
 
     if rust_proc_macro:
         mod_type = 'rust_prebuilt_proc_macro'
 
-    bp = mod_type + ' {\n' + gen_bp_prop(prop, INDENT) + '}\n\n'
+    bp += mod_type + ' {\n' + gen_bp_prop(prop, INDENT) + '}\n\n'
     return bp
 
-def gen_host_bp_file(install_dir):
+def gen_host_bp_file(install_dir, version):
     """Generate Android.bp for a host snapshot.
 
     This routine will find the JSON description file from a host
@@ -449,6 +493,7 @@ def gen_host_bp_file(install_dir):
 
     Args:
       install_dir: directory where the host snapshot can be found
+      version: the version of the host snapshot
     """
     bpfilename = 'Android.bp'
     with open(os.path.join(install_dir, bpfilename), 'w') as wfp:
@@ -457,7 +502,7 @@ def gen_host_bp_file(install_dir):
                 with open(os.path.join(install_dir, file), 'r') as rfp:
                     props = json.load(rfp)
                     for mod in props:
-                        prop = convert_json_host_data_to_bp(mod, install_dir)
+                        prop = convert_json_host_data_to_bp(mod, install_dir, version)
                         if prop:
                             wfp.write(prop)
 
@@ -473,7 +518,7 @@ def gen_bp_files(image, vndk_dir, install_dir, snapshot_version):
       install_dir: string, directory to which the snapshot will be installed
       snapshot_version: int, version of the snapshot
     """
-    props = build_props(install_dir)
+    props = build_props(install_dir, image, snapshot_version)
 
     for target_arch in sorted(props):
         androidbp = ''
@@ -968,7 +1013,7 @@ def main():
         install_dir=install_dir)
 
     if host_image:
-        gen_host_bp_file(install_dir)
+        gen_host_bp_file(install_dir, snapshot_version)
 
     else:
         gen_bp_files(args.image, vndk_dir, install_dir, snapshot_version)
