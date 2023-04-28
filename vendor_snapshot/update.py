@@ -113,6 +113,7 @@ JSON_TO_BP = {
     'CrateName': 'crate_name',
     'Prebuilt': 'prebuilt',
     'Overrides': 'overrides',
+    'MinSdkVersion': 'min_sdk_version',
 }
 
 SANITIZER_VARIANT_PROPS = {

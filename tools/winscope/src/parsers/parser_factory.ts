@@ -19,6 +19,7 @@ import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {ParserAccessibility} from './parser_accessibility';
+import {ParserEventLog} from './parser_eventlog';
 import {ParserInputMethodClients} from './parser_input_method_clients';
 import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
 import {ParserInputMethodService} from './parser_input_method_service';
@@ -27,6 +28,7 @@ import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
 import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
+import {ParserTransitions} from './parser_transitions';
 import {ParserWindowManager} from './parser_window_manager';
 import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
@@ -43,6 +45,8 @@ export class ParserFactory {
     ParserTransactions,
     ParserWindowManager,
     ParserWindowManagerDump,
+    ParserEventLog,
+    ParserTransitions,
   ];
 
   private parsers = new Map<TraceType, Parser<object>>();

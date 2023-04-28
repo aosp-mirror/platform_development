@@ -54,6 +54,20 @@ const Transform = require('flicker').android.tools.common.traces.surfaceflinger.
 const Display = require('flicker').android.tools.common.traces.surfaceflinger.Display;
 const Region = require('flicker').android.tools.common.datatypes.Region;
 
+// Event Log
+const EventLog = require('flicker').android.tools.common.traces.events.EventLog;
+const CujEvent = require('flicker').android.tools.common.traces.events.CujEvent;
+const CujType = require('flicker').android.tools.common.traces.events.CujType;
+const Event = require('flicker').android.tools.common.traces.events.Event;
+const FlickerEvent = require('flicker').android.tools.common.traces.events.FlickerEvent;
+const FocusEvent = require('flicker').android.tools.common.traces.events.FocusEvent;
+const EventLogParser = require('flicker').android.tools.common.parsers.events.EventLogParser;
+
+// Transitions
+const Transition = require('flicker').android.tools.common.traces.wm.Transition;
+const TransitionType = require('flicker').android.tools.common.traces.wm.TransitionType;
+const TransitionChange = require('flicker').android.tools.common.traces.wm.TransitionChange;
+
 // Common
 const Size = require('flicker').android.tools.common.datatypes.Size;
 const ActiveBuffer = require('flicker').android.tools.common.datatypes.ActiveBuffer;
@@ -68,6 +82,9 @@ const Point = require('flicker').android.tools.common.datatypes.Point;
 const PointF = require('flicker').android.tools.common.datatypes.PointF;
 const Rect = require('flicker').android.tools.common.datatypes.Rect;
 const RectF = require('flicker').android.tools.common.datatypes.RectF;
+const WindowingMode = require('flicker').android.tools.common.traces.wm.WindowingMode;
+const CrossPlatform = require('flicker').android.tools.common.CrossPlatform;
+const TimestampFactory = require('flicker').android.tools.common.TimestampFactory;
 
 const EMPTY_SIZE = Size.Companion.EMPTY;
 const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
@@ -285,6 +302,18 @@ export {
   Matrix22,
   Matrix33,
   Display,
+  // Eventlog
+  EventLog,
+  CujEvent,
+  CujType,
+  Event,
+  FlickerEvent,
+  FocusEvent,
+  EventLogParser,
+  // Transitions
+  Transition,
+  TransitionType,
+  TransitionChange,
   // Common
   Size,
   ActiveBuffer,
@@ -297,6 +326,9 @@ export {
   RectF,
   Region,
   Rotation,
+  WindowingMode,
+  CrossPlatform,
+  TimestampFactory,
   // Service
   toSize,
   toActiveBuffer,
