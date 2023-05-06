@@ -197,11 +197,12 @@ TRACE_TARGETS = {
         'rm -f /data/local/tmp/eventlog.winscope && EVENT_LOG_TRACING_START_TIME=$EPOCHREALTIME\necho "Event Log trace started."',
         'echo "EventLog\\n" > /data/local/tmp/eventlog.winscope && su root logcat -b events -v threadtime -v printable -v uid -v nsec -v epoch -b events -t $EVENT_LOG_TRACING_START_TIME >> /data/local/tmp/eventlog.winscope',
     ),
-    "transition_trace": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "transition_trace", "transition_trace"),
-        'su root cmd window shell tracing start\necho "WMShell Transition trace started."',
-        'su root cmd window shell tracing stop >/dev/null 2>&1'
-    )
+    "transition_traces": TraceTarget(
+        [WinscopeFileMatcher(WINSCOPE_DIR, "wm_transition_trace", "wm_transition_trace"),
+         WinscopeFileMatcher(WINSCOPE_DIR, "shell_transition_trace", "shell_transition_trace")],
+        'su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start\necho "Transition traces started."',
+        'su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1'
+    ),
 }
 
 
@@ -671,6 +672,7 @@ while true; do sleep 0.1; done
     def process_with_device(self, server, path, device_id):
         try:
             requested_types = self.get_request(server)
+            log.debug(f"Clienting requested trace types {requested_types}")
             requested_traces = [TRACE_TARGETS[t] for t in requested_types]
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
@@ -686,6 +688,7 @@ while true; do sleep 0.1; done
             '\n'.join([t.trace_start for t in requested_traces]))
         log.debug("Trace requested for {} with targets {}".format(
             device_id, ','.join(requested_types)))
+        log.debug(f"Executing command \"{command}\" on {device_id}...")
         TRACE_THREADS[device_id] = TraceThread(
             device_id, command.encode('utf-8'))
         TRACE_THREADS[device_id].start()
