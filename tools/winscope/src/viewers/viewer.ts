@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 
 enum ViewType {
@@ -30,7 +32,7 @@ class View {
 }
 
 interface Viewer {
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
+  onTracePositionUpdate(position: TracePosition): void;
   getViews(): View[];
   getDependencies(): TraceType[];
 }

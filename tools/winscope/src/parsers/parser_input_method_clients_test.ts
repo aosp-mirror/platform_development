@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserInputMethodlClients', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<any>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser(
@@ -52,19 +52,15 @@ describe('ParserInputMethodlClients', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry from elapsed timestamp', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 15647516364n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos)).toEqual(15647516364n);
-    });
-
-    it('retrieves trace entry from real timestamp', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107090249283325n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos)).toEqual(15647516364n);
+    it('retrieves trace entry', () => {
+      expect(BigInt(parser.getEntry(1, TimestampType.REAL)!.elapsedRealtimeNanos)).toEqual(
+        15647516364n
+      );
     });
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<any>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/InputMethodClients.pb');
@@ -81,8 +77,12 @@ describe('ParserInputMethodlClients', () => {
     });
 
     it("doesn't provide real timestamps", () => {
-      expect(parser.getTimestamps(TimestampType.ELAPSED)![0]).toEqual(
-        new Timestamp(TimestampType.ELAPSED, 1149083651642n)
+      expect(parser.getTimestamps(TimestampType.REAL)).toBeUndefined();
+    });
+
+    it('retrieves trace entry from elapsed timestamp', () => {
+      expect(BigInt(parser.getEntry(0, TimestampType.ELAPSED)!.elapsedRealtimeNanos)).toEqual(
+        1149083651642n
       );
     });
   });

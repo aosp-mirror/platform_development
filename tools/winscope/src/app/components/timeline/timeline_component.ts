@@ -32,8 +32,9 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {StringUtils} from 'common/string_utils';
 import {TimeUtils} from 'common/time_utils';
-import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
+import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineComponent} from './mini_timeline_component';
 
@@ -55,8 +56,7 @@ import {MiniTimelineComponent} from './mini_timeline_component';
       </div>
       <expanded-timeline
         [timelineData]="timelineData"
-        [currentTimestamp]="currentTimestamp"
-        (onTimestampChanged)="updateCurrentTimestamp($event)"
+        (onTracePositionUpdate)="updatePosition($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar" #collapsedTimeline>
@@ -147,10 +147,10 @@ import {MiniTimelineComponent} from './mini_timeline_component';
         </div>
         <mini-timeline
           [timelineData]="timelineData"
-          [currentTimestamp]="currentTimestamp"
+          [currentTracePosition]="getCurrentTracePosition()"
           [selectedTraces]="selectedTraces"
-          (changeTimestamp)="updateCurrentTimestamp($event)"
-          (changeSeekTimestamp)="updateSeekTimestamp($event)"
+          (onTracePositionUpdate)="updatePosition($event)"
+          (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
           id="mini-timeline"
           #miniTimeline></mini-timeline>
         <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
@@ -287,7 +287,7 @@ import {MiniTimelineComponent} from './mini_timeline_component';
     `,
   ],
 })
-export class TimelineComponent implements TimestampChangeListener {
+export class TimelineComponent implements TracePositionUpdateListener {
   readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
   readonly MAX_SELECTED_TRACES = 3;
 
@@ -312,7 +312,7 @@ export class TimelineComponent implements TimestampChangeListener {
     }
 
     // Create new object to make sure we trigger an update on Mini Timeline child component
-    this.selectedTraces = [...this.selectedTraces]
+    this.selectedTraces = [...this.selectedTraces];
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
   internalActiveTrace: TraceType | undefined = undefined;
@@ -382,28 +382,27 @@ export class TimelineComponent implements TimestampChangeListener {
   }
 
   getVideoCurrentTime() {
-    return this.timelineData.searchCorrespondingScreenRecordingTimeSeconds(this.currentTimestamp);
+    return this.timelineData.searchCorrespondingScreenRecordingTimeSeconds(
+      this.getCurrentTracePosition()
+    );
   }
 
   private seekTimestamp: Timestamp | undefined;
 
-  get currentTimestamp(): Timestamp {
+  getCurrentTracePosition(): TracePosition {
     if (this.seekTimestamp !== undefined) {
-      return this.seekTimestamp;
+      return TracePosition.fromTimestamp(this.seekTimestamp);
     }
 
-    const timestamp = this.timelineData.getCurrentTimestamp();
-    if (timestamp === undefined) {
-      throw Error('A timestamp should have been set by the time the timeline is loaded');
+    const position = this.timelineData.getCurrentPosition();
+    if (position === undefined) {
+      throw Error('A trace position should be available by the time the timeline is loaded');
     }
 
-    return timestamp;
+    return position;
   }
 
-  onCurrentTimestampChanged(timestamp: Timestamp | undefined): void {
-    if (!timestamp) {
-      return;
-    }
+  onTracePositionUpdate(position: TracePosition) {
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -412,8 +411,8 @@ export class TimelineComponent implements TimestampChangeListener {
     this.changeDetectorRef.detectChanges();
   }
 
-  updateCurrentTimestamp(timestamp: Timestamp) {
-    this.timelineData.setCurrentTimestamp(timestamp);
+  updatePosition(position: TracePosition) {
+    this.timelineData.setPosition(position);
   }
 
   usingRealtime(): boolean {
@@ -427,12 +426,17 @@ export class TimelineComponent implements TimestampChangeListener {
 
   private updateTimeInputValuesToCurrentTimestamp() {
     this.selectedElapsedTimeFormControl.setValue(
-      TimeUtils.format(new ElapsedTimestamp(this.currentTimestamp.getValueNs()), false)
+      TimeUtils.format(
+        new ElapsedTimestamp(this.getCurrentTracePosition().timestamp.getValueNs()),
+        false
+      )
     );
     this.selectedRealTimeFormControl.setValue(
-      TimeUtils.format(new RealTimestamp(this.currentTimestamp.getValueNs()))
+      TimeUtils.format(new RealTimestamp(this.getCurrentTracePosition().timestamp.getValueNs()))
     );
-    this.selectedNsFormControl.setValue(`${this.currentTimestamp.getValueNs()} ns`);
+    this.selectedNsFormControl.setValue(
+      `${this.getCurrentTracePosition().timestamp.getValueNs()} ns`
+    );
   }
 
   isOptionDisabled(trace: TraceType) {
@@ -469,37 +473,31 @@ export class TimelineComponent implements TimestampChangeListener {
   }
 
   hasPrevEntry(): boolean {
-    if (
-      !this.internalActiveTrace ||
-      (this.timelineData.getTimelines().get(this.internalActiveTrace)?.length ?? 0) === 0
-    ) {
+    if (!this.internalActiveTrace) {
       return false;
     }
-    return this.timelineData.getPreviousTimestampFor(this.internalActiveTrace) !== undefined;
+    return this.timelineData.getPreviousEntryFor(this.internalActiveTrace) !== undefined;
   }
 
   hasNextEntry(): boolean {
-    if (
-      !this.internalActiveTrace ||
-      (this.timelineData.getTimelines().get(this.internalActiveTrace)?.length ?? 0) === 0
-    ) {
+    if (!this.internalActiveTrace) {
       return false;
     }
-    return this.timelineData.getNextTimestampFor(this.internalActiveTrace) !== undefined;
+    return this.timelineData.getNextEntryFor(this.internalActiveTrace) !== undefined;
   }
 
   moveToPreviousEntry() {
     if (!this.internalActiveTrace) {
       return;
     }
-    this.timelineData.moveToPreviousTimestampFor(this.internalActiveTrace);
+    this.timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
   }
 
   moveToNextEntry() {
     if (!this.internalActiveTrace) {
       return;
     }
-    this.timelineData.moveToNextTimestampFor(this.internalActiveTrace);
+    this.timelineData.moveToNextEntryFor(this.internalActiveTrace);
   }
 
   humanElapsedTimeInputChange(event: Event) {
@@ -508,7 +506,7 @@ export class TimelineComponent implements TimestampChangeListener {
     }
     const target = event.target as HTMLInputElement;
     const timestamp = TimeUtils.parseHumanElapsed(target.value);
-    this.timelineData.setCurrentTimestamp(timestamp);
+    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -519,7 +517,7 @@ export class TimelineComponent implements TimestampChangeListener {
     const target = event.target as HTMLInputElement;
 
     const timestamp = TimeUtils.parseHumanReal(target.value);
-    this.timelineData.setCurrentTimestamp(timestamp);
+    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -533,7 +531,7 @@ export class TimelineComponent implements TimestampChangeListener {
       this.timelineData.getTimestampType()!,
       StringUtils.parseBigIntStrippingUnit(target.value)
     );
-    this.timelineData.setCurrentTimestamp(timestamp);
+    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 }

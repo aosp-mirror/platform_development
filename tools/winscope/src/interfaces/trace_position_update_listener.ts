@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-import {TimestampType} from './timestamp';
+import {TracePosition} from 'trace/trace_position';
 
-class TransactionsTraceEntry {
-  constructor(
-    public entriesProto: any[],
-    public timestampType: TimestampType,
-    public realToElapsedTimeOffsetNs: bigint | undefined,
-    public currentEntryIndex: number
-  ) {}
+export interface TracePositionUpdateListener {
+  onTracePositionUpdate(position: TracePosition): void;
 }
-
-export {TransactionsTraceEntry};

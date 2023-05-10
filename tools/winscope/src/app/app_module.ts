@@ -67,7 +67,7 @@ import {
 } from './components/bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
-import {ParserErrorSnackBarComponent} from './components/parser_error_snack_bar_component';
+import {SnackBarComponent} from './components/snack_bar_component';
 import {ExpandedTimelineComponent} from './components/timeline/expanded_timeline_component';
 import {MiniTimelineComponent} from './components/timeline/mini_timeline_component';
 import {SingleTimelineComponent} from './components/timeline/single_timeline_component';
@@ -101,7 +101,6 @@ import {WebAdbComponent} from './components/web_adb_component';
     TreeNodePropertiesDataViewComponent,
     PropertyGroupsComponent,
     TransformMatrixComponent,
-    ParserErrorSnackBarComponent,
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
     CoordinatesTableComponent,
@@ -109,6 +108,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     MiniTimelineComponent,
     ExpandedTimelineComponent,
     SingleTimelineComponent,
+    SnackBarComponent,
     MatDrawer,
     MatDrawerContent,
     MatDrawerContainer,

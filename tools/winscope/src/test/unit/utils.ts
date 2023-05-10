@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import {Parser} from 'parsers/parser';
 import {ParserFactory} from 'parsers/parser_factory';
 import {CommonTestUtils} from 'test/common/utils';
 import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {Parser} from 'trace/parser';
+import {TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class UnitTestUtils extends CommonTestUtils {
-  static async getParser(filename: string): Promise<Parser> {
+  static async getParser(filename: string): Promise<Parser<object>> {
     const file = new TraceFile(await CommonTestUtils.getFixtureFile(filename), undefined);
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length).toEqual(1);
@@ -48,40 +48,37 @@ class UnitTestUtils extends CommonTestUtils {
     let surfaceFlingerEntry: LayerTraceEntry | undefined;
     {
       const parser = await UnitTestUtils.getParser('traces/ime/SurfaceFlinger_with_IME.pb');
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 502942319579n);
-      surfaceFlingerEntry = await parser.getTraceEntry(timestamp);
+      surfaceFlingerEntry = await parser.getEntry(5, TimestampType.ELAPSED);
     }
 
     let windowManagerEntry: WindowManagerState | undefined;
     {
       const parser = await UnitTestUtils.getParser('traces/ime/WindowManager_with_IME.pb');
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 502938057652n);
-      windowManagerEntry = await parser.getTraceEntry(timestamp)!;
+      windowManagerEntry = await parser.getEntry(2, TimestampType.ELAPSED);
     }
 
     const entries = new Map<TraceType, any>();
-    entries.set(TraceType.INPUT_METHOD_CLIENTS, [
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb'),
-      null,
-    ]);
-    entries.set(TraceType.INPUT_METHOD_MANAGER_SERVICE, [
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodManagerService.pb'),
-      null,
-    ]);
-    entries.set(TraceType.INPUT_METHOD_SERVICE, [
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodService.pb'),
-      null,
-    ]);
-    entries.set(TraceType.SURFACE_FLINGER, [surfaceFlingerEntry, null]);
-    entries.set(TraceType.WINDOW_MANAGER, [windowManagerEntry, null]);
+    entries.set(
+      TraceType.INPUT_METHOD_CLIENTS,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb')
+    );
+    entries.set(
+      TraceType.INPUT_METHOD_MANAGER_SERVICE,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodManagerService.pb')
+    );
+    entries.set(
+      TraceType.INPUT_METHOD_SERVICE,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodService.pb')
+    );
+    entries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
+    entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
 
     return entries;
   }
 
   private static async getTraceEntry(filename: string) {
     const parser = await UnitTestUtils.getParser(filename);
-    const timestamp = parser.getTimestamps(TimestampType.ELAPSED)![0];
-    return parser.getTraceEntry(timestamp);
+    return parser.getEntry(0, TimestampType.ELAPSED);
   }
 }
 

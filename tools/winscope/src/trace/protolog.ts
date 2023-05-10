@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {TimeUtils} from 'common/time_utils';
 import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from './timestamp';
-
-class ProtoLogTraceEntry {
-  constructor(public messages: LogMessage[], public currentMessageIndex: number) {}
-}
 
 class LogMessage {
   text: string;
@@ -182,4 +179,4 @@ function getParam<T>(arr: T[], idx: number): T {
   return arr[idx];
 }
 
-export {FormattedLogMessage, LogMessage, ProtoLogTraceEntry, UnformattedLogMessage};
+export {FormattedLogMessage, LogMessage, UnformattedLogMessage};

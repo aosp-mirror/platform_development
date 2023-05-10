@@ -13,25 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from 'common/array_utils';
-import {LogMessage, ProtoLogTraceEntry} from 'trace/protolog';
+import {LogMessage} from 'trace/protolog';
+import {Trace, TraceEntry} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {assertDefined} from '../../common/assert_utils';
 import {UiData} from './ui_data';
 
 export class Presenter {
-  constructor(notifyUiDataCallback: (data: UiData) => void) {
+  private readonly trace: Trace<LogMessage>;
+  private readonly notifyUiDataCallback: (data: UiData) => void;
+  private entry?: TraceEntry<LogMessage>;
+  private originalIndicesOfFilteredOutputMessages: number[];
+  private uiData = UiData.EMPTY;
+
+  private tags: string[] = [];
+  private files: string[] = [];
+  private levels: string[] = [];
+  private searchString = '';
+
+  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
+    this.trace = assertDefined(traces.getTrace(TraceType.PROTO_LOG));
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.originalIndicesOfFilteredOutputMessages = [];
-    this.uiData = UiData.EMPTY;
+    this.computeUiDataMessages();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  //TODO: replace input with something like iterator/cursor (same for other viewers/presenters)
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
-    this.entry = entries.get(TraceType.PROTO_LOG) ? entries.get(TraceType.PROTO_LOG)[0] : undefined;
-    if (this.uiData === UiData.EMPTY) {
-      this.computeUiDataMessages();
-    }
+  onTracePositionUpdate(position: TracePosition) {
+    this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
@@ -65,26 +79,14 @@ export class Presenter {
   }
 
   private computeUiDataMessages() {
-    if (!this.entry) {
-      return;
-    }
+    const allLogLevels = this.getUniqueMessageValues((message: LogMessage) => message.level);
+    const allTags = this.getUniqueMessageValues((message: LogMessage) => message.tag);
+    const allSourceFiles = this.getUniqueMessageValues((message: LogMessage) => message.at);
 
-    const allLogLevels = this.getUniqueMessageValues(
-      this.entry!.messages,
-      (message: LogMessage) => message.level
-    );
-    const allTags = this.getUniqueMessageValues(
-      this.entry!.messages,
-      (message: LogMessage) => message.tag
-    );
-    const allSourceFiles = this.getUniqueMessageValues(
-      this.entry!.messages,
-      (message: LogMessage) => message.at
-    );
-
-    let filteredMessagesAndOriginalIndex: Array<[number, LogMessage]> = [
-      ...this.entry!.messages.entries(),
-    ];
+    let filteredMessagesAndOriginalIndex = new Array<[number, LogMessage]>();
+    this.trace.forEachEntry((entry) => {
+      filteredMessagesAndOriginalIndex.push([entry.getIndex(), entry.getValue()]);
+    });
 
     if (this.levels.length > 0) {
       filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
@@ -113,40 +115,34 @@ export class Presenter {
     );
     const filteredMessages = filteredMessagesAndOriginalIndex.map((value) => value[1]);
 
-    this.uiData = new UiData(allLogLevels, allTags, allSourceFiles, filteredMessages, 0);
+    this.uiData = new UiData(allLogLevels, allTags, allSourceFiles, filteredMessages, undefined);
   }
 
   private computeUiDataCurrentMessageIndex() {
     if (!this.entry) {
+      this.uiData.currentMessageIndex = undefined;
       return;
     }
 
-    this.uiData.currentMessageIndex = ArrayUtils.binarySearchLowerOrEqual(
-      this.originalIndicesOfFilteredOutputMessages,
-      this.entry.currentMessageIndex
-    );
+    if (this.originalIndicesOfFilteredOutputMessages.length === 0) {
+      this.uiData.currentMessageIndex = undefined;
+      return;
+    }
+
+    this.uiData.currentMessageIndex =
+      ArrayUtils.binarySearchFirstGreaterOrEqual(
+        this.originalIndicesOfFilteredOutputMessages,
+        this.entry.getIndex()
+      ) ?? this.originalIndicesOfFilteredOutputMessages.length - 1;
   }
 
-  private getUniqueMessageValues(
-    messages: LogMessage[],
-    getValue: (message: LogMessage) => string
-  ): string[] {
+  private getUniqueMessageValues(getValue: (message: LogMessage) => string): string[] {
     const uniqueValues = new Set<string>();
-    messages.forEach((message) => {
-      uniqueValues.add(getValue(message));
+    this.trace.forEachEntry((entry) => {
+      uniqueValues.add(getValue(entry.getValue()));
     });
     const result = [...uniqueValues];
     result.sort();
     return result;
   }
-
-  private entry?: ProtoLogTraceEntry;
-  private originalIndicesOfFilteredOutputMessages: number[];
-  private uiData: UiData;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-
-  private tags: string[] = [];
-  private files: string[] = [];
-  private levels: string[] = [];
-  private searchString = '';
 }
