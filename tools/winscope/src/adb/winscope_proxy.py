@@ -192,6 +192,16 @@ TRACE_TARGETS = {
         'su root service call Wayland 26 i32 1 >/dev/null\necho "Wayland trace started."',
         'su root service call Wayland 26 i32 0 >/dev/null'
     ),
+    "eventlog": TraceTarget(
+        WinscopeFileMatcher("/data/local/tmp", "eventlog", "eventlog"),
+        'rm -f /data/local/tmp/eventlog.winscope && EVENT_LOG_TRACING_START_TIME=$EPOCHREALTIME\necho "Event Log trace started."',
+        'echo "EventLog\\n" > /data/local/tmp/eventlog.winscope && su root logcat -b events -v threadtime -v printable -v uid -v nsec -v epoch -b events -t $EVENT_LOG_TRACING_START_TIME >> /data/local/tmp/eventlog.winscope',
+    ),
+    "transition_trace": TraceTarget(
+        WinscopeFileMatcher(WINSCOPE_DIR, "transition_trace", "transition_trace"),
+        'su root cmd window shell tracing start\necho "WMShell Transition trace started."',
+        'su root cmd window shell tracing stop >/dev/null 2>&1'
+    )
 }
 
 
@@ -636,10 +646,15 @@ echo "TRACE_START" > /data/local/tmp/winscope_status
 
 # Do not print anything to stdout/stderr in the handler
 function stop_trace() {{
+  echo "start" >/data/local/tmp/winscope_signal_handler.log
+
+  # redirect stdout/stderr to log file
+  exec 1>>/data/local/tmp/winscope_signal_handler.log
+  exec 2>>/data/local/tmp/winscope_signal_handler.log
+
+  set -x
   trap - EXIT HUP INT
-
-{}
-
+  {}
   echo "TRACE_OK" > /data/local/tmp/winscope_status
 }}
 
@@ -685,8 +700,18 @@ class EndTrace(DeviceRequestEndpoint):
             TRACE_THREADS[device_id].end_trace()
 
         success = TRACE_THREADS[device_id].success()
-        out = TRACE_THREADS[device_id].out + \
-            b"\n" + TRACE_THREADS[device_id].err
+
+        signal_handler_log = call_adb("shell su root cat /data/local/tmp/winscope_signal_handler.log", device=device_id).encode('utf-8')
+
+        out = b"### Shell script's stdout - start\n" + \
+            TRACE_THREADS[device_id].out + \
+            b"### Shell script's stdout - end\n" + \
+            b"### Shell script's stderr - start\n" + \
+            TRACE_THREADS[device_id].err + \
+            b"### Shell script's stderr - end\n" + \
+            b"### Signal handler log - start\n" + \
+            signal_handler_log + \
+            b"### Signal handler log - end\n"
         command = TRACE_THREADS[device_id].trace_command
         TRACE_THREADS.pop(device_id)
         if success:
