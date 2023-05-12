@@ -734,6 +734,15 @@ class Crate(object):
           self.write('        "%s",' % apex)
       self.write('    ],')
     if crate_type != 'test':
+      if self.runner.variant_args.no_std:
+        self.write('    prefer_rlib: true,')
+        self.write('    no_stdlibs: true,')
+        self.write('    stdlibs: [')
+        if self.runner.variant_args.alloc:
+          self.write('        "liballoc.rust_sysroot",')
+        self.write('        "libcompiler_builtins.rust_sysroot",')
+        self.write('        "libcore.rust_sysroot",')
+        self.write('    ],')
       if self.runner.variant_args.native_bridge_supported:
         self.write('    native_bridge_supported: true,')
       if self.runner.variant_args.product_available:
@@ -1852,6 +1861,16 @@ def get_parser():
       type=str,
       help=('Add the contents of the given file to the main module. '+
             'The filename should start with cargo2android to work with the updater.'))
+  parser.add_argument(
+      '--no-std',
+      action='store_true',
+      default=False,
+      help='Don\'t link against std.')
+  parser.add_argument(
+      '--alloc',
+      action='store_true',
+      default=False,
+      help='Link against alloc. Only valid if --no-std is also passed.')
   parser.add_argument(
       '--verbose',
       action='store_true',
