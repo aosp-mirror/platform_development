@@ -936,6 +936,7 @@ class Crate(object):
     so_libs = list()
     rust_libs = ''
     deps_libname = re.compile('^.* = lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$')
+    dependency_suffix = self.runner.variant_args.dependency_suffix or ''
     for lib in self.externs:
       # normal value of lib: "libc = liblibc-*.rlib"
       # strange case in rand crate:  "getrandom_package = libgetrandom-*.rlib"
@@ -949,7 +950,7 @@ class Crate(object):
         continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
-        rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
+        rust_libs += '        "' + altered_name('lib' + lib_name + dependency_suffix) + '",\n'
       elif lib.endswith('.so'):
         so_libs.append(lib_name)
       elif lib != 'proc_macro':  # --extern proc_macro is special and ignored
@@ -1872,6 +1873,10 @@ def get_parser():
       action='store_true',
       default=False,
       help='Link against alloc. Only valid if --no-std is also passed.')
+  parser.add_argument(
+      '--dependency-suffix',
+      type=str,
+      help='Suffix to add to name of dependencies')
   parser.add_argument(
       '--verbose',
       action='store_true',
