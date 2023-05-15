@@ -373,6 +373,12 @@ fn write_android_bp(
         return Ok(());
     }
 
+    // In some cases there are nearly identical rustc invocations that that get processed into
+    // identical BP modules. So far, dedup'ing them is a good enough fix. At some point we might
+    // need something more complex, maybe like cargo2android's logic for merging crates.
+    modules.sort();
+    modules.dedup();
+
     modules.sort_by_key(|m| m.props.get_string("name").to_string());
     for m in modules {
         m.write(&mut bp_contents)?;
