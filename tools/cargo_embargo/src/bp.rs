@@ -16,13 +16,14 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 
 /// Build module.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BpModule {
     module_type: String,
     pub props: BpProperties,
 }
 
 /// Properties of a build module, or of a nested object value.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BpProperties {
     map: BTreeMap<String, BpValue>,
     /// A raw block of text to append after the last key-value pair, but before the closing brace.
@@ -43,7 +44,7 @@ pub struct BpProperties {
     pub raw_block: Option<String>,
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum BpValue {
     Object(BpProperties),
     Bool(bool),
