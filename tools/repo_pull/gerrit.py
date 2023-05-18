@@ -495,6 +495,14 @@ def restore(url_opener, gerrit_url, change_id):
     return _make_json_post_request(url_opener, url, {})
 
 
+def delete(url_opener, gerrit_url, change_id):
+    """Delete a change list."""
+
+    url = '{}/a/changes/{}'.format(gerrit_url, change_id)
+
+    return _make_json_post_request(url_opener, url, {}, method='DELETE')
+
+
 def set_topic(url_opener, gerrit_url, change_id, name):
     """Set the topic name."""
 
