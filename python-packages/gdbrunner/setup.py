@@ -17,11 +17,11 @@ from setuptools import setup
 
 
 setup(
-    name='gdbrunner',
     version='0.0.1',
     description='Common helpers of ndk-gdb and gdbclient.',
     license='Apache 2.0',
     packages=['gdbrunner'],
+    package_data={'gdbrunner': ['py.typed']},
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
