@@ -125,8 +125,13 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: EVENT_LOG_ICON,
     color: '#fdd663',
   },
-  [TraceType.TRANSITION]: {
-    name: 'Transition Trace',
+  [TraceType.WM_TRANSITION]: {
+    name: 'WM Transitions',
+    icon: TRANSITION_ICON,
+    color: '#EC407A',
+  },
+  [TraceType.SHELL_TRANSITION]: {
+    name: 'Shell Transitions',
     icon: TRANSITION_ICON,
     color: '#EC407A',
   },
