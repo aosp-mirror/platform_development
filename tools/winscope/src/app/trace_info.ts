@@ -36,6 +36,7 @@ interface TraceInfoMap {
     name: string;
     icon: string;
     color: string;
+    downloadArchiveDir: string;
   };
 }
 
@@ -44,95 +45,114 @@ export const TRACE_INFO: TraceInfoMap = {
     name: 'Accessibility',
     icon: ACCESSIBILITY_ICON,
     color: '#FF63B8',
+    downloadArchiveDir: 'accessibility',
   },
   [TraceType.WINDOW_MANAGER]: {
     name: 'Window Manager',
     icon: WINDOW_MANAGER_ICON,
     color: '#AF5CF7',
+    downloadArchiveDir: 'wm',
   },
   [TraceType.SURFACE_FLINGER]: {
     name: 'Surface Flinger',
     icon: SURFACE_FLINGER_ICON,
     color: '#4ECDE6',
+    downloadArchiveDir: 'sf',
   },
   [TraceType.SCREEN_RECORDING]: {
     name: 'Screen Recording',
     icon: SCREEN_RECORDING_ICON,
     color: '#8A9CF9',
+    downloadArchiveDir: '',
   },
   [TraceType.TRANSACTIONS]: {
     name: 'Transactions',
     icon: TRANSACTION_ICON,
     color: '#5BB974',
+    downloadArchiveDir: 'sf',
   },
   [TraceType.TRANSACTIONS_LEGACY]: {
     name: 'Transactions Legacy',
     icon: TRANSACTION_ICON,
     color: '#5BB974',
+    downloadArchiveDir: 'sf',
   },
   [TraceType.WAYLAND]: {
     name: 'Wayland',
     icon: WAYLAND_ICON,
     color: '#FDC274',
+    downloadArchiveDir: 'wayland',
   },
   [TraceType.WAYLAND_DUMP]: {
     name: 'Wayland Dump',
     icon: WAYLAND_ICON,
     color: '#D01884',
+    downloadArchiveDir: 'wayland',
   },
   [TraceType.PROTO_LOG]: {
     name: 'ProtoLog',
     icon: PROTO_LOG_ICON,
     color: '#40A58A',
+    downloadArchiveDir: 'protolog',
   },
   [TraceType.SYSTEM_UI]: {
     name: 'System UI',
     icon: SYSTEM_UI_ICON,
     color: '#7A86FF',
+    downloadArchiveDir: 'sysui',
   },
   [TraceType.LAUNCHER]: {
     name: 'Launcher',
     icon: LAUNCHER_ICON,
     color: '#137333',
+    downloadArchiveDir: 'launcher',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
     icon: IME_ICON,
     color: '#FA903E',
+    downloadArchiveDir: 'ime',
   },
   [TraceType.INPUT_METHOD_SERVICE]: {
     name: 'IME Service',
     icon: IME_ICON,
     color: '#F29900',
+    downloadArchiveDir: 'ime',
   },
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: {
     name: 'IME Manager Service',
     icon: IME_ICON,
     color: '#D93025',
+    downloadArchiveDir: 'ime',
   },
   [TraceType.TAG]: {
     name: 'Tag',
     icon: TAG_ICON,
     color: '#4575B4',
+    downloadArchiveDir: '',
   },
   [TraceType.ERROR]: {
     name: 'Error',
     icon: TRACE_ERROR_ICON,
     color: '#D73027',
+    downloadArchiveDir: '',
   },
   [TraceType.EVENT_LOG]: {
     name: 'Event Log',
     icon: EVENT_LOG_ICON,
     color: '#fdd663',
+    downloadArchiveDir: 'eventlog',
   },
   [TraceType.WM_TRANSITION]: {
     name: 'WM Transitions',
     icon: TRANSITION_ICON,
     color: '#EC407A',
+    downloadArchiveDir: 'transition',
   },
   [TraceType.SHELL_TRANSITION]: {
     name: 'Shell Transitions',
     icon: TRANSITION_ICON,
     color: '#EC407A',
+    downloadArchiveDir: 'transition',
   },
 };

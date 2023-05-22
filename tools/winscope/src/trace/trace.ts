@@ -72,32 +72,56 @@ export class TraceEntry<T> {
 }
 
 export class Trace<T> {
-  readonly type: TraceType;
   readonly file?: TraceFile;
   readonly lengthEntries: number;
   readonly fullTrace: Trace<T>;
 
-  private readonly parser: Parser<T>;
-  private readonly timestampType: TimestampType;
+  private timestampType: TimestampType | undefined;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
 
-  constructor(
+  static newUninitializedTrace<T>(parser: Parser<T>): Trace<T> {
+    return new Trace(
+      parser.getTraceType(),
+      parser,
+      parser.getDescriptors(),
+      undefined,
+      undefined,
+      undefined
+    );
+  }
+
+  static newInitializedTrace<T>(
     type: TraceType,
-    file: TraceFile | undefined,
-    fullTrace: Trace<T> | undefined,
-    parser: Parser<T>,
+    entryProvider: Parser<T>,
+    descriptors: string[],
     timestampType: TimestampType,
     entriesRange: EntriesRange
-  ) {
-    this.type = type;
-    this.file = file;
-    this.lengthEntries = entriesRange.end - entriesRange.start;
-    this.fullTrace = fullTrace ? fullTrace : this;
-    this.parser = parser;
+  ): Trace<T> {
+    return new Trace(type, entryProvider, descriptors, undefined, timestampType, entriesRange);
+  }
+
+  init(timestampType: TimestampType) {
     this.timestampType = timestampType;
-    this.entriesRange = entriesRange;
+  }
+
+  private constructor(
+    readonly type: TraceType,
+    readonly parser: Parser<T>,
+    readonly descriptors: string[],
+    fullTrace: Trace<T> | undefined,
+    timestampType: TimestampType | undefined,
+    entriesRange: EntriesRange | undefined
+  ) {
+    this.fullTrace = fullTrace ?? this;
+    this.entriesRange = entriesRange ?? {start: 0, end: parser.getLengthEntries()};
+    this.lengthEntries = this.entriesRange.end - this.entriesRange.start;
+    this.timestampType = timestampType;
+  }
+
+  getDescriptors(): string[] {
+    return this.parser.getDescriptors();
   }
 
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
@@ -315,6 +339,10 @@ export class Trace<T> {
   }
 
   private getFullTraceTimestamps(): Timestamp[] {
+    if (this.timestampType === undefined) {
+      throw new Error('Forgot to initialize trace?');
+    }
+
     const timestamps = this.parser.getTimestamps(this.timestampType);
     if (!timestamps) {
       throw new Error(`Timestamp type ${this.timestampType} is expected to be available`);
@@ -350,9 +378,9 @@ export class Trace<T> {
 
     const slice = new Trace<T>(
       this.type,
-      this.file,
-      this.fullTrace,
       this.parser,
+      this.descriptors,
+      this.fullTrace,
       this.timestampType,
       entries
     );
