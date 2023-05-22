@@ -155,4 +155,10 @@ export const TRACE_INFO: TraceInfoMap = {
     color: '#EC407A',
     downloadArchiveDir: 'transition',
   },
+  [TraceType.TRANSITION]: {
+    name: 'Transitions',
+    icon: TRANSITION_ICON,
+    color: '#EC407A',
+    downloadArchiveDir: 'transition',
+  },
 };
