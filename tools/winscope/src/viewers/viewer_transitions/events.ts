@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-export class TraceFile {
-  constructor(public file: File, public parentArchive?: File) {}
-
-  getDescriptor(): string {
-    let descriptor = this.file.name;
-    if (this.parentArchive?.name !== undefined) {
-      descriptor += ` (${this.parentArchive?.name})`;
-    }
-    return descriptor;
-  }
+class Events {
+  static TransitionSelected = 'ViewerTransitionsEvent_TransitionSelected';
 }
+
+export {Events};

@@ -16,17 +16,20 @@
 
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
+import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
 import {FrameMapper} from 'trace/frame_mapper';
+import {LoadedTrace} from 'trace/loaded_trace';
 import {Parser} from 'trace/parser';
 import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {LoadedTraceFile, TraceFile} from 'trace/trace_file';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class TracePipeline {
   private parserFactory = new ParserFactory();
   private parsers: Array<Parser<object>> = [];
+  private files = new Map<TraceType, TraceFile>();
   private traces?: Traces;
   private commonTimestampType?: TimestampType;
 
@@ -38,7 +41,25 @@ class TracePipeline {
       traceFiles,
       onLoadProgressUpdate
     );
-    this.parsers = parsers;
+    this.parsers = parsers.map((it) => it.parser);
+
+    const tracesParser = new TracesParserTransitions(this.parsers);
+    if (tracesParser.canProvideEntries()) {
+      this.parsers.push(tracesParser);
+    }
+
+    for (const parser of parsers) {
+      this.files.set(parser.parser.getTraceType(), parser.file);
+    }
+
+    if (this.parsers.some((it) => it.getTraceType() === TraceType.TRANSITION)) {
+      this.parsers = this.parsers.filter(
+        (it) =>
+          it.getTraceType() !== TraceType.WM_TRANSITION &&
+          it.getTraceType() !== TraceType.SHELL_TRANSITION
+      );
+    }
+
     return parserErrors;
   }
 
@@ -46,9 +67,13 @@ class TracePipeline {
     this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== type);
   }
 
-  getLoadedTraceFiles(): LoadedTraceFile[] {
+  getLoadedFiles(): Map<TraceType, TraceFile> {
+    return this.files;
+  }
+
+  getLoadedTraceFiles(): LoadedTrace[] {
     return this.parsers.map(
-      (parser: Parser<object>) => new LoadedTraceFile(parser.getTraceFile(), parser.getTraceType())
+      (parser: Parser<object>) => new LoadedTrace(parser.getDescriptors(), parser.getTraceType())
     );
   }
 
@@ -57,16 +82,11 @@ class TracePipeline {
 
     this.traces = new Traces();
     this.parsers.forEach((parser) => {
-      const trace = new Trace(
-        parser.getTraceType(),
-        parser.getTraceFile(),
-        undefined,
-        parser,
-        commonTimestampType,
-        {start: 0, end: parser.getLengthEntries()}
-      );
+      const trace = Trace.newUninitializedTrace(parser);
+      trace.init(commonTimestampType);
       this.traces?.setTrace(parser.getTraceType(), trace);
     });
+
     new FrameMapper(this.traces).computeMapping();
   }
 
@@ -88,6 +108,7 @@ class TracePipeline {
     this.parsers = [];
     this.traces = undefined;
     this.commonTimestampType = undefined;
+    this.files = new Map<TraceType, TraceFile>();
   }
 
   private getCommonTimestampType(): TimestampType {
