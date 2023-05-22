@@ -42,7 +42,7 @@ abstract class AbstractParser implements Parser<object> {
         throw TypeError("buffer doesn't contain expected magic number");
       }
     }
-     
+
     this.decodedEntries = this.decodeTrace(traceBuffer).map((it) => this.addDefaultProtoFields(it));
 
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
