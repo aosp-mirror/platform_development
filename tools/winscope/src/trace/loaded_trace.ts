@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-export class TraceFile {
-  constructor(public file: File, public parentArchive?: File) {}
+import {TraceType} from './trace_type';
 
-  getDescriptor(): string {
-    let descriptor = this.file.name;
-    if (this.parentArchive?.name !== undefined) {
-      descriptor += ` (${this.parentArchive?.name})`;
-    }
-    return descriptor;
-  }
+export class LoadedTrace {
+  constructor(public descriptors: string[], public type: TraceType) {}
 }

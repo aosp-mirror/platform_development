@@ -31,6 +31,7 @@ export class TraceBuilder<T> {
   private timestampType = TimestampType.REAL;
   private frameMap?: FrameMap;
   private frameMapBuilder?: FrameMapBuilder;
+  private descriptors: string[] = [];
 
   setType(type: TraceType): TraceBuilder<T> {
     this.type = type;
@@ -73,6 +74,11 @@ export class TraceBuilder<T> {
     return this;
   }
 
+  setDescriptors(descriptors: string[]): TraceBuilder<T> {
+    this.descriptors = descriptors;
+    return this;
+  }
+
   build(): Trace<T> {
     if (!this.parser) {
       this.parser = this.createParser();
@@ -82,11 +88,10 @@ export class TraceBuilder<T> {
       start: 0,
       end: this.parser.getLengthEntries(),
     };
-    const trace = new Trace<T>(
+    const trace = Trace.newInitializedTrace<T>(
       this.type,
-      undefined,
-      undefined,
       this.parser,
+      this.descriptors,
       this.timestampType,
       entriesRange
     );

@@ -19,15 +19,28 @@ import {CommonTestUtils} from 'test/common/utils';
 import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {TimestampType} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class UnitTestUtils extends CommonTestUtils {
+  static async getTraceFromFile(filename: string): Promise<Trace<object>> {
+    const parser = await UnitTestUtils.getParser(filename);
+
+    const trace = Trace.newUninitializedTrace(parser);
+    trace.init(
+      parser.getTimestamps(TimestampType.REAL) !== undefined
+        ? TimestampType.REAL
+        : TimestampType.ELAPSED
+    );
+    return trace;
+  }
+
   static async getParser(filename: string): Promise<Parser<object>> {
     const file = new TraceFile(await CommonTestUtils.getFixtureFile(filename), undefined);
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length).toEqual(1);
-    return parsers[0];
+    return parsers[0].parser;
   }
 
   static async getWindowManagerState(): Promise<WindowManagerState> {
