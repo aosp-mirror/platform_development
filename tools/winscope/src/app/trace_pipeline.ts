@@ -16,6 +16,7 @@
 
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
+import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
 import {FrameMapper} from 'trace/frame_mapper';
 import {LoadedTrace} from 'trace/loaded_trace';
 import {Parser} from 'trace/parser';
@@ -42,8 +43,21 @@ class TracePipeline {
     );
     this.parsers = parsers.map((it) => it.parser);
 
+    const tracesParser = new TracesParserTransitions(this.parsers);
+    if (tracesParser.canProvideEntries()) {
+      this.parsers.push(tracesParser);
+    }
+
     for (const parser of parsers) {
       this.files.set(parser.parser.getTraceType(), parser.file);
+    }
+
+    if (this.parsers.some((it) => it.getTraceType() === TraceType.TRANSITION)) {
+      this.parsers = this.parsers.filter(
+        (it) =>
+          it.getTraceType() !== TraceType.WM_TRANSITION &&
+          it.getTraceType() !== TraceType.SHELL_TRANSITION
+      );
     }
 
     return parserErrors;
@@ -69,8 +83,10 @@ class TracePipeline {
     this.traces = new Traces();
     this.parsers.forEach((parser) => {
       const trace = Trace.newUninitializedTrace(parser);
+      trace.init(commonTimestampType);
       this.traces?.setTrace(parser.getTraceType(), trace);
     });
+
     new FrameMapper(this.traces).computeMapping();
   }
 
