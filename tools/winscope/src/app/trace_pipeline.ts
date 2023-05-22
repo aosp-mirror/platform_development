@@ -108,7 +108,7 @@ class TracePipeline {
     this.parsers = [];
     this.traces = undefined;
     this.commonTimestampType = undefined;
-    this.files.clear();
+    this.files = new Map<TraceType, TraceFile>();
   }
 
   private getCommonTimestampType(): TimestampType {
