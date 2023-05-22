@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Event} from 'trace/flickerlib/common';
-import {Transition} from './flickerlib/common';
+import {Event, Transition} from 'trace/flickerlib/common';
 import {LayerTraceEntry} from './flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from './flickerlib/windows/WindowManagerState';
 import {LogMessage} from './protolog';
@@ -38,6 +37,7 @@ export enum TraceType {
   EVENT_LOG,
   WM_TRANSITION,
   SHELL_TRANSITION,
+  TRANSITION,
   TAG,
   ERROR,
   TEST_TRACE_STRING,
@@ -62,6 +62,7 @@ export interface TraceEntryTypeMap {
   [TraceType.EVENT_LOG]: Event;
   [TraceType.WM_TRANSITION]: object;
   [TraceType.SHELL_TRANSITION]: object;
+  [TraceType.TRANSITION]: Transition;
   [TraceType.TAG]: object;
   [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
