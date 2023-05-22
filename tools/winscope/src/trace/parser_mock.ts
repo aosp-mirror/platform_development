@@ -48,4 +48,8 @@ export class ParserMock<T> implements Parser<T> {
   getEntry(index: number): T {
     return this.entries[index];
   }
+
+  getDescriptors(): string[] {
+    return ['MockTrace'];
+  }
 }
