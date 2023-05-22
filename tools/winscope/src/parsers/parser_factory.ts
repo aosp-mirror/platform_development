@@ -28,7 +28,8 @@ import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
 import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
-import {ParserTransitions} from './parser_transitions';
+import {ParserTransitionsShell} from './parser_transitions_shell';
+import {ParserTransitionsWm} from './parser_transitions_wm';
 import {ParserWindowManager} from './parser_window_manager';
 import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
@@ -46,7 +47,8 @@ export class ParserFactory {
     ParserWindowManager,
     ParserWindowManagerDump,
     ParserEventLog,
-    ParserTransitions,
+    ParserTransitionsWm,
+    ParserTransitionsShell,
   ];
 
   private parsers = new Map<TraceType, Parser<object>>();
