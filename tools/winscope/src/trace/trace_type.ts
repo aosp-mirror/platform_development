@@ -36,7 +36,8 @@ export enum TraceType {
   INPUT_METHOD_MANAGER_SERVICE,
   INPUT_METHOD_SERVICE,
   EVENT_LOG,
-  TRANSITION,
+  WM_TRANSITION,
+  SHELL_TRANSITION,
   TAG,
   ERROR,
   TEST_TRACE_STRING,
@@ -59,7 +60,8 @@ export interface TraceEntryTypeMap {
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: object;
   [TraceType.INPUT_METHOD_SERVICE]: object;
   [TraceType.EVENT_LOG]: Event;
-  [TraceType.TRANSITION]: Transition;
+  [TraceType.WM_TRANSITION]: object;
+  [TraceType.SHELL_TRANSITION]: object;
   [TraceType.TAG]: object;
   [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
