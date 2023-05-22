@@ -331,24 +331,23 @@ export class AppComponent implements TraceDataListener {
   private makeActiveTraceFileInfo(view: View): string {
     const traceFile = this.tracePipeline
       .getLoadedTraceFiles()
-      .find((file) => file.type === view.dependencies[0])?.traceFile;
+      .find((file) => file.type === view.dependencies[0]);
 
     if (!traceFile) {
       return '';
     }
 
-    if (!traceFile.parentArchive) {
-      return traceFile.file.name;
-    }
-
-    return `${traceFile.parentArchive.name} - ${traceFile.file.name}`;
+    return `${traceFile.type} (${traceFile.descriptors.join(', ')})`;
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.tracePipeline.getLoadedTraceFiles().map((trace) => {
-      const traceType = TRACE_INFO[trace.type].name;
-      const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
-      return new File([trace.traceFile.file], newName);
+    const loadedFiles = this.tracePipeline.getLoadedFiles();
+    return [...loadedFiles.keys()].map((traceType) => {
+      const file = loadedFiles.get(traceType)!;
+      const path = TRACE_INFO[traceType].downloadArchiveDir;
+
+      const newName = path + '/' + FileUtils.removeDirFromFileName(file.file.name);
+      return new File([file.file], newName);
     });
   }
 }

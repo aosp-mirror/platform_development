@@ -25,7 +25,7 @@ import {
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'interfaces/progress_listener';
-import {LoadedTraceFile} from 'trace/trace_file';
+import {LoadedTrace} from 'trace/loaded_trace';
 import {LoadProgressComponent} from './load_progress_component';
 
 @Component({
@@ -63,7 +63,8 @@ import {LoadProgressComponent} from './load_progress_component';
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
 
-            <p matLine>{{ trace.traceFile.file.name }} ({{ TRACE_INFO[trace.type].name }})</p>
+            <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
+            <p matLine *ngFor="let descriptor of trace.descriptors">{{ descriptor }}</p>
 
             <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
@@ -235,7 +236,7 @@ export class UploadTracesComponent implements ProgressListener {
     this.filesUploaded.emit(Array.from(droppedFiles));
   }
 
-  onRemoveTrace(event: MouseEvent, trace: LoadedTraceFile) {
+  onRemoveTrace(event: MouseEvent, trace: LoadedTrace) {
     event.preventDefault();
     event.stopPropagation();
     this.tracePipeline.removeTraceFile(trace.type);
