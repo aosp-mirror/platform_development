@@ -30,6 +30,10 @@ export class Traces {
     return this.traces.get(type) as Trace<TraceEntryTypeMap[T]> | undefined;
   }
 
+  deleteTrace<T extends TraceType>(type: T) {
+    this.traces.delete(type);
+  }
+
   sliceTime(start?: Timestamp, end?: Timestamp): Traces {
     const slice = new Traces();
     this.traces.forEach((trace, type) => {

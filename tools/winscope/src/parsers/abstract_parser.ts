@@ -66,8 +66,8 @@ abstract class AbstractParser implements Parser<object> {
 
   abstract getTraceType(): TraceType;
 
-  getTraceFile(): TraceFile {
-    return this.traceFile;
+  getDescriptors(): string[] {
+    return [this.traceFile.getDescriptor()];
   }
 
   getLengthEntries(): number {

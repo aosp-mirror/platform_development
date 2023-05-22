@@ -15,13 +15,13 @@
  */
 
 import {Timestamp, TimestampType} from './timestamp';
-import {TraceFile} from './trace_file';
 import {TraceType} from './trace_type';
 
 export interface Parser<T> {
   getTraceType(): TraceType;
-  getTraceFile(): TraceFile;
   getLengthEntries(): number;
   getTimestamps(type: TimestampType): Timestamp[] | undefined;
   getEntry(index: number, timestampType: TimestampType): T;
+
+  getDescriptors(): string[];
 }
