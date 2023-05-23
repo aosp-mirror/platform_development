@@ -127,6 +127,19 @@ export class TimeUtils {
     );
   }
 
+  static formattedKotlinTimestamp(time: any, timestampType: TimestampType): string {
+    console.log('time', time);
+    if (timestampType === TimestampType.ELAPSED) {
+      return TimeUtils.format(new ElapsedTimestamp(BigInt(time.elapsedNanos.toString())));
+    }
+
+    if (timestampType === TimestampType.REAL) {
+      return TimeUtils.format(new RealTimestamp(BigInt(time.unixNanos.toString())));
+    }
+
+    throw new Error('Unsupported timestamp');
+  }
+
   static TO_NANO = {
     ns: 1,
     ms: 1000000,
