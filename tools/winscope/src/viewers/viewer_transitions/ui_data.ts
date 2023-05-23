@@ -15,22 +15,16 @@
  */
 
 import {Transition} from 'trace/flickerlib/common';
+import {TimestampType} from 'trace/timestamp';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 
 export class UiData {
   constructor(
-    transitions: Transition[],
-    selectedTransition: Transition,
-    selectedTransitionPropertiesTree?: PropertiesTreeNode
-  ) {
-    this.entries = transitions;
-    this.selectedTransition = selectedTransition;
-    this.selectedTransitionPropertiesTree = selectedTransitionPropertiesTree;
-  }
+    public entries: Transition[],
+    public selectedTransition: Transition,
+    public timestampType: TimestampType,
+    public selectedTransitionPropertiesTree?: PropertiesTreeNode
+  ) {}
 
-  entries: Transition[] = [];
-  selectedTransition: Transition | undefined;
-  selectedTransitionPropertiesTree: PropertiesTreeNode | undefined;
-
-  static EMPTY = new UiData([], undefined, undefined);
+  static EMPTY = new UiData([], undefined, TimestampType.REAL, undefined);
 }

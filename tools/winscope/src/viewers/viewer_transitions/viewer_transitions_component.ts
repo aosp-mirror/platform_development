@@ -17,7 +17,7 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TimeUtils} from 'common/time_utils';
 import {Transition} from 'trace/flickerlib/common';
-import {ElapsedTimestamp} from 'trace/timestamp';
+import {ElapsedTimestamp, TimestampType} from 'trace/timestamp';
 import {Terminal} from 'viewers/common/ui_tree_utils';
 import {Events} from './events';
 import {UiData} from './ui_data';
@@ -49,7 +49,7 @@ import {UiData} from './ui_data';
               </div>
               <div class="send-time">
                 <span *ngIf="!transition.sendTime.isMin" class="mat-body-1">{{
-                  formattedElapsedTime(transition.sendTime.elapsedNanos.toString())
+                  formattedTime(transition.sendTime, uiData.timestampType)
                 }}</span>
                 <span *ngIf="transition.sendTime.isMin"> n/a </span>
               </div>
@@ -58,9 +58,10 @@ import {UiData} from './ui_data';
                   *ngIf="!transition.sendTime.isMin && !transition.finishTime.isMax"
                   class="mat-body-1"
                   >{{
-                    formattedElapsedTimeDiff(
-                      transition.sendTime.elapsedNanos.toString(),
-                      transition.finishTime.elapsedNanos.toString()
+                    formattedTimeDiff(
+                      transition.sendTime,
+                      transition.finishTime,
+                      uiData.timestampType
                     )
                   }}</span
                 >
@@ -296,14 +297,15 @@ export class ViewerTransitionsComponent {
     return maxOfRange;
   }
 
-  formattedElapsedTime(timeStringNanos: string): string {
-    return TimeUtils.format(new ElapsedTimestamp(BigInt(timeStringNanos)));
+  formattedTime(time: any, timestampType: TimestampType): string {
+    return TimeUtils.formattedKotlinTimestamp(time, timestampType);
   }
 
-  formattedElapsedTimeDiff(timeStringNanos1: string, timeStringNanos2: string) {
-    return TimeUtils.format(
-      new ElapsedTimestamp(BigInt(timeStringNanos2) - BigInt(timeStringNanos1))
+  formattedTimeDiff(time1: any, time2: any, timestampType: TimestampType): string {
+    const timeDiff = new ElapsedTimestamp(
+      BigInt(time2.elapsedNanos.toString()) - BigInt(time1.elapsedNanos.toString())
     );
+    return TimeUtils.format(timeDiff);
   }
 
   widthOf(transition: Transition) {
