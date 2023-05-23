@@ -124,6 +124,13 @@ export class Trace<T> {
     return this.parser.getDescriptors();
   }
 
+  getTimestampType(): TimestampType {
+    if (this.timestampType === undefined) {
+      throw new Error('Trace no fully initialized yet!');
+    }
+    return this.timestampType;
+  }
+
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
     if (frameMap.lengthEntries !== this.fullTrace.lengthEntries) {
       throw new Error('Attemped to set a frame map with incompatible number of entries');
