@@ -15,7 +15,7 @@ SDK_SYSIMG_XML_ARGS :=
 # $3=package to create (e.g. tools, docs, etc.)
 #
 define sdk-repo-pkg-zip
-$(dir $(2))/sdk-repo-$(1)-$(3)-$(FILE_NAME_TAG).zip
+$(dir $(2))/sdk-repo-$(1)-$(3).zip
 endef
 
 # Defines the rule to build an SDK repository package by zipping all
@@ -36,7 +36,7 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	$(hide) cd $(basename $(3)) && \
 	        rm  -f   ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) $(4)/*
-$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
+$(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 
@@ -62,7 +62,7 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	$(hide) cd $(basename $(3))/$(4) && \
 	        rm  -f   ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
-$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
+$(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 
@@ -92,7 +92,7 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	$(hide) cd $(basename $(3))/$(5) && \
 	        rm  -f   ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
 	        zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
-$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
+$(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 
@@ -113,7 +113,7 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) development/build/tools/mk_sources
 	development/build/tools/mk_sources_zip.py --exec-zip \
 	            $(HOST_OUT)/development/sdk/source_source.properties \
 	            $$@ .
-$(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
+$(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 
