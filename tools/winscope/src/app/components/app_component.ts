@@ -41,6 +41,7 @@ import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_c
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {SnackBarOpener} from './snack_bar_opener';
@@ -264,6 +265,12 @@ export class AppComponent implements TraceDataListener {
         createCustomElement(ViewerWindowManagerComponent, {injector})
       );
     }
+    if (!customElements.get('viewer-transitions')) {
+      customElements.define(
+        'viewer-transitions',
+        createCustomElement(ViewerTransitionsComponent, {injector})
+      );
+    }
   }
 
   ngAfterViewInit() {
@@ -331,24 +338,23 @@ export class AppComponent implements TraceDataListener {
   private makeActiveTraceFileInfo(view: View): string {
     const traceFile = this.tracePipeline
       .getLoadedTraceFiles()
-      .find((file) => file.type === view.dependencies[0])?.traceFile;
+      .find((file) => file.type === view.dependencies[0]);
 
     if (!traceFile) {
       return '';
     }
 
-    if (!traceFile.parentArchive) {
-      return traceFile.file.name;
-    }
-
-    return `${traceFile.parentArchive.name} - ${traceFile.file.name}`;
+    return `${traceFile.type} (${traceFile.descriptors.join(', ')})`;
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.tracePipeline.getLoadedTraceFiles().map((trace) => {
-      const traceType = TRACE_INFO[trace.type].name;
-      const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
-      return new File([trace.traceFile.file], newName);
+    const loadedFiles = this.tracePipeline.getLoadedFiles();
+    return [...loadedFiles.keys()].map((traceType) => {
+      const file = loadedFiles.get(traceType)!;
+      const path = TRACE_INFO[traceType].downloadArchiveDir;
+
+      const newName = path + '/' + FileUtils.removeDirFromFileName(file.file.name);
+      return new File([file.file], newName);
     });
   }
 }

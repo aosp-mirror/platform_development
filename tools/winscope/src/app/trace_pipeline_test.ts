@@ -93,7 +93,8 @@ describe('TracePipeline', () => {
 
     const files = tracePipeline.getLoadedTraceFiles();
     expect(files.length).toEqual(2);
-    expect(files[0].traceFile).toBeTruthy();
+    expect(files[0].descriptors).toBeTruthy();
+    expect(files[0].descriptors.length).toBeGreaterThan(0);
 
     const actualTraceTypes = new Set(files.map((file) => file.type));
     const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
