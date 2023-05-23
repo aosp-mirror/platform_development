@@ -289,7 +289,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.tracePipeline.getLoadedTraceFiles().map((trace) => trace.type);
+    return this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -337,7 +337,7 @@ export class AppComponent implements TraceDataListener {
 
   private makeActiveTraceFileInfo(view: View): string {
     const traceFile = this.tracePipeline
-      .getLoadedTraceFiles()
+      .getLoadedTraces()
       .find((file) => file.type === view.dependencies[0]);
 
     if (!traceFile) {
