@@ -22,8 +22,10 @@ describe('Viewer Transitions', () => {
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
   });
   it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/wm_transition_trace.pb');
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/shell_transition_trace.pb');
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
+    );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 

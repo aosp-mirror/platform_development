@@ -124,6 +124,7 @@ describe('Cross-Tool Protocol', () => {
       'ProtoLog',
       'Surface Flinger',
       'Transactions',
+      'Transitions',
       'Window Manager',
     ];
 
