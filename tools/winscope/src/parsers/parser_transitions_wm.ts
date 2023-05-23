@@ -108,13 +108,13 @@ export class ParserTransitionsWm extends AbstractParser {
     }
 
     let startTransactionId = null;
-    if (entry.startTransactionId !== 0) {
-      startTransactionId = entry.startTransactionId;
+    if (entry.startTransactionId && BigInt(entry.startTransactionId.toString()) !== 0n) {
+      startTransactionId = BigInt(entry.startTransactionId.toString());
     }
 
     let finishTransactionId = null;
-    if (entry.finishTransactionId !== 0) {
-      finishTransactionId = entry.finishTransactionId;
+    if (entry.finishTransactionId && BigInt(entry.finishTransactionId.toString()) !== 0n) {
+      finishTransactionId = BigInt(entry.finishTransactionId.toString());
     }
 
     let type = null;
@@ -129,8 +129,8 @@ export class ParserTransitionsWm extends AbstractParser {
         sendTime,
         abortTime,
         finishTime,
-        startTransactionId,
-        finishTransactionId,
+        startTransactionId?.toString(),
+        finishTransactionId?.toString(),
         type,
         changes
       ),
