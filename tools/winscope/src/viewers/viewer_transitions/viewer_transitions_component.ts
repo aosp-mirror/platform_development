@@ -33,6 +33,7 @@ import {UiData} from './ui_data';
             <div class="type">Type</div>
             <div class="send-time">Send Time</div>
             <div class="duration">Duration</div>
+            <div class="status">Status</div>
           </div>
           <cdk-virtual-scroll-viewport itemSize="53" class="scroll">
             <div
@@ -64,6 +65,35 @@ import {UiData} from './ui_data';
                   }}</span
                 >
                 <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
+              </div>
+              <div class="status">
+                <div *ngIf="transition.mergedInto">
+                  <span>MERGED</span>
+                  <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
+                  </mat-icon>
+                </div>
+
+                <div *ngIf="transition.aborted && !transition.mergedInto">
+                  <span>ABORTED</span>
+                  <mat-icon
+                    aria-hidden="false"
+                    fontIcon="close"
+                    matTooltip="aborted"
+                    style="color: red"
+                    icon-red></mat-icon>
+                </div>
+
+                <div *ngIf="transition.played && !transition.aborted && !transition.mergedInto">
+                  <span>PLAYED</span>
+                  <mat-icon
+                    aria-hidden="false"
+                    fontIcon="check"
+                    matTooltip="played"
+                    style="color: green"
+                    *ngIf="
+                      transition.played && !transition.aborted && !transition.mergedInto
+                    "></mat-icon>
+                </div>
               </div>
             </div>
           </cdk-virtual-scroll-viewport>
@@ -190,6 +220,21 @@ import {UiData} from './ui_data';
 
       .table-row .duration {
         flex: 3;
+      }
+
+      .table-row .status {
+        flex: 2;
+      }
+
+      .status > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .current .status mat-icon {
+        color: white !important;
       }
 
       .transition-timeline .row svg rect {
