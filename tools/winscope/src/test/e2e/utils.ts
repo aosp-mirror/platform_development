@@ -22,9 +22,12 @@ class E2eTestUtils extends CommonTestUtils {
     return path.join(CommonTestUtils.getProjectRootPath(), 'dist/prod/index.html');
   }
 
-  static async uploadFixture(path: string) {
+  static async uploadFixture(...paths: string[]) {
     const inputFile = element(by.css('input[type="file"]'));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath(path));
+
+    // Uploading multiple files is not properly supported but
+    // chrome handles file paths joined with new lines
+    await inputFile.sendKeys(paths.map((it) => E2eTestUtils.getFixturePath(it)).join('\n'));
   }
 
   static async clickViewTracesButton() {
