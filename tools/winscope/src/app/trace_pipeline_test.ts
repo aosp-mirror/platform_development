@@ -28,11 +28,11 @@ describe('TracePipeline', () => {
   });
 
   it('can load valid trace files', async () => {
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
 
     await loadValidSfWmTraces();
 
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(2);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
 
     const traceEntries = TracesUtils.extractEntries(tracePipeline.getTraces());
     expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(0);
@@ -47,18 +47,18 @@ describe('TracePipeline', () => {
     const errors = await tracePipeline.loadTraceFiles(invalidTraceFiles);
     tracePipeline.buildTraces();
     expect(errors.length).toEqual(1);
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
     const files = [
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
     ];
     const errors = await tracePipeline.loadTraceFiles(files);
     tracePipeline.buildTraces();
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
     expect(errors.length).toEqual(1);
   });
 
@@ -72,26 +72,26 @@ describe('TracePipeline', () => {
 
     expect(errors.length).toEqual(0);
 
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
   });
 
   it('can remove traces', async () => {
     await loadValidSfWmTraces();
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(2);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(2);
 
     tracePipeline.removeTraceFile(TraceType.SURFACE_FLINGER);
     tracePipeline.buildTraces();
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(1);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(1);
 
     tracePipeline.removeTraceFile(TraceType.WINDOW_MANAGER);
     tracePipeline.buildTraces();
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
   });
 
   it('gets loaded trace files', async () => {
     await loadValidSfWmTraces();
 
-    const files = tracePipeline.getLoadedTraceFiles();
+    const files = tracePipeline.getLoadedTraces();
     expect(files.length).toEqual(2);
     expect(files[0].descriptors).toBeTruthy();
     expect(files[0].descriptors.length).toBeGreaterThan(0);
@@ -127,10 +127,10 @@ describe('TracePipeline', () => {
 
   it('can be cleared', async () => {
     await loadValidSfWmTraces();
-    expect(tracePipeline.getLoadedTraceFiles().length).toBeGreaterThan(0);
+    expect(tracePipeline.getLoadedTraces().length).toBeGreaterThan(0);
 
     tracePipeline.clear();
-    expect(tracePipeline.getLoadedTraceFiles().length).toEqual(0);
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
     expect(() => {
       tracePipeline.getTraces();
     }).toThrow();
