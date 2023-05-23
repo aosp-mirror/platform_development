@@ -56,9 +56,9 @@ import {LoadProgressComponent} from './load_progress_component';
         </load-progress>
 
         <mat-list
-          *ngIf="!isLoadingFiles && this.tracePipeline.getLoadedTraceFiles().length > 0"
+          *ngIf="!isLoadingFiles && this.tracePipeline.getLoadedTraces().length > 0"
           class="uploaded-files">
-          <mat-list-item *ngFor="let trace of this.tracePipeline.getLoadedTraceFiles()">
+          <mat-list-item *ngFor="let trace of this.tracePipeline.getLoadedTraces()">
             <mat-icon matListIcon>
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
@@ -73,7 +73,7 @@ import {LoadProgressComponent} from './load_progress_component';
         </mat-list>
 
         <div
-          *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraceFiles().length === 0"
+          *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraces().length === 0"
           class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
@@ -83,7 +83,7 @@ import {LoadProgressComponent} from './load_progress_component';
       </mat-card-content>
 
       <div
-        *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraceFiles().length > 0"
+        *ngIf="!isLoadingFiles && tracePipeline.getLoadedTraces().length > 0"
         class="trace-actions-container">
         <button
           color="primary"
