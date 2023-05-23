@@ -26,6 +26,7 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'trace/flickerlib/common';
+import {TimestampType} from 'trace/timestamp';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
@@ -80,8 +81,14 @@ function makeUiData(): UiData {
 
   const selectedTransition = undefined;
   const selectedTransitionPropertiesTree = undefined;
+  const timestampType = TimestampType.REAL;
 
-  return new UiData(transitions, selectedTransition, selectedTransitionPropertiesTree);
+  return new UiData(
+    transitions,
+    selectedTransition,
+    timestampType,
+    selectedTransitionPropertiesTree
+  );
 }
 
 function createMockTransition(
