@@ -71,7 +71,7 @@ class TracePipeline {
     return this.files;
   }
 
-  getLoadedTraceFiles(): LoadedTrace[] {
+  getLoadedTraces(): LoadedTrace[] {
     return this.parsers.map(
       (parser: Parser<object>) => new LoadedTrace(parser.getDescriptors(), parser.getTraceType())
     );
