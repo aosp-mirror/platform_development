@@ -281,8 +281,9 @@ export class ViewerTransitionsComponent {
   startOf(transition: Transition) {
     const fullRange = this.getMaxOfRanges() - this.getMinOfRanges();
     return `${
-      Number((BigInt(transition.createTime.elapsedNanos.toString()) - this.getMinOfRanges()) * 100n) /
-      Number(fullRange)
+      Number(
+        (BigInt(transition.createTime.elapsedNanos.toString()) - this.getMinOfRanges()) * 100n
+      ) / Number(fullRange)
     }%`;
   }
 
