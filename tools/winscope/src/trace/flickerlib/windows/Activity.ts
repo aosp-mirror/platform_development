@@ -27,14 +27,12 @@ Activity.fromProto = (proto: any, nextSeq: () => number): Activity => {
       /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
       /* isActivityInTree */ true,
       /* computedZ */ nextSeq,
-      /* nameOverride */ null,
+      /* nameOverride */ proto.name,
       /* identifierOverride */ proto.identifier
     );
 
     const entry = new Activity(
-      proto.name,
       proto.state,
-      proto.visible,
       proto.frontOfTask,
       proto.procId,
       proto.translucent,
