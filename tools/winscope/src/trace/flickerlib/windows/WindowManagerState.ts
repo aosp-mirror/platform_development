@@ -34,9 +34,9 @@ WindowManagerState.fromProto = (
   realToElapsedTimeOffsetNs: bigint | undefined = undefined,
   useElapsedTime = false
 ): WindowManagerState => {
-  const inputMethodWIndowAppToken = '';
+  let inputMethodWIndowAppToken = '';
   if (proto.inputMethodWindow != null) {
-    proto.inputMethodWindow.hashCode.toString(16);
+    inputMethodWIndowAppToken = proto.inputMethodWindow.hashCode.toString(16);
   }
 
   let parseOrder = 0;
@@ -47,21 +47,21 @@ WindowManagerState.fromProto = (
   );
   const policy = createWindowManagerPolicy(proto.policy);
 
-  const entry = new WindowManagerTraceEntryBuilder(
-    `${elapsedTimestamp}`,
-    policy,
-    proto.focusedApp,
-    proto.focusedDisplayId,
-    proto.focusedWindow?.title ?? '',
-    inputMethodWIndowAppToken,
-    proto.rootWindowContainer.isHomeRecentsComponent,
-    proto.displayFrozen,
-    proto.rootWindowContainer.pendingActivities.map((it: any) => it.title),
-    rootWindowContainer,
-    keyguardControllerState,
-    where,
-    `${realToElapsedTimeOffsetNs ?? 0}`
-  ).build();
+  const entry = new WindowManagerTraceEntryBuilder()
+    .setElapsedTimestamp(`${elapsedTimestamp}`)
+    .setPolicy(policy)
+    .setFocusedApp(proto.focusedApp)
+    .setFocusedDisplayId(proto.focusedDisplayId)
+    .setFocusedWindow(proto.focusedWindow?.title ?? '')
+    .setInputMethodWindowAppToken(inputMethodWIndowAppToken)
+    .setIsHomeRecentsComponent(proto.rootWindowContainer.isHomeRecentsComponent)
+    .setIsDisplayFrozen(proto.displayFrozen)
+    .setPendingActivities(proto.rootWindowContainer.pendingActivities.map((it: any) => it.title))
+    .setRoot(rootWindowContainer)
+    .setKeyguardControllerState(keyguardControllerState)
+    .setWhere(where)
+    .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`)
+    .build();
 
   addAttributes(entry, proto, realToElapsedTimeOffsetNs === undefined || useElapsedTime);
   return entry;
