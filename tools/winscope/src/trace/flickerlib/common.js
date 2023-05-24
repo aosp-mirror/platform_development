@@ -67,6 +67,9 @@ const EventLogParser = require('flicker').android.tools.common.parsers.events.Ev
 const Transition = require('flicker').android.tools.common.traces.wm.Transition;
 const TransitionType = require('flicker').android.tools.common.traces.wm.TransitionType;
 const TransitionChange = require('flicker').android.tools.common.traces.wm.TransitionChange;
+const TransitionsTrace = require('flicker').android.tools.common.traces.wm.TransitionsTrace;
+const ShellTransitionData = require('flicker').android.tools.common.traces.wm.ShellTransitionData;
+const WmTransitionData = require('flicker').android.tools.common.traces.wm.WmTransitionData;
 
 // Common
 const Size = require('flicker').android.tools.common.datatypes.Size;
@@ -314,6 +317,9 @@ export {
   Transition,
   TransitionType,
   TransitionChange,
+  TransitionsTrace,
+  ShellTransitionData,
+  WmTransitionData,
   // Common
   Size,
   ActiveBuffer,

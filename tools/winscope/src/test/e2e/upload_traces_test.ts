@@ -44,14 +44,24 @@ describe('Upload traces', () => {
 
   const checkHasLoadedTraces = async () => {
     const text = await element(by.css('.uploaded-files')).getText();
-    expect(text).toContain('wm_log.winscope (ProtoLog)');
-    expect(text).toContain('ime_trace_service.winscope (IME Service)');
-    expect(text).toContain('ime_trace_managerservice.winscope (IME Manager Service)');
-    expect(text).toContain('wm_trace.winscope (Window Manager)');
-    expect(text).toContain('layers_trace_from_transactions.winscope (Surface Flinger)');
-    expect(text).toContain('ime_trace_clients.winscope (IME Clients)');
-    expect(text).toContain('transactions_trace.winscope (Transactions)');
-    expect(text).toContain('transition_trace.winscope (Transitions)');
+    expect(text).toContain('ProtoLog');
+    expect(text).toContain('IME Service');
+    expect(text).toContain('IME Manager Service)');
+    expect(text).toContain('Window Manager)');
+    expect(text).toContain('Surface Flinger)');
+    expect(text).toContain('IME Clients)');
+    expect(text).toContain('Transactions)');
+    expect(text).toContain('Transitions');
+
+    expect(text).toContain('wm_log.winscope');
+    expect(text).toContain('ime_trace_service.winscope');
+    expect(text).toContain('ime_trace_managerservice.winscope');
+    expect(text).toContain('wm_trace.winscope');
+    expect(text).toContain('layers_trace_from_transactions.winscope');
+    expect(text).toContain('ime_trace_clients.winscope');
+    expect(text).toContain('transactions_trace.winscope');
+    expect(text).toContain('wm_transition_trace.winscope');
+    expect(text).toContain('shell_transition_trace.winscope');
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {

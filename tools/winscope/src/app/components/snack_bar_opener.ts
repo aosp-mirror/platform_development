@@ -67,7 +67,7 @@ export class SnackBarOpener implements UserNotificationListener {
   }
 
   private convertErrorToMessage(error: ParserError): string {
-    const fileName = error.trace !== undefined ? error.trace.name : '<no file name>';
+    const fileName = error.trace !== undefined ? error.trace : '<no file name>';
     const traceTypeName =
       error.traceType !== undefined ? TRACE_INFO[error.traceType].name : '<unknown>';
 
