@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {LayerTraceEntry, Transition, WindowManagerState} from 'trace/flickerlib/common';
-import {ElapsedTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -61,7 +60,17 @@ export class Presenter {
     const selectedTransition = this.uiData?.selectedTransition ?? undefined;
     const selectedTransitionPropertiesTree =
       this.uiData?.selectedTransitionPropertiesTree ?? undefined;
-    return new UiData(transitions, selectedTransition, selectedTransitionPropertiesTree);
+
+    const timestampType = this.transitionTrace.getTimestampType();
+    if (timestampType === undefined) {
+      throw new Error('Missing timestamp type in trace!');
+    }
+    return new UiData(
+      transitions,
+      selectedTransition,
+      timestampType,
+      selectedTransitionPropertiesTree
+    );
   }
 
   private makeSelectedTransitionPropertiesTree(transition: Transition): PropertiesTreeNode {
@@ -124,47 +133,42 @@ export class Presenter {
       properties.push({propertyKey: 'handler', propertyValue: transition.handler});
     }
 
+    const timestampType = this.transitionTrace.getTimestampType();
+
     if (!transition.createTime.isMin) {
       properties.push({
         propertyKey: 'createTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.createTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.createTime, timestampType),
       });
     }
 
     if (!transition.sendTime.isMin) {
       properties.push({
         propertyKey: 'sendTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.sendTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.sendTime, timestampType),
       });
     }
 
     if (!transition.dispatchTime.isMin) {
       properties.push({
         propertyKey: 'dispatchTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.dispatchTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.dispatchTime, timestampType),
       });
     }
 
     if (!transition.finishTime.isMax) {
       properties.push({
         propertyKey: 'finishTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.finishTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.finishTime, timestampType),
       });
     }
 
     if (transition.mergeRequestTime) {
       properties.push({
         propertyKey: 'mergeRequestTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.mergeRequestTime.elapsedNanos.toString()))
+        propertyValue: TimeUtils.formattedKotlinTimestamp(
+          transition.mergeRequestTime,
+          timestampType
         ),
       });
     }
@@ -172,18 +176,14 @@ export class Presenter {
     if (transition.shellAbortTime) {
       properties.push({
         propertyKey: 'shellAbortTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.shellAbortTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.shellAbortTime, timestampType),
       });
     }
 
     if (transition.mergeTime) {
       properties.push({
         propertyKey: 'mergeTime',
-        propertyValue: TimeUtils.format(
-          new ElapsedTimestamp(BigInt(transition.mergeTime.elapsedNanos.toString()))
-        ),
+        propertyValue: TimeUtils.formattedKotlinTimestamp(transition.mergeTime, timestampType),
       });
     }
 
