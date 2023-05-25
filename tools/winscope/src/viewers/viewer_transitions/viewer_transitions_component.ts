@@ -17,7 +17,7 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TimeUtils} from 'common/time_utils';
 import {Transition} from 'trace/flickerlib/common';
-import {ElapsedTimestamp} from 'trace/timestamp';
+import {ElapsedTimestamp, TimestampType} from 'trace/timestamp';
 import {Terminal} from 'viewers/common/ui_tree_utils';
 import {Events} from './events';
 import {UiData} from './ui_data';
@@ -33,6 +33,7 @@ import {UiData} from './ui_data';
             <div class="type">Type</div>
             <div class="send-time">Send Time</div>
             <div class="duration">Duration</div>
+            <div class="status">Status</div>
           </div>
           <cdk-virtual-scroll-viewport itemSize="53" class="scroll">
             <div
@@ -48,7 +49,7 @@ import {UiData} from './ui_data';
               </div>
               <div class="send-time">
                 <span *ngIf="!transition.sendTime.isMin" class="mat-body-1">{{
-                  formattedElapsedTime(transition.sendTime.elapsedNanos.toString())
+                  formattedTime(transition.sendTime, uiData.timestampType)
                 }}</span>
                 <span *ngIf="transition.sendTime.isMin"> n/a </span>
               </div>
@@ -57,13 +58,43 @@ import {UiData} from './ui_data';
                   *ngIf="!transition.sendTime.isMin && !transition.finishTime.isMax"
                   class="mat-body-1"
                   >{{
-                    formattedElapsedTimeDiff(
-                      transition.sendTime.elapsedNanos.toString(),
-                      transition.finishTime.elapsedNanos.toString()
+                    formattedTimeDiff(
+                      transition.sendTime,
+                      transition.finishTime,
+                      uiData.timestampType
                     )
                   }}</span
                 >
                 <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
+              </div>
+              <div class="status">
+                <div *ngIf="transition.mergedInto">
+                  <span>MERGED</span>
+                  <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
+                  </mat-icon>
+                </div>
+
+                <div *ngIf="transition.aborted && !transition.mergedInto">
+                  <span>ABORTED</span>
+                  <mat-icon
+                    aria-hidden="false"
+                    fontIcon="close"
+                    matTooltip="aborted"
+                    style="color: red"
+                    icon-red></mat-icon>
+                </div>
+
+                <div *ngIf="transition.played && !transition.aborted && !transition.mergedInto">
+                  <span>PLAYED</span>
+                  <mat-icon
+                    aria-hidden="false"
+                    fontIcon="check"
+                    matTooltip="played"
+                    style="color: green"
+                    *ngIf="
+                      transition.played && !transition.aborted && !transition.mergedInto
+                    "></mat-icon>
+                </div>
               </div>
             </div>
           </cdk-virtual-scroll-viewport>
@@ -192,6 +223,21 @@ import {UiData} from './ui_data';
         flex: 3;
       }
 
+      .table-row .status {
+        flex: 2;
+      }
+
+      .status > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .current .status mat-icon {
+        color: white !important;
+      }
+
       .transition-timeline .row svg rect {
         cursor: pointer;
       }
@@ -251,14 +297,15 @@ export class ViewerTransitionsComponent {
     return maxOfRange;
   }
 
-  formattedElapsedTime(timeStringNanos: string): string {
-    return TimeUtils.format(new ElapsedTimestamp(BigInt(timeStringNanos)));
+  formattedTime(time: any, timestampType: TimestampType): string {
+    return TimeUtils.formattedKotlinTimestamp(time, timestampType);
   }
 
-  formattedElapsedTimeDiff(timeStringNanos1: string, timeStringNanos2: string) {
-    return TimeUtils.format(
-      new ElapsedTimestamp(BigInt(timeStringNanos2) - BigInt(timeStringNanos1))
+  formattedTimeDiff(time1: any, time2: any, timestampType: TimestampType): string {
+    const timeDiff = new ElapsedTimestamp(
+      BigInt(time2.elapsedNanos.toString()) - BigInt(time1.elapsedNanos.toString())
     );
+    return TimeUtils.format(timeDiff);
   }
 
   widthOf(transition: Transition) {
