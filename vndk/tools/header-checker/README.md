@@ -6,12 +6,7 @@ The header ABI checker consists of 3 tools:
 [header-abi-linker](#Header-ABI-Linker), and
 [header-abi-diff](#Header-ABI-Diff).  The first two commands generate ABI dumps
 for shared libraries.  The third command compares the ABI dumps with the
-reference ABI dumps in [prebuilts/abi-dumps].  If there are no ABI dumps under
-[prebuilts/abi-dumps], follow the instructions in
-[Create Reference ABI Dumps](#Create-Reference-ABI-Dumps) to create one.
-
-[prebuilts/abi-dumps]: https://android.googlesource.com/platform/prebuilts/abi-dumps
-
+prebuilt reference ABI dumps.
 
 ## Header ABI Dumper
 
@@ -140,18 +135,63 @@ The config file and the header-abi-diff CLI support the same set of `flags`. If
 a flag is present in both CLI and config sections, the library config section
 takes priority, then the global config section and the CLI.
 
+## Opt-in ABI check
+
+Android build system runs the ABI checker automatically when it builds
+particular libraries, such as NDK and VNDK. Developers can enable the ABI
+check for common libraries by the following steps:
+
+1. Set the ABI checker properties in Android.bp. For example,
+
+   ```
+   cc_library {
+       name: "libfoo",
+       ...
+       target: {
+           vendor: {
+               header_abi_checker: {
+                   enabled: true,
+                   symbol_file: "map.txt",
+                   ref_dump_dirs: ["abi-dumps"],
+               },
+           },
+       },
+   }
+   ```
+
+   `cc_library` modules and their `platform`, `product`, and `vendor` variants
+   support `header_abi_checker`. The following are the commonly used
+   properties of `header_abi_checker`:
+
+   - `enabled` explicitly enables or disables the check.
+   - `symbol_file` is the file containing the exported symbols.
+   - `diff_flags` are the command line options for header-abi-diff.
+   - `ref_dump_dirs` are the directories containing the dumps and
+     [config files](#Configuration).
+
+2. Follow the instructions in
+   [Update Opt-in Reference ABI Dumps](#Update-Opt-in-Reference-ABI-Dumps)
+   to generate ABI dumps in the `ref_dump_dirs`.
+
+3. Verify that the ABI check is working.
+
+   ```
+   $ make libfoo.vendor
+   $ find $ANDROID_BUILD_TOP/out/soong/.intermediates \
+     -name libfoo.so.opt0.abidiff
+   ```
+
 ## How to Resolve ABI Difference
 
-Android build system runs the ABI checker automatically when it builds the
-ABI-monitored libraries. Currently the build system compares the ABI of the
-source code with two sets of reference dumps: the **current version** and the
-**previous version**. The ABI difference is propagated as build errors. This
-section describes the common methods to resolve them.
+The build system compares the source code with three sets of reference dumps:
+**current version**, **opt-in**, and **previous version**. The ABI difference
+is propagated as build errors. This section describes the common methods to
+resolve them.
 
-### Update Reference ABI Dumps
+### Update Reference ABI Dumps for Current Version
 
 When the build system finds difference between the source code and the ABI
-reference dumps for the **current** version, it instructs you to run
+reference dumps for the **current version**, it instructs you to run
 `create_reference_dumps.py` to update the dumps.
 
 The command below updates the reference ABI dumps for all monitored libraries
@@ -171,8 +211,25 @@ $ python3 utils/create_reference_dumps.py -l libfoo
 For more command line options, run:
 
 ```
-utils/create_reference_dumps.py --help
+$ utils/create_reference_dumps.py --help
 ```
+
+### Update Opt-in Reference ABI Dumps
+
+When the build system finds difference between the source code and the
+**opt-in** ABI reference dumps, it instructs you to run
+`create_reference_dumps.py` with `--ref-dump-dir` to update the dumps.
+
+The command below updates the reference ABI dumps for a specific library:
+
+```
+$ python3 utils/create_reference_dumps.py -l libfoo \
+  --ref-dump-dir /path/to/abi-dumps
+```
+
+You may specify `-products` if you don't want to create the ABI dumps for
+all architectures. For example, with `-products aosp_arm`, the command creates
+dumps for 32-bit arm only.
 
 ### Configure Cross-Version ABI Check
 
