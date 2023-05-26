@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {DisplayContent} from 'trace/flickerlib/windows/DisplayContent';
+import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
@@ -28,7 +35,66 @@ import {UiData} from './ui_data';
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
+  private readonly trace: Trace<WindowManagerState>;
+  private readonly notifyViewCallback: NotifyViewCallbackType;
+  private uiData: UiData;
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private highlightedItems: string[] = [];
+  private displayIds: number[] = [];
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedIds: string[] = [];
+  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private previousEntry: TraceTreeNode | null = null;
+  private entry: TraceTreeNode | null = null;
+  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'WmHierarchyOptions',
+    {
+      showDiff: {
+        name: 'Show diff',
+        enabled: false,
+      },
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: true,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
+    },
+    this.storage
+  );
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'WmPropertyOptions',
+    {
+      showDiff: {
+        name: 'Show diff',
+        enabled: false,
+      },
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    },
+    this.storage
+  );
+
+  constructor(
+    traces: Traces,
+    private storage: Storage,
+    notifyViewCallback: NotifyViewCallbackType
+  ) {
+    this.trace = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
     this.notifyViewCallback(this.uiData);
@@ -86,20 +152,22 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
+  onTracePositionUpdate(position: TracePosition) {
     this.uiData = new UiData();
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
-    const wmEntries = entries.get(TraceType.WINDOW_MANAGER);
-    if (wmEntries) {
-      [this.entry, this.previousEntry] = wmEntries;
-      if (this.entry) {
-        this.uiData.highlightedItems = this.highlightedItems;
-        this.uiData.rects = this.generateRects();
-        this.uiData.displayIds = this.displayIds;
-        this.uiData.tree = this.generateTree();
-      }
+    const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
+    const prevEntry =
+      entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
+
+    this.entry = entry?.getValue() ?? null;
+    this.previousEntry = prevEntry?.getValue() ?? null;
+    if (this.entry) {
+      this.uiData.highlightedItems = this.highlightedItems;
+      this.uiData.rects = this.generateRects();
+      this.uiData.displayIds = this.displayIds;
+      this.uiData.tree = this.generateTree();
     }
 
     this.notifyViewCallback(this.uiData);
@@ -224,57 +292,4 @@ export class Presenter {
     const transformedTree = transformer.transform();
     return transformedTree;
   }
-
-  private readonly notifyViewCallback: NotifyViewCallbackType;
-  private uiData: UiData;
-  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private highlightedItems: string[] = [];
-  private displayIds: number[] = [];
-  private pinnedItems: HierarchyTreeNode[] = [];
-  private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
-  private previousEntry: TraceTreeNode | null = null;
-  private entry: TraceTreeNode | null = null;
-  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'WmHierarchyOptions',
-    {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: true,
-      },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: false,
-      },
-    },
-    this.storage
-  );
-  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'WmPropertyOptions',
-    {
-      showDiff: {
-        name: 'Show diff',
-        enabled: false,
-      },
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: false,
-        tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
-      },
-    },
-    this.storage
-  );
 }

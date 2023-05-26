@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-export interface FilesDownloadListener {
-  onFilesDownloadStart(): void;
-  onFilesDownloaded(files: File[]): Promise<void>;
+import {Transition} from 'trace/flickerlib/common';
+import {TimestampType} from 'trace/timestamp';
+import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+
+export class UiData {
+  constructor(
+    public entries: Transition[],
+    public selectedTransition: Transition,
+    public timestampType: TimestampType,
+    public selectedTransitionPropertiesTree?: PropertiesTreeNode
+  ) {}
+
+  static EMPTY = new UiData([], undefined, TimestampType.REAL, undefined);
 }

@@ -15,10 +15,11 @@
  */
 import {CommonTestUtils} from 'test/common/utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
@@ -34,16 +35,10 @@ describe('Parser', () => {
     expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_CLIENTS);
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([]);
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual([]);
-
-    const timestampElapsed = new Timestamp(TimestampType.ELAPSED, 0n);
-    expect(parser.getTraceEntry(timestampElapsed)).toBeUndefined();
-
-    const timestampReal = new Timestamp(TimestampType.REAL, 0n);
-    expect(parser.getTraceEntry(timestampReal)).toBeUndefined();
   });
 
   describe('real timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/WindowManager.pb');
@@ -58,35 +53,22 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry (no timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089075566201n);
-      expect(parser.getTraceEntry(timestamp)).toEqual(undefined);
-    });
-
-    it('retrieves trace entry (equal timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089075566202n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.unixNanos.toString())).toEqual(
-        1659107089075566202n
-      );
-    });
-
-    it('retrieves trace entry (equal timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.unixNanos.toString())).toEqual(
-        1659107089999048990n
-      );
-    });
-
-    it('retrieves trace entry (lower timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048991n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.unixNanos.toString())).toEqual(
-        1659107089999048990n
-      );
+    it('retrieves trace entries', () => {
+      expect(
+        BigInt(parser.getEntry(0, TimestampType.REAL)!.timestamp.unixNanos.toString())
+      ).toEqual(1659107089075566202n);
+      expect(
+        BigInt(
+          parser
+            .getEntry(parser.getLengthEntries() - 1, TimestampType.REAL)!
+            .timestamp.unixNanos.toString()
+        )
+      ).toEqual(1659107091700249187n);
     });
   });
 
   describe('elapsed timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/WindowManager.pb');
@@ -101,37 +83,17 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
-    it('retrieves trace entry (no timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319342n);
-      expect(parser.getTraceEntry(timestamp)).toEqual(undefined);
-    });
-
-    it('retrieves trace entry (equal timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.elapsedNanos.toString())).toEqual(
-        850254319343n
-      );
-    });
-
-    it('retrieves trace entry (equal timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506110n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.elapsedNanos.toString())).toEqual(
-        850763506110n
-      );
-    });
-
-    it('retrieves trace entry (lower timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319344n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.elapsedNanos.toString())).toEqual(
-        850254319343n
-      );
-    });
-
-    it('retrieves trace entry (equal timestamp matches)', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506111n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.timestamp.elapsedNanos.toString())).toEqual(
-        850763506110n
-      );
+    it('retrieves trace entries', () => {
+      expect(
+        BigInt(parser.getEntry(0, TimestampType.ELAPSED)!.timestamp.elapsedNanos.toString())
+      ).toEqual(850254319343n);
+      expect(
+        BigInt(
+          parser
+            .getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED)!
+            .timestamp.elapsedNanos.toString()
+        )
+      ).toEqual(850782750048n);
     });
   });
 });

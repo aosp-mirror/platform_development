@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-// This class is needed for testing because Node.js doesn't provide the Web API's File type
-import {Blob} from './blob';
+import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {ParserError} from 'parsers/parser_factory';
 
-class File extends Blob {
-  constructor(buffer: ArrayBuffer, fileName: string) {
-    super(buffer);
-    this.name = fileName;
+export class SnackBarOpenerStub implements UserNotificationListener {
+  onParserErrors(errors: ParserError[]) {
+    // do nothing
   }
-
-  readonly lastModified: number = 0;
-  readonly name: string;
-  readonly webkitRelativePath: string = '';
 }
-
-export {File};

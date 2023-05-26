@@ -16,12 +16,12 @@
 
 import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
 import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
+import {AbstractParser} from './abstract_parser';
 import {LayersTraceFileProto} from './proto_types';
 
-class ParserSurfaceFlinger extends Parser {
+class ParserSurfaceFlinger extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;

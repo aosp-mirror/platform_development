@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { DisplayContent, DisplayCutout, Rotation, Rect, toInsets, toRect} from '../common';
+import {DisplayContent, DisplayCutout, Rect, Rotation, toInsets, toRect} from '../common';
 import {shortenName} from '../mixin';
 import {WindowContainer} from './WindowContainer';
 

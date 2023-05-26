@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'trace/timestamp';
+export class TraceFile {
+  constructor(public file: File, public parentArchive?: File) {}
 
-export interface TimestampChangeListener {
-  onCurrentTimestampChanged(timestamp: Timestamp | undefined): void;
+  getDescriptor(): string {
+    let descriptor = this.file.name;
+    if (this.parentArchive?.name !== undefined) {
+      descriptor += ` (${this.parentArchive?.name})`;
+    }
+    return descriptor;
+  }
 }

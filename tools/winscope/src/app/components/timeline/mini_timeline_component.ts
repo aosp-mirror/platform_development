@@ -25,7 +25,10 @@ import {
   ViewChild,
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'trace/timestamp';
+import {Traces} from 'trace/traces';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniCanvasDrawer, MiniCanvasDrawerInput} from './mini_canvas_drawer';
 
@@ -48,11 +51,11 @@ import {MiniCanvasDrawer, MiniCanvasDrawerInput} from './mini_canvas_drawer';
 })
 export class MiniTimelineComponent {
   @Input() timelineData!: TimelineData;
-  @Input() currentTimestamp!: Timestamp;
+  @Input() currentTracePosition!: TracePosition;
   @Input() selectedTraces!: TraceType[];
 
-  @Output() changeTimestamp = new EventEmitter<Timestamp>();
-  @Output() changeSeekTimestamp = new EventEmitter<Timestamp | undefined>();
+  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() onSeekTimestampUpdate = new EventEmitter<Timestamp | undefined>();
 
   @ViewChild('miniTimelineWrapper', {static: false}) miniTimelineWrapper!: ElementRef;
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
@@ -65,10 +68,9 @@ export class MiniTimelineComponent {
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
 
-    const updateTimestampCallback = (position: bigint) => {
-      const timestampType = this.timelineData.getTimestampType()!;
-      this.changeSeekTimestamp.emit(undefined);
-      this.changeTimestamp.emit(new Timestamp(timestampType, position));
+    const updateTimestampCallback = (timestamp: Timestamp) => {
+      this.onSeekTimestampUpdate.emit(undefined);
+      this.onTracePositionUpdate.emit(TracePosition.fromTimestamp(timestamp));
     };
 
     this.drawer = new MiniCanvasDrawer(
@@ -76,15 +78,12 @@ export class MiniTimelineComponent {
       () => this.getMiniCanvasDrawerInput(),
       (position) => {
         const timestampType = this.timelineData.getTimestampType()!;
-        this.changeSeekTimestamp.emit(new Timestamp(timestampType, position));
+        this.onSeekTimestampUpdate.emit(position);
       },
       updateTimestampCallback,
       (selection) => {
         const timestampType = this.timelineData.getTimestampType()!;
-        this.timelineData.setSelectionRange({
-          from: new Timestamp(timestampType, selection.from),
-          to: new Timestamp(timestampType, selection.to),
-        });
+        this.timelineData.setSelectionTimeRange(selection);
       },
       updateTimestampCallback
     );
@@ -99,31 +98,19 @@ export class MiniTimelineComponent {
 
   private getMiniCanvasDrawerInput() {
     return new MiniCanvasDrawerInput(
-      {
-        from: this.timelineData.getFullRange().from.getValueNs(),
-        to: this.timelineData.getFullRange().to.getValueNs(),
-      },
-      this.currentTimestamp.getValueNs(),
-      {
-        from: this.timelineData.getSelectionRange().from.getValueNs(),
-        to: this.timelineData.getSelectionRange().to.getValueNs(),
-      },
-      this.getTimelinesToShow()
+      this.timelineData.getFullTimeRange(),
+      this.currentTracePosition.timestamp,
+      this.timelineData.getSelectionTimeRange(),
+      this.getTracesToShow()
     );
   }
 
-  private getTimelinesToShow() {
-    const timelines = new Map<TraceType, Array<bigint>>();
-    for (const type of this.selectedTraces) {
-      timelines.set(
-        type,
-        this.timelineData
-          .getTimelines()
-          .get(type)!
-          .map((it) => it.getValueNs())
-      );
-    }
-    return timelines;
+  private getTracesToShow(): Traces {
+    const traces = new Traces();
+    this.selectedTraces.forEach((type) => {
+      traces.setTrace(type, assertDefined(this.timelineData.getTraces().getTrace(type)));
+    });
+    return traces;
   }
 
   private makeHiPPICanvas() {

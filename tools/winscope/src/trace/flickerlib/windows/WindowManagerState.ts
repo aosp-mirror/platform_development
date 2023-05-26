@@ -18,8 +18,8 @@ import {TimeUtils} from 'common/time_utils';
 import {ElapsedTimestamp, RealTimestamp} from 'trace/timestamp';
 import {
   KeyguardControllerState,
-  Rotation,
   RootWindowContainer,
+  Rotation,
   WindowManagerPolicy,
   WindowManagerState,
   WindowManagerTraceEntryBuilder,

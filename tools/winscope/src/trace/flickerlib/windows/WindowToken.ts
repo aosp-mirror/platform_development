@@ -32,13 +32,15 @@ WindowToken.fromProto = (
     /* protoChildren */ proto.windowContainer?.children ?? [],
     /* isActivityInTree */ isActivityInTree,
     /* computedZ */ nextSeq,
-    /* nameOverride */ null,
+    /* nameOverride */ proto.hashCode.toString(16),
     /* identifierOverride */ null,
     /* tokenOverride */ proto.hashCode
   );
   const entry = new WindowToken(windowContainer);
   entry.kind = entry.constructor.name;
   entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
   entry.shortName = shortenName(entry.name);
   return entry;
 };

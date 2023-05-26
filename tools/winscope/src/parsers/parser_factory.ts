@@ -15,10 +15,11 @@
  */
 
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {TraceFile} from 'trace/trace';
+import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 import {ParserAccessibility} from './parser_accessibility';
+import {ParserEventLog} from './parser_eventlog';
 import {ParserInputMethodClients} from './parser_input_method_clients';
 import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
 import {ParserInputMethodService} from './parser_input_method_service';
@@ -27,6 +28,8 @@ import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
 import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
+import {ParserTransitionsShell} from './parser_transitions_shell';
+import {ParserTransitionsWm} from './parser_transitions_wm';
 import {ParserWindowManager} from './parser_window_manager';
 import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
@@ -43,15 +46,20 @@ export class ParserFactory {
     ParserTransactions,
     ParserWindowManager,
     ParserWindowManagerDump,
+    ParserEventLog,
+    ParserTransitionsWm,
+    ParserTransitionsShell,
   ];
 
-  private parsers = new Map<TraceType, Parser>();
+  private parsers = new Map<TraceType, Parser<object>>();
 
   async createParsers(
     traceFiles: TraceFile[],
     onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
-  ): Promise<[Parser[], ParserError[]]> {
+  ): Promise<[Array<{file: TraceFile; parser: Parser<object>}>, ParserError[]]> {
     const errors: ParserError[] = [];
+
+    const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
     if (traceFiles.length === 0) {
       errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
@@ -67,6 +75,7 @@ export class ParserFactory {
           hasFoundParser = true;
           if (this.shouldUseParser(parser, errors)) {
             this.parsers.set(parser.getTraceType(), parser);
+            parsers.push({file: traceFile, parser});
           }
           break;
         } catch (error) {
@@ -76,37 +85,37 @@ export class ParserFactory {
 
       if (!hasFoundParser) {
         console.log(`Failed to load trace ${traceFile.file.name}`);
-        errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.file));
+        errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.getDescriptor()));
       }
 
       onProgressUpdate((100 * (index + 1)) / traceFiles.length);
     }
 
-    return [Array.from(this.parsers.values()), errors];
+    return [parsers, errors];
   }
 
-  private shouldUseParser(newParser: Parser, errors: ParserError[]): boolean {
+  private shouldUseParser(newParser: Parser<object>, errors: ParserError[]): boolean {
     const oldParser = this.parsers.get(newParser.getTraceType());
     if (!oldParser) {
       console.log(
-        `Loaded trace ${
-          newParser.getTrace().traceFile.file.name
-        } (trace type: ${newParser.getTraceType()})`
+        `Loaded trace ${newParser
+          .getDescriptors()
+          .join()} (trace type: ${newParser.getTraceType()})`
       );
       return true;
     }
 
-    if (newParser.getEntriesLength() > oldParser.getEntriesLength()) {
+    if (newParser.getLengthEntries() > oldParser.getLengthEntries()) {
       console.log(
-        `Loaded trace ${
-          newParser.getTrace().traceFile.file.name
-        } (trace type: ${newParser.getTraceType()}).` +
-          ` Replace trace ${oldParser.getTrace().traceFile.file.name}`
+        `Loaded trace ${newParser
+          .getDescriptors()
+          .join()} (trace type: ${newParser.getTraceType()}).` +
+          ` Replace trace ${oldParser.getDescriptors().join()}`
       );
       errors.push(
         new ParserError(
           ParserErrorType.OVERRIDE,
-          oldParser.getTrace().traceFile.file,
+          oldParser.getDescriptors().join(),
           oldParser.getTraceType()
         )
       );
@@ -114,15 +123,15 @@ export class ParserFactory {
     }
 
     console.log(
-      `Skipping trace ${
-        newParser.getTrace().traceFile.file.name
-      } (trace type: ${newParser.getTraceType()}).` +
-        ` Keep trace ${oldParser.getTrace().traceFile.file.name}`
+      `Skipping trace ${newParser
+        .getDescriptors()
+        .join()} (trace type: ${newParser.getTraceType()}).` +
+        ` Keep trace ${oldParser.getDescriptors().join()}`
     );
     errors.push(
       new ParserError(
         ParserErrorType.OVERRIDE,
-        newParser.getTrace().traceFile.file,
+        newParser.getDescriptors().join(),
         newParser.getTraceType()
       )
     );
@@ -139,7 +148,7 @@ export enum ParserErrorType {
 export class ParserError {
   constructor(
     public type: ParserErrorType,
-    public trace: File | undefined = undefined,
+    public trace: string | undefined = undefined,
     public traceType: TraceType | undefined = undefined
   ) {}
 }
