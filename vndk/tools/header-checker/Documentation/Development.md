@@ -9,7 +9,7 @@ To checkout the source tree, run the following commands:
     $ cd aosp-clang-tools
 
     $ repo init \
-          -u persistent-https://android.googlesource.com/platform/manifest \
+          -u https://android.googlesource.com/platform/manifest \
           -b clang-tools
 
     $ repo sync
