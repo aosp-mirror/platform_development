@@ -39,7 +39,15 @@ export class ViewerTransitions implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Transitions')];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'Transitions',
+        TraceType.TRANSITION
+      ),
+    ];
   }
 
   getDependencies(): TraceType[] {
