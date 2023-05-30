@@ -23,7 +23,13 @@ import {PresenterInputMethodService} from './presenter_input_method_service';
 class ViewerInputMethodService extends ViewerInputMethod {
   override getViews(): View[] {
     return [
-      new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Input Method Service'),
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'Input Method Service',
+        TraceType.INPUT_METHOD_SERVICE
+      ),
     ];
   }
 

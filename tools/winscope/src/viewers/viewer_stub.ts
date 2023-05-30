@@ -34,7 +34,15 @@ class ViewerStub implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, this.title)];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        this.title,
+        this.getDependencies()[0]
+      ),
+    ];
   }
 
   getDependencies(): any {
