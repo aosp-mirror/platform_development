@@ -40,7 +40,10 @@ import {SingleTimelineComponent} from './single_timeline_component';
         *ngFor="let trace of getTraces(); trackBy: trackTraceBySelectedTimestamp"
         class="timeline">
         <div class="icon-wrapper">
-          <mat-icon class="icon" [style]="{color: TRACE_INFO[trace.type].color}">
+          <mat-icon
+            class="icon"
+            [matTooltip]="TRACE_INFO[trace.type].name"
+            [style]="{color: TRACE_INFO[trace.type].color}">
             {{ TRACE_INFO[trace.type].icon }}
           </mat-icon>
         </div>

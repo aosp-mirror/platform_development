@@ -15,6 +15,7 @@
  */
 
 import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {TRACE_INFO} from 'app/trace_info';
 import {PersistentStore} from 'common/persistent_store';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
@@ -44,6 +45,12 @@ interface Tab extends View {
           [active]="isCurrentActiveTab(tab)"
           (click)="onTabClick(tab)"
           class="tab">
+          <mat-icon
+            class="icon"
+            [matTooltip]="TRACE_INFO[tab.traceType].name"
+            [style]="{color: TRACE_INFO[tab.traceType].color, marginRight: '0.5rem'}">
+            {{ TRACE_INFO[tab.traceType].icon }}
+          </mat-icon>
           {{ tab.title }}
         </a>
       </nav>
@@ -99,6 +106,8 @@ export class TraceViewComponent {
   @Output() downloadTracesButtonClick = new EventEmitter<void>();
   @Output() activeViewChanged = new EventEmitter<View>();
 
+  TRACE_INFO = TRACE_INFO;
+
   private elementRef: ElementRef;
 
   tabs: Tab[] = [];
@@ -129,6 +138,7 @@ export class TraceViewComponent {
           title: view.title,
           addedToDom: false,
           dependencies: view.dependencies,
+          traceType: view.traceType
         };
       });
 

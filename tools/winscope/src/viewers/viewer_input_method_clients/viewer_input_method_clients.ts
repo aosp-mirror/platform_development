@@ -23,7 +23,13 @@ import {PresenterInputMethodClients} from './presenter_input_method_clients';
 class ViewerInputMethodClients extends ViewerInputMethod {
   override getViews(): View[] {
     return [
-      new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Input Method Clients'),
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'Input Method Clients',
+        TraceType.INPUT_METHOD_CLIENTS
+      ),
     ];
   }
 
