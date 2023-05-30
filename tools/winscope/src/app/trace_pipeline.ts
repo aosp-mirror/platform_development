@@ -37,6 +37,7 @@ class TracePipeline {
     traceFiles: TraceFile[],
     onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
   ): Promise<ParserError[]> {
+    traceFiles = await this.filterBugreportFilesIfNeeded(traceFiles);
     const [parsers, parserErrors] = await this.parserFactory.createParsers(
       traceFiles,
       onLoadProgressUpdate
@@ -109,6 +110,36 @@ class TracePipeline {
     this.traces = undefined;
     this.commonTimestampType = undefined;
     this.files = new Map<TraceType, TraceFile>();
+  }
+
+  private async filterBugreportFilesIfNeeded(files: TraceFile[]): Promise<TraceFile[]> {
+    const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
+    if (!bugreportMainEntry) {
+      return files;
+    }
+
+    const bugreportName = (await bugreportMainEntry.file.text()).trim();
+    const isBugreport = files.find((file) => file.file.name === bugreportName) !== undefined;
+    if (!isBugreport) {
+      return files;
+    }
+
+    const BUGREPORT_TRACE_DIRS = ['FS/data/misc/wmtrace/', 'FS/data/misc/perfetto-traces/'];
+    const isFileWithinBugreportTraceDir = (file: TraceFile) => {
+      for (const traceDir of BUGREPORT_TRACE_DIRS) {
+        if (file.file.name.startsWith(traceDir)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const fileBelongsToBugreport = (file: TraceFile) =>
+      file.parentArchive === bugreportMainEntry.parentArchive;
+
+    return files.filter((file) => {
+      return isFileWithinBugreportTraceDir(file) || !fileBelongsToBugreport(file);
+    });
   }
 
   private getCommonTimestampType(): TimestampType {
