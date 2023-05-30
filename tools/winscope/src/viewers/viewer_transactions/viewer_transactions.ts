@@ -64,7 +64,15 @@ class ViewerTransactions implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Transactions')];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'Transactions',
+        TraceType.TRANSACTIONS
+      ),
+    ];
   }
 
   getDependencies(): TraceType[] {
