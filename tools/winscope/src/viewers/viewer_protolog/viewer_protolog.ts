@@ -49,7 +49,15 @@ class ViewerProtoLog implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'ProtoLog')];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'ProtoLog',
+        TraceType.PROTO_LOG
+      ),
+    ];
   }
 
   getDependencies(): TraceType[] {
