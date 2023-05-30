@@ -32,6 +32,7 @@ import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {LoadedTrace} from 'trace/loaded_trace';
 import {Timestamp} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
@@ -59,6 +60,13 @@ import {UploadTracesComponent} from './upload_traces_component';
       </a>
 
       <div class="spacer">
+        <mat-icon
+          *ngIf="activeTrace"
+          class="icon"
+          [matTooltip]="TRACE_INFO[activeTrace.type].name"
+          [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
+          {{ TRACE_INFO[activeTrace.type].icon }}
+        </mat-icon>
         <span *ngIf="dataLoaded" class="active-trace-file-info mat-body-2">
           {{ activeTraceFileInfo }}
         </span>
@@ -157,6 +165,9 @@ import {UploadTracesComponent} from './upload_traces_component';
       .spacer {
         flex: 1;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .viewers {
         height: 0;
@@ -202,11 +213,13 @@ export class AppComponent implements TraceDataListener {
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView?: View;
+  activeTrace?: LoadedTrace;
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
+  TRACE_INFO = TRACE_INFO;
 
   constructor(
     @Inject(Injector) injector: Injector,
@@ -327,6 +340,7 @@ export class AppComponent implements TraceDataListener {
 
   onActiveViewChanged(view: View) {
     this.activeView = view;
+    this.activeTrace = this.getActiveTrace(view);
     this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
     this.timelineData.setActiveViewTraceTypes(view.dependencies);
   }
@@ -336,15 +350,19 @@ export class AppComponent implements TraceDataListener {
   }
 
   private makeActiveTraceFileInfo(view: View): string {
-    const traceFile = this.tracePipeline
-      .getLoadedTraces()
-      .find((file) => file.type === view.dependencies[0]);
+    const trace = this.getActiveTrace(view);
 
-    if (!traceFile) {
+    if (!trace) {
       return '';
     }
 
-    return `${traceFile.type} (${traceFile.descriptors.join(', ')})`;
+    return `${TRACE_INFO[trace.type].name} (${trace.descriptors.join(', ')})`;
+  }
+
+  private getActiveTrace(view: View): LoadedTrace | undefined {
+    return this.tracePipeline
+      .getLoadedTraces()
+      .find((trace) => trace.type === view.dependencies[0]);
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
