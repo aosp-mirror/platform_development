@@ -138,7 +138,7 @@ export class TraceViewComponent {
           title: view.title,
           addedToDom: false,
           dependencies: view.dependencies,
-          traceType: view.traceType
+          traceType: view.traceType,
         };
       });
 
