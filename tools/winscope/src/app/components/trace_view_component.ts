@@ -51,7 +51,9 @@ interface Tab extends View {
             [style]="{color: TRACE_INFO[tab.traceType].color, marginRight: '0.5rem'}">
             {{ TRACE_INFO[tab.traceType].icon }}
           </mat-icon>
-          {{ tab.title }}
+          <p>
+            {{ tab.title }}
+          </p>
         </a>
       </nav>
       <button

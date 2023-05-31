@@ -26,7 +26,8 @@ describe('Cross-Tool Protocol', () => {
   const TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL = '1670509913000000000';
 
   beforeAll(async () => {
-    await browser.manage().timeouts().implicitlyWait(5000);
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+    await browser.manage().timeouts().implicitlyWait(15000);
     await checkServerIsUp('Remote tool mock', REMOTE_TOOL_MOCK_URL);
     await checkServerIsUp('Winscope', WINSCOPE_URL);
   });
@@ -111,13 +112,13 @@ describe('Cross-Tool Protocol', () => {
   };
 
   const checkWinscopeRenderedAllViewTabs = async () => {
-    const linkElements = await element.all(by.css('.tabs-navigation-bar a'));
+    const tabParagraphs = await element.all(by.css('.tabs-navigation-bar a p'));
 
-    const actualLinks = await Promise.all(
-      (linkElements as ElementFinder[]).map(async (linkElement) => await linkElement.getText())
+    const actualTabParagraphs = await Promise.all(
+      (tabParagraphs as ElementFinder[]).map(async (paragraph) => await paragraph.getText())
     );
 
-    const expectedLinks = [
+    const expectedTabParagraphs = [
       'Input Method Clients',
       'Input Method Manager Service',
       'Input Method Service',
@@ -128,7 +129,7 @@ describe('Cross-Tool Protocol', () => {
       'Window Manager',
     ];
 
-    expect(actualLinks.sort()).toEqual(expectedLinks.sort());
+    expect(actualTabParagraphs.sort()).toEqual(expectedTabParagraphs.sort());
   };
 
   const checkWinscopeAppliedTimestampInBugreportMessage = async () => {
