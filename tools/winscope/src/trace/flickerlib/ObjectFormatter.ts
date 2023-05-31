@@ -20,9 +20,7 @@ import intDefMapping from '../../../../../../prebuilts/misc/common/winscope/intD
 import {
   toActiveBuffer,
   toColor,
-  toColor3,
   toInsets,
-  toMatrix22,
   toPoint,
   toPointF,
   toRect,
@@ -170,8 +168,6 @@ export class ObjectFormatter {
         return toSize(obj);
       case `ActiveBufferProto`:
         return toActiveBuffer(obj);
-      case `Color3`:
-        return toColor3(obj);
       case `ColorProto`:
         return toColor(obj);
       case `Long`:
@@ -184,8 +180,6 @@ export class ObjectFormatter {
       // definition of insets and rects uses the same object type
       case `RectProto`:
         return key.toLowerCase().includes('insets') ? toInsets(obj) : toRect(obj);
-      case `Matrix22`:
-        return toMatrix22(obj);
       case `FloatRectProto`:
         return toRectF(obj);
       case `RegionProto`:

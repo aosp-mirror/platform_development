@@ -75,10 +75,8 @@ const WmTransitionData = require('flicker').android.tools.common.traces.wm.WmTra
 // Common
 const Size = require('flicker').android.tools.common.datatypes.Size;
 const ActiveBuffer = require('flicker').android.tools.common.datatypes.ActiveBuffer;
-const Color3 = require('flicker').android.tools.common.datatypes.Color3;
 const Color = require('flicker').android.tools.common.datatypes.Color;
 const Insets = require('flicker').android.tools.common.datatypes.Insets;
-const Matrix22 = require('flicker').android.tools.common.datatypes.Matrix22;
 const Matrix33 = require('flicker').android.tools.common.datatypes.Matrix33;
 const PlatformConsts = require('flicker').android.tools.common.PlatformConsts;
 const Rotation = require('flicker').android.tools.common.Rotation;
@@ -92,14 +90,12 @@ const TimestampFactory = require('flicker').android.tools.common.TimestampFactor
 
 const EMPTY_SIZE = Size.Companion.EMPTY;
 const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
-const EMPTY_COLOR3 = Color3.Companion.EMPTY;
 const EMPTY_COLOR = Color.Companion.EMPTY;
 const EMPTY_INSETS = Insets.Companion.EMPTY;
 const EMPTY_RECT = Rect.Companion.EMPTY;
 const EMPTY_RECTF = RectF.Companion.EMPTY;
 const EMPTY_POINT = Point.Companion.EMPTY;
 const EMPTY_POINTF = PointF.Companion.EMPTY;
-const EMPTY_MATRIX22 = Matrix22.Companion.EMPTY;
 const EMPTY_MATRIX33 = Matrix33.Companion.identity(0, 0);
 const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX33);
 
@@ -125,19 +121,6 @@ function toActiveBuffer(proto) {
     return new ActiveBuffer(width, height, stride, format);
   }
   return EMPTY_BUFFER;
-}
-
-function toColor3(proto) {
-  if (proto == null) {
-    return EMPTY_COLOR;
-  }
-  const r = proto.r ?? 0;
-  const g = proto.g ?? 0;
-  const b = proto.b ?? 0;
-  if (r || g || b) {
-    return new Color3(r, g, b);
-  }
-  return EMPTY_COLOR3;
 }
 
 function toColor(proto) {
@@ -276,22 +259,6 @@ function toTransform(proto) {
   return EMPTY_TRANSFORM;
 }
 
-function toMatrix22(proto) {
-  if (proto == null) {
-    return EMPTY_MATRIX22;
-  }
-  const dsdx = proto.dsdx ?? 0;
-  const dtdx = proto.dtdx ?? 0;
-  const dsdy = proto.dsdy ?? 0;
-  const dtdy = proto.dtdy ?? 0;
-
-  if (dsdx || dtdx || dsdy || dtdy) {
-    return new Matrix22(dsdx, dtdx, dsdy, dtdy);
-  }
-
-  return EMPTY_MATRIX22;
-}
-
 export {
   Activity,
   Configuration,
@@ -320,7 +287,6 @@ export {
   LayerTraceEntryBuilder,
   LayersTrace,
   Transform,
-  Matrix22,
   Matrix33,
   Display,
   // Eventlog
@@ -342,7 +308,6 @@ export {
   Size,
   ActiveBuffer,
   Color,
-  Color3,
   Insets,
   PlatformConsts,
   Point,
@@ -357,7 +322,6 @@ export {
   toSize,
   toActiveBuffer,
   toColor,
-  toColor3,
   toCropRect,
   toInsets,
   toPoint,
@@ -365,17 +329,14 @@ export {
   toRect,
   toRectF,
   toRegion,
-  toMatrix22,
   toTransform,
   // Constants
   EMPTY_BUFFER,
-  EMPTY_COLOR3,
   EMPTY_COLOR,
   EMPTY_RECT,
   EMPTY_RECTF,
   EMPTY_POINT,
   EMPTY_POINTF,
-  EMPTY_MATRIX22,
   EMPTY_MATRIX33,
   EMPTY_TRANSFORM,
 };
