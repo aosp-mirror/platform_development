@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "fetchartifact"
+version = "0.1.0"
+description = "Python library for https://android.googlesource.com/tools/fetch_artifact/."
+authors = ["The Android Open Source Project"]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.8.4"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.2.0"
+pylint = "^2.17.2"
+black = "^23.3.0"
+pytest = "^7.2.2"
+pytest-asyncio = "^0.21.0"
+isort = "^5.12.0"
+pytest-aiohttp = "^1.0.4"
+pytest-cov = "^4.0.0"
+
+[tool.coverage.report]
+fail_under = 100
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+asyncio_mode = "auto"
+markers = [
+    "requires_network: marks a test that requires network access"
+]
+xfail_strict = true
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_any_unimported = true
+disallow_subclassing_any = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+follow_imports = "silent"
+implicit_reexport = false
+namespace_packages = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = "duplicate-code,too-many-arguments"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
