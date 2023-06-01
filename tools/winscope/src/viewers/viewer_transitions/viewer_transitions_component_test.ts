@@ -101,8 +101,8 @@ function createMockTransition(
   const abortTime = null;
   const finishTime = CrossPlatform.timestamp.fromString(finishTimeNanos.toString(), null, null);
 
-  const startTransactionId = -1;
-  const finishTransactionId = -1;
+  const startTransactionId = '-1';
+  const finishTransactionId = '-1';
   const type = TransitionType.TO_FRONT;
   const changes: TransitionChange[] = [];
 
