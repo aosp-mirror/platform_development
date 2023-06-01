@@ -15,6 +15,7 @@
  */
 
 import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
@@ -34,11 +35,19 @@ class ViewerStub implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, this.title)];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        this.title,
+        this.getDependencies()[0]
+      ),
+    ];
   }
 
-  getDependencies(): any {
-    return;
+  getDependencies(): TraceType[] {
+    return [TraceType.WINDOW_MANAGER];
   }
 
   private htmlElement: HTMLElement;
