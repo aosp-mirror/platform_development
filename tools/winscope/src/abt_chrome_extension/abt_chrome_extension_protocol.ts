@@ -26,14 +26,15 @@ export class AbtChromeExtensionProtocol implements BuganizerAttachmentsDownloadE
   static readonly ABT_EXTENSION_ID = 'mbbaofdfoekifkfpgehgffcpagbbjkmj';
   private onAttachmentsDownloadStart: OnBuganizerAttachmentsDownloadStart =
     FunctionUtils.DO_NOTHING;
-  private onttachmentsDownloaded: OnBuganizerAttachmentsDownloaded = FunctionUtils.DO_NOTHING_ASYNC;
+  private onAttachmentsDownloaded: OnBuganizerAttachmentsDownloaded =
+    FunctionUtils.DO_NOTHING_ASYNC;
 
   setOnBuganizerAttachmentsDownloadStart(callback: OnBuganizerAttachmentsDownloadStart) {
     this.onAttachmentsDownloadStart = callback;
   }
 
   setOnBuganizerAttachmentsDownloaded(callback: OnBuganizerAttachmentsDownloaded) {
-    this.onttachmentsDownloaded = callback;
+    this.onAttachmentsDownloaded = callback;
   }
 
   run() {
@@ -83,7 +84,7 @@ export class AbtChromeExtensionProtocol implements BuganizerAttachmentsDownloadE
     });
 
     const files = await Promise.all(filesBlobPromises);
-    await this.onttachmentsDownloaded(files);
+    await this.onAttachmentsDownloaded(files);
   }
 
   private isOpenBuganizerResponseMessage(
