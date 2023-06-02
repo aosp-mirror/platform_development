@@ -1,0 +1,19 @@
+#!/bin/sh
+
+WINSCOPE_SRC_PATTERN="tools/winscope/"
+
+match=false
+for file in "$@"
+do
+  if echo $file | grep --quiet "$WINSCOPE_SRC_PATTERN"
+  then
+    match=true
+  fi
+done
+
+# If there are changes to winscope files and npm is installed
+if $match && (which node > /dev/null)
+then
+  echo "Running winscope presubmit tests..."
+  npm run test:presubmit --prefix $WINSCOPE_SRC_PATTERN
+fi
