@@ -19,7 +19,7 @@ import {RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 
-class ParserEventLog extends AbstractParser {
+class ParserEventLog extends AbstractParser<Event> {
   override getTraceType(): TraceType {
     return TraceType.EVENT_LOG;
   }
