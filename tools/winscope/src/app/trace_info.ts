@@ -30,6 +30,7 @@ const TAG_ICON = 'details';
 const TRACE_ERROR_ICON = 'warning';
 const EVENT_LOG_ICON = 'description';
 const TRANSITION_ICON = 'animation';
+const CUJ_ICON = 'label';
 
 interface TraceInfoMap {
   [key: number]: {
@@ -160,5 +161,11 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: TRANSITION_ICON,
     color: '#EC407A',
     downloadArchiveDir: 'transition',
+  },
+  [TraceType.CUJS]: {
+    name: 'Cujs',
+    icon: CUJ_ICON,
+    color: '#EC407A',
+    downloadArchiveDir: 'eventlog',
   },
 };
