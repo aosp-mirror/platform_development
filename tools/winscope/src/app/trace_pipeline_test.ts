@@ -39,6 +39,74 @@ describe('TracePipeline', () => {
     expect(traceEntries.get(TraceType.SURFACE_FLINGER)?.length).toBeGreaterThan(0);
   });
 
+  it('can load bugreport and ignores non-trace dirs', async () => {
+    expect(tracePipeline.getLoadedTraces().length).toEqual(0);
+
+    // Could be any file, we just need an instance of File to be used as a fake bugreport archive
+    const bugreportArchive = await UnitTestUtils.getFixtureFile(
+      'bugreports/bugreport_stripped.zip'
+    );
+
+    const bugreportFiles = [
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
+        bugreportArchive
+      ),
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile(
+          'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+          'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
+        ),
+        bugreportArchive
+      ),
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          'FS/data/misc/wmtrace/surface_flinger.bp'
+        ),
+        bugreportArchive
+      ),
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/Transactions.pb',
+          'FS/data/misc/wmtrace/transactions.bp'
+        ),
+        bugreportArchive
+      ),
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/WindowManager.pb',
+          'FS/data/misc/ignored-dir/window_manager.bp'
+        ),
+        bugreportArchive
+      ),
+    ];
+
+    // Corner case:
+    // A plain trace file is loaded along the bugreport -> trace file must not be ignored
+    //
+    // Note:
+    // The even weirder corner case where two bugreports are loaded at the same time is
+    // currently not properly handled.
+    const plainTraceFile = new TraceFile(
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
+        'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb'
+      )
+    );
+
+    const mergedFiles = bugreportFiles.concat([plainTraceFile]);
+    const errors = await tracePipeline.loadTraceFiles(mergedFiles);
+    expect(errors.length).toEqual(0);
+    tracePipeline.buildTraces();
+    const traces = tracePipeline.getTraces();
+
+    expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeDefined();
+    expect(traces.getTrace(TraceType.TRANSACTIONS)).toBeDefined();
+    expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined(); // ignored
+    expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
+  });
+
   it('is robust to invalid trace files', async () => {
     const invalidTraceFiles = [
       new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
