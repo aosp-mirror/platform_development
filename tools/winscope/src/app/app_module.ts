@@ -58,6 +58,7 @@ import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/vi
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
+import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {AdbProxyComponent} from './components/adb_proxy_component';
 import {AppComponent} from './components/app_component';
@@ -88,6 +89,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     ViewerTransactionsComponent,
     ViewerScreenRecordingComponent,
     ViewerTransitionsComponent,
+    ViewerViewCaptureComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,

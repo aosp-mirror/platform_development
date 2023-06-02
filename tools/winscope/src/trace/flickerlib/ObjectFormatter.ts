@@ -64,6 +64,9 @@ export class ObjectFormatter {
    * @return The "true" properties of the entry as described above
    */
   static getProperties(entry: any): string[] {
+    if (entry === null || entry === undefined) {
+      return [];
+    }
     const props: string[] = [];
     let obj = entry;
 
