@@ -83,7 +83,7 @@ export class Mediator {
       }
     );
 
-    this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
+    this.crossToolProtocol.setOnTimestampReceived((timestamp: Timestamp) => {
       this.onRemoteTimestampReceived(timestamp);
     });
 
@@ -203,7 +203,7 @@ export class Mediator {
 
   private async processRemoteFilesReceived(files: File[]) {
     this.resetAppToInitialState();
-    this.processFiles(files);
+    await this.processFiles(files);
   }
 
   private async processFiles(files: File[]) {
