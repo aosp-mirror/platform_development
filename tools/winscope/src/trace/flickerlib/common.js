@@ -62,6 +62,8 @@ const Event = require('flicker').android.tools.common.traces.events.Event;
 const FlickerEvent = require('flicker').android.tools.common.traces.events.FlickerEvent;
 const FocusEvent = require('flicker').android.tools.common.traces.events.FocusEvent;
 const EventLogParser = require('flicker').android.tools.common.parsers.events.EventLogParser;
+const CujTrace = require('flicker').android.tools.common.parsers.events.CujTrace;
+const Cuj = require('flicker').android.tools.common.parsers.events.Cuj;
 
 // Transitions
 const Transition = require('flicker').android.tools.common.traces.wm.Transition;
@@ -313,6 +315,8 @@ export {
   FlickerEvent,
   FocusEvent,
   EventLogParser,
+  CujTrace,
+  Cuj,
   // Transitions
   Transition,
   TransitionType,

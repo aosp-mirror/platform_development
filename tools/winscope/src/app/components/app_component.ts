@@ -356,7 +356,7 @@ export class AppComponent implements TraceDataListener {
       return '';
     }
 
-    return `${TRACE_INFO[trace.type].name} (${trace.descriptors.join(', ')})`;
+    return `${trace.descriptors.join(', ')}`;
   }
 
   private getActiveTrace(view: View): LoadedTrace | undefined {
