@@ -128,7 +128,6 @@ export class TimeUtils {
   }
 
   static formattedKotlinTimestamp(time: any, timestampType: TimestampType): string {
-    console.log('time', time);
     if (timestampType === TimestampType.ELAPSED) {
       return TimeUtils.format(new ElapsedTimestamp(BigInt(time.elapsedNanos.toString())));
     }

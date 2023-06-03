@@ -61,9 +61,8 @@ class FileUtils {
         // Ignore directories
         continue;
       } else {
-        const name = FileUtils.removeDirFromFileName(filename);
         const fileBlob = await file.async('blob');
-        const unzippedFile = new File([fileBlob], name);
+        const unzippedFile = new File([fileBlob], filename);
         unzippedFiles.push(unzippedFile);
       }
 
