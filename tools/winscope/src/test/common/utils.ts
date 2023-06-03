@@ -18,9 +18,12 @@ import * as path from 'path';
 import {FileImpl} from './file_impl';
 
 class CommonTestUtils {
-  static async getFixtureFile(filename: string): Promise<File> {
-    const buffer = CommonTestUtils.loadFixture(filename);
-    return new FileImpl(buffer, filename) as unknown as File;
+  static async getFixtureFile(
+    srcFilename: string,
+    dstFilename: string = srcFilename
+  ): Promise<File> {
+    const buffer = CommonTestUtils.loadFixture(srcFilename);
+    return new FileImpl(buffer, dstFilename) as unknown as File;
   }
 
   static loadFixture(filename: string): ArrayBuffer {

@@ -20,7 +20,7 @@ import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
-abstract class AbstractParser implements Parser<object> {
+abstract class AbstractParser<T extends object = object> implements Parser<object> {
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
@@ -78,7 +78,7 @@ abstract class AbstractParser implements Parser<object> {
     return this.timestamps.get(type);
   }
 
-  getEntry(index: number, timestampType: TimestampType): object {
+  getEntry(index: number, timestampType: TimestampType): T {
     return this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
   }
 

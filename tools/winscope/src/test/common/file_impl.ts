@@ -46,7 +46,11 @@ class FileImpl {
   }
 
   text(): Promise<string> {
-    throw new Error('Not implemented!');
+    const utf8Decoder = new TextDecoder();
+    const text = utf8Decoder.decode(this.buffer);
+    return new Promise<string>((resolve) => {
+      resolve(text);
+    });
   }
 }
 
