@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,8 @@
  * limitations under the License.
  */
 
-import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {TraceType} from './trace_type';
 
-enum ViewType {
-  TAB,
-  OVERLAY,
+export class LoadedTrace {
+  constructor(public descriptors: string[], public type: TraceType) {}
 }
-
-class View {
-  constructor(
-    public type: ViewType,
-    public dependencies: TraceType[],
-    public htmlElement: HTMLElement,
-    public title: string,
-    public traceType: TraceType
-  ) {}
-}
-
-interface Viewer {
-  onTracePositionUpdate(position: TracePosition): void;
-  getViews(): View[];
-  getDependencies(): TraceType[];
-}
-
-export {Viewer, View, ViewType};

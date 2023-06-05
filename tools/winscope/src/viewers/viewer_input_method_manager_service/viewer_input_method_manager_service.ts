@@ -27,7 +27,8 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
         ViewType.TAB,
         this.getDependencies(),
         this.htmlElement,
-        'Input Method Manager Service'
+        'Input Method Manager Service',
+        TraceType.INPUT_METHOD_MANAGER_SERVICE
       ),
     ];
   }

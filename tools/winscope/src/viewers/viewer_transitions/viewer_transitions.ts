@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -22,29 +21,20 @@ import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class ViewerProtoLog implements Viewer {
+export class ViewerTransitions implements Viewer {
   constructor(traces: Traces) {
-    this.htmlElement = document.createElement('viewer-protolog');
+    this.htmlElement = document.createElement('viewer-transitions');
 
     this.presenter = new Presenter(traces, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-      return this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
-      return this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-      return this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-      return this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(Events.TransitionSelected, (event) => {
+      this.presenter.onTransitionSelected((event as CustomEvent).detail);
     });
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  onTracePositionUpdate(position: TracePosition): void {
     this.presenter.onTracePositionUpdate(position);
   }
 
@@ -54,19 +44,17 @@ class ViewerProtoLog implements Viewer {
         ViewType.TAB,
         this.getDependencies(),
         this.htmlElement,
-        'ProtoLog',
-        TraceType.PROTO_LOG
+        'Transitions',
+        TraceType.TRANSITION
       ),
     ];
   }
 
   getDependencies(): TraceType[] {
-    return ViewerProtoLog.DEPENDENCIES;
+    return ViewerTransitions.DEPENDENCIES;
   }
 
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSITION];
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 }
-
-export {ViewerProtoLog};
