@@ -28,13 +28,15 @@ import sys
 import tempfile
 import textwrap
 
+from typing import BinaryIO
+
 # Shared functions across gdbclient.py and ndk-gdb.py.
 import gdbrunner
 
 g_temp_dirs = []
 
 
-def read_toolchain_config(root):
+def read_toolchain_config(root: str) -> str:
     """Finds out current toolchain version."""
     version_output = subprocess.check_output(
         f'{root}/build/soong/scripts/get_clang_version.py',
@@ -42,7 +44,7 @@ def read_toolchain_config(root):
     return version_output.strip()
 
 
-def get_lldb_path(toolchain_path):
+def get_lldb_path(toolchain_path: str) -> str | None:
     for lldb_name in ['lldb.sh', 'lldb.cmd', 'lldb', 'lldb.exe']:
         debugger_path = os.path.join(toolchain_path, "bin", lldb_name)
         if os.path.isfile(debugger_path):
@@ -50,7 +52,7 @@ def get_lldb_path(toolchain_path):
     return None
 
 
-def get_lldb_server_path(root, clang_base, clang_version, arch):
+def get_lldb_server_path(root: str, clang_base: str, clang_version: str, arch: str) -> str:
     arch = {
         'arm': 'arm',
         'arm64': 'aarch64',
@@ -61,7 +63,7 @@ def get_lldb_server_path(root, clang_base, clang_version, arch):
                         clang_version, "runtimes_ndk_cxx", arch, "lldb-server")
 
 
-def get_tracer_pid(device, pid):
+def get_tracer_pid(device: adb.AndroidDevice, pid: int | str | None) -> int:
     if pid is None:
         return 0
 
@@ -70,7 +72,7 @@ def get_tracer_pid(device, pid):
     return int(tracer_pid)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = gdbrunner.ArgumentParser()
 
     group = parser.add_argument_group(title="attach target")
@@ -109,15 +111,15 @@ def parse_args():
     return parser.parse_args()
 
 
-def verify_device(root, device):
+def verify_device(device: adb.AndroidDevice) -> None:
     names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.name")])
     target_device = os.environ["TARGET_PRODUCT"]
     if target_device not in names:
         msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
-        sys.exit(msg.format(target_device, ", ".join(names)))
+        sys.exit(msg.format(target_device, ", ".join(n if n else "None" for n in names)))
 
 
-def get_remote_pid(device, process_name):
+def get_remote_pid(device: adb.AndroidDevice, process_name: str) -> int:
     processes = gdbrunner.get_processes(device)
     if process_name not in processes:
         msg = "failed to find running process {}".format(process_name)
@@ -131,14 +133,14 @@ def get_remote_pid(device, process_name):
     return pids[0]
 
 
-def make_temp_dir(prefix):
+def make_temp_dir(prefix: str) -> str:
     global g_temp_dirs
     result = tempfile.mkdtemp(prefix='lldbclient-linker-')
     g_temp_dirs.append(result)
     return result
 
 
-def ensure_linker(device, sysroot, interp):
+def ensure_linker(device: adb.AndroidDevice, sysroot: str, interp: str | None) -> str | None:
     """Ensure that the device's linker exists on the host.
 
     PT_INTERP is usually /system/bin/linker[64], but on the device, that file is
@@ -189,7 +191,7 @@ def ensure_linker(device, sysroot, interp):
     return result
 
 
-def handle_switches(args, sysroot):
+def handle_switches(args, sysroot: str) -> tuple[BinaryIO, int | None, str | None]:
     """Fetch the targeted binary and determine how to attach lldb.
 
     Args:
@@ -242,7 +244,7 @@ def handle_switches(args, sysroot):
 
     return (binary_file, pid, run_cmd)
 
-def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_path):
+def generate_vscode_lldb_script(root: str, sysroot: str, binary_name: str, port: str | int, solib_search_path: list[str]) -> str:
     # TODO It would be nice if we didn't need to copy this or run the
     #      lldbclient.py program manually. Doing this would probably require
     #      writing a vscode extension or modifying an existing one.
@@ -262,7 +264,7 @@ def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_p
     }
     return json.dumps(res, indent=4)
 
-def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
+def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | int, solib_search_path: list[str]) -> str:
     commands = []
     commands.append(
         'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
@@ -276,7 +278,7 @@ def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
     return '\n'.join(commands)
 
 
-def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
+def generate_setup_script(sysroot: str, linker_search_dir: str | None, binary_name: str, is64bit: bool, port: str | int, debugger: str) -> str:
     # Generate a setup script.
     root = os.environ["ANDROID_BUILD_TOP"]
     symbols_dir = os.path.join(sysroot, "system", "lib64" if is64bit else "lib")
@@ -292,15 +294,15 @@ def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file
 
     if debugger == "vscode-lldb":
         return generate_vscode_lldb_script(
-            root, sysroot, binary_file.name, port, solib_search_path)
+            root, sysroot, binary_name, port, solib_search_path)
     elif debugger == 'lldb':
         return generate_lldb_script(
-            root, sysroot, binary_file.name, port, solib_search_path)
+            root, sysroot, binary_name, port, solib_search_path)
     else:
         raise Exception("Unknown debugger type " + debugger)
 
 
-def do_main():
+def do_main() -> None:
     required_env = ["ANDROID_BUILD_TOP",
                     "ANDROID_PRODUCT_OUT", "TARGET_PRODUCT"]
     for env in required_env:
@@ -321,7 +323,7 @@ def do_main():
     # Skip when running in a chroot because the chroot lunch target may not
     # match the device's lunch target.
     if not args.chroot:
-        verify_device(root, device)
+        verify_device(device)
 
     debug_socket = "/data/local/tmp/debug_socket"
     pid = None
@@ -374,10 +376,9 @@ def do_main():
         debugger = args.setup_forwarding or 'lldb'
 
         # Generate the lldb script.
-        setup_commands = generate_setup_script(debugger_path=debugger_path,
-                                               sysroot=sysroot,
+        setup_commands = generate_setup_script(sysroot=sysroot,
                                                linker_search_dir=linker_search_dir,
-                                               binary_file=binary_file,
+                                               binary_name=binary_file.name,
                                                is64bit=is64bit,
                                                port=args.port,
                                                debugger=debugger)
