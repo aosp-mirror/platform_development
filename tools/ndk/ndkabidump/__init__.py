@@ -39,7 +39,19 @@ class Updater:
         """Builds the updated NDK ABI dumps."""
         soong = Soong(self.src_dir, self.build_dir)
         logger().info(f"Building ABI dumps to {self.build_dir}")
-        soong.build(["dump-ndk-abi"], env={"TARGET_PRODUCT": "ndk"})
+        soong.build(
+            ["dump-ndk-abi"],
+            env={
+                "TARGET_PRODUCT": "ndk",
+                # TODO: remove ALLOW_MISSING_DEPENDENCIES=true when all the
+                # riscv64 dependencies exist (currently blocked by
+                # http://b/273792258).
+                "ALLOW_MISSING_DEPENDENCIES": "true",
+                # TODO: remove BUILD_BROKEN_DISABLE_BAZEL=1 when bazel supports
+                # riscv64 (http://b/262192655).
+                "BUILD_BROKEN_DISABLE_BAZEL": "1",
+            },
+        )
 
     def copy_updated_abi_dumps(self) -> None:
         """Copies the NDK ABI dumps from the build directory to prebuilts."""
