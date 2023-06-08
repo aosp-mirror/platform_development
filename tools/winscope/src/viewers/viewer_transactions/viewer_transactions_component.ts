@@ -26,6 +26,12 @@ import {UiData} from './ui_data';
       <div class="entries">
         <div class="filters">
           <div class="time"></div>
+          <div class="id">
+            <mat-form-field appearance="fill">
+              <mat-label>TX ID</mat-label>
+              <input matInput [(ngModel)]="idString" (input)="onIdSearchStringChanged()" />
+            </mat-form-field>
+          </div>
           <div class="vsyncid">
             <mat-form-field appearance="fill">
               <mat-label>VSYNC ID</mat-label>
@@ -69,8 +75,8 @@ import {UiData} from './ui_data';
           <div class="id">
             <mat-form-field appearance="fill">
               <mat-label>LAYER/DISP ID</mat-label>
-              <mat-select (selectionChange)="onIdFilterChanged($event)" multiple>
-                <mat-option *ngFor="let id of uiData.allIds" [value]="id">
+              <mat-select (selectionChange)="onLayerIdFilterChanged($event)" multiple>
+                <mat-option *ngFor="let id of uiData.allLayerAndDisplayIds" [value]="id">
                   {{ id }}
                 </mat-option>
               </mat-select>
@@ -94,6 +100,9 @@ import {UiData} from './ui_data';
             <div class="time">
               <span class="mat-body-1">{{ entry.time }}</span>
             </div>
+            <div class="id">
+              <span class="mat-body-1">{{ entry.transactionId }}</span>
+            </div>
             <div class="vsyncid">
               <span class="mat-body-1">{{ entry.vsyncId }}</span>
             </div>
@@ -107,7 +116,7 @@ import {UiData} from './ui_data';
               <span class="mat-body-1">{{ entry.type }}</span>
             </div>
             <div class="id">
-              <span class="mat-body-1">{{ entry.id }}</span>
+              <span class="mat-body-1">{{ entry.layerOrDisplayId }}</span>
             </div>
             <div class="what">
               <span class="mat-body-1">{{ entry.what }}</span>
@@ -222,6 +231,7 @@ import {UiData} from './ui_data';
 })
 class ViewerTransactionsComponent {
   uiData: UiData = UiData.EMPTY;
+  idString = '';
   whatSearchString = '';
 
   @ViewChild(CdkVirtualScrollViewport) private scrollComponent?: CdkVirtualScrollViewport;
@@ -255,12 +265,16 @@ class ViewerTransactionsComponent {
     this.emitEvent(Events.TypeFilterChanged, event.value);
   }
 
-  onIdFilterChanged(event: MatSelectChange) {
-    this.emitEvent(Events.IdFilterChanged, event.value);
+  onLayerIdFilterChanged(event: MatSelectChange) {
+    this.emitEvent(Events.LayerIdFilterChanged, event.value);
   }
 
   onWhatSearchStringChange() {
     this.emitEvent(Events.WhatSearchStringChanged, this.whatSearchString);
+  }
+
+  onIdSearchStringChanged() {
+    this.emitEvent(Events.IdFilterChanges, this.idString);
   }
 
   onEntryClicked(index: number) {
