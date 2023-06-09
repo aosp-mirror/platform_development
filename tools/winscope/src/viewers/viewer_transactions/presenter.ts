@@ -283,6 +283,26 @@ export class Presenter {
             )
           );
         }
+
+        if (
+          transactionStateProto.layerChanges.length === 0 &&
+          transactionStateProto.displayChanges.length === 0
+        ) {
+          entries.push(
+            new UiDataEntry(
+              originalIndex,
+              TimeUtils.format(entry.getTimestamp()),
+              Number(entryProto.vsyncId),
+              transactionStateProto.pid.toString(),
+              transactionStateProto.uid.toString(),
+              UiDataEntryType.NO_OP,
+              '',
+              transactionStateProto.transactionId.toString(),
+              '',
+              {}
+            )
+          );
+        }
       }
 
       for (const layerCreationArgsProto of entryProto.addedLayers) {
