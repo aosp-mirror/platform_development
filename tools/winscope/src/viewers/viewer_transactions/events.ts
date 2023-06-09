@@ -19,9 +19,10 @@ class Events {
   static PidFilterChanged = 'ViewerTransactionsEvent_PidFilterChanged';
   static UidFilterChanged = 'ViewerTransactionsEvent_UidFilterChanged';
   static TypeFilterChanged = 'ViewerTransactionsEvent_TypeFilterChanged';
-  static IdFilterChanged = 'ViewerTransactionsEvent_IdFilterChanged';
+  static LayerIdFilterChanged = 'ViewerTransactionsEvent_LayerIdFilterChanged';
   static WhatSearchStringChanged = 'ViewerTransactionsEvent_WhatSearchStringChanged';
   static EntryClicked = 'ViewerTransactionsEvent_EntryClicked';
+  static IdFilterChanges = 'ViewerTransactionsEvent_IdFilterChanged';
 }
 
 export {Events};
