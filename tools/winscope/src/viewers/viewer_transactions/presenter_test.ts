@@ -76,7 +76,9 @@ describe('PresenterTransactions', () => {
       'LAYER_DESTROYED',
       'LAYER_HANDLE_DESTROYED',
     ]);
-    expect(outputUiData?.allIds.length).toEqual(116);
+
+    expect(outputUiData?.allTransactionIds.length).toEqual(1152);
+    expect(outputUiData?.allLayerAndDisplayIds.length).toEqual(116);
 
     expect(outputUiData?.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
@@ -94,6 +96,16 @@ describe('PresenterTransactions', () => {
     presenter.onTracePositionUpdate(createTracePosition(10));
     expect(outputUiData!.currentEntryIndex).toEqual(13);
     expect(outputUiData!.scrollToIndex).toEqual(13);
+  });
+
+  it('filters entries according to transaction ID filter', () => {
+    presenter.onIdFilterChanged('');
+    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onIdFilterChanged('2211908157465');
+    expect(new Set(outputUiData!.entries.map((entry) => entry.transactionId))).toEqual(
+      new Set(['2211908157465'])
+    );
   });
 
   it('filters entries according to VSYNC ID filter', () => {
@@ -160,15 +172,21 @@ describe('PresenterTransactions', () => {
     );
   });
 
-  it('filters entries according to ID filter', () => {
-    presenter.onIdFilterChanged([]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id)).size).toBeGreaterThan(20);
+  it('filters entries according to layer or display ID filter', () => {
+    presenter.onLayerIdFilterChanged([]);
+    expect(
+      new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId)).size
+    ).toBeGreaterThan(20);
 
-    presenter.onIdFilterChanged(['1']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id))).toEqual(new Set(['1']));
+    presenter.onLayerIdFilterChanged(['1']);
+    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
+      new Set(['1'])
+    );
 
-    presenter.onIdFilterChanged(['1', '3']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id))).toEqual(new Set(['1', '3']));
+    presenter.onLayerIdFilterChanged(['1', '3']);
+    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
+      new Set(['1', '3'])
+    );
   });
 
   it('filters entries according to "what" search string', () => {
