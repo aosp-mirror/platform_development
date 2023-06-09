@@ -56,6 +56,7 @@ class UiDataEntryType {
   static LAYER_DESTROYED = 'LAYER_DESTROYED';
   static LAYER_CHANGED = 'LAYER_CHANGED';
   static LAYER_HANDLE_DESTROYED = 'LAYER_HANDLE_DESTROYED';
+  static NO_OP = 'NO_OP';
 }
 
 export {UiData, UiDataEntry, UiDataEntryType};
