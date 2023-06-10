@@ -168,6 +168,8 @@ export class ObjectFormatter {
         return toSize(obj);
       case `ActiveBufferProto`:
         return toActiveBuffer(obj);
+      case `Color3`:
+        return toColor(obj, /* hasAlpha */ false);
       case `ColorProto`:
         return toColor(obj);
       case `Long`:

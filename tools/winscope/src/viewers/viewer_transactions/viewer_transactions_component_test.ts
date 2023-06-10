@@ -82,10 +82,11 @@ async function makeUiData(): Promise<UiData> {
     'PID_VALUE',
     'UID_VALUE',
     'TYPE_VALUE',
-    'ID_VALUE',
+    'LAYER_OR_DISPLAY_ID_VALUE',
+    'TRANSACTION_ID_VALUE',
     'flag1 | flag2 | ...',
     propertiesTree
   );
 
-  return new UiData([], [], [], [], [], [entry], 0, 0, 0, propertiesTree);
+  return new UiData([], [], [], [], [], [], [entry], 0, 0, 0, propertiesTree);
 }

@@ -125,14 +125,17 @@ function toActiveBuffer(proto) {
   return EMPTY_BUFFER;
 }
 
-function toColor(proto) {
+function toColor(proto, hasAlpha = true) {
   if (proto == null) {
     return EMPTY_COLOR;
   }
   const r = proto.r ?? 0;
   const g = proto.g ?? 0;
   const b = proto.b ?? 0;
-  const a = proto.a ?? 0;
+  let a = proto.a;
+  if (a === null && !hasAlpha) {
+    a = 1;
+  }
   if (r || g || b || a) {
     return new Color(r, g, b, a);
   }
