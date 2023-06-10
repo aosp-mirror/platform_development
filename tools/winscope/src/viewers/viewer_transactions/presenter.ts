@@ -38,7 +38,8 @@ export class Presenter {
   private pidFilter: string[] = [];
   private uidFilter: string[] = [];
   private typeFilter: string[] = [];
-  private idFilter: string[] = [];
+  private layerIdFilter: string[] = [];
+  private idFilter: string | undefined = undefined;
   private whatSearchString = '';
 
   constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
@@ -88,8 +89,18 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onIdFilterChanged(ids: string[]) {
-    this.idFilter = ids;
+  onLayerIdFilterChanged(ids: string[]) {
+    this.layerIdFilter = ids;
+    this.computeUiData();
+    this.notifyUiDataCallback(this.uiData);
+  }
+
+  onIdFilterChanged(id: string) {
+    if (id === '') {
+      this.idFilter = undefined;
+    } else {
+      this.idFilter = id;
+    }
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
@@ -127,7 +138,14 @@ export class Presenter {
     const allPids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.pid);
     const allUids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.uid);
     const allTypes = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.type);
-    const allIds = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.id);
+    const allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
+      entries,
+      (entry: UiDataEntry) => entry.layerOrDisplayId
+    );
+    const allTransactionIds = this.getUniqueUiDataEntryValues(
+      entries,
+      (entry: UiDataEntry) => entry.transactionId
+    );
 
     let filteredEntries = entries;
 
@@ -149,8 +167,15 @@ export class Presenter {
       filteredEntries = filteredEntries.filter((entry) => this.typeFilter.includes(entry.type));
     }
 
-    if (this.idFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) => this.idFilter.includes(entry.id));
+    if (this.layerIdFilter.length > 0) {
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.layerIdFilter.includes(entry.layerOrDisplayId)
+      );
+    }
+    if (this.idFilter !== undefined) {
+      filteredEntries = filteredEntries.filter(
+        (entry) => entry.transactionId.toString() === this.idFilter
+      );
     }
 
     filteredEntries = filteredEntries.filter((entry) => entry.what.includes(this.whatSearchString));
@@ -172,7 +197,8 @@ export class Presenter {
       allPids,
       allUids,
       allTypes,
-      allIds,
+      allLayerAndDisplayIds,
+      allTransactionIds,
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
@@ -234,6 +260,7 @@ export class Presenter {
               transactionStateProto.uid.toString(),
               UiDataEntryType.LAYER_CHANGED,
               layerStateProto.layerId.toString(),
+              transactionStateProto.transactionId.toString(),
               layerStateProto.what,
               treeGenerator.generate('LayerState', ObjectFormatter.format(layerStateProto))
             )
@@ -250,8 +277,29 @@ export class Presenter {
               transactionStateProto.uid.toString(),
               UiDataEntryType.DISPLAY_CHANGED,
               displayStateProto.id.toString(),
+              transactionStateProto.transactionId.toString(),
               displayStateProto.what,
               treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
+            )
+          );
+        }
+
+        if (
+          transactionStateProto.layerChanges.length === 0 &&
+          transactionStateProto.displayChanges.length === 0
+        ) {
+          entries.push(
+            new UiDataEntry(
+              originalIndex,
+              TimeUtils.format(entry.getTimestamp()),
+              Number(entryProto.vsyncId),
+              transactionStateProto.pid.toString(),
+              transactionStateProto.uid.toString(),
+              UiDataEntryType.NO_OP,
+              '',
+              transactionStateProto.transactionId.toString(),
+              '',
+              {}
             )
           );
         }
@@ -267,6 +315,7 @@ export class Presenter {
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_ADDED,
             layerCreationArgsProto.layerId.toString(),
+            '',
             '',
             treeGenerator.generate(
               'LayerCreationArgs',
@@ -287,6 +336,7 @@ export class Presenter {
             UiDataEntryType.LAYER_DESTROYED,
             destroyedLayerId.toString(),
             '',
+            '',
             treeGenerator.generate('DestroyedLayerId', ObjectFormatter.format(destroyedLayerId))
           )
         );
@@ -302,6 +352,7 @@ export class Presenter {
             Presenter.VALUE_NA,
             UiDataEntryType.DISPLAY_ADDED,
             displayStateProto.id.toString(),
+            '',
             displayStateProto.what,
             treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
           )
@@ -319,6 +370,7 @@ export class Presenter {
             UiDataEntryType.DISPLAY_REMOVED,
             removedDisplayId.toString(),
             '',
+            '',
             treeGenerator.generate('RemovedDisplayId', ObjectFormatter.format(removedDisplayId))
           )
         );
@@ -334,6 +386,7 @@ export class Presenter {
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_HANDLE_DESTROYED,
             destroyedLayerHandleId.toString(),
+            '',
             '',
             treeGenerator.generate(
               'DestroyedLayerHandleId',
