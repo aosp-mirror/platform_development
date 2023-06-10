@@ -32,7 +32,7 @@ describe('PresenterTransactions', () => {
   let traces: Traces;
   let presenter: Presenter;
   let outputUiData: undefined | UiData;
-  const TOTAL_OUTPUT_ENTRIES = 1504;
+  const TOTAL_OUTPUT_ENTRIES = 1647;
 
   beforeAll(async () => {
     parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/Transactions.pb');
@@ -75,8 +75,11 @@ describe('PresenterTransactions', () => {
       'LAYER_CHANGED',
       'LAYER_DESTROYED',
       'LAYER_HANDLE_DESTROYED',
+      'NO_OP',
     ]);
-    expect(outputUiData?.allIds.length).toEqual(116);
+
+    expect(outputUiData?.allTransactionIds.length).toEqual(1295);
+    expect(outputUiData?.allLayerAndDisplayIds.length).toEqual(117);
 
     expect(outputUiData?.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
@@ -94,6 +97,16 @@ describe('PresenterTransactions', () => {
     presenter.onTracePositionUpdate(createTracePosition(10));
     expect(outputUiData!.currentEntryIndex).toEqual(13);
     expect(outputUiData!.scrollToIndex).toEqual(13);
+  });
+
+  it('filters entries according to transaction ID filter', () => {
+    presenter.onIdFilterChanged('');
+    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onIdFilterChanged('2211908157465');
+    expect(new Set(outputUiData!.entries.map((entry) => entry.transactionId))).toEqual(
+      new Set(['2211908157465'])
+    );
   });
 
   it('filters entries according to VSYNC ID filter', () => {
@@ -146,6 +159,7 @@ describe('PresenterTransactions', () => {
         UiDataEntryType.LAYER_CHANGED,
         UiDataEntryType.LAYER_DESTROYED,
         UiDataEntryType.LAYER_HANDLE_DESTROYED,
+        UiDataEntryType.NO_OP,
       ])
     );
 
@@ -160,15 +174,34 @@ describe('PresenterTransactions', () => {
     );
   });
 
-  it('filters entries according to ID filter', () => {
-    presenter.onIdFilterChanged([]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id)).size).toBeGreaterThan(20);
+  it('filters entries according to layer or display ID filter', () => {
+    presenter.onLayerIdFilterChanged([]);
+    expect(
+      new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId)).size
+    ).toBeGreaterThan(20);
 
-    presenter.onIdFilterChanged(['1']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id))).toEqual(new Set(['1']));
+    presenter.onLayerIdFilterChanged(['1']);
+    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
+      new Set(['1'])
+    );
 
-    presenter.onIdFilterChanged(['1', '3']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.id))).toEqual(new Set(['1', '3']));
+    presenter.onLayerIdFilterChanged(['1', '3']);
+    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
+      new Set(['1', '3'])
+    );
+  });
+
+  it('includes no op transitions', () => {
+    presenter.onTypeFilterChanged([UiDataEntryType.NO_OP]);
+    expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
+      new Set([UiDataEntryType.NO_OP])
+    );
+
+    for (const entry of outputUiData!.entries) {
+      expect(entry.layerOrDisplayId).toEqual('');
+      expect(entry.what).toEqual('');
+      expect(entry.propertiesTree).toEqual({});
+    }
   });
 
   it('filters entries according to "what" search string', () => {

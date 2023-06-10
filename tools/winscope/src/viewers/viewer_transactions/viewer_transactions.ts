@@ -46,12 +46,16 @@ class ViewerTransactions implements Viewer {
       this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
     });
 
-    this.htmlElement.addEventListener(Events.IdFilterChanged, (event) => {
-      this.presenter.onIdFilterChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(Events.LayerIdFilterChanged, (event) => {
+      this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
     });
 
     this.htmlElement.addEventListener(Events.WhatSearchStringChanged, (event) => {
       this.presenter.onWhatSearchStringChanged((event as CustomEvent).detail);
+    });
+
+    this.htmlElement.addEventListener(Events.IdFilterChanges, (event) => {
+      this.presenter.onIdFilterChanged((event as CustomEvent).detail);
     });
 
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
