@@ -42,7 +42,8 @@ const WindowState = require('flicker').android.tools.common.traces.wm.WindowStat
 const WindowToken = require('flicker').android.tools.common.traces.wm.WindowToken;
 
 // SF
-const HwcCompositionType = require('flicker').android.tools.common.traces.surfaceflinger.HwcCompositionType;
+const HwcCompositionType =
+  require('flicker').android.tools.common.traces.surfaceflinger.HwcCompositionType;
 const Layer = require('flicker').android.tools.common.traces.surfaceflinger.Layer;
 const LayerProperties =
   require('flicker').android.tools.common.traces.surfaceflinger.LayerProperties;
@@ -192,7 +193,7 @@ function toCropRect(proto) {
   // crop (0,0) (-1,-1) means no crop
   if (right == -1 && left == 0 && bottom == -1 && top == 0) EMPTY_RECT;
 
-  if ((right - left) <= 0 || (bottom - top) <= 0) return EMPTY_RECT;
+  if (right - left <= 0 || bottom - top <= 0) return EMPTY_RECT;
 
   return Rect.Companion.from(left, top, right, bottom);
 }
