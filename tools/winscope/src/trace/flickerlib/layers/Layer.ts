@@ -49,7 +49,7 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
   const inputRegion = toRegion(
     proto.inputWindowInfo ? proto.inputWindowInfo.touchableRegion : null
   );
-  let crop: Rect = toCropRect(proto.crop);
+  const crop: Rect = toCropRect(proto.crop);
 
   const properties = new LayerProperties(
     visibleRegion,
