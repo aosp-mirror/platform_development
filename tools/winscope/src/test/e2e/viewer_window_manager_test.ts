@@ -20,13 +20,14 @@ describe('Viewer WindowManager', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('processes trace and renders view', async () => {
-      await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/WindowManager.pb');
-      await E2eTestUtils.closeSnackBarIfNeeded();
-      await E2eTestUtils.clickViewTracesButton();
+  });
 
-      const viewerPresent = await element(by.css('viewer-window-manager')).isPresent();
-      expect(viewerPresent).toBeTruthy();
-    });
+  it('processes trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/WindowManager.pb');
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
+
+    const viewerPresent = await element(by.css('viewer-window-manager')).isPresent();
+    expect(viewerPresent).toBeTruthy();
+  });
 });

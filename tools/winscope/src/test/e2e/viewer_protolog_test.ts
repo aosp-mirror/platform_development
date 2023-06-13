@@ -20,18 +20,19 @@ describe('Viewer ProtoLog', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('processes trace and renders view', async () => {
-      await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/ProtoLog.pb');
-      await E2eTestUtils.closeSnackBarIfNeeded();
-      await E2eTestUtils.clickViewTracesButton();
+  });
 
-      const isViewerRendered = await element(by.css('viewer-protolog')).isPresent();
-      expect(isViewerRendered).toBeTruthy();
+  it('processes trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/ProtoLog.pb');
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
 
-      const isFirstMessageRendered = await element(
-        by.css('viewer-protolog .scroll-messages .message')
-      ).isPresent();
-      expect(isFirstMessageRendered).toBeTruthy();
-    });
+    const isViewerRendered = await element(by.css('viewer-protolog')).isPresent();
+    expect(isViewerRendered).toBeTruthy();
+
+    const isFirstMessageRendered = await element(
+      by.css('viewer-protolog .scroll-messages .message')
+    ).isPresent();
+    expect(isFirstMessageRendered).toBeTruthy();
+  });
 });

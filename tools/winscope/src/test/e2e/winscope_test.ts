@@ -19,9 +19,10 @@ import {E2eTestUtils} from './utils';
 describe('winscope', () => {
   beforeAll(() => {
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('has title', () => {
-      const title = element(by.css('.app-title'));
-      expect(title.getText()).toContain('Winscope');
-    });
+  });
+
+  it('has title', () => {
+    const title = element(by.css('.app-title'));
+    expect(title.getText()).toContain('Winscope');
+  });
 });
