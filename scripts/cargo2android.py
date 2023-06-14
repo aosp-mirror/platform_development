@@ -1339,7 +1339,7 @@ class Runner(object):
       # Resolve - and _ for Namespace usage
       variant_data = {k.replace('-', '_') : v for k, v in self.args.variants[variant_num].items()}
       # Merge and overwrite variant args
-      self.variant_args = argparse.Namespace(**vars(self.args) | variant_data)
+      self.variant_args = argparse.Namespace(**{**vars(self.args), **variant_data})
 
     # Default action is cargo clean, followed by build or user given actions.
     if self.variant_args.cargo:
