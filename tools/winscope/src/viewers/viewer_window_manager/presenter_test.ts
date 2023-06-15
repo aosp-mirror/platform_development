@@ -46,7 +46,7 @@ describe('PresenterWindowManager', () => {
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('ScreenDecorOverlayBottom')
-      .setStableId('WindowState 2088ac1 ScreenDecorOverlayBottom')
+      .setStableId('WindowContainer 2088ac1 ScreenDecorOverlayBottom')
       .setKind('WindowState')
       .setSimplifyNames(true)
       .setShortName('ScreenDecorOverlayBottom')
@@ -57,7 +57,7 @@ describe('PresenterWindowManager', () => {
       .build();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 

@@ -20,18 +20,18 @@ describe('Viewer Transactions', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('processes trace and renders view', async () => {
-      await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/Transactions.pb');
-      await E2eTestUtils.closeSnackBarIfNeeded();
-      await E2eTestUtils.clickViewTracesButton();
+  });
+  it('processes trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/Transactions.pb');
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
 
-      const isViewerRendered = await element(by.css('viewer-transactions')).isPresent();
-      expect(isViewerRendered).toBeTruthy();
+    const isViewerRendered = await element(by.css('viewer-transactions')).isPresent();
+    expect(isViewerRendered).toBeTruthy();
 
-      const isFirstEntryRendered = await element(
-        by.css('viewer-transactions .scroll .entry')
-      ).isPresent();
-      expect(isFirstEntryRendered).toBeTruthy();
-    });
+    const isFirstEntryRendered = await element(
+      by.css('viewer-transactions .scroll .entry')
+    ).isPresent();
+    expect(isFirstEntryRendered).toBeTruthy();
+  });
 });
