@@ -31,6 +31,7 @@ import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
+import {CrossPlatform, NoCache} from 'flickerlib/common';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {Timestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
