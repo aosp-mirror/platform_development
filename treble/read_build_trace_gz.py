@@ -35,7 +35,7 @@ class Trace:
         self.target = os.path.splitext(os.path.basename(trace_file))[0]
         if not os.path.isfile(trace_file):
             return
-        self._trace_file = gzip.open(trace_file, 'r')
+        self._trace_file = gzip.open(trace_file, 'rt', encoding='utf-8')
         self._trace_data = json.load(self._trace_file)
         for t in self._trace_data:
             if 'ph' not in t:
