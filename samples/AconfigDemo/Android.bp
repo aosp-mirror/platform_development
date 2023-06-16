@@ -1,0 +1,3 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
