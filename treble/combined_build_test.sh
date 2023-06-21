@@ -128,13 +128,30 @@ if [[ -n "${alter_target}" ]]; then
     # Building two targets with a single artifacts
     echo "Installclean for the alternative target..."
     run_command "${base_command} TARGET_PRODUCT=${alter_target} TARGET_BUILD_VARIANT=${variant} installclean"
+    if [[ -n "${dist_dir}" ]]; then
+        # Remove target-specific dist artifacts from the previous build
+        run_command "rm -f ${dist_dir}/${target}*"
+    fi
     echo "Build the alternative target..."
     run_command "${base_command} TARGET_PRODUCT=${alter_target} TARGET_BUILD_VARIANT=${variant} ${goals}"
     get_build_trace "build_${alter_target}_ab.trace.gz"
 
     echo "Installclean for the primary target..."
     run_command "${base_command} TARGET_PRODUCT=${target} TARGET_BUILD_VARIANT=${variant} installclean"
+    if [[ -n "${dist_dir}" ]]; then
+        # Remove target-specific dist artifacts from the previous build
+        run_command "rm -f ${dist_dir}/${alter_target}*"
+    fi
     echo "Build the primary target again..."
     run_command "${base_command} TARGET_PRODUCT=${target} TARGET_BUILD_VARIANT=${variant} ${goals}"
     get_build_trace "build_${target}_aba.trace.gz"
+fi
+
+if [[ -n "${dist_dir}" ]]; then
+    # Remove some dist artifacts to save disk space
+    run_command "rm -f ${dist_dir}/${target}*"
+    run_command "rm -f ${dist_dir}/device-tests*"
+    run_command "rm -f ${dist_dir}/cvd-host_package.tar.gz"
+    run_command "rm -f ${dist_dir}/dexpreopt_tools.zip"
+    run_command "rm -f ${dist_dir}/otatools.zip"
 fi
