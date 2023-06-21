@@ -170,7 +170,7 @@ check for common libraries by the following steps:
      [config files](#Configuration).
 
 2. Follow the instructions in
-   [Update Opt-in Reference ABI Dumps](#Update-Opt-in-Reference-ABI-Dumps)
+   [Update Opt-in Reference ABI Dumps](#Update-Opt_in-Reference-ABI-Dumps)
    to generate ABI dumps in the `ref_dump_dirs`.
 
 3. Verify that the ABI check is working.
