@@ -56,6 +56,7 @@ def get_lldb_server_path(root: str, clang_base: str, clang_version: str, arch: s
     arch = {
         'arm': 'arm',
         'arm64': 'aarch64',
+        'riscv64': 'riscv64',
         'x86': 'i386',
         'x86_64': 'x86_64',
     }[arch]
