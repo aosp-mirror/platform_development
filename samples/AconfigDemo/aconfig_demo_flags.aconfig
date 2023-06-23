@@ -1,0 +1,7 @@
+package: "com.example.android.aconfig.demo.activity"
+
+flag {
+    name: "append_content"
+    namespace: "aconfig_demo_ns"
+    description: "This flag is buildtime flag"
+}
