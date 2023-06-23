@@ -1,3 +1,45 @@
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
+
+android_app {
+    name: "AconfigDemoActivity",
+    manifest: "AndroidManifest.xml",
+    srcs: ["src/com/example/android/aconfig/demo/activity/AconfigDemoActivity.java"],
+    certificate: "platform",
+    sdk_version: "current",
+    static_libs: [
+        "ContentProvider",
+    ],
+    optimize: {
+        enabled: true,
+        proguard_compatibility: false,
+        shrink: true,
+        optimize: false,
+        obfuscate: false,
+        shrink_resources: true,
+    },
+}
+
+aconfig_declarations {
+    name: "aconfig_demo_flags",
+    package: "com.example.android.aconfig.demo.activity",
+    srcs: ["aconfig_demo_flags.aconfig"],
+}
+
+
+java_aconfig_library {
+    name: "aconfig_demo_flags_lib",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+java_library {
+    name: "ContentProvider",
+    srcs: [
+        "src/com/example/android/aconfig/demo/activity/ContentProvider.java",
+    ],
+    sdk_version: "current",
+    static_libs: [
+        "aconfig_demo_flags_lib",
+    ],
+}
