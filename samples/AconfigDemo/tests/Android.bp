@@ -1,0 +1,15 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "AconfigDemo_ContentProvide_Test",
+    srcs: ["src/com/example/android/aconfig/demo/activity/ContentProviderTests.java"],
+    certificate: "platform",
+    static_libs: [
+        "ContentProvider",
+        "junit",
+        "androidx.test.runner",
+    ],
+    manifest: "AndroidManifest.xml",
+}
