@@ -15,7 +15,7 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.example.android.aconfig.demo.activity.tests">
+      package="com.example.android.aconfig.demo.tests">
      <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
 
     <!-- We add an application tag here just so that we can indicate that
@@ -26,7 +26,7 @@
     </application>
 
      <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
-          android:targetPackage="com.example.android.aconfig.demo.activity.tests"
+          android:targetPackage="com.example.android.aconfig.demo.tests"
           android:label="AconfigDemoActivity sample tests">
      </instrumentation>
 </manifest>
