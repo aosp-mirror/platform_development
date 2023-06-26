@@ -1,7 +1,13 @@
-package: "com.example.android.aconfig.demo.activity"
+package: "com.example.android.aconfig.demo.flags"
 
 flag {
-    name: "append_content"
+    name: "append_injected_content"
     namespace: "aconfig_demo_ns"
-    description: "This flag is buildtime flag"
+    description: "This flag controls injected content"
+}
+
+flag {
+    name: "append_static_content"
+    namespace: "aconfig_demo_ns"
+    description: "This flag controls static content"
 }

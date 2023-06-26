@@ -5,11 +5,15 @@ package {
 android_app {
     name: "AconfigDemoActivity",
     manifest: "AndroidManifest.xml",
-    srcs: ["src/com/example/android/aconfig/demo/activity/AconfigDemoActivity.java"],
+    srcs: [
+        "src/**/*.java"
+    ],
     certificate: "platform",
     sdk_version: "current",
     static_libs: [
-        "ContentProvider",
+        "ContentLibs",
+        "dagger2",
+        "jsr330",
     ],
     optimize: {
         enabled: true,
@@ -19,11 +23,13 @@ android_app {
         obfuscate: false,
         shrink_resources: true,
     },
+
+    plugins: ["dagger2-compiler"]
 }
 
 aconfig_declarations {
     name: "aconfig_demo_flags",
-    package: "com.example.android.aconfig.demo.activity",
+    package: "com.example.android.aconfig.demo.flags",
     srcs: ["aconfig_demo_flags.aconfig"],
 }
 
@@ -34,12 +40,13 @@ java_aconfig_library {
 }
 
 java_library {
-    name: "ContentProvider",
+    name: "ContentLibs",
     srcs: [
-        "src/com/example/android/aconfig/demo/activity/ContentProvider.java",
+        "lib/**/*.java",
     ],
     sdk_version: "current",
     static_libs: [
         "aconfig_demo_flags_lib",
     ],
+    libs: ["jsr330"],
 }
