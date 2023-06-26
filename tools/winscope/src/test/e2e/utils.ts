@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as path from 'path';
-import {by, element} from 'protractor';
+import {browser, by, element} from 'protractor';
 import {CommonTestUtils} from '../common/utils';
 
 class E2eTestUtils extends CommonTestUtils {
-  static getProductionIndexHtmlPath(): string {
-    return path.join(CommonTestUtils.getProjectRootPath(), 'dist/prod/index.html');
+  static readonly WINSCOPE_URL = 'http://localhost:8080';
+  static readonly REMOTE_TOOL_MOCK_URL = 'http://localhost:8081';
+
+  static async checkServerIsUp(name: string, url: string) {
+    try {
+      await browser.get(url);
+    } catch (error) {
+      fail(`${name} server (${url}) looks down. Did you start it?`);
+    }
   }
 
   static async uploadFixture(...paths: string[]) {
