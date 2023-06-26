@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {Cuj, CujTrace, EventLog, Transition} from 'trace/flickerlib/common';
+import {assertDefined} from 'common/assert_utils';
+import {Cuj, EventLog, Transition} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
@@ -24,6 +25,7 @@ import {ParserEventLog} from './parser_eventlog';
 export class TracesParserCujs extends AbstractTracesParser<Transition> {
   private readonly eventLogTrace: ParserEventLog | undefined;
   private readonly descriptors: string[];
+  private decodedEntries: Cuj[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
     super(parsers);
@@ -40,35 +42,26 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     }
   }
 
-  override canProvideEntries(): boolean {
-    return this.eventLogTrace !== undefined;
-  }
-
-  getLengthEntries(): number {
-    return this.getDecodedEntries().length;
-  }
-
-  getEntry(index: number, timestampType: TimestampType): Transition {
-    return this.getDecodedEntries()[index];
-  }
-
-  private cujTrace: CujTrace | undefined;
-  getDecodedEntries(): Cuj[] {
+  override parse() {
     if (this.eventLogTrace === undefined) {
       throw new Error('eventLogTrace not defined');
     }
 
-    if (this.cujTrace === undefined) {
-      const events: Event[] = [];
+    const events: Event[] = [];
 
-      for (let i = 0; i < this.eventLogTrace.getLengthEntries(); i++) {
-        events.push(this.eventLogTrace.getEntry(i, TimestampType.REAL));
-      }
-
-      this.cujTrace = new EventLog(events).cujTrace;
+    for (let i = 0; i < this.eventLogTrace.getLengthEntries(); i++) {
+      events.push(this.eventLogTrace.getEntry(i, TimestampType.REAL));
     }
 
-    return this.cujTrace.entries;
+    this.decodedEntries = new EventLog(events).cujTrace.entries;
+  }
+
+  getLengthEntries(): number {
+    return assertDefined(this.decodedEntries).length;
+  }
+
+  getEntry(index: number, timestampType: TimestampType): Transition {
+    return assertDefined(this.decodedEntries)[index];
   }
 
   override getDescriptors(): string[] {
