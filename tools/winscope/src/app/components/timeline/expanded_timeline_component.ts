@@ -37,7 +37,7 @@ import {SingleTimelineComponent} from './single_timeline_component';
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
-        *ngFor="let trace of getTraces(); trackBy: trackTraceBySelectedTimestamp"
+        *ngFor="let trace of this.timelineData.getTraces(); trackBy: trackTraceBySelectedTimestamp"
         class="timeline">
         <div class="icon-wrapper">
           <mat-icon
@@ -147,14 +147,6 @@ export class ExpandedTimelineComponent {
   @ViewChildren(SingleTimelineComponent) singleTimelines!: QueryList<SingleTimelineComponent>;
 
   TRACE_INFO = TRACE_INFO;
-
-  getTraces(): Array<Trace<{}>> {
-    const traces = new Array<Trace<{}>>();
-    this.timelineData.getTraces().forEachTrace((trace) => {
-      traces.push(trace);
-    });
-    return traces;
-  }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {

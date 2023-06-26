@@ -29,8 +29,8 @@ abstract class ViewerInputMethod implements Viewer {
     this.addViewerEventListeners();
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.presenter.onTracePositionUpdate(position);
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.presenter.onTracePositionUpdate(position);
   }
 
   abstract getViews(): View[];

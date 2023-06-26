@@ -63,18 +63,18 @@ describe('PresenterViewCapture', () => {
     presenter = createPresenter(trace);
   });
 
-  it('is robust to empty trace', () => {
+  it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<object>().setEntries([]).build();
     const presenter = createPresenter(emptyTrace);
 
     const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
-  it('processes trace position updates', () => {
-    presenter.onTracePositionUpdate(position);
+  it('processes trace position updates', async () => {
+    await presenter.onTracePositionUpdate(position);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.highlightedItems?.length).toEqual(0);
@@ -85,31 +85,31 @@ describe('PresenterViewCapture', () => {
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
-  it('creates input data for rects view', () => {
-    presenter.onTracePositionUpdate(position);
+  it('creates input data for rects view', async () => {
+    await presenter.onTracePositionUpdate(position);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual(new Point(0, 0));
     expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 2340));
   });
 
-  it('updates pinned items', () => {
+  it('updates pinned items', async () => {
     const pinnedItem = new HierarchyTreeBuilder().setName('FirstPinnedItem').setId('id').build();
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted items', () => {
+  it('updates highlighted items', async () => {
     expect(uiData.highlightedItems).toEqual([]);
 
     const id = '4';
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.updateHighlightedItems(id);
     expect(uiData.highlightedItems).toContain(id);
   });
 
-  it('updates hierarchy tree', () => {
-    presenter.onTracePositionUpdate(position);
+  it('updates hierarchy tree', async () => {
+    await presenter.onTracePositionUpdate(position);
 
     expect(
       // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace
@@ -138,7 +138,7 @@ describe('PresenterViewCapture', () => {
     ).toEqual('com.android.launcher3.Workspace@251960479');
   });
 
-  it('filters hierarchy tree', () => {
+  it('filters hierarchy tree', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -157,7 +157,7 @@ describe('PresenterViewCapture', () => {
         enabled: true,
       },
     };
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.updateHierarchyTree(userOptions);
     presenter.filterHierarchyTree('Workspace');
 
@@ -167,13 +167,13 @@ describe('PresenterViewCapture', () => {
     ).toEqual('com.android.launcher3.Workspace@251960479');
   });
 
-  it('sets properties tree and associated ui data', () => {
-    presenter.onTracePositionUpdate(position);
+  it('sets properties tree and associated ui data', async () => {
+    await presenter.onTracePositionUpdate(position);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree).toBeTruthy();
   });
 
-  it('updates properties tree', () => {
+  it('updates properties tree', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -190,7 +190,7 @@ describe('PresenterViewCapture', () => {
       },
     };
 
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
 
@@ -199,8 +199,8 @@ describe('PresenterViewCapture', () => {
     expect(uiData.propertiesTree?.diffType).toBeTruthy();
   });
 
-  it('filters properties tree', () => {
-    presenter.onTracePositionUpdate(position);
+  it('filters properties tree', async () => {
+    await presenter.onTracePositionUpdate(position);
 
     const userOptions: UserOptions = {
       showDiff: {

@@ -61,7 +61,6 @@ describe('Mediator', () => {
   });
 
   beforeEach(async () => {
-    timelineComponent = new TimelineComponentStub();
     tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = new AbtChromeExtensionProtocolStub();
@@ -94,6 +93,8 @@ describe('Mediator', () => {
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(appComponent, 'onTraceDataLoaded'),
       spyOn(viewerStub, 'onTracePositionUpdate'),
+      spyOn(timelineComponent, 'onTracePositionUpdate'),
+      spyOn(crossToolProtocol, 'sendTimestamp'),
     ];
 
     await mediator.onWinscopeFilesUploaded(inputFiles);
@@ -113,8 +114,11 @@ describe('Mediator', () => {
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalled();
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onTraceDataLoaded).toHaveBeenCalledOnceWith([viewerStub]);
-    // notifies viewer about current timestamp on creation
+
+    // propagates trace position on viewers creation
     expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
   });
 
   it('handles collected traces from Winscope', async () => {
@@ -124,6 +128,8 @@ describe('Mediator', () => {
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(appComponent, 'onTraceDataLoaded'),
       spyOn(viewerStub, 'onTracePositionUpdate'),
+      spyOn(timelineComponent, 'onTracePositionUpdate'),
+      spyOn(crossToolProtocol, 'sendTimestamp'),
     ];
 
     await mediator.onWinscopeFilesCollected(inputFiles);
@@ -132,8 +138,11 @@ describe('Mediator', () => {
     expect(collectTracesComponent.onOperationFinished).toHaveBeenCalled();
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onTraceDataLoaded).toHaveBeenCalledOnceWith([viewerStub]);
-    // notifies viewer about current timestamp on creation
+
+    // propagates trace position on viewers creation
     expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
   });
 
   //TODO: test "bugreport data from cross-tool protocol" when FileUtils is fully compatible with
@@ -160,7 +169,7 @@ describe('Mediator', () => {
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalledTimes(1);
   });
 
-  it('propagates trace position update from timeline data', async () => {
+  it('propagates trace position update from timeline component', async () => {
     await loadTraceFiles();
     await mediator.onWinscopeViewTracesRequest();
 
@@ -171,20 +180,14 @@ describe('Mediator', () => {
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(0);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
 
-    // notify timestamp
-    timelineData.setPosition(POSITION_10);
+    // notify position
+    await mediator.onTimelineTracePositionUpdate(POSITION_10);
     expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(1);
 
-    // notify same timestamp again (ignored, no timestamp change)
-    timelineData.setPosition(POSITION_10);
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
-    expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
-    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(1);
-
-    // notify another timestamp
-    timelineData.setPosition(POSITION_11);
+    // notify position
+    await mediator.onTimelineTracePositionUpdate(POSITION_11);
     expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(2);
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(2);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(2);
@@ -205,12 +208,7 @@ describe('Mediator', () => {
       expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
 
-      // receive same timestamp again (ignored, no timestamp change)
-      await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
-      expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
-      expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
-
-      // receive another
+      // receive timestamp
       await crossToolProtocol.onTimestampReceived(TIMESTAMP_11);
       expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(2);
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(2);

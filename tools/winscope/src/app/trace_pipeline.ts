@@ -60,8 +60,8 @@ class TracePipeline {
     });
 
     const hasTransitionTrace = this.traces
-      .map((trace) => trace.type)
-      .some((type) => type == TraceType.TRANSITION);
+      .mapTrace((trace) => trace.type)
+      .some((type) => type === TraceType.TRANSITION);
     if (hasTransitionTrace) {
       this.traces.deleteTrace(TraceType.WM_TRANSITION);
       this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
@@ -79,22 +79,22 @@ class TracePipeline {
     return this.files;
   }
 
-  buildTraces() {
+  async buildTraces() {
     const commonTimestampType = this.getCommonTimestampType();
     this.traces.forEachTrace((trace) => trace.init(commonTimestampType));
-    new FrameMapper(this.traces).computeMapping();
+    await new FrameMapper(this.traces).computeMapping();
   }
 
   getTraces(): Traces {
     return this.traces;
   }
 
-  getScreenRecordingVideo(): undefined | Blob {
+  async getScreenRecordingVideo(): Promise<undefined | Blob> {
     const screenRecording = this.getTraces().getTrace(TraceType.SCREEN_RECORDING);
     if (!screenRecording || screenRecording.lengthEntries === 0) {
       return undefined;
     }
-    return screenRecording.getEntry(0).getValue().videoData;
+    return (await screenRecording.getEntry(0).getValue()).videoData;
   }
 
   clear() {

@@ -21,13 +21,13 @@ import {TracesParserTransitions} from './traces_parser_transitions';
 export class TracesParserFactory {
   static readonly PARSERS = [TracesParserCujs, TracesParserTransitions];
 
-  async createParsers(parsers: Parser<object>[]): Promise<Array<Parser<object>>> {
-    const tracesParsers: Parser<object>[] = [];
+  async createParsers(parsers: Array<Parser<object>>): Promise<Array<Parser<object>>> {
+    const tracesParsers: Array<Parser<object>> = [];
 
     for (const ParserType of TracesParserFactory.PARSERS) {
       try {
         const parser = new ParserType(parsers);
-        parser.parse();
+        await parser.parse();
         tracesParsers.push(parser);
         break;
       } catch (error) {

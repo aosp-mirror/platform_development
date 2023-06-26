@@ -28,9 +28,9 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
   private decodedEntries: Cuj[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
-    super(parsers);
+    super();
 
-    const eventlogTraces = this.parsers.filter((it) => it.getTraceType() === TraceType.EVENT_LOG);
+    const eventlogTraces = parsers.filter((it) => it.getTraceType() === TraceType.EVENT_LOG);
     if (eventlogTraces.length > 0) {
       this.eventLogTrace = eventlogTraces[0] as ParserEventLog;
     }
@@ -42,7 +42,7 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     }
   }
 
-  override parse() {
+  override async parse() {
     if (this.eventLogTrace === undefined) {
       throw new Error('eventLogTrace not defined');
     }
@@ -50,18 +50,21 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     const events: Event[] = [];
 
     for (let i = 0; i < this.eventLogTrace.getLengthEntries(); i++) {
-      events.push(this.eventLogTrace.getEntry(i, TimestampType.REAL));
+      events.push(await this.eventLogTrace.getEntry(i, TimestampType.REAL));
     }
 
     this.decodedEntries = new EventLog(events).cujTrace.entries;
+
+    await this.parseTimestamps();
   }
 
   getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
 
-  getEntry(index: number, timestampType: TimestampType): Transition {
-    return assertDefined(this.decodedEntries)[index];
+  getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+    const entry = assertDefined(this.decodedEntries)[index];
+    return Promise.resolve(entry);
   }
 
   override getDescriptors(): string[] {

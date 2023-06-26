@@ -34,10 +34,10 @@ class ViewerScreenRecording implements Viewer {
     this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  async onTracePositionUpdate(position: TracePosition) {
     const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
     (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
-      entry?.getValue();
+      await entry?.getValue();
   }
 
   getViews(): View[] {

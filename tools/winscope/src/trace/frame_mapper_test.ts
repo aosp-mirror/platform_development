@@ -46,7 +46,7 @@ describe('FrameMapper', () => {
     let windowManager: Trace<WindowManagerState>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // Frames              F0        F1
       //                 |<------>|  |<->|
       // PROTO_LOG:      0  1  2     3  4  5
@@ -75,10 +75,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.PROTO_LOG, protoLog);
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -95,7 +95,7 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -104,7 +104,7 @@ describe('FrameMapper', () => {
     let windowManager: Trace<WindowManagerState>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // IME:            0--1--2     3
       //                    |        |
       // WINDOW_MANAGER:    0        1  2
@@ -131,10 +131,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.INPUT_METHOD_CLIENTS, ime);
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -158,7 +158,7 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -167,7 +167,7 @@ describe('FrameMapper', () => {
     let transactions: Trace<object>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // WINDOW_MANAGER:     0  1     2  3
       //                     |  |     |    \
       // TRANSACTIONS:    0  1  2--3  4     5  ... 6  <-- ignored (not connected) because too far
@@ -207,10 +207,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
       traces.setTrace(TraceType.TRANSACTIONS, transactions);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -255,7 +255,7 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -264,7 +264,7 @@ describe('FrameMapper', () => {
     let surfaceFlinger: Trace<LayerTraceEntry>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // TRANSACTIONS:   0  1--2        3  4
       //                  \     \        \
       //                   \     \        \
@@ -292,16 +292,16 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.TRANSACTIONS, transactions);
       traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [transactions.getEntry(0).getValue()]],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(0).getValue()]],
+          [TraceType.TRANSACTIONS, [await transactions.getEntry(0).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(0).getValue()]],
         ])
       );
       expectedFrames.set(
@@ -309,20 +309,20 @@ describe('FrameMapper', () => {
         new Map<TraceType, Array<{}>>([
           [
             TraceType.TRANSACTIONS,
-            [transactions.getEntry(1).getValue(), transactions.getEntry(2).getValue()],
+            [await transactions.getEntry(1).getValue(), await transactions.getEntry(2).getValue()],
           ],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(1).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(1).getValue()]],
         ])
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [transactions.getEntry(3).getValue()]],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(2).getValue()]],
+          [TraceType.TRANSACTIONS, [await transactions.getEntry(3).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(2).getValue()]],
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
@@ -331,7 +331,7 @@ describe('FrameMapper', () => {
     let screenRecording: Trace<ScreenRecordingTraceEntry>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // SURFACE_FLINGER:      0  1  2---  3     4  5  6
       //                              \  \  \        \
       //                               \  \  \        \
@@ -365,10 +365,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
       traces.setTrace(TraceType.SCREEN_RECORDING, screenRecording);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -413,7 +413,7 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 

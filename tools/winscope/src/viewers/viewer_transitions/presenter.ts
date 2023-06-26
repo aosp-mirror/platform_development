@@ -26,19 +26,27 @@ import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData} from './ui_data';
 
 export class Presenter {
+  private transitionTrace: Trace<object>;
+  private surfaceFlingerTrace: Trace<object> | undefined;
+  private windowManagerTrace: Trace<object> | undefined;
+  private uiData = UiData.EMPTY;
+  private readonly notifyUiDataCallback: (data: UiData) => void;
+
   constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
     this.transitionTrace = assertDefined(traces.getTrace(TraceType.TRANSITION));
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
     this.notifyUiDataCallback = notifyUiDataCallback;
-    this.uiData = this.computeUiData();
-    this.notifyUiDataCallback(this.uiData);
   }
 
-  onTracePositionUpdate(position: TracePosition): void {
+  async onTracePositionUpdate(position: TracePosition) {
+    if (this.uiData === UiData.EMPTY) {
+      this.uiData = await this.computeUiData();
+    }
+
     const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, position);
 
-    this.uiData.selectedTransition = entry?.getValue();
+    this.uiData.selectedTransition = await entry?.getValue();
 
     this.notifyUiDataCallback(this.uiData);
   }
@@ -50,12 +58,11 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private computeUiData(): UiData {
-    const transitions: Transition[] = [];
-
-    this.transitionTrace.forEachEntry((entry, originalIndex) => {
-      transitions.push(entry.getValue());
+  private async computeUiData(): Promise<UiData> {
+    const entryPromises = this.transitionTrace.mapEntry((entry, originalIndex) => {
+      return entry.getValue();
     });
+    const transitions = await Promise.all(entryPromises);
 
     const selectedTransition = this.uiData?.selectedTransition ?? undefined;
     const selectedTransitionPropertiesTree =
@@ -212,10 +219,4 @@ export class Presenter {
       propertyKey: 'Selected Transition',
     };
   }
-
-  private transitionTrace: Trace<object>;
-  private surfaceFlingerTrace: Trace<object> | undefined;
-  private windowManagerTrace: Trace<object> | undefined;
-  private uiData: UiData;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
 }

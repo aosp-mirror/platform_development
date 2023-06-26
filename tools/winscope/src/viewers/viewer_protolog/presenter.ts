@@ -15,107 +15,142 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {LogMessage} from 'trace/protolog';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {assertDefined} from '../../common/assert_utils';
-import {UiData} from './ui_data';
+import {UiData, UiDataMessage} from './ui_data';
 
 export class Presenter {
   private readonly trace: Trace<LogMessage>;
   private readonly notifyUiDataCallback: (data: UiData) => void;
   private entry?: TraceEntry<LogMessage>;
-  private originalIndicesOfFilteredOutputMessages: number[];
   private uiData = UiData.EMPTY;
+  private originalIndicesOfFilteredOutputMessages: number[] = [];
 
-  private tags: string[] = [];
-  private files: string[] = [];
-  private levels: string[] = [];
+  private isInitialized = false;
+  private allUiDataMessages: UiDataMessage[] = [];
+  private allTags: string[] = [];
+  private allSourceFiles: string[] = [];
+  private allLogLevels: string[] = [];
+
+  private tagsFilter: string[] = [];
+  private filesFilter: string[] = [];
+  private levelsFilter: string[] = [];
   private searchString = '';
 
   constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
     this.trace = assertDefined(traces.getTrace(TraceType.PROTO_LOG));
     this.notifyUiDataCallback = notifyUiDataCallback;
-    this.originalIndicesOfFilteredOutputMessages = [];
-    this.computeUiDataMessages();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.initializeIfNeeded();
     this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onLogLevelsFilterChanged(levels: string[]) {
-    this.levels = levels;
-    this.computeUiDataMessages();
+    this.levelsFilter = levels;
+    this.computeUiData();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onTagsFilterChanged(tags: string[]) {
-    this.tags = tags;
-    this.computeUiDataMessages();
+    this.tagsFilter = tags;
+    this.computeUiData();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onSourceFilesFilterChanged(files: string[]) {
-    this.files = files;
-    this.computeUiDataMessages();
+    this.filesFilter = files;
+    this.computeUiData();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onSearchStringFilterChanged(searchString: string) {
     this.searchString = searchString;
-    this.computeUiDataMessages();
+    this.computeUiData();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private computeUiDataMessages() {
-    const allLogLevels = this.getUniqueMessageValues((message: LogMessage) => message.level);
-    const allTags = this.getUniqueMessageValues((message: LogMessage) => message.tag);
-    const allSourceFiles = this.getUniqueMessageValues((message: LogMessage) => message.at);
-
-    let filteredMessagesAndOriginalIndex = new Array<[number, LogMessage]>();
-    this.trace.forEachEntry((entry) => {
-      filteredMessagesAndOriginalIndex.push([entry.getIndex(), entry.getValue()]);
-    });
-
-    if (this.levels.length > 0) {
-      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
-        this.levels.includes(value[1].level)
-      );
+  private async initializeIfNeeded() {
+    if (this.isInitialized) {
+      return;
     }
 
-    if (this.tags.length > 0) {
-      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
-        this.tags.includes(value[1].tag)
-      );
-    }
+    this.allUiDataMessages = await this.makeAllUiDataMessages();
 
-    if (this.files.length > 0) {
-      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
-        this.files.includes(value[1].at)
-      );
-    }
-
-    filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
-      value[1].text.includes(this.searchString)
+    this.allLogLevels = this.getUniqueMessageValues(
+      this.allUiDataMessages,
+      (message: LogMessage) => message.level
+    );
+    this.allTags = this.getUniqueMessageValues(
+      this.allUiDataMessages,
+      (message: LogMessage) => message.tag
+    );
+    this.allSourceFiles = this.getUniqueMessageValues(
+      this.allUiDataMessages,
+      (message: LogMessage) => message.at
     );
 
-    this.originalIndicesOfFilteredOutputMessages = filteredMessagesAndOriginalIndex.map(
-      (value) => value[0]
-    );
-    const filteredMessages = filteredMessagesAndOriginalIndex.map((value) => value[1]);
+    this.computeUiData();
 
-    this.uiData = new UiData(allLogLevels, allTags, allSourceFiles, filteredMessages, undefined);
+    this.isInitialized = true;
+  }
+
+  private async makeAllUiDataMessages(): Promise<UiDataMessage[]> {
+    const messages: UiDataMessage[] = [];
+
+    for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
+      const entry = assertDefined(this.trace.getEntry(originalIndex));
+      const message = await entry.getValue();
+      (message as UiDataMessage).originalIndex = originalIndex;
+      messages.push(message as UiDataMessage);
+    }
+
+    return messages;
+  }
+
+  private computeUiData() {
+    let filteredMessages = this.allUiDataMessages;
+
+    if (this.levelsFilter.length > 0) {
+      filteredMessages = filteredMessages.filter((value) =>
+        this.levelsFilter.includes(value.level)
+      );
+    }
+
+    if (this.tagsFilter.length > 0) {
+      filteredMessages = filteredMessages.filter((value) => this.tagsFilter.includes(value.tag));
+    }
+
+    if (this.filesFilter.length > 0) {
+      filteredMessages = filteredMessages.filter((value) => this.filesFilter.includes(value.at));
+    }
+
+    filteredMessages = filteredMessages.filter((value) => value.text.includes(this.searchString));
+
+    this.originalIndicesOfFilteredOutputMessages = filteredMessages.map(
+      (message) => message.originalIndex
+    );
+
+    this.uiData = new UiData(
+      this.allLogLevels,
+      this.allTags,
+      this.allSourceFiles,
+      filteredMessages,
+      undefined
+    );
   }
 
   private computeUiDataCurrentMessageIndex() {
@@ -136,10 +171,13 @@ export class Presenter {
       ) ?? this.originalIndicesOfFilteredOutputMessages.length - 1;
   }
 
-  private getUniqueMessageValues(getValue: (message: LogMessage) => string): string[] {
+  private getUniqueMessageValues(
+    allMessages: LogMessage[],
+    getValue: (message: LogMessage) => string
+  ): string[] {
     const uniqueValues = new Set<string>();
-    this.trace.forEachEntry((entry) => {
-      uniqueValues.add(getValue(entry.getValue()));
+    allMessages.forEach((message) => {
+      uniqueValues.add(getValue(message));
     });
     const result = [...uniqueValues];
     result.sort();
