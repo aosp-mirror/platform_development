@@ -3,12 +3,13 @@ package {
 }
 
 android_test {
-    name: "AconfigDemo_ContentProvide_Test",
-    srcs: ["src/com/example/android/aconfig/demo/activity/ContentProviderTests.java"],
+    name: "AconfigDemo_ContentLibs_Test",
+    srcs: ["src/**/*.java"],
     certificate: "platform",
     static_libs: [
-        "ContentProvider",
+        "ContentLibs",
         "junit",
+        "mockito-target-minus-junit4",
         "androidx.test.runner",
     ],
     manifest: "AndroidManifest.xml",

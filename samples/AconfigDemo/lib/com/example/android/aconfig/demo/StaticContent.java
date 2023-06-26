@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package com.example.android.aconfig.demo.activity;
+package com.example.android.aconfig.demo;
 
-/**
- * A minimal "Hello, World!" application.
- */
-public class ContentProvider {
+import static com.example.android.aconfig.demo.flags.Flags.appendStaticContent;
 
-    public ContentProvider() {};
+public class StaticContent {
+
+    public StaticContent() {};
 
     public String getContent() {
 
         StringBuilder sBuffer = new StringBuilder();
 
-        if (Flags.appendContent()) {
-            sBuffer.append("The flag is ON!!\n");
+        if (appendStaticContent()) {
+            sBuffer.append("The flag: appendStaticContent is ON!!\n\n");
         } else {
-            sBuffer.append("The flag is OFF!!\n");
+            sBuffer.append("The flag: appendStaticContent is OFF!!\n\n");
         }
 
         return sBuffer.toString();
