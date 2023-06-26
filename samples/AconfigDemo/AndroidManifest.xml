@@ -20,9 +20,11 @@
      own application, the package name must be changed from "com.example.*"
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.aconfig.demo.activity">
+    package="com.example.android.aconfig.demo">
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
-    <application android:label="Hello!">
+    <application
+        android:name="AconfigDemoApplication"
+        android:label="Hello!">
         <activity android:name="AconfigDemoActivity"
                 android:exported="true">
             <intent-filter>
