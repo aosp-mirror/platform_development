@@ -17,8 +17,9 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('winscope', () => {
-  beforeAll(() => {
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
+  beforeAll(async () => {
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
   it('has title', () => {

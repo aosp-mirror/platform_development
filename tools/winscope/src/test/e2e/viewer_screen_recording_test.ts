@@ -19,7 +19,8 @@ import {E2eTestUtils} from './utils';
 describe('Viewer ScreenRecording', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
   it('processes trace and renders view', async () => {
