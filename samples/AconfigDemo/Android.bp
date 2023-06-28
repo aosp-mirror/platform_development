@@ -1,3 +1,52 @@
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
+
+android_app {
+    name: "AconfigDemoActivity",
+    manifest: "AndroidManifest.xml",
+    srcs: [
+        "src/**/*.java"
+    ],
+    certificate: "platform",
+    sdk_version: "current",
+    static_libs: [
+        "ContentLibs",
+        "dagger2",
+        "jsr330",
+    ],
+    optimize: {
+        enabled: true,
+        proguard_compatibility: false,
+        shrink: true,
+        optimize: false,
+        obfuscate: false,
+        shrink_resources: true,
+    },
+
+    plugins: ["dagger2-compiler"]
+}
+
+aconfig_declarations {
+    name: "aconfig_demo_flags",
+    package: "com.example.android.aconfig.demo.flags",
+    srcs: ["aconfig_demo_flags.aconfig"],
+}
+
+
+java_aconfig_library {
+    name: "aconfig_demo_flags_lib",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+java_library {
+    name: "ContentLibs",
+    srcs: [
+        "lib/**/*.java",
+    ],
+    sdk_version: "current",
+    static_libs: [
+        "aconfig_demo_flags_lib",
+    ],
+    libs: ["jsr330"],
+}
