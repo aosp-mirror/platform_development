@@ -373,7 +373,7 @@ static std::string DumpJson(const JsonObject &obj) {
   return Json::writeString(factory, obj);
 }
 
-static void WriteTailTrimmedLinesToFile(const std::string &path,
+static bool WriteTailTrimmedLinesToFile(const std::string &path,
                                         const std::string &output_string) {
   std::ofstream output_file(path);
   size_t line_start = 0;
@@ -389,19 +389,25 @@ static void WriteTailTrimmedLinesToFile(const std::string &path,
     }
     // Only write this line if this line contains non-whitespace characters.
     if (trailing_space_start != line_start) {
-      output_file.write(output_string.data() + line_start,
-                        trailing_space_start - line_start);
-      output_file.write("\n", 1);
+      if (output_file
+              .write(output_string.data() + line_start,
+                     trailing_space_start - line_start)
+              .fail()) {
+        return false;
+      }
+      if (output_file.write("\n", 1).fail()) {
+        return false;
+      }
     }
     line_start = index + 1;
   }
+  return output_file.flush().good();
 }
 
 bool JsonIRDumper::Dump(const ModuleIR &module) {
   DumpModule(module);
   std::string output_string = DumpJson(translation_unit_);
-  WriteTailTrimmedLinesToFile(dump_path_, output_string);
-  return true;
+  return WriteTailTrimmedLinesToFile(dump_path_, output_string);
 }
 
 JsonIRDumper::JsonIRDumper(const std::string &dump_path)

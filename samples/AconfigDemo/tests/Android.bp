@@ -1,0 +1,16 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "AconfigDemo_ContentLibs_Test",
+    srcs: ["src/**/*.java"],
+    certificate: "platform",
+    static_libs: [
+        "ContentLibs",
+        "junit",
+        "mockito-target-minus-junit4",
+        "androidx.test.runner",
+    ],
+    manifest: "AndroidManifest.xml",
+}
