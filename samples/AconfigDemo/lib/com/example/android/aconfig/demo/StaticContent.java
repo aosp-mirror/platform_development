@@ -17,6 +17,7 @@
 package com.example.android.aconfig.demo;
 
 import static com.example.android.aconfig.demo.flags.Flags.appendStaticContent;
+import static com.example.android.aconfig.demo.flags.Flags.thirdFlag;
 
 public class StaticContent {
 
@@ -30,6 +31,12 @@ public class StaticContent {
             sBuffer.append("The flag: appendStaticContent is ON!!\n\n");
         } else {
             sBuffer.append("The flag: appendStaticContent is OFF!!\n\n");
+        }
+
+        if (thirdFlag()) {
+            sBuffer.append("The flag: thirdFlag is ON!!\n\n");
+        } else {
+            sBuffer.append("The flag: thirdFlag is OFF!!\n\n");
         }
 
         return sBuffer.toString();
