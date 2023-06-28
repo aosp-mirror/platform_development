@@ -378,8 +378,13 @@ bool ProtobufIRDiffDumper::Dump() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   assert(diff_tu_.get() != nullptr);
   std::ofstream text_output(dump_path_);
-  google::protobuf::io::OstreamOutputStream text_os(&text_output);
-  return google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os);
+  {
+    google::protobuf::io::OstreamOutputStream text_os(&text_output);
+    if (!google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os)) {
+      return false;
+    }
+  }
+  return text_output.flush().good();
 }
 
 std::unique_ptr<IRDiffDumper> CreateProtobufIRDiffDumper(

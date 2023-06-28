@@ -59,3 +59,23 @@ python_test_host {
         "pyfakefs",
     ]
 }
+
+python_test_host {
+    name: "gdbclient_test",
+    srcs: [
+        "gdbclient.py",
+        "gdbclient_test.py",
+    ],
+    libs: [
+        "adb_py",
+        "gdbrunner",
+    ],
+    test_options: {
+        unit_test: true,
+    },
+    version: {
+        py3: {
+            embedded_launcher: true,
+        },
+    },
+}
