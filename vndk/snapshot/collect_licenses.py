@@ -82,9 +82,13 @@ class LicenseCollector(object):
     def check_licenses(self, filepath):
         """ Read a license text file and find the license_kinds.
         """
-        with open(filepath, 'r') as file_to_check:
-            file_string = file_to_check.read()
-            self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
+        with open(filepath, 'rt', encoding='utf-8') as file_to_check:
+            try:
+                file_string = file_to_check.read()
+                self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
+            except UnicodeDecodeError:
+                # Read text files only.
+                return
 
     def run(self, module=''):
         """ search licenses in vndk snapshots
