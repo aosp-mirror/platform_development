@@ -4,6 +4,7 @@ flag {
     name: "append_injected_content"
     namespace: "aconfig_demo_ns"
     description: "This flag controls injected content"
+    bug: "287644619"
 }
 
 flag {
@@ -16,4 +17,6 @@ flag {
     name: "third_flag"
     namespace: "configuration"
     description: "This flag controls static content"
+    bug: "287644619"
+    bug: "280833463"
 }
