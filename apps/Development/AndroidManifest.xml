@@ -112,6 +112,12 @@
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
+        <activity android:name="HttpEngineActivity" android:label="Http Client" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.TEST" />
+            </intent-filter>
+        </activity>
 
         <activity android:name="InstrumentationList" android:label="Instrumentation"
             android:exported="true">

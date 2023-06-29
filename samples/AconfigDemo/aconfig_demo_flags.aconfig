@@ -11,3 +11,9 @@ flag {
     namespace: "aconfig_demo_ns"
     description: "This flag controls static content"
 }
+
+flag {
+    name: "third_flag"
+    namespace: "configuration"
+    description: "This flag controls static content"
+}
