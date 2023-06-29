@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (C) 2023 The Android Open Source Project
 #
@@ -84,10 +84,9 @@ if [[ -n "${dist_dir}" ]]; then
 fi
 
 run_command() {
+    echo "Running: ${1}"
     if [[ -z "${dry_run}" ]]; then
         $1
-    else
-        echo "$1"
     fi
 }
 
