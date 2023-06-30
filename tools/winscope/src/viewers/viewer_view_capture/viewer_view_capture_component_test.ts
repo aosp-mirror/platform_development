@@ -20,11 +20,11 @@ import {MatIconModule} from '@angular/material/icon';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
-import {ViewerSurfaceFlingerComponent} from './viewer_surface_flinger_component';
+import {ViewerViewCaptureComponent} from './viewer_view_capture_component';
 
 describe('ViewerSurfaceFlingerComponent', () => {
-  let fixture: ComponentFixture<ViewerSurfaceFlingerComponent>;
-  let component: ViewerSurfaceFlingerComponent;
+  let fixture: ComponentFixture<ViewerViewCaptureComponent>;
+  let component: ViewerViewCaptureComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
@@ -32,7 +32,7 @@ describe('ViewerSurfaceFlingerComponent', () => {
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatIconModule, MatDividerModule],
       declarations: [
-        ViewerSurfaceFlingerComponent,
+        ViewerViewCaptureComponent,
         HierarchyComponent,
         PropertiesComponent,
         RectsComponent,
@@ -42,7 +42,7 @@ describe('ViewerSurfaceFlingerComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ViewerSurfaceFlingerComponent);
+    fixture = TestBed.createComponent(ViewerViewCaptureComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

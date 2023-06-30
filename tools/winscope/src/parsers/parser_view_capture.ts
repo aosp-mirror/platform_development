@@ -17,7 +17,6 @@
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {DiffType} from 'viewers/common/ui_tree_utils';
 import {AbstractParser} from './abstract_parser';
 import {ExportedData} from './proto_types';
 
@@ -62,9 +61,9 @@ export class ParserViewCapture extends AbstractParser {
     return shortName.charAt(0).toUpperCase() + shortName.slice(1);
   }
 
-  // TODO: Audit these properties
   private formatProperties(root: any /* ViewNode */, classNames: string[]): any /* ViewNode */ {
     const DEPTH_MAGNIFICATION = 4;
+    const VISIBLE = 0;
 
     function inner(
       node: any /* ViewNode */,
@@ -93,23 +92,12 @@ export class ParserViewCapture extends AbstractParser {
         height: node.height * newScaleY,
       };
 
-      if (node.name === undefined) {
-        node.name = node.classname;
-      }
-      if (node.name === undefined && classNames) {
-        node.name = `${classNames[node.classnameIndex]}@${node.hashcode}`;
-      }
+      node.name = `${classNames[node.classnameIndex]}@${node.hashcode}`;
 
       node.shortName = node.name.split('.');
       node.shortName = node.shortName[node.shortName.length - 1];
 
-      if (node.contentDesc != null) {
-        node.shortName = `${node.shortName} : ${node.contentDesc}`;
-      }
-      node.desc = node.shortName;
-      node.isVisible =
-        isParentVisible &&
-        (node.visibility === 0 || node.visibility === 'VISIBLE' || node.visibility === undefined);
+      node.isVisible = isParentVisible && VISIBLE === node.visibility;
 
       for (let i = 0; i < node.children.length; i++) {
         inner(
@@ -124,6 +112,7 @@ export class ParserViewCapture extends AbstractParser {
         node.children[i].parent = node;
       }
 
+      // TODO: Audit these properties
       node.depth = depth * DEPTH_MAGNIFICATION;
       node.type = 'ViewNode';
       node.layerId = 0;
@@ -131,10 +120,10 @@ export class ParserViewCapture extends AbstractParser {
       node.hwcCompositionType = 0;
       node.zOrderRelativeOfId = -1;
       node.isRootLayer = false;
-      node.diffType = DiffType.NONE;
       node.skip = null;
       node.id = node.name;
       node.stableId = node.id;
+      node.equals = (other: any /* ViewNode */) => ParserViewCapture.equals(node, other);
     }
 
     root.scaleX = root.scaleY = 1;
@@ -154,4 +143,35 @@ export class ParserViewCapture extends AbstractParser {
   }
 
   private static readonly MAGIC_NUMBER = [0x9, 0x78, 0x65, 0x90, 0x65, 0x73, 0x82, 0x65, 0x68];
+
+  /** This method is used by the tree_generator to determine if 2 nodes have equivalent properties. */
+  private static equals(node: any /* ViewNode */, other: any /* ViewNode */): boolean {
+    if (!node && !other) {
+      return true;
+    }
+    if (!node || !other) {
+      return false;
+    }
+    return (
+      node.id === other.id &&
+      node.name === other.name &&
+      node.hashcode === other.hashcode &&
+      node.left === other.left &&
+      node.top === other.top &&
+      node.height === other.height &&
+      node.width === other.width &&
+      node.elevation === other.elevation &&
+      node.scaleX === other.scaleX &&
+      node.scaleY === other.scaleY &&
+      node.scrollX === other.scrollX &&
+      node.scrollY === other.scrollY &&
+      node.translationX === other.translationX &&
+      node.translationY === other.translationY &&
+      node.alpha === other.alpha &&
+      node.visibility === other.visibility &&
+      node.willNotDraw === other.willNotDraw &&
+      node.clipChildren === other.clipChildren &&
+      node.depth === other.depth
+    );
+  }
 }

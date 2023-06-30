@@ -18,6 +18,9 @@ import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {UiData} from './ui_data';
 
+/**
+ * TODO: Upgrade the View Capture's Properties View after getting UX's opinion.
+ */
 @Component({
   selector: 'viewer-view-capture',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,8 +28,10 @@ import {UiData} from './ui_data';
     <div class="card-grid">
       <rects-view
         class="rects-view"
-        title="Layerz"
+        title="View Hierarchy Sketch"
+        [enableShowVirtualButton]="false"
         [rects]="inputData?.rects ?? []"
+        [highlightedItems]="inputData?.highlightedItems ?? []"
         [displayIds]="[0]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
