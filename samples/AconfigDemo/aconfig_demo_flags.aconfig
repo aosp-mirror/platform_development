@@ -24,6 +24,12 @@ flag {
   namespace: "test"
   description: "Another awesome flag for testing purposes."
 }
+flag {
+    name: "fifth_flag"
+    namespace: "configuration"
+    description: "The fifth flag, added right after the first three flags."
+    bug: "287644619"
+}
 
 flag {
     name: "third_flag"
@@ -32,3 +38,4 @@ flag {
     bug: "287644619"
     bug: "280833463"
 }
+
