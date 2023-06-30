@@ -18,9 +18,12 @@ package com.example.android.aconfig.demo;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.view.WindowManager;
+import android.widget.TextView;
+
+import com.example.android.aconfig.demo.flags.Flags;
 
 import javax.inject.Inject;
 
@@ -46,6 +49,14 @@ public class AconfigDemoActivity extends Activity {
         simpleTextView.append(cp.getContent());
 
         simpleTextView.append(injectedContent.getContent());
+
+        if (Flags.awesomeFlag1()) {
+            Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_1 + " is on!");
+        }
+
+        if (Flags.awesomeFlag2()) {
+            Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_2 + " is on!");
+        }
     }
 }
 
