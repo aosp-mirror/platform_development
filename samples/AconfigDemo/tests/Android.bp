@@ -7,7 +7,6 @@ android_test {
     srcs: ["src/**/*.java"],
     certificate: "platform",
     static_libs: [
-        "ContentLibs",
         "junit",
         "mockito-target-minus-junit4",
         "androidx.test.runner",
