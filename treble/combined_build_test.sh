@@ -86,7 +86,7 @@ fi
 run_command() {
     echo "Running: ${1}"
     if [[ -z "${dry_run}" ]]; then
-        $1
+        eval "${1}"
     fi
 }
 
