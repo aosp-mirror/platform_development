@@ -62,7 +62,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
       <div class="spacer">
         <mat-icon
-          *ngIf="activeTrace"
+          *ngIf="dataLoaded && activeTrace"
           class="icon"
           [matTooltip]="TRACE_INFO[activeTrace.type].name"
           [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
