@@ -118,7 +118,7 @@ def rewrite_misc_info(args_part_imgs, unpacked_part_imgs, lpmake_path,
 
 
 def repack_super_image(ota_tools_dir, misc_info_path, super_img_path,
-                       part_imgs):
+                       part_imgs, output_path):
   temp_dirs = []
   temp_files = []
 
@@ -168,7 +168,7 @@ def repack_super_image(ota_tools_dir, misc_info_path, super_img_path,
     build_super_image_path = os.path.join(ota_tools_dir, BIN_DIR_NAME,
                                           "build_super_image")
     subprocess.check_call([build_super_image_path, misc_info_file_path,
-                           super_img_path])
+                           output_path])
   finally:
     for temp_dir in temp_dirs:
       shutil.rmtree(temp_dir, ignore_errors=True)
@@ -232,7 +232,7 @@ def main():
       ota_tools_dir = temp_ota_tools_dir
 
     repack_super_image(ota_tools_dir, args.misc_info, args.super_img,
-                       args_part_imgs)
+                       args_part_imgs, args.super_img)
   finally:
     if temp_ota_tools_dir:
       shutil.rmtree(temp_ota_tools_dir)
