@@ -11,6 +11,9 @@ android_test {
         "junit",
         "mockito-target-minus-junit4",
         "androidx.test.runner",
+        "flag-junit",
+        "platform-test-annotations",
     ],
     manifest: "AndroidManifest.xml",
+    instrumentation_for: "AconfigDemoActivity",
 }
