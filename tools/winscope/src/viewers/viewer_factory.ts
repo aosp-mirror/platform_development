@@ -25,6 +25,7 @@ import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_rec
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
+import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
@@ -41,6 +42,7 @@ class ViewerFactory {
     ViewerProtoLog,
     ViewerScreenRecording,
     ViewerTransitions,
+    ViewerViewCapture,
   ];
 
   createViewers(activeTraceTypes: Set<TraceType>, traces: Traces, storage: Storage): Viewer[] {
