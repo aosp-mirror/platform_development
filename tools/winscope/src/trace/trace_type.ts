@@ -43,6 +43,7 @@ export enum TraceType {
   ERROR,
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
+  VIEW_CAPTURE,
 }
 
 export interface TraceEntryTypeMap {
@@ -69,4 +70,5 @@ export interface TraceEntryTypeMap {
   [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
+  [TraceType.VIEW_CAPTURE]: object;
 }
