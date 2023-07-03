@@ -36,8 +36,6 @@ LICENSE_KEYWORDS = {
     'NCSA': ('University of Illinois', 'NCSA',),
     'OpenSSL': ('The OpenSSL Project',),
     'Zlib': ('zlib License',),
-}
-RESTRICTED_LICENSE_KEYWORDS = {
     'LGPL-3.0': ('LESSER GENERAL PUBLIC LICENSE', 'Version 3,',),
     'LGPL-2.1': ('LESSER GENERAL PUBLIC LICENSE', 'Version 2.1',),
     'LGPL-2.0': ('GNU LIBRARY GENERAL PUBLIC LICENSE', 'Version 2,',),
@@ -52,12 +50,10 @@ class LicenseCollector(object):
     """ Collect licenses from a VNDK snapshot directory
 
     This is to collect the license_kinds to be used in license modules.
-    It also lists the modules with the restricted licenses.
 
     Initialize the LicenseCollector with a vndk snapshot directory.
     After run() is called, 'license_kinds' will include the licenses found from
     the snapshot directory.
-    'restricted' will have the files that have the restricted licenses.
     """
     def __init__(self, install_dir):
         self._install_dir = install_dir
@@ -66,7 +62,6 @@ class LicenseCollector(object):
         self._paths_to_check = self._paths_to_check + glob.glob(os.path.join(self._install_dir, '*/include'))
 
         self.license_kinds = set()
-        self.restricted = set()
 
     def read_and_check_licenses(self, license_text, license_keywords):
         """ Read the license keywords and check if all keywords are in the file.
@@ -84,24 +79,36 @@ class LicenseCollector(object):
                 found = True
         return found
 
-    def read_and_check_dir_for_licenses(self, path):
-        """ Check licenses for all files under the directory
+    def check_licenses(self, filepath):
+        """ Read a license text file and find the license_kinds.
         """
-        for (root, _, files) in os.walk(path):
-            for f in files:
-                with open(os.path.join(root, f), 'r') as file_to_check:
-                    file_string = file_to_check.read()
-                    self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
-                    if self.read_and_check_licenses(file_string, RESTRICTED_LICENSE_KEYWORDS):
-                        self.restricted.add(f)
+        with open(filepath, 'r') as file_to_check:
+            file_string = file_to_check.read()
+            self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
 
-    def run(self):
+    def run(self, module=''):
         """ search licenses in vndk snapshots
+
+        Args:
+          module: module name to find the license kind.
+                  If empty, check all license files.
         """
-        for path in self._paths_to_check:
-            logging.info('Reading {}'.format(path))
-            self.read_and_check_dir_for_licenses(path)
-        self.license_kinds.update(LICENSE_INCLUDE)
+        if module == '':
+            for path in self._paths_to_check:
+                logging.info('Reading {}'.format(path))
+                for (root, _, files) in os.walk(path):
+                    for f in files:
+                        self.check_licenses(os.path.join(root, f))
+            self.license_kinds.update(LICENSE_INCLUDE)
+        else:
+            license_text_path = '{notice_dir}/{module}.txt'.format(
+                notice_dir=utils.NOTICE_FILES_DIR_NAME,
+                module=module)
+            logging.info('Reading {}'.format(license_text_path))
+            self.check_licenses(os.path.join(self._install_dir, utils.COMMON_DIR_PATH, license_text_path))
+            if not self.license_kinds:
+                # Add 'legacy_permissive' if no licenses are found for this file.
+                self.license_kinds.add('legacy_permissive')
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -132,7 +139,6 @@ def main():
     license_collector = LicenseCollector(install_dir)
     license_collector.run()
     print(sorted(license_collector.license_kinds))
-    print(sorted(license_collector.restricted))
 
 if __name__ == '__main__':
     main()

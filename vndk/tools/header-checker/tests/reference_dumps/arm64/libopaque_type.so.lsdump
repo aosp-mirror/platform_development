@@ -1,0 +1,45 @@
+{
+ "array_types" : [],
+ "builtin_types" : [],
+ "elf_functions" :
+ [
+  {
+   "name" : "function"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "function",
+   "linker_set_key" : "function",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTISt9__va_list"
+    }
+   ],
+   "return_type" : "_ZTIP10OpaqueType",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/opaque_type/include/opaque_type.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIP10OpaqueType",
+   "name" : "OpaqueType *",
+   "referenced_type" : "_ZTI10OpaqueType",
+   "self_type" : "_ZTIP10OpaqueType",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/opaque_type/include/opaque_type.h"
+  }
+ ],
+ "qualified_types" : [],
+ "record_types" : [],
+ "rvalue_reference_types" : []
+}
