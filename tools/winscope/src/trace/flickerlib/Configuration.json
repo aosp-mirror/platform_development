@@ -21,7 +21,12 @@
         "rootWindowContainer",
         "windowContainer",
         "children",
-        "stableId"
+        "stableId",
+        "boxPos",
+        "classnameIndex",
+        "depth",
+        "zOrderRelativeOfId",
+        "isRootLayer"
     ],
     "intDefColumn": {
         "WindowLayoutParams.type": "android.view.WindowManager.LayoutParams.WindowType",
