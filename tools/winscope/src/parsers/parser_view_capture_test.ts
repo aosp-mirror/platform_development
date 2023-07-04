@@ -49,8 +49,8 @@ describe('ParserViewCapture', () => {
     expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
   });
 
-  it('retrieves trace entry', () => {
-    const entry = parser.getEntry(1, TimestampType.REAL) as any;
+  it('retrieves trace entry', async () => {
+    const entry = (await parser.getEntry(1, TimestampType.REAL)) as any;
     expect(entry.timestamp).toBeTruthy();
     expect(entry.node).toBeTruthy();
   });

@@ -58,14 +58,14 @@ describe('ParserScreenRecording', () => {
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
-  it('retrieves trace entry', () => {
+  it('retrieves trace entry', async () => {
     {
-      const entry = parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
     {
-      const entry = parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
+      const entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(1.371077, 0.001);
     }

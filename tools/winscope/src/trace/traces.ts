@@ -56,6 +56,14 @@ export class Traces {
     });
   }
 
+  mapTrace<T>(callback: (trace: Trace<{}>, type: TraceType) => T): T[] {
+    const result: T[] = [];
+    this.forEachTrace((trace, type) => {
+      result.push(callback(trace, type));
+    });
+    return result;
+  }
+
   forEachFrame(callback: (traces: Traces, index: AbsoluteFrameIndex) => void): void {
     let startFrameIndex: AbsoluteFrameIndex = Number.MAX_VALUE;
     let endFrameIndex: AbsoluteFrameIndex = Number.MIN_VALUE;
@@ -73,16 +81,16 @@ export class Traces {
     }
   }
 
-  getSize(): number {
-    return this.traces.size;
-  }
-
-  map<T>(callback: (trace: Trace<{}>, type: TraceType) => T): T[] {
+  mapFrame<T>(callback: (traces: Traces, index: AbsoluteFrameIndex) => T): T[] {
     const result: T[] = [];
-    this.forEachTrace((trace, type) => {
-      result.push(callback(trace, type));
+    this.forEachFrame((traces, index) => {
+      result.push(callback(traces, index));
     });
     return result;
+  }
+
+  getSize(): number {
+    return this.traces.size;
   }
 
   [Symbol.iterator]() {

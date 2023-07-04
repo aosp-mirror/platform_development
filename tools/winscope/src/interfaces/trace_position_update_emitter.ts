@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  OnTracePositionUpdate,
-  TracePositionUpdateEmitter,
-} from 'interfaces/trace_position_update_emitter';
-import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {TracePosition} from 'trace/trace_position';
 
-export class TimelineComponentStub
-  implements TracePositionUpdateEmitter, TracePositionUpdateListener
-{
-  setOnTracePositionUpdate(callback: OnTracePositionUpdate) {
-    // do nothing
-  }
+export type OnTracePositionUpdate = (position: TracePosition) => Promise<void>;
 
-  onTracePositionUpdate(position: TracePosition) {
-    // do nothing
-  }
+export interface TracePositionUpdateEmitter {
+  setOnTracePositionUpdate(callback: OnTracePositionUpdate): void;
 }

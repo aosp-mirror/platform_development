@@ -30,8 +30,8 @@ class ViewerStub implements Viewer {
     }
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    // do nothing
+  onTracePositionUpdate(position: TracePosition): Promise<void> {
+    return Promise.resolve();
   }
 
   getViews(): View[] {
