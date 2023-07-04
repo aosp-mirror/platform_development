@@ -25,7 +25,6 @@ import {
 } from './index_types';
 import {Parser} from './parser';
 import {Timestamp, TimestampType} from './timestamp';
-import {TraceFile} from './trace_file';
 import {TraceType} from './trace_type';
 
 export {
@@ -72,10 +71,12 @@ export class TraceEntry<T> {
 }
 
 export class Trace<T> {
-  readonly file?: TraceFile;
+  readonly type: TraceType;
   readonly lengthEntries: number;
-  readonly fullTrace: Trace<T>;
 
+  private readonly parser: Parser<T>;
+  private readonly descriptors: string[];
+  private readonly fullTrace: Trace<T>;
   private timestampType: TimestampType | undefined;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
@@ -107,13 +108,16 @@ export class Trace<T> {
   }
 
   private constructor(
-    readonly type: TraceType,
-    readonly parser: Parser<T>,
-    readonly descriptors: string[],
+    type: TraceType,
+    parser: Parser<T>,
+    descriptors: string[],
     fullTrace: Trace<T> | undefined,
     timestampType: TimestampType | undefined,
     entriesRange: EntriesRange | undefined
   ) {
+    this.type = type;
+    this.parser = parser;
+    this.descriptors = descriptors;
     this.fullTrace = fullTrace ?? this;
     this.entriesRange = entriesRange ?? {start: 0, end: parser.getLengthEntries()};
     this.lengthEntries = this.entriesRange.end - this.entriesRange.start;
