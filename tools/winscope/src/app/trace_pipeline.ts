@@ -18,7 +18,6 @@ import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
-import {LoadedTrace} from 'trace/loaded_trace';
 import {Parser} from 'trace/parser';
 import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
@@ -31,7 +30,7 @@ class TracePipeline {
   private tracesParserFactory = new TracesParserFactory();
   private parsers: Array<Parser<object>> = [];
   private files = new Map<TraceType, TraceFile>();
-  private traces?: Traces;
+  private traces = new Traces();
   private commonTimestampType?: TimestampType;
 
   async loadTraceFiles(
@@ -39,59 +38,55 @@ class TracePipeline {
     onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
   ): Promise<ParserError[]> {
     traceFiles = await this.filterBugreportFilesIfNeeded(traceFiles);
-    const [parsers, parserErrors] = await this.parserFactory.createParsers(
+    const [fileAndParsers, parserErrors] = await this.parserFactory.createParsers(
       traceFiles,
       onLoadProgressUpdate
     );
-    //FIXME: old parsers are being dropped
-    this.parsers = parsers.map((it) => it.parser);
-    this.parsers.concat(await this.tracesParserFactory.createParsers(this.parsers));
-
-    for (const parser of parsers) {
-      this.files.set(parser.parser.getTraceType(), parser.file);
+    for (const fileAndParser of fileAndParsers) {
+      this.files.set(fileAndParser.parser.getTraceType(), fileAndParser.file);
     }
 
-    if (this.parsers.some((it) => it.getTraceType() === TraceType.TRANSITION)) {
-      this.parsers = this.parsers.filter(
-        (it) =>
-          it.getTraceType() !== TraceType.WM_TRANSITION &&
-          it.getTraceType() !== TraceType.SHELL_TRANSITION
-      );
+    const newParsers = fileAndParsers.map((it) => it.parser);
+    this.parsers = this.parsers.concat(newParsers);
+
+    const tracesParsers = await this.tracesParserFactory.createParsers(this.parsers);
+
+    const allParsers = this.parsers.concat(tracesParsers);
+
+    this.traces = new Traces();
+    allParsers.forEach((parser) => {
+      const trace = Trace.newUninitializedTrace(parser);
+      this.traces?.setTrace(parser.getTraceType(), trace);
+    });
+
+    const hasTransitionTrace = this.traces
+      .map((trace) => trace.type)
+      .some((type) => type == TraceType.TRANSITION);
+    if (hasTransitionTrace) {
+      this.traces.deleteTrace(TraceType.WM_TRANSITION);
+      this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
     }
 
     return parserErrors;
   }
 
-  removeTraceFile(type: TraceType) {
-    this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== type);
+  removeTrace(trace: Trace<object>) {
+    this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== trace.type);
+    this.traces.deleteTrace(trace.type);
   }
 
   getLoadedFiles(): Map<TraceType, TraceFile> {
     return this.files;
   }
 
-  getLoadedTraces(): LoadedTrace[] {
-    return this.parsers.map(
-      (parser: Parser<object>) => new LoadedTrace(parser.getDescriptors(), parser.getTraceType())
-    );
-  }
-
   buildTraces() {
     const commonTimestampType = this.getCommonTimestampType();
-
-    this.traces = new Traces();
-    this.parsers.forEach((parser) => {
-      const trace = Trace.newUninitializedTrace(parser);
-      trace.init(commonTimestampType);
-      this.traces?.setTrace(parser.getTraceType(), trace);
-    });
-
+    this.traces.forEachTrace((trace) => trace.init(commonTimestampType));
     new FrameMapper(this.traces).computeMapping();
   }
 
   getTraces(): Traces {
-    this.checkTracesWereBuilt();
-    return this.traces!;
+    return this.traces;
   }
 
   getScreenRecordingVideo(): undefined | Blob {
@@ -105,7 +100,7 @@ class TracePipeline {
   clear() {
     this.parserFactory = new ParserFactory();
     this.parsers = [];
-    this.traces = undefined;
+    this.traces = new Traces();
     this.commonTimestampType = undefined;
     this.files = new Map<TraceType, TraceFile>();
   }
@@ -154,14 +149,6 @@ class TracePipeline {
     }
 
     throw Error('Failed to find common timestamp type across all traces');
-  }
-
-  private checkTracesWereBuilt() {
-    if (!this.traces) {
-      throw new Error(
-        `Can't access traces before building them. Did you forget to call '${this.buildTraces.name}'?`
-      );
-    }
   }
 }
 

@@ -72,4 +72,20 @@ export class Traces {
       callback(this.sliceFrames(i, i + 1), i);
     }
   }
+
+  getSize(): number {
+    return this.traces.size;
+  }
+
+  map<T>(callback: (trace: Trace<{}>, type: TraceType) => T): T[] {
+    const result: T[] = [];
+    this.forEachTrace((trace, type) => {
+      result.push(callback(trace, type));
+    });
+    return result;
+  }
+
+  [Symbol.iterator]() {
+    return this.traces.values();
+  }
 }
