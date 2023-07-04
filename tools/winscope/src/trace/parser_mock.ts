@@ -16,7 +16,6 @@
 
 import {Parser} from './parser';
 import {RealTimestamp, Timestamp, TimestampType} from './timestamp';
-import {TraceFile} from './trace_file';
 import {TraceType} from './trace_type';
 
 export class ParserMock<T> implements Parser<T> {
@@ -30,10 +29,6 @@ export class ParserMock<T> implements Parser<T> {
     return TraceType.SURFACE_FLINGER;
   }
 
-  getTraceFile(): TraceFile {
-    return new TraceFile(new File([], 'file_name'));
-  }
-
   getLengthEntries(): number {
     return this.entries.length;
   }
@@ -45,8 +40,8 @@ export class ParserMock<T> implements Parser<T> {
     return this.timestamps;
   }
 
-  getEntry(index: number): T {
-    return this.entries[index];
+  getEntry(index: number): Promise<T> {
+    return Promise.resolve(this.entries[index]);
   }
 
   getDescriptors(): string[] {

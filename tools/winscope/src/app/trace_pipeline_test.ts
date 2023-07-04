@@ -43,7 +43,7 @@ describe('TracePipeline', () => {
 
     expect(tracePipeline.getTraces().getSize()).toEqual(2);
 
-    const traceEntries = TracesUtils.extractEntries(tracePipeline.getTraces());
+    const traceEntries = await TracesUtils.extractEntries(tracePipeline.getTraces());
     expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(0);
     expect(traceEntries.get(TraceType.SURFACE_FLINGER)?.length).toBeGreaterThan(0);
   });
@@ -120,7 +120,7 @@ describe('TracePipeline', () => {
     const mergedFiles = bugreportFiles.concat([plainTraceFile]);
     const errors = await tracePipeline.loadTraceFiles(mergedFiles);
     expect(errors.length).toEqual(0);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
     const traces = tracePipeline.getTraces();
 
     expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeDefined();
@@ -135,7 +135,7 @@ describe('TracePipeline', () => {
     ];
 
     const errors = await tracePipeline.loadTraceFiles(invalidTraceFiles);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
     expect(errors.length).toEqual(1);
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
@@ -147,7 +147,7 @@ describe('TracePipeline', () => {
       new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
     ];
     const errors = await tracePipeline.loadTraceFiles(files);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
     expect(errors.length).toEqual(1);
   });
@@ -158,7 +158,7 @@ describe('TracePipeline', () => {
     ];
 
     const errors = await tracePipeline.loadTraceFiles(traceFilesWithNoEntries);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
 
     expect(errors.length).toEqual(0);
 
@@ -173,11 +173,11 @@ describe('TracePipeline', () => {
     const wmTrace = assertDefined(tracePipeline.getTraces().getTrace(TraceType.WINDOW_MANAGER));
 
     tracePipeline.removeTrace(sfTrace);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
 
     tracePipeline.removeTrace(wmTrace);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
 
@@ -187,7 +187,7 @@ describe('TracePipeline', () => {
     const traces = tracePipeline.getTraces();
     expect(traces.getSize()).toEqual(2);
 
-    const actualTraceTypes = new Set(traces.map((trace) => trace.type));
+    const actualTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
     expect(actualTraceTypes).toEqual(expectedTraceTypes);
 
@@ -212,9 +212,9 @@ describe('TracePipeline', () => {
       ),
     ];
     await tracePipeline.loadTraceFiles(traceFiles);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
 
-    const video = tracePipeline.getScreenRecordingVideo();
+    const video = await tracePipeline.getScreenRecordingVideo();
     expect(video).toBeDefined();
     expect(video!.size).toBeGreaterThan(0);
   });
@@ -231,6 +231,6 @@ describe('TracePipeline', () => {
     const traceFiles = [validSfTraceFile, validWmTraceFile];
     const errors = await tracePipeline.loadTraceFiles(traceFiles);
     expect(errors.length).toEqual(0);
-    tracePipeline.buildTraces();
+    await tracePipeline.buildTraces();
   };
 });

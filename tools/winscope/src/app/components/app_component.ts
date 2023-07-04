@@ -309,7 +309,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.tracePipeline.getTraces().map((trace) => trace.type);
+    return this.tracePipeline.getTraces().mapTrace((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -345,11 +345,11 @@ export class AppComponent implements TraceDataListener {
     document.body.removeChild(a);
   }
 
-  onActiveViewChanged(view: View) {
+  async onActiveViewChanged(view: View) {
     this.activeView = view;
     this.activeTrace = this.getActiveTrace(view);
     this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
-    this.timelineData.setActiveViewTraceTypes(view.dependencies);
+    await this.mediator.onWinscopeActiveViewChanged(view);
   }
 
   goToLink(url: string) {

@@ -28,15 +28,14 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   private decodedEntries: Transition[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
-    super(parsers);
-
-    const wmTransitionTraces = this.parsers.filter(
+    super();
+    const wmTransitionTraces = parsers.filter(
       (it) => it.getTraceType() === TraceType.WM_TRANSITION
     );
     if (wmTransitionTraces.length > 0) {
       this.wmTransitionTrace = wmTransitionTraces[0];
     }
-    const shellTransitionTraces = this.parsers.filter(
+    const shellTransitionTraces = parsers.filter(
       (it) => it.getTraceType() === TraceType.SHELL_TRANSITION
     );
     if (shellTransitionTraces.length > 0) {
@@ -51,7 +50,7 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     }
   }
 
-  override parse() {
+  override async parse() {
     if (this.wmTransitionTrace === undefined) {
       throw new Error('Missing WM Transition trace');
     }
@@ -62,12 +61,14 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
 
     const wmTransitionEntries: Transition[] = [];
     for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
-      wmTransitionEntries.push(this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
+      wmTransitionEntries.push(await this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
     }
 
     const shellTransitionEntries: Transition[] = [];
     for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
-      shellTransitionEntries.push(this.shellTransitionTrace.getEntry(index, TimestampType.REAL));
+      shellTransitionEntries.push(
+        await this.shellTransitionTrace.getEntry(index, TimestampType.REAL)
+      );
     }
 
     const transitionsTrace = new TransitionsTrace(
@@ -75,21 +76,24 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     );
 
     this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
+
+    await this.parseTimestamps();
   }
 
-  getLengthEntries(): number {
+  override getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
 
-  getEntry(index: number, timestampType: TimestampType): Transition {
-    return assertDefined(this.decodedEntries)[index];
+  override getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+    const entry = assertDefined(this.decodedEntries)[index];
+    return Promise.resolve(entry);
   }
 
   override getDescriptors(): string[] {
     return this.descriptors;
   }
 
-  getTraceType(): TraceType {
+  override getTraceType(): TraceType {
     return TraceType.TRANSITION;
   }
 

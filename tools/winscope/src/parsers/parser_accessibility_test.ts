@@ -48,11 +48,9 @@ describe('ParserAccessibility', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry', () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 1659107089100562784n);
-      expect(BigInt(parser.getEntry(1, TimestampType.REAL).elapsedRealtimeNanos)).toEqual(
-        14499599656n
-      );
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(1, TimestampType.REAL);
+      expect(BigInt(entry.elapsedRealtimeNanos)).toEqual(14499599656n);
     });
   });
 

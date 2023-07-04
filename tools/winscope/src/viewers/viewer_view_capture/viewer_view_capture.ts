@@ -58,8 +58,8 @@ export class ViewerViewCapture implements Viewer {
     );
   }
 
-  onTracePositionUpdate(position: TracePosition): void {
-    this.presenter.onTracePositionUpdate(position);
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.presenter.onTracePositionUpdate(position);
   }
 
   getViews(): View[] {

@@ -65,8 +65,8 @@ export class TraceEntry<T> {
     return this.framesRange;
   }
 
-  getValue(): T {
-    return this.parser.getEntry(this.index, this.timestamp.getType());
+  async getValue(): Promise<T> {
+    return await this.parser.getEntry(this.index, this.timestamp.getType());
   }
 }
 
@@ -327,6 +327,14 @@ export class Trace<T> {
     }
   }
 
+  mapEntry<U>(callback: (entry: TraceEntry<T>, index: RelativeEntryIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachEntry((entry, index) => {
+      result.push(callback(entry, index));
+    });
+    return result;
+  }
+
   forEachTimestamp(callback: (timestamp: Timestamp, index: RelativeEntryIndex) => void) {
     const timestamps = this.getFullTraceTimestamps();
     for (let index = 0; index < this.lengthEntries; ++index) {
@@ -342,6 +350,14 @@ export class Trace<T> {
     for (let frame = this.framesRange.start; frame < this.framesRange.end; ++frame) {
       callback(this.getFrame(frame), frame);
     }
+  }
+
+  mapFrame<U>(callback: (frame: Trace<T>, index: AbsoluteFrameIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachFrame((traces, index) => {
+      result.push(callback(traces, index));
+    });
+    return result;
   }
 
   getFramesRange(): FramesRange | undefined {

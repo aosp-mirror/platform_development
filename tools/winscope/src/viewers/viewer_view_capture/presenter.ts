@@ -18,7 +18,6 @@ import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {Point} from 'trace/flickerlib/common';
-import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -95,21 +94,16 @@ export class Presenter {
     this.viewCaptureTrace = assertDefined(traces.getTrace(TraceType.VIEW_CAPTURE));
   }
 
-  onTracePositionUpdate(position: TracePosition): void {
+  async onTracePositionUpdate(position: TracePosition) {
     const entry = TraceEntryFinder.findCorrespondingEntry(this.viewCaptureTrace, position);
-    this.selectedFrameData = this.viewCaptureTrace.parser.getEntry(
-      entry?.getIndex() ?? 0,
-      TimestampType.ELAPSED
-    );
 
+    let prevEntry: typeof entry;
     if (entry && entry.getIndex() > 0) {
-      this.previousFrameData = this.viewCaptureTrace.parser.getEntry(
-        entry.getIndex() - 1,
-        TimestampType.ELAPSED
-      );
-    } else {
-      this.previousFrameData = undefined;
+      prevEntry = this.viewCaptureTrace.getEntry(entry.getIndex() - 1);
     }
+
+    this.selectedFrameData = await entry?.getValue();
+    this.previousFrameData = await prevEntry?.getValue();
 
     this.refreshUI();
   }
