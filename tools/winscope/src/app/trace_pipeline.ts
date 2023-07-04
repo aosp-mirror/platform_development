@@ -16,8 +16,7 @@
 
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
-import {TracesParserCujs} from 'parsers/traces_parser_cujs';
-import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
+import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {LoadedTrace} from 'trace/loaded_trace';
 import {Parser} from 'trace/parser';
@@ -29,6 +28,7 @@ import {TraceType} from 'trace/trace_type';
 
 class TracePipeline {
   private parserFactory = new ParserFactory();
+  private tracesParserFactory = new TracesParserFactory();
   private parsers: Array<Parser<object>> = [];
   private files = new Map<TraceType, TraceFile>();
   private traces?: Traces;
@@ -43,17 +43,9 @@ class TracePipeline {
       traceFiles,
       onLoadProgressUpdate
     );
+    //FIXME: old parsers are being dropped
     this.parsers = parsers.map((it) => it.parser);
-
-    const tracesParsers = [
-      new TracesParserTransitions(this.parsers),
-      new TracesParserCujs(this.parsers),
-    ];
-    for (const tracesParser of tracesParsers) {
-      if (tracesParser.canProvideEntries()) {
-        this.parsers.push(tracesParser);
-      }
-    }
+    this.parsers.concat(await this.tracesParserFactory.createParsers(this.parsers));
 
     for (const parser of parsers) {
       this.files.set(parser.parser.getTraceType(), parser.file);

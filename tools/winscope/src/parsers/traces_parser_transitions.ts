@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Transition, TransitionsTrace} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
@@ -24,6 +25,7 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   private readonly wmTransitionTrace: Parser<object> | undefined;
   private readonly shellTransitionTrace: Parser<object> | undefined;
   private readonly descriptors: string[];
+  private decodedEntries: Transition[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
     super(parsers);
@@ -49,47 +51,38 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     }
   }
 
-  override canProvideEntries(): boolean {
-    return this.wmTransitionTrace !== undefined && this.shellTransitionTrace !== undefined;
+  override parse() {
+    if (this.wmTransitionTrace === undefined) {
+      throw new Error('Missing WM Transition trace');
+    }
+
+    if (this.shellTransitionTrace === undefined) {
+      throw new Error('Missing Shell Transition trace');
+    }
+
+    const wmTransitionEntries: Transition[] = [];
+    for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
+      wmTransitionEntries.push(this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
+    }
+
+    const shellTransitionEntries: Transition[] = [];
+    for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
+      shellTransitionEntries.push(this.shellTransitionTrace.getEntry(index, TimestampType.REAL));
+    }
+
+    const transitionsTrace = new TransitionsTrace(
+      wmTransitionEntries.concat(shellTransitionEntries)
+    );
+
+    this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
   }
 
   getLengthEntries(): number {
-    return this.getDecodedEntries().length;
+    return assertDefined(this.decodedEntries).length;
   }
 
   getEntry(index: number, timestampType: TimestampType): Transition {
-    return this.getDecodedEntries()[index];
-  }
-
-  private decodedEntries: Transition[] | undefined;
-  getDecodedEntries(): Transition[] {
-    if (this.decodedEntries === undefined) {
-      if (this.wmTransitionTrace === undefined) {
-        throw new Error('Missing WM Transition trace');
-      }
-
-      if (this.shellTransitionTrace === undefined) {
-        throw new Error('Missing Shell Transition trace');
-      }
-
-      const wmTransitionEntries: Transition[] = [];
-      for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
-        wmTransitionEntries.push(this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
-      }
-
-      const shellTransitionEntries: Transition[] = [];
-      for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
-        shellTransitionEntries.push(this.shellTransitionTrace.getEntry(index, TimestampType.REAL));
-      }
-
-      const transitionsTrace = new TransitionsTrace(
-        wmTransitionEntries.concat(shellTransitionEntries)
-      );
-
-      this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
-    }
-
-    return this.decodedEntries;
+    return assertDefined(this.decodedEntries)[index];
   }
 
   override getDescriptors(): string[] {

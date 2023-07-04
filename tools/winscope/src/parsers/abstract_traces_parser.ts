@@ -20,13 +20,16 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 export abstract class AbstractTracesParser<T> implements Parser<T> {
+  private timestampsSet: boolean = false;
+  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+
   constructor(readonly parsers: Array<Parser<object>>) {}
 
   getTraceFile(): TraceFile {
     throw new Error('Method not implemented.');
   }
 
-  abstract canProvideEntries(): boolean;
+  abstract parse(): void;
 
   abstract getDescriptors(): string[];
 
@@ -69,7 +72,4 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
   }
 
   abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
-
-  private timestampsSet: boolean = false;
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 }
