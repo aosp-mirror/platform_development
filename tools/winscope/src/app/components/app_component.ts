@@ -43,6 +43,7 @@ import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/vi
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
+import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {SnackBarOpener} from './snack_bar_opener';
@@ -282,6 +283,12 @@ export class AppComponent implements TraceDataListener {
       customElements.define(
         'viewer-transitions',
         createCustomElement(ViewerTransitionsComponent, {injector})
+      );
+    }
+    if (!customElements.get('viewer-view-capture')) {
+      customElements.define(
+        'viewer-view-capture',
+        createCustomElement(ViewerViewCaptureComponent, {injector})
       );
     }
   }
