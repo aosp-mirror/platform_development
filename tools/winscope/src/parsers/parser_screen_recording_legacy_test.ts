@@ -56,14 +56,14 @@ describe('ParserScreenRecordingLegacy', () => {
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
   });
 
-  it('retrieves trace entry', () => {
+  it('retrieves trace entry', async () => {
     {
-      const entry = parser.getEntry(0, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
     {
-      const entry = parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }

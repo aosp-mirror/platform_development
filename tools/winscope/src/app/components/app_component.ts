@@ -32,8 +32,8 @@ import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
-import {LoadedTrace} from 'trace/loaded_trace';
 import {Timestamp} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
@@ -62,7 +62,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
       <div class="spacer">
         <mat-icon
-          *ngIf="activeTrace"
+          *ngIf="dataLoaded && activeTrace"
           class="icon"
           [matTooltip]="TRACE_INFO[activeTrace.type].name"
           [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
@@ -214,7 +214,7 @@ export class AppComponent implements TraceDataListener {
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView?: View;
-  activeTrace?: LoadedTrace;
+  activeTrace?: Trace<object>;
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
@@ -309,7 +309,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
+    return this.tracePipeline.getTraces().mapTrace((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -345,11 +345,11 @@ export class AppComponent implements TraceDataListener {
     document.body.removeChild(a);
   }
 
-  onActiveViewChanged(view: View) {
+  async onActiveViewChanged(view: View) {
     this.activeView = view;
     this.activeTrace = this.getActiveTrace(view);
     this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
-    this.timelineData.setActiveViewTraceTypes(view.dependencies);
+    await this.mediator.onWinscopeActiveViewChanged(view);
   }
 
   goToLink(url: string) {
@@ -363,13 +363,17 @@ export class AppComponent implements TraceDataListener {
       return '';
     }
 
-    return `${trace.descriptors.join(', ')}`;
+    return `${trace.getDescriptors().join(', ')}`;
   }
 
-  private getActiveTrace(view: View): LoadedTrace | undefined {
-    return this.tracePipeline
-      .getLoadedTraces()
-      .find((trace) => trace.type === view.dependencies[0]);
+  private getActiveTrace(view: View): Trace<object> | undefined {
+    let activeTrace: Trace<object> | undefined;
+    this.tracePipeline.getTraces().forEachTrace((trace) => {
+      if (trace.type === view.dependencies[0]) {
+        activeTrace = trace;
+      }
+    });
+    return activeTrace;
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
