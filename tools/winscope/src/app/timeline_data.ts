@@ -28,6 +28,7 @@ export interface TimeRange {
   from: Timestamp;
   to: Timestamp;
 }
+const INVALID_TIMESTAMP = 0n
 
 export class TimelineData {
   private traces = new Traces();
@@ -42,7 +43,21 @@ export class TimelineData {
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
     this.clear();
 
-    this.traces = traces;
+    this.traces = new Traces();
+    traces.forEachTrace((trace, type) => {
+      if (type === TraceType.WINDOW_MANAGER) {
+        // Filter out WindowManager dumps with no timestamp from timeline
+        if (
+          trace.lengthEntries === 1 &&
+          trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
+        ) {
+          return;
+        }
+      }
+
+      this.traces.setTrace(type, trace);
+    });
+
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
@@ -247,6 +262,7 @@ export class TimelineData {
 
   private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
     const activeEntries = this.activeViewTraceTypes
+      .filter((it) => this.traces.getTrace(it) !== undefined)
       .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
       .filter((trace) => trace.lengthEntries > 0)
       .map((trace) => trace.getEntry(0))

@@ -48,6 +48,20 @@ describe('TimelineData', () => {
     expect(timelineData.getCurrentPosition()).toBeDefined();
   });
 
+  it('ignores dumps with no timestamp', () => {
+    expect(timelineData.getCurrentPosition()).toBeUndefined();
+
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10, timestamp11])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [new Timestamp(TimestampType.REAL, 0n)])
+      .build();
+
+    timelineData.initialize(traces, undefined);
+    expect(timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined();
+    expect(timelineData.getFullTimeRange().from).toBe(timestamp10);
+    expect(timelineData.getFullTimeRange().to).toBe(timestamp11);
+  });
+
   it('uses first entry by default', () => {
     timelineData.initialize(traces, undefined);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
