@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {FilterType, TreeNode} from 'common/tree_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 
 import {

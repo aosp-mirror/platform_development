@@ -16,7 +16,7 @@
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TimeUtils} from 'common/time_utils';
-import {Transition} from 'trace/flickerlib/common';
+import {Transition} from 'flickerlib/common';
 import {ElapsedTimestamp, TimestampType} from 'trace/timestamp';
 import {Terminal} from 'viewers/common/ui_tree_utils';
 import {Events} from './events';

@@ -16,8 +16,8 @@
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';

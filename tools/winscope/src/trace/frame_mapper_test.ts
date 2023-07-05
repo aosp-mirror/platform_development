@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {LayerTraceEntry} from './flickerlib/layers/LayerTraceEntry';
-import {WindowManagerState} from './flickerlib/windows/WindowManagerState';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
 import {LogMessage} from './protolog';

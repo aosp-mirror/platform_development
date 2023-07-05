@@ -25,7 +25,7 @@ import {
   TransitionChange,
   TransitionType,
   WmTransitionData,
-} from 'trace/flickerlib/common';
+} from 'flickerlib/common';
 import {TimestampType} from 'trace/timestamp';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';

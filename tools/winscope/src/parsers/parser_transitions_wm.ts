@@ -5,7 +5,7 @@ import {
   TransitionChange,
   TransitionType,
   WmTransitionData,
-} from 'trace/flickerlib/common';
+} from 'flickerlib/common';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';

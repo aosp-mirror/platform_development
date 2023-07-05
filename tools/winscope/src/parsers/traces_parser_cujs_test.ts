@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Cuj} from 'flickerlib/common';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Cuj} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';

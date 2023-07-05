@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {Transform} from 'trace/flickerlib/common';
+import {Transform} from 'flickerlib/common';
 
 @Component({
   selector: 'transform-matrix',

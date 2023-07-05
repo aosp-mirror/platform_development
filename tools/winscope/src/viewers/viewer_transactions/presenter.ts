@@ -17,7 +17,7 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';

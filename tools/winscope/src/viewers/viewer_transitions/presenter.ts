@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {LayerTraceEntry, Transition, WindowManagerState} from 'trace/flickerlib/common';
+import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import {LayerTraceEntry, WindowManagerState} from 'flickerlib/common';
 import {ParserFactory} from 'parsers/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {CommonTestUtils} from 'test/common/utils';
-import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';

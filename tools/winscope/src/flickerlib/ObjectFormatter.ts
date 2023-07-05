@@ -16,7 +16,7 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {PropertiesDump} from 'viewers/common/ui_tree_utils';
-import intDefMapping from '../../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
+import intDefMapping from '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 import {
   toActiveBuffer,
   toColor,

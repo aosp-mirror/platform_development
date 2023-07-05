@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';

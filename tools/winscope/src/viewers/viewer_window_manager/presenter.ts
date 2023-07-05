@@ -17,8 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {DisplayContent} from 'trace/flickerlib/windows/DisplayContent';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {DisplayContent} from 'flickerlib/windows/DisplayContent';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';

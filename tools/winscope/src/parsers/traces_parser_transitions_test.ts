@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Transition} from 'flickerlib/common';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Transition} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';

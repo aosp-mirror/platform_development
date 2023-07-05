@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';

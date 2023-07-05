@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Cuj, Event, Transition} from 'trace/flickerlib/common';
-import {LayerTraceEntry} from './flickerlib/layers/LayerTraceEntry';
-import {WindowManagerState} from './flickerlib/windows/WindowManagerState';
+import {Cuj, Event, Transition} from 'flickerlib/common';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
 import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';

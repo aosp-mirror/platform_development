@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Layer} from 'flickerlib/layers/Layer';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Layer} from 'trace/flickerlib/layers/Layer';
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';

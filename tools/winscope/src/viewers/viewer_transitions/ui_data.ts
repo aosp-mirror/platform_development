@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Transition} from 'trace/flickerlib/common';
+import {Transition} from 'flickerlib/common';
 import {TimestampType} from 'trace/timestamp';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 
