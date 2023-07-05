@@ -493,11 +493,17 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     if (!this.internalActiveTrace) {
       return false;
     }
+    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
+      return false;
+    }
     return this.timelineData.getPreviousEntryFor(this.internalActiveTrace) !== undefined;
   }
 
   hasNextEntry(): boolean {
     if (!this.internalActiveTrace) {
+      return false;
+    }
+    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
       return false;
     }
     return this.timelineData.getNextEntryFor(this.internalActiveTrace) !== undefined;
