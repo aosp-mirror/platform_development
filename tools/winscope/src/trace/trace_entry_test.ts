@@ -66,8 +66,8 @@ describe('TraceEntry', () => {
     expect(trace.getEntry(5).getFramesRange()).toEqual({start: 4, end: 5});
   });
 
-  it('getValue()', () => {
-    expect(trace.getEntry(0).getValue()).toEqual('entry-0');
-    expect(trace.getEntry(1).getValue()).toEqual('entry-1');
+  it('getValue()', async () => {
+    expect(await trace.getEntry(0).getValue()).toEqual('entry-0');
+    expect(await trace.getEntry(1).getValue()).toEqual('entry-1');
   });
 });

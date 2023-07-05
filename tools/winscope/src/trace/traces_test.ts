@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
-import {assertDefined} from '../common/assert_utils';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
 import {RealTimestamp} from './timestamp';
@@ -134,31 +135,31 @@ describe('Traces', () => {
     );
   });
 
-  it('getTrace()', () => {
+  it('getTrace()', async () => {
     expect(
-      TraceUtils.extractEntries(assertDefined(traces.getTrace(TraceType.TEST_TRACE_STRING)))
+      await TraceUtils.extractEntries(assertDefined(traces.getTrace(TraceType.TEST_TRACE_STRING)))
     ).toEqual(extractedEntriesFull.get(TraceType.TEST_TRACE_STRING) as string[]);
     expect(
-      TraceUtils.extractEntries(assertDefined(traces.getTrace(TraceType.TEST_TRACE_NUMBER)))
+      await TraceUtils.extractEntries(assertDefined(traces.getTrace(TraceType.TEST_TRACE_NUMBER)))
     ).toEqual(extractedEntriesFull.get(TraceType.TEST_TRACE_NUMBER) as number[]);
     expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeUndefined();
   });
 
-  it('sliceTime()', () => {
+  it('sliceTime()', async () => {
     // empty
     {
       const slice = traces.sliceTime(time3, time3);
-      expect(TracesUtils.extractEntries(slice)).toEqual(extractedEntriesEmpty);
+      expect(await TracesUtils.extractEntries(slice)).toEqual(extractedEntriesEmpty);
     }
     // full
     {
       const slice = traces.sliceTime();
-      expect(TracesUtils.extractEntries(slice)).toEqual(extractedEntriesFull);
+      expect(await TracesUtils.extractEntries(slice)).toEqual(extractedEntriesFull);
     }
     // middle
     {
       const slice = traces.sliceTime(time4, time8);
-      expect(TracesUtils.extractEntries(slice)).toEqual(
+      expect(await TracesUtils.extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['2', '3']],
           [TraceType.TEST_TRACE_NUMBER, [1, 2]],
@@ -168,7 +169,7 @@ describe('Traces', () => {
     // slice away front
     {
       const slice = traces.sliceTime(time8);
-      expect(TracesUtils.extractEntries(slice)).toEqual(
+      expect(await TracesUtils.extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['4']],
           [TraceType.TEST_TRACE_NUMBER, [3, 4]],
@@ -178,7 +179,7 @@ describe('Traces', () => {
     // slice away back
     {
       const slice = traces.sliceTime(undefined, time8);
-      expect(TracesUtils.extractEntries(slice)).toEqual(
+      expect(await TracesUtils.extractEntries(slice)).toEqual(
         new Map<TraceType, Array<{}>>([
           [TraceType.TEST_TRACE_STRING, ['0', '1', '2', '3']],
           [TraceType.TEST_TRACE_NUMBER, [0, 1, 2]],
@@ -187,16 +188,16 @@ describe('Traces', () => {
     }
   });
 
-  it('sliceFrames()', () => {
+  it('sliceFrames()', async () => {
     // empty
     {
       const slice = traces.sliceFrames(1, 1);
-      expect(TracesUtils.extractFrames(slice)).toEqual(extractedFramesEmpty);
+      expect(await TracesUtils.extractFrames(slice)).toEqual(extractedFramesEmpty);
     }
     // full
     {
       const slice = traces.sliceFrames();
-      expect(TracesUtils.extractFrames(slice)).toEqual(extractedFramesFull);
+      expect(await TracesUtils.extractFrames(slice)).toEqual(extractedFramesFull);
     }
     // middle
     {
@@ -204,7 +205,7 @@ describe('Traces', () => {
       const expectedFrames = structuredClone(extractedFramesFull);
       expectedFrames.delete(0);
       expectedFrames.delete(4);
-      expect(TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
     }
     // slice away front
     {
@@ -212,7 +213,7 @@ describe('Traces', () => {
       const expectedFrames = structuredClone(extractedFramesFull);
       expectedFrames.delete(0);
       expectedFrames.delete(1);
-      expect(TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
     }
     // slice away back
     {
@@ -221,23 +222,24 @@ describe('Traces', () => {
       expectedFrames.delete(2);
       expectedFrames.delete(3);
       expectedFrames.delete(4);
-      expect(TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(slice)).toEqual(expectedFrames);
     }
   });
 
-  it('forEachTrace()', () => {
-    traces.forEachTrace((trace) => {
+  it('mapTrace()', async () => {
+    const promises = traces.mapTrace(async (trace) => {
       const expectedEntries = extractedEntriesFull.get(trace.type) as Array<{}>;
-      const actualEntries = TraceUtils.extractEntries(trace);
+      const actualEntries = await TraceUtils.extractEntries(trace);
       expect(actualEntries).toEqual(expectedEntries);
     });
+    await Promise.all(promises);
   });
 
-  it('forEachFrame()', () => {
-    expect(TracesUtils.extractFrames(traces)).toEqual(extractedFramesFull);
+  it('mapFrame()', async () => {
+    expect(await TracesUtils.extractFrames(traces)).toEqual(extractedFramesFull);
   });
 
-  it('it supports empty traces', () => {
+  it('it supports empty traces', async () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TEST_TRACE_STRING, [])
       .setFrameMap(TraceType.TEST_TRACE_STRING, new FrameMapBuilder(0, 0).build())
@@ -246,21 +248,25 @@ describe('Traces', () => {
       .setFrameMap(TraceType.TEST_TRACE_NUMBER, new FrameMapBuilder(0, 0).build())
       .build();
 
-    expect(TracesUtils.extractEntries(traces)).toEqual(extractedEntriesEmpty);
-    expect(TracesUtils.extractFrames(traces)).toEqual(extractedFramesEmpty);
+    expect(await TracesUtils.extractEntries(traces)).toEqual(extractedEntriesEmpty);
+    expect(await TracesUtils.extractFrames(traces)).toEqual(extractedFramesEmpty);
 
-    expect(TracesUtils.extractEntries(traces.sliceTime(time1, time10))).toEqual(
+    expect(await TracesUtils.extractEntries(traces.sliceTime(time1, time10))).toEqual(
       extractedEntriesEmpty
     );
-    expect(TracesUtils.extractFrames(traces.sliceTime(time1, time10))).toEqual(
+    expect(await TracesUtils.extractFrames(traces.sliceTime(time1, time10))).toEqual(
       extractedFramesEmpty
     );
 
-    expect(TracesUtils.extractEntries(traces.sliceFrames(0, 10))).toEqual(extractedEntriesEmpty);
-    expect(TracesUtils.extractFrames(traces.sliceFrames(0, 10))).toEqual(extractedFramesEmpty);
+    expect(await TracesUtils.extractEntries(traces.sliceFrames(0, 10))).toEqual(
+      extractedEntriesEmpty
+    );
+    expect(await TracesUtils.extractFrames(traces.sliceFrames(0, 10))).toEqual(
+      extractedFramesEmpty
+    );
   });
 
-  it('it supports unavailable frame mapping', () => {
+  it('it supports unavailable frame mapping', async () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TEST_TRACE_STRING, ['entry-0'])
       .setTimestamps(TraceType.TEST_TRACE_STRING, [time1])
@@ -276,13 +282,17 @@ describe('Traces', () => {
       [TraceType.TEST_TRACE_NUMBER, [0]],
     ]);
 
-    expect(TracesUtils.extractEntries(traces)).toEqual(expectedEntries);
-    expect(TracesUtils.extractEntries(traces.sliceTime())).toEqual(expectedEntries);
+    expect(await TracesUtils.extractEntries(traces)).toEqual(expectedEntries);
+    expect(await TracesUtils.extractEntries(traces.sliceTime())).toEqual(expectedEntries);
+
     expect(() => {
       traces.sliceFrames();
     }).toThrow();
     expect(() => {
-      TracesUtils.extractFrames(traces);
+      traces.forEachFrame(FunctionUtils.DO_NOTHING);
+    }).toThrow();
+    expect(() => {
+      traces.mapFrame(FunctionUtils.DO_NOTHING);
     }).toThrow();
   });
 });

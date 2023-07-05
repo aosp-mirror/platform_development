@@ -21,7 +21,7 @@ export interface Parser<T> {
   getTraceType(): TraceType;
   getLengthEntries(): number;
   getTimestamps(type: TimestampType): Timestamp[] | undefined;
-  getEntry(index: number, timestampType: TimestampType): T;
+  getEntry(index: number, timestampType: TimestampType): Promise<T>;
 
   getDescriptors(): string[];
 }

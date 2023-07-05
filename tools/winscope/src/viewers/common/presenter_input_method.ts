@@ -101,7 +101,7 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  async onTracePositionUpdate(position: TracePosition) {
     this.uiData = new ImeUiData(this.dependencies);
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
@@ -109,11 +109,11 @@ export abstract class PresenterInputMethod {
     const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(position);
 
     if (imeEntry) {
-      this.entry = imeEntry.getValue() as TraceTreeNode;
+      this.entry = (await imeEntry.getValue()) as TraceTreeNode;
       this.uiData.highlightedItems = this.highlightedItems;
       this.uiData.additionalProperties = this.getAdditionalProperties(
-        wmEntry?.getValue(),
-        sfEntry?.getValue()
+        await wmEntry?.getValue(),
+        await sfEntry?.getValue()
       );
       this.uiData.tree = this.generateTree();
       this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
