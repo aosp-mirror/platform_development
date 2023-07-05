@@ -117,9 +117,13 @@ class TracePipeline {
       return files;
     }
 
-    const BUGREPORT_TRACE_DIRS = ['FS/data/misc/wmtrace/', 'FS/data/misc/perfetto-traces/'];
-    const isFileWithinBugreportTraceDir = (file: TraceFile) => {
-      for (const traceDir of BUGREPORT_TRACE_DIRS) {
+    const BUGREPORT_FILES_ALLOWLIST = [
+      'FS/data/misc/wmtrace/',
+      'FS/data/misc/perfetto-traces/',
+      'proto/window_CRITICAL.proto',
+    ];
+    const isFileAllowlisted = (file: TraceFile) => {
+      for (const traceDir of BUGREPORT_FILES_ALLOWLIST) {
         if (file.file.name.startsWith(traceDir)) {
           return true;
         }
@@ -131,7 +135,7 @@ class TracePipeline {
       file.parentArchive === bugreportMainEntry.parentArchive;
 
     return files.filter((file) => {
-      return isFileWithinBugreportTraceDir(file) || !fileBelongsToBugreport(file);
+      return isFileAllowlisted(file) || !fileBelongsToBugreport(file);
     });
   }
 
