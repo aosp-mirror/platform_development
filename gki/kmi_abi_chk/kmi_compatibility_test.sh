@@ -58,7 +58,7 @@ shift
 # break KMI ABI, because the requirement is "relaxed". We want this case to
 # pass so a keyword like "...EXPORT_SYMBOL" in the current symbol file can
 # still match "...EXPORT_SYMBOL_GPL" in the previous symbol file.
-grep "vmlinux.EXPORT_SYMBOL" $curr | sed 's/[ \t]*$//' > $tmp
+grep "EXPORT_SYMBOL" $curr | sed 's/[ \t]*$//' > $tmp
 
 echo "Current kernel symbol file, $curr, is checking against:"
 
