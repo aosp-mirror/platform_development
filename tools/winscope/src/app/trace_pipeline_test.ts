@@ -98,7 +98,14 @@ describe('TracePipeline', () => {
       new TraceFile(
         await UnitTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/WindowManager.pb',
-          'FS/data/misc/ignored-dir/window_manager.bp'
+          'proto/window_CRITICAL.proto'
+        ),
+        bugreportArchive
+      ),
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+          'FS/data/misc/ignored-dir/wm_transition_trace.bp'
         ),
         bugreportArchive
       ),
@@ -125,8 +132,9 @@ describe('TracePipeline', () => {
 
     expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeDefined();
     expect(traces.getTrace(TraceType.TRANSACTIONS)).toBeDefined();
-    expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined(); // ignored
+    expect(traces.getTrace(TraceType.WM_TRANSITION)).toBeUndefined(); // ignored
     expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
+    expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeDefined();
   });
 
   it('is robust to invalid trace files', async () => {
