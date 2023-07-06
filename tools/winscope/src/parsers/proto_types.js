@@ -81,5 +81,6 @@ export {
   WindowManagerServiceDumpProto,
   WindowManagerTraceFileProto,
   WmTransitionsTraceFileProto,
+  transactionsJson,
   winscopeJson,
 };
