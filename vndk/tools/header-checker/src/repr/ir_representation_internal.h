@@ -30,11 +30,6 @@ inline std::string GetReferencedTypeMapKey(T &element) {
 }
 
 template <>
-inline std::string GetReferencedTypeMapKey<ArrayTypeIR>(ArrayTypeIR &element) {
-  return element.GetReferencedType() + ":" + std::to_string(element.GetSize());
-}
-
-template <>
 inline std::string GetReferencedTypeMapKey<BuiltinTypeIR>(
     BuiltinTypeIR &element) {
   return element.GetLinkerSetKey();
@@ -42,6 +37,12 @@ inline std::string GetReferencedTypeMapKey<BuiltinTypeIR>(
 
 inline static std::string BoolToString(bool val) {
   return val ? "true" : "false";
+}
+
+template <>
+inline std::string GetReferencedTypeMapKey<ArrayTypeIR>(ArrayTypeIR &element) {
+  return element.GetReferencedType() + ":" + std::to_string(element.GetSize()) +
+         ":" + BoolToString(element.IsOfUnknownBound());
 }
 
 template <>
