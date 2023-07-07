@@ -1,0 +1,4 @@
+libopaque_type {
+  global:
+    function;
+};

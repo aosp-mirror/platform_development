@@ -43,9 +43,10 @@ class DiffWrapper : public AbiDiffHelper {
               const AbiElementMap<const repr::TypeIR *> &old_types,
               const AbiElementMap<const repr::TypeIR *> &new_types,
               const repr::DiffPolicyOptions &diff_policy_options,
-              std::set<std::string> *type_cache)
+              std::set<std::string> *type_cache,
+              const std::set<std::string> &ignored_linker_set_keys)
       : AbiDiffHelper(old_types, new_types, diff_policy_options, type_cache,
-                      ir_diff_dumper),
+                      ignored_linker_set_keys, ir_diff_dumper),
         oldp_(oldp), newp_(newp) {}
 
   bool DumpDiff(repr::IRDiffDumper::DiffKind diff_kind);

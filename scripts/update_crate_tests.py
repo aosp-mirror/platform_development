@@ -25,6 +25,15 @@ argument is provided, it assumes the crate is the current directory.
   $ update_crate_tests.py $ANDROID_BUILD_TOP/external/rust/crates/libc
 
 This script is automatically called by external_updater.
+
+A test_mapping_config.json file can be defined in the project directory to
+configure the generated TEST_MAPPING file, for example:
+
+    {
+        // Run tests in postsubmit instead of presubmit.
+        "postsubmit_tests":["foo"]
+    }
+
 """
 
 import argparse
@@ -49,7 +58,8 @@ TEST_OPTIONS = {
 # "presubmit-rust" runs arm64 device tests on physical devices.
 TEST_GROUPS = [
     "presubmit",
-    "presubmit-rust"
+    "presubmit-rust",
+    "postsubmit",
 ]
 
 # Excluded tests. These tests will be ignored by this script.
@@ -72,6 +82,10 @@ TEST_EXCLUDE = [
 
         # TODO: Remove when b/198197213 is closed.
         "diced_client_test",
+
+        "CoverageRustSmokeTest",
+        "libtrusty-rs-tests",
+        "terminal-size_test_src_lib",
 ]
 
 # Excluded modules.
@@ -130,7 +144,7 @@ class Bazel(object):
         """
         if platform.system() != 'Linux':
             raise UpdaterException('This script has only been tested on Linux.')
-        self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
+        self.path = os.path.join(env.ANDROID_BUILD_TOP, "build", "bazel", "bin", "bazel")
         soong_ui = os.path.join(env.ANDROID_BUILD_TOP, "build", "soong", "soong_ui.bash")
 
         # soong_ui requires to be at the root of the repository.
@@ -177,7 +191,41 @@ class Bazel(object):
                 return True
         return False
 
-    def query_rdep_tests_dirs(self, modules, path):
+    # Return all the TEST_MAPPING files within a given path.
+    def find_all_test_mapping_files(self, path):
+        result = []
+        for root, dirs, files in os.walk(path):
+            if "TEST_MAPPING" in files:
+                result.append(os.path.join(root, "TEST_MAPPING"))
+        return result
+
+    # For a given test, return the TEST_MAPPING file where the test is mapped.
+    # This limits the search to the directory specified in "path" along with its subdirs.
+    def test_to_test_mapping(self, env, path, test):
+        test_mapping_files = self.find_all_test_mapping_files(env.ANDROID_BUILD_TOP + path)
+        for file in test_mapping_files:
+            with open(file) as fd:
+                if "\""+ test + "\"" in fd.read():
+                    mapping_path = file.split("/TEST_MAPPING")[0].split("//")[1]
+                    return mapping_path
+
+        return None
+
+    # Returns:
+    # rdep_test: for tests specified locally.
+    # rdep_dirs: for paths to TEST_MAPPING files for reverse dependencies.
+    #
+    # We import directories for non-local tests because including tests directly has proven to be
+    # fragile and burdensome. For example, whenever a project removes or renames a test, all the
+    # TEST_MAPPING files for its reverse dependencies must be updated or we get test breakages.
+    # That can be many tens of projects that must updated to prevent the reported breakage of tests
+    # that no longer exist. Similarly when a test is added, it won't be run when the reverse
+    # dependencies change unless/until update_crate_tests.py is run for its depenencies.
+    # Importing TEST_MAPPING files instead of tests solves both of these problems. When tests are
+    # removed, renamed, or added, only files local to the project need to be modified.
+    # The downside is that we potentially miss some tests. But this seems like a reasonable
+    # tradeoff.
+    def query_rdep_tests_dirs(self, env, modules, path, exclude_dir):
         """Returns all reverse dependency tests for modules in this package."""
         rdep_tests = set()
         rdep_dirs = set()
@@ -190,7 +238,15 @@ class Bazel(object):
                         continue
                     path_match = path_pat.match(mod)
                     if path_match or not EXTERNAL_PAT.match(mod):
-                        rdep_tests.add(mod.split(":")[1].split("--")[0])
+                        rdep_path = mod.split(":")[0]
+                        rdep_test = mod.split(":")[1].split("--")[0]
+                        mapping_path = self.test_to_test_mapping(env, rdep_path, rdep_test)
+                        # Only include tests directly if they're local to the project.
+                        if (mapping_path is not None) and exclude_dir.endswith(mapping_path):
+                            rdep_tests.add(rdep_test)
+                        # All other tests are included by path.
+                        elif mapping_path is not None:
+                            rdep_dirs.add(mapping_path)
                     else:
                         label_match = LABEL_PAT.match(mod)
                         if label_match:
@@ -234,7 +290,8 @@ class Package(object):
         # Move to the package_directory.
         os.chdir(self.dir)
         modules = bazel.query_modules(self.dir_rel)
-        (self.rdep_tests, self.rdep_dirs) = bazel.query_rdep_tests_dirs(modules, self.dir_rel)
+        (self.rdep_tests, self.rdep_dirs) = bazel.query_rdep_tests_dirs(env, modules,
+                                                                        self.dir_rel, self.dir)
 
     def get_rdep_tests_dirs(self):
         return (self.rdep_tests, self.rdep_dirs)
@@ -269,16 +326,33 @@ class TestMapping(object):
     def tests_dirs_to_mapping(self, tests, dirs):
         """Translate the test list into a dictionary."""
         test_mapping = {"imports": []}
+        config = None
+        if os.path.isfile(os.path.join(self.package.dir, "test_mapping_config.json")):
+            with open(os.path.join(self.package.dir, "test_mapping_config.json"), 'r') as fd:
+                config = json.load(fd)
+
         for test_group in TEST_GROUPS:
             test_mapping[test_group] = []
             for test in tests:
                 if test in TEST_EXCLUDE:
                     continue
+                if config and 'postsubmit_tests' in config:
+                    if test in config['postsubmit_tests'] and 'postsubmit' not in test_group:
+                        continue
+                    if test not in config['postsubmit_tests'] and 'postsubmit' in test_group:
+                        continue
+                else:
+                    if 'postsubmit' in test_group:
+                        # If postsubmit_tests is not configured, do not place
+                        # anything in postsubmit - presubmit groups are
+                        # automatically included in postsubmit in CI.
+                        continue
                 if test in TEST_OPTIONS:
                     test_mapping[test_group].append({"name": test, "options": TEST_OPTIONS[test]})
                 else:
                     test_mapping[test_group].append({"name": test})
             test_mapping[test_group] = sorted(test_mapping[test_group], key=lambda t: t["name"])
+
         for dir in dirs:
             test_mapping["imports"].append({"path": dir})
         test_mapping["imports"] = sorted(test_mapping["imports"], key=lambda t: t["path"])
@@ -307,7 +381,6 @@ def parse_args():
                         help='Pushes change to Gerrit.')
     return parser.parse_args()
 
-
 def main():
     args = parse_args()
     paths = args.paths if len(args.paths) > 0 else [os.getcwd()]
@@ -331,6 +404,10 @@ def main():
                 subprocess.check_output(['repo', 'start',
                                          'tmp_auto_test_mapping', '.'])
                 subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
+                # test_mapping_config.json is not always present
+                subprocess.call(['git', 'add', 'test_mapping_config.json'],
+                                stderr=subprocess.DEVNULL,
+                                stdout=subprocess.DEVNULL)
                 subprocess.check_output(['git', 'commit', '-m',
                                          'Update TEST_MAPPING\n\nTest: None'])
             if args.push_change and (changed or untracked):

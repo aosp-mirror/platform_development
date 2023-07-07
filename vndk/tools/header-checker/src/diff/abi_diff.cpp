@@ -327,7 +327,9 @@ bool HeaderAbiDiff::DumpLoneElements(
 
   for (auto &&element : elements) {
     if (IgnoreSymbol<T>(element, ignored_symbols_,
-                        [](const T *e) {return e->GetLinkerSetKey();})) {
+                        [](const T *e) {return e->GetLinkerSetKey();}) ||
+        ignored_linker_set_keys_.find(element->GetLinkerSetKey()) !=
+            ignored_linker_set_keys_.end()) {
       continue;
     }
 
@@ -380,14 +382,17 @@ bool HeaderAbiDiff::DumpDiffElements(
     const T *old_element = pair.first;
     const T *new_element = pair.second;
 
+    // The old and new linker set keys are supposed to be equal.
     if (IgnoreSymbol<T>(old_element, ignored_symbols_,
-                        [](const T *e) {return e->GetLinkerSetKey();})) {
+                        [](const T *e) { return e->GetLinkerSetKey(); }) ||
+        ignored_linker_set_keys_.find(old_element->GetLinkerSetKey()) !=
+            ignored_linker_set_keys_.end()) {
       continue;
     }
 
     DiffWrapper<T> diff_wrapper(
         old_element, new_element, ir_diff_dumper, old_types, new_types,
-        diff_policy_options_, &type_cache_);
+        diff_policy_options_, &type_cache_, ignored_linker_set_keys_);
     if (!diff_wrapper.DumpDiff(diff_kind)) {
       llvm::errs() << "Failed to diff elements\n";
       return false;
