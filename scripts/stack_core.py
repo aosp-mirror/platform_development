@@ -60,30 +60,30 @@ class TraceConverter:
   width = "{8}"
   spacing = ""
   apk_info = dict()
+  lib_to_path = dict()
 
   register_names = {
     "arm": "r0|r1|r2|r3|r4|r5|r6|r7|r8|r9|sl|fp|ip|sp|lr|pc|cpsr",
     "arm64": "x0|x1|x2|x3|x4|x5|x6|x7|x8|x9|x10|x11|x12|x13|x14|x15|x16|x17|x18|x19|x20|x21|x22|x23|x24|x25|x26|x27|x28|x29|x30|sp|pc|pstate",
-    "mips": "zr|at|v0|v1|a0|a1|a2|a3|t0|t1|t2|t3|t4|t5|t6|t7|s0|s1|s2|s3|s4|s5|s6|s7|t8|t9|k0|k1|gp|sp|s8|ra|hi|lo|bva|epc",
-    "mips64": "zr|at|v0|v1|a0|a1|a2|a3|a4|a5|a6|a7|t0|t1|t2|t3|s0|s1|s2|s3|s4|s5|s6|s7|t8|t9|k0|k1|gp|sp|s8|ra|hi|lo|bva|epc",
     "x86": "eax|ebx|ecx|edx|esi|edi|x?cs|x?ds|x?es|x?fs|x?ss|eip|ebp|esp|flags",
     "x86_64": "rax|rbx|rcx|rdx|rsi|rdi|r8|r9|r10|r11|r12|r13|r14|r15|cs|ss|rip|rbp|rsp|eflags",
+    "riscv64": "ra|sp|gp|tp|t0|t1|t2|s0|s1|a0|a1|a2|a3|a4|a5|a6|a7|s2|s3|s4|s5|s6|s7|s8|s9|s10|s11|t3|t4|t5|t6|pc",
   }
 
   # We use the "file" command line tool to extract BuildId from ELF files.
   ElfInfo = collections.namedtuple("ElfInfo", ["bitness", "build_id"])
-  file_tool_output = re.compile(r"ELF (?P<bitness>32|64)-bit .*"
-                                r"BuildID(\[.*\])?=(?P<build_id>[0-9a-f]+)")
+  readelf_output = re.compile(r"Class:\s*ELF(?P<bitness>32|64).*"
+                              r"Build ID:\s*(?P<build_id>[0-9a-f]+)",
+                              flags=re.DOTALL)
 
-  def UpdateAbiRegexes(self):
-    if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
-      self.width = "{16}"
-      self.spacing = "        "
-    else:
+  def UpdateBitnessRegexes(self):
+    if symbol.ARCH_IS_32BIT:
       self.width = "{8}"
       self.spacing = ""
-
-    self.register_line = re.compile("(([ ]*\\b(" + self.register_names[symbol.ARCH] + ")\\b +[0-9a-f]" + self.width + "){2,5})")
+    else:
+      self.width = "{16}"
+      self.spacing = "        "
+    self.register_line = re.compile("    (([ ]*\\b(\S*)\\b +[0-9a-f]" + self.width + "){1,5}$)")
 
     # Note that both trace and value line matching allow for variable amounts of
     # whitespace (e.g. \t). This is because the we want to allow for the stack
@@ -182,9 +182,9 @@ class TraceConverter:
   def ConvertTrace(self, lines):
     lines = [self.CleanLine(line) for line in lines]
     try:
-      if not symbol.ARCH:
-        symbol.SetAbi(lines)
-      self.UpdateAbiRegexes()
+      if symbol.ARCH_IS_32BIT is None:
+        symbol.SetBitness(lines)
+      self.UpdateBitnessRegexes()
       for line in lines:
         self.ProcessLine(line)
       self.PrintOutput(self.trace_lines, self.value_lines)
@@ -317,14 +317,15 @@ class TraceConverter:
   def GlobSymbolsDir(self, symbols_dir):
     files_by_basename = {}
     for path in sorted(pathlib.Path(symbols_dir).glob("**/*")):
-      files_by_basename.setdefault(path.name, []).append(path)
+      if os.path.isfile(path):
+        files_by_basename.setdefault(path.name, []).append(path)
     return files_by_basename
 
   # Use the "file" command line tool to find the bitness and build_id of given ELF file.
   @functools.lru_cache(maxsize=None)
   def GetLibraryInfo(self, lib):
-    stdout = subprocess.check_output(["file", lib], text=True)
-    match = self.file_tool_output.search(stdout)
+    stdout = subprocess.check_output([symbol.ToolPath("llvm-readelf"), "-h", "-n", lib], text=True)
+    match = self.readelf_output.search(stdout)
     if match:
       return self.ElfInfo(bitness=match.group("bitness"), build_id=match.group("build_id"))
     return None
@@ -339,9 +340,26 @@ class TraceConverter:
     return None
 
   def GetLibPath(self, lib):
+    if lib in self.lib_to_path:
+      return self.lib_to_path[lib]
+
+    lib_path = self.FindLibPath(lib)
+    self.lib_to_path[lib] = lib_path
+    return lib_path
+
+  def FindLibPath(self, lib):
     symbol_dir = symbol.SYMBOLS_DIR
     if os.path.isfile(symbol_dir + lib):
       return lib
+
+    # Try and rewrite any apex files if not found in symbols.
+    # For some reason, the directory in symbols does not match
+    # the path on system.
+    # The path is com.android.<directory> on device, but
+    # com.google.android.<directory> in symbols.
+    new_lib = lib.replace("/com.android.", "/com.google.android.")
+    if os.path.isfile(symbol_dir + new_lib):
+      return new_lib
 
     # When using atest, test paths are different between the out/ directory
     # and device. Apply fixups.
@@ -352,11 +370,11 @@ class TraceConverter:
     test_name = lib.rsplit("/", 1)[-1]
     test_dir = "/data/nativetest"
     test_dir_bitness = ""
-    if symbol.ARCH.endswith("64"):
+    if symbol.ARCH_IS_32BIT:
+      bitness = "32"
+    else:
       bitness = "64"
       test_dir_bitness = "64"
-    else:
-      bitness = "32"
 
     # Unfortunately, the location of the real symbol file is not
     # standardized, so we need to go hunting for it.
@@ -364,9 +382,9 @@ class TraceConverter:
     # This is in vendor, look for the value in:
     #   /data/nativetest{64}/vendor/test_name/test_name
     if lib.startswith("/data/local/tests/vendor/"):
-       lib_path = os.path.join(test_dir + test_dir_bitness, "vendor", test_name, test_name)
-       if os.path.isfile(symbol_dir + lib_path):
-         return lib_path
+      lib_path = os.path.join(test_dir + test_dir_bitness, "vendor", test_name, test_name)
+      if os.path.isfile(symbol_dir + lib_path):
+        return lib_path
 
     # Look for the path in:
     #   /data/nativetest{64}/test_name/test_name
@@ -478,6 +496,13 @@ class TraceConverter:
                 apk = area[0:index + 4]
           if apk:
             lib_name, lib = self.GetLibFromApk(apk, so_offset)
+        else:
+          # Sometimes we'll see something like:
+          #   #01 pc abcd  libart.so!libart.so
+          # Remove everything after the !.
+          index = area.rfind(".so!")
+          if index != -1:
+            area = area[0:index + 3]
         if not lib:
           lib = area
           lib_name = None
@@ -514,7 +539,7 @@ class TraceConverter:
           if nest_count > 0:
             nest_count = nest_count - 1
             arrow = "v------>"
-            if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
+            if not symbol.ARCH_IS_32BIT:
               arrow = "v-------------->"
             self.trace_lines.append((arrow, source_symbol, source_location))
           else:
@@ -557,8 +582,8 @@ class RegisterPatternTests(unittest.TestCase):
   def assert_register_matches(self, abi, example_crash, stupid_pattern):
     tc = TraceConverter()
     lines = example_crash.split('\n')
-    symbol.SetAbi(lines)
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    tc.UpdateBitnessRegexes()
     for line in lines:
       tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
@@ -567,16 +592,10 @@ class RegisterPatternTests(unittest.TestCase):
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
   def test_arm_registers(self):
-    self.assert_register_matches("arm", example_crashes.arm, '\\b(r0|r4|r8|ip)\\b')
+    self.assert_register_matches("arm", example_crashes.arm, '\\b(r0|r4|r8|ip|scr)\\b')
 
   def test_arm64_registers(self):
-    self.assert_register_matches("arm64", example_crashes.arm64, '\\b(x0|x4|x8|x12|x16|x20|x24|x28|sp)\\b')
-
-  def test_mips_registers(self):
-    self.assert_register_matches("mips", example_crashes.mips, '\\b(zr|a0|t0|t4|s0|s4|t8|gp|hi)\\b')
-
-  def test_mips64_registers(self):
-    self.assert_register_matches("mips64", example_crashes.mips64, '\\b(zr|a0|a4|t0|s0|s4|t8|gp|hi)\\b')
+    self.assert_register_matches("arm64", example_crashes.arm64, '\\b(x0|x4|x8|x12|x16|x20|x24|x28|sp|v[1-3]?[0-9])\\b')
 
   def test_x86_registers(self):
     self.assert_register_matches("x86", example_crashes.x86, '\\b(eax|esi|xcs|eip)\\b')
@@ -584,15 +603,17 @@ class RegisterPatternTests(unittest.TestCase):
   def test_x86_64_registers(self):
     self.assert_register_matches("x86_64", example_crashes.x86_64, '\\b(rax|rsi|r8|r12|cs|rip)\\b')
 
+  def test_riscv64_registers(self):
+    self.assert_register_matches("riscv64", example_crashes.riscv64, '\\b(gp|t2|t6|s3|s7|s11|a3|a7|sp)\\b')
+
 class LibmemunreachablePatternTests(unittest.TestCase):
   def test_libmemunreachable(self):
     tc = TraceConverter()
     lines = example_crashes.libmemunreachable.split('\n')
 
-    symbol.SetAbi(lines)
-    self.assertEqual(symbol.ARCH, "arm")
-
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    self.assertTrue(symbol.ARCH_IS_32BIT)
+    tc.UpdateBitnessRegexes()
     header_lines = 0
     trace_lines = 0
     for line in lines:
@@ -612,8 +633,8 @@ class LongASANStackTests(unittest.TestCase):
   def test_long_asan_crash(self):
     tc = TraceConverter()
     lines = example_crashes.long_asan_crash.splitlines()
-    symbol.SetAbi(lines)
-    tc.UpdateAbiRegexes()
+    symbol.SetBitness(lines)
+    tc.UpdateBitnessRegexes()
     # Test by making sure trace_line_count is monotonically non-decreasing. If the stack trace
     # is split, a separator is printed and trace_lines is flushed.
     trace_line_count = 0
@@ -629,8 +650,8 @@ class LongASANStackTests(unittest.TestCase):
 class ValueLinesTest(unittest.TestCase):
   def test_value_line_skipped(self):
     tc = TraceConverter()
-    symbol.SetAbi(["ABI: 'arm'"])
-    tc.UpdateAbiRegexes()
+    symbol.ARCH_IS_32BIT = True
+    tc.UpdateBitnessRegexes()
     tc.ProcessLine("    12345678  00001000  .")
     self.assertEqual([], tc.value_lines)
 

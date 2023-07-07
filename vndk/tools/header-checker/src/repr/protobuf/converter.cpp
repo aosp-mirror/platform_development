@@ -138,8 +138,10 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
     const RecordTypeDiffIR *record_type_diff_ir) {
   abi_diff::RecordTypeDiff record_type_diff_protobuf;
   record_type_diff_protobuf.set_name(record_type_diff_ir->GetName());
-  const TypeDiffIR *type_diff_ir = record_type_diff_ir->GetTypeDiff();
+  record_type_diff_protobuf.set_linker_set_key(
+      record_type_diff_ir->GetLinkerSetKey());
   // If a type_info diff exists
+  const TypeDiffIR *type_diff_ir = record_type_diff_ir->GetTypeDiff();
   if (type_diff_ir != nullptr) {
     abi_diff::TypeInfoDiff *type_info_diff =
         record_type_diff_protobuf.mutable_type_info_diff();
@@ -230,6 +232,8 @@ abi_diff::EnumTypeDiff IRDiffToProtobufConverter::ConvertEnumTypeDiffIR(
     const EnumTypeDiffIR *enum_type_diff_ir) {
   abi_diff::EnumTypeDiff enum_type_diff_protobuf;
   enum_type_diff_protobuf.set_name(enum_type_diff_ir->GetName());
+  enum_type_diff_protobuf.set_linker_set_key(
+      enum_type_diff_ir->GetLinkerSetKey());
   const std::pair<std::string, std::string> *underlying_type_diff =
       enum_type_diff_ir->GetUnderlyingTypeDiff();
   if ((underlying_type_diff != nullptr &&

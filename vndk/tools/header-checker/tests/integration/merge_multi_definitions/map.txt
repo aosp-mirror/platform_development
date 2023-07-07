@@ -1,5 +1,6 @@
 libmerge_multi_definitions {
   global:
     func;
+    func2;
     var;
 };
