@@ -1,0 +1,288 @@
+{
+ "array_types" :
+ [
+  {
+   "alignment" : 4,
+   "linker_set_key" : "_ZTIA10_A10_i",
+   "name" : "int[10][10]",
+   "referenced_type" : "_ZTIA10_i",
+   "self_type" : "_ZTIA10_A10_i",
+   "size" : 400,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 4,
+   "linker_set_key" : "_ZTIA10_i",
+   "name" : "int[10]",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIA10_i",
+   "size" : 40,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 4,
+   "linker_set_key" : "_ZTIA11_i",
+   "name" : "int[11]",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIA11_i",
+   "size" : 44,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 2,
+   "linker_set_key" : "_ZTIA2_s",
+   "name" : "short[2]",
+   "referenced_type" : "_ZTIs",
+   "self_type" : "_ZTIA2_s",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "is_of_unknown_bound" : true,
+   "linker_set_key" : "_ZTIA_A11_i",
+   "name" : "int[][11]",
+   "referenced_type" : "_ZTIA11_i",
+   "self_type" : "_ZTIA_A11_i",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "is_of_unknown_bound" : true,
+   "linker_set_key" : "_ZTIA_i",
+   "name" : "int[]",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIA_i",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  }
+ ],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIi",
+   "name" : "int",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIi",
+   "size" : 4
+  },
+  {
+   "alignment" : 2,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIs",
+   "name" : "short",
+   "referenced_type" : "_ZTIs",
+   "self_type" : "_ZTIs",
+   "size" : 2
+  },
+  {
+   "linker_set_key" : "_ZTIv",
+   "name" : "void",
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "DoublePointer"
+  },
+  {
+   "name" : "Element"
+  },
+  {
+   "name" : "Pointer"
+  },
+  {
+   "name" : "PointerTo2DArray"
+  },
+  {
+   "name" : "PointerToArray"
+  },
+  {
+   "name" : "Reference"
+  },
+  {
+   "name" : "StructMember"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "DoublePointer",
+   "linker_set_key" : "DoublePointer",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPPi"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "Element",
+   "linker_set_key" : "Element",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPA2_s"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "Pointer",
+   "linker_set_key" : "Pointer",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPi"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "PointerTo2DArray",
+   "linker_set_key" : "PointerTo2DArray",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPA10_A10_i"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "PointerToArray",
+   "linker_set_key" : "PointerToArray",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPA10_i"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "Reference",
+   "linker_set_key" : "Reference",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIRA_A11_i"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "function_name" : "StructMember",
+   "linker_set_key" : "StructMember",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIR6Struct"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIR6Struct",
+   "name" : "Struct &",
+   "referenced_type" : "_ZTI6Struct",
+   "self_type" : "_ZTIR6Struct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIRA_A11_i",
+   "name" : "int (&)[][11]",
+   "referenced_type" : "_ZTIA_A11_i",
+   "self_type" : "_ZTIRA_A11_i",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  }
+ ],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPA10_A10_i",
+   "name" : "int (*)[10][10]",
+   "referenced_type" : "_ZTIA10_A10_i",
+   "self_type" : "_ZTIPA10_A10_i",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPA10_i",
+   "name" : "int (*)[10]",
+   "referenced_type" : "_ZTIA10_i",
+   "self_type" : "_ZTIPA10_i",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPA2_s",
+   "name" : "short (*)[2]",
+   "referenced_type" : "_ZTIA2_s",
+   "self_type" : "_ZTIPA2_s",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPPi",
+   "name" : "int **",
+   "referenced_type" : "_ZTIPi",
+   "self_type" : "_ZTIPPi",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPi",
+   "name" : "int *",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIPi",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  }
+ ],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "array",
+     "referenced_type" : "_ZTIA_i"
+    }
+   ],
+   "linker_set_key" : "_ZTI6Struct",
+   "name" : "Struct",
+   "referenced_type" : "_ZTI6Struct",
+   "self_type" : "_ZTI6Struct",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/diff.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}

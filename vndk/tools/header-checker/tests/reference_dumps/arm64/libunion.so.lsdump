@@ -1,0 +1,188 @@
+{
+ "array_types" :
+ [
+  {
+   "alignment" : 1,
+   "linker_set_key" : "_ZTIA0_c",
+   "name" : "char[0]",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIA0_c",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "linker_set_key" : "_ZTIA0_i",
+   "name" : "int[0]",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIA0_i",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  }
+ ],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 1,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIc",
+   "name" : "char",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIc",
+   "size" : 1
+  },
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIi",
+   "name" : "int",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIi",
+   "size" : 4
+  },
+  {
+   "linker_set_key" : "_ZTIv",
+   "name" : "void",
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "function"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "function",
+   "linker_set_key" : "function",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTI10ChangeType"
+    },
+    {
+     "referenced_type" : "_ZTI6Rename"
+    },
+    {
+     "referenced_type" : "_ZTI4Swap"
+    },
+    {
+     "referenced_type" : "_ZTI18ChangeTypeInStruct"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
+     "referenced_type" : "_ZTIc"
+    },
+    {
+     "field_name" : "member_2",
+     "referenced_type" : "_ZTIc"
+    },
+    {
+     "field_name" : "member_3",
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI10ChangeType",
+   "name" : "ChangeType",
+   "record_kind" : "union",
+   "referenced_type" : "_ZTI10ChangeType",
+   "self_type" : "_ZTI10ChangeType",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "member_2",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIA0_c"
+    },
+    {
+     "field_name" : "member_3",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIA0_c"
+    },
+    {
+     "field_name" : "member_4",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIA0_i"
+    }
+   ],
+   "linker_set_key" : "_ZTI18ChangeTypeInStruct",
+   "name" : "ChangeTypeInStruct",
+   "referenced_type" : "_ZTI18ChangeTypeInStruct",
+   "self_type" : "_ZTI18ChangeTypeInStruct",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "member_2",
+     "referenced_type" : "_ZTIc"
+    }
+   ],
+   "linker_set_key" : "_ZTI4Swap",
+   "name" : "Swap",
+   "record_kind" : "union",
+   "referenced_type" : "_ZTI4Swap",
+   "self_type" : "_ZTI4Swap",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member_1",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "member_2",
+     "referenced_type" : "_ZTIc"
+    }
+   ],
+   "linker_set_key" : "_ZTI6Rename",
+   "name" : "Rename",
+   "record_kind" : "union",
+   "referenced_type" : "_ZTI6Rename",
+   "self_type" : "_ZTI6Rename",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}
