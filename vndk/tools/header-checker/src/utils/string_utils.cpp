@@ -92,7 +92,9 @@ llvm::Optional<int> ParseInt(const std::string &s) {
 
 bool ParseBool(const std::string &s) {
   std::string value(s);
-  std::transform(value.begin(), value.end(), value.begin(), std::tolower);
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char c){ return std::tolower(c); }
+                );
   return (value == "true" || value == "on" || value == "1");
 }
 
