@@ -31,6 +31,8 @@ If you don't have an entry, follow these steps:
 
 Note: You must repeat these for each Gerrit Code Review websites.
 
+Note: For Googlers, please read go/repo-pull-for-google for details.
+
 
 ## Usages
 
