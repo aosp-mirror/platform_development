@@ -164,7 +164,7 @@ def decide_license_type(cargo_license):
   # Some crate like time-macros-impl uses lower case names like LICENSE-Apache.
   licenses = []
   license_file = None
-  for license_file in glob.glob("LICENSE*"):
+  for license_file in glob.glob("LICENSE*") + glob.glob("COPYING*"):
     lowered_name = license_file.lower()
     if lowered_name == "license-apache":
       licenses.append(License(LicenseType.APACHE2, license_file))
@@ -175,7 +175,7 @@ def decide_license_type(cargo_license):
     return licenses
   if not license_file:
     raise FileNotFoundError("No license file has been found.")
-  # There is a LICENSE or LICENSE.txt file, use cargo_license found in
+  # There is a LICENSE* or COPYING* file, use cargo_license found in
   # Cargo.toml.
   if "Apache" in cargo_license:
     return [License(LicenseType.APACHE2, license_file)]

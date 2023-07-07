@@ -31,7 +31,6 @@ namespace repr {
 class DiffMessageIR {
  public:
   enum DiffKind {
-    Extension,  // Applicable for enums.
     Added,
     Removed,
     Referenced,
@@ -60,6 +59,10 @@ class AccessSpecifierDiffIR {
   AccessSpecifierDiffIR(AccessSpecifierIR old_access,
                         AccessSpecifierIR new_access)
       : old_access_(old_access), new_access_(new_access) {}
+
+  AccessSpecifierIR GetOldAccess() const { return old_access_; }
+
+  AccessSpecifierIR GetNewAccess() const { return new_access_; }
 
  protected:
   AccessSpecifierIR old_access_;
@@ -190,11 +193,11 @@ class RecordTypeDiffIR : public DiffMessageIR {
     base_specifier_diffs_ = std::move(base_diffs);
   }
 
-  bool DiffExists() const {
-    return (type_diff_ != nullptr) || (vtable_diffs_ != nullptr) ||
-        (fields_removed_.size() != 0) || (field_diffs_.size() != 0) ||
-        (access_diff_ != nullptr) || (base_specifier_diffs_ != nullptr);
+  void SetLinkerSetKey(std::string linker_set_key) {
+    linker_set_key_ = std::move(linker_set_key);
   }
+
+  void SetExtended(bool is_extended) { is_extended_ = is_extended; }
 
   const TypeDiffIR *GetTypeDiff() const {
     return type_diff_.get();
@@ -208,6 +211,10 @@ class RecordTypeDiffIR : public DiffMessageIR {
     return base_specifier_diffs_.get();
   }
 
+  const std::string &GetLinkerSetKey() const { return linker_set_key_; }
+
+  bool IsExtended() const { return is_extended_; }
+
  protected:
   // optional implemented with vector / std::unique_ptr.
   std::unique_ptr<TypeDiffIR> type_diff_;
@@ -217,8 +224,8 @@ class RecordTypeDiffIR : public DiffMessageIR {
   std::vector<const RecordFieldIR *> fields_added_;
   std::unique_ptr<AccessSpecifierDiffIR> access_diff_;
   std::unique_ptr<CXXBaseSpecifierDiffIR> base_specifier_diffs_;
-  // Template Diffs are not needed since they will show up in the linker set
-  // key.
+  std::string linker_set_key_;
+  bool is_extended_ = false;
 };
 
 class EnumFieldDiffIR {
@@ -274,6 +281,12 @@ class EnumTypeDiffIR : public DiffMessageIR {
     return underlying_type_diff_.get();
   }
 
+  void SetLinkerSetKey(std::string linker_set_key) {
+    linker_set_key_ = std::move(linker_set_key);
+  }
+
+  const std::string &GetLinkerSetKey() const { return linker_set_key_; }
+
   bool IsExtended() const {
     if (fields_removed_.size() == 0 && fields_diff_.size() == 0 &&
         fields_added_.size() != 0) {
@@ -300,8 +313,7 @@ class EnumTypeDiffIR : public DiffMessageIR {
   std::vector<const EnumFieldIR *> fields_removed_;
   std::vector<const EnumFieldIR *> fields_added_;
   std::vector<EnumFieldDiffIR> fields_diff_;
-  // Modifiable to allow implicit construction.
-  std::string name_;
+  std::string linker_set_key_;
 };
 
 class GlobalVarDiffIR : public DiffMessageIR {
@@ -329,9 +341,11 @@ class GlobalVarDiffIR : public DiffMessageIR {
 
 class FunctionDiffIR : public DiffMessageIR {
  public:
-  FunctionDiffIR(const FunctionIR *old_function,
-                 const FunctionIR *new_function)
-      : old_function_(old_function), new_function_(new_function) {}
+  FunctionDiffIR(const FunctionIR *old_function, const FunctionIR *new_function,
+                 bool is_extended)
+      : old_function_(old_function),
+        new_function_(new_function),
+        is_extended_(is_extended) {}
 
   LinkableMessageKind Kind() const override {
     return LinkableMessageKind::FunctionKind;
@@ -345,9 +359,12 @@ class FunctionDiffIR : public DiffMessageIR {
     return new_function_;
   }
 
+  bool IsExtended() const { return is_extended_; }
+
  protected:
   const FunctionIR *old_function_;
   const FunctionIR *new_function_;
+  const bool is_extended_;
 };
 
 

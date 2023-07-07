@@ -34,13 +34,48 @@
    "name" : "func"
   },
   {
+   "name" : "func2"
+  },
+  {
    "name" : "var"
   }
  ],
  "elf_objects" : [],
  "enum_types" : [],
  "function_types" : [],
- "functions" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "func",
+   "linker_set_key" : "func",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIP6Struct"
+    },
+    {
+     "referenced_type" : "_ZTIP6Opaque"
+    },
+    {
+     "referenced_type" : "_ZTIP18DefinedInOneHeader"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+  },
+  {
+   "function_name" : "func2",
+   "linker_set_key" : "func2",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIP18DefinedInOneHeader"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+  }
+ ],
  "global_vars" :
  [
   {
@@ -53,6 +88,24 @@
  "lvalue_reference_types" : [],
  "pointer_types" :
  [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIP18DefinedInOneHeader",
+   "name" : "DefinedInOneHeader *",
+   "referenced_type" : "_ZTI18DefinedInOneHeader",
+   "self_type" : "_ZTIP18DefinedInOneHeader",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIP6Opaque",
+   "name" : "Opaque *",
+   "referenced_type" : "_ZTI6Opaque",
+   "self_type" : "_ZTIP6Opaque",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+  },
   {
    "alignment" : 8,
    "linker_set_key" : "_ZTIP6Struct",
@@ -70,68 +123,20 @@
    "self_type" : "_ZTIP6Struct#ODR:/def2.h.sdump",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
-  },
-  {
-   "alignment" : 8,
-   "linker_set_key" : "_ZTIPK6Opaque",
-   "name" : "const Opaque *",
-   "referenced_type" : "_ZTIK6Opaque",
-   "self_type" : "_ZTIPK6Opaque",
-   "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
-  },
-  {
-   "alignment" : 8,
-   "linker_set_key" : "_ZTIPK6Struct",
-   "name" : "const Struct *",
-   "referenced_type" : "_ZTIK6Struct",
-   "self_type" : "_ZTIPK6Struct",
-   "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
-  },
-  {
-   "alignment" : 8,
-   "linker_set_key" : "_ZTIPK6Struct",
-   "name" : "const Struct *",
-   "referenced_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTIPK6Struct#ODR:/def2.h.sdump",
-   "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   }
  ],
- "qualified_types" :
- [
-  {
-   "is_const" : true,
-   "linker_set_key" : "_ZTIK6Opaque",
-   "name" : "const Opaque",
-   "referenced_type" : "_ZTI6Opaque",
-   "self_type" : "_ZTIK6Opaque",
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
-  },
-  {
-   "alignment" : 8,
-   "is_const" : true,
-   "linker_set_key" : "_ZTIK6Struct",
-   "name" : "const Struct",
-   "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
-   "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
-  },
-  {
-   "alignment" : 8,
-   "is_const" : true,
-   "linker_set_key" : "_ZTIK6Struct",
-   "name" : "const Struct",
-   "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTIK6Struct",
-   "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
-  }
- ],
+ "qualified_types" : [],
  "record_types" :
  [
+  {
+   "alignment" : 1,
+   "linker_set_key" : "_ZTI18DefinedInOneHeader",
+   "name" : "DefinedInOneHeader",
+   "referenced_type" : "_ZTI18DefinedInOneHeader",
+   "self_type" : "_ZTI18DefinedInOneHeader",
+   "size" : 1,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+  },
   {
    "alignment" : 8,
    "fields" :

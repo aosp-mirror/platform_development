@@ -1,0 +1,244 @@
+{
+ "array_types" :
+ [
+  {
+   "alignment" : 1,
+   "linker_set_key" : "_ZTIA2_c",
+   "name" : "char[2]",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIA2_c",
+   "size" : 2,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 1,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIc",
+   "name" : "char",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIc",
+   "size" : 1
+  },
+  {
+   "linker_set_key" : "_ZTIv",
+   "name" : "void",
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "ConstParameter"
+  },
+  {
+   "name" : "MultipleConst"
+  },
+  {
+   "name" : "Restrict"
+  },
+  {
+   "name" : "VolatileParameter"
+  },
+  {
+   "name" : "_Z11ConstReturnv"
+  },
+  {
+   "name" : "_Z14VolatileReturnv"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "ConstParameter",
+   "linker_set_key" : "ConstParameter",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIRA2_c"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "function_name" : "MultipleConst",
+   "linker_set_key" : "MultipleConst",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIPPc"
+    }
+   ],
+   "return_type" : "_ZTIPKPKc",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "function_name" : "Restrict",
+   "linker_set_key" : "Restrict",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIrPc"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "function_name" : "VolatileParameter",
+   "linker_set_key" : "VolatileParameter",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIO6Struct"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "function_name" : "ConstReturn",
+   "linker_set_key" : "_Z11ConstReturnv",
+   "return_type" : "_ZTIRKc",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "function_name" : "VolatileReturn",
+   "linker_set_key" : "_Z14VolatileReturnv",
+   "return_type" : "_ZTIOV6Struct",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIRA2_c",
+   "name" : "char (&)[2]",
+   "referenced_type" : "_ZTIA2_c",
+   "self_type" : "_ZTIRA2_c",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIRKc",
+   "name" : "const char &",
+   "referenced_type" : "_ZTIKc",
+   "self_type" : "_ZTIRKc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPKPKc",
+   "name" : "const char *const *",
+   "referenced_type" : "_ZTIKPKc",
+   "self_type" : "_ZTIPKPKc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPKc",
+   "name" : "const char *",
+   "referenced_type" : "_ZTIKc",
+   "self_type" : "_ZTIPKc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPPc",
+   "name" : "char **",
+   "referenced_type" : "_ZTIPc",
+   "self_type" : "_ZTIPPc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIPc",
+   "name" : "char *",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIPc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ],
+ "qualified_types" :
+ [
+  {
+   "alignment" : 8,
+   "is_const" : true,
+   "linker_set_key" : "_ZTIKPKc",
+   "name" : "const char *const",
+   "referenced_type" : "_ZTIPKc",
+   "self_type" : "_ZTIKPKc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 1,
+   "is_const" : true,
+   "linker_set_key" : "_ZTIKc",
+   "name" : "const char",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIKc",
+   "size" : 1,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "is_volatile" : true,
+   "linker_set_key" : "_ZTIV6Struct",
+   "name" : "volatile Struct",
+   "referenced_type" : "_ZTI6Struct",
+   "self_type" : "_ZTIV6Struct",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "is_restricted" : true,
+   "linker_set_key" : "_ZTIrPc",
+   "name" : "char *__restrict",
+   "referenced_type" : "_ZTIPc",
+   "self_type" : "_ZTIrPc",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ],
+ "record_types" : [],
+ "rvalue_reference_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIO6Struct",
+   "name" : "Struct &&",
+   "referenced_type" : "_ZTI6Struct",
+   "self_type" : "_ZTIO6Struct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIOV6Struct",
+   "name" : "volatile Struct &&",
+   "referenced_type" : "_ZTIV6Struct",
+   "self_type" : "_ZTIOV6Struct",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/base.h"
+  }
+ ]
+}

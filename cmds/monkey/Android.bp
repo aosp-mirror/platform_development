@@ -10,5 +10,5 @@ package {
 java_binary {
     name: "monkey",
     srcs: ["**/*.java"],
-    wrapper: "monkey",
+    wrapper: "monkey.sh",
 }
