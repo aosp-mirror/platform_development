@@ -385,6 +385,7 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   }
   if (type_ptr->isArrayType()) {
     auto array_type_ir = std::make_unique<repr::ArrayTypeIR>();
+    array_type_ir->SetUnknownBound(type_ptr->isIncompleteArrayType());
     array_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(array_type_ir));
   }
@@ -881,8 +882,12 @@ bool EnumDeclWrapper::SetupEnumFields(repr::EnumTypeIR *enump) {
   clang::EnumDecl::enumerator_iterator enum_it = enum_decl_->enumerator_begin();
   while (enum_it != enum_decl_->enumerator_end()) {
     std::string name = enum_it->getQualifiedNameAsString();
-    uint64_t field_value = enum_it->getInitVal().getExtValue();
-    enump->AddEnumField(repr::EnumFieldIR(name, field_value));
+    const llvm::APSInt &value = enum_it->getInitVal();
+    if (value.isUnsigned()) {
+      enump->AddEnumField(repr::EnumFieldIR(name, value.getZExtValue()));
+    } else {
+      enump->AddEnumField(repr::EnumFieldIR(name, value.getSExtValue()));
+    }
     enum_it++;
   }
   return true;

@@ -63,7 +63,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
   std::set<std::string> type_cache;
   repr::DiffPolicyOptions diff_policy_options(false);
   repr::AbiDiffHelper diff_helper(module_->type_graph_, addend.type_graph_,
-                                  diff_policy_options, &type_cache, nullptr);
+                                  diff_policy_options, &type_cache, {}, nullptr);
 
   // Compare each user-defined type with the latest input user-defined type.
   // If there is a match, re-use the existing user-defined type.
@@ -71,7 +71,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
     const repr::TypeIR *contender_ud = definition.type_ir_;
     repr::DiffStatus result = diff_helper.CompareAndDumpTypeDiff(
         contender_ud->GetSelfType(), ud_type->GetSelfType());
-    if (result == repr::DiffStatus::no_diff) {
+    if (!result.HasDiff()) {
       local_to_global_type_id_map_->emplace(
           ud_type->GetSelfType(),
           MergeStatus(false, contender_ud->GetSelfType()));
@@ -131,7 +131,7 @@ MergeStatus ModuleMerger::MergeReferencingTypeInternal(
     // The type was already added to the parent graph. So change the
     // referenced type to the global type id.
     references_type->SetReferencedType(local_to_global_it->second.type_id_);
-    return local_to_global_it->second;
+    return MergeStatus(false, local_to_global_it->second.type_id_);
   }
 
   // If that did not go through, look at the addend's type_map_ and get the
@@ -206,7 +206,8 @@ ModuleMerger::UpdateUDTypeAccounting(
   std::string added_type_id = addend_node->GetSelfType();
   auto type_id_it = module_->type_graph_.find(added_type_id);
   if (type_id_it != module_->type_graph_.end()) {
-    added_type_id = added_type_id + "#ODR:" + addend_compilation_unit_path;
+    added_type_id = repr::FormatMultiDefinitionTypeId(
+        added_type_id, addend_compilation_unit_path);
   }
 
   // Add the ud-type with type-id to the type_graph_, since if there are generic
@@ -390,7 +391,8 @@ MergeStatus ModuleMerger::MergeReferencingType(
           addend.GetCompilationUnitPath(final_referenced_type);
       // The path is empty for built-in types.
       if (compilation_unit_path != "") {
-        added_type_id = added_type_id + "#ODR:" + compilation_unit_path;
+        added_type_id = repr::FormatMultiDefinitionTypeId(
+            added_type_id, compilation_unit_path);
       }
     }
   }
@@ -468,7 +470,7 @@ MergeStatus ModuleMerger::MergeType(
   // parent graph. This does not add the node itself though.
   auto type_it = local_to_global_type_id_map->find(addend_node->GetSelfType());
   if (type_it != local_to_global_type_id_map->end()) {
-    return type_it->second;
+    return MergeStatus(false, type_it->second.type_id_);
   }
 
   MergeStatus merge_status = LookupType(

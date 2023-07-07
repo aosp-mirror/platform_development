@@ -44,7 +44,7 @@ def main():
 
   args = parser.parse_args()
   if args.arch:
-    symbol.ARCH = args.arch
+    symbol.ARCH_IS_32BIT = not "64" in args.arch
   if args.symbols_dir:
     symbol.SYMBOLS_DIR = args.symbols_dir
   if args.symbols_zip:
@@ -56,10 +56,11 @@ def main():
   symbol.VERBOSE = args.verbose
   if args.file == '-':
     print("Reading native crash info from stdin")
+    sys.stdin.reconfigure(errors='ignore')
     f = sys.stdin
   else:
     print("Searching for native crashes in %s" % args.file)
-    f = open(args.file, "r")
+    f = open(args.file, "r", errors='ignore')
 
   lines = f.readlines()
   f.close()
