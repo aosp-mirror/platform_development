@@ -245,7 +245,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
             if (line == null) {
                 return i;
             }
-            line.trim();
+            line = line.trim();
             processLine(line);
         }
         return MAX_ONE_TIME_READS;
@@ -262,7 +262,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
         if (line == null) {
             return 0;
         }
-        line.trim();
+        line = line.trim();
         processLine(line);
         return 1;
     }

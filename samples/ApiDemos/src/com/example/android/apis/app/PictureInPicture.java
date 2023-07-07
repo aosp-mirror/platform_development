@@ -39,13 +39,17 @@ import android.util.Rational;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.Switch;
+import android.window.OnBackInvokedDispatcher;
 
 import com.example.android.apis.R;
+import com.example.android.apis.view.FixedAspectRatioImageView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,17 +58,23 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_AUTO_PIP = "auto_pip";
     private static final String EXTRA_ENABLE_SOURCE_RECT_HINT = "source_rect_hint";
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
+    private static final String EXTRA_ENTER_PIP_ON_BACK = "enter_pip_on_back";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
+    private static final String EXTRA_ASPECT_RATIO = "aspect_ratio";
 
     private static final int TABLET_BREAK_POINT_DP = 700;
 
     private static final String ACTION_CUSTOM_CLOSE = "demo.pip.custom_close";
+    private static final String ACTION_MOVE_TO_BACK = "demo.pip.move_to_back";
     private final BroadcastReceiver mRemoteActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case ACTION_CUSTOM_CLOSE:
                     finish();
+                    break;
+                case ACTION_MOVE_TO_BACK:
+                    moveTaskToBack(false /* nonRoot */);
                     break;
             }
         }
@@ -93,14 +103,17 @@ public class PictureInPicture extends Activity {
             (v, id) -> updateContentPosition(id);
 
     private LinearLayout mContainer;
-    private ImageView mImageView;
+    private FixedAspectRatioImageView mImageView;
     private View mControlGroup;
     private Switch mAutoPipToggle;
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
+    private Switch mEnterPipOnBackToggle;
     private RadioGroup mCurrentPositionGroup;
+    private Spinner mAspectRatioSpinner;
     private List<RemoteAction> mPipActions;
     private RemoteAction mCloseAction;
+    private RemoteAction mMoveToBackAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,14 +127,47 @@ public class PictureInPicture extends Activity {
         mAutoPipToggle = findViewById(R.id.auto_pip_toggle);
         mSourceRectHintToggle = findViewById(R.id.source_rect_hint_toggle);
         mSeamlessResizeToggle = findViewById(R.id.seamless_resize_toggle);
+        mEnterPipOnBackToggle = findViewById(R.id.enter_pip_on_back);
         mCurrentPositionGroup = findViewById(R.id.current_position);
+        mAspectRatioSpinner = findViewById(R.id.aspect_ratio);
+
+        // Initiate views if applicable
+        final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.aspect_ratio_list, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mAspectRatioSpinner.setAdapter(adapter);
 
         // Attach listeners
         mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
         mAutoPipToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mSourceRectHintToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mSeamlessResizeToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
+        mEnterPipOnBackToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
+        getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {
+                    if (mEnterPipOnBackToggle.isChecked()) {
+                        enterPictureInPictureMode();
+                    } else {
+                        finish();
+                    }
+                });
         mCurrentPositionGroup.setOnCheckedChangeListener(mOnPositionChangedListener);
+        mAspectRatioSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                final String rawText = parent.getItemAtPosition(position).toString();
+                final String textToParse = rawText.substring(
+                        rawText.indexOf('(') + 1,
+                        rawText.indexOf(')'));
+                mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
+                mImageView.setAspectRatio(Rational.parseRational(textToParse));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing.
+            }
+        });
         findViewById(R.id.enter_pip_button).setOnClickListener(v -> enterPictureInPictureMode());
         findViewById(R.id.enter_content_pip_button).setOnClickListener(v -> enterContentPip());
 
@@ -132,11 +178,14 @@ public class PictureInPicture extends Activity {
                 intent.getBooleanExtra(EXTRA_ENABLE_SOURCE_RECT_HINT, false));
         mSeamlessResizeToggle.setChecked(
                 intent.getBooleanExtra(EXTRA_ENABLE_SEAMLESS_RESIZE, false));
+        mEnterPipOnBackToggle.setChecked(
+                intent.getBooleanExtra(EXTRA_ENTER_PIP_ON_BACK, false));
         final int positionId = "end".equalsIgnoreCase(
                 intent.getStringExtra(EXTRA_CURRENT_POSITION))
                 ? R.id.radio_current_end
                 : R.id.radio_current_start;
         mCurrentPositionGroup.check(positionId);
+        mAspectRatioSpinner.setSelection(1);
 
         updateLayout(getResources().getConfiguration());
     }
@@ -219,19 +268,29 @@ public class PictureInPicture extends Activity {
 
     private void setupPipActions() {
         final IntentFilter remoteActionFilter = new IntentFilter();
+        mPipActions = new ArrayList<>();
+
         remoteActionFilter.addAction(ACTION_CUSTOM_CLOSE);
-        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
-        final Intent intent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
+        final Intent closeIntent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
         mCloseAction = new RemoteAction(
                 Icon.createWithResource(this, R.drawable.ic_call_end),
                 getString(R.string.action_custom_close),
                 getString(R.string.action_custom_close),
-                PendingIntent.getBroadcast(this, 0 /* requestCode */, intent,
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, closeIntent,
                         FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
-
-        // Add close action as a regular PiP action
-        mPipActions = new ArrayList<>(1);
         mPipActions.add(mCloseAction);
+
+        remoteActionFilter.addAction(ACTION_MOVE_TO_BACK);
+        final Intent backIntent = new Intent(ACTION_MOVE_TO_BACK).setPackage(getPackageName());
+        mMoveToBackAction = new RemoteAction(
+                Icon.createWithResource(this, R.drawable.ic_eject),
+                getString(R.string.action_move_to_back),
+                getString(R.string.action_move_to_back),
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, backIntent,
+                        FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
+        mPipActions.add(mMoveToBackAction);
+
+        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
     }
 
     private void setupPictureInPictureLayout() {
