@@ -356,7 +356,11 @@ inline bool SetIRToProtobufEnumField(
     return true;
   }
   enum_field_protobuf->set_name(enum_field_ir->GetName());
-  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetValue());
+  // The "enum_field_value" in the .proto is a signed 64-bit integer. An
+  // unsigned integer >= (1 << 63) is represented with a negative integer in the
+  // dump file. Despite the wrong representation, the diff result isn't affected
+  // because every integer has a unique representation.
+  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetSignedValue());
   return true;
 }
 

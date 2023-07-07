@@ -24,12 +24,4 @@ python_binary_host {
     srcs: [
         "diff.py",
     ],
-    version: {
-        py2: {
-            enabled: false,
-        },
-        py3: {
-            enabled: true,
-        },
-    }
 }
