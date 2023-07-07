@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.6)
 project(frameworks_base)
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeLists.txt")
+
 # HWUI
-add_subdirectory(libs/hwui/libhwui-arm64-android)
-add_subdirectory(libs/hwui/hwuimacro-arm64-android)
-add_subdirectory(libs/hwui/hwuimicro-arm64-android)
-add_subdirectory(libs/hwui/hwui_unit_tests-arm64-android)
+try_add_subdir(libs/hwui/libhwui)
+try_add_subdir(libs/hwui/hwuimacro)
+try_add_subdir(libs/hwui/hwuimicro)
+try_add_subdir(libs/hwui/hwui_unit_tests)
 
 # JNI
-add_subdirectory(core/jni/libandroid_runtime-arm64-android)
+try_add_subdir(core/jni/libandroid_runtime)

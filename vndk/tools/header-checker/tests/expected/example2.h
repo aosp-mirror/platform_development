@@ -333,7 +333,7 @@ builtin_types {
 }
 qualified_types {
   type_info {
-    name: "bool const[2]"
+    name: "const bool[2]"
     size: 2
     alignment: 1
     referenced_type: "_ZTIA2_b"
@@ -347,7 +347,7 @@ qualified_types {
 }
 array_types {
   type_info {
-    name: "bool [2]"
+    name: "bool[2]"
     size: 2
     alignment: 1
     referenced_type: "_ZTIb"
@@ -355,6 +355,7 @@ array_types {
     linker_set_key: "_ZTIA2_b"
     self_type: "_ZTIA2_b"
   }
+  is_of_unknown_bound: false
 }
 functions {
   return_type: "_ZTIi"

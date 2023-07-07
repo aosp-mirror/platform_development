@@ -44,5 +44,11 @@
         <activity android:name="PackageShortcutActivity"
             android:theme="@android:style/Theme.Holo.Light.Dialog">
         </activity>
+        <!--provider entry is a workaround for b/277943394-->
+        <provider
+            xmlns:tools="http://schemas.android.com/tools"
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="com.example.android.pm.shortcutlauncherdemo.androidx-startup"
+            tools:replace="android:authorities" />
     </application>
 </manifest>
