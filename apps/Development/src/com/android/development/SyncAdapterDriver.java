@@ -299,7 +299,7 @@ public class SyncAdapterDriver extends Activity
             intent.putExtra(Intent.EXTRA_CLIENT_LABEL,
                     com.android.internal.R.string.sync_binding_label);
             intent.putExtra(Intent.EXTRA_CLIENT_INTENT, PendingIntent.getActivity(
-                    this, 0, new Intent(Settings.ACTION_SYNC_SETTINGS), 0));
+                    this, 0, new Intent(Settings.ACTION_SYNC_SETTINGS), PendingIntent.FLAG_IMMUTABLE));
             if (!bindService(intent, mActiveServiceConnection, Context.BIND_AUTO_CREATE)) {
                 mBoundAdapterTextView.setText(getString(R.string.binding_bind_failed));
                 mActiveServiceConnection = null;

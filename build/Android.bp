@@ -93,7 +93,6 @@ android_sdk_repo_host {
                 lib32: {
                     deps: [
                         "aapt",
-                        "aapt2",
                         "aidl",
                         "apksigner",
                         "bcc_compat",
@@ -108,6 +107,7 @@ android_sdk_repo_host {
                 },
                 lib64: {
                     deps: [
+                        "aapt2",
                         "libwinpthread-1",
                     ],
                 },
@@ -161,7 +161,10 @@ genrule {
 java_device_for_host {
     name: "build-tools_core-lambda-stubs-device",
     visibility: ["//visibility:private"],
-    libs: ["core-lambda-stubs"],
+    // Use the prebuilt of the stubs irrespective of whether prebuilts are enabled
+    // in this build configuration. This ensures that this non-host specific library
+    // is treated consistently on all hosts.
+    libs: ["prebuilt_core-lambda-stubs"],
     target: {
         windows: {
             enabled: true,
@@ -216,21 +219,15 @@ android_sdk_repo_host {
             strip_files: ["lib64/*.dylib"],
         },
         not_windows: {
-            deps: [
-                "e2fsdroid",
-                "sload_f2fs",
-            ],
             strip_files: [
                 "adb",
                 "dmtracedump",
-                "e2fsdroid",
                 "etc1tool",
                 "fastboot",
                 "hprof-conv",
                 "make_f2fs_casefold",
                 "make_f2fs",
                 "mke2fs",
-                "sload_f2fs",
                 "sqlite3",
             ],
         },

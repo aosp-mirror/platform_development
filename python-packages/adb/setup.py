@@ -22,8 +22,8 @@ setup(
     description='A Python interface to the Android Debug Bridge.',
     license='Apache 2.0',
     keywords='adb android',
-    package_dir={'adb': ''},
     packages=['adb'],
+    package_data={'adb': ['py.typed']},
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
