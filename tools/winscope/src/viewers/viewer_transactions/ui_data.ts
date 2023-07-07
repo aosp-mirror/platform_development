@@ -21,7 +21,8 @@ class UiData {
     public allPids: string[],
     public allUids: string[],
     public allTypes: string[],
-    public allIds: string[],
+    public allLayerAndDisplayIds: string[],
+    public allTransactionIds: string[],
     public entries: UiDataEntry[],
     public currentEntryIndex: undefined | number,
     public selectedEntryIndex: undefined | number,
@@ -29,7 +30,7 @@ class UiData {
     public currentPropertiesTree: undefined | PropertiesTreeNode
   ) {}
 
-  static EMPTY = new UiData([], [], [], [], [], [], undefined, undefined, undefined, undefined);
+  static EMPTY = new UiData([], [], [], [], [], [], [], undefined, undefined, undefined, undefined);
 }
 
 class UiDataEntry {
@@ -40,7 +41,8 @@ class UiDataEntry {
     public pid: string,
     public uid: string,
     public type: string,
-    public id: string,
+    public layerOrDisplayId: string,
+    public transactionId: string,
     public what: string,
     public propertiesTree?: PropertiesTreeNode
   ) {}
@@ -54,6 +56,7 @@ class UiDataEntryType {
   static LAYER_DESTROYED = 'LAYER_DESTROYED';
   static LAYER_CHANGED = 'LAYER_CHANGED';
   static LAYER_HANDLE_DESTROYED = 'LAYER_HANDLE_DESTROYED';
+  static NO_OP = 'NO_OP';
 }
 
 export {UiData, UiDataEntry, UiDataEntryType};

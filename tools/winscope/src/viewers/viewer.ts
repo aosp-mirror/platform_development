@@ -27,7 +27,8 @@ class View {
     public type: ViewType,
     public dependencies: TraceType[],
     public htmlElement: HTMLElement,
-    public title: string
+    public title: string,
+    public traceType: TraceType
   ) {}
 }
 
