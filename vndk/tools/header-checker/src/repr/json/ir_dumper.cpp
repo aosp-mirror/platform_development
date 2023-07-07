@@ -203,7 +203,12 @@ static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   JsonObject enum_field;
   enum_field.Set("name", enum_field_ir->GetName());
   // Never omit enum values.
-  enum_field["enum_field_value"] = Json::Int64(enum_field_ir->GetValue());
+  Json::Value &enum_field_value = enum_field["enum_field_value"];
+  if (enum_field_ir->IsSigned()) {
+    enum_field_value = Json::Int64(enum_field_ir->GetSignedValue());
+  } else {
+    enum_field_value = Json::UInt64(enum_field_ir->GetUnsignedValue());
+  }
   return enum_field;
 }
 
@@ -265,6 +270,7 @@ IRToJsonConverter::ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
 JsonObject
 IRToJsonConverter::ConvertArrayTypeIR(const ArrayTypeIR *array_typep) {
   JsonObject array_type;
+  array_type.Set("is_of_unknown_bound", array_typep->IsOfUnknownBound());
   AddTypeInfo(array_type, array_typep);
   return array_type;
 }

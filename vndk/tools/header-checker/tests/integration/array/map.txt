@@ -1,0 +1,10 @@
+libarray {
+  global:
+    StructMember;
+    Pointer;
+    DoublePointer;
+    PointerToArray;
+    PointerTo2DArray;
+    Reference;
+    Element;
+};

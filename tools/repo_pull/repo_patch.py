@@ -26,25 +26,14 @@ import os
 import sys
 
 from gerrit import (
-    create_url_opener_from_args, find_gerrit_name, normalize_gerrit_name,
-    query_change_lists, get_patch
+    add_common_parse_args, create_url_opener_from_args, find_gerrit_name,
+    normalize_gerrit_name, query_change_lists, get_patch
 )
 
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
-
-    parser.add_argument('--gitcookies',
-                        default=os.path.expanduser('~/.gitcookies'),
-                        help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000, type=int,
-                        help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
-
+    add_common_parse_args(parser)
     return parser.parse_args()
 
 

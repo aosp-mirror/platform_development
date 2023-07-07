@@ -245,6 +245,7 @@ void ProtobufIRReader::ReadArrayTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&array_type_protobuf : tu.array_types()) {
     ArrayTypeIR array_type_ir;
     ReadTypeInfo(array_type_protobuf.type_info(), &array_type_ir);
+    array_type_ir.SetUnknownBound(array_type_protobuf.is_of_unknown_bound());
     module_->AddArrayType(std::move(array_type_ir));
   }
 }
