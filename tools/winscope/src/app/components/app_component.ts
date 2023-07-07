@@ -32,6 +32,7 @@ import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {LoadedTrace} from 'trace/loaded_trace';
 import {Timestamp} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
@@ -41,6 +42,7 @@ import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_c
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {SnackBarOpener} from './snack_bar_opener';
@@ -58,6 +60,13 @@ import {UploadTracesComponent} from './upload_traces_component';
       </a>
 
       <div class="spacer">
+        <mat-icon
+          *ngIf="activeTrace"
+          class="icon"
+          [matTooltip]="TRACE_INFO[activeTrace.type].name"
+          [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
+          {{ TRACE_INFO[activeTrace.type].icon }}
+        </mat-icon>
         <span *ngIf="dataLoaded" class="active-trace-file-info mat-body-2">
           {{ activeTraceFileInfo }}
         </span>
@@ -156,6 +165,9 @@ import {UploadTracesComponent} from './upload_traces_component';
       .spacer {
         flex: 1;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .viewers {
         height: 0;
@@ -201,11 +213,13 @@ export class AppComponent implements TraceDataListener {
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView?: View;
+  activeTrace?: LoadedTrace;
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
+  TRACE_INFO = TRACE_INFO;
 
   constructor(
     @Inject(Injector) injector: Injector,
@@ -264,6 +278,12 @@ export class AppComponent implements TraceDataListener {
         createCustomElement(ViewerWindowManagerComponent, {injector})
       );
     }
+    if (!customElements.get('viewer-transitions')) {
+      customElements.define(
+        'viewer-transitions',
+        createCustomElement(ViewerTransitionsComponent, {injector})
+      );
+    }
   }
 
   ngAfterViewInit() {
@@ -282,7 +302,7 @@ export class AppComponent implements TraceDataListener {
   }
 
   getLoadedTraceTypes(): TraceType[] {
-    return this.tracePipeline.getLoadedTraceFiles().map((trace) => trace.type);
+    return this.tracePipeline.getLoadedTraces().map((trace) => trace.type);
   }
 
   onTraceDataLoaded(viewers: Viewer[]) {
@@ -320,6 +340,7 @@ export class AppComponent implements TraceDataListener {
 
   onActiveViewChanged(view: View) {
     this.activeView = view;
+    this.activeTrace = this.getActiveTrace(view);
     this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
     this.timelineData.setActiveViewTraceTypes(view.dependencies);
   }
@@ -329,26 +350,29 @@ export class AppComponent implements TraceDataListener {
   }
 
   private makeActiveTraceFileInfo(view: View): string {
-    const traceFile = this.tracePipeline
-      .getLoadedTraceFiles()
-      .find((file) => file.type === view.dependencies[0])?.traceFile;
+    const trace = this.getActiveTrace(view);
 
-    if (!traceFile) {
+    if (!trace) {
       return '';
     }
 
-    if (!traceFile.parentArchive) {
-      return traceFile.file.name;
-    }
+    return `${trace.descriptors.join(', ')}`;
+  }
 
-    return `${traceFile.parentArchive.name} - ${traceFile.file.name}`;
+  private getActiveTrace(view: View): LoadedTrace | undefined {
+    return this.tracePipeline
+      .getLoadedTraces()
+      .find((trace) => trace.type === view.dependencies[0]);
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.tracePipeline.getLoadedTraceFiles().map((trace) => {
-      const traceType = TRACE_INFO[trace.type].name;
-      const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
-      return new File([trace.traceFile.file], newName);
+    const loadedFiles = this.tracePipeline.getLoadedFiles();
+    return [...loadedFiles.keys()].map((traceType) => {
+      const file = loadedFiles.get(traceType)!;
+      const path = TRACE_INFO[traceType].downloadArchiveDir;
+
+      const newName = path + '/' + FileUtils.removeDirFromFileName(file.file.name);
+      return new File([file.file], newName);
     });
   }
 }
