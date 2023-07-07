@@ -36,14 +36,15 @@ class GPLChecker(object):
     MANIFEST_XML = utils.MANIFEST_FILE_NAME
     MODULE_PATHS_TXT = utils.MODULE_PATHS_FILE_NAME
 
-    def __init__(self, install_dir, android_build_top, temp_artifact_dir,
-                 remote_git):
+    def __init__(self, install_dir, android_build_top, gpl_projects,
+                 temp_artifact_dir, remote_git):
         """GPLChecker constructor.
 
         Args:
           install_dir: string, absolute path to the prebuilts/vndk/v{version}
             directory where the build files will be generated.
           android_build_top: string, absolute path to ANDROID_BUILD_TOP
+          gpl_projects: list of strings, names of libraries under GPL
           temp_artifact_dir: string, temp directory to hold build artifacts
             fetched from Android Build server.
           remote_git: string, remote name to fetch and check if the revision of
@@ -53,10 +54,9 @@ class GPLChecker(object):
         self._android_build_top = android_build_top
         self._install_dir = install_dir
         self._remote_git = remote_git
+        self._gpl_projects = gpl_projects
         self._manifest_file = os.path.join(temp_artifact_dir,
                                            self.MANIFEST_XML)
-        self._notice_files_dir = os.path.join(install_dir,
-                                              utils.NOTICE_FILES_DIR_PATH)
 
         if not os.path.isfile(self._manifest_file):
             raise RuntimeError(
@@ -197,49 +197,36 @@ class GPLChecker(object):
         """
         logging.info('Starting license check for GPL projects...')
 
-        notice_files = glob.glob('{}/*'.format(self._notice_files_dir))
-        if len(notice_files) == 0:
-            raise RuntimeError('No license files found in {}'.format(
-                self._notice_files_dir))
-
-        gpl_projects = []
-        pattern = 'GENERAL PUBLIC LICENSE'
-        for notice_file_path in notice_files:
-            with open(notice_file_path, 'r') as notice_file:
-                if pattern in notice_file.read():
-                    lib_name = os.path.splitext(
-                        os.path.basename(notice_file_path))[0]
-                    gpl_projects.append(lib_name)
-
-        if not gpl_projects:
+        if not self._gpl_projects:
             logging.info('No GPL projects found.')
             return
 
-        logging.info('GPL projects found: {}'.format(', '.join(gpl_projects)))
+        logging.info('GPL projects found: {}'.format(', '.join(self._gpl_projects)))
 
         module_paths = self._parse_module_paths()
         manifest_projects = self._parse_manifest()
         released_projects = []
         unreleased_projects = []
 
-        for lib in gpl_projects:
-            if lib in module_paths:
-                module_path = module_paths[lib]
-                revision = self._get_revision(module_path, manifest_projects)
-                if not revision:
-                    raise RuntimeError(
-                        'No project found for {path} in {manifest}'.format(
-                            path=module_path, manifest=self.MANIFEST_XML))
-                revision_exists = self._check_revision_exists(
-                    revision, module_path)
-                if not revision_exists:
-                    unreleased_projects.append((lib, module_path))
-                else:
-                    released_projects.append((lib, module_path))
-            else:
+        for name in self._gpl_projects:
+            lib = name if name.endswith('.so') else name + '.so'
+            if lib not in module_paths:
                 raise RuntimeError(
                     'No module path was found for {lib} in {module_paths}'.
                     format(lib=lib, module_paths=self.MODULE_PATHS_TXT))
+
+            module_path = module_paths[lib]
+            revision = self._get_revision(module_path, manifest_projects)
+            if not revision:
+                raise RuntimeError(
+                    'No project found for {path} in {manifest}'.format(
+                        path=module_path, manifest=self.MANIFEST_XML))
+            revision_exists = self._check_revision_exists(
+                revision, module_path)
+            if not revision_exists:
+                unreleased_projects.append((lib, module_path))
+            else:
+                released_projects.append((lib, module_path))
 
         if released_projects:
             logging.info('Released GPL projects: {}'.format(released_projects))
@@ -266,6 +253,8 @@ def get_args():
         default='aosp',
         help=('Remote name to fetch and check if the revision of VNDK snapshot '
               'is included in the source to conform GPL license. default=aosp'))
+    parser.add_argument('-m', '--modules', help='list of modules to check',
+                        nargs='+')
     parser.add_argument(
         '-v',
         '--verbose',
@@ -304,7 +293,7 @@ def main():
     utils.fetch_artifact(args.branch, args.build, manifest_pattern,
                          manifest_dest)
 
-    license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
+    license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP, args.modules,
                                  temp_artifact_dir, remote)
     try:
         license_checker.check_gpl_projects()

@@ -1,0 +1,167 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 1,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIa",
+   "name" : "signed char",
+   "referenced_type" : "_ZTIa",
+   "self_type" : "_ZTIa",
+   "size" : 1
+  },
+  {
+   "alignment" : 1,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIh",
+   "name" : "unsigned char",
+   "referenced_type" : "_ZTIh",
+   "self_type" : "_ZTIh",
+   "size" : 1
+  },
+  {
+   "alignment" : 8,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIl",
+   "name" : "long",
+   "referenced_type" : "_ZTIl",
+   "self_type" : "_ZTIl",
+   "size" : 8
+  },
+  {
+   "alignment" : 8,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIm",
+   "name" : "unsigned long",
+   "referenced_type" : "_ZTIm",
+   "self_type" : "_ZTIm",
+   "size" : 8
+  },
+  {
+   "linker_set_key" : "_ZTIv",
+   "name" : "void",
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "function"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" :
+ [
+  {
+   "alignment" : 1,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 0,
+     "name" : "ZERO"
+    },
+    {
+     "enum_field_value" : -1,
+     "name" : "MINUS_1"
+    }
+   ],
+   "linker_set_key" : "_ZTI4Int8",
+   "name" : "Int8",
+   "referenced_type" : "_ZTI4Int8",
+   "self_type" : "_ZTI4Int8",
+   "size" : 1,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
+   "underlying_type" : "_ZTIa"
+  },
+  {
+   "alignment" : 8,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 9223372036854775807,
+     "name" : "SIGNED_MAX"
+    },
+    {
+     "enum_field_value" : -9223372036854775808,
+     "name" : "SIGNED_MIN"
+    }
+   ],
+   "linker_set_key" : "_ZTI5Int64",
+   "name" : "Int64",
+   "referenced_type" : "_ZTI5Int64",
+   "self_type" : "_ZTI5Int64",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
+   "underlying_type" : "_ZTIl"
+  },
+  {
+   "alignment" : 1,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 255,
+     "name" : "UNSIGNED_255"
+    }
+   ],
+   "linker_set_key" : "_ZTI5Uint8",
+   "name" : "Uint8",
+   "referenced_type" : "_ZTI5Uint8",
+   "self_type" : "_ZTI5Uint8",
+   "size" : 1,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
+   "underlying_type" : "_ZTIh"
+  },
+  {
+   "alignment" : 8,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 18446744073709551615,
+     "name" : "UNSIGNED_MAX"
+    }
+   ],
+   "linker_set_key" : "_ZTI6Uint64",
+   "name" : "Uint64",
+   "referenced_type" : "_ZTI6Uint64",
+   "self_type" : "_ZTI6Uint64",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
+   "underlying_type" : "_ZTIm"
+  }
+ ],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "function",
+   "linker_set_key" : "function",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTI4Int8"
+    },
+    {
+     "referenced_type" : "_ZTI5Uint8"
+    },
+    {
+     "referenced_type" : "_ZTI5Int64"
+    },
+    {
+     "referenced_type" : "_ZTI6Uint64"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" : [],
+ "rvalue_reference_types" : []
+}

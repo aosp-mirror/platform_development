@@ -13,7 +13,8 @@ from module import Module
 from test import INPUT_DIR
 from test import EXPECTED_DIR
 from test import EXPORTED_HEADER_DIRS
-from test import make_and_copy_reference_dumps
+from test import REF_DUMP_DIR
+from test import make_and_copy_dump
 
 FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
 
@@ -41,7 +42,9 @@ def main():
 
     modules = Module.get_test_modules()
     for module in modules:
-        print('Created abi dump at', make_and_copy_reference_dumps(module))
+        if module.has_reference_dump:
+            print('Created abi dump at',
+                  make_and_copy_dump(module, REF_DUMP_DIR))
 
     return 0
 

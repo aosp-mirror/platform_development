@@ -44,16 +44,6 @@ python_test_host {
         ":llvm-tools",
     ],
     libs: ["python-symbol"],
-    version: {
-        py2: {
-            enabled: false,
-            embedded_launcher: false,
-        },
-        py3: {
-            enabled: true,
-            embedded_launcher: false,
-        },
-    },
     test_options: {
         unit_test: true,
     },
