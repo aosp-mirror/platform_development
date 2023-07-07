@@ -631,7 +631,8 @@ public class Connectivity extends Activity {
         i.putExtra(TEST_ALARM_OFF_EXTRA, Long.toString(mSCOffDuration));
         i.putExtra(TEST_ALARM_CYCLE_EXTRA, Integer.toString(mSCCycleCount));
 
-        PendingIntent p = PendingIntent.getBroadcast(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent p = PendingIntent.getBroadcast(this, 0, i,
+                PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
 
         am.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + delayMs, p);
     }
