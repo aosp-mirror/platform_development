@@ -1,0 +1,5 @@
+libunion {
+  global:
+    function;
+};
+
