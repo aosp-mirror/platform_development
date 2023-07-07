@@ -76,15 +76,10 @@ export class MiniTimelineComponent {
     this.drawer = new MiniCanvasDrawer(
       this.canvas,
       () => this.getMiniCanvasDrawerInput(),
-      (position) => {
-        const timestampType = this.timelineData.getTimestampType()!;
-        this.onSeekTimestampUpdate.emit(position);
-      },
+      (position) => this.onSeekTimestampUpdate.emit(position),
       updateTimestampCallback,
-      (selection) => {
-        const timestampType = this.timelineData.getTimestampType()!;
-        this.timelineData.setSelectionTimeRange(selection);
-      },
+      (selection) => this.timelineData.setSelectionTimeRange(selection),
+      (zoom) => this.timelineData.setZoom(zoom),
       updateTimestampCallback
     );
     this.drawer.draw();
@@ -101,6 +96,7 @@ export class MiniTimelineComponent {
       this.timelineData.getFullTimeRange(),
       this.currentTracePosition.timestamp,
       this.timelineData.getSelectionTimeRange(),
+      this.timelineData.getZoomRange(),
       this.getTracesToShow()
     );
   }

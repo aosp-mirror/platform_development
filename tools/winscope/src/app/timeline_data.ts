@@ -38,6 +38,7 @@ export class TimelineData {
   private lastEntry?: TraceEntry<{}>;
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
+  private explicitlySetZoomRange?: TimeRange;
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
@@ -124,6 +125,18 @@ export class TimelineData {
 
   setSelectionTimeRange(selection: TimeRange) {
     this.explicitlySetSelection = selection;
+  }
+
+  getZoomRange(): TimeRange {
+    if (this.explicitlySetZoomRange === undefined) {
+      return this.getFullTimeRange();
+    } else {
+      return this.explicitlySetZoomRange;
+    }
+  }
+
+  setZoom(zoomRange: TimeRange) {
+    this.explicitlySetZoomRange = zoomRange;
   }
 
   getTraces(): Traces {
