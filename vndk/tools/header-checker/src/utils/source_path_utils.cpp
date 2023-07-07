@@ -18,23 +18,41 @@
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
 
-
 namespace header_checker {
 namespace utils {
 
+static const std::vector<std::string> header_extensions{
+    ".h", ".hh", ".hpp", ".hxx", ".h++", ".inl", ".inc", ".ipp", ".h.generic"};
 
-static bool ShouldSkipFile(llvm::StringRef &file_name) {
-  // Ignore swap files, hidden files, and hidden directories. Do not recurse
-  // into hidden directories either. We should also not look at source files.
-  // Many projects include source files in their exports.
-  return (file_name.empty() || file_name.startswith(".") ||
-          file_name.endswith(".swp") || file_name.endswith(".swo") ||
-          file_name.endswith("#") || file_name.endswith(".cpp") ||
-          file_name.endswith(".cc") || file_name.endswith(".c"));
+static const std::vector<std::string> libcxx_include_dir{"libcxx", "include"};
+
+static bool HasHeaderExtension(llvm::StringRef file_name) {
+  return std::find_if(header_extensions.begin(), header_extensions.end(),
+                      [file_name](const std::string &e) {
+                        return file_name.endswith(e);
+                      }) != header_extensions.end();
+}
+
+static bool PathEndsWith(llvm::StringRef path,
+                         const std::vector<std::string> &suffix) {
+  auto path_it = llvm::sys::path::rbegin(path);
+  auto suffix_it = suffix.rbegin();
+  while (suffix_it != suffix.rend()) {
+    if (path_it == llvm::sys::path::rend(path)) {
+      return false;
+    }
+    if (*path_it != *suffix_it) {
+      return false;
+    }
+    ++path_it;
+    ++suffix_it;
+  }
+  return true;
 }
 
 static std::string GetCwd() {
@@ -118,6 +136,11 @@ std::string NormalizePath(std::string_view path, const RootDirs &root_dirs) {
 static bool CollectExportedHeaderSet(const std::string &dir_name,
                                      std::set<std::string> *exported_headers,
                                      const RootDirs &root_dirs) {
+  // Bazel creates temporary files in header directories. To avoid race
+  // condition, this function filters headers by name extensions.
+  // An exception is that libc++ headers do not have extensions.
+  bool collect_headers_without_extensions =
+      PathEndsWith(dir_name, libcxx_include_dir);
   std::error_code ec;
   llvm::sys::fs::recursive_directory_iterator walker(dir_name, ec);
   // Default construction - end of directory.
@@ -132,11 +155,16 @@ static bool CollectExportedHeaderSet(const std::string &dir_name,
     const std::string &file_path = walker->path();
 
     llvm::StringRef file_name(llvm::sys::path::filename(file_path));
-    // Ignore swap files and hidden files / dirs. Do not recurse into them too.
-    // We should also not look at source files. Many projects include source
-    // files in their exports.
-    if (ShouldSkipFile(file_name)) {
+    if (file_name.empty() || file_name.startswith(".")) {
+      // Ignore hidden files and directories.
       walker.no_push();
+      continue;
+    }
+    if (!file_name.contains(".")) {
+      if (!collect_headers_without_extensions) {
+        continue;
+      }
+    } else if (!HasHeaderExtension(file_name)) {
       continue;
     }
 

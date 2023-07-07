@@ -20,11 +20,6 @@
 #include <clang/Frontend/FrontendAction.h>
 #include <llvm/ADT/StringRef.h>
 
-#include <memory>
-#include <set>
-#include <string>
-#include <vector>
-
 
 namespace clang {
   class ASTConsumer;
@@ -46,9 +41,6 @@ class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &ci, llvm::StringRef header_file) override;
-
-  bool BeginInvocation(clang::CompilerInstance &ci) override;
-  bool BeginSourceFileAction(clang::CompilerInstance &ci) override;
 };
 
 

@@ -77,11 +77,6 @@ static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<bool> suppress_errors(
-    "suppress-errors",
-    llvm::cl::desc("Suppress preprocess and semantic errors"),
-    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
-
 static llvm::cl::opt<bool> dump_function_declarations(
     "dump-function-declarations",
     llvm::cl::desc("Output the functions declared but not defined in the input "
@@ -184,10 +179,10 @@ int main(int argc, const char **argv) {
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
-  HeaderCheckerOptions options(
-      NormalizePath(header_file, parsed_root_dirs), out_dump,
-      std::move(exported_headers), std::move(parsed_root_dirs), output_format,
-      dump_exported_only, dump_function_declarations, suppress_errors);
+  HeaderCheckerOptions options(NormalizePath(header_file, parsed_root_dirs),
+                               out_dump, std::move(exported_headers),
+                               std::move(parsed_root_dirs), output_format,
+                               dump_exported_only, dump_function_declarations);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
