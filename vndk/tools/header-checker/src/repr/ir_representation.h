@@ -70,6 +70,11 @@ enum AccessSpecifierIR {
   PrivateAccess = 3
 };
 
+static inline bool IsAccessDowngraded(AccessSpecifierIR old_access,
+                                      AccessSpecifierIR new_access) {
+  return old_access < new_access;
+}
+
 enum LinkableMessageKind {
   RecordTypeKind,
   EnumTypeKind,
@@ -91,6 +96,16 @@ std::map<V, K> CreateInverseMap(const std::map<K, V> &m) {
     inverse_map[it.second] = it.first;
   }
   return inverse_map;
+}
+
+static inline std::string FormatMultiDefinitionTypeId(
+    const std::string &type_id, const std::string &compilation_unit_path) {
+  return type_id + "#ODR:" + compilation_unit_path;
+}
+
+static inline std::string_view ExtractMultiDefinitionTypeId(
+    std::string_view type_id) {
+  return type_id.substr(0, type_id.find("#ODR:"));
 }
 
 class LinkableMessageIR {
@@ -432,20 +447,29 @@ class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
 
 class EnumFieldIR {
  public:
-  EnumFieldIR(const std::string &name, int value)
-      : name_(name), value_(value) {}
+  EnumFieldIR(const std::string &name, int64_t value)
+      : name_(name), signed_value_(value), is_signed_(true) {}
+
+  EnumFieldIR(const std::string &name, uint64_t value)
+      : name_(name), unsigned_value_(value), is_signed_(false) {}
 
   const std::string &GetName() const {
     return name_;
   }
 
-  int GetValue() const {
-    return value_;
-  }
+  bool IsSigned() const { return is_signed_; }
+
+  int64_t GetSignedValue() const { return signed_value_; }
+
+  uint64_t GetUnsignedValue() const { return unsigned_value_; }
 
  protected:
   std::string name_;
-  int value_ = 0;
+  union {
+    int64_t signed_value_;
+    uint64_t unsigned_value_;
+  };
+  bool is_signed_;
 };
 
 class EnumTypeIR : public TypeIR {
@@ -493,9 +517,18 @@ class EnumTypeIR : public TypeIR {
 
 class ArrayTypeIR : public TypeIR {
  public:
+  void SetUnknownBound(bool is_of_unknown_bound) {
+    is_of_unknown_bound_ = is_of_unknown_bound;
+  }
+
+  bool IsOfUnknownBound() const { return is_of_unknown_bound_; }
+
   LinkableMessageKind GetKind() const override {
     return LinkableMessageKind::ArrayTypeKind;
   }
+
+ private:
+  bool is_of_unknown_bound_ = false;
 };
 
 class PointerTypeIR : public TypeIR {
