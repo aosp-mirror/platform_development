@@ -15,14 +15,11 @@
 #include "dumper/frontend_action.h"
 
 #include "dumper/ast_processing.h"
-#include "dumper/diagnostic_consumer.h"
-#include "dumper/fake_decl_source.h"
-#include "repr/ir_representation.h"
-#include "utils/header_abi_util.h"
 
 #include <clang/AST/ASTConsumer.h>
+// FIXME: ASTFrontendAction depends on DenseMapInfo<clang::QualType>.
+#include <clang/AST/TypeOrdering.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Lex/Preprocessor.h>
 
 #include <utility>
 
@@ -40,26 +37,6 @@ HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
                                                llvm::StringRef header_file) {
   // Create AST consumers.
   return std::make_unique<HeaderASTConsumer>(&ci, options_);
-}
-
-bool HeaderCheckerFrontendAction::BeginInvocation(clang::CompilerInstance &ci) {
-  if (options_.suppress_errors_) {
-    ci.getFrontendOpts().SkipFunctionBodies = true;
-    clang::DiagnosticsEngine &diagnostics = ci.getDiagnostics();
-    diagnostics.setClient(
-        new HeaderCheckerDiagnosticConsumer(diagnostics.takeClient()),
-        /* ShouldOwnClient */ true);
-  }
-  return true;
-}
-
-bool HeaderCheckerFrontendAction::BeginSourceFileAction(
-    clang::CompilerInstance &ci) {
-  if (options_.suppress_errors_) {
-    ci.setExternalSemaSource(new FakeDeclSource(ci));
-    ci.getPreprocessor().SetSuppressIncludeNotFoundError(true);
-  }
-  return true;
 }
 
 
