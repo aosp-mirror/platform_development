@@ -18,6 +18,7 @@ package com.android.commands.monkey;
 
 import android.app.IActivityManager;
 import android.hardware.input.InputManager;
+import android.hardware.input.InputManagerGlobal;
 import android.os.SystemClock;
 import android.view.IWindowManager;
 import android.view.InputDevice;
@@ -130,7 +131,7 @@ public class MonkeyKeyEvent extends MonkeyEvent {
                     mRepeatCount, mMetaState, mDeviceId, mScanCode,
                     KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
         }
-        if (!InputManager.getInstance().injectInputEvent(keyEvent,
+        if (!InputManagerGlobal.getInstance().injectInputEvent(keyEvent,
                 InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
             return MonkeyEvent.INJECT_FAIL;
         }
