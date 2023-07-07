@@ -28,7 +28,7 @@ for f in "$@"; do
   if [[ ! -e "$f" ]]; then
     echo "Kernel symbol file $f does not exist!" >&2
     ret=1
-  elif ! grep -iE "^0x[0-9a-f]{8}+.[_0-9a-z]+.vmlinux.EXPORT_SYMBOL" $f > /dev/null; then
+  elif ! grep -iE "^0x[0-9a-f]{8}+.[_0-9a-z]+.[_0-9a-z/]+.EXPORT_SYMBOL" $f > /dev/null; then
     ret=1
     echo "$f doesn't look like kernel symbol file!" >&2
   fi

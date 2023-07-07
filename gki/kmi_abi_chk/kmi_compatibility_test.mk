@@ -22,21 +22,21 @@ KMI_CHK_SCRIPT := $(LOCAL_PATH)/kmi_compatibility_test.sh
 #
 # Set CURR_5_15_SYMVERS/CURR_5_10_SYMVERS explicitly for the actual
 # current kernel symbol file to be checked. E.g.,
-# $ m CURR_5_10_SYMVERS=kernel/prebuilts/5.10/arm64/vmlinux.symvers \
+# $ m CURR_5_10_SYMVERS=kernel/prebuilts/5.10/arm64/Module.symvers \
 #     gki_5_10_kmi_compatibility_test
-#CURR_5_15_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.15/vmlinux.symvers
-#CURR_5_10_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.10/vmlinux.symvers
+#CURR_5_15_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.15/Module.symvers
+#CURR_5_10_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.10/Module.symvers
 
 # Check the one under kernel/prebuilts for stable GKI KMI.
-CURR_5_15_SYMVERS ?= kernel/prebuilts/5.15/arm64/vmlinux.symvers
-CURR_5_10_SYMVERS ?= kernel/prebuilts/5.10/arm64/vmlinux.symvers
+CURR_5_15_SYMVERS ?= kernel/prebuilts/5.15/arm64/Module.symvers
+CURR_5_10_SYMVERS ?= kernel/prebuilts/5.10/arm64/Module.symvers
 
 # Previous kernel symbol files, against which the latest one is checked
 # The file names of previous kernel symbol files are of this form:
 #     *.symvers-$(BID)
 # Here *.symvers is a symbolic link to the latest build.
-PREV_5_15_SYMVERS := $(LOCAL_PATH)/sym-5.15/vmlinux.symvers
-PREV_5_10_SYMVERS := $(LOCAL_PATH)/sym-5.10/vmlinux.symvers
+PREV_5_15_SYMVERS := $(LOCAL_PATH)/sym-5.15/Module.symvers
+PREV_5_10_SYMVERS := $(LOCAL_PATH)/sym-5.10/Module.symvers
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := a13_5_15_kmi_compatibility_test
