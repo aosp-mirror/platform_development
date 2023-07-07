@@ -32,8 +32,8 @@ import sys
 import xml.dom.minidom
 
 from gerrit import (
-    create_url_opener_from_args, find_gerrit_name, normalize_gerrit_name,
-    query_change_lists, run
+    add_common_parse_args, create_url_opener_from_args, find_gerrit_name,
+    normalize_gerrit_name, query_change_lists, run
 )
 from subprocess import PIPE
 
@@ -90,6 +90,7 @@ class ChangeList(object):
 
         self.project = project
         self.number = change_list['_number']
+        self.branch = change_list['branch']
 
         self.fetch = fetch
 
@@ -129,6 +130,28 @@ def find_repo_top(curdir):
     raise ValueError('.repo dir not found')
 
 
+class ProjectNameDirDict:
+    """A dict which maps project name and revision to the source path."""
+    def __init__(self):
+        self._dirs = dict()
+
+
+    def add_directory(self, name, revision, path):
+        """Maps project name and revision to path."""
+        self._dirs[name] = path or name
+        if revision:
+            self._dirs[(name, revision)] = path or name
+
+
+    def find_directory(self, name, revision, default_result=None):
+        """Finds corresponding path of project name and revision."""
+        if (name, revision) in self._dirs:
+            return self._dirs[(name, revision)]
+        if default_result is None:
+            return self._dirs[name]
+        return self._dirs.get(name, default_result)
+
+
 def build_project_name_dir_dict(manifest_name):
     """Build the mapping from Gerrit project name to source tree project
     directory path."""
@@ -138,14 +161,12 @@ def build_project_name_dir_dict(manifest_name):
     raw_manifest_xml = run(manifest_cmd, stdout=PIPE, check=True).stdout
 
     manifest_xml = xml.dom.minidom.parseString(raw_manifest_xml)
-    project_dirs = {}
+    project_dirs = ProjectNameDirDict()
     for project in manifest_xml.getElementsByTagName('project'):
         name = project.getAttribute('name')
         path = project.getAttribute('path')
-        if path:
-            project_dirs[name] = path
-        else:
-            project_dirs[name] = name
+        revision = project.getAttribute('revision')
+        project_dirs.add_directory(name, revision, path)
 
     return project_dirs
 
@@ -269,7 +290,8 @@ def _main_bash(args):
     print(_sh_quote_command(['pushd', repo_top]))
     for changes in change_list_groups:
         for change in changes:
-            project_dir = project_dirs.get(change.project, change.project)
+            project_dir = project_dirs.find_directory(
+                change.project, change.branch, change.project)
             cmds = []
             cmds.append(['pushd', project_dir])
             cmds.extend(build_pull_commands(
@@ -279,7 +301,7 @@ def _main_bash(args):
     print(_sh_quote_command(['popd']))
 
 
-def _do_pull_change_lists_for_project(task):
+def _do_pull_change_lists_for_project(task, ignore_unknown_changes):
     """Pick a list of changes (usually under a project directory)."""
     changes, task_opts = task
 
@@ -291,10 +313,13 @@ def _do_pull_change_lists_for_project(task):
 
     for i, change in enumerate(changes):
         try:
-            cwd = project_dirs[change.project]
+            cwd = project_dirs.find_directory(change.project, change.branch)
         except KeyError:
             err_msg = 'error: project "{}" cannot be found in manifest.xml\n'
             err_msg = err_msg.format(change.project).encode('utf-8')
+            if ignore_unknown_changes:
+                print(err_msg)
+                continue
             return (change, changes[i + 1:], [], err_msg)
 
         print(change.commit_sha1[0:10], i + 1, cwd)
@@ -346,12 +371,14 @@ def _main_pull(args):
 
     # Run the commands to pull the change lists
     if args.parallel <= 1:
-        results = [_do_pull_change_lists_for_project((changes, task_opts))
+        results = [_do_pull_change_lists_for_project(
+            (changes, task_opts), args.ignore_unknown_changes)
                    for changes in change_list_groups]
     else:
         pool = multiprocessing.Pool(processes=args.parallel)
         results = pool.map(_do_pull_change_lists_for_project,
-                           zip(change_list_groups, itertools.repeat(task_opts)))
+                           zip(change_list_groups, itertools.repeat(task_opts)),
+                           args.ignore_unknown_changes)
 
     # Print failures and tracebacks
     failures = [result for result in results if result]
@@ -366,18 +393,10 @@ def _parse_args():
 
     parser.add_argument('command', choices=['pull', 'bash', 'json'],
                         help='Commands')
+    add_common_parse_args(parser)
 
-    parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
-    parser.add_argument('--gitcookies',
-                        default=os.path.expanduser('~/.gitcookies'),
-                        help='Gerrit cookie file')
     parser.add_argument('--manifest', help='Manifest')
-    parser.add_argument('--limits', default=1000, type=int,
-                        help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
 
     parser.add_argument('-m', '--merge',
                         choices=sorted(_MERGE_COMMANDS.keys()),
@@ -395,6 +414,12 @@ def _parse_args():
     parser.add_argument('-j', '--parallel', default=1, type=int,
                         help='Number of parallel running commands')
 
+    parser.add_argument('--current-branch', action='store_true',
+                        help='Pull commits to the current branch')
+
+    parser.add_argument('--ignore-unknown-changes', action='store_true',
+                        help='Ignore changes whose repo is not in the manifest')
+
     return parser.parse_args()
 
 
@@ -407,7 +432,7 @@ def _get_change_lists_from_args(args):
 
 def _get_local_branch_name_from_args(args):
     """Get the local branch name from args."""
-    if not args.branch and not _confirm(
+    if not args.branch and not args.current_branch and not _confirm(
             'Do you want to continue without local branch name?', False):
         print('error: `-b` or `--branch` must be specified', file=sys.stderr)
         sys.exit(1)

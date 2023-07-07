@@ -15,13 +15,13 @@
  */
 import {UnitTestUtils} from 'test/unit/utils';
 import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserSurfaceFlingerDump', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<LayerTraceEntry>;
     const DUMP_REAL_TIME = 1659176624505188647n;
 
     beforeAll(async () => {
@@ -44,9 +44,8 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
     });
 
-    it('retrieves trace entry from elapsed timestamp', () => {
-      const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
-      const entry = parser.getTraceEntry(timestamp)!;
+    it('retrieves trace entry', () => {
+      const entry = parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(LayerTraceEntry);
       expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(0n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(DUMP_REAL_TIME);
@@ -54,7 +53,7 @@ describe('ParserSurfaceFlingerDump', () => {
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser;
+    let parser: Parser<LayerTraceEntry>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/dump_SurfaceFlinger.pb');

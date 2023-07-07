@@ -18,7 +18,7 @@ import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {NgModule} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -57,6 +57,7 @@ import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_c
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {AdbProxyComponent} from './components/adb_proxy_component';
 import {AppComponent} from './components/app_component';
@@ -67,7 +68,7 @@ import {
 } from './components/bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
-import {ParserErrorSnackBarComponent} from './components/parser_error_snack_bar_component';
+import {SnackBarComponent} from './components/snack_bar_component';
 import {ExpandedTimelineComponent} from './components/timeline/expanded_timeline_component';
 import {MiniTimelineComponent} from './components/timeline/mini_timeline_component';
 import {SingleTimelineComponent} from './components/timeline/single_timeline_component';
@@ -86,6 +87,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     ViewerProtologComponent,
     ViewerTransactionsComponent,
     ViewerScreenRecordingComponent,
+    ViewerTransitionsComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,
@@ -101,7 +103,6 @@ import {WebAdbComponent} from './components/web_adb_component';
     TreeNodePropertiesDataViewComponent,
     PropertyGroupsComponent,
     TransformMatrixComponent,
-    ParserErrorSnackBarComponent,
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
     CoordinatesTableComponent,
@@ -109,6 +110,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     MiniTimelineComponent,
     ExpandedTimelineComponent,
     SingleTimelineComponent,
+    SnackBarComponent,
     MatDrawer,
     MatDrawerContent,
     MatDrawerContainer,
@@ -143,6 +145,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     DragDropModule,
     ReactiveFormsModule,
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

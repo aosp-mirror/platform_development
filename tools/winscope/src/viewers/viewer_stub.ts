@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
@@ -27,16 +30,24 @@ class ViewerStub implements Viewer {
     }
   }
 
-  notifyCurrentTraceEntries(entries: any) {
+  onTracePositionUpdate(position: TracePosition) {
     // do nothing
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, this.title)];
+    return [
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        this.title,
+        this.getDependencies()[0]
+      ),
+    ];
   }
 
-  getDependencies(): any {
-    return;
+  getDependencies(): TraceType[] {
+    return [TraceType.WINDOW_MANAGER];
   }
 
   private htmlElement: HTMLElement;

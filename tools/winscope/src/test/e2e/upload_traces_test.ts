@@ -18,8 +18,11 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Upload traces', () => {
+  const DEFAULT_TIMEOUT_MS = 15000;
+
   beforeAll(async () => {
-    await browser.manage().timeouts().implicitlyWait(5000);
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;
+    await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
   });
 
   beforeEach(async () => {
@@ -44,27 +47,43 @@ describe('Upload traces', () => {
 
   const checkHasLoadedTraces = async () => {
     const text = await element(by.css('.uploaded-files')).getText();
-    expect(text).toContain('wm_log.winscope (ProtoLog)');
-    expect(text).toContain('ime_trace_service.winscope (IME Service)');
-    expect(text).toContain('ime_trace_managerservice.winscope (IME Manager Service)');
-    expect(text).toContain('wm_trace.winscope (Window Manager)');
-    expect(text).toContain('layers_trace_from_transactions.winscope (Surface Flinger)');
-    expect(text).toContain('ime_trace_clients.winscope (IME Clients)');
-    expect(text).toContain('transactions_trace.winscope (Transactions)');
+    expect(text).toContain('ProtoLog');
+    expect(text).toContain('IME Service');
+    expect(text).toContain('IME Manager Service');
+    expect(text).toContain('Window Manager');
+    expect(text).toContain('Surface Flinger');
+    expect(text).toContain('IME Clients');
+    expect(text).toContain('Transactions');
+    expect(text).toContain('Transitions');
+
+    expect(text).toContain('wm_log.winscope');
+    expect(text).toContain('ime_trace_service.winscope');
+    expect(text).toContain('ime_trace_managerservice.winscope');
+    expect(text).toContain('wm_trace.winscope');
+    expect(text).toContain('layers_trace_from_transactions.winscope');
+    expect(text).toContain('ime_trace_clients.winscope');
+    expect(text).toContain('transactions_trace.winscope');
+    expect(text).toContain('wm_transition_trace.winscope');
+    expect(text).toContain('shell_transition_trace.winscope');
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('unsupported file format');
   };
 
   const checkEmitsOverriddenTracesMessages = async () => {
-    const text = await element(by.css('upload-snack-bar')).getText();
+    const text = await element(by.css('snack-bar')).getText();
     expect(text).toContain('overridden by another trace');
   };
 
   const areMessagesEmitted = async (): Promise<boolean> => {
-    return element(by.css('upload-snack-bar')).isPresent();
+    // Messages are emitted quickly. There is no Need to wait for the entire
+    // default timeout to understand whether the messages where emitted or not.
+    await browser.manage().timeouts().implicitlyWait(1000);
+    const emitted = await element(by.css('snack-bar')).isPresent();
+    await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
+    return emitted;
   };
 
   const checkRendersSurfaceFlingerView = async () => {

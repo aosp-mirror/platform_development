@@ -28,28 +28,31 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {Timestamp} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
+import {TracePosition} from 'trace/trace_position';
 import {SingleTimelineComponent} from './single_timeline_component';
 
 @Component({
   selector: 'expanded-timeline',
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
-      <div *ngFor="let timeline of this.data | keyvalue" class="timeline">
+      <div
+        *ngFor="let trace of getTraces(); trackBy: trackTraceBySelectedTimestamp"
+        class="timeline">
         <div class="icon-wrapper">
-          <mat-icon class="icon" [style]="{color: TRACE_INFO[timeline.key].color}">
-            {{ TRACE_INFO[timeline.key].icon }}
+          <mat-icon
+            class="icon"
+            [matTooltip]="TRACE_INFO[trace.type].name"
+            [style]="{color: TRACE_INFO[trace.type].color}">
+            {{ TRACE_INFO[trace.type].icon }}
           </mat-icon>
         </div>
-        <!-- TODO: Timestamp variables are passed to single-timeline, but single-timeline takes bigint parameters. Why the heck is this working??? -->
         <single-timeline
-          [color]="TRACE_INFO[timeline.key].color"
-          [entries]="timeline.value"
-          [selected]="
-            timelineData.getCurrentTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined
-          "
-          [start]="start"
-          [end]="end"
-          (onTimestampChanged)="onTimestampChanged.emit($event)"
+          [color]="TRACE_INFO[trace.type].color"
+          [trace]="trace"
+          [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
+          [selectionRange]="timelineData.getSelectionTimeRange()"
+          (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
           class="single-timeline"></single-timeline>
         <div class="icon-wrapper">
           <mat-icon class="icon placeholder-icon"></mat-icon>
@@ -137,9 +140,7 @@ import {SingleTimelineComponent} from './single_timeline_component';
 })
 export class ExpandedTimelineComponent {
   @Input() timelineData!: TimelineData;
-  @Input() currentTimestamp!: Timestamp;
-
-  @Output() onTimestampChanged = new EventEmitter<Timestamp>();
+  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('expandedTimelineWrapper', {static: false}) warpperRef!: ElementRef;
@@ -147,32 +148,22 @@ export class ExpandedTimelineComponent {
 
   TRACE_INFO = TRACE_INFO;
 
-  get canvas(): HTMLCanvasElement {
-    return this.canvasRef.nativeElement;
-  }
-
-  get data() {
-    return this.timelineData.getTimelines();
-  }
-
-  get sortedMergedTimestamps() {
-    return Array.from(this.data.values())
-      .flatMap((it) => it)
-      .sort();
-  }
-
-  get start() {
-    return this.timelineData.getSelectionRange().from;
-  }
-
-  get end() {
-    return this.timelineData.getSelectionRange().to;
+  getTraces(): Array<Trace<{}>> {
+    const traces = new Array<Trace<{}>>();
+    this.timelineData.getTraces().forEachTrace((trace) => {
+      traces.push(trace);
+    });
+    return traces;
   }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     this.resizeCanvases();
   }
+
+  trackTraceBySelectedTimestamp = (index: number, trace: Trace<{}>): Timestamp | undefined => {
+    return this.timelineData.findCurrentEntryFor(trace.type)?.getTimestamp();
+  };
 
   private resizeCanvases() {
     // Reset any size before computing new size to avoid it interfering with size computations.

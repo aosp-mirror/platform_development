@@ -15,12 +15,12 @@
  */
 import {UnitTestUtils} from 'test/unit/utils';
 import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {Parser} from './parser';
 
 describe('ParserWindowManagerDump', () => {
-  let parser: Parser;
+  let parser: Parser<WindowManagerState>;
 
   beforeAll(async () => {
     parser = await UnitTestUtils.getParser('traces/dump_WindowManager.pb');
@@ -40,9 +40,8 @@ describe('ParserWindowManagerDump', () => {
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
   });
 
-  it('retrieves trace entry from elapsed timestamp', () => {
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
-    const entry = parser.getTraceEntry(timestamp)!;
+  it('retrieves trace entry', () => {
+    const entry = parser.getEntry(0, TimestampType.ELAPSED);
     expect(entry).toBeInstanceOf(WindowManagerState);
     expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(0n);
   });

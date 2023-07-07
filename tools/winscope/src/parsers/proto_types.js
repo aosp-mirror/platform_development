@@ -22,7 +22,9 @@ protobuf.configure();
 import protoLogJson from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import accessibilityJson from 'frameworks/base/core/proto/android/server/accessibilitytrace.proto';
 import windowManagerJson from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
+import wmTransitionsJson from 'frameworks/base/core/proto/android/server/windowmanagertransitiontrace.proto';
 import inputMethodClientsJson from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
+import shellTransitionsJson from 'frameworks/base/libs/WindowManager/Shell/proto/wm_shell_transition_trace.proto';
 import layersJson from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
 import transactionsJson from 'frameworks/native/services/surfaceflinger/layerproto/transactions.proto';
 
@@ -53,6 +55,12 @@ const WindowManagerServiceDumpProto = protobuf.Root.fromJSON(windowManagerJson).
 const WindowManagerTraceFileProto = protobuf.Root.fromJSON(windowManagerJson).lookupType(
   'com.android.server.wm.WindowManagerTraceFileProto'
 );
+const WmTransitionsTraceFileProto = protobuf.Root.fromJSON(wmTransitionsJson).lookupType(
+  'com.android.server.wm.shell.TransitionTraceProto'
+);
+const ShellTransitionsTraceFileProto = protobuf.Root.fromJSON(shellTransitionsJson).lookupType(
+  'com.android.wm.shell.WmShellTransitionTraceProto'
+);
 
 export {
   AccessibilityTraceFileProto,
@@ -64,4 +72,6 @@ export {
   TransactionsTraceFileProto,
   WindowManagerServiceDumpProto,
   WindowManagerTraceFileProto,
+  WmTransitionsTraceFileProto,
+  ShellTransitionsTraceFileProto,
 };

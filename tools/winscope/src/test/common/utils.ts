@@ -15,14 +15,15 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import {Blob} from './blob';
-import {File} from './file';
+import {FileImpl} from './file_impl';
 
 class CommonTestUtils {
-  static async getFixtureFile(filename: string): Promise<File> {
-    const buffer = CommonTestUtils.loadFixture(filename);
-    const blob = new Blob(buffer);
-    return new File(await blob.arrayBuffer(), filename);
+  static async getFixtureFile(
+    srcFilename: string,
+    dstFilename: string = srcFilename
+  ): Promise<File> {
+    const buffer = CommonTestUtils.loadFixture(srcFilename);
+    return new FileImpl(buffer, dstFilename) as unknown as File;
   }
 
   static loadFixture(filename: string): ArrayBuffer {

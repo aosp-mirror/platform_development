@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';
@@ -21,7 +23,13 @@ import {PresenterInputMethodClients} from './presenter_input_method_clients';
 class ViewerInputMethodClients extends ViewerInputMethod {
   override getViews(): View[] {
     return [
-      new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Input Method Clients'),
+      new View(
+        ViewType.TAB,
+        this.getDependencies(),
+        this.htmlElement,
+        'Input Method Clients',
+        TraceType.INPUT_METHOD_CLIENTS
+      ),
     ];
   }
 
@@ -29,8 +37,13 @@ class ViewerInputMethodClients extends ViewerInputMethod {
     return ViewerInputMethodClients.DEPENDENCIES;
   }
 
-  override initialisePresenter(storage: Storage) {
-    return new PresenterInputMethodClients(this.imeUiCallback, this.getDependencies(), storage);
+  override initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethodClients {
+    return new PresenterInputMethodClients(
+      traces,
+      storage,
+      this.getDependencies(),
+      this.imeUiCallback
+    );
   }
 
   static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_CLIENTS];
