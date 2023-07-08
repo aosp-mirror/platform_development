@@ -46,6 +46,7 @@ import {LoadProgressComponent} from './load_progress_component';
           hidden
           type="file"
           multiple
+          onclick="this.value = null"
           #fileDropRef
           (change)="onInputFiles($event)" />
 
@@ -216,6 +217,7 @@ export class UploadTracesComponent implements ProgressListener {
 
   onClearButtonClick() {
     this.tracePipeline.clear();
+    this.onOperationFinished();
   }
 
   onFileDragIn(e: DragEvent) {
@@ -240,6 +242,7 @@ export class UploadTracesComponent implements ProgressListener {
     event.preventDefault();
     event.stopPropagation();
     this.tracePipeline.removeTraceFile(trace.type);
+    this.onOperationFinished();
   }
 
   private getInputFiles(event: Event): File[] {
