@@ -31,11 +31,13 @@ export class MiniCanvasDrawerInput {
     public fullRange: TimeRange,
     public selectedPosition: Timestamp,
     public selection: TimeRange,
+    public zoomRange: TimeRange,
     public traces: Traces
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
-    const transformer = new Transformer(this.fullRange, mapToRange);
+    const transformer = new Transformer(this.zoomRange, mapToRange);
+
     return new MiniCanvasDrawerData(
       transformer.transform(this.selectedPosition),
       {
@@ -86,7 +88,7 @@ export class Transformer {
 
     this.fromOffset = this.fromRange.from.getValueNs();
     // Needs to be a whole number to be compatible with bigints
-    this.toOffset = Math.round(this.toRange.from);
+    this.toOffset = this.toRange.from;
   }
 
   transform(x: Timestamp): number {
@@ -159,7 +161,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     };
   }
 
-  get input() {
+  get input(): MiniCanvasDrawerData {
     return this.inputGetter().transform(this.usableRange);
   }
 
@@ -169,6 +171,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
     private onSelectionChanged: (selection: TimeRange) => void,
+    private onZoomChanged: (zoom: TimeRange) => void,
     private onUnhandledClick: (pos: Timestamp) => void
   ) {
     const ctx = canvas.getContext('2d');
@@ -235,6 +238,19 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       });
     };
 
+    const onLeftZoomChanged = (x: number) => {
+      this.onZoomChanged({
+        from: this.input.transformer.untransform(x),
+        to: this.inputGetter().zoomRange.to,
+      });
+    }
+    const onRightZoomChanged = (x: number) => {
+      this.onZoomChanged({
+        from: this.inputGetter().zoomRange.from,
+        to: this.input.transformer.untransform(x),
+      });
+    }
+
     const barWidth = 6;
     const selectorArrowWidth = this.innerHeight / 12;
     const selectorArrowHeight = selectorArrowWidth * 2;
@@ -255,7 +271,10 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       },
       focusSelectorDrawConfig,
       onLeftSelectionChanged,
-      onLeftSelectionChanged,
+      (x: number) => {
+        onLeftSelectionChanged(x);
+        onLeftZoomChanged(x);
+      },
       () => {
         return {
           from: this.usableRange.from,
@@ -279,7 +298,10 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       },
       focusSelectorDrawConfig,
       onRightSelectionChanged,
-      onRightSelectionChanged,
+      (x: number) => {
+        onRightSelectionChanged(x);
+        onRightZoomChanged(x);
+      },
       () => {
         return {
           from: this.leftFocusSectionSelector.position + selectorArrowWidth + barWidth,
