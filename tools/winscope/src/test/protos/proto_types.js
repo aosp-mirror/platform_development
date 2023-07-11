@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Long from 'long';
+import * as protobuf from 'protobufjs';
 
-export function assertDefined<A>(value: A | null | undefined): A {
-  if (value === undefined || value === null) {
-    throw new Error(`Expected value, but found '${value}'`);
-  }
-  return value;
-}
+protobuf.util.Long = Long; // otherwise 64-bit types would be decoded as javascript number (only 53-bits precision)
+protobuf.configure();
 
-export function assertTrue(value: boolean, lazyErrorMessage: () => string) {
-  if (!value) {
-    throw new Error(lazyErrorMessage());
-  }
-}
+import fakeProtoTestJson from 'src/test/protos/fake_proto_test.proto';
+
+export {fakeProtoTestJson};

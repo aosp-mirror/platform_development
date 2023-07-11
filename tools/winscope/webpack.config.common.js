@@ -51,6 +51,7 @@ module.exports = {
           paths: [
             __dirname,
             path.resolve(__dirname, '../../..'),
+            path.resolve(__dirname, '../../../external/perfetto'),
             path.resolve(__dirname, '../../../external/protobuf/src'),
           ],
         },
