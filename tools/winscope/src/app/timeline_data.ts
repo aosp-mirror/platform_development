@@ -28,7 +28,7 @@ export interface TimeRange {
   from: Timestamp;
   to: Timestamp;
 }
-const INVALID_TIMESTAMP = 0n
+const INVALID_TIMESTAMP = 0n;
 
 export class TimelineData {
   private traces = new Traces();
