@@ -13,15 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Inject,
-  Input,
-  NgZone,
-  Output,
-} from '@angular/core';
+import {ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'interfaces/progress_listener';
@@ -178,10 +170,7 @@ export class UploadTracesComponent implements ProgressListener {
   @Output() filesUploaded = new EventEmitter<File[]>();
   @Output() viewTracesButtonClick = new EventEmitter<void>();
 
-  constructor(
-    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(NgZone) private ngZone: NgZone
-  ) {}
+  constructor(@Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.tracePipeline.clear();

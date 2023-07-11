@@ -68,8 +68,8 @@ export class SnackBarOpener implements UserNotificationListener {
 
   private convertErrorToMessage(error: ParserError): string {
     const fileName = error.trace !== undefined ? error.trace : '<no file name>';
-    const traceTypeName =
-      error.traceType !== undefined ? TRACE_INFO[error.traceType].name : '<unknown>';
+    const traceTypeInfo =
+      error.traceType !== undefined ? ` of type ${TRACE_INFO[error.traceType].name}` : '';
 
     switch (error.type) {
       case ParserErrorType.NO_INPUT_FILES:
@@ -77,7 +77,7 @@ export class SnackBarOpener implements UserNotificationListener {
       case ParserErrorType.UNSUPPORTED_FORMAT:
         return `${fileName}: unsupported file format`;
       case ParserErrorType.OVERRIDE: {
-        return `${fileName}: overridden by another trace of type ${traceTypeName}`;
+        return `${fileName}: overridden by another trace${traceTypeInfo}`;
       }
       default:
         return `${fileName}: unknown error occurred`;

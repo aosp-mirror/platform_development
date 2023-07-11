@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {globalConfig} from 'common/global_config';
 import {UrlUtils} from 'common/url_utils';
+import {ProgressListener} from 'interfaces/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {initWasm, resetEngineWorker, WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
@@ -30,17 +30,18 @@ export class ParserFactory {
 
   async createParsers(
     traceFile: TraceFile,
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    progressListener?: ProgressListener
   ): Promise<Array<Parser<object>>> {
-    const parsers: Array<Parser<object>> = [];
-
     const traceProcessor = await this.initializeTraceProcessor();
     for (
       let chunkStart = 0;
       chunkStart < traceFile.file.size;
       chunkStart += ParserFactory.CHUNK_SIZE_BYTES
     ) {
-      onProgressUpdate(chunkStart / traceFile.file.size * 100);
+      progressListener?.onProgressUpdate(
+        'Loading perfetto trace...',
+        (chunkStart / traceFile.file.size) * 100
+      );
       const chunkEnd = chunkStart + ParserFactory.CHUNK_SIZE_BYTES;
       const data = await traceFile.file.slice(chunkStart, chunkEnd).arrayBuffer();
       try {
@@ -51,8 +52,9 @@ export class ParserFactory {
       }
     }
     await traceProcessor.notifyEof();
-    onProgressUpdate(100);
 
+    progressListener?.onProgressUpdate('Reading from trace processor...', undefined);
+    const parsers: Array<Parser<object>> = [];
     for (const ParserType of ParserFactory.PARSERS) {
       try {
         const parser = new ParserType(traceFile, traceProcessor);

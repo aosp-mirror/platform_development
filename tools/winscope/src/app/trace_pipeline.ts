@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {ParserError, ParserFactory} from 'parsers/parser_factory';
+import {ProgressListener} from 'interfaces/progress_listener';
+import {ParserError, ParserErrorType, ParserFactory} from 'parsers/parser_factory';
+import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {Parser} from 'trace/parser';
@@ -24,8 +25,10 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {TraceFileFilter} from './trace_file_filter';
 
 class TracePipeline {
+  private traceFileFilter = new TraceFileFilter();
   private parserFactory = new ParserFactory();
   private tracesParserFactory = new TracesParserFactory();
   private parsers: Array<Parser<object>> = [];
@@ -35,13 +38,28 @@ class TracePipeline {
 
   async loadTraceFiles(
     traceFiles: TraceFile[],
-    onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    progressListener?: ProgressListener
   ): Promise<ParserError[]> {
-    traceFiles = await this.filterBugreportFilesIfNeeded(traceFiles);
-    const [fileAndParsers, parserErrors] = await this.parserFactory.createParsers(
-      traceFiles,
-      onLoadProgressUpdate
+    const filterResult = await this.traceFileFilter.filter(traceFiles);
+    if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+      return [new ParserError(ParserErrorType.NO_INPUT_FILES)];
+    }
+
+    const errors = filterResult.errors;
+
+    if (filterResult.perfetto) {
+      const perfettoParsers = await new PerfettoParserFactory().createParsers(
+        filterResult.perfetto,
+        progressListener
+      );
+      this.parsers = this.parsers.concat(perfettoParsers);
+    }
+
+    const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
+      filterResult.legacy,
+      progressListener
     );
+    errors.push(...legacyErrors);
     for (const fileAndParser of fileAndParsers) {
       this.files.set(fileAndParser.parser.getTraceType(), fileAndParser.file);
     }
@@ -67,7 +85,7 @@ class TracePipeline {
       this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
     }
 
-    return parserErrors;
+    return errors;
   }
 
   removeTrace(trace: Trace<object>) {
@@ -103,40 +121,6 @@ class TracePipeline {
     this.traces = new Traces();
     this.commonTimestampType = undefined;
     this.files = new Map<TraceType, TraceFile>();
-  }
-
-  private async filterBugreportFilesIfNeeded(files: TraceFile[]): Promise<TraceFile[]> {
-    const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
-    if (!bugreportMainEntry) {
-      return files;
-    }
-
-    const bugreportName = (await bugreportMainEntry.file.text()).trim();
-    const isBugreport = files.find((file) => file.file.name === bugreportName) !== undefined;
-    if (!isBugreport) {
-      return files;
-    }
-
-    const BUGREPORT_FILES_ALLOWLIST = [
-      'FS/data/misc/wmtrace/',
-      'FS/data/misc/perfetto-traces/',
-      'proto/window_CRITICAL.proto',
-    ];
-    const isFileAllowlisted = (file: TraceFile) => {
-      for (const traceDir of BUGREPORT_FILES_ALLOWLIST) {
-        if (file.file.name.startsWith(traceDir)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    const fileBelongsToBugreport = (file: TraceFile) =>
-      file.parentArchive === bugreportMainEntry.parentArchive;
-
-    return files.filter((file) => {
-      return isFileAllowlisted(file) || !fileBelongsToBugreport(file);
-    });
   }
 
   private getCommonTimestampType(): TimestampType {

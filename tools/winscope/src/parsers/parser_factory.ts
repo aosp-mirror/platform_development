@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {ProgressListener} from 'interfaces/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -57,17 +57,15 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    progressListener?: ProgressListener
   ): Promise<[Array<{file: TraceFile; parser: Parser<object>}>, ParserError[]]> {
     const errors: ParserError[] = [];
 
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
-    if (traceFiles.length === 0) {
-      errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
-    }
-
     for (const [index, traceFile] of traceFiles.entries()) {
+      progressListener?.onProgressUpdate('Parsing proto files', (index / traceFiles.length) * 100);
+
       let hasFoundParser = false;
 
       for (const ParserType of ParserFactory.PARSERS) {
@@ -89,8 +87,6 @@ export class ParserFactory {
         console.log(`Failed to load trace ${traceFile.file.name}`);
         errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.getDescriptor()));
       }
-
-      onProgressUpdate((100 * (index + 1)) / traceFiles.length);
     }
 
     return [parsers, errors];

@@ -233,13 +233,18 @@ export class Mediator {
       traceFiles.push(new TraceFile(file, parentArchive));
     };
 
+    //TODO(b/290183109): push unzip logic into trace pipeline, once the trace
+    // pipeline test will run with Karma. Currently, we can't execute
+    // FileUtils.unzipFilesIfNeeded() within Node.js because of the dependency
+    // on type File (which is Web API stuff).
     progressMessage = 'Unzipping files...';
     this.currentProgressListener?.onProgressUpdate(progressMessage, 0);
     await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
 
-    progressMessage = 'Parsing files...';
-    this.currentProgressListener?.onProgressUpdate(progressMessage, 0);
-    const parserErrors = await this.tracePipeline.loadTraceFiles(traceFiles, onProgressUpdate);
+    const parserErrors = await this.tracePipeline.loadTraceFiles(
+      traceFiles,
+      this.currentProgressListener
+    );
     this.currentProgressListener?.onOperationFinished();
     this.userNotificationListener?.onParserErrors(parserErrors);
   }
