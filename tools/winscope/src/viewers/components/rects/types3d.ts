@@ -18,6 +18,7 @@ export enum ColorType {
   VISIBLE,
   NOT_VISIBLE,
   HIGHLIGHTED,
+  HAS_CONTENT,
 }
 
 export class Distance2D {

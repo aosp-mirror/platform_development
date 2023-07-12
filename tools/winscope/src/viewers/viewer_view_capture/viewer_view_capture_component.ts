@@ -31,6 +31,8 @@ import {UiData} from './ui_data';
         title="View Hierarchy Sketch"
         [enableShowVirtualButton]="false"
         [rects]="inputData?.rects ?? []"
+        [zoomFactor]="4"
+        [miniRects]="inputData?.sfRects ?? []"
         [highlightedItems]="inputData?.highlightedItems ?? []"
         [displayIds]="[0]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>

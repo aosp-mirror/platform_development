@@ -28,6 +28,7 @@ export interface Rectangle {
   isClickable: boolean;
   cornerRadius: number;
   depth?: number;
+  hasContent?: boolean;
 }
 
 export interface Point {

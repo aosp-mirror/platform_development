@@ -27,6 +27,9 @@ export class ParserViewCapture extends AbstractParser {
   packageName: string = '';
   windowTitle: string = '';
 
+  // TODO(b/291213403): viewer should read this data from the Trace object
+  static packageNames: string[] = [];
+
   constructor(trace: TraceFile) {
     super(trace);
   }
@@ -44,6 +47,7 @@ export class ParserViewCapture extends AbstractParser {
     this.classNames = exportedData.classname;
     this.realToElapsedTimeOffsetNanos = BigInt(exportedData.realToElapsedTimeOffsetNanos);
     this.packageName = this.shortenAndCapitalize(exportedData.package);
+    ParserViewCapture.packageNames.push(exportedData.package);
 
     const firstWindowData = exportedData.windowData[0];
     this.windowTitle = this.shortenAndCapitalize(firstWindowData.title);

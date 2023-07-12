@@ -25,6 +25,7 @@ export class UiData {
 
   constructor(
     readonly rects: Rectangle[],
+    public sfRects: Rectangle[] | undefined,
     public tree: HierarchyTreeNode | null,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,

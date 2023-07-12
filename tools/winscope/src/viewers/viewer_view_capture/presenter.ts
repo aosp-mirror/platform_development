@@ -18,7 +18,7 @@ import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {Point} from 'flickerlib/common';
+import {LayerTraceEntry, Point} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -28,10 +28,12 @@ import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {Presenter as SurfaceFlingerPresenter} from 'viewers/viewer_surface_flinger/presenter';
 import {UiData} from './ui_data';
 
 export class Presenter {
   private viewCaptureTrace: Trace<object>;
+  private surfaceFlingerTrace: Trace<object> | undefined;
 
   private selectedFrameData: any | undefined;
   private previousFrameData: any | undefined;
@@ -92,20 +94,32 @@ export class Presenter {
     private readonly notifyUiDataCallback: (data: UiData) => void
   ) {
     this.viewCaptureTrace = assertDefined(traces.getTrace(TraceType.VIEW_CAPTURE));
+    this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
   async onAppEvent(event: AppEvent) {
     await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
-      const entry = TraceEntryFinder.findCorrespondingEntry(this.viewCaptureTrace, event.position);
-
-      let prevEntry: typeof entry;
-      if (entry && entry.getIndex() > 0) {
-        prevEntry = this.viewCaptureTrace.getEntry(entry.getIndex() - 1);
+      const vcEntry = TraceEntryFinder.findCorrespondingEntry(
+        this.viewCaptureTrace,
+        event.position
+      );
+      let prevVcEntry: typeof vcEntry;
+      if (vcEntry && vcEntry.getIndex() > 0) {
+        prevVcEntry = this.viewCaptureTrace.getEntry(vcEntry.getIndex() - 1);
       }
 
-      this.selectedFrameData = await entry?.getValue();
-      this.previousFrameData = await prevEntry?.getValue();
+      this.selectedFrameData = await vcEntry?.getValue();
+      this.previousFrameData = await prevVcEntry?.getValue();
 
+      if (this.uiData && this.surfaceFlingerTrace) {
+        this.uiData.sfRects = Presenter.generateSurfaceFlingerRectangles(
+          await TraceEntryFinder.findCorrespondingEntry(
+            this.surfaceFlingerTrace,
+            event.position
+          )?.getValue(),
+          this.hierarchyUserOptions
+        );
+      }
       this.refreshUI();
     });
   }
@@ -118,7 +132,8 @@ export class Presenter {
     }
 
     this.uiData = new UiData(
-      this.generateRectangles(),
+      this.generateViewCaptureRectangles(),
+      this.uiData?.sfRects,
       tree,
       this.hierarchyUserOptions,
       this.propertiesUserOptions,
@@ -129,7 +144,7 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private generateRectangles(): Rectangle[] {
+  private generateViewCaptureRectangles(): Rectangle[] {
     const rectangles: Rectangle[] = [];
 
     function inner(node: any /* ViewNode */) {
@@ -150,6 +165,7 @@ export class Presenter {
         isClickable: true,
         cornerRadius: 0,
         depth: node.depth,
+        hasContent: node.isVisible,
       };
       rectangles.push(aRectangle);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
@@ -272,5 +288,26 @@ export class Presenter {
     // won't detect the new input
     const copy = Object.assign({}, this.uiData);
     this.notifyUiDataCallback(copy);
+  }
+
+  private static generateSurfaceFlingerRectangles(
+    entry: LayerTraceEntry,
+    hierarchyUserOptions: UserOptions
+  ): Rectangle[] {
+    const rects = SurfaceFlingerPresenter.getRectsViewLayers(hierarchyUserOptions, entry)
+      .sort(SurfaceFlingerPresenter.compareLayerZ)
+      .map((it: any) => {
+        const rect = it.rect;
+        rect.displayId = it.stackId;
+        rect.cornerRadius = it.cornerRadius;
+        rect.transform = {
+          matrix: rect.transform.matrix,
+        };
+        return rect;
+      });
+
+    return SurfaceFlingerPresenter.rectsToUiData(
+      rects.concat(SurfaceFlingerPresenter.getDisplayRects(entry))
+    );
   }
 }

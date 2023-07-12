@@ -80,13 +80,13 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor() {
-    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP;
+  increaseZoomFactor(times: number = 1) {
+    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor() {
-    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP;
+  decreaseZoomFactor(times: number = 1) {
+    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
@@ -219,6 +219,8 @@ class Mapper3D {
     let colorType: ColorType;
     if (this.highlightedRectIds.includes(rect2d.id)) {
       colorType = ColorType.HIGHLIGHTED;
+    } else if (rect2d.hasContent === true) {
+      colorType = ColorType.HAS_CONTENT;
     } else if (rect2d.isVisible) {
       colorType = ColorType.VISIBLE;
     } else {

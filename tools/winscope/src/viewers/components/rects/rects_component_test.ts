@@ -57,7 +57,7 @@ describe('RectsComponent', () => {
   });
 
   it('renders canvas', () => {
-    const rectsCanvas = htmlElement.querySelector('.canvas-rects');
+    const rectsCanvas = htmlElement.querySelector('.large-rects-canvas');
     expect(rectsCanvas).toBeTruthy();
   });
 
