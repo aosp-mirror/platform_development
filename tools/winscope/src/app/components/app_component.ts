@@ -228,6 +228,8 @@ export class AppComponent implements TraceDataListener {
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
     @Inject(SnackBarOpener) snackBar: SnackBarOpener
   ) {
+    CrossPlatform.setCache(new NoCache());
+
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
     this.mediator = new Mediator(

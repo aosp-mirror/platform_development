@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {enableProdMode} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {AppModule} from './app/app_module';
-import {globalConfig} from './common/global_config';
 
-globalConfig.set({
-  MODE: 'PROD',
-});
-
-enableProdMode();
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
+export class UrlUtils {
+  static getRootUrl(): string {
+    const fullUrl = window.location.href;
+    const posLastSlash = fullUrl.lastIndexOf('/');
+    return fullUrl.slice(0, posLastSlash + 1);
+  }
+}

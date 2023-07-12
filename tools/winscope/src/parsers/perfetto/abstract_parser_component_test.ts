@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {enableProdMode} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {AppModule} from './app/app_module';
-import {globalConfig} from './common/global_config';
+import {KarmaTestUtils} from 'test/unit/karma_utils';
 
-globalConfig.set({
-  MODE: 'PROD',
+describe('Perfetto AbstractParser', () => {
+  it('fails parsing if there are no trace entries', async () => {
+    const parsers = await KarmaTestUtils.getPerfettoParsers(
+      'traces/perfetto/no_winscope_traces.perfetto-trace'
+    );
+    expect(parsers.length).toEqual(0);
+  });
 });
-
-enableProdMode();
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));

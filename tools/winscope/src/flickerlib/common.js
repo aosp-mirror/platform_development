@@ -105,6 +105,8 @@ const WindowingMode = require('flickerlib/flicker').android.tools.common.traces.
 const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
 const TimestampFactory = require('flickerlib/flicker').android.tools.common.TimestampFactory;
 
+const NoCache = require('flickerlib/flicker').android.tools.common.NoCache;
+
 const EMPTY_SIZE = Size.Companion.EMPTY;
 const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
 const EMPTY_COLOR = Color.Companion.EMPTY;
@@ -340,6 +342,7 @@ export {
   WindowingMode,
   CrossPlatform,
   TimestampFactory,
+  NoCache,
   // Service
   toSize,
   toActiveBuffer,

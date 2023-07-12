@@ -19,6 +19,7 @@ import * as protobuf from 'protobufjs';
 protobuf.util.Long = Long; // otherwise 64-bit types would be decoded as javascript number (only 53-bits precision)
 protobuf.configure();
 
+import winscopeJson from 'external/perfetto/protos/perfetto/trace/android/winscope.proto';
 import protoLogJson from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import accessibilityJson from 'frameworks/base/core/proto/android/server/accessibilitytrace.proto';
 import windowManagerJson from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
@@ -69,15 +70,16 @@ const ExportedData = protobuf.Root.fromJSON(viewCaptureJson).lookupType(
 
 export {
   AccessibilityTraceFileProto,
+  ExportedData,
   InputMethodClientsTraceFileProto,
   InputMethodManagerServiceTraceFileProto,
   InputMethodServiceTraceFileProto,
   LayersTraceFileProto,
   ProtoLogFileProto,
+  ShellTransitionsTraceFileProto,
   TransactionsTraceFileProto,
   WindowManagerServiceDumpProto,
   WindowManagerTraceFileProto,
   WmTransitionsTraceFileProto,
-  ShellTransitionsTraceFileProto,
-  ExportedData,
+  winscopeJson,
 };
