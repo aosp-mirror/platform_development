@@ -58,8 +58,8 @@ describe('Upload traces', () => {
     expect(text).toContain('Transitions');
 
     // Should be merged into a single Transitions trace
-    expect(text.includes("WM Transitions")).toBeFalsy();
-    expect(text.includes("Shell Transitions")).toBeFalsy();
+    expect(text.includes('WM Transitions')).toBeFalsy();
+    expect(text.includes('Shell Transitions')).toBeFalsy();
 
     expect(text).toContain('wm_log.winscope');
     expect(text).toContain('ime_trace_service.winscope');
