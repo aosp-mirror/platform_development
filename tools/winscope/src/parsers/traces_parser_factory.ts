@@ -29,7 +29,6 @@ export class TracesParserFactory {
         const parser = new ParserType(parsers);
         await parser.parse();
         tracesParsers.push(parser);
-        break;
       } catch (error) {
         // skip current parser
       }
