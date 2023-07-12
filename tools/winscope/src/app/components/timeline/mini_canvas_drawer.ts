@@ -243,13 +243,13 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         from: this.input.transformer.untransform(x),
         to: this.inputGetter().zoomRange.to,
       });
-    }
+    };
     const onRightZoomChanged = (x: number) => {
       this.onZoomChanged({
         from: this.inputGetter().zoomRange.from,
         to: this.input.transformer.untransform(x),
       });
-    }
+    };
 
     const barWidth = 6;
     const selectorArrowWidth = this.innerHeight / 12;
