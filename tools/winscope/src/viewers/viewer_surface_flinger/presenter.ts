@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
@@ -22,7 +23,6 @@ import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
 import {TreeGenerator} from 'viewers/common/tree_generator';
@@ -101,25 +101,27 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    this.uiData = new UiData();
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      this.uiData = new UiData();
+      this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+      this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
-    const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
-    const prevEntry =
-      entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
+      const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
+      const prevEntry =
+        entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
 
-    this.entry = (await entry?.getValue()) ?? null;
-    this.previousEntry = (await prevEntry?.getValue()) ?? null;
-    if (this.entry) {
-      this.uiData.highlightedItems = this.highlightedItems;
-      this.uiData.rects = this.generateRects();
-      this.uiData.displayIds = this.displayIds;
-      this.uiData.tree = this.generateTree();
-    }
+      this.entry = (await entry?.getValue()) ?? null;
+      this.previousEntry = (await prevEntry?.getValue()) ?? null;
+      if (this.entry) {
+        this.uiData.highlightedItems = this.highlightedItems;
+        this.uiData.rects = this.generateRects();
+        this.uiData.displayIds = this.displayIds;
+        this.uiData.tree = this.generateTree();
+      }
 
-    this.copyUiDataAndNotifyView();
+      this.copyUiDataAndNotifyView();
+    });
   }
 
   updatePinnedItems(pinnedItem: HierarchyTreeNode) {

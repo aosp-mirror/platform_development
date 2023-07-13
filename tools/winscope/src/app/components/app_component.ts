@@ -24,6 +24,7 @@ import {
 } from '@angular/core';
 import {createCustomElement} from '@angular/elements';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
+import {AppEvent, AppEventType} from 'app/app_event';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
@@ -32,6 +33,7 @@ import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {CrossPlatform, NoCache} from 'flickerlib/common';
+import {AppEventListener} from 'interfaces/app_event_listener';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {Timestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
@@ -49,6 +51,7 @@ import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer
 import {CollectTracesComponent} from './collect_traces_component';
 import {SnackBarOpener} from './snack_bar_opener';
 import {TimelineComponent} from './timeline/timeline_component';
+import {TraceViewComponent} from './trace_view_component';
 import {UploadTracesComponent} from './upload_traces_component';
 
 @Component({
@@ -108,8 +111,7 @@ import {UploadTracesComponent} from './upload_traces_component';
             class="viewers"
             [viewers]="viewers"
             [store]="store"
-            (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
-            (activeViewChanged)="onActiveViewChanged($event)"></trace-view>
+            (downloadTracesButtonClick)="onDownloadTracesButtonClick()"></trace-view>
 
           <mat-divider></mat-divider>
         </ng-container>
@@ -199,7 +201,7 @@ import {UploadTracesComponent} from './upload_traces_component';
   ],
   encapsulation: ViewEncapsulation.None,
 })
-export class AppComponent implements TraceDataListener {
+export class AppComponent implements AppEventListener, TraceDataListener {
   title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
   snackbarOpener: SnackBarOpener;
@@ -220,6 +222,7 @@ export class AppComponent implements TraceDataListener {
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
+  @ViewChild(TraceViewComponent) traceViewComponent?: TraceViewComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
   TRACE_INFO = TRACE_INFO;
 
@@ -303,6 +306,7 @@ export class AppComponent implements TraceDataListener {
   ngAfterViewChecked() {
     this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
     this.mediator.setCollectTracesComponent(this.collectTracesComponent);
+    this.mediator.setTraceViewComponent(this.traceViewComponent);
     this.mediator.setTimelineComponent(this.timelineComponent);
   }
 
@@ -348,11 +352,12 @@ export class AppComponent implements TraceDataListener {
     document.body.removeChild(a);
   }
 
-  async onActiveViewChanged(view: View) {
-    this.activeView = view;
-    this.activeTrace = this.getActiveTrace(view);
-    this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
-    await this.mediator.onWinscopeActiveViewChanged(view);
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TABBED_VIEW_SWITCHED, async (event) => {
+      this.activeView = event.newFocusedView;
+      this.activeTrace = this.getActiveTrace(event.newFocusedView);
+      this.activeTraceFileInfo = this.makeActiveTraceFileInfo(event.newFocusedView);
+    });
   }
 
   goToLink(url: string) {

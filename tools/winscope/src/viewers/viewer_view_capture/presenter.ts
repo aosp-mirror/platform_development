@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
@@ -21,7 +22,6 @@ import {Point} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Rectangle} from 'viewers/common/rectangle';
 import {TreeGenerator} from 'viewers/common/tree_generator';
@@ -94,18 +94,20 @@ export class Presenter {
     this.viewCaptureTrace = assertDefined(traces.getTrace(TraceType.VIEW_CAPTURE));
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    const entry = TraceEntryFinder.findCorrespondingEntry(this.viewCaptureTrace, position);
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      const entry = TraceEntryFinder.findCorrespondingEntry(this.viewCaptureTrace, event.position);
 
-    let prevEntry: typeof entry;
-    if (entry && entry.getIndex() > 0) {
-      prevEntry = this.viewCaptureTrace.getEntry(entry.getIndex() - 1);
-    }
+      let prevEntry: typeof entry;
+      if (entry && entry.getIndex() > 0) {
+        prevEntry = this.viewCaptureTrace.getEntry(entry.getIndex() - 1);
+      }
 
-    this.selectedFrameData = await entry?.getValue();
-    this.previousFrameData = await prevEntry?.getValue();
+      this.selectedFrameData = await entry?.getValue();
+      this.previousFrameData = await prevEntry?.getValue();
 
-    this.refreshUI();
+      this.refreshUI();
+    });
   }
 
   private refreshUI() {

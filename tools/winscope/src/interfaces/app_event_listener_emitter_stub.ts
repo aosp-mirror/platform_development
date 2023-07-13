@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,15 @@
  */
 
 import {AppEvent} from 'app/app_event';
-import {AppEventListener} from 'interfaces/app_event_listener';
-import {TraceDataListener} from 'interfaces/trace_data_listener';
-import {Viewer} from 'viewers/viewer';
+import {AppEventEmitter, EmitAppEvent} from './app_event_emitter';
+import {AppEventListener} from './app_event_listener';
 
-export class AppComponentStub implements AppEventListener, TraceDataListener {
+export class AppEventListenerEmitterStub implements AppEventListener, AppEventEmitter {
   async onAppEvent(event: AppEvent) {
     // do nothing
   }
 
-  onTraceDataLoaded(viewers: Viewer[]) {
-    // do nothing
-  }
-
-  onTraceDataUnloaded() {
+  setEmitAppEvent(callback: EmitAppEvent) {
     // do nothing
   }
 }

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {AppEvent} from 'app/app_event';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
@@ -34,8 +34,12 @@ export class ViewerTransitions implements Viewer {
     });
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.presenter.onTracePositionUpdate(position);
+  async onAppEvent(event: AppEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitAppEvent() {
+    // do nothing
   }
 
   getViews(): View[] {

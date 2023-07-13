@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TracePositionUpdate} from 'app/app_event';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
@@ -22,7 +23,6 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -31,8 +31,8 @@ import {UiData} from './ui_data';
 
 describe('PresenterSurfaceFlinger', () => {
   let trace: Trace<LayerTraceEntry>;
-  let position: TracePosition;
-  let positionMultiDisplayEntry: TracePosition;
+  let positionUpdate: TracePositionUpdate;
+  let positionUpdateMultiDisplayEntry: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
   let selectedTree: HierarchyTreeNode;
@@ -45,8 +45,8 @@ describe('PresenterSurfaceFlinger', () => {
       ])
       .build();
 
-    position = TracePosition.fromTraceEntry(trace.getEntry(0));
-    positionMultiDisplayEntry = TracePosition.fromTraceEntry(trace.getEntry(1));
+    positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
+    positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(trace.getEntry(1));
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('Dim layer#53')
@@ -66,14 +66,16 @@ describe('PresenterSurfaceFlinger', () => {
     const emptyTrace = new TraceBuilder<LayerTraceEntry>().setEntries([]).build();
     const presenter = createPresenter(emptyTrace);
 
-    const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
+      new RealTimestamp(0n)
+    );
+    await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
   it('processes trace position updates', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.highlightedItems?.length).toEqual(0);
@@ -90,7 +92,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('creates input data for rects view', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 0});
     expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 118});
@@ -137,7 +139,7 @@ describe('PresenterSurfaceFlinger', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.tree?.children.length).toEqual(3);
 
     presenter.updateHierarchyTree(userOptions);
@@ -165,7 +167,7 @@ describe('PresenterSurfaceFlinger', () => {
         enabled: true,
       },
     };
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.tree?.children.length).toEqual(94);
     presenter.filterHierarchyTree('Wallpaper');
@@ -174,7 +176,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('sets properties tree and associated ui data', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
@@ -198,7 +200,7 @@ describe('PresenterSurfaceFlinger', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
 
@@ -208,7 +210,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('filters properties tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     let nonTerminalChildren =
       uiData.propertiesTree?.children?.filter(
@@ -226,7 +228,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('handles displays with no visible layers', async () => {
-    await presenter.onTracePositionUpdate(positionMultiDisplayEntry);
+    await presenter.onAppEvent(positionUpdateMultiDisplayEntry);
     expect(uiData.displayIds.length).toEqual(5);
     // we want the ids to be sorted
     expect(uiData.displayIds).toEqual([0, 2, 3, 4, 5]);

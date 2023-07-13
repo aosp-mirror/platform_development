@@ -16,14 +16,17 @@
 
 import {AbtChromeExtensionProtocolStub} from 'abt_chrome_extension/abt_chrome_extension_protocol_stub';
 import {CrossToolProtocolStub} from 'cross_tool/cross_tool_protocol_stub';
+import {AppEventListenerEmitterStub} from 'interfaces/app_event_listener_emitter_stub';
 import {ProgressListenerStub} from 'interfaces/progress_listener_stub';
 import {MockStorage} from 'test/unit/mock_storage';
 import {UnitTestUtils} from 'test/unit/utils';
 import {RealTimestamp} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {ViewerStub} from 'viewers/viewer_stub';
+import {AppEvent, AppEventType, TabbedViewSwitched, TabbedViewSwitchRequest} from './app_event';
 import {AppComponentStub} from './components/app_component_stub';
 import {SnackBarOpenerStub} from './components/snack_bar_opener_stub';
 import {TimelineComponentStub} from './components/timeline/timeline_component_stub';
@@ -42,6 +45,7 @@ describe('Mediator', () => {
   let timelineComponent: TimelineComponentStub;
   let uploadTracesComponent: ProgressListenerStub;
   let collectTracesComponent: ProgressListenerStub;
+  let traceViewComponent: AppEventListenerEmitterStub;
   let snackBarOpener: SnackBarOpenerStub;
   let mediator: Mediator;
 
@@ -69,6 +73,7 @@ describe('Mediator', () => {
     timelineComponent = new TimelineComponentStub();
     uploadTracesComponent = new ProgressListenerStub();
     collectTracesComponent = new ProgressListenerStub();
+    traceViewComponent = new AppEventListenerEmitterStub();
     snackBarOpener = new SnackBarOpenerStub();
     mediator = new Mediator(
       tracePipeline,
@@ -82,6 +87,7 @@ describe('Mediator', () => {
     mediator.setTimelineComponent(timelineComponent);
     mediator.setUploadTracesComponent(uploadTracesComponent);
     mediator.setCollectTracesComponent(collectTracesComponent);
+    mediator.setTraceViewComponent(traceViewComponent);
 
     spyOn(ViewerFactory.prototype, 'createViewers').and.returnValue([viewerStub]);
   });
@@ -92,7 +98,7 @@ describe('Mediator', () => {
       spyOn(uploadTracesComponent, 'onOperationFinished'),
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(appComponent, 'onTraceDataLoaded'),
-      spyOn(viewerStub, 'onTracePositionUpdate'),
+      spyOn(viewerStub, 'onAppEvent'),
       spyOn(timelineComponent, 'onTracePositionUpdate'),
       spyOn(crossToolProtocol, 'sendTimestamp'),
     ];
@@ -103,7 +109,7 @@ describe('Mediator', () => {
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalled();
     expect(timelineData.initialize).not.toHaveBeenCalled();
     expect(appComponent.onTraceDataLoaded).not.toHaveBeenCalled();
-    expect(viewerStub.onTracePositionUpdate).not.toHaveBeenCalled();
+    expect(viewerStub.onAppEvent).not.toHaveBeenCalled();
 
     spies.forEach((spy) => {
       spy.calls.reset();
@@ -116,7 +122,11 @@ describe('Mediator', () => {
     expect(appComponent.onTraceDataLoaded).toHaveBeenCalledOnceWith([viewerStub]);
 
     // propagates trace position on viewers creation
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
   });
@@ -127,7 +137,7 @@ describe('Mediator', () => {
       spyOn(collectTracesComponent, 'onOperationFinished'),
       spyOn(timelineData, 'initialize').and.callThrough(),
       spyOn(appComponent, 'onTraceDataLoaded'),
-      spyOn(viewerStub, 'onTracePositionUpdate'),
+      spyOn(viewerStub, 'onAppEvent'),
       spyOn(timelineComponent, 'onTracePositionUpdate'),
       spyOn(crossToolProtocol, 'sendTimestamp'),
     ];
@@ -140,7 +150,11 @@ describe('Mediator', () => {
     expect(appComponent.onTraceDataLoaded).toHaveBeenCalledOnceWith([viewerStub]);
 
     // propagates trace position on viewers creation
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
   });
@@ -173,22 +187,31 @@ describe('Mediator', () => {
     await loadTraceFiles();
     await mediator.onWinscopeViewTracesRequest();
 
-    spyOn(viewerStub, 'onTracePositionUpdate');
+    spyOn(viewerStub, 'onAppEvent');
     spyOn(timelineComponent, 'onTracePositionUpdate');
     spyOn(crossToolProtocol, 'sendTimestamp');
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(0);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledTimes(0);
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(0);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
 
     // notify position
     await mediator.onTimelineTracePositionUpdate(POSITION_10);
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(1);
 
     // notify position
     await mediator.onTimelineTracePositionUpdate(POSITION_11);
-    expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(2);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledTimes(2);
+    expect(viewerStub.onAppEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
     expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(2);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(2);
   });
@@ -198,19 +221,28 @@ describe('Mediator', () => {
       await loadTraceFiles();
       await mediator.onWinscopeViewTracesRequest();
 
-      spyOn(viewerStub, 'onTracePositionUpdate');
+      spyOn(viewerStub, 'onAppEvent');
       spyOn(timelineComponent, 'onTracePositionUpdate');
-      expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(0);
+      expect(viewerStub.onAppEvent).toHaveBeenCalledTimes(0);
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(0);
 
       // receive timestamp
       await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
-      expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+      expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+        jasmine.objectContaining({
+          type: AppEventType.TRACE_POSITION_UPDATE,
+        } as AppEvent)
+      );
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(1);
 
       // receive timestamp
       await crossToolProtocol.onTimestampReceived(TIMESTAMP_11);
-      expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(2);
+      expect(viewerStub.onAppEvent).toHaveBeenCalledTimes(2);
+      expect(viewerStub.onAppEvent).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          type: AppEventType.TRACE_POSITION_UPDATE,
+        } as AppEvent)
+      );
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(2);
     });
 
@@ -218,16 +250,20 @@ describe('Mediator', () => {
       await loadTraceFiles();
       await mediator.onWinscopeViewTracesRequest();
 
-      spyOn(viewerStub, 'onTracePositionUpdate');
+      spyOn(viewerStub, 'onAppEvent');
       spyOn(crossToolProtocol, 'sendTimestamp');
 
       // receive timestamp
       await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
-      expect(viewerStub.onTracePositionUpdate).toHaveBeenCalledTimes(1);
+      expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+        jasmine.objectContaining({
+          type: AppEventType.TRACE_POSITION_UPDATE,
+        } as AppEvent)
+      );
       expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
     });
 
-    it('defers propagation till traces are loaded and visualized', async () => {
+    it('defers trace position propagation till traces are loaded and visualized', async () => {
       spyOn(timelineComponent, 'onTracePositionUpdate');
 
       // keep timestamp for later
@@ -243,6 +279,37 @@ describe('Mediator', () => {
       await mediator.onWinscopeViewTracesRequest();
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledWith(POSITION_11);
     });
+  });
+
+  it("forwards 'switched view' events", async () => {
+    //TODO (after integrating also the timeline with AppEvent):
+    // spyOn(timelineComponent, 'onAppEvent') + checks
+
+    spyOn(appComponent, 'onAppEvent');
+    expect(appComponent.onAppEvent).not.toHaveBeenCalled();
+
+    const event = new TabbedViewSwitched(viewerStub.getViews()[0]);
+    await mediator.onTraceViewAppEvent(event);
+    expect(appComponent.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TABBED_VIEW_SWITCHED,
+      } as AppEvent)
+    );
+  });
+
+  it("forwards 'switch view' requests from viewers to trace view component", async () => {
+    await mediator.onWinscopeViewTracesRequest();
+
+    spyOn(traceViewComponent, 'onAppEvent');
+    expect(traceViewComponent.onAppEvent).not.toHaveBeenCalled();
+
+    await viewerStub.emitAppEventForTesting(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE));
+
+    expect(traceViewComponent.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TABBED_VIEW_SWITCH_REQUEST,
+      } as AppEvent)
+    );
   });
 
   const loadTraceFiles = async () => {

@@ -27,7 +27,6 @@ describe('FakeProtoTransformer', () => {
   it('sets default value (0) of number fields', () => {
     const proto = {};
     const transformed = transformer.transform(proto);
-    console.log('transformed:', transformed);
     expect(transformed.number_32bit).toEqual(0);
     expect(transformed.number_64bit).toEqual(0n);
   });

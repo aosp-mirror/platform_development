@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
@@ -34,10 +34,16 @@ class ViewerScreenRecording implements Viewer {
     this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
-    (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
-      await entry?.getValue();
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
+      (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
+        await entry?.getValue();
+    });
+  }
+
+  setEmitAppEvent() {
+    // do nothing
   }
 
   getViews(): View[] {
