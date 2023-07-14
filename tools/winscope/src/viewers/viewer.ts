@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import {TracePosition} from 'trace/trace_position';
+import {AppEvent} from 'app/app_event';
+import {AppEventEmitter, EmitAppEvent} from 'interfaces/app_event_emitter';
+import {AppEventListener} from 'interfaces/app_event_listener';
 import {TraceType} from 'trace/trace_type';
 
 enum ViewType {
@@ -32,8 +33,9 @@ class View {
   ) {}
 }
 
-interface Viewer {
-  onTracePositionUpdate(position: TracePosition): Promise<void>;
+interface Viewer extends AppEventListener, AppEventEmitter {
+  onAppEvent(event: AppEvent): Promise<void>;
+  setEmitAppEvent(callback: EmitAppEvent): void;
   getViews(): View[];
   getDependencies(): TraceType[];
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TracePositionUpdate} from 'app/app_event';
 import {WindowManagerState} from 'flickerlib/common';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
@@ -22,7 +23,6 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
@@ -32,7 +32,7 @@ import {UiData} from './ui_data';
 
 describe('PresenterWindowManager', () => {
   let trace: Trace<WindowManagerState>;
-  let position: TracePosition;
+  let positionUpdate: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
   let selectedTree: HierarchyTreeNode;
@@ -42,7 +42,7 @@ describe('PresenterWindowManager', () => {
       .setEntries([await UnitTestUtils.getWindowManagerState()])
       .build();
 
-    position = TracePosition.fromTraceEntry(trace.getEntry(0));
+    positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('ScreenDecorOverlayBottom')
@@ -67,14 +67,16 @@ describe('PresenterWindowManager', () => {
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
 
-    const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
+      new RealTimestamp(0n)
+    );
+    await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
   it('processes trace position update', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     const filteredUiDataRectLabels = uiData.rects
       ?.filter((rect) => rect.isVisible !== undefined)
       .map((rect) => rect.label);
@@ -95,14 +97,14 @@ describe('PresenterWindowManager', () => {
   });
 
   it('creates input data for rects view', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 2326});
     expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 2400});
   });
 
   it('updates pinned items', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.pinnedItems).toEqual([]);
 
     const pinnedItem = new HierarchyTreeBuilder()
@@ -143,7 +145,7 @@ describe('PresenterWindowManager', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.tree?.children.length).toEqual(1);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
@@ -170,7 +172,7 @@ describe('PresenterWindowManager', () => {
         enabled: true,
       },
     };
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.tree?.children.length).toEqual(72);
     presenter.filterHierarchyTree('ScreenDecor');
@@ -179,7 +181,7 @@ describe('PresenterWindowManager', () => {
   });
 
   it('sets properties tree and associated ui data', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
@@ -203,7 +205,7 @@ describe('PresenterWindowManager', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
     presenter.updatePropertiesTree(userOptions);
@@ -213,7 +215,7 @@ describe('PresenterWindowManager', () => {
   });
 
   it('filters properties tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
 
     let nonTerminalChildren =

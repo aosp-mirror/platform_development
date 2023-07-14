@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData} from './ui_data';
@@ -39,16 +39,18 @@ export class Presenter {
     this.notifyUiDataCallback = notifyUiDataCallback;
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    if (this.uiData === UiData.EMPTY) {
-      this.uiData = await this.computeUiData();
-    }
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      if (this.uiData === UiData.EMPTY) {
+        this.uiData = await this.computeUiData();
+      }
 
-    const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, position);
+      const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, event.position);
 
-    this.uiData.selectedTransition = await entry?.getValue();
+      this.uiData.selectedTransition = await entry?.getValue();
 
-    this.notifyUiDataCallback(this.uiData);
+      this.notifyUiDataCallback(this.uiData);
+    });
   }
 
   onTransitionSelected(transition: Transition): void {

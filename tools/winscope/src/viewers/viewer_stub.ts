@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-import {TracePosition} from 'trace/trace_position';
+import {AppEvent} from 'app/app_event';
+import {FunctionUtils} from 'common/function_utils';
+import {EmitAppEvent} from 'interfaces/app_event_emitter';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
-  constructor(title: string, viewContent?: string) {
+  private htmlElement: HTMLElement;
+  private title: string;
+  private view: View;
+  private dependencies: TraceType[];
+  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
+  constructor(title: string, viewContent?: string, dependencies?: TraceType[]) {
     this.title = title;
 
     if (viewContent !== undefined) {
@@ -28,30 +36,37 @@ class ViewerStub implements Viewer {
     } else {
       this.htmlElement = undefined as unknown as HTMLElement;
     }
+
+    this.dependencies = dependencies ?? [TraceType.WINDOW_MANAGER];
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      this.title,
+      this.getDependencies()[0]
+    );
   }
 
-  onTracePositionUpdate(position: TracePosition): Promise<void> {
+  onAppEvent(event: AppEvent): Promise<void> {
     return Promise.resolve();
   }
 
+  setEmitAppEvent(callback: EmitAppEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  async emitAppEventForTesting(event: AppEvent) {
+    await this.emitAppEvent(event);
+  }
+
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        this.title,
-        this.getDependencies()[0]
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
-    return [TraceType.WINDOW_MANAGER];
+    return this.dependencies;
   }
-
-  private htmlElement: HTMLElement;
-  private title: string;
 }
 
 export {ViewerStub};

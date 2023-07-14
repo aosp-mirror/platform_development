@@ -18,6 +18,8 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
+import {AppEvent, AppEventType, TabbedViewSwitchRequest} from 'app/app_event';
+import {TraceType} from 'trace/trace_type';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
@@ -36,8 +38,8 @@ describe('TraceViewComponent', () => {
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub('Title0', 'Content0'),
-      new ViewerStub('Title1', 'Content1'),
+      new ViewerStub('Title0', 'Content0', [TraceType.SURFACE_FLINGER]),
+      new ViewerStub('Title1', 'Content1', [TraceType.VIEW_CAPTURE]),
     ];
     component.ngOnChanges();
     fixture.detectChanges();
@@ -55,17 +57,7 @@ describe('TraceViewComponent', () => {
     expect(tabs.item(1)!.textContent).toContain('Title1');
   });
 
-  it('changes active view on click', () => {
-    const getVisibleTabContents = () => {
-      const contents: HTMLElement[] = [];
-      htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {
-        if ((content as HTMLElement).style.display !== 'none') {
-          contents.push(content as HTMLElement);
-        }
-      });
-      return contents;
-    };
-
+  it('switches view on click', () => {
     const tabButtons = htmlElement.querySelectorAll('.tab');
 
     // Initially tab 0
@@ -89,6 +81,54 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
   });
 
+  it("emits 'view switched' events", () => {
+    const tabButtons = htmlElement.querySelectorAll('.tab');
+
+    const emitAppEvent = jasmine.createSpy();
+    component.setEmitAppEvent(emitAppEvent);
+
+    expect(emitAppEvent).not.toHaveBeenCalled();
+
+    tabButtons[1].dispatchEvent(new Event('click'));
+    expect(emitAppEvent).toHaveBeenCalledTimes(1);
+    expect(emitAppEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: AppEventType.TABBED_VIEW_SWITCHED,
+      } as AppEvent)
+    );
+
+    tabButtons[0].dispatchEvent(new Event('click'));
+    expect(emitAppEvent).toHaveBeenCalledTimes(2);
+    expect(emitAppEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: AppEventType.TABBED_VIEW_SWITCHED,
+      } as AppEvent)
+    );
+  });
+
+  it("handles 'view switch' requests", async () => {
+    const tabButtons = htmlElement.querySelectorAll('.tab');
+
+    // Initially tab 0
+    let visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual('Content0');
+
+    // Switch to tab 1
+    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE));
+    fixture.detectChanges();
+    visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual('Content1');
+
+    // Switch to tab 0
+    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
+    fixture.detectChanges();
+    visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual('Content0');
+  });
+
   it('emits event on download button click', () => {
     const spy = spyOn(component.downloadTracesButtonClick, 'emit');
 
@@ -103,4 +143,14 @@ describe('TraceViewComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(2);
   });
+
+  const getVisibleTabContents = () => {
+    const contents: HTMLElement[] = [];
+    htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {
+      if ((content as HTMLElement).style.display !== 'none') {
+        contents.push(content as HTMLElement);
+      }
+    });
+    return contents;
+  };
 });

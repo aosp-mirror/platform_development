@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TracePositionUpdate} from 'app/app_event';
 import {Point} from 'flickerlib/common';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
@@ -23,7 +24,6 @@ import {Parser} from 'trace/parser';
 import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -35,7 +35,7 @@ describe('PresenterViewCapture', () => {
   let trace: Trace<object>;
   let uiData: UiData;
   let presenter: Presenter;
-  let position: TracePosition;
+  let positionUpdate: TracePositionUpdate;
   let selectedTree: HierarchyTreeNode;
 
   beforeAll(async () => {
@@ -49,7 +49,7 @@ describe('PresenterViewCapture', () => {
         parser.getEntry(2, TimestampType.REAL),
       ])
       .build();
-    position = TracePosition.fromTraceEntry(trace.getEntry(0));
+    positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
     selectedTree = new HierarchyTreeBuilder()
       .setName('Name@Id')
       .setStableId('stableId')
@@ -59,7 +59,7 @@ describe('PresenterViewCapture', () => {
       .build();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 
@@ -67,14 +67,16 @@ describe('PresenterViewCapture', () => {
     const emptyTrace = new TraceBuilder<object>().setEntries([]).build();
     const presenter = createPresenter(emptyTrace);
 
-    const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
+      new RealTimestamp(0n)
+    );
+    await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
   it('processes trace position updates', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.highlightedItems?.length).toEqual(0);
@@ -86,7 +88,7 @@ describe('PresenterViewCapture', () => {
   });
 
   it('creates input data for rects view', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual(new Point(0, 0));
     expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 2340));
@@ -94,22 +96,22 @@ describe('PresenterViewCapture', () => {
 
   it('updates pinned items', async () => {
     const pinnedItem = new HierarchyTreeBuilder().setName('FirstPinnedItem').setId('id').build();
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
   it('updates highlighted items', async () => {
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.highlightedItems).toEqual([]);
 
     const id = '4';
-    await presenter.onTracePositionUpdate(position);
     presenter.updateHighlightedItems(id);
     expect(uiData.highlightedItems).toContain(id);
   });
 
   it('updates hierarchy tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     expect(
       // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace
@@ -157,7 +159,7 @@ describe('PresenterViewCapture', () => {
         enabled: true,
       },
     };
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updateHierarchyTree(userOptions);
     presenter.filterHierarchyTree('Workspace');
 
@@ -168,7 +170,7 @@ describe('PresenterViewCapture', () => {
   });
 
   it('sets properties tree and associated ui data', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree).toBeTruthy();
   });
@@ -190,7 +192,7 @@ describe('PresenterViewCapture', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
 
@@ -200,7 +202,7 @@ describe('PresenterViewCapture', () => {
   });
 
   it('filters properties tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     const userOptions: UserOptions = {
       showDiff: {

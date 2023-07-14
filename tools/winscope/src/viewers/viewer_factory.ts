@@ -45,7 +45,8 @@ class ViewerFactory {
     ViewerViewCapture,
   ];
 
-  createViewers(activeTraceTypes: Set<TraceType>, traces: Traces, storage: Storage): Viewer[] {
+  createViewers(traces: Traces, storage: Storage): Viewer[] {
+    const activeTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {

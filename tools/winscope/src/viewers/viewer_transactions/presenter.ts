@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {AppEvent, AppEventType} from 'app/app_event';
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
@@ -21,7 +22,6 @@ import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
@@ -60,21 +60,21 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.initializeIfNeeded();
+  async onAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+      this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
+      this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
+      this.uiData.selectedEntryIndex = undefined;
+      this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
+      this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+        this.uiData.entries,
+        this.uiData.currentEntryIndex,
+        this.uiData.selectedEntryIndex
+      );
 
-    this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
-
-    this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-    this.uiData.selectedEntryIndex = undefined;
-    this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex
-    );
-
-    this.notifyUiDataCallback(this.uiData);
+      this.notifyUiDataCallback(this.uiData);
+    });
   }
 
   onVSyncIdFilterChanged(vsyncIds: string[]) {

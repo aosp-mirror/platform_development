@@ -15,6 +15,8 @@
  */
 
 import {FileUtils, OnFile} from 'common/file_utils';
+import {AppEventEmitter} from 'interfaces/app_event_emitter';
+import {AppEventListener} from 'interfaces/app_event_listener';
 import {BuganizerAttachmentsDownloadEmitter} from 'interfaces/buganizer_attachments_download_emitter';
 import {ProgressListener} from 'interfaces/progress_listener';
 import {RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
@@ -28,9 +30,9 @@ import {UserNotificationListener} from 'interfaces/user_notification_listener';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
-import {View, Viewer} from 'viewers/viewer';
+import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
+import {AppEvent, AppEventType, TracePositionUpdate} from './app_event';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
@@ -45,15 +47,15 @@ export class Mediator {
   private crossToolProtocol: CrossToolProtocolInterface;
   private uploadTracesComponent?: ProgressListener;
   private collectTracesComponent?: ProgressListener;
+  private traceViewComponent?: AppEventListener & AppEventEmitter;
   private timelineComponent?: TimelineComponentInterface;
-  private appComponent: TraceDataListener;
+  private appComponent: AppEventListener & TraceDataListener;
   private userNotificationListener: UserNotificationListener;
   private storage: Storage;
 
   private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
   private viewers: Viewer[] = [];
-  private isChangingCurrentTimestamp = false;
   private isTraceDataVisualized = false;
   private lastRemoteToolTimestampReceived: Timestamp | undefined;
   private currentProgressListener?: ProgressListener;
@@ -63,7 +65,7 @@ export class Mediator {
     timelineData: TimelineData,
     abtChromeExtensionProtocol: AbtChromeExtensionProtocolInterface,
     crossToolProtocol: CrossToolProtocolInterface,
-    appComponent: TraceDataListener,
+    appComponent: AppEventListener & TraceDataListener,
     userNotificationListener: UserNotificationListener,
     storage: Storage
   ) {
@@ -96,16 +98,23 @@ export class Mediator {
     );
   }
 
-  setUploadTracesComponent(uploadTracesComponent: ProgressListener | undefined) {
-    this.uploadTracesComponent = uploadTracesComponent;
+  setUploadTracesComponent(component: ProgressListener | undefined) {
+    this.uploadTracesComponent = component;
   }
 
-  setCollectTracesComponent(collectTracesComponent: ProgressListener | undefined) {
-    this.collectTracesComponent = collectTracesComponent;
+  setCollectTracesComponent(component: ProgressListener | undefined) {
+    this.collectTracesComponent = component;
   }
 
-  setTimelineComponent(timelineComponent: TimelineComponentInterface | undefined) {
-    this.timelineComponent = timelineComponent;
+  setTraceViewComponent(component: (AppEventListener & AppEventEmitter) | undefined) {
+    this.traceViewComponent = component;
+    this.traceViewComponent?.setEmitAppEvent(async (event) => {
+      await this.onTraceViewAppEvent(event);
+    });
+  }
+
+  setTimelineComponent(component: TimelineComponentInterface | undefined) {
+    this.timelineComponent = component;
     this.timelineComponent?.setOnTracePositionUpdate(async (position) => {
       await this.onTimelineTracePositionUpdate(position);
     });
@@ -134,13 +143,22 @@ export class Mediator {
     await this.processLoadedTraceFiles();
   }
 
-  async onWinscopeActiveViewChanged(view: View) {
-    this.timelineData.setActiveViewTraceTypes(view.dependencies);
-    await this.propagateTracePosition(this.timelineData.getCurrentPosition());
-  }
-
   async onTimelineTracePositionUpdate(position: TracePosition) {
     await this.propagateTracePosition(position);
+  }
+
+  async onTraceViewAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TABBED_VIEW_SWITCHED, async (event) => {
+      await this.appComponent.onAppEvent(event);
+      this.timelineData.setActiveViewTraceTypes(event.newFocusedView.dependencies);
+      await this.propagateTracePosition(this.timelineData.getCurrentPosition());
+    });
+  }
+
+  async onViewerAppEvent(event: AppEvent) {
+    await event.visit(AppEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
+      await this.traceViewComponent?.onAppEvent(event);
+    });
   }
 
   private async propagateTracePosition(
@@ -152,8 +170,9 @@ export class Mediator {
     }
 
     //TODO (b/289478304): update only visible viewers (1 tab viewer + overlay viewers)
+    const event = new TracePositionUpdate(position);
     const promises = this.viewers.map((viewer) => {
-      return viewer.onTracePositionUpdate(position);
+      return viewer.onAppEvent(event);
     });
     await Promise.all(promises);
 
@@ -262,36 +281,22 @@ export class Mediator {
       this.tracePipeline.getTraces(),
       await this.tracePipeline.getScreenRecordingVideo()
     );
-    await this.createViewers();
+
+    this.viewers = new ViewerFactory().createViewers(this.tracePipeline.getTraces(), this.storage);
+    this.viewers.forEach((viewer) =>
+      viewer.setEmitAppEvent(async (event) => {
+        await this.onViewerAppEvent(event);
+      })
+    );
+
+    // Set position as soon as the viewers are created
+    await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
+
     this.appComponent.onTraceDataLoaded(this.viewers);
     this.isTraceDataVisualized = true;
 
     if (this.lastRemoteToolTimestampReceived !== undefined) {
       await this.onRemoteTimestampReceived(this.lastRemoteToolTimestampReceived);
-    }
-  }
-
-  private async createViewers() {
-    const traces = this.tracePipeline.getTraces();
-    const traceTypes = new Set<TraceType>();
-    traces.forEachTrace((trace) => {
-      traceTypes.add(trace.type);
-    });
-    this.viewers = new ViewerFactory().createViewers(traceTypes, traces, this.storage);
-
-    // Set position as soon as the viewers are created
-    await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
-  }
-
-  private async executeIgnoringRecursiveTimestampNotifications(op: () => Promise<void>) {
-    if (this.isChangingCurrentTimestamp) {
-      return;
-    }
-    this.isChangingCurrentTimestamp = true;
-    try {
-      await op();
-    } finally {
-      this.isChangingCurrentTimestamp = false;
     }
   }
 
