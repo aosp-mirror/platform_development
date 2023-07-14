@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--port", nargs="?", default="5039",
-        help="override the port used on the host [default: 5039]")
+        help="Unused **host** port to forward the debug_socket to.[default: 5039]")
     parser.add_argument(
         "--user", nargs="?", default="root",
         help="user to run commands as on the device [default: root]")
@@ -121,7 +121,7 @@ def verify_device(device: adb.AndroidDevice) -> None:
     names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.name")])
     target_device = os.environ["TARGET_PRODUCT"]
     if target_device not in names:
-        msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
+        msg = "You used the wrong lunch: TARGET_PRODUCT ({}) does not match attached device ({})"
         sys.exit(msg.format(target_device, ", ".join(n if n else "None" for n in names)))
 
 
