@@ -144,6 +144,22 @@ describe('TraceViewComponent', () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
+  it('emits tab set onChanges', () => {
+    const emitAppEvent = jasmine.createSpy();
+    component.setEmitAppEvent(emitAppEvent);
+
+    expect(emitAppEvent).not.toHaveBeenCalled();
+
+    component.ngOnChanges();
+
+    expect(emitAppEvent).toHaveBeenCalledTimes(1);
+    expect(emitAppEvent).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        type: AppEventType.TABBED_VIEW_SWITCHED,
+      } as AppEvent)
+    );
+  });
+
   const getVisibleTabContents = () => {
     const contents: HTMLElement[] = [];
     htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {

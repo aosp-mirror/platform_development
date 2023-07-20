@@ -129,16 +129,14 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
   }
 
   async onTabClick(tab: Tab) {
-    this.showTab(tab);
-    await this.emitAppEvent(new TabbedViewSwitched(tab));
+    await this.showTab(tab);
   }
 
   async onAppEvent(event: AppEvent) {
     await event.visit(AppEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
       const tab = this.tabs.find((tab) => tab.traceType === event.newFocusedViewId);
       if (tab) {
-        this.showTab(tab);
-        await this.emitAppEvent(new TabbedViewSwitched(tab));
+        await this.showTab(tab);
       }
     });
   }
@@ -198,7 +196,7 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     });
   }
 
-  private showTab(tab: Tab) {
+  private async showTab(tab: Tab) {
     if (this.currentActiveTab) {
       this.currentActiveTab.htmlElement.style.display = 'none';
     }
@@ -217,6 +215,8 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     }
 
     this.currentActiveTab = tab;
+
+    await this.emitAppEvent(new TabbedViewSwitched(tab));
   }
 
   isCurrentActiveTab(tab: Tab) {
