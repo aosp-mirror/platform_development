@@ -21,6 +21,7 @@ import argparse
 import atexit
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -170,11 +171,18 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
 
     # Push gdbserver to the target.
     if gdbserver_local_path is not None:
-        device.push(gdbserver_local_path, chroot + gdbserver_remote_path)
-        # If the user here is potentially on Windows, adb cannot inspect execute
-        # permissions. Since we don't know where the users are, chmod
-        # gdbserver_remote_path on device regardless.
-        device.shell(["chmod", "+x", gdbserver_remote_path])
+        try:
+            device.push(gdbserver_local_path, chroot + gdbserver_remote_path)
+            # If the user here is potentially on Windows, adb cannot inspect execute
+            # permissions. Since we don't know where the users are, chmod
+            # gdbserver_remote_path on device regardless.
+            device.shell(["chmod", "+x", gdbserver_remote_path])
+        except subprocess.CalledProcessError as err:
+            print("Command failed:")
+            print(shlex.join(err.cmd))
+            print("Output:")
+            print(err.output.decode("utf-8"))
+            raise
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path]
