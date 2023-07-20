@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
+/kotlin_build
 
 # Node
 /node_modules
