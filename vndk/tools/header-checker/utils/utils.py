@@ -293,25 +293,27 @@ def find_lib_lsdumps(lsdump_paths, libs, target):
     return [(tag, os.path.join(AOSP_DIR, path)) for tag, path in result]
 
 
-def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
-                 flags=tuple()):
-    abi_diff_cmd = ['header-abi-diff', '-new', new_test_dump_path, '-old',
-                    old_test_dump_path, '-arch', arch, '-lib', lib_name]
+def run_abi_diff(old_dump_path, new_dump_path, output_path, arch, lib_name,
+                 flags):
+    abi_diff_cmd = ['header-abi-diff', '-new', new_dump_path, '-old',
+                    old_dump_path, '-arch', arch, '-lib', lib_name,
+                    '-o', output_path]
+    abi_diff_cmd += flags
+    if '-input-format-old' not in flags:
+        abi_diff_cmd += ['-input-format-old', DEFAULT_FORMAT]
+    if '-input-format-new' not in flags:
+        abi_diff_cmd += ['-input-format-new', DEFAULT_FORMAT]
+    return subprocess.run(abi_diff_cmd).returncode
+
+
+def run_and_read_abi_diff(old_dump_path, new_dump_path, arch, lib_name,
+                          flags=tuple()):
     with tempfile.TemporaryDirectory() as tmp:
         output_name = os.path.join(tmp, lib_name) + '.abidiff'
-        abi_diff_cmd += ['-o', output_name]
-        abi_diff_cmd += flags
-        if '-input-format-old' not in flags:
-            abi_diff_cmd += ['-input-format-old', DEFAULT_FORMAT]
-        if '-input-format-new' not in flags:
-            abi_diff_cmd += ['-input-format-new', DEFAULT_FORMAT]
-
-        result = subprocess.run(abi_diff_cmd)
-        output = ""
-        if os.path.isfile(output_name):
-            with open(output_name, 'r') as output_file:
-                output = output_file.read()
-    return result.returncode, output
+        result = run_abi_diff(old_dump_path, new_dump_path, output_name, arch,
+                              lib_name, flags)
+        with open(output_name, 'r') as output_file:
+            return result, output_file.read()
 
 
 def get_build_vars_for_product(names, product=None, variant=None):
