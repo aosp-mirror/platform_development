@@ -151,4 +151,46 @@ describe('TimelineData', () => {
       expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeTrue();
     }
   });
+
+  it('getCurrentPosition() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getCurrentPosition()).toBe(timelineData.getCurrentPosition());
+
+    timelineData.setPosition(TracePosition.fromTimestamp(timestamp11));
+
+    expect(timelineData.getCurrentPosition()).toBe(timelineData.getCurrentPosition());
+  });
+
+  it('getFullTimeRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getFullTimeRange()).toBe(timelineData.getFullTimeRange());
+  });
+
+  it('getSelectionTimeRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
+
+    timelineData.setSelectionTimeRange({
+      from: new Timestamp(TimestampType.REAL, 0n),
+      to: new Timestamp(TimestampType.REAL, 5n),
+    });
+
+    expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
+  });
+
+  it('getZoomRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
+
+    timelineData.setZoom({
+      from: new Timestamp(TimestampType.REAL, 0n),
+      to: new Timestamp(TimestampType.REAL, 5n),
+    });
+
+    expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
+  });
 });
