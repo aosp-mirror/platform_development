@@ -30,7 +30,10 @@ import {TRACE_INFO} from 'app/trace_info';
 import {Timestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {SingleTimelineComponent} from './single_timeline_component';
+import {TraceType} from 'trace/trace_type';
+import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
+import {DefaultTimelineRowComponent} from './default_timeline_row_component';
+import {TransitionTimelineComponent} from './transition_timeline_component';
 
 @Component({
   selector: 'expanded-timeline',
@@ -38,7 +41,7 @@ import {SingleTimelineComponent} from './single_timeline_component';
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
         *ngFor="let trace of this.timelineData.getTraces(); trackBy: trackTraceBySelectedTimestamp"
-        class="timeline">
+        class="timeline row">
         <div class="icon-wrapper">
           <mat-icon
             class="icon"
@@ -47,13 +50,25 @@ import {SingleTimelineComponent} from './single_timeline_component';
             {{ TRACE_INFO[trace.type].icon }}
           </mat-icon>
         </div>
-        <single-timeline
+        <transition-timeline
+          *ngIf="trace.type === TraceType.TRANSITION"
           [color]="TRACE_INFO[trace.type].color"
           [trace]="trace"
           [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
           [selectionRange]="timelineData.getSelectionTimeRange()"
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
-          class="single-timeline"></single-timeline>
+          class="single-timeline">
+        </transition-timeline>
+        <single-timeline
+          *ngIf="trace.type !== TraceType.TRANSITION"
+          [color]="TRACE_INFO[trace.type].color"
+          [trace]="trace"
+          [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
+          [selectionRange]="timelineData.getSelectionTimeRange()"
+          (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
+          class="single-timeline">
+        </single-timeline>
+
         <div class="icon-wrapper">
           <mat-icon class="icon placeholder-icon"></mat-icon>
         </div>
@@ -144,9 +159,15 @@ export class ExpandedTimelineComponent {
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('expandedTimelineWrapper', {static: false}) warpperRef!: ElementRef;
-  @ViewChildren(SingleTimelineComponent) singleTimelines!: QueryList<SingleTimelineComponent>;
+
+  @ViewChildren(DefaultTimelineRowComponent)
+  singleTimelines: QueryList<DefaultTimelineRowComponent> | undefined;
+
+  @ViewChildren(TransitionTimelineComponent)
+  transitionTimelines: QueryList<TransitionTimelineComponent> | undefined;
 
   TRACE_INFO = TRACE_INFO;
+  TraceType = TraceType;
 
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
@@ -161,18 +182,22 @@ export class ExpandedTimelineComponent {
     // Reset any size before computing new size to avoid it interfering with size computations.
     // Needs to be done together because otherwise the sizes of each timeline will interfere with
     // each other, since if one timeline is still too big the container will stretch to that size.
-    for (const timeline of this.singleTimelines) {
-      timeline.canvas.width = 0;
-      timeline.canvas.height = 0;
-      timeline.canvas.style.width = 'auto';
-      timeline.canvas.style.height = 'auto';
+    const timelines = [
+      ...(this.transitionTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
+      ...(this.singleTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
+    ];
+    for (const timeline of timelines) {
+      timeline.getCanvas().width = 0;
+      timeline.getCanvas().height = 0;
+      timeline.getCanvas().style.width = 'auto';
+      timeline.getCanvas().style.height = 'auto';
     }
 
-    for (const timeline of this.singleTimelines) {
+    for (const timeline of timelines) {
       timeline.initializeCanvas();
-      timeline.canvas.height = 0;
-      timeline.canvas.style.width = 'auto';
-      timeline.canvas.style.height = 'auto';
+      timeline.getCanvas().height = 0;
+      timeline.getCanvas().style.width = 'auto';
+      timeline.getCanvas().style.height = 'auto';
     }
   }
 }
