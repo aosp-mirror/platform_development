@@ -24,19 +24,36 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {TimelineData} from 'app/timeline_data';
+import {TimelineData, TimeRange} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {MiniCanvasDrawer, MiniCanvasDrawerInput} from './mini_canvas_drawer';
+import {MiniCanvasDrawer} from './drawer/mini_canvas_drawer';
+import {MiniCanvasDrawerInput} from './drawer/mini_canvas_drawer_input';
 
 @Component({
   selector: 'mini-timeline',
   template: `
     <div id="mini-timeline-wrapper" #miniTimelineWrapper>
       <canvas #canvas></canvas>
+      <div class="zoom-control-wrapper">
+        <div [style]="{visibility: isZoomed() ? 'visible' : 'hidden'}" class="zoom-control">
+          <button
+            mat-icon-button
+            aria-label="Example icon button with a vertical three dot icon"
+            id="reset-zoom-btn"
+            (click)="resetZoom()">
+            <mat-icon>refresh</mat-icon>
+          </button>
+          <slider
+            [fullRange]="timelineData.getFullTimeRange()"
+            [zoomRange]="timelineData.getZoomRange()"
+            [currentPosition]="timelineData.getCurrentPosition()"
+            (onZoomChanged)="onZoomChanged($event)"></slider>
+        </div>
+      </div>
     </div>
   `,
   styles: [
@@ -45,6 +62,21 @@ import {MiniCanvasDrawer, MiniCanvasDrawerInput} from './mini_canvas_drawer';
         width: 100%;
         min-height: 5em;
         height: 100%;
+      }
+      .zoom-control-wrapper {
+        margin-top: -25px;
+        margin-left: -60px;
+        padding-right: 30px;
+      }
+      .zoom-control {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        justify-items: center;
+        gap: 23px;
+      }
+      .zoom-control slider {
+        flex-grow: 1;
       }
     `,
   ],
@@ -63,7 +95,7 @@ export class MiniTimelineComponent {
     return this.canvasRef.nativeElement;
   }
 
-  private drawer: MiniCanvasDrawer | undefined = undefined;
+  drawer: MiniCanvasDrawer | undefined = undefined;
 
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
@@ -91,17 +123,24 @@ export class MiniTimelineComponent {
     }
   }
 
+  isZoomed(): boolean {
+    const fullRange = this.timelineData.getFullTimeRange();
+    const zoomRange = this.timelineData.getZoomRange();
+    return fullRange.from !== zoomRange.from || fullRange.to !== zoomRange.to;
+  }
+
   private getMiniCanvasDrawerInput() {
     return new MiniCanvasDrawerInput(
       this.timelineData.getFullTimeRange(),
       this.currentTracePosition.timestamp,
       this.timelineData.getSelectionTimeRange(),
       this.timelineData.getZoomRange(),
-      this.getTracesToShow()
+      this.getTracesToShow(),
+      this.timelineData
     );
   }
 
-  private getTracesToShow(): Traces {
+  getTracesToShow(): Traces {
     const traces = new Traces();
     this.selectedTraces
       .filter((type) => this.timelineData.getTraces().getTrace(type) !== undefined)
@@ -140,5 +179,15 @@ export class MiniTimelineComponent {
   onResize(event: Event) {
     this.makeHiPPICanvas();
     this.drawer?.draw();
+  }
+
+  onZoomChanged(zoom: TimeRange) {
+    this.timelineData.setZoom(zoom);
+    this.timelineData.setSelectionTimeRange(zoom);
+    this.drawer?.draw();
+  }
+
+  resetZoom() {
+    this.onZoomChanged(this.timelineData.getFullTimeRange());
   }
 }
