@@ -65,3 +65,17 @@ export function dragElement<T>(
 
   flush();
 }
+
+export async function waitToBeCalled(spy: jasmine.Spy, times: number = 1, timeout = 10000) {
+  return new Promise<void>((resolve, reject) => {
+    let called = 0;
+    spy.and.callThrough().and.callFake(() => {
+      called++;
+      if (called === times) {
+        resolve();
+      }
+    });
+
+    setTimeout(() => reject(`not called ${times} times within ${timeout}ms`), timeout);
+  });
+}
