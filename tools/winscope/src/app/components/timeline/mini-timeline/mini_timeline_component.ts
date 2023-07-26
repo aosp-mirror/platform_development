@@ -30,8 +30,8 @@ import {Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {MiniCanvasDrawer} from './drawer/mini_canvas_drawer';
-import {MiniCanvasDrawerInput} from './drawer/mini_canvas_drawer_input';
+import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
+import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
 
 @Component({
   selector: 'mini-timeline',
@@ -95,7 +95,7 @@ export class MiniTimelineComponent {
     return this.canvasRef.nativeElement;
   }
 
-  drawer: MiniCanvasDrawer | undefined = undefined;
+  drawer: MiniTimelineDrawer | undefined = undefined;
 
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
@@ -105,7 +105,7 @@ export class MiniTimelineComponent {
       this.onTracePositionUpdate.emit(TracePosition.fromTimestamp(timestamp));
     };
 
-    this.drawer = new MiniCanvasDrawer(
+    this.drawer = new MiniTimelineDrawer(
       this.canvas,
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),
@@ -130,7 +130,7 @@ export class MiniTimelineComponent {
   }
 
   private getMiniCanvasDrawerInput() {
-    return new MiniCanvasDrawerInput(
+    return new MiniTimelineDrawerInput(
       this.timelineData.getFullTimeRange(),
       this.currentTracePosition.timestamp,
       this.timelineData.getSelectionTimeRange(),

@@ -14,119 +14,15 @@
  * limitations under the License.
  */
 
+import {Color} from 'app/colors';
 import {TimeRange} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
-import {Color} from '../../colors';
-import {CanvasDrawer} from '../canvas/canvas_drawer';
-import {CanvasMouseHandler} from '../canvas/canvas_mouse_handler';
-import {DraggableCanvasObject} from '../canvas/draggable_canvas_object';
-import {Segment} from './utils';
-
-export class MiniCanvasDrawerInput {
-  constructor(
-    public fullRange: TimeRange,
-    public selectedPosition: Timestamp,
-    public selection: TimeRange,
-    public zoomRange: TimeRange,
-    public traces: Traces
-  ) {}
-
-  transform(mapToRange: Segment): MiniCanvasDrawerData {
-    const transformer = new Transformer(this.zoomRange, mapToRange);
-
-    return new MiniCanvasDrawerData(
-      transformer.transform(this.selectedPosition),
-      {
-        from: transformer.transform(this.selection.from),
-        to: transformer.transform(this.selection.to),
-      },
-      this.transformTracesTimestamps(transformer),
-      transformer
-    );
-  }
-
-  private transformTracesTimestamps(transformer: Transformer): Map<TraceType, number[]> {
-    const transformedTraceSegments = new Map<TraceType, number[]>();
-
-    this.traces.forEachTrace((trace) => {
-      transformedTraceSegments.set(trace.type, this.transformTraceTimestamps(transformer, trace));
-    });
-
-    return transformedTraceSegments;
-  }
-
-  private transformTraceTimestamps(transformer: Transformer, trace: Trace<{}>): number[] {
-    const result: number[] = [];
-
-    trace.forEachTimestamp((timestamp) => {
-      result.push(transformer.transform(timestamp));
-    });
-
-    return result;
-  }
-}
-
-export class Transformer {
-  private timestampType: TimestampType;
-
-  private fromWidth: bigint;
-  private targetWidth: number;
-
-  private fromOffset: bigint;
-  private toOffset: number;
-
-  constructor(private fromRange: TimeRange, private toRange: Segment) {
-    this.timestampType = fromRange.from.getType();
-
-    this.fromWidth = this.fromRange.to.getValueNs() - this.fromRange.from.getValueNs();
-    // Needs to be a whole number to be compatible with bigints
-    this.targetWidth = Math.round(this.toRange.to - this.toRange.from);
-
-    this.fromOffset = this.fromRange.from.getValueNs();
-    // Needs to be a whole number to be compatible with bigints
-    this.toOffset = this.toRange.from;
-  }
-
-  transform(x: Timestamp): number {
-    return (
-      this.toOffset +
-      (this.targetWidth * Number(x.getValueNs() - this.fromOffset)) / Number(this.fromWidth)
-    );
-  }
-
-  untransform(x: number): Timestamp {
-    x = Math.round(x);
-    const valueNs =
-      this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
-    return new Timestamp(this.timestampType, valueNs);
-  }
-}
-
-class MiniCanvasDrawerOutput {
-  constructor(public selectedPosition: Timestamp, public selection: TimeRange) {}
-}
-
-class MiniCanvasDrawerData {
-  constructor(
-    public selectedPosition: number,
-    public selection: Segment,
-    public timelineEntries: Map<TraceType, number[]>,
-    public transformer: Transformer
-  ) {}
-
-  toOutput(): MiniCanvasDrawerOutput {
-    return new MiniCanvasDrawerOutput(this.transformer.untransform(this.selectedPosition), {
-      from: this.transformer.untransform(this.selection.from),
-      to: this.transformer.untransform(this.selection.to),
-    });
-  }
-}
-
-export class MiniCanvasDrawer implements CanvasDrawer {
+import {Timestamp} from 'trace/timestamp';
+import {CanvasMouseHandler} from './canvas_mouse_handler';
+import {DraggableCanvasObject} from './draggable_canvas_object';
+import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
+import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
+export class MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
 
@@ -167,7 +63,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
 
   constructor(
     public canvas: HTMLCanvasElement,
-    private inputGetter: () => MiniCanvasDrawerInput,
+    private inputGetter: () => MiniTimelineDrawerInput,
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
     private onSelectionChanged: (selection: TimeRange) => void,
@@ -182,7 +78,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
 
     this.ctx = ctx;
 
-    const onUnhandledClickInternal = (x: number, y: number) => {
+    const onUnhandledClickInternal = async (x: number, y: number) => {
       this.onUnhandledClick(this.input.transformer.untransform(x));
     };
     this.handler = new CanvasMouseHandler(this, 'pointer', onUnhandledClickInternal);
@@ -319,8 +215,8 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     return this.input.selection;
   }
 
-  get timelineEntries() {
-    return this.input.timelineEntries;
+  async getTimelineEntries(): Promise<TimelineEntries> {
+    return await this.input.getTimelineEntries();
   }
 
   get padding() {
@@ -336,12 +232,12 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     return this.getHeight() - this.padding.top - this.padding.bottom;
   }
 
-  draw() {
+  async draw() {
     this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
 
     this.drawSelectionBackground();
 
-    this.drawTraceLines();
+    await this.drawTraceLines();
 
     this.drawTimelineGuides();
 
@@ -367,21 +263,40 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     this.ctx.restore();
   }
 
-  private drawTraceLines() {
+  private async drawTraceLines() {
     const lineHeight = this.innerHeight / 8;
 
     let fromTop = this.padding.top + (this.innerHeight * 2) / 3 - lineHeight;
 
-    this.timelineEntries.forEach((entries, traceType) => {
-      // TODO: Only if active or a selected trace
-      for (const entry of entries) {
-        this.ctx.globalAlpha = 0.7;
-        this.ctx.fillStyle = TRACE_INFO[traceType].color;
+    (await this.getTimelineEntries()).forEach((entries, traceType) => {
+      this.ctx.globalAlpha = 0.7;
+      this.ctx.fillStyle = TRACE_INFO[traceType].color;
+      this.ctx.strokeStyle = 'blue';
 
+      for (const entry of entries.points) {
         const width = 5;
         this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
-        this.ctx.globalAlpha = 1.0;
       }
+
+      for (const entry of entries.segments) {
+        const width = Math.max(entry.to - entry.from, 3);
+        this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+      }
+
+      this.ctx.fillStyle = Color.ACTIVE_POINTER;
+      if (entries.activePoint) {
+        const entry = entries.activePoint;
+        const width = 5;
+        this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
+      }
+
+      if (entries.activeSegment) {
+        const entry = entries.activeSegment;
+        const width = Math.max(entry.to - entry.from, 3);
+        this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+      }
+
+      this.ctx.globalAlpha = 1.0;
 
       fromTop -= (lineHeight * 4) / 3;
     });
@@ -403,25 +318,6 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       (this.getWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing)
     );
     const bars = barSets * 10;
-
-    // Draw start bar
-    this.ctx.fillStyle = Color.GUIDE_BAR;
-    this.ctx.fillRect(
-      0,
-      this.padding.top + this.innerHeight - edgeBarHeight,
-      edgeBarWidth,
-      edgeBarHeight
-    );
-
-    // Draw end bar
-    this.ctx.fillStyle = Color.GUIDE_BAR;
-    this.ctx.fillRect(
-      this.getWidth() - edgeBarWidth,
-      this.padding.top + this.innerHeight - edgeBarHeight,
-      edgeBarWidth,
-      edgeBarHeight
-    );
-
     const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
     let start = edgeBarWidth + spacing;
     for (let i = 1; i < bars; i++) {
