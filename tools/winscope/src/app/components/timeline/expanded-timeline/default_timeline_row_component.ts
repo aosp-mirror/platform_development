@@ -16,11 +16,11 @@
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {TimeRange} from 'app/timeline_data';
+import {isPointInRect} from 'common/geometry_utils';
 import {Timestamp} from 'trace/timestamp';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
-import { isPointInRect } from 'common/geometry_utils';
 
 @Component({
   selector: 'single-timeline',
