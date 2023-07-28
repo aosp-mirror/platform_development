@@ -64,6 +64,7 @@ Darwin)
 esac
 
 LINUX_SOONG_BINARIES=(
+    "bindgen"
     "cxx_extractor"
     "header-abi-linker"
     "header-abi-dumper"
