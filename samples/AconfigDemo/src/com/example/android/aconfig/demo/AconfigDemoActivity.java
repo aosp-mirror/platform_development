@@ -43,12 +43,15 @@ public class AconfigDemoActivity extends Activity {
 
         setContentView(R.layout.main);
         TextView simpleTextView = (TextView) findViewById(R.id.simpleTextView);
-        simpleTextView.setText("Show Flags: \n\n");
+        simpleTextView.setText("Show Java Flags: \n\n");
 
         StaticContent cp = new StaticContent();
         simpleTextView.append(cp.getContent());
 
         simpleTextView.append(injectedContent.getContent());
+
+        simpleTextView.append("Show C/C++ Flags: \n\n");
+        simpleTextView.append(printCFlag());
 
         if (Flags.awesomeFlag1()) {
             Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_1 + " is on!");
@@ -58,5 +61,10 @@ public class AconfigDemoActivity extends Activity {
             Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_2 + " is on!");
         }
     }
-}
 
+    public native String printCFlag();
+
+    static {
+        System.loadLibrary("example_cpp_lib");
+    }
+}

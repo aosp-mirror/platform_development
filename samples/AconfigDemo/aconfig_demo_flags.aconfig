@@ -27,6 +27,7 @@ flag {
   description: "Another awesome flag for testing purposes."
   bug: "287644619"
 }
+
 flag {
     name: "fifth_flag"
     namespace: "configuration"
@@ -40,4 +41,3 @@ flag {
   description: "This flag controls static content"
   bug: "287644619"
 }
-
