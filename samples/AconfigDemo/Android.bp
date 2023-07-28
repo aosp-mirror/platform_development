@@ -8,12 +8,15 @@ android_app {
     srcs: [
         "src/**/*.java"
     ],
+    platform_apis: true,
     certificate: "platform",
-    sdk_version: "current",
     static_libs: [
         "ContentLibs",
         "dagger2",
         "jsr330",
+    ],
+    jni_libs: [
+        "libexample_cpp_lib",
     ],
     optimize: {
         enabled: true,
@@ -35,7 +38,7 @@ aconfig_declarations {
 
 
 java_aconfig_library {
-    name: "aconfig_demo_flags_lib",
+    name: "aconfig_demo_flags_java_lib",
     aconfig_declarations: "aconfig_demo_flags",
 }
 
@@ -53,7 +56,34 @@ java_library {
     ],
     sdk_version: "current",
     static_libs: [
-        "aconfig_demo_flags_lib",
+        "aconfig_demo_flags_java_lib",
     ],
     libs: ["jsr330"],
+}
+
+cc_aconfig_library {
+    name: "aconfig_demo_flags_c_lib",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+cc_library {
+    name: "libexample_cpp_lib",
+    srcs: ["src/example_cpp_lib.cc"],
+    double_loadable: true,
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-function",
+        "-Wno-unused-parameter",
+    ],
+    header_libs: [
+      "jni_headers",
+    ],
+    shared_libs: [
+        "server_configurable_flags",
+    ],
+    static_libs: [
+        "aconfig_demo_flags_c_lib",
+    ],
+    export_include_dirs: ["src/include"],
 }
