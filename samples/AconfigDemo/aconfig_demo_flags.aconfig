@@ -1,28 +1,31 @@
 package: "com.example.android.aconfig.demo.flags"
 
 flag {
-    name: "append_injected_content"
-    namespace: "aconfig_demo_ns"
-    description: "This flag controls injected content"
-    bug: "287644619"
+  name: "append_injected_content"
+  namespace: "aconfig_demo_ns"
+  description: "This flag controls injected content"
+  bug: "287644619"
 }
 
 flag {
-    name: "append_static_content"
-    namespace: "aconfig_demo_ns"
-    description: "This flag controls static content"
+  name: "append_static_content"
+  namespace: "aconfig_demo_ns"
+  description: "This flag controls static content"
+  bug: "287644619"
 }
 
 flag {
   name: "awesome_flag_1"
   namespace: "test"
   description: "A very awesome flag for testing purposes."
+  bug: "287644619"
 }
 
 flag {
   name: "awesome_flag_2"
   namespace: "test"
   description: "Another awesome flag for testing purposes."
+  bug: "287644619"
 }
 flag {
     name: "fifth_flag"
@@ -32,10 +35,9 @@ flag {
 }
 
 flag {
-    name: "third_flag"
-    namespace: "configuration"
-    description: "This flag controls static content"
-    bug: "287644619"
-    bug: "280833463"
+  name: "third_flag"
+  namespace: "configuration"
+  description: "This flag controls static content"
+  bug: "287644619"
 }
 
