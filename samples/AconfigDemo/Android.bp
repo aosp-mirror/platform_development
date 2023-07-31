@@ -39,10 +39,17 @@ java_aconfig_library {
     aconfig_declarations: "aconfig_demo_flags",
 }
 
+filegroup {
+    name: "ContentLibsFile",
+    srcs: [
+        "lib/**/*.java",
+    ],
+}
+
 java_library {
     name: "ContentLibs",
     srcs: [
-        "lib/**/*.java",
+        ":ContentLibsFile",
     ],
     sdk_version: "current",
     static_libs: [
