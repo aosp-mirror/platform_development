@@ -193,4 +193,11 @@ describe('TimelineData', () => {
 
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
   });
+
+  it("getCurrentPosition() prioritizes active trace's first entry", () => {
+    timelineData.initialize(traces, undefined);
+    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+
+    expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
+  });
 });

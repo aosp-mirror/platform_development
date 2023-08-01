@@ -72,12 +72,13 @@ export class TimelineData {
     }
 
     let currentPosition: TracePosition | undefined = undefined;
+    if (this.firstEntry) {
+      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
+    }
+
     const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
     if (firstActiveEntry) {
       currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
-    }
-    if (this.firstEntry) {
-      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
     }
 
     if (
