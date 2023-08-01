@@ -20,6 +20,8 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::env;
+use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -72,31 +74,46 @@ pub struct Crate {
     pub main_src: PathBuf,    // relative to package_dir
 }
 
-pub fn parse_cargo_out(cargo_out_path: &str, cargo_metadata_path: &str) -> Result<Vec<Crate>> {
-    let metadata: WorkspaceMetadata = serde_json::from_str(
-        &std::fs::read_to_string(cargo_metadata_path).context("failed to read cargo.metadata")?,
+/// Reads the given `cargo.out` and `cargo.metadata` files, and generates a list of crates based on
+/// the rustc invocations.
+///
+/// Ignores crates outside the current directory and build script crates.
+pub fn parse_cargo_out(
+    cargo_out_path: impl AsRef<Path>,
+    cargo_metadata_path: impl AsRef<Path>,
+) -> Result<Vec<Crate>> {
+    let cargo_out = read_to_string(cargo_out_path).context("failed to read cargo.out")?;
+    let metadata = serde_json::from_reader(
+        File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
     )
     .context("failed to parse cargo.metadata")?;
+    parse_cargo_out_str(&cargo_out, &metadata, env::current_dir().unwrap().canonicalize().unwrap())
+}
 
-    let cargo_out = CargoOut::parse(
-        &std::fs::read_to_string(cargo_out_path).context("failed to read cargo.out")?,
-    )
-    .context("failed to parse cargo.out")?;
+/// Parses the given `cargo.out` and `cargo.metadata` file contents and generates a list of crates
+/// based on the rustc invocations.
+///
+/// Ignores crates outside `base_directory` and build script crates.
+fn parse_cargo_out_str(
+    cargo_out: &str,
+    metadata: &WorkspaceMetadata,
+    base_directory: impl AsRef<Path>,
+) -> Result<Vec<Crate>> {
+    let cargo_out = CargoOut::parse(cargo_out).context("failed to parse cargo.out")?;
 
     assert!(cargo_out.cc_invocations.is_empty(), "cc not supported yet");
     assert!(cargo_out.ar_invocations.is_empty(), "ar not supported yet");
 
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let c = Crate::from_rustc_invocation(rustc, &metadata)
+        let c = Crate::from_rustc_invocation(rustc, metadata)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
             continue;
         }
-        // Ignore crates outside the current directory.
-        let cwd = std::env::current_dir().unwrap().canonicalize().unwrap();
-        if !c.package_dir.starts_with(cwd) {
+        // Ignore crates outside the base directory.
+        if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
         crates.push(c);

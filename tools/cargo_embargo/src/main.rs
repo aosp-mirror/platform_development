@@ -52,6 +52,7 @@ use std::process::Command;
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
+/// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
 #[clap()]
 struct Args {
