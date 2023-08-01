@@ -1,0 +1,23 @@
+[
+  {
+    "name": "plotters",
+    "package_name": "plotters",
+    "version": "0.3.4",
+    "types": ["lib"],
+    "target": "x86_64-unknown-linux-gnu",
+    "features": ["area_series", "line_series", "plotters-svg", "svg_backend"],
+    "cfgs": [],
+    "externs": [
+      ["num_traits", "libnum_traits-93a69c224ed38166.rmeta"],
+      ["plotters_backend", "libplotters_backend-4110c43be89cf520.rmeta"],
+      ["plotters_svg", "libplotters_svg-e0f639cce7c4701c.rmeta"]
+    ],
+    "codegens": [],
+    "cap_lints": "",
+    "static_libs": [],
+    "shared_libs": [],
+    "edition": "2018",
+    "package_dir": ".",
+    "main_src": "src/lib.rs"
+  }
+]
