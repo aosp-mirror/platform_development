@@ -15,20 +15,18 @@
  */
 
 import {Color} from 'app/colors';
-import {TimeRange} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {Timestamp} from 'trace/timestamp';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
 import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
+
 export class MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
 
   private activePointer: DraggableCanvasObject;
-  private leftFocusSectionSelector: DraggableCanvasObject;
-  private rightFocusSectionSelector: DraggableCanvasObject;
 
   private get pointerWidth() {
     return this.getHeight() / 6;
@@ -66,8 +64,6 @@ export class MiniTimelineDrawer {
     private inputGetter: () => MiniTimelineDrawerInput,
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
-    private onSelectionChanged: (selection: TimeRange) => void,
-    private onZoomChanged: (zoom: TimeRange) => void,
     private onUnhandledClick: (pos: Timestamp) => void
   ) {
     const ctx = canvas.getContext('2d');
@@ -113,98 +109,6 @@ export class MiniTimelineDrawer {
       },
       () => this.usableRange
     );
-
-    const focusSelectorDrawConfig = {
-      fillStyle: Color.SELECTOR_COLOR,
-      fill: true,
-    };
-
-    const onLeftSelectionChanged = (x: number) => {
-      this.selection.from = x;
-      this.onSelectionChanged({
-        from: this.input.transformer.untransform(x),
-        to: this.input.transformer.untransform(this.selection.to),
-      });
-    };
-    const onRightSelectionChanged = (x: number) => {
-      this.selection.to = x;
-      this.onSelectionChanged({
-        from: this.input.transformer.untransform(this.selection.from),
-        to: this.input.transformer.untransform(x),
-      });
-    };
-
-    const onLeftZoomChanged = (x: number) => {
-      this.onZoomChanged({
-        from: this.input.transformer.untransform(x),
-        to: this.inputGetter().zoomRange.to,
-      });
-    };
-    const onRightZoomChanged = (x: number) => {
-      this.onZoomChanged({
-        from: this.inputGetter().zoomRange.from,
-        to: this.input.transformer.untransform(x),
-      });
-    };
-
-    const barWidth = 6;
-    const selectorArrowWidth = this.innerHeight / 12;
-    const selectorArrowHeight = selectorArrowWidth * 2;
-
-    this.leftFocusSectionSelector = new DraggableCanvasObject(
-      this,
-      () => this.selection.from,
-      (ctx: CanvasRenderingContext2D, position: number) => {
-        ctx.beginPath();
-        ctx.moveTo(position - barWidth, this.padding.top);
-        ctx.lineTo(position, this.padding.top);
-        ctx.lineTo(position + selectorArrowWidth, this.padding.top + selectorArrowWidth);
-        ctx.lineTo(position, this.padding.top + selectorArrowHeight);
-        ctx.lineTo(position, this.padding.top + this.innerHeight);
-        ctx.lineTo(position - barWidth, this.padding.top + this.innerHeight);
-        ctx.lineTo(position - barWidth, this.padding.top);
-        ctx.closePath();
-      },
-      focusSelectorDrawConfig,
-      onLeftSelectionChanged,
-      (x: number) => {
-        onLeftSelectionChanged(x);
-        onLeftZoomChanged(x);
-      },
-      () => {
-        return {
-          from: this.usableRange.from,
-          to: this.rightFocusSectionSelector.position - selectorArrowWidth - barWidth,
-        };
-      }
-    );
-
-    this.rightFocusSectionSelector = new DraggableCanvasObject(
-      this,
-      () => this.selection.to,
-      (ctx: CanvasRenderingContext2D, position: number) => {
-        ctx.beginPath();
-        ctx.moveTo(position + barWidth, this.padding.top);
-        ctx.lineTo(position, this.padding.top);
-        ctx.lineTo(position - selectorArrowWidth, this.padding.top + selectorArrowWidth);
-        ctx.lineTo(position, this.padding.top + selectorArrowHeight);
-        ctx.lineTo(position, this.padding.top + this.innerHeight);
-        ctx.lineTo(position + barWidth, this.padding.top + this.innerHeight);
-        ctx.closePath();
-      },
-      focusSelectorDrawConfig,
-      onRightSelectionChanged,
-      (x: number) => {
-        onRightSelectionChanged(x);
-        onRightZoomChanged(x);
-      },
-      () => {
-        return {
-          from: this.leftFocusSectionSelector.position + selectorArrowWidth + barWidth,
-          to: this.usableRange.to,
-        };
-      }
-    );
   }
 
   get selectedPosition() {
@@ -235,32 +139,11 @@ export class MiniTimelineDrawer {
   async draw() {
     this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
 
-    this.drawSelectionBackground();
-
     await this.drawTraceLines();
 
     this.drawTimelineGuides();
 
-    this.leftFocusSectionSelector.draw(this.ctx);
-    this.rightFocusSectionSelector.draw(this.ctx);
-
     this.activePointer.draw(this.ctx);
-  }
-
-  private drawSelectionBackground() {
-    const triangleHeight = this.innerHeight / 6;
-
-    // Selection background
-    this.ctx.globalAlpha = 0.8;
-    this.ctx.fillStyle = Color.SELECTION_BACKGROUND;
-    const width = this.selection.to - this.selection.from;
-    this.ctx.fillRect(
-      this.selection.from,
-      this.padding.top + triangleHeight / 2,
-      width,
-      this.innerHeight - triangleHeight / 2
-    );
-    this.ctx.restore();
   }
 
   private async drawTraceLines() {

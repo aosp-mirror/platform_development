@@ -110,8 +110,6 @@ export class MiniTimelineComponent {
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),
       updateTimestampCallback,
-      (selection) => this.timelineData.setSelectionTimeRange(selection),
-      (zoom) => this.timelineData.setZoom(zoom),
       updateTimestampCallback
     );
     this.drawer.draw();
