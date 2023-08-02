@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """Compare failed tests in CTS/VTS test_result.xml.
 
 Given two test_result.xml's (A and B), this script lists all failed tests in A,
@@ -66,19 +66,19 @@ def print_test_infos(test_result_a, test_result_b):
 
   line_format = '{:{}}  {:{}}  {}'
 
-  print '=' * table_len
+  print('=' * table_len)
 
   for key in info_a:
-    print line_format.format(key, max_key_len,
+    print(line_format.format(key, max_key_len,
                              info_a[key], max_value_a_len,
-                             info_b[key])
+                             info_b[key]))
 
-  print '=' * table_len
-  print
+  print('=' * table_len)
+  print()
 
 
 def get_result(test_result, module_name, testcase_name, test_name):
-  """Get result of specifc module, testcase and test name."""
+  """Get result of specific module, testcase and test name."""
 
   modules = test_result['modules']
   if module_name not in modules:
@@ -112,7 +112,7 @@ def read_test_result_xml(test_result_path):
 
     module_name = module.attrib['name']
 
-    if not module_name in modules:
+    if module_name not in modules:
       modules[module_name] = collections.OrderedDict()
 
     testcases = modules[module_name]
@@ -120,7 +120,7 @@ def read_test_result_xml(test_result_path):
     for testcase in module.iter('TestCase'):
       testcase_name = testcase.attrib['name']
 
-      if not testcase_name in testcases:
+      if testcase_name not in testcases:
         testcases[testcase_name] = collections.OrderedDict()
 
       tests = testcases[testcase_name]
@@ -128,11 +128,11 @@ def read_test_result_xml(test_result_path):
       for test in testcase.iter('Test'):
         test_name = test.attrib['name']
 
-        if not test_name in tests:
+        if test_name not in tests:
           tests[test_name] = collections.OrderedDict()
 
         if abi in tests[test_name]:
-          print '[WARNING] duplicated test:', test_name
+          print('[WARNING] duplicated test:', test_name)
 
         tests[test_name][abi] = test.attrib['result']
 
@@ -161,13 +161,13 @@ def compare_failed_tests(test_result_a, test_result_b, csvfile):
 
   modules = test_result_a['modules']
 
-  for module_name, testcases in modules.iteritems():
+  for module_name, testcases in modules.items():
     module_sub_summary = ''
 
-    for testcase_name, tests in testcases.iteritems():
+    for testcase_name, tests in testcases.items():
       testcase_sub_summary = ''
 
-      for test_name, result in tests.iteritems():
+      for test_name, result in tests.items():
         if FAIL in result.values():
           result_b = get_result(
               test_result_b, module_name, testcase_name, test_name)
@@ -201,7 +201,7 @@ def main():
   with open(args.csv, 'w') as csvfile:
     summary = compare_failed_tests(test_result_a, test_result_b, csvfile)
 
-    print summary
+    print(summary)
 
 
 if __name__ == '__main__':
