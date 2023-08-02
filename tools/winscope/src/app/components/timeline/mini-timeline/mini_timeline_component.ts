@@ -39,7 +39,7 @@ import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
     <div id="mini-timeline-wrapper" #miniTimelineWrapper>
       <canvas #canvas></canvas>
       <div class="zoom-control-wrapper">
-        <div [style]="{visibility: isZoomed() ? 'visible' : 'hidden'}" class="zoom-control">
+        <div class="zoom-control">
           <button
             mat-icon-button
             aria-label="Example icon button with a vertical three dot icon"

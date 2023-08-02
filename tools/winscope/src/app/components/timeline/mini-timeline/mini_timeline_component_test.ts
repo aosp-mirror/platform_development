@@ -117,14 +117,14 @@ describe('MiniTimelineComponent', () => {
     expect(zoomRange).toBe(fullRange);
   });
 
-  it("doesn't show zoom controls when zoomed out", () => {
+  it('show zoom controls when zoomed out', () => {
     const zoomControlDiv = htmlElement.querySelector('.zoom-control');
     expect(zoomControlDiv).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(zoomControlDiv)).visibility).toBe('hidden');
+    expect(window.getComputedStyle(assertDefined(zoomControlDiv)).visibility).toBe('visible');
 
     const zoomButton = htmlElement.querySelector('button#reset-zoom-btn') as HTMLButtonElement;
     expect(zoomButton).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(zoomButton)).visibility).toBe('hidden');
+    expect(window.getComputedStyle(assertDefined(zoomButton)).visibility).toBe('visible');
   });
 
   it('shows zoom controls when zoomed in', () => {
