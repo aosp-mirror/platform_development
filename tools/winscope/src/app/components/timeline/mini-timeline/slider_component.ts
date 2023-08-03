@@ -15,10 +15,12 @@
  */
 
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
   HostListener,
+  Inject,
   Input,
   Output,
   SimpleChanges,
@@ -46,9 +48,9 @@ import {Transformer} from './transformer';
         (cdkDragEnded)="onSlideEnd($event)"
         [cdkDragFreeDragPosition]="dragPosition"
         [style]="{width: sliderWidth + 'px'}">
-        <div class="left cropper"></div>
-        <div class="handle"></div>
-        <div class="right cropper"></div>
+        <div class="left cropper" (mousedown)="startMoveLeft($event)"></div>
+        <div class="handle" cdkDragHandle></div>
+        <div class="right cropper" (mousedown)="startMoveRight($event)"></div>
       </div>
       <div class="cursor" [style]="{left: cursorOffset + 'px'}"></div>
     </div>
@@ -101,6 +103,11 @@ import {Transformer} from './transformer';
         background: ${Color.SELECTOR_COLOR};
       }
 
+      .cropper.left,
+      .cropper.right {
+        cursor: ew-resize;
+      }
+
       .cursor {
         width: 2px;
         height: 100%;
@@ -125,6 +132,8 @@ export class SliderComponent {
   cursorOffset = 0;
 
   @ViewChild('sliderBox', {static: false}) sliderBox!: ElementRef;
+
+  constructor(@Inject(ChangeDetectorRef) private cdr: ChangeDetectorRef) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['zoomRange'] !== undefined && !this.dragging) {
@@ -162,6 +171,13 @@ export class SliderComponent {
     this.viewInitialized = true;
   }
 
+  ngAfterViewChecked() {
+    assertDefined(this.fullRange);
+    const zoomRange = assertDefined(this.zoomRange);
+    this.syncDragPositionTo(zoomRange);
+    this.cdr.detectChanges();
+  }
+
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     this.syncDragPositionTo(assertDefined(this.zoomRange));
@@ -181,14 +197,17 @@ export class SliderComponent {
     return width;
   }
 
+  slideStartX: number | undefined = undefined;
   onSlideStart(e: any) {
     this.dragging = true;
+    this.slideStartX = e.source.freeDragPosition.x;
     document.body.classList.add('inheritCursors');
     document.body.style.cursor = 'grabbing';
   }
 
   onSlideEnd(e: any) {
     this.dragging = false;
+    this.slideStartX = undefined;
     this.syncDragPositionTo(assertDefined(this.zoomRange));
     document.body.classList.remove('inheritCursors');
     document.body.style.cursor = 'unset';
@@ -196,7 +215,11 @@ export class SliderComponent {
 
   onSliderMove(e: any) {
     const zoomRange = assertDefined(this.zoomRange);
-    const newX = e.source.freeDragPosition.x + e.distance.x;
+    let newX = this.slideStartX + e.distance.x;
+    if (newX < 0) {
+      newX = 0;
+    }
+
     // Calculation to adjust for min width slider
     const from = this.getTransformer()
       .untransform(newX + this.sliderWidth / 2)
@@ -220,8 +243,42 @@ export class SliderComponent {
 
     const listener = (event: any) => {
       const movedX = event.pageX - startPos;
-      const from = this.getTransformer().untransform(startOffset + movedX);
+      let from = this.getTransformer().untransform(startOffset + movedX);
+      if (from.getValueNs() < assertDefined(this.fullRange).from.getValueNs()) {
+        from = assertDefined(this.fullRange).from;
+      }
+      if (from.getValueNs() > assertDefined(this.zoomRange).to.getValueNs()) {
+        from = assertDefined(this.zoomRange).to;
+      }
       const to = assertDefined(this.zoomRange).to;
+
+      this.onZoomChanged.emit({from, to});
+    };
+    addEventListener('mousemove', listener);
+
+    const mouseUpListener = () => {
+      removeEventListener('mousemove', listener);
+      removeEventListener('mouseup', mouseUpListener);
+    };
+    addEventListener('mouseup', mouseUpListener);
+  }
+
+  startMoveRight(e: any) {
+    e.preventDefault();
+
+    const startPos = e.pageX;
+    const startOffset = this.getTransformer().transform(assertDefined(this.zoomRange).to);
+
+    const listener = (event: any) => {
+      const movedX = event.pageX - startPos;
+      const from = assertDefined(this.zoomRange).from;
+      let to = this.getTransformer().untransform(startOffset + movedX);
+      if (to.getValueNs() > assertDefined(this.fullRange).to.getValueNs()) {
+        to = assertDefined(this.fullRange).to;
+      }
+      if (to.getValueNs() < assertDefined(this.zoomRange).from.getValueNs()) {
+        to = assertDefined(this.zoomRange).from;
+      }
 
       this.onZoomChanged.emit({from, to});
     };
