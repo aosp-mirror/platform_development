@@ -26,27 +26,33 @@ import {
 } from '@angular/core';
 import {TimelineData, TimeRange} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {TimeUtils} from 'common/time_utils';
 import {Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
+import {Transformer} from './transformer';
 
 @Component({
   selector: 'mini-timeline',
   template: `
     <div id="mini-timeline-wrapper" #miniTimelineWrapper>
-      <canvas #canvas></canvas>
+      <canvas #canvas id="mini-timeline-canvas"></canvas>
       <div class="zoom-control-wrapper">
         <div class="zoom-control">
-          <button
-            mat-icon-button
-            aria-label="Example icon button with a vertical three dot icon"
-            id="reset-zoom-btn"
-            (click)="resetZoom()">
-            <mat-icon>refresh</mat-icon>
-          </button>
+          <div class="zoom-buttons">
+            <button mat-icon-button id="reset-zoom-btn" (click)="resetZoom()">
+              <mat-icon>refresh</mat-icon>
+            </button>
+            <button mat-icon-button id="zoom-in-btn" (click)="zoomIn()">
+              <mat-icon>zoom_in</mat-icon>
+            </button>
+            <button mat-icon-button id="zoom-out-btn" (click)="zoomOut()">
+              <mat-icon>zoom_out</mat-icon>
+            </button>
+          </div>
           <slider
             [fullRange]="timelineData.getFullTimeRange()"
             [zoomRange]="timelineData.getZoomRange()"
@@ -187,5 +193,151 @@ export class MiniTimelineComponent {
 
   resetZoom() {
     this.onZoomChanged(this.timelineData.getFullTimeRange());
+  }
+
+  zoomIn(zoomOn: Timestamp | undefined = undefined) {
+    this.zoom({nominator: 3n, demoniator: 4n}, zoomOn);
+  }
+
+  zoomOut(zoomOn: Timestamp | undefined = undefined) {
+    this.zoom({nominator: 5n, demoniator: 4n}, zoomOn);
+  }
+
+  zoom(
+    zoomRatio: {nominator: bigint; demoniator: bigint},
+    zoomOn: Timestamp | undefined = undefined
+  ) {
+    const fullRange = this.timelineData.getFullTimeRange();
+    const currentZoomRange = this.timelineData.getZoomRange();
+    const currentZoomWidth = currentZoomRange.to.minus(currentZoomRange.from);
+    const zoomToWidth = currentZoomWidth.times(zoomRatio.nominator).div(zoomRatio.demoniator);
+
+    const cursorPosition = this.timelineData.getCurrentPosition()?.timestamp;
+    const currentMiddle = currentZoomRange.from.plus(currentZoomRange.to).div(2n);
+
+    let newFrom: Timestamp;
+    let newTo: Timestamp;
+    if (zoomOn === undefined) {
+      let zoomTowards = currentMiddle;
+      if (cursorPosition !== undefined && cursorPosition.in(currentZoomRange)) {
+        zoomTowards = cursorPosition;
+      }
+
+      let leftAdjustment;
+      let rightAdjustment;
+      if (zoomTowards.getValueNs() < currentMiddle.getValueNs()) {
+        leftAdjustment = currentZoomWidth.times(0n);
+        rightAdjustment = currentZoomWidth
+          .times(zoomRatio.demoniator - zoomRatio.nominator)
+          .div(zoomRatio.demoniator);
+      } else {
+        leftAdjustment = currentZoomWidth
+          .times(zoomRatio.demoniator - zoomRatio.nominator)
+          .div(zoomRatio.demoniator);
+        rightAdjustment = currentZoomWidth.times(0n);
+      }
+
+      newFrom = currentZoomRange.from.plus(leftAdjustment);
+      newTo = currentZoomRange.to.minus(rightAdjustment);
+      const newMiddle = newFrom.plus(newTo).div(2n);
+
+      if (
+        (zoomTowards.getValueNs() <= currentMiddle.getValueNs() &&
+          newMiddle.getValueNs() < zoomTowards.getValueNs()) ||
+        (zoomTowards.getValueNs() >= currentMiddle.getValueNs() &&
+          newMiddle.getValueNs() > zoomTowards.getValueNs())
+      ) {
+        // Moved past middle, so ensure cursor is in the middle
+        newFrom = zoomTowards.minus(zoomToWidth.div(2n));
+        newTo = zoomTowards.plus(zoomToWidth.div(2n));
+      }
+    } else {
+      newFrom = zoomOn.minus(zoomToWidth.div(2n));
+      newTo = zoomOn.plus(zoomToWidth.div(2n));
+    }
+
+    if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
+      newTo = TimeUtils.min(fullRange.to, newTo.plus(fullRange.from.minus(newFrom)));
+      newFrom = fullRange.from;
+    }
+
+    if (newTo.getValueNs() > fullRange.to.getValueNs()) {
+      newFrom = TimeUtils.max(fullRange.from, newFrom.minus(newTo.minus(fullRange.to)));
+      newTo = fullRange.to;
+    }
+
+    this.onZoomChanged({
+      from: newFrom,
+      to: newTo,
+    });
+  }
+
+  // -1 for x direction, 1 for y direction
+  private lastMoves: WheelEvent[] = [];
+  @HostListener('wheel', ['$event'])
+  onScroll(event: WheelEvent) {
+    this.lastMoves.push(event);
+    setTimeout(() => this.lastMoves.shift(), 1000);
+
+    const xMoveAmount = this.lastMoves.reduce((accumulator, it) => accumulator + it.deltaX, 0);
+    const yMoveAmount = this.lastMoves.reduce((accumulator, it) => accumulator + it.deltaY, 0);
+
+    let moveDirection: 'x' | 'y';
+    if (Math.abs(yMoveAmount) > Math.abs(xMoveAmount)) {
+      moveDirection = 'y';
+    } else {
+      moveDirection = 'x';
+    }
+
+    if (
+      (event.target as any)?.id === 'mini-timeline-canvas' &&
+      event.deltaY !== 0 &&
+      moveDirection === 'y'
+    ) {
+      // Zooming
+      const canvas = event.target as HTMLCanvasElement;
+      const xPosInCanvas = event.x - canvas.offsetLeft;
+      const zoomRange = this.timelineData.getZoomRange();
+
+      const zoomTo = new Transformer(zoomRange, assertDefined(this.drawer).usableRange).untransform(
+        xPosInCanvas
+      );
+
+      if (event.deltaY > 0) {
+        this.zoomIn(zoomTo);
+      } else {
+        this.zoomOut(zoomTo);
+      }
+    }
+
+    if (event.deltaX !== 0 && moveDirection === 'x') {
+      // Horizontal scrolling
+      const scrollAmount = event.deltaX;
+      const fullRange = this.timelineData.getFullTimeRange();
+      const zoomRange = this.timelineData.getZoomRange();
+
+      const usableRange = assertDefined(this.drawer).usableRange;
+      const transformer = new Transformer(zoomRange, usableRange);
+      const shiftAmount = transformer
+        .untransform(usableRange.from + scrollAmount)
+        .minus(zoomRange.from);
+      let newFrom = zoomRange.from.plus(shiftAmount);
+      let newTo = zoomRange.to.plus(shiftAmount);
+
+      if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
+        newTo = newTo.plus(fullRange.from.minus(newFrom));
+        newFrom = fullRange.from;
+      }
+
+      if (newTo.getValueNs() > fullRange.to.getValueNs()) {
+        newFrom = newFrom.minus(newTo.minus(fullRange.to));
+        newTo = fullRange.to;
+      }
+
+      this.onZoomChanged({
+        from: newFrom,
+        to: newTo,
+      });
+    }
   }
 }

@@ -18,7 +18,14 @@
 
 import {ComponentFixture, flush} from '@angular/core/testing';
 
-export function dispatchMouseEvent(source: Node, type: string, screenX: number, screenY: number, clientX: number, clientY: number) {
+export function dispatchMouseEvent(
+  source: Node,
+  type: string,
+  screenX: number,
+  screenY: number,
+  clientX: number,
+  clientY: number
+) {
   const event = document.createEvent('MouseEvent');
 
   event.initMouseEvent(

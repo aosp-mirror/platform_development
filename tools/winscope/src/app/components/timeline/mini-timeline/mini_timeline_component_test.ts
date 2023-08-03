@@ -30,6 +30,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {dragElement} from 'test/utils';
 import {RealTimestamp} from 'trace/timestamp';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineComponent} from './mini_timeline_component';
 import {SliderComponent} from './slider_component';
@@ -41,6 +42,7 @@ describe('MiniTimelineComponent', () => {
   let timelineData: TimelineData;
   const timestamp10 = new RealTimestamp(10n);
   const timestamp20 = new RealTimestamp(20n);
+  const timestamp1000 = new RealTimestamp(1000n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -193,4 +195,240 @@ describe('MiniTimelineComponent', () => {
     const finalZoom = timelineData.getZoomRange();
     expect(finalZoom).not.toBe(initialZoom);
   }));
+
+  it('zoom button zooms onto cursor', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    let initialZoom = {
+      from: timestamp10,
+      to: timestamp1000,
+    };
+    component.onZoomChanged(initialZoom);
+
+    const cursorPos = 800n;
+    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(cursorPos)));
+
+    fixture.detectChanges();
+
+    const zoomButton = htmlElement.querySelector('#zoom-in-btn') as HTMLButtonElement;
+    expect(zoomButton).toBeTruthy();
+
+    for (let i = 0; i < 10; i++) {
+      zoomButton.click();
+      fixture.detectChanges();
+      const finalZoom = timelineData.getZoomRange();
+      expect(finalZoom).not.toBe(initialZoom);
+      expect(finalZoom.from.getValueNs()).toBeGreaterThanOrEqual(
+        Number(initialZoom.from.getValueNs())
+      );
+      expect(finalZoom.to.getValueNs()).toBeLessThanOrEqual(Number(initialZoom.to.getValueNs()));
+      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeLessThan(
+        Number(initialZoom.to.minus(initialZoom.from).getValueNs())
+      );
+
+      // center to get closer to cursor or stay on cursor
+      const curCenter = finalZoom.from.plus(finalZoom.to).div(2n).getValueNs();
+      const prevCenter = initialZoom.from.plus(initialZoom.to).div(2n).getValueNs();
+
+      if (prevCenter === cursorPos) {
+        expect(curCenter).toBe(prevCenter);
+      } else {
+        expect(Math.abs(Number(curCenter - cursorPos))).toBeLessThan(
+          Math.abs(Number(prevCenter - cursorPos))
+        );
+      }
+
+      initialZoom = finalZoom;
+    }
+  });
+
+  it('can zoom out with the buttons', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    let initialZoom = {
+      from: new RealTimestamp(700n),
+      to: new RealTimestamp(810n),
+    };
+    component.onZoomChanged(initialZoom);
+
+    const cursorPos = 800n;
+    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(cursorPos)));
+
+    fixture.detectChanges();
+
+    const zoomButton = htmlElement.querySelector('#zoom-out-btn') as HTMLButtonElement;
+    expect(zoomButton).toBeTruthy();
+
+    for (let i = 0; i < 10; i++) {
+      zoomButton.click();
+      fixture.detectChanges();
+      const finalZoom = timelineData.getZoomRange();
+      expect(finalZoom).not.toBe(initialZoom);
+      expect(finalZoom.from.getValueNs()).toBeLessThanOrEqual(
+        Number(initialZoom.from.getValueNs())
+      );
+      expect(finalZoom.to.getValueNs()).toBeGreaterThanOrEqual(Number(initialZoom.to.getValueNs()));
+      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeGreaterThan(
+        Number(initialZoom.to.minus(initialZoom.from).getValueNs())
+      );
+
+      // center to get closer to cursor or stay on cursor unless we reach the edge
+      const curCenter = finalZoom.from.plus(finalZoom.to).div(2n).getValueNs();
+      const prevCenter = initialZoom.from.plus(initialZoom.to).div(2n).getValueNs();
+
+      if (
+        finalZoom.from.getValueNs() === timestamp10.getValueNs() ||
+        finalZoom.to.getValueNs() === timestamp1000.getValueNs()
+      ) {
+        // No checks as cursor will stop being more centered
+      } else if (prevCenter === cursorPos) {
+        expect(curCenter).toBe(prevCenter);
+      } else {
+        expect(Math.abs(Number(curCenter - cursorPos))).toBeGreaterThan(
+          Math.abs(Number(prevCenter - cursorPos))
+        );
+      }
+
+      initialZoom = finalZoom;
+    }
+  });
+
+  it('can not zoom out past full range', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    const initialZoom = {
+      from: timestamp10,
+      to: timestamp1000,
+    };
+    component.onZoomChanged(initialZoom);
+
+    const cursorPos = 800n;
+    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(cursorPos)));
+
+    fixture.detectChanges();
+
+    const zoomButton = htmlElement.querySelector('#zoom-out-btn') as HTMLButtonElement;
+    expect(zoomButton).toBeTruthy();
+
+    zoomButton.click();
+    fixture.detectChanges();
+    const finalZoom = timelineData.getZoomRange();
+
+    expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
+    expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
+  });
+
+  it('zooms in with scroll wheel', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    let initialZoom = {
+      from: timestamp10,
+      to: timestamp1000,
+    };
+    component.onZoomChanged(initialZoom);
+
+    fixture.detectChanges();
+
+    for (let i = 0; i < 10; i++) {
+      component.onScroll({
+        deltaY: 200,
+        deltaX: 0,
+        x: 10, // scrolling on pos
+        target: {id: 'mini-timeline-canvas', offsetLeft: 0},
+      } as any as WheelEvent);
+
+      fixture.detectChanges();
+      const finalZoom = timelineData.getZoomRange();
+      expect(finalZoom).not.toBe(initialZoom);
+      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeLessThan(
+        Number(initialZoom.to.minus(initialZoom.from).getValueNs())
+      );
+
+      initialZoom = finalZoom;
+    }
+  });
+
+  it('zooms out with scroll wheel', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    let initialZoom = {
+      from: new RealTimestamp(700n),
+      to: new RealTimestamp(810n),
+    };
+    component.onZoomChanged(initialZoom);
+
+    fixture.detectChanges();
+
+    for (let i = 0; i < 10; i++) {
+      component.onScroll({
+        deltaY: -200,
+        deltaX: 0,
+        x: 10, // scrolling on pos
+        target: {id: 'mini-timeline-canvas', offsetLeft: 0},
+      } as any as WheelEvent);
+
+      fixture.detectChanges();
+      const finalZoom = timelineData.getZoomRange();
+      expect(finalZoom).not.toBe(initialZoom);
+      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeGreaterThan(
+        Number(initialZoom.to.minus(initialZoom.from).getValueNs())
+      );
+
+      initialZoom = finalZoom;
+    }
+  });
+
+  it('cannot zoom out past full range', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    component.timelineData.initialize(traces, undefined);
+
+    const initialZoom = {
+      from: timestamp10,
+      to: timestamp1000,
+    };
+    component.onZoomChanged(initialZoom);
+
+    component.onScroll({
+      deltaY: -1000,
+      deltaX: 0,
+      x: 10, // scrolling on pos
+      target: {id: 'mini-timeline-canvas', offsetLeft: 0},
+    } as any as WheelEvent);
+
+    fixture.detectChanges();
+
+    const finalZoom = timelineData.getZoomRange();
+
+    expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
+    expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
+  });
 });
