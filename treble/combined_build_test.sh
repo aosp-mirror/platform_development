@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (C) 2023 The Android Open Source Project
 #
@@ -78,16 +78,15 @@ if [[ -n "${dist_dir}" ]]; then
     out_dir="${dist_dir}/logs"
 fi
 
-base_command="build/soong/soong_ui.bash --make-mode"
+base_command="build/soong/soong_ui.bash --make-mode TARGET_RELEASE=trunk_staging"
 if [[ -n "${dist_dir}" ]]; then
     base_command="${base_command} DIST_DIR=${dist_dir} dist"
 fi
 
 run_command() {
+    echo "Running: ${1}"
     if [[ -z "${dry_run}" ]]; then
-        $1
-    else
-        echo "$1"
+        eval "${1}"
     fi
 }
 

@@ -28,7 +28,10 @@
 
 mod bp;
 mod cargo_out;
+mod config;
 
+use crate::config::Config;
+use crate::config::PackageConfig;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
@@ -64,83 +67,6 @@ struct Args {
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
-}
-
-fn default_apex_available() -> Vec<String> {
-    vec!["//apex_available:platform".to_string(), "//apex_available:anyapex".to_string()]
-}
-
-/// Options that apply to everything.
-#[derive(serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Config {
-    /// Whether to output "rust_test" modules.
-    tests: bool,
-    /// Set of features to enable. If non-empty, disables the default crate features.
-    #[serde(default)]
-    features: Vec<String>,
-    /// Whether to build with --workspace.
-    #[serde(default)]
-    workspace: bool,
-    /// When workspace is enabled, list of --exclude crates.
-    #[serde(default)]
-    workspace_excludes: Vec<String>,
-    /// Value to use for every generated module's "defaults" field.
-    global_defaults: Option<String>,
-    /// Value to use for every generated library module's "apex_available" field.
-    #[serde(default = "default_apex_available")]
-    apex_available: Vec<String>,
-    /// Map of renames for modules. For example, if a "libfoo" would be generated and there is an
-    /// entry ("libfoo", "libbar"), the generated module will be called "libbar" instead.
-    ///
-    /// Also, affects references to dependencies (e.g. in a "static_libs" list), even those outside
-    /// the project being processed.
-    #[serde(default)]
-    module_name_overrides: BTreeMap<String, String>,
-    /// Package specific config options.
-    #[serde(default)]
-    package: BTreeMap<String, PackageConfig>,
-    /// Modules in this list will not be generated.
-    #[serde(default)]
-    module_blocklist: Vec<String>,
-    /// Modules name => Soong "visibility" property.
-    #[serde(default)]
-    module_visibility: BTreeMap<String, Vec<String>>,
-}
-
-/// Options that apply to everything in a package (i.e. everything associated with a particular
-/// Cargo.toml file).
-#[derive(serde::Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-struct PackageConfig {
-    /// Whether to compile for device. Defaults to true.
-    #[serde(default)]
-    device_supported: Option<bool>,
-    /// Whether to compile for host. Defaults to true.
-    #[serde(default)]
-    host_supported: Option<bool>,
-    /// Generate "rust_library_rlib" instead of "rust_library".
-    #[serde(default)]
-    force_rlib: bool,
-    /// Whether to disable "unit_test" for "rust_test" modules.
-    // TODO: Should probably be a list of modules or crates. A package might have a mix of unit and
-    // integration tests.
-    #[serde(default)]
-    no_presubmit: bool,
-    /// File with content to append to the end of the generated Android.bp.
-    add_toplevel_block: Option<PathBuf>,
-    /// File with content to append to the end of each generated module.
-    add_module_block: Option<PathBuf>,
-    /// Modules in this list will not be added as dependencies of generated modules.
-    #[serde(default)]
-    dep_blocklist: Vec<String>,
-    /// Patch file to apply after Android.bp is generated.
-    patch: Option<PathBuf>,
-    /// Copy build.rs output to ./out/* and add a genrule to copy ./out/* to genrule output.
-    /// For crates with code pattern:
-    ///     include!(concat!(env!("OUT_DIR"), "/<some_file>.rs"))
-    #[serde(default)]
-    copy_out: bool,
 }
 
 fn main() -> Result<()> {
@@ -583,17 +509,16 @@ fn crate_to_bp_modules(
             m.props.set("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
         }
 
-        if !cfg.apex_available.is_empty()
-            && [
-                CrateType::Lib,
-                CrateType::RLib,
-                CrateType::DyLib,
-                CrateType::CDyLib,
-                CrateType::StaticLib,
-            ]
-            .contains(crate_type)
-        {
-            m.props.set("apex_available", cfg.apex_available.clone());
+        if crate_type.is_library() {
+            if !cfg.apex_available.is_empty() {
+                m.props.set("apex_available", cfg.apex_available.clone());
+            }
+            if cfg.product_available {
+                m.props.set("product_available", true);
+            }
+            if cfg.vendor_available {
+                m.props.set("vendor_available", true);
+            }
         }
 
         if let Some(visibility) = cfg.module_visibility.get(module_name) {

@@ -14,12 +14,14 @@
 # limitations under the License.
 #
 
-import gdbclient
-import unittest
 import copy
 import json
-
+import textwrap
+import unittest
 from typing import Any
+
+import gdbclient
+
 
 class LaunchConfigMergeTest(unittest.TestCase):
     def merge_compare(self, base: dict[str, Any], to_add: dict[str, Any] | None, expected: dict[str, Any]) -> None:
@@ -159,6 +161,222 @@ class VsCodeLaunchGeneratorTest(unittest.TestCase):
                                        'continue'],
              'preLaunchTask' : 'Build'
          })
+
+
+class LaunchConfigInsertTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests can generate long diffs, so we remove the limit
+        self.maxDiff = None
+
+    def test_insert_config(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end""")
+        to_insert = textwrap.dedent("""\
+                                    foo
+                                    bar""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            // #lldbclient-generated-begin
+                            foo
+                            bar
+                            // #lldbclient-generated-end"""))
+
+    def test_insert_into_start(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end
+            more content""")
+        to_insert = textwrap.dedent("""\
+            foo
+            bar""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            // #lldbclient-generated-begin
+                            foo
+                            bar
+                            // #lldbclient-generated-end
+                            more content"""))
+
+    def test_insert_into_mid(self) -> None:
+        dst = textwrap.dedent("""\
+            start content
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end
+            more content""")
+        to_insert = textwrap.dedent("""\
+            foo
+            bar""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            start content
+                            // #lldbclient-generated-begin
+                            foo
+                            bar
+                            // #lldbclient-generated-end
+                            more content"""))
+
+    def test_insert_into_end(self) -> None:
+        dst = textwrap.dedent("""\
+            start content
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end""")
+        to_insert = textwrap.dedent("""\
+            foo
+            bar""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            start content
+                            // #lldbclient-generated-begin
+                            foo
+                            bar
+                            // #lldbclient-generated-end"""))
+
+    def test_insert_twice(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end
+            """)
+        to_insert = 'foo'
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            // #lldbclient-generated-begin
+                            foo
+                            // #lldbclient-generated-end
+                            // #lldbclient-generated-begin
+                            foo
+                            // #lldbclient-generated-end
+                         """))
+
+    def test_preserve_space_indent(self) -> None:
+        dst = textwrap.dedent("""\
+            {
+              "version": "0.2.0",
+              "configurations": [
+                // #lldbclient-generated-begin
+                // #lldbclient-generated-end
+              ]
+            }
+        """)
+        to_insert = textwrap.dedent("""\
+            {
+                "name": "(lldbclient.py) Attach test",
+                "type": "lldb",
+                "processCreateCommands": [
+                    "gdb-remote 123",
+                    "test"
+                ]
+            }""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                             {
+                               "version": "0.2.0",
+                               "configurations": [
+                                 // #lldbclient-generated-begin
+                                 {
+                                     "name": "(lldbclient.py) Attach test",
+                                     "type": "lldb",
+                                     "processCreateCommands": [
+                                         "gdb-remote 123",
+                                         "test"
+                                     ]
+                                 }
+                                 // #lldbclient-generated-end
+                               ]
+                             }
+                         """))
+
+    def test_preserve_tab_indent(self) -> None:
+        dst = textwrap.dedent("""\
+            {
+            \t"version": "0.2.0",
+            \t"configurations": [
+            \t\t// #lldbclient-generated-begin
+            \t\t// #lldbclient-generated-end
+            \t]
+            }
+        """)
+        to_insert = textwrap.dedent("""\
+            {
+            \t"name": "(lldbclient.py) Attach test",
+            \t"type": "lldb",
+            \t"processCreateCommands": [
+            \t\t"gdb-remote 123",
+            \t\t"test"
+            \t]
+            }""")
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            {
+                            \t"version": "0.2.0",
+                            \t"configurations": [
+                            \t\t// #lldbclient-generated-begin
+                            \t\t{
+                            \t\t\t"name": "(lldbclient.py) Attach test",
+                            \t\t\t"type": "lldb",
+                            \t\t\t"processCreateCommands": [
+                            \t\t\t\t"gdb-remote 123",
+                            \t\t\t\t"test"
+                            \t\t\t]
+                            \t\t}
+                            \t\t// #lldbclient-generated-end
+                            \t]
+                            }
+                         """))
+
+    def test_preserve_trailing_whitespace(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin \t
+            // #lldbclient-generated-end\t """)
+        to_insert = 'foo'
+        self.assertEqual(gdbclient.insert_commands_into_vscode_config(dst,
+                                                                      to_insert),
+                         textwrap.dedent("""\
+                            // #lldbclient-generated-begin \t
+                            foo
+                            // #lldbclient-generated-end\t """))
+
+    def test_fail_if_no_begin(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-end""")
+        with self.assertRaisesRegex(ValueError, 'Did not find begin marker line'):
+            gdbclient.insert_commands_into_vscode_config(dst, 'foo')
+
+    def test_fail_if_no_end(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin""")
+        with self.assertRaisesRegex(ValueError, 'Unterminated begin marker at line 1'):
+            gdbclient.insert_commands_into_vscode_config(dst, 'foo')
+
+    def test_fail_if_begin_has_extra_text(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin text
+            // #lldbclient-generated-end""")
+        with self.assertRaisesRegex(ValueError, 'Did not find begin marker line'):
+            gdbclient.insert_commands_into_vscode_config(dst, 'foo')
+
+    def test_fail_if_end_has_extra_text(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-begin
+            // #lldbclient-generated-end text""")
+        with self.assertRaisesRegex(ValueError, 'Unterminated begin marker at line 1'):
+            gdbclient.insert_commands_into_vscode_config(dst, 'foo')
+
+    def test_fail_if_begin_end_swapped(self) -> None:
+        dst = textwrap.dedent("""\
+            // #lldbclient-generated-end
+            // #lldbclient-generated-begin""")
+        with self.assertRaisesRegex(ValueError, 'Unterminated begin marker at line 2'):
+            gdbclient.insert_commands_into_vscode_config(dst, 'foo')
 
 
 if __name__ == '__main__':
