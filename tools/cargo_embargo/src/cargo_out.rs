@@ -23,7 +23,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 /// Combined representation of --crate-type and --test flags.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CrateType {
     // --crate-type types
     Bin,
@@ -37,6 +37,13 @@ pub enum CrateType {
     Test,
     // "--cfg test" without --test. (Assume it is a test with the harness disabled.
     TestNoHarness,
+}
+
+impl CrateType {
+    /// Returns whether the crate type is a kind of library.
+    pub fn is_library(self) -> bool {
+        matches!(self, Self::Lib | Self::RLib | Self::DyLib | Self::CDyLib | Self::StaticLib)
+    }
 }
 
 /// Info extracted from `CargoOut` for a crate.

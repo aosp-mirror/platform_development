@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 
-import adb
 import argparse
 import json
 import logging
 import os
+import pathlib
 import posixpath
 import re
 import shutil
@@ -27,13 +27,16 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+from typing import Any, BinaryIO
 
-from typing import BinaryIO, Any
-
+import adb
 # Shared functions across gdbclient.py and ndk-gdb.py.
 import gdbrunner
 
 g_temp_dirs = []
+
+g_vscode_config_marker_begin = '// #lldbclient-generated-begin'
+g_vscode_config_marker_end = '// #lldbclient-generated-end'
 
 
 def read_toolchain_config(root: str) -> str:
@@ -90,7 +93,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--port", nargs="?", default="5039",
-        help="override the port used on the host [default: 5039]")
+        help="Unused **host** port to forward the debug_socket to.[default: 5039]")
     parser.add_argument(
         "--user", nargs="?", default="root",
         help="user to run commands as on the device [default: root]")
@@ -106,6 +109,14 @@ def parse_args() -> argparse.Namespace:
         dest="vscode_launch_props",
         help=("JSON with extra properties to add to launch parameters when using " +
               "vscode-lldb forwarding."))
+    parser.add_argument(
+        "--vscode-launch-file", default=None,
+        dest="vscode_launch_file",
+        help=textwrap.dedent(f"""Path to .vscode/launch.json file for the generated launch
+                     config when using vscode-lldb forwarding. The file needs to
+                     contain two marker lines: '{g_vscode_config_marker_begin}'
+                     and '{g_vscode_config_marker_end}'. The config will be written inline
+                     between these lines, replacing any text that is already there."""))
 
     parser.add_argument(
         "--env", nargs=1, action="append", metavar="VAR=VALUE",
@@ -121,7 +132,7 @@ def verify_device(device: adb.AndroidDevice) -> None:
     names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.name")])
     target_device = os.environ["TARGET_PRODUCT"]
     if target_device not in names:
-        msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
+        msg = "You used the wrong lunch: TARGET_PRODUCT ({}) does not match attached device ({})"
         sys.exit(msg.format(target_device, ", ".join(n if n else "None" for n in names)))
 
 
@@ -351,6 +362,83 @@ def generate_setup_script(sysroot: str, linker_search_dir: str | None, binary_na
         raise Exception("Unknown debugger type " + debugger)
 
 
+def insert_commands_into_vscode_config(dst_launch_config: str, setup_commands: str) -> str:
+    """Inserts setup commands into launch config between two marker lines.
+    Marker lines are set in global variables g_vscode_config_marker_end and g_vscode_config_marker_end.
+    The commands are inserted with the same indentation as the first marker line.
+
+    Args:
+        dst_launch_config: Config to insert commands into.
+        setup_commands: Commands to insert.
+    Returns:
+        Config with inserted commands.
+    Raises:
+        ValueError if the begin marker is not found or not terminated with an end marker.
+    """
+
+    # We expect the files to be small (~10s KB), so we use simple string concatenation
+    # for simplicity and readability even if it is slower.
+    output = ""
+    found_at_least_one_begin = False
+    unterminated_begin_line = None
+
+    # It might be tempting to rewrite this using find() or even regexes,
+    # but keeping track of line numbers, preserving whitespace, and detecting indent
+    # becomes tricky enough that this simple loop is more clear.
+    for linenum, line in enumerate(dst_launch_config.splitlines(keepends=True), start=1):
+       if unterminated_begin_line != None:
+           if line.strip() == g_vscode_config_marker_end:
+               unterminated_begin_line = None
+           else:
+               continue
+       output += line
+       if line.strip() == g_vscode_config_marker_begin:
+           found_at_least_one_begin = True
+           unterminated_begin_line = linenum
+           marker_indent = line[:line.find(g_vscode_config_marker_begin)]
+           output += textwrap.indent(setup_commands, marker_indent) + '\n'
+
+    if not found_at_least_one_begin:
+       raise ValueError(f"Did not find begin marker line '{g_vscode_config_marker_begin}' " +
+                        "in the VSCode launch file")
+
+    if unterminated_begin_line is not None:
+       raise ValueError(f"Unterminated begin marker at line {unterminated_begin_line} " +
+                        f"in the VSCode launch file. Add end marker line to file: '{g_vscode_config_marker_end}'")
+
+    return output
+
+
+def replace_file_contents(dst_path: os.PathLike, contents: str) -> None:
+    """Replaces the contents of the file pointed to by dst_path.
+
+    This function writes the new contents into a temporary file, then atomically swaps it with
+    the target file. This way if a write fails, the original file is not overwritten.
+
+    Args:
+        dst_path: The path to the file to be replaced.
+        contents: The new contents of the file.
+    Raises:
+        Forwards exceptions from underlying filesystem methods.
+    """
+    tempf = tempfile.NamedTemporaryFile('w', delete=False)
+    try:
+        tempf.write(contents)
+        os.replace(tempf.name, dst_path)
+    except:
+        os.remove(tempf.name)
+        raise
+
+
+def write_vscode_config(vscode_launch_file: pathlib.Path, setup_commands: str) -> None:
+    """Writes setup_commands into the file pointed by vscode_launch_file.
+
+    See insert_commands_into_vscode_config for the description of how the setup commands are written.
+    """
+    contents = insert_commands_into_vscode_config(vscode_launch_file.read_text(), setup_commands)
+    replace_file_contents(vscode_launch_file, contents)
+
+
 def do_main() -> None:
     required_env = ["ANDROID_BUILD_TOP",
                     "ANDROID_PRODUCT_OUT", "TARGET_PRODUCT"]
@@ -384,8 +472,16 @@ def do_main() -> None:
     vscode_launch_props = None
     if args.vscode_launch_props:
         if args.setup_forwarding != "vscode-lldb":
-            raise ValueError('vscode_launch_props requires --setup-forwarding=vscode-lldb')
+            raise ValueError(
+                'vscode-launch-props requires --setup-forwarding=vscode-lldb')
         vscode_launch_props = json.loads(args.vscode_launch_props)
+
+    vscode_launch_file = None
+    if args.vscode_launch_file:
+        if args.setup_forwarding != "vscode-lldb":
+            raise ValueError(
+                'vscode-launch-file requires --setup-forwarding=vscode-lldb')
+        vscode_launch_file = args.vscode_launch_file
 
     with binary_file:
         if sys.platform.startswith("linux"):
@@ -446,19 +542,25 @@ def do_main() -> None:
             # Start lldb.
             gdbrunner.start_gdb(debugger_path, setup_commands, lldb=True)
         else:
-            print("")
-            print(setup_commands)
-            print("")
-            if args.setup_forwarding == "vscode-lldb":
-                print(textwrap.dedent("""
-                        Paste the above json into .vscode/launch.json and start the debugger as
-                        normal. Press enter in this terminal once debugging is finished to shut
-                        lldb-server down and close all the ports."""))
+            if args.setup_forwarding == "vscode-lldb" and vscode_launch_file:
+                write_vscode_config(pathlib.Path(vscode_launch_file) , setup_commands)
+                print(f"Generated config written to '{vscode_launch_file}'")
             else:
-                print(textwrap.dedent("""
-                        Paste the lldb commands above into the lldb frontend to set up the
-                        lldb-server connection. Press enter in this terminal once debugging is
-                        finished to shut lldb-server down and close all the ports."""))
+                print("")
+                print(setup_commands)
+                print("")
+                if args.setup_forwarding == "vscode-lldb":
+                    print(textwrap.dedent("""
+                            Paste the above json into .vscode/launch.json and start the debugger as
+                            normal."""))
+                else:
+                    print(textwrap.dedent("""
+                            Paste the lldb commands above into the lldb frontend to set up the
+                            lldb-server connection."""))
+
+            print(textwrap.dedent("""
+                        Press enter in this terminal once debugging is finished to shut lldb-server
+                        down and close all the ports."""))
             print("")
             input("Press enter to shut down lldb-server")
 
