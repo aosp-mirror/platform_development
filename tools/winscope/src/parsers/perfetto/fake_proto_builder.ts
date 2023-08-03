@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-import {assertTrue} from 'common/assert_utils';
+import {ObjectUtils} from 'common/object_utils';
 import {StringUtils} from 'common/string_utils';
 
 export type FakeProto = any;
 
-interface ArrayKey {
-  key: string;
-  index: number;
-}
-
 export class FakeProtoBuilder {
   private proto = {};
-  static readonly ARRAY_KEY_REGEX = new RegExp('(.+)\\[(\\d+)\\]');
 
   addArg(
     key: string,
@@ -35,11 +29,14 @@ export class FakeProtoBuilder {
     realValue: number | undefined,
     stringValue: string | undefined
   ): FakeProtoBuilder {
-    const keyTokens = key.split('.').map((token) => {
-      return StringUtils.convertSnakeToCamelCase(token);
-    });
+    const keyCamelCase = key
+      .split('.')
+      .map((token) => {
+        return StringUtils.convertSnakeToCamelCase(token);
+      })
+      .join('.');
     const value = this.makeValue(valueType, intValue, realValue, stringValue);
-    this.addArgRec(this.proto, keyTokens, 0, value);
+    ObjectUtils.setProperty(this.proto, keyCamelCase, value);
     return this;
   }
 
@@ -69,57 +66,5 @@ export class FakeProtoBuilder {
       default:
       // do nothing
     }
-  }
-
-  private addArgRec(proto: FakeProto, keys: string[], keyIndex: number, value: any) {
-    const key = keys[keyIndex];
-    const arrayKey = this.tryParseArrayKey(key);
-
-    const isLeaf = keyIndex === keys.length - 1;
-    if (isLeaf) {
-      if (arrayKey) {
-        this.initializeChildArrayIfNeeded(proto, arrayKey);
-        proto[arrayKey.key][arrayKey.index] = value;
-      } else {
-        proto[key] = value;
-      }
-      return;
-    }
-
-    if (arrayKey) {
-      this.initializeChildArrayIfNeeded(proto, arrayKey);
-      this.addArgRec(proto[arrayKey.key][arrayKey.index], keys, keyIndex + 1, value);
-    } else {
-      this.initializeChildIfNeeded(proto, key);
-      this.addArgRec(proto[key], keys, keyIndex + 1, value);
-    }
-  }
-
-  private tryParseArrayKey(key: string): ArrayKey | undefined {
-    const match = FakeProtoBuilder.ARRAY_KEY_REGEX.exec(key);
-    if (!match) {
-      return undefined;
-    }
-    return {
-      key: match[1],
-      index: Number(match[2]),
-    };
-  }
-
-  private initializeChildIfNeeded(proto: FakeProto, key: string) {
-    if (proto[key] === undefined) {
-      proto[key] = {};
-    }
-    assertTrue(typeof proto[key] === 'object', () => 'Expected to be object');
-  }
-
-  private initializeChildArrayIfNeeded(proto: FakeProto, arrayKey: ArrayKey) {
-    if (proto[arrayKey.key] === undefined) {
-      proto[arrayKey.key] = [];
-    }
-    if (proto[arrayKey.key][arrayKey.index] === undefined) {
-      proto[arrayKey.key][arrayKey.index] = {};
-    }
-    assertTrue(Array.isArray(proto[arrayKey.key]), () => 'Expected to be array');
   }
 }

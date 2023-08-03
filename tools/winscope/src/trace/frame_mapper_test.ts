@@ -282,9 +282,9 @@ describe('FrameMapper', () => {
 
       surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
         .setEntries([
-          {id: 0, vSyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
-          {id: 1, vSyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
-          {id: 2, vSyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
+          {id: 0, vsyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
+          {id: 1, vsyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
+          {id: 2, vsyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
         ])
         .setTimestamps([time0, time1, time2])
         .build();
