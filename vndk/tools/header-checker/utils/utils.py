@@ -228,20 +228,28 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
             tag, path = (x.strip() for x in line.split(':', 1))
             if not path or tag in exclude_tags:
                 continue
-            dirname, filename = os.path.split(path)
+            dir_path, filename = os.path.split(path)
             if not filename.endswith(SOURCE_ABI_DUMP_EXT):
                 continue
             libname = filename[:-len(SOURCE_ABI_DUMP_EXT)]
             if not libname:
                 continue
-            variant = os.path.basename(dirname)
-            if not variant:
-                continue
+            # dir_path may contain soong config hash.
+            # For example, the following dir_paths are valid.
+            # android_x86_x86_64_shared/012abc/libc.so.lsdump
+            # android_x86_x86_64_shared/libc.so.lsdump
+            dirnames = []
+            dir_path, dirname = os.path.split(dir_path)
+            dirnames.append(dirname)
+            dirname = os.path.basename(dir_path)
+            dirnames.append(dirname)
             for target in targets:
                 arch_cpu = target.get_arch_cpu_str()
                 prefix = _get_module_variant_dir_name(tag, vndk_version,
                                                       arch_cpu)
-                if not variant.startswith(prefix):
+                variant = next((d for d in dirnames if d.startswith(prefix)),
+                               None)
+                if not variant:
                     continue
                 new_suffix = variant[len(prefix):]
                 old_suffix = suffixes[libname].get(arch_cpu)
