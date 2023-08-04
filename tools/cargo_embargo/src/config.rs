@@ -29,7 +29,7 @@ fn default_true() -> bool {
 }
 
 /// Options that apply to everything.
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// Whether to output "rust_test" modules.
