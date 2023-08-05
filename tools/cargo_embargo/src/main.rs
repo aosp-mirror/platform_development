@@ -535,3 +535,58 @@ fn crate_to_bp_modules(
     }
     Ok(modules)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crate_to_bp_empty() {
+        let c = Crate {
+            name: "name".to_string(),
+            package_name: "package_name".to_string(),
+            edition: "2021".to_string(),
+            types: vec![],
+            ..Default::default()
+        };
+        let cfg = Config { ..Default::default() };
+        let package_cfg = PackageConfig { ..Default::default() };
+        let modules = crate_to_bp_modules(&c, &cfg, &package_cfg, &[]).unwrap();
+
+        assert_eq!(modules, vec![]);
+    }
+
+    #[test]
+    fn crate_to_bp_minimal() {
+        let c = Crate {
+            name: "name".to_string(),
+            package_name: "package_name".to_string(),
+            edition: "2021".to_string(),
+            types: vec![CrateType::Lib],
+            ..Default::default()
+        };
+        let cfg = Config { ..Default::default() };
+        let package_cfg = PackageConfig { ..Default::default() };
+        let modules = crate_to_bp_modules(&c, &cfg, &package_cfg, &[]).unwrap();
+
+        assert_eq!(
+            modules,
+            vec![BpModule {
+                module_type: "rust_library".to_string(),
+                props: BpProperties {
+                    map: [
+                        ("cargo_env_compat".to_string(), BpValue::Bool(true)),
+                        ("crate_name".to_string(), BpValue::String("name".to_string())),
+                        ("edition".to_string(), BpValue::String("2021".to_string())),
+                        ("host_supported".to_string(), BpValue::Bool(true)),
+                        ("name".to_string(), BpValue::String("libname".to_string())),
+                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    raw_block: None
+                }
+            }]
+        );
+    }
+}
