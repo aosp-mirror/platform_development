@@ -16,10 +16,11 @@
     "build:trace_processor": "PERFETTO_TOP=../../../external/perfetto; (cd $PERFETTO_TOP && tools/install-build-deps --ui && ui/node ui/build.js --out trace_processor_build) && rm -rf deps_build/trace_processor && mkdir -p deps_build/trace_processor && rsync -ar $PERFETTO_TOP/trace_processor_build/ deps_build/trace_processor && mkdir deps_build/trace_processor/to_be_served && cp deps_build/trace_processor/ui/dist_version/engine_bundle.js deps_build/trace_processor/to_be_served/ && cp deps_build/trace_processor/wasm/trace_processor.wasm deps_build/trace_processor/to_be_served/",
     "build:prod": "npm run build:trace_processor && npm run build:kotlin && webpack --config webpack.config.prod.js --progress && cp deps_build/trace_processor/to_be_served/* dist/prod/",
     "test:unit": "webpack --config webpack.config.unit_test.js && jasmine dist/unit_test/bundle.js",
-    "test:component": "npx karma start",
+    "test:component:ci": "npx karma start karma.config.ci.js",
+    "test:component:dev": "npx karma start karma.config.dev.js",
     "test:e2e": "rm -rf dist/e2e_test && npx tsc -p ./src/test/e2e && npx protractor protractor.config.js",
-    "test:presubmit": "npm run test:unit && npm run test:component && npm run format:check && npm run tslint:check && npm run eslint:check && npm run deps_graph:check_cycles",
-    "test:all": "npm run test:unit && npm run test:component && npm run test:e2e && npm run format:check && npm run tslint:check && npm run eslint:check && npm run deps_graph:check_cycles"
+    "test:presubmit": "npm run test:unit && npm run test:component:ci && npm run format:check && npm run tslint:check && npm run eslint:check && npm run deps_graph:check_cycles",
+    "test:all": "npm run test:unit && npm run test:component:ci && npm run test:e2e && npm run format:check && npm run tslint:check && npm run eslint:check && npm run deps_graph:check_cycles"
   },
   "private": true,
   "dependencies": {

@@ -38,8 +38,6 @@ module.exports = (config) => {
     preprocessors: {
       'src/main_component_test.ts': ['webpack', 'sourcemap'],
     },
-    singleRun: true,
-    browsers: ['ChromeHeadless'],
     webpack: webpackConfig,
   });
 };
