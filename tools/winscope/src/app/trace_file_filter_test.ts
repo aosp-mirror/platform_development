@@ -24,7 +24,11 @@ describe('TraceFileFilter', () => {
   const filter = new TraceFileFilter();
 
   // Could be any file, we just need an instance of File to be used as a fake bugreport archive
-  const bugreportArchive = new FileImpl(new ArrayBuffer(0), 'test_bugreport.zip');
+  // TODO(b/290183109): use the Web API's File type instead, once this Node.js test is ported to Karma.
+  const bugreportArchive = new FileImpl(
+    new ArrayBuffer(0),
+    'test_bugreport.zip'
+  ) as unknown as File;
 
   describe('bugreport (detects it is a bugreport)', () => {
     it('ignores non-trace dirs', async () => {
@@ -131,7 +135,7 @@ describe('TraceFileFilter', () => {
   const makeTraceFile = (filename: string, parentArchive?: File, size?: number) => {
     size = size ?? 0;
     const file = new FileImpl(new ArrayBuffer(size), filename);
-    return new TraceFile(file, parentArchive);
+    return new TraceFile(file as unknown as File, parentArchive);
   };
 
   const makeBugreportMainEntryTraceFile = async () => {

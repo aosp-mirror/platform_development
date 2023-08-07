@@ -16,6 +16,9 @@
 
 // This class is needed for unit tests because Node.js doesn't provide
 // an implementation of the Web API's File type
+
+// TODO(b/290183109): remove this class and use the Web API's File type instead,
+//  once all the Node.js tests have been ported to Karma.
 class FileImpl {
   readonly size: number;
   readonly type: string;
