@@ -35,4 +35,7 @@ message DisplayProto {
     TransformProto transform = 6;
 
     bool is_virtual = 7;
+
+    double dpi_x = 8;
+    double dpi_y = 9;
 }
