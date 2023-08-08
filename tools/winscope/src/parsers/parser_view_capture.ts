@@ -16,7 +16,7 @@
 
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
+import {FrameData, TraceType, ViewNode, WindowData} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ExportedData} from './proto_types';
 
@@ -42,20 +42,24 @@ export class ParserViewCapture extends AbstractParser {
     return ParserViewCapture.MAGIC_NUMBER;
   }
 
-  override decodeTrace(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): FrameData[] {
     const exportedData = ExportedData.decode(buffer) as any;
     this.classNames = exportedData.classname;
     this.realToElapsedTimeOffsetNanos = BigInt(exportedData.realToElapsedTimeOffsetNanos);
     this.packageName = this.shortenAndCapitalize(exportedData.package);
     ParserViewCapture.packageNames.push(exportedData.package);
 
-    const firstWindowData = exportedData.windowData[0];
+    const firstWindowData: WindowData = exportedData.windowData[0];
     this.windowTitle = this.shortenAndCapitalize(firstWindowData.title);
 
     return firstWindowData.frameData;
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, decodedEntry: any) {
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    decodedEntry: FrameData
+  ) {
     this.formatProperties(decodedEntry.node, this.classNames);
     return decodedEntry;
   }
@@ -65,12 +69,12 @@ export class ParserViewCapture extends AbstractParser {
     return shortName.charAt(0).toUpperCase() + shortName.slice(1);
   }
 
-  private formatProperties(root: any /* ViewNode */, classNames: string[]): any /* ViewNode */ {
+  private formatProperties(root: ViewNode, classNames: string[]): ViewNode {
     const DEPTH_MAGNIFICATION = 4;
     const VISIBLE = 0;
 
     function inner(
-      node: any /* ViewNode */,
+      node: ViewNode,
       leftShift: number,
       topShift: number,
       scaleX: number,
@@ -118,6 +122,7 @@ export class ParserViewCapture extends AbstractParser {
 
       // TODO: Audit these properties
       node.depth = depth * DEPTH_MAGNIFICATION;
+      node.className = node.name.substring(0, node.name.indexOf('@'));
       node.type = 'ViewNode';
       node.layerId = 0;
       node.isMissing = false;
@@ -127,7 +132,7 @@ export class ParserViewCapture extends AbstractParser {
       node.skip = null;
       node.id = node.name;
       node.stableId = node.id;
-      node.equals = (other: any /* ViewNode */) => ParserViewCapture.equals(node, other);
+      node.equals = (other: ViewNode) => ParserViewCapture.equals(node, other);
     }
 
     root.scaleX = root.scaleY = 1;
@@ -138,7 +143,7 @@ export class ParserViewCapture extends AbstractParser {
     return root;
   }
 
-  override getTimestamp(timestampType: TimestampType, frameData: any): undefined | Timestamp {
+  override getTimestamp(timestampType: TimestampType, frameData: FrameData): undefined | Timestamp {
     return Timestamp.from(
       timestampType,
       BigInt(frameData.timestamp),
@@ -149,7 +154,7 @@ export class ParserViewCapture extends AbstractParser {
   private static readonly MAGIC_NUMBER = [0x9, 0x78, 0x65, 0x90, 0x65, 0x73, 0x82, 0x65, 0x68];
 
   /** This method is used by the tree_generator to determine if 2 nodes have equivalent properties. */
-  private static equals(node: any /* ViewNode */, other: any /* ViewNode */): boolean {
+  private static equals(node: ViewNode, other: ViewNode): boolean {
     if (!node && !other) {
       return true;
     }

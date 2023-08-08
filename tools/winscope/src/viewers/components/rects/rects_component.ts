@@ -178,7 +178,6 @@ import {Distance2D} from './types3d';
   ],
 })
 export class RectsComponent implements OnInit, OnDestroy {
-
   @Input() title = 'title';
   @Input() enableShowVirtualButton: boolean = true;
   @Input() zoomFactor: number = 1;

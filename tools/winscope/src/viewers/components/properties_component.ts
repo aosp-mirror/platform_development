@@ -15,6 +15,7 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TraceTreeNode} from 'trace/trace_tree_node';
+import {TraceType, ViewNode} from 'trace/trace_type';
 import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -44,10 +45,15 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         >
       </div>
 
-      <property-groups
-        *ngIf="itemIsSelected() && displayPropertyGroups"
+      <surface-flinger-property-groups
+        *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedFlickerItem"></property-groups>
+        [item]="selectedItem"></surface-flinger-property-groups>
+
+      <view-capture-property-groups
+        *ngIf="showViewCaptureFormat()"
+        class="property-groups"
+        [item]="selectedItem"></view-capture-property-groups>
     </div>
 
     <mat-divider></mat-divider>
@@ -61,7 +67,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 
       <div class="tree-wrapper">
         <tree-view
-          *ngIf="objectKeys(propertiesTree).length > 0"
+          *ngIf="objectKeys(propertiesTree).length > 0 && !showViewCaptureFormat()"
           [item]="propertiesTree"
           [showNode]="showNode"
           [isLeaf]="isLeaf"
@@ -121,9 +127,10 @@ export class PropertiesComponent {
 
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNode = {};
-  @Input() selectedFlickerItem: TraceTreeNode | null = null;
+  @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
+  @Input() traceType: TraceType | undefined;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -160,6 +167,19 @@ export class PropertiesComponent {
   }
 
   itemIsSelected() {
-    return this.selectedFlickerItem && Object.keys(this.selectedFlickerItem).length > 0;
+    return this.selectedItem && Object.keys(this.selectedItem).length > 0;
+  }
+
+  showViewCaptureFormat(): boolean {
+    return (
+      this.traceType === TraceType.VIEW_CAPTURE &&
+      this.filterString === '' &&
+      // Todo: Highlight Inline in formatted ViewCapture Properties Component.
+      this.userOptions['showDiff']?.enabled === false
+    );
+  }
+
+  isSurfaceFlinger(): boolean {
+    return this.traceType === TraceType.SURFACE_FLINGER;
   }
 }

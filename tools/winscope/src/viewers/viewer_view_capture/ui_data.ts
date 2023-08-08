@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
+import {TraceType, ViewNode} from 'trace/trace_type';
 import {Rectangle} from 'viewers/common/rectangle';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -31,6 +31,7 @@ export class UiData {
     public propertiesUserOptions: UserOptions,
     public pinnedItems: HierarchyTreeNode[],
     public highlightedItems: string[],
-    public propertiesTree: PropertiesTreeNode | null
+    public propertiesTree: PropertiesTreeNode | null,
+    public selectedViewNode: ViewNode
   ) {}
 }

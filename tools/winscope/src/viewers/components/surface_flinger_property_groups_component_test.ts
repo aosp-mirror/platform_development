@@ -17,21 +17,21 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {LayerBuilder} from 'test/unit/layer_builder';
-import {PropertyGroupsComponent} from './property_groups_component';
+import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
 describe('PropertyGroupsComponent', () => {
-  let fixture: ComponentFixture<PropertyGroupsComponent>;
-  let component: PropertyGroupsComponent;
+  let fixture: ComponentFixture<SurfaceFlingerPropertyGroupsComponent>;
+  let component: SurfaceFlingerPropertyGroupsComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatDividerModule, MatTooltipModule],
-      declarations: [PropertyGroupsComponent, TransformMatrixComponent],
+      declarations: [SurfaceFlingerPropertyGroupsComponent, TransformMatrixComponent],
       schemas: [],
     }).compileComponents();
-    fixture = TestBed.createComponent(PropertyGroupsComponent);
+    fixture = TestBed.createComponent(SurfaceFlingerPropertyGroupsComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

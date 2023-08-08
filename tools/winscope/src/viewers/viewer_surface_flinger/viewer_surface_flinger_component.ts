@@ -44,7 +44,8 @@ import {UiData} from './ui_data';
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
+        [selectedItem]="inputData?.selectedLayer ?? {}"
+        [traceType]="${TraceType.SURFACE_FLINGER}"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
         [isProtoDump]="true"></properties-view>
     </div>

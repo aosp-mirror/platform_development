@@ -17,7 +17,7 @@ import {Component, Input} from '@angular/core';
 import {Layer} from 'flickerlib/common';
 
 @Component({
-  selector: 'property-groups',
+  selector: 'surface-flinger-property-groups',
   template: `
     <div class="group">
       <h3 class="group-header mat-subheading-2">Visibility</h3>
@@ -277,7 +277,7 @@ import {Layer} from 'flickerlib/common';
     `,
   ],
 })
-export class PropertyGroupsComponent {
+export class SurfaceFlingerPropertyGroupsComponent {
   @Input() item!: Layer;
 
   hasInputChannel() {

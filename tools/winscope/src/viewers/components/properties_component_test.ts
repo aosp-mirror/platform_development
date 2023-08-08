@@ -22,7 +22,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PropertiesComponent} from './properties_component';
-import {PropertyGroupsComponent} from './property_groups_component';
+import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
 
 describe('PropertiesComponent', () => {
@@ -33,7 +33,7 @@ describe('PropertiesComponent', () => {
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [PropertiesComponent, PropertyGroupsComponent, TreeComponent],
+      declarations: [PropertiesComponent, SurfaceFlingerPropertyGroupsComponent, TreeComponent],
       imports: [
         CommonModule,
         MatInputModule,
@@ -51,7 +51,7 @@ describe('PropertiesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.propertiesTree = {};
-    component.selectedFlickerItem = null;
+    component.selectedItem = null;
     component.userOptions = {
       showDefaults: {
         name: 'Show defaults',
