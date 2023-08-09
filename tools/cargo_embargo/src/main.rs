@@ -36,7 +36,9 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo::{cargo_out::parse_cargo_out, Crate, CrateType, ExternType};
+use cargo::{
+    cargo_out::parse_cargo_out, metadata::parse_cargo_metadata_file, Crate, CrateType, ExternType,
+};
 use clap::Parser;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
@@ -100,8 +102,11 @@ fn main() -> Result<()> {
             .context("generate_cargo_out failed")?;
     }
 
-    let crates =
-        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?;
+    let crates = if cfg.run_cargo {
+        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?
+    } else {
+        parse_cargo_metadata_file(cargo_metadata_path, &cfg)?
+    };
 
     // Find out files.
     // Example: target.tmp/x86_64-unknown-linux-gnu/debug/build/metrics-d2dd799cebf1888d/out/event_details.rs
@@ -211,28 +216,30 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             .args(&feature_args),
     )?;
 
-    // cargo build
-    run_cargo(
-        &mut cargo_out_file,
-        Command::new("cargo")
-            .args(["build", "--target", default_target])
-            .args(verbose_args)
-            .args(target_dir_args)
-            .args(&workspace_args)
-            .args(&feature_args),
-    )?;
-
-    if cfg.tests {
-        // cargo build --tests
+    if cfg.run_cargo {
+        // cargo build
         run_cargo(
             &mut cargo_out_file,
             Command::new("cargo")
-                .args(["build", "--target", default_target, "--tests"])
+                .args(["build", "--target", default_target])
                 .args(verbose_args)
                 .args(target_dir_args)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
+
+        if cfg.tests {
+            // cargo build --tests
+            run_cargo(
+                &mut cargo_out_file,
+                Command::new("cargo")
+                    .args(["build", "--target", default_target, "--tests"])
+                    .args(verbose_args)
+                    .args(target_dir_args)
+                    .args(&workspace_args)
+                    .args(&feature_args),
+            )?;
+        }
     }
 
     Ok(())

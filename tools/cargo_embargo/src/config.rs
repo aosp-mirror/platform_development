@@ -71,6 +71,10 @@ pub struct Config {
     /// Modules name => Soong "visibility" property.
     #[serde(default)]
     pub module_visibility: BTreeMap<String, Vec<String>>,
+    /// Whether to run the cargo build and parse its output, rather than just figuring things out
+    /// from the `cargo.metadata`.
+    #[serde(default = "default_true")]
+    pub run_cargo: bool,
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
