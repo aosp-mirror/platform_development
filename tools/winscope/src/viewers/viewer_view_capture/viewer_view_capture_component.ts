@@ -16,6 +16,7 @@
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
 import {UiData} from './ui_data';
 
 /**
@@ -49,8 +50,9 @@ import {UiData} from './ui_data';
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [displayPropertyGroups]="inputData?.displayPropertyGroups"
-        [isProtoDump]="true">
+        [selectedItem]="inputData?.selectedViewNode ?? null"
+        [traceType]="${TraceType.VIEW_CAPTURE}"
+        [isProtoDump]="false">
       </properties-view>
     </div>
   `,

@@ -223,7 +223,7 @@ describe('PresenterViewCapture', () => {
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
       (it) => typeof it.propertyKey === 'string'
     );
-    expect(nonTerminalChildren?.length).toEqual(24);
+    expect(nonTerminalChildren?.length).toEqual(25);
     presenter.filterPropertiesTree('alpha');
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(

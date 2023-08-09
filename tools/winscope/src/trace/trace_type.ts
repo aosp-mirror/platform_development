@@ -46,6 +46,11 @@ export enum TraceType {
   VIEW_CAPTURE,
 }
 
+// view capture types
+export type ViewNode = any;
+export type FrameData = any;
+export type WindowData = any;
+
 export interface TraceEntryTypeMap {
   [TraceType.ACCESSIBILITY]: object;
   [TraceType.LAUNCHER]: object;
