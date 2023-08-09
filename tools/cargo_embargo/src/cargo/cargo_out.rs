@@ -12,67 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::metadata::WorkspaceMetadata;
+use super::{Crate, CrateType};
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::env;
 use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::path::PathBuf;
-
-/// Combined representation of --crate-type and --test flags.
-#[derive(Copy, Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
-#[serde[rename_all = "lowercase"]]
-pub enum CrateType {
-    // --crate-type types
-    Bin,
-    Lib,
-    RLib,
-    DyLib,
-    CDyLib,
-    StaticLib,
-    ProcMacro,
-    // --test
-    Test,
-    // "--cfg test" without --test. (Assume it is a test with the harness disabled.
-    TestNoHarness,
-}
-
-impl CrateType {
-    /// Returns whether the crate type is a kind of library.
-    pub fn is_library(self) -> bool {
-        matches!(self, Self::Lib | Self::RLib | Self::DyLib | Self::CDyLib | Self::StaticLib)
-    }
-}
-
-/// Info extracted from `CargoOut` for a crate.
-///
-/// Note that there is a 1-to-many relationship between a Cargo.toml file and these `Crate`
-/// objects. For example, a Cargo.toml file might have a bin, a lib, and various tests. Each of
-/// those will be a separate `Crate`. All of them will have the same `package_name`.
-#[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Crate {
-    pub name: String,
-    pub package_name: String,
-    pub version: Option<String>,
-    pub types: Vec<CrateType>,
-    pub target: Option<String>,                 // --target
-    pub features: Vec<String>,                  // --cfg feature=
-    pub cfgs: Vec<String>,                      // non-feature --cfg
-    pub externs: Vec<(String, Option<String>)>, // name => rlib file
-    pub codegens: Vec<String>,                  // -C
-    pub cap_lints: String,
-    pub static_libs: Vec<String>,
-    pub shared_libs: Vec<String>,
-    pub edition: String,
-    pub package_dir: PathBuf, // canonicalized
-    pub main_src: PathBuf,    // relative to package_dir
-}
 
 /// Reads the given `cargo.out` and `cargo.metadata` files, and generates a list of crates based on
 /// the rustc invocations.
@@ -119,20 +71,6 @@ fn parse_cargo_out_str(
         crates.push(c);
     }
     Ok(crates)
-}
-
-/// `cargo metadata` output.
-#[derive(Debug, Deserialize)]
-struct WorkspaceMetadata {
-    packages: Vec<PackageMetadata>,
-}
-
-#[derive(Debug, Deserialize)]
-struct PackageMetadata {
-    name: String,
-    version: String,
-    edition: String,
-    manifest_path: String,
 }
 
 /// Raw-ish data extracted from cargo.out file.
@@ -254,21 +192,6 @@ impl CargoOut {
         // self.find_warning_owners()
 
         Ok(result)
-    }
-}
-
-impl CrateType {
-    fn from_str(s: &str) -> CrateType {
-        match s {
-            "bin" => CrateType::Bin,
-            "lib" => CrateType::Lib,
-            "rlib" => CrateType::RLib,
-            "dylib" => CrateType::DyLib,
-            "cdylib" => CrateType::CDyLib,
-            "staticlib" => CrateType::StaticLib,
-            "proc-macro" => CrateType::ProcMacro,
-            _ => panic!("unexpected --crate-type: {}", s),
-        }
     }
 }
 

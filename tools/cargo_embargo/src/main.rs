@@ -27,7 +27,7 @@
 //! available to tweak it via a config file.
 
 mod bp;
-mod cargo_out;
+mod cargo;
 mod config;
 
 use crate::config::Config;
@@ -36,7 +36,7 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo_out::{parse_cargo_out, Crate, CrateType};
+use cargo::{cargo_out::parse_cargo_out, Crate, CrateType};
 use clap::Parser;
 use once_cell::sync::Lazy;
 use regex::Regex;
