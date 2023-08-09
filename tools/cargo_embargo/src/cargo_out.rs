@@ -356,27 +356,7 @@ impl Crate {
                     }
                 }
                 _ if !arg.starts_with('-') => {
-                    let src_path = Path::new(arg);
-                    // Canonicalize the path because:
-                    //
-                    // 1. We don't consistently get relative or absolute paths elsewhere. If we
-                    //    canonicalize everything, it becomes easy to compare paths.
-                    //
-                    // 2. We don't want to consider symlinks to code outside the cwd as part of the
-                    //    project (e.g. AOSP's import of crosvm has symlinks from crosvm's own 3p
-                    //    directory to the android 3p directories).
-                    let src_path = src_path
-                        .canonicalize()
-                        .unwrap_or_else(|e| panic!("failed to canonicalize {src_path:?}: {}", e));
-                    out.package_dir = src_path.parent().unwrap().to_path_buf();
-                    while !out.package_dir.join("Cargo.toml").try_exists()? {
-                        if let Some(parent) = out.package_dir.parent() {
-                            out.package_dir = parent.to_path_buf();
-                        } else {
-                            bail!("No Cargo.toml found in parents of {:?}", src_path);
-                        }
-                    }
-                    out.main_src = src_path.strip_prefix(&out.package_dir).unwrap().to_path_buf();
+                    (out.package_dir, out.main_src) = split_src_path(Path::new(arg))?;
                 }
 
                 // ignored flags
@@ -442,4 +422,36 @@ impl Crate {
 
         Ok(out)
     }
+}
+
+/// Given a path to the main source file of some Rust crate, returns the canonical path to the
+/// package directory, and the relative path to the source file within that directory.
+fn split_src_path(src_path: &Path) -> Result<(PathBuf, PathBuf)> {
+    // Canonicalize the path because:
+    //
+    // 1. We don't consistently get relative or absolute paths elsewhere. If we
+    //    canonicalize everything, it becomes easy to compare paths.
+    //
+    // 2. We don't want to consider symlinks to code outside the cwd as part of the
+    //    project (e.g. AOSP's import of crosvm has symlinks from crosvm's own 3p
+    //    directory to the android 3p directories).
+    let src_path = src_path
+        .canonicalize()
+        .unwrap_or_else(|e| panic!("failed to canonicalize {src_path:?}: {}", e));
+    let package_dir = find_cargo_toml(&src_path)?;
+    let main_src = src_path.strip_prefix(&package_dir).unwrap().to_path_buf();
+
+    Ok((package_dir, main_src))
+}
+
+/// Given a path to a Rust source file, finds the closest ancestor directory containing a
+/// `Cargo.toml` file.
+fn find_cargo_toml(src_path: &Path) -> Result<PathBuf> {
+    let mut package_dir = src_path.parent().unwrap();
+    while !package_dir.join("Cargo.toml").try_exists()? {
+        package_dir = package_dir
+            .parent()
+            .ok_or_else(|| anyhow!("No Cargo.toml found in parents of {:?}", src_path))?;
+    }
+    Ok(package_dir.to_path_buf())
 }
