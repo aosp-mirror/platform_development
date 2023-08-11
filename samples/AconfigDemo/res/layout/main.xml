@@ -28,5 +28,6 @@
         android:textSize="25sp"
         android:autoText="true"
         android:capitalize="sentences"
+        android:scrollbars="vertical"
         android:textStyle="bold|italic"/>
 </LinearLayout>
