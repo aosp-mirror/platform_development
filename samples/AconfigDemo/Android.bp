@@ -26,7 +26,7 @@ android_app {
         obfuscate: false,
         shrink_resources: true,
     },
-
+    required: ["libexample_rust_jni"],
     plugins: ["dagger2-compiler"]
 }
 
@@ -86,4 +86,20 @@ cc_library {
         "aconfig_demo_flags_c_lib",
     ],
     export_include_dirs: ["src/include"],
+}
+
+rust_aconfig_library {
+    name: "libaconfig_demo_flags_rust",
+    crate_name: "aconfig_demo_flags_rust",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+rust_ffi_shared {
+    name: "libexample_rust_jni",
+    crate_name: "example_rust_jni",
+    srcs: ["src/lib.rs"],
+    rustlibs: [
+        "libjni",
+        "libaconfig_demo_flags_rust",
+    ]
 }
