@@ -65,7 +65,6 @@ pub struct Crate {
     pub cap_lints: String,
     pub static_libs: Vec<String>,
     pub shared_libs: Vec<String>,
-    pub emit_list: String,
     pub edition: String,
     pub package_dir: PathBuf, // canonicalized
     pub main_src: PathBuf,    // relative to package_dir
@@ -337,9 +336,6 @@ impl Crate {
                         out.shared_libs.push(arg.to_string());
                     }
                 }
-                _ if arg.starts_with("--emit=") => {
-                    out.emit_list = arg.strip_prefix("--emit=").unwrap().to_string();
-                }
                 _ if !arg.starts_with('-') => {
                     let src_path = Path::new(arg);
                     // Canonicalize the path because:
@@ -375,6 +371,7 @@ impl Crate {
                     arg_iter.next().unwrap();
                 }
                 _ if arg.starts_with("--error-format=") => {}
+                _ if arg.starts_with("--emit=") => {}
                 _ if arg.starts_with("--edition=") => {}
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
