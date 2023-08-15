@@ -16,7 +16,7 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "jest": "^24.9.0",
     "material-design-icons": "^3.0.1",
-    "protobufjs": "^6.11.2",
+    "protobufjs": "^6.11.4",
     "roboto-fontface": "*",
     "vue": "^3.0.0-0",
     "vue-echarts": "^6.0.0-rc.6",
