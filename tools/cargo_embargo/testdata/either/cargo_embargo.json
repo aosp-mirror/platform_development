@@ -1,0 +1,8 @@
+{
+  "tests": true,
+  "package": {
+    "either": {
+      "device_supported": true
+    }
+  }
+}

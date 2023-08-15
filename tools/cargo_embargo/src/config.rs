@@ -14,7 +14,7 @@
 
 //! Code for reading configuration json files.
 //!
-//! These are usually called `cargo_embargo.json` or `cargo2android.json`.
+//! These are usually called `cargo_embargo.json`.
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
