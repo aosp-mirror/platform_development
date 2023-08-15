@@ -1,0 +1,9 @@
+{
+  "features": ["svg_backend", "area_series", "line_series"],
+  "tests": false,
+  "package": {
+    "plotters": {
+      "device_supported": true
+    }
+  }
+}
