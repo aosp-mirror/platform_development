@@ -1,0 +1,8 @@
+package: "com.android.trunk_stable_workflow_testing"
+
+flag {
+  name: "welcome_aboard"
+  namespace: "core_experiments_team_internal"
+  description: "Ahoy, raise the first flag of this namespace"
+  bug: "294537090"
+}
