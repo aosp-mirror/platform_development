@@ -18,12 +18,14 @@ use anyhow::Context;
 use anyhow::Result;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::path::PathBuf;
 
 /// Combined representation of --crate-type and --test flags.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde[rename_all = "lowercase"]]
 pub enum CrateType {
     // --crate-type types
     Bin,
@@ -51,7 +53,7 @@ impl CrateType {
 /// Note that there is a 1-to-many relationship between a Cargo.toml file and these `Crate`
 /// objects. For example, a Cargo.toml file might have a bin, a lib, and various tests. Each of
 /// those will be a separate `Crate`. All of them will have the same `package_name`.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Crate {
     pub name: String,
     pub package_name: String,
@@ -103,12 +105,12 @@ pub fn parse_cargo_out(cargo_out_path: &str, cargo_metadata_path: &str) -> Resul
 }
 
 /// `cargo metadata` output.
-#[derive(serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 struct WorkspaceMetadata {
     packages: Vec<PackageMetadata>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 struct PackageMetadata {
     name: String,
     version: String,
