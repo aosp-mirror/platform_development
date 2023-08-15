@@ -33,6 +33,7 @@ fn default_true() -> bool {
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// Whether to output "rust_test" modules.
+    #[serde(default)]
     pub tests: bool,
     /// Set of features to enable. If non-empty, disables the default crate features.
     #[serde(default)]
