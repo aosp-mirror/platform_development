@@ -40,4 +40,5 @@ rust_binary_host {
 rust_test_host {
     name: "cargo_embargo.test",
     defaults: ["cargo_embargo.defaults"],
+    data: ["testdata/**/*"],
 }
