@@ -43,7 +43,9 @@ export abstract class AbstractParser<T> implements Parser<T> {
       () => `Trace processor tables don't contain entries of type ${this.getTraceType()}`
     );
 
-    this.realToElapsedTimeOffsetNs = await this.queryRealToElapsedTimeOffset();
+    this.realToElapsedTimeOffsetNs = await this.queryRealToElapsedTimeOffset(
+      assertDefined(elapsedTimestamps.at(-1))
+    );
 
     this.timestamps.set(
       TimestampType.ELAPSED,
@@ -125,10 +127,20 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return timestamps;
   }
 
-  private async queryRealToElapsedTimeOffset(): Promise<bigint> {
-    const elapsed = await this.queryLastClockSnapshot('BOOTTIME');
-    const real = await this.queryLastClockSnapshot('REALTIME');
-    return real - elapsed;
+  // Query the real-to-elapsed time offset at the specified time
+  // (timestamp parameter).
+  // The timestamp parameter must be a timestamp queried/provided by TP,
+  // otherwise the TO_REALTIME() SQL function might return invalid values.
+  private async queryRealToElapsedTimeOffset(elapsedTimestamp: bigint): Promise<bigint> {
+    const sql = `
+      SELECT TO_REALTIME(${elapsedTimestamp}) as realtime;
+    `;
+
+    const result = await this.traceProcessor.query(sql).waitAllRows();
+    assertTrue(result.numRows() === 1, () => 'Failed to query realtime timestamp');
+
+    const real = result.iter({}).get('realtime') as bigint;
+    return real - elapsedTimestamp;
   }
 
   private async queryLastClockSnapshot(clockName: string): Promise<bigint> {
