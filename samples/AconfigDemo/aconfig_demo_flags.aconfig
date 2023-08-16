@@ -29,6 +29,13 @@ flag {
 }
 
 flag {
+    name: "fifth_flag"
+    namespace: "configuration"
+    description: "The fifth flag, added right after the first three flags."
+    bug: "287644619"
+}
+
+flag {
   name: "third_flag"
   namespace: "configuration"
   description: "This flag controls static content"
