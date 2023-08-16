@@ -18,7 +18,7 @@ package com.example.android.aconfig.demo;
 
 import static org.junit.Assert.assertEquals;
 
-import android.platform.test.flag.junit.MockFlagsRule;
+import android.platform.test.flag.junit.SetFlagsRule;
 import com.example.android.aconfig.demo.flags.Flags;
 
 import org.junit.Rule;
@@ -28,12 +28,12 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public final class StaticContentUnitTests {
-    @Rule public final MockFlagsRule mMockFlagsRule = new MockFlagsRule();
+    @Rule public final SetFlagsRule mSetFlagsRule = new SetFlagsRule();
 
     @Test
     public void staticContent_enable_staticFlag_disable_thirdFlag() throws Exception {
-        mMockFlagsRule.enableFlags(Flags.FLAG_APPEND_STATIC_CONTENT);
-        mMockFlagsRule.disableFlags(Flags.FLAG_THIRD_FLAG);
+        mSetFlagsRule.enableFlags(Flags.FLAG_APPEND_STATIC_CONTENT);
+        mSetFlagsRule.disableFlags(Flags.FLAG_THIRD_FLAG);
         StaticContent statiContent = new StaticContent();
         String ret = statiContent.getContent();
         StringBuilder expected = new StringBuilder();
