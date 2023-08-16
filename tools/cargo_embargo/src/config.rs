@@ -14,7 +14,7 @@
 
 //! Code for reading configuration json files.
 //!
-//! These are usually called `cargo_embargo.json` or `cargo2android.json`.
+//! These are usually called `cargo_embargo.json`.
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -33,6 +33,7 @@ fn default_true() -> bool {
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// Whether to output "rust_test" modules.
+    #[serde(default)]
     pub tests: bool,
     /// Set of features to enable. If non-empty, disables the default crate features.
     #[serde(default)]
