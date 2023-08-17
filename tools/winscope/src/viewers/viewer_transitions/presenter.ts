@@ -53,10 +53,11 @@ export class Presenter {
     });
   }
 
-  onTransitionSelected(transition: Transition): void {
+  async onTransitionSelected(transition: Transition): Promise<void> {
     this.uiData.selectedTransition = transition;
-    this.uiData.selectedTransitionPropertiesTree =
-      this.makeSelectedTransitionPropertiesTree(transition);
+    this.uiData.selectedTransitionPropertiesTree = await this.makeSelectedTransitionPropertiesTree(
+      transition
+    );
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -82,7 +83,9 @@ export class Presenter {
     );
   }
 
-  private makeSelectedTransitionPropertiesTree(transition: Transition): PropertiesTreeNode {
+  private async makeSelectedTransitionPropertiesTree(
+    transition: Transition
+  ): Promise<PropertiesTreeNode> {
     const changes: PropertiesTreeNode[] = [];
 
     for (const change of transition.changes) {
@@ -90,31 +93,35 @@ export class Presenter {
       let windowName: string | undefined = undefined;
 
       if (this.surfaceFlingerTrace) {
-        this.surfaceFlingerTrace.forEachEntry((entry, originalIndex) => {
-          if (layerName !== undefined) {
-            return;
-          }
-          const layerTraceEntry = entry.getValue() as LayerTraceEntry;
-          for (const layer of layerTraceEntry.flattenedLayers) {
-            if (layer.id === change.layerId) {
-              layerName = layer.name;
+        await Promise.all(
+          this.surfaceFlingerTrace.mapEntry(async (entry, originalIndex) => {
+            if (layerName !== undefined) {
+              return;
             }
-          }
-        });
+            const layerTraceEntry = (await entry.getValue()) as LayerTraceEntry;
+            for (const layer of layerTraceEntry.flattenedLayers) {
+              if (layer.id === change.layerId) {
+                layerName = layer.name;
+              }
+            }
+          })
+        );
       }
 
       if (this.windowManagerTrace) {
-        this.windowManagerTrace.forEachEntry((entry, originalIndex) => {
-          if (windowName !== undefined) {
-            return;
-          }
-          const wmState = entry.getValue() as WindowManagerState;
-          for (const window of wmState.windowContainers) {
-            if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
-              windowName = window.title;
+        await Promise.all(
+          this.windowManagerTrace.mapEntry(async (entry, originalIndex) => {
+            if (windowName !== undefined) {
+              return;
             }
-          }
-        });
+            const wmState = (await entry.getValue()) as WindowManagerState;
+            for (const window of wmState.windowContainers) {
+              if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
+                windowName = window.title;
+              }
+            }
+          })
+        );
       }
 
       const layerIdValue = layerName ? `${change.layerId} (${layerName})` : change.layerId;

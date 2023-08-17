@@ -18,6 +18,7 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {
   CrossPlatform,
@@ -27,6 +28,16 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
+import {ParserTransitionsShell} from 'parsers/parser_transitions_shell';
+import {ParserTransitionsWm} from 'parsers/parser_transitions_wm';
+import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
+import {KarmaTestUtils} from 'test/unit/karma_utils';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TraceFile} from 'trace/trace_file';
+import {TraceType} from 'trace/trace_type';
+import {Events} from './events';
+import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
@@ -68,6 +79,84 @@ describe('ViewerTransitionsComponent', () => {
     expect(htmlElement.querySelector('.container-properties')?.innerHTML).toContain(
       'No selected transition'
     );
+  });
+
+  it('emits TransitionSelected event on transition clicked', () => {
+    const emitEventSpy = spyOn(component, 'emitEvent');
+
+    const entries = htmlElement.querySelectorAll('.entry.table-row');
+    const entry1 = assertDefined(entries[0]) as HTMLElement;
+    const entry2 = assertDefined(entries[1]) as HTMLElement;
+    const treeView = assertDefined(
+      htmlElement.querySelector('.container-properties')
+    ) as HTMLElement;
+    expect(treeView.textContent).toContain('No selected transition');
+
+    expect(emitEventSpy).not.toHaveBeenCalled();
+
+    const id0 = assertDefined(entry1.querySelector('.id')).textContent;
+    expect(id0).toBe('0');
+    entry1.click();
+    fixture.detectChanges();
+
+    expect(emitEventSpy).toHaveBeenCalled();
+    expect(emitEventSpy).toHaveBeenCalledWith(Events.TransitionSelected, jasmine.any(Object));
+    expect(emitEventSpy.calls.mostRecent().args[1].id).toBe(0);
+
+    const id1 = assertDefined(entry2.querySelector('.id')).textContent;
+    expect(id1).toBe('1');
+    entry2.click();
+    fixture.detectChanges();
+
+    expect(emitEventSpy).toHaveBeenCalled();
+    expect(emitEventSpy).toHaveBeenCalledWith(Events.TransitionSelected, jasmine.any(Object));
+    expect(emitEventSpy.calls.mostRecent().args[1].id).toBe(1);
+  });
+
+  it('updates tree view when transition is selected', async () => {
+    const wmTransFile = new TraceFile(
+      await KarmaTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
+      )
+    );
+    const shellTransFile = new TraceFile(
+      await KarmaTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
+      )
+    );
+
+    const wmTrans = new ParserTransitionsWm(wmTransFile);
+    await wmTrans.parse();
+    const shellTrans = new ParserTransitionsShell(shellTransFile);
+    await shellTrans.parse();
+
+    const transitionsTraceParser = new TracesParserTransitions([wmTrans, shellTrans]);
+    await transitionsTraceParser.parse();
+
+    const traces = new Traces();
+    const trace = Trace.newUninitializedTrace(transitionsTraceParser);
+    trace.init(TimestampType.REAL);
+    traces.setTrace(TraceType.TRANSITION, trace);
+
+    let treeView = assertDefined(
+      htmlElement.querySelector('.container-properties')
+    ) as any as HTMLElement;
+    expect(treeView.textContent).toContain('No selected transition');
+
+    const presenter = new Presenter(traces, (data) => {
+      component.uiData = data;
+    });
+    const selectedTransitionEntry = (await assertDefined(
+      traces.getTrace(TraceType.TRANSITION)?.getEntry(2)
+    ).getValue()) as Transition;
+    await presenter.onTransitionSelected(selectedTransitionEntry);
+
+    fixture.detectChanges();
+
+    treeView = assertDefined(
+      htmlElement.querySelector('.container-properties')
+    ) as any as HTMLElement;
+    expect(treeView.textContent).toContain(`id: ${selectedTransitionEntry.id}`);
   });
 });
 
