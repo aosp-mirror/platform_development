@@ -33,6 +33,9 @@ import zipfile
 # TODO(b/293809772): Logging.
 
 
+NO_DATA = 'null'
+
+
 class CtsReport:
   """Class to record the test result of a cts report."""
 
@@ -44,6 +47,27 @@ class CtsReport:
     self.result_tree = {}
     self.module_summaries = {}
 
+  @staticmethod
+  def is_fail(status):
+    if status == NO_DATA:
+      return False
+    else:
+      return (CtsReport.STATUS_ORDER.index(status) >= 3)
+
+  def gen_keys_list(self):
+    """Generate a 2D-list of keys."""
+
+    keys_list = []
+
+    modules = self.result_tree
+
+    for module_name, abis in modules.items():
+      for abi, test_classes in abis.items():
+        for class_name, tests in test_classes.items():
+          for test_name in tests.keys():
+            keys_list.append([module_name, abi, class_name, test_name])
+    return keys_list
+
   def is_compatible(self, info):
     return self.info['build_fingerprint'] == info['build_fingerprint']
 
@@ -51,19 +75,19 @@ class CtsReport:
     """Get test status from the CtsReport object."""
 
     if module_name not in self.result_tree:
-      return None
+      return NO_DATA
     abis = self.result_tree[module_name]
 
     if abi not in abis:
-      return None
+      return NO_DATA
     test_classes = abis[abi]
 
     if class_name not in test_classes:
-      return None
+      return NO_DATA
     tests = test_classes[class_name]
 
     if test_name not in tests:
-      return None
+      return NO_DATA
 
     return tests[test_name]
 
@@ -77,7 +101,7 @@ class CtsReport:
     test_classes = abis.setdefault(abi, {})
     tests = test_classes.setdefault(class_name, {})
 
-    if not previous:
+    if previous == NO_DATA:
       tests[test_name] = test_status
 
       module_summary = self.module_summaries.setdefault(module_name, {})
@@ -171,9 +195,7 @@ class CtsReport:
     """Record the result summary of each (module, abi) pair."""
 
     def __init__(self):
-      self.counter = {}
-      for status in CtsReport.STATUS_ORDER:
-        self.counter[status] = 0
+      self.counter = dict.fromkeys(CtsReport.STATUS_ORDER, 0)
 
     def print_summary(self):
       for key in CtsReport.STATUS_ORDER:
