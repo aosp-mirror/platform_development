@@ -7,10 +7,10 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {WmTransitionsTraceFileProto} from './proto_types';
-import { TraceFile } from 'trace/trace_file';
 
 export class ParserTransitionsWm extends AbstractParser {
   private realToElapsedTimeOffsetNs: undefined | bigint;

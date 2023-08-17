@@ -16,10 +16,10 @@
 
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {CrossPlatform, ShellTransitionData, Transition, WmTransitionData} from 'flickerlib/common';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ShellTransitionsTraceFileProto} from './proto_types';
-import { TraceFile } from 'trace/trace_file';
 
 export class ParserTransitionsShell extends AbstractParser {
   private realToElapsedTimeOffsetNs: undefined | bigint;

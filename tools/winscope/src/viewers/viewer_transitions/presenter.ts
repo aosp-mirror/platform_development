@@ -50,6 +50,9 @@ export class Presenter {
       const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, event.position);
 
       this.uiData.selectedTransition = await entry?.getValue();
+      if (this.uiData.selectedTransition !== undefined) {
+        await this.onTransitionSelected(this.uiData.selectedTransition);
+      }
 
       this.notifyUiDataCallback(this.uiData);
     });

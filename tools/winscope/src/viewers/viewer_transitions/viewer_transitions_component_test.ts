@@ -18,6 +18,7 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {TracePositionUpdate} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {
@@ -35,7 +36,12 @@ import {KarmaTestUtils} from 'test/unit/karma_utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {TreeComponent} from 'viewers/components/tree_component';
+import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
+import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
 import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -45,12 +51,19 @@ describe('ViewerTransitionsComponent', () => {
   let fixture: ComponentFixture<ViewerTransitionsComponent>;
   let component: ViewerTransitionsComponent;
   let htmlElement: HTMLElement;
+  let mockTransitionIdCounter = 0;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatDividerModule, ScrollingModule],
-      declarations: [ViewerTransitionsComponent],
+      declarations: [
+        ViewerTransitionsComponent,
+        TreeComponent,
+        TreeNodeComponent,
+        TreeNodeDataViewComponent,
+        TreeNodePropertiesDataViewComponent,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -58,6 +71,7 @@ describe('ViewerTransitionsComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
+    mockTransitionIdCounter = 0;
     component.uiData = makeUiData();
     fixture.detectChanges();
   });
@@ -113,7 +127,7 @@ describe('ViewerTransitionsComponent', () => {
     expect(emitEventSpy.calls.mostRecent().args[1].id).toBe(1);
   });
 
-  it('updates tree view when transition is selected', async () => {
+  it('updates tree view on TracePositionUpdate event', async () => {
     const wmTransFile = new TraceFile(
       await KarmaTestUtils.getFixtureFile(
         'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
@@ -144,19 +158,26 @@ describe('ViewerTransitionsComponent', () => {
     expect(treeView.textContent).toContain('No selected transition');
 
     const presenter = new Presenter(traces, (data) => {
-      component.uiData = data;
+      component.inputData = data;
     });
-    const selectedTransitionEntry = (await assertDefined(
+    const selectedTransitionEntry = assertDefined(
       traces.getTrace(TraceType.TRANSITION)?.getEntry(2)
-    ).getValue()) as Transition;
-    await presenter.onTransitionSelected(selectedTransitionEntry);
+    );
+    const selectedTransition = (await selectedTransitionEntry.getValue()) as Transition;
+    await presenter.onAppEvent(
+      new TracePositionUpdate(TracePosition.fromTraceEntry(selectedTransitionEntry))
+    );
+
+    expect(component.uiData.selectedTransition.id).toBe(selectedTransition.id);
+    expect(component.uiData.selectedTransitionPropertiesTree).toBeTruthy();
 
     fixture.detectChanges();
 
     treeView = assertDefined(
-      htmlElement.querySelector('.container-properties')
+      fixture.nativeElement.querySelector('.container-properties')
     ) as any as HTMLElement;
-    expect(treeView.textContent).toContain(`id: ${selectedTransitionEntry.id}`);
+    const textContentWithoutWhitespaces = treeView.textContent?.replace(/(\s|\t|\n)*/g, '');
+    expect(textContentWithoutWhitespaces).toContain(`id:${selectedTransition.id}`);
   });
 });
 
@@ -197,7 +218,7 @@ function createMockTransition(
   const changes: TransitionChange[] = [];
 
   return new Transition(
-    id++,
+    mockTransitionIdCounter++,
     new WmTransitionData(
       createTime,
       sendTime,
@@ -212,5 +233,3 @@ function createMockTransition(
     new ShellTransitionData()
   );
 }
-
-let id = 0;
