@@ -42,7 +42,7 @@ import {TracePositionUpdateListener} from 'interfaces/trace_position_update_list
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {MiniTimelineComponent} from './mini_timeline_component';
+import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
 
 @Component({
   selector: 'timeline',

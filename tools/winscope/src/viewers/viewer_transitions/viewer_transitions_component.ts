@@ -26,117 +26,92 @@ import {UiData} from './ui_data';
   selector: 'viewer-transitions',
   template: `
     <div class="card-grid container">
-      <div class="top-viewer">
-        <div class="entries">
-          <div class="table-header table-row">
-            <div class="id">Id</div>
-            <div class="type">Type</div>
-            <div class="send-time">Send Time</div>
-            <div class="duration">Duration</div>
-            <div class="status">Status</div>
-          </div>
-          <cdk-virtual-scroll-viewport itemSize="53" class="scroll">
-            <div
-              *cdkVirtualFor="let transition of uiData.entries; let i = index"
-              class="entry table-row"
-              [class.current]="isCurrentTransition(transition)"
-              (click)="onTransitionClicked(transition)">
-              <div class="id">
-                <span class="mat-body-1">{{ transition.id }}</span>
+      <div class="entries">
+        <div class="table-header table-row">
+          <div class="id">Id</div>
+          <div class="type">Type</div>
+          <div class="send-time">Send Time</div>
+          <div class="duration">Duration</div>
+          <div class="status">Status</div>
+        </div>
+        <cdk-virtual-scroll-viewport itemSize="53" class="scroll">
+          <div
+            *cdkVirtualFor="let transition of uiData.entries; let i = index"
+            class="entry table-row"
+            [class.current]="isCurrentTransition(transition)"
+            (click)="onTransitionClicked(transition)">
+            <div class="id">
+              <span class="mat-body-1">{{ transition.id }}</span>
+            </div>
+            <div class="type">
+              <span class="mat-body-1">{{ transition.type }}</span>
+            </div>
+            <div class="send-time">
+              <span *ngIf="!transition.sendTime.isMin" class="mat-body-1">{{
+                formattedTime(transition.sendTime, uiData.timestampType)
+              }}</span>
+              <span *ngIf="transition.sendTime.isMin"> n/a </span>
+            </div>
+            <div class="duration">
+              <span
+                *ngIf="!transition.sendTime.isMin && !transition.finishTime.isMax"
+                class="mat-body-1"
+                >{{
+                  formattedTimeDiff(
+                    transition.sendTime,
+                    transition.finishTime,
+                    uiData.timestampType
+                  )
+                }}</span
+              >
+              <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
+            </div>
+            <div class="status">
+              <div *ngIf="transition.mergedInto">
+                <span>MERGED</span>
+                <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
+                </mat-icon>
               </div>
-              <div class="type">
-                <span class="mat-body-1">{{ transition.type }}</span>
-              </div>
-              <div class="send-time">
-                <span *ngIf="!transition.sendTime.isMin" class="mat-body-1">{{
-                  formattedTime(transition.sendTime, uiData.timestampType)
-                }}</span>
-                <span *ngIf="transition.sendTime.isMin"> n/a </span>
-              </div>
-              <div class="duration">
-                <span
-                  *ngIf="!transition.sendTime.isMin && !transition.finishTime.isMax"
-                  class="mat-body-1"
-                  >{{
-                    formattedTimeDiff(
-                      transition.sendTime,
-                      transition.finishTime,
-                      uiData.timestampType
-                    )
-                  }}</span
-                >
-                <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
-              </div>
-              <div class="status">
-                <div *ngIf="transition.mergedInto">
-                  <span>MERGED</span>
-                  <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
-                  </mat-icon>
-                </div>
 
-                <div *ngIf="transition.aborted && !transition.mergedInto">
-                  <span>ABORTED</span>
-                  <mat-icon
-                    aria-hidden="false"
-                    fontIcon="close"
-                    matTooltip="aborted"
-                    style="color: red"
-                    icon-red></mat-icon>
-                </div>
+              <div *ngIf="transition.aborted && !transition.mergedInto">
+                <span>ABORTED</span>
+                <mat-icon
+                  aria-hidden="false"
+                  fontIcon="close"
+                  matTooltip="aborted"
+                  style="color: red"
+                  icon-red></mat-icon>
+              </div>
 
-                <div *ngIf="transition.played && !transition.aborted && !transition.mergedInto">
-                  <span>PLAYED</span>
-                  <mat-icon
-                    aria-hidden="false"
-                    fontIcon="check"
-                    matTooltip="played"
-                    style="color: green"
-                    *ngIf="
-                      transition.played && !transition.aborted && !transition.mergedInto
-                    "></mat-icon>
-                </div>
+              <div *ngIf="transition.played && !transition.aborted && !transition.mergedInto">
+                <span>PLAYED</span>
+                <mat-icon
+                  aria-hidden="false"
+                  fontIcon="check"
+                  matTooltip="played"
+                  style="color: green"
+                  *ngIf="
+                    transition.played && !transition.aborted && !transition.mergedInto
+                  "></mat-icon>
               </div>
             </div>
-          </cdk-virtual-scroll-viewport>
-        </div>
-
-        <mat-divider [vertical]="true"></mat-divider>
-
-        <div class="container-properties">
-          <h3 class="properties-title mat-title">Selected Transition</h3>
-          <tree-view
-            [item]="uiData.selectedTransitionPropertiesTree"
-            [showNode]="showNode"
-            [isLeaf]="isLeaf"
-            [isAlwaysCollapsed]="true">
-          </tree-view>
-          <div *ngIf="!uiData.selectedTransitionPropertiesTree">
-            No selected transition.<br />
-            Select the tranitions below.
           </div>
-        </div>
+        </cdk-virtual-scroll-viewport>
       </div>
 
-      <div class="bottom-viewer">
-        <div class="transition-timeline">
-          <div *ngFor="let row of timelineRows()" class="row">
-            <svg width="100%" [attr.height]="transitionHeight">
-              <rect
-                *ngFor="let transition of transitionsOnRow(row)"
-                [attr.width]="widthOf(transition)"
-                [attr.height]="transitionHeight"
-                [attr.style]="transitionRectStyle(transition)"
-                rx="5"
-                [attr.x]="startOf(transition)"
-                (click)="onTransitionClicked(transition)" />
-              <rect
-                *ngFor="let transition of transitionsOnRow(row)"
-                [attr.width]="transitionDividerWidth"
-                [attr.height]="transitionHeight"
-                [attr.style]="transitionDividerRectStyle(transition)"
-                [attr.x]="sendOf(transition)" />
-            </svg>
-          </div>
+      <mat-divider [vertical]="true"></mat-divider>
+
+      <div class="container-properties">
+        <h3 class="properties-title mat-title">Selected Transition</h3>
+        <tree-view
+          [item]="uiData.selectedTransitionPropertiesTree"
+          [showNode]="showNode"
+          [isLeaf]="isLeaf"
+          [isAlwaysCollapsed]="true">
+        </tree-view>
+        <div *ngIf="!uiData.selectedTransitionPropertiesTree">
+          No selected transition.<br />
+          Select the tranitions below.
         </div>
       </div>
     </div>
@@ -147,23 +122,6 @@ import {UiData} from './ui_data';
         display: flex;
         flex-grow: 1;
         flex-direction: column;
-      }
-
-      .top-viewer {
-        display: flex;
-        flex-grow: 1;
-        flex: 3;
-        border-bottom: solid 1px rgba(0, 0, 0, 0.12);
-      }
-
-      .bottom-viewer {
-        display: flex;
-        flex-shrink: 1;
-      }
-
-      .transition-timeline {
-        flex-grow: 1;
-        padding: 1.5rem 1rem;
       }
 
       .entries {

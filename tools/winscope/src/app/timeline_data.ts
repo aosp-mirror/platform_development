@@ -65,18 +65,31 @@ export class TimelineData {
     this.timestampType = this.firstEntry?.getTimestamp().getType();
   }
 
+  private lastReturnedCurrentPosition?: TracePosition;
   getCurrentPosition(): TracePosition | undefined {
     if (this.explicitlySetPosition) {
       return this.explicitlySetPosition;
     }
+
+    let currentPosition: TracePosition | undefined = undefined;
+    if (this.firstEntry) {
+      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
+    }
+
     const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
     if (firstActiveEntry) {
-      return TracePosition.fromTraceEntry(firstActiveEntry);
+      currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
-    if (this.firstEntry) {
-      return TracePosition.fromTraceEntry(this.firstEntry);
+
+    if (
+      this.lastReturnedCurrentPosition === undefined ||
+      currentPosition === undefined ||
+      !this.lastReturnedCurrentPosition.isEqual(currentPosition)
+    ) {
+      this.lastReturnedCurrentPosition = currentPosition;
     }
-    return undefined;
+
+    return this.lastReturnedCurrentPosition;
   }
 
   setPosition(position: TracePosition | undefined) {
@@ -105,14 +118,26 @@ export class TimelineData {
     return this.timestampType;
   }
 
+  private lastReturnedFullTimeRange?: TimeRange;
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');
     }
-    return {
+
+    const fullTimeRange = {
       from: this.firstEntry.getTimestamp(),
       to: this.lastEntry.getTimestamp(),
     };
+
+    if (
+      this.lastReturnedFullTimeRange === undefined ||
+      this.lastReturnedFullTimeRange.from.getValueNs() !== fullTimeRange.from.getValueNs() ||
+      this.lastReturnedFullTimeRange.to.getValueNs() !== fullTimeRange.to.getValueNs()
+    ) {
+      this.lastReturnedFullTimeRange = fullTimeRange;
+    }
+
+    return this.lastReturnedFullTimeRange;
   }
 
   getSelectionTimeRange(): TimeRange {
@@ -205,15 +230,23 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
+  private lastReturnedCurrentEntries: Map<TraceType, TraceEntry<any> | undefined> = new Map();
   findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {
       return undefined;
     }
-    return TraceEntryFinder.findCorrespondingEntry(
+
+    const entry = TraceEntryFinder.findCorrespondingEntry(
       assertDefined(this.traces.getTrace(type)),
       position
     );
+
+    if (this.lastReturnedCurrentEntries.get(type)?.getIndex() !== entry?.getIndex()) {
+      this.lastReturnedCurrentEntries.set(type, entry);
+    }
+
+    return this.lastReturnedCurrentEntries.get(type);
   }
 
   moveToPreviousEntryFor(type: TraceType) {

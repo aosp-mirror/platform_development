@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {CanvasDrawer} from './canvas_drawer';
 import {DraggableCanvasObject} from './draggable_canvas_object';
+import {MiniTimelineDrawer} from './mini_timeline_drawer';
 
 export type DragListener = (x: number, y: number) => void;
 export type DropListener = DragListener;
@@ -29,7 +29,7 @@ export class CanvasMouseHandler {
   private onDrop = new Map<DraggableCanvasObject, DropListener>();
 
   constructor(
-    private drawer: CanvasDrawer,
+    private drawer: MiniTimelineDrawer,
     private defaultCursor: string = 'auto',
     private onUnhandledMouseDown: (x: number, y: number) => void = (x, y) => {}
   ) {

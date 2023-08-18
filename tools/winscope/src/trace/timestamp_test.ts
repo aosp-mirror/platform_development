@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from './timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from './timestamp';
 
 describe('Timestamp', () => {
   describe('from', () => {
@@ -38,6 +38,54 @@ describe('Timestamp', () => {
       timestamp = Timestamp.from(TimestampType.ELAPSED, 100n);
       expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
       expect(timestamp.getValueNs()).toBe(100n);
+    });
+  });
+
+  describe('arithmetic', () => {
+    it('can add', () => {
+      let timestamp = new RealTimestamp(10n).plus(new RealTimestamp(20n));
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(30n);
+
+      timestamp = new ElapsedTimestamp(10n).plus(new ElapsedTimestamp(20n));
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(30n);
+    });
+
+    it('can subtract', () => {
+      let timestamp = new RealTimestamp(20n).minus(new RealTimestamp(10n));
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(10n);
+
+      timestamp = new ElapsedTimestamp(20n).minus(new ElapsedTimestamp(10n));
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(10n);
+    });
+
+    it('can divide', () => {
+      let timestamp = new RealTimestamp(10n).div(2n);
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(5n);
+
+      timestamp = new ElapsedTimestamp(10n).div(2n);
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(5n);
+    });
+
+    it('fails between different timestamp types', () => {
+      const error = new Error('Attemping to do timestamp arithmetic on different timestamp types');
+      expect(() => {
+        new RealTimestamp(20n).minus(new ElapsedTimestamp(10n));
+      }).toThrow(error);
+      expect(() => {
+        new RealTimestamp(20n).plus(new ElapsedTimestamp(10n));
+      }).toThrow(error);
+      expect(() => {
+        new ElapsedTimestamp(20n).minus(new RealTimestamp(10n));
+      }).toThrow(error);
+      expect(() => {
+        new ElapsedTimestamp(20n).plus(new RealTimestamp(10n));
+      }).toThrow(error);
     });
   });
 });

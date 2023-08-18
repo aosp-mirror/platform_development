@@ -15,8 +15,8 @@
  */
 
 import {MathUtils} from 'three/src/Three';
-import {Segment} from '../timeline/utils';
-import {CanvasDrawer} from './canvas_drawer';
+import {Segment} from '../../utils';
+import {MiniTimelineDrawer} from './mini_timeline_drawer';
 
 export interface DrawConfig {
   fillStyle: string;
@@ -27,7 +27,7 @@ export class DraggableCanvasObject {
   private draggingPosition: number | undefined;
 
   constructor(
-    private drawer: CanvasDrawer,
+    private drawer: MiniTimelineDrawer,
     private positionGetter: () => number,
     private definePathFunc: (ctx: CanvasRenderingContext2D, position: number) => void,
     private drawConfig: DrawConfig,

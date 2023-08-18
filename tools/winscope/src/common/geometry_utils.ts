@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-import {CanvasMouseHandler} from './canvas_mouse_handler';
-
-export interface Padding {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-export interface CanvasDrawer {
-  draw(): void;
-  handler: CanvasMouseHandler;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  padding: Padding;
-  getXScale(): number;
-  getYScale(): number;
-  getWidth(): number;
-  getHeight(): number;
+export function isPointInRect(
+  point: {x: number; y: number},
+  rect: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }
+): boolean {
+  return (
+    rect.x <= point.x &&
+    point.x <= rect.x + rect.w &&
+    rect.y <= point.y &&
+    point.y <= rect.y + rect.h
+  );
 }

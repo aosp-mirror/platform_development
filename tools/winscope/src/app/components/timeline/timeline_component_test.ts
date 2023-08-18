@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ChangeDetectionStrategy} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -35,9 +36,11 @@ import {TracesBuilder} from 'test/unit/traces_builder';
 import {RealTimestamp} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {ExpandedTimelineComponent} from './expanded_timeline_component';
-import {MiniTimelineComponent} from './mini_timeline_component';
-import {SingleTimelineComponent} from './single_timeline_component';
+import {DefaultTimelineRowComponent} from './expanded-timeline/default_timeline_row_component';
+import {ExpandedTimelineComponent} from './expanded-timeline/expanded_timeline_component';
+import {TransitionTimelineComponent} from './expanded-timeline/transition_timeline_component';
+import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
+import {SliderComponent} from './mini-timeline/slider_component';
 import {TimelineComponent} from './timeline_component';
 
 describe('TimelineComponent', () => {
@@ -69,15 +72,18 @@ describe('TimelineComponent', () => {
         MatTooltipModule,
         ReactiveFormsModule,
         BrowserAnimationsModule,
+        DragDropModule,
       ],
       declarations: [
         ExpandedTimelineComponent,
-        SingleTimelineComponent,
+        DefaultTimelineRowComponent,
         MatDrawer,
         MatDrawerContainer,
         MatDrawerContent,
         MiniTimelineComponent,
         TimelineComponent,
+        SliderComponent,
+        TransitionTimelineComponent,
       ],
     })
       .overrideComponent(TimelineComponent, {

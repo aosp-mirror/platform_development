@@ -71,9 +71,11 @@ import {
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
 import {SnackBarComponent} from './components/snack_bar_component';
-import {ExpandedTimelineComponent} from './components/timeline/expanded_timeline_component';
-import {MiniTimelineComponent} from './components/timeline/mini_timeline_component';
-import {SingleTimelineComponent} from './components/timeline/single_timeline_component';
+import {DefaultTimelineRowComponent} from './components/timeline/expanded-timeline/default_timeline_row_component';
+import {ExpandedTimelineComponent} from './components/timeline/expanded-timeline/expanded_timeline_component';
+import {TransitionTimelineComponent} from './components/timeline/expanded-timeline/transition_timeline_component';
+import {MiniTimelineComponent} from './components/timeline/mini-timeline/mini_timeline_component';
+import {SliderComponent} from './components/timeline/mini-timeline/slider_component';
 import {TimelineComponent} from './components/timeline/timeline_component';
 import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
@@ -112,12 +114,14 @@ import {WebAdbComponent} from './components/web_adb_component';
     TimelineComponent,
     MiniTimelineComponent,
     ExpandedTimelineComponent,
-    SingleTimelineComponent,
+    DefaultTimelineRowComponent,
+    TransitionTimelineComponent,
     SnackBarComponent,
     MatDrawer,
     MatDrawerContent,
     MatDrawerContainer,
     LoadProgressComponent,
+    SliderComponent,
     ViewCapturePropertyGroupsComponent,
   ],
   imports: [
