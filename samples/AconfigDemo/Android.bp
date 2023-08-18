@@ -2,8 +2,8 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-android_app {
-    name: "AconfigDemoActivity",
+java_defaults {
+    name: "AconfigDemoActivityDefault",
     manifest: "AndroidManifest.xml",
     srcs: [
         "src/**/*.java"
@@ -11,7 +11,6 @@ android_app {
     platform_apis: true,
     certificate: "platform",
     static_libs: [
-        "ContentLibs",
         "dagger2",
         "jsr330",
     ],
@@ -28,6 +27,14 @@ android_app {
     },
     required: ["libexample_rust_jni"],
     plugins: ["dagger2-compiler"]
+}
+
+android_app {
+    name: "AconfigDemoActivity",
+    defaults: ["AconfigDemoActivityDefault"],
+    static_libs: [
+        "ContentLibs",
+    ]
 }
 
 aconfig_declarations {
@@ -49,17 +56,23 @@ filegroup {
     ],
 }
 
-java_library {
-    name: "ContentLibs",
+java_defaults {
+    name: "ContentLibsDefault",
+    sdk_version: "current",
     srcs: [
         ":ContentLibsFile",
     ],
-    sdk_version: "current",
+    libs: ["jsr330"],
+}
+
+java_library {
+    name: "ContentLibs",
+    defaults: ["ContentLibsDefault"],
     static_libs: [
         "aconfig_demo_flags_java_lib",
     ],
-    libs: ["jsr330"],
 }
+
 
 cc_aconfig_library {
     name: "aconfig_demo_flags_c_lib",
@@ -101,5 +114,98 @@ rust_ffi_shared {
     rustlibs: [
         "libjni",
         "libaconfig_demo_flags_rust",
+    ]
+}
+
+// Test setup
+
+// Create test verion of the jave flag library
+// It needs to use the same aconfig_declarations as
+// the production one
+java_aconfig_library {
+    name: "aconfig_demo_flags_java_lib_test",
+    aconfig_declarations: "aconfig_demo_flags",
+    // host_supported is set to true here for test running
+    // one host, in tests/unittests/Android.bp
+    host_supported: true,
+    test: true
+}
+
+
+// Option 1
+// Create a test version of the library under testing
+// The test version of this library shares the common
+// settings in a java_defaults target with the production
+// version library. The test version library statically
+// links to the test flag library, and the production
+// version library links to the production version flag
+// library.
+
+java_library {
+    name: "ContentLibsTest1",
+    defaults: ["ContentLibsDefault"],
+    static_libs: [
+        "aconfig_demo_flags_java_lib_test",
+    ],
+}
+
+// Create the test version of the android_app. This app is used
+// for self-instrumentation test. This app uses the test version
+// of the library which uses flags.
+// Please check tests/unittests/Android.bp:AconfigDemoUnitTests1
+android_app {
+    name: "AconfigDemoActivityTest1",
+    defaults: ["AconfigDemoActivityDefault"],
+    optimize: {
+        enabled: false,
+    },
+    static_libs: [
+        "ContentLibsTest1",
+    ]
+}
+
+// Option 2
+// Instead of creating two verions of the library containing flags,
+// it could work that create one version of the library and dynamically
+// link to the flag library. The flag library here just works as a stub
+// library for the purpose of building. The real flag library should be
+// statically linked in the final binary.
+
+
+// This library is created to demonstrate dynamically linking to flag
+// library
+java_library {
+    name: "ContentLibs2",
+    defaults: ["ContentLibsDefault"],
+    sdk_version: "current",
+    libs: [
+        // link the flag library for building purpose
+        "aconfig_demo_flags_java_lib",
+    ],
+}
+
+// This app is created to demonstrate the production version of the app
+// statically links to the production version of the flag library.
+android_app {
+    name: "AconfigDemoActivity2",
+    defaults: ["AconfigDemoActivityDefault"],
+    static_libs: [
+        "ContentLibs2",
+        "aconfig_demo_flags_java_lib",
+    ]
+}
+
+// This app is created to demonstrate the test version of app uses the same
+// ContentLibs2 library, but links to test version of the flag library.
+// Please check tests/unittests/Android.bp:AconfigDemoUnitTests2
+android_app {
+    name: "AconfigDemoActivityTest2",
+    defaults: ["AconfigDemoActivityDefault"],
+    optimize: {
+        enabled: false,
+    },
+    static_libs: [
+        "ContentLibs2",
+        "aconfig_demo_flags_java_lib",
     ]
 }
