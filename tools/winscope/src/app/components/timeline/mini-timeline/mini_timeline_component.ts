@@ -303,7 +303,7 @@ export class MiniTimelineComponent {
         xPosInCanvas
       );
 
-      if (event.deltaY > 0) {
+      if (event.deltaY < 0) {
         this.zoomIn(zoomTo);
       } else {
         this.zoomOut(zoomTo);
