@@ -168,10 +168,10 @@ def fetch_pkg(args, pkg, dl_path):
     echo(args, "Calling add3prf.py in {}".format(dest_dir))
     cwd = os.getcwd()
     os.chdir(dest_dir)
-    os.system("add3prf.py")
+    # add3prf.py is in the same directory as this python script
+    os.system(os.path.dirname(__file__) +  "/add3prf.py")
     os.chdir(cwd)
   return True
-
 
 def get_crate_dependencies(args, pkg):
   """Ask crates.io for pkg's dependencies."""
