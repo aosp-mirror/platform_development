@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {ObjectUtils} from 'common/object_utils';
+import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';
 import {RealTimestamp, Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
@@ -40,8 +42,18 @@ export class ParserMock<T> implements Parser<T> {
     return this.timestamps;
   }
 
-  getEntry(index: number): Promise<T> {
+  getEntry(index: AbsoluteEntryIndex): Promise<T> {
     return Promise.resolve(this.entries[index]);
+  }
+
+  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
+    const partialEntries = this.entries.slice(entriesRange.start, entriesRange.end).map((entry) => {
+      const fieldValue = ObjectUtils.getProperty(entry as object, fieldPath);
+      const proto = {};
+      ObjectUtils.setProperty(proto, fieldPath, fieldValue);
+      return proto;
+    });
+    return Promise.resolve(partialEntries);
   }
 
   getDescriptors(): string[] {

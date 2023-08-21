@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
 
@@ -21,7 +22,7 @@ export interface Parser<T> {
   getTraceType(): TraceType;
   getLengthEntries(): number;
   getTimestamps(type: TimestampType): Timestamp[] | undefined;
-  getEntry(index: number, timestampType: TimestampType): Promise<T>;
-
+  getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
+  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]>;
   getDescriptors(): string[];
 }

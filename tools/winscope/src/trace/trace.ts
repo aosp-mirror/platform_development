@@ -41,7 +41,8 @@ export class TraceEntry<T> {
     private readonly parser: Parser<T>,
     private readonly index: AbsoluteEntryIndex,
     private readonly timestamp: Timestamp,
-    private readonly framesRange: FramesRange | undefined
+    private readonly framesRange: FramesRange | undefined,
+    private readonly prefetchedPartialProto: object | undefined
   ) {}
 
   getFullTrace(): Trace<T> {
@@ -63,6 +64,10 @@ export class TraceEntry<T> {
       );
     }
     return this.framesRange;
+  }
+
+  getPrefetchedPartialProto(): object | undefined {
+    return this.prefetchedPartialProto;
   }
 
   async getValue(): Promise<T> {
@@ -148,22 +153,15 @@ export class Trace<T> {
   }
 
   getEntry(index: RelativeEntryIndex): TraceEntry<T> {
-    const entry = this.convertToAbsoluteEntryIndex(index) as AbsoluteEntryIndex;
-    if (entry < this.entriesRange.start || entry >= this.entriesRange.end) {
-      throw new Error(
-        `Trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${this.lengthEntries}.`
-      );
-    }
-    const frames = this.clampFramesRangeToSliceBounds(
-      this.frameMap?.getFramesRange({start: entry, end: entry + 1})
+    return this.getEntryInternal(index, undefined);
+  }
+
+  async prefetchPartialProtos(fieldPath: string): Promise<Array<TraceEntry<T>>> {
+    const partialProtos = await this.parser.getPartialProtos(this.entriesRange, fieldPath);
+    const entries = partialProtos.map((partialProto, index) =>
+      this.getEntryInternal(index, partialProto)
     );
-    return new TraceEntry<T>(
-      this.fullTrace,
-      this.parser,
-      entry,
-      this.getFullTraceTimestamps()[entry],
-      frames
-    );
+    return entries;
   }
 
   getFrame(frame: AbsoluteFrameIndex): Trace<T> {
@@ -363,6 +361,29 @@ export class Trace<T> {
   getFramesRange(): FramesRange | undefined {
     this.checkTraceCanBeAccessedInFrameDomain();
     return this.framesRange;
+  }
+
+  private getEntryInternal(
+    index: RelativeEntryIndex,
+    prefetchedPartialProto: object | undefined
+  ): TraceEntry<T> {
+    const entry = this.convertToAbsoluteEntryIndex(index) as AbsoluteEntryIndex;
+    if (entry < this.entriesRange.start || entry >= this.entriesRange.end) {
+      throw new Error(
+        `Trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${this.lengthEntries}.`
+      );
+    }
+    const frames = this.clampFramesRangeToSliceBounds(
+      this.frameMap?.getFramesRange({start: entry, end: entry + 1})
+    );
+    return new TraceEntry<T>(
+      this.fullTrace,
+      this.parser,
+      entry,
+      this.getFullTraceTimestamps()[entry],
+      frames,
+      prefetchedPartialProto
+    );
   }
 
   private getFullTraceTimestamps(): Timestamp[] {
