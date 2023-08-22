@@ -64,7 +64,7 @@ def aggregate_cts_reports(report_files):
         msg = (f'{report_file} is incompatible to {first_report_file}.')
         raise UserWarning(msg)
 
-    report.read_test_result_xml(xml_path)
+      report.read_test_result_xml(xml_path)
 
   return report
 
