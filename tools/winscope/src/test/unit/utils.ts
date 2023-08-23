@@ -40,7 +40,9 @@ class UnitTestUtils extends CommonTestUtils {
   static async getParser(filename: string): Promise<Parser<object>> {
     const file = new TraceFile(await CommonTestUtils.getFixtureFile(filename), undefined);
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
-    expect(parsers.length).toEqual(1);
+    expect(parsers.length)
+      .withContext(`Should have been able to create a parser for ${filename}`)
+      .toEqual(1);
     return parsers[0].parser;
   }
 
@@ -49,7 +51,9 @@ class UnitTestUtils extends CommonTestUtils {
       filenames.map((filename) => UnitTestUtils.getParser(filename))
     );
     const tracesParsers = await new TracesParserFactory().createParsers(parsers);
-    expect(tracesParsers.length).toEqual(1);
+    expect(tracesParsers.length)
+      .withContext(`Should have been able to create a traces parser for [${filenames.join()}]`)
+      .toEqual(1);
     return tracesParsers[0];
   }
 

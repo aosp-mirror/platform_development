@@ -84,7 +84,7 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        console.log(`Failed to load trace ${traceFile.file.name}`);
+        console.error(`Failed to find parser for trace ${traceFile.file.name}`);
         errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.getDescriptor()));
       }
     }
