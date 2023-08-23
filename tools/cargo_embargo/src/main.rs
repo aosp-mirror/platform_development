@@ -27,7 +27,7 @@
 //! available to tweak it via a config file.
 
 mod bp;
-mod cargo_out;
+mod cargo;
 mod config;
 
 use crate::config::Config;
@@ -36,7 +36,7 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo_out::{parse_cargo_out, Crate, CrateType};
+use cargo::{cargo_out::parse_cargo_out, Crate, CrateType};
 use clap::Parser;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -52,6 +52,7 @@ use std::process::Command;
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
+/// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
 #[clap()]
 struct Args {
