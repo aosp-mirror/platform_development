@@ -36,10 +36,8 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo::{cargo_out::parse_cargo_out, Crate, CrateType};
+use cargo::{cargo_out::parse_cargo_out, Crate, CrateType, ExternType};
 use clap::Parser;
-use once_cell::sync::Lazy;
-use regex::Regex;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -505,27 +503,10 @@ fn crate_to_bp_modules(
 
         let mut rust_libs = Vec::new();
         let mut proc_macro_libs = Vec::new();
-        for (extern_name, filename) in &crate_.externs {
-            if extern_name == "proc_macro" {
-                continue;
-            }
-            let filename =
-                filename.as_ref().unwrap_or_else(|| panic!("no filename for {}", extern_name));
-            // Example filename: "libgetrandom-fd8800939535fc59.rmeta"
-            static REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$").unwrap());
-            let lib_name = if let Some(x) = REGEX.captures(filename).and_then(|x| x.get(1)) {
-                x
-            } else {
-                bail!("bad filename for extern {}: {}", extern_name, filename);
-            };
-            if filename.ends_with(".rlib") || filename.ends_with(".rmeta") {
-                rust_libs.push(lib_name.as_str().to_string());
-            } else if filename.ends_with(".so") {
-                // Assume .so files are always proc_macros. May not always be right.
-                proc_macro_libs.push(lib_name.as_str().to_string());
-            } else {
-                unreachable!();
+        for extern_dep in &crate_.externs {
+            match extern_dep.extern_type {
+                ExternType::Rust => rust_libs.push(extern_dep.lib_name.clone()),
+                ExternType::ProcMacro => proc_macro_libs.push(extern_dep.lib_name.clone()),
             }
         }
 

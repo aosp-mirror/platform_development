@@ -72,15 +72,29 @@ pub struct Crate {
     pub package_name: String,
     pub version: Option<String>,
     pub types: Vec<CrateType>,
-    pub target: Option<String>,                 // --target
-    pub features: Vec<String>,                  // --cfg feature=
-    pub cfgs: Vec<String>,                      // non-feature --cfg
-    pub externs: Vec<(String, Option<String>)>, // name => rlib file
-    pub codegens: Vec<String>,                  // -C
+    pub target: Option<String>, // --target
+    pub features: Vec<String>,  // --cfg feature=
+    pub cfgs: Vec<String>,      // non-feature --cfg
+    pub externs: Vec<Extern>,
+    pub codegens: Vec<String>, // -C
     pub cap_lints: String,
     pub static_libs: Vec<String>,
     pub shared_libs: Vec<String>,
     pub edition: String,
     pub package_dir: PathBuf, // canonicalized
     pub main_src: PathBuf,    // relative to package_dir
+}
+
+/// A dependency of a Rust crate.
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Extern {
+    pub name: String,
+    pub lib_name: String,
+    pub extern_type: ExternType,
+}
+
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum ExternType {
+    Rust,
+    ProcMacro,
 }
