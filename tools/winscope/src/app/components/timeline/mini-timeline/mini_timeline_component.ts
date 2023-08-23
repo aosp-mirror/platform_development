@@ -196,21 +196,21 @@ export class MiniTimelineComponent {
   }
 
   zoomIn(zoomOn: Timestamp | undefined = undefined) {
-    this.zoom({nominator: 3n, demoniator: 4n}, zoomOn);
+    this.zoom({nominator: 3n, denominator: 4n}, zoomOn);
   }
 
   zoomOut(zoomOn: Timestamp | undefined = undefined) {
-    this.zoom({nominator: 5n, demoniator: 4n}, zoomOn);
+    this.zoom({nominator: 5n, denominator: 4n}, zoomOn);
   }
 
   zoom(
-    zoomRatio: {nominator: bigint; demoniator: bigint},
+    zoomRatio: {nominator: bigint; denominator: bigint},
     zoomOn: Timestamp | undefined = undefined
   ) {
     const fullRange = this.timelineData.getFullTimeRange();
     const currentZoomRange = this.timelineData.getZoomRange();
     const currentZoomWidth = currentZoomRange.to.minus(currentZoomRange.from);
-    const zoomToWidth = currentZoomWidth.times(zoomRatio.nominator).div(zoomRatio.demoniator);
+    const zoomToWidth = currentZoomWidth.times(zoomRatio.nominator).div(zoomRatio.denominator);
 
     const cursorPosition = this.timelineData.getCurrentPosition()?.timestamp;
     const currentMiddle = currentZoomRange.from.plus(currentZoomRange.to).div(2n);
@@ -228,12 +228,12 @@ export class MiniTimelineComponent {
       if (zoomTowards.getValueNs() < currentMiddle.getValueNs()) {
         leftAdjustment = currentZoomWidth.times(0n);
         rightAdjustment = currentZoomWidth
-          .times(zoomRatio.demoniator - zoomRatio.nominator)
-          .div(zoomRatio.demoniator);
+          .times(zoomRatio.denominator - zoomRatio.nominator)
+          .div(zoomRatio.denominator);
       } else {
         leftAdjustment = currentZoomWidth
-          .times(zoomRatio.demoniator - zoomRatio.nominator)
-          .div(zoomRatio.demoniator);
+          .times(zoomRatio.denominator - zoomRatio.nominator)
+          .div(zoomRatio.denominator);
         rightAdjustment = currentZoomWidth.times(0n);
       }
 
