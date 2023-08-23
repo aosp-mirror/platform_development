@@ -8,9 +8,17 @@
     "features": ["area_series", "line_series", "plotters-svg", "svg_backend"],
     "cfgs": [],
     "externs": [
-      ["num_traits", "libnum_traits-93a69c224ed38166.rmeta"],
-      ["plotters_backend", "libplotters_backend-4110c43be89cf520.rmeta"],
-      ["plotters_svg", "libplotters_svg-e0f639cce7c4701c.rmeta"]
+      { "name": "num_traits", "lib_name": "num_traits", "extern_type": "Rust" },
+      {
+        "name": "plotters_backend",
+        "lib_name": "plotters_backend",
+        "extern_type": "Rust"
+      },
+      {
+        "name": "plotters_svg",
+        "lib_name": "plotters_svg",
+        "extern_type": "Rust"
+      }
     ],
     "codegens": [],
     "cap_lints": "",
