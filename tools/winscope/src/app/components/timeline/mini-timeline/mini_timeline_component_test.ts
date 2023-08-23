@@ -351,7 +351,7 @@ describe('MiniTimelineComponent', () => {
 
     for (let i = 0; i < 10; i++) {
       component.onScroll({
-        deltaY: 200,
+        deltaY: -200,
         deltaX: 0,
         x: 10, // scrolling on pos
         target: {id: 'mini-timeline-canvas', offsetLeft: 0},
@@ -386,7 +386,7 @@ describe('MiniTimelineComponent', () => {
 
     for (let i = 0; i < 10; i++) {
       component.onScroll({
-        deltaY: -200,
+        deltaY: 200,
         deltaX: 0,
         x: 10, // scrolling on pos
         target: {id: 'mini-timeline-canvas', offsetLeft: 0},
@@ -418,7 +418,7 @@ describe('MiniTimelineComponent', () => {
     component.onZoomChanged(initialZoom);
 
     component.onScroll({
-      deltaY: -1000,
+      deltaY: 1000,
       deltaX: 0,
       x: 10, // scrolling on pos
       target: {id: 'mini-timeline-canvas', offsetLeft: 0},
