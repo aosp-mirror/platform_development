@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use super::metadata::WorkspaceMetadata;
-use super::{Crate, CrateType};
+use super::{Crate, CrateType, Extern, ExternType};
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
@@ -236,12 +236,32 @@ impl Crate {
                     // example: memoffset=/some/path/libmemoffset-2cfda327d156e680.rmeta
                     let arg = arg_iter.next().unwrap();
                     if let Some((name, path)) = arg.split_once('=') {
-                        out.externs.push((
-                            name.to_string(),
-                            Some(path.split('/').last().unwrap().to_string()),
-                        ));
-                    } else {
-                        out.externs.push((arg.to_string(), None));
+                        let filename = path.split('/').last().unwrap();
+
+                        // Example filename: "libgetrandom-fd8800939535fc59.rmeta"
+                        static REGEX: Lazy<Regex> = Lazy::new(|| {
+                            Regex::new(r"^lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$").unwrap()
+                        });
+
+                        let Some(lib_name) = REGEX.captures(filename).and_then(|x| x.get(1)) else {
+                            bail!("bad filename for extern {}: {}", name, filename);
+                        };
+                        let extern_type =
+                            if filename.ends_with(".rlib") || filename.ends_with(".rmeta") {
+                                ExternType::Rust
+                            } else if filename.ends_with(".so") {
+                                // Assume .so files are always proc_macros. May not always be right.
+                                ExternType::ProcMacro
+                            } else {
+                                bail!("Unexpected extension for extern filename {}", filename);
+                            };
+                        out.externs.push(Extern {
+                            name: name.to_string(),
+                            lib_name: lib_name.as_str().to_string(),
+                            extern_type,
+                        });
+                    } else if arg != "proc_macro" {
+                        panic!("No filename for {}", arg);
                     }
                 }
                 _ if arg.starts_with("-C") => {
