@@ -50,10 +50,9 @@ describe('PresenterSurfaceFlinger', () => {
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('Dim layer#53')
-      .setStableId('EffectLayer 53 Dim layer#53')
+      .setStableId('53 Dim layer#53')
       .setFilteredView(true)
       .setKind('53')
-      .setDiffType('EffectLayer')
       .setId(53)
       .build();
   });
