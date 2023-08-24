@@ -24,7 +24,6 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
@@ -91,7 +90,7 @@ describe('PresenterViewCapture', () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual(new Point(0, 0));
-    expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 2340));
+    expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 249));
   });
 
   it('updates pinned items', async () => {
@@ -114,14 +113,14 @@ describe('PresenterViewCapture', () => {
     await presenter.onAppEvent(positionUpdate);
 
     expect(
-      // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace
-      uiData.tree?.children[0].children[1].children[0].children[0].children[1].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> TaskbarView
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
 
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
-        enabled: true,
+        enabled: false,
       },
       simplifyNames: {
         name: 'Simplify names',
@@ -135,9 +134,9 @@ describe('PresenterViewCapture', () => {
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
-      // DecorView -> LinearLayout -> FrameLayout (before, this was the 2nd child) -> LauncherRootView -> DragLayer -> Workspace if filter works as expected
-      uiData.tree?.children[0].children[0].children[0].children[0].children[1].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> TaskbarScrimView
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
   it('filters hierarchy tree', async () => {
@@ -154,19 +153,15 @@ describe('PresenterViewCapture', () => {
         name: 'Only visible',
         enabled: false,
       },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
     };
     await presenter.onAppEvent(positionUpdate);
     presenter.updateHierarchyTree(userOptions);
-    presenter.filterHierarchyTree('Workspace');
+    presenter.filterHierarchyTree('BubbleBarView');
 
     expect(
-      // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace if filter works as expected
-      uiData.tree?.children[0].children[0].children[0].children[0].children[0].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> BubbleBarView if filter works as expected
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
   it('sets properties tree and associated ui data', async () => {
@@ -234,8 +229,8 @@ describe('PresenterViewCapture', () => {
 
   const createPresenter = (trace: Trace<object>): Presenter => {
     const traces = new Traces();
-    traces.setTrace(TraceType.VIEW_CAPTURE, trace);
-    return new Presenter(traces, new MockStorage(), (newData: UiData) => {
+    traces.setTrace(parser.getTraceType(), trace);
+    return new Presenter(parser.getTraceType(), traces, new MockStorage(), (newData: UiData) => {
       uiData = newData;
     });
   };

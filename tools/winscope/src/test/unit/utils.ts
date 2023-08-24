@@ -42,7 +42,7 @@ class UnitTestUtils extends CommonTestUtils {
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
-      .toEqual(1);
+      .toBeGreaterThanOrEqual(1);
     return parsers[0].parser;
   }
 

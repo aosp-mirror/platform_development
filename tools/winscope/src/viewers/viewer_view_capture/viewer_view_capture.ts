@@ -30,8 +30,7 @@ export class ViewerViewCapture implements Viewer {
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
-
-    this.presenter = new Presenter(traces, storage, (data: UiData) => {
+    this.presenter = new Presenter(this.getDependencies()[0], traces, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
@@ -72,13 +71,47 @@ export class ViewerViewCapture implements Viewer {
         ViewType.TAB,
         this.getDependencies(),
         this.htmlElement,
-        'View Capture',
-        TraceType.VIEW_CAPTURE
+        this.getTitle(),
+        this.getDependencies()[0]
       ),
     ];
   }
 
   getDependencies(): TraceType[] {
     return ViewerViewCapture.DEPENDENCIES;
+  }
+
+  private getTitle(): string {
+    switch (this.getDependencies()[0]) {
+      case TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER:
+        return 'View Capture - Taskbar';
+      case TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER:
+        return 'View Capture - Taskbar Overlay';
+      default:
+        return 'View Capture - Nexuslauncher';
+    }
+  }
+}
+
+export class ViewerViewCaptureLauncherActivity extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureLauncherActivity.DEPENDENCIES;
+  }
+}
+
+export class ViewerViewCaptureTaskbarDragLayer extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureTaskbarDragLayer.DEPENDENCIES;
+  }
+}
+
+export class ViewerViewCaptureTaskbarOverlayDragLayer extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  ];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureTaskbarOverlayDragLayer.DEPENDENCIES;
   }
 }

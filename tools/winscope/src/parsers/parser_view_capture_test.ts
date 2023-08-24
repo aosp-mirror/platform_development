@@ -28,23 +28,23 @@ describe('ParserViewCapture', () => {
   });
 
   it('has expected trace type', () => {
-    expect(parser.getTraceType()).toEqual(TraceType.VIEW_CAPTURE);
+    expect(parser.getTraceType()).toEqual(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER);
   });
 
   it('provides elapsed timestamps', () => {
     const expected = [
-      new Timestamp(TimestampType.ELAPSED, 26231798759n),
-      new Timestamp(TimestampType.ELAPSED, 26242905367n),
-      new Timestamp(TimestampType.ELAPSED, 26255550549n),
+      new Timestamp(TimestampType.ELAPSED, 181114412436130n),
+      new Timestamp(TimestampType.ELAPSED, 181114421012750n),
+      new Timestamp(TimestampType.ELAPSED, 181114429047540n),
     ];
     expect(parser.getTimestamps(TimestampType.ELAPSED)!.slice(0, 3)).toEqual(expected);
   });
 
   it('provides real timestamps', () => {
     const expected = [
-      new Timestamp(TimestampType.REAL, 1686674380113072216n),
-      new Timestamp(TimestampType.REAL, 1686674380124178824n),
-      new Timestamp(TimestampType.REAL, 1686674380136824006n),
+      new Timestamp(TimestampType.REAL, 1691692936292808460n),
+      new Timestamp(TimestampType.REAL, 1691692936301385080n),
+      new Timestamp(TimestampType.REAL, 1691692936309419870n),
     ];
     expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
   });

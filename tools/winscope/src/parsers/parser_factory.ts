@@ -63,6 +63,13 @@ export class ParserFactory {
 
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
+    const maybeAddParser = (p: Parser<object>, f: TraceFile) => {
+      if (this.shouldUseParser(p, errors)) {
+        this.parsers.set(p.getTraceType(), p);
+        parsers.push({file: f, parser: p});
+      }
+    };
+
     for (const [index, traceFile] of traceFiles.entries()) {
       progressListener?.onProgressUpdate('Parsing proto files', (index / traceFiles.length) * 100);
 
@@ -73,9 +80,10 @@ export class ParserFactory {
           const parser = new ParserType(traceFile);
           await parser.parse();
           hasFoundParser = true;
-          if (this.shouldUseParser(parser, errors)) {
-            this.parsers.set(parser.getTraceType(), parser);
-            parsers.push({file: traceFile, parser});
+          if (parser instanceof ParserViewCapture) {
+            parser.windowParsers.forEach((it) => maybeAddParser(it, traceFile));
+          } else {
+            maybeAddParser(parser, traceFile);
           }
           break;
         } catch (error) {

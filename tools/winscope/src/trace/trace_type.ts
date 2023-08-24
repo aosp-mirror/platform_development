@@ -30,7 +30,6 @@ export enum TraceType {
   WAYLAND_DUMP,
   PROTO_LOG,
   SYSTEM_UI,
-  LAUNCHER,
   INPUT_METHOD_CLIENTS,
   INPUT_METHOD_MANAGER_SERVICE,
   INPUT_METHOD_SERVICE,
@@ -44,6 +43,9 @@ export enum TraceType {
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
+  VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+  VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+  VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
 }
 
 // view capture types
@@ -53,7 +55,6 @@ export type WindowData = any;
 
 export interface TraceEntryTypeMap {
   [TraceType.ACCESSIBILITY]: object;
-  [TraceType.LAUNCHER]: object;
   [TraceType.PROTO_LOG]: LogMessage;
   [TraceType.SURFACE_FLINGER]: LayerTraceEntry;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
@@ -76,4 +77,7 @@ export interface TraceEntryTypeMap {
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: object;
+  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: FrameData;
+  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: FrameData;
+  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: FrameData;
 }
