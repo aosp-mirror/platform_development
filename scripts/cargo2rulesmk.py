@@ -88,13 +88,13 @@ DRY_RUN_NOTE = (
 )
 
 # Cargo -v output of a call to rustc.
-RUSTC_PAT = re.compile("^ +Running `rustc (.*)`$")
+RUSTC_PAT = re.compile("^ +Running `(.*\/)?rustc (.*)`$")
 
 # Cargo -vv output of a call to rustc could be split into multiple lines.
 # Assume that the first line will contain some CARGO_* env definition.
 RUSTC_VV_PAT = re.compile("^ +Running `.*CARGO_.*=.*$")
 # The combined -vv output rustc command line pattern.
-RUSTC_VV_CMD_ARGS = re.compile("^ *Running `.*CARGO_.*=.* rustc (.*)`$")
+RUSTC_VV_CMD_ARGS = re.compile("^ *Running `.*CARGO_.*=.* (.*\/)?rustc (.*)`$")
 
 # Cargo -vv output of a "cc" or "ar" command; all in one line.
 CC_AR_VV_PAT = re.compile(r'^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$')
@@ -1019,7 +1019,7 @@ class Runner(object):
         if not line.endswith("`\n") or (new_rustc.count("`") % 2) != 0:
             return new_rustc
         if match := RUSTC_VV_CMD_ARGS.match(new_rustc):
-            args = match.group(1)
+            args = match.group(2)
             self.add_crate(Crate(self, outf_name).parse(n, args))
         else:
             self.assert_empty_vv_line(new_rustc)
@@ -1086,7 +1086,7 @@ class Runner(object):
                 continue
             new_rustc = ""
             if match := RUSTC_PAT.match(line):
-                args_line = match.group(1)
+                args_line = match.group(2)
                 self.add_crate(Crate(self, outf_name).parse(n, args_line))
                 self.assert_empty_vv_line(rustc_line)
             elif rustc_line or RUSTC_VV_PAT.match(line):
