@@ -100,6 +100,7 @@ function createMockTransition(
   const sendTime = CrossPlatform.timestamp.fromString(sendTimeNanos.toString(), null, null);
   const abortTime = null;
   const finishTime = CrossPlatform.timestamp.fromString(finishTimeNanos.toString(), null, null);
+  const startingWindowRemoveTime = null;
 
   const startTransactionId = '-1';
   const finishTransactionId = '-1';
@@ -113,6 +114,7 @@ function createMockTransition(
       sendTime,
       abortTime,
       finishTime,
+      startingWindowRemoveTime,
       startTransactionId,
       finishTransactionId,
       type,

@@ -15,6 +15,8 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {ObjectUtils} from 'common/object_utils';
+import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
@@ -78,9 +80,21 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
     return this.timestamps.get(type);
   }
 
-  getEntry(index: number, timestampType: TimestampType): Promise<T> {
+  getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T> {
     const entry = this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
     return Promise.resolve(entry);
+  }
+
+  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
+    const partialProtos = this.decodedEntries
+      .slice(entriesRange.start, entriesRange.end)
+      .map((entry) => {
+        const fieldValue = ObjectUtils.getProperty(entry, fieldPath);
+        const proto = {};
+        ObjectUtils.setProperty(proto, fieldPath, fieldValue);
+        return proto;
+      });
+    return Promise.resolve(partialProtos);
   }
 
   // Add default values to the proto objects.

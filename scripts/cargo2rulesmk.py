@@ -88,13 +88,13 @@ DRY_RUN_NOTE = (
 )
 
 # Cargo -v output of a call to rustc.
-RUSTC_PAT = re.compile("^ +Running `rustc (.*)`$")
+RUSTC_PAT = re.compile("^ +Running `(.*\/)?rustc (.*)`$")
 
 # Cargo -vv output of a call to rustc could be split into multiple lines.
 # Assume that the first line will contain some CARGO_* env definition.
 RUSTC_VV_PAT = re.compile("^ +Running `.*CARGO_.*=.*$")
 # The combined -vv output rustc command line pattern.
-RUSTC_VV_CMD_ARGS = re.compile("^ *Running `.*CARGO_.*=.* rustc (.*)`$")
+RUSTC_VV_CMD_ARGS = re.compile("^ *Running `.*CARGO_.*=.* (.*\/)?rustc (.*)`$")
 
 # Cargo -vv output of a "cc" or "ar" command; all in one line.
 CC_AR_VV_PAT = re.compile(r'^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$')
@@ -513,19 +513,18 @@ class Crate(object):
 
     def dump_trusty_module(self):
         """Dump one or more module definitions, depending on crate_types."""
-        match self.crate_types:
-            case [_single]:
-                pass
-            case multiple if "test" in multiple:
+        if len(self.crate_types) > 1:
+            if "test" in self.crate_types:
                 self.write("\nERROR: multiple crate types cannot include test type")
                 return
-            case multiple if "lib" in multiple:
+
+            if "lib" in self.crate_types:
                 print(f"### WARNING: crate {self.crate_name} has multiple "
-                      f"crate types ({str(multiple)}). Treating as 'lib'")
+                      f"crate types ({str(self.crate_types)}). Treating as 'lib'")
                 self.crate_types = ["lib"]
-            case unsupported:
+            else:
                 self.write("\nERROR: don't know how to handle crate types of "
-                           f"crate {self.crate_name}: {str(unsupported)}")
+                           f"crate {self.crate_name}: {str(self.crate_types)}")
                 return
 
         self.dump_single_type_trusty_module()
@@ -672,16 +671,15 @@ class Crate(object):
             if hasattr(self.runner.args, "module_add_implicit_deps_reason"):
                 self.write(self.runner.args.module_add_implicit_deps_reason)
 
-            match self.runner.args.module_add_implicit_deps:
-                case True | "yes":
-                    self.write("MODULE_ADD_IMPLICIT_DEPS := true")
-                case False | "no":
-                    self.write("MODULE_ADD_IMPLICIT_DEPS := false")
-                case other:
-                    sys.exit(
-                        "ERROR: invalid value for module_add_implicit_deps: " +
-                        str(other)
-                    )
+            if self.runner.args.module_add_implicit_deps in [True, "yes"]:
+                self.write("MODULE_ADD_IMPLICIT_DEPS := true")
+            elif self.runner.args.module_add_implicit_deps in [False, "no"]:
+                self.write("MODULE_ADD_IMPLICIT_DEPS := false")
+            else:
+                sys.exit(
+                    "ERROR: invalid value for module_add_implicit_deps: " +
+                    str(self.runner.args.module_add_implicit_deps)
+                )
 
 
 class Runner(object):
@@ -1021,7 +1019,7 @@ class Runner(object):
         if not line.endswith("`\n") or (new_rustc.count("`") % 2) != 0:
             return new_rustc
         if match := RUSTC_VV_CMD_ARGS.match(new_rustc):
-            args = match.group(1)
+            args = match.group(2)
             self.add_crate(Crate(self, outf_name).parse(n, args))
         else:
             self.assert_empty_vv_line(new_rustc)
@@ -1088,7 +1086,7 @@ class Runner(object):
                 continue
             new_rustc = ""
             if match := RUSTC_PAT.match(line):
-                args_line = match.group(1)
+                args_line = match.group(2)
                 self.add_crate(Crate(self, outf_name).parse(n, args_line))
                 self.assert_empty_vv_line(rustc_line)
             elif rustc_line or RUSTC_VV_PAT.match(line):

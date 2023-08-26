@@ -30,7 +30,7 @@ import {assertDefined} from 'common/assert_utils';
 import {dragElement} from 'test/utils';
 import {RealTimestamp} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
-import {SliderComponent} from './slider_component';
+import {MIN_SLIDER_WIDTH, SliderComponent} from './slider_component';
 
 describe('SliderComponent', () => {
   let fixture: ComponentFixture<SliderComponent>;
@@ -116,11 +116,9 @@ describe('SliderComponent', () => {
     });
     fixture.detectChanges();
 
-    const minWidth = 15;
-
     const sliderWidth = component.sliderBox.nativeElement.offsetWidth;
-    expect(component.sliderWidth).toBe(minWidth);
-    expect(component.dragPosition.x).toBe(sliderWidth / 4 - minWidth / 2);
+    expect(component.sliderWidth).toBe(MIN_SLIDER_WIDTH);
+    expect(component.dragPosition.x).toBe(sliderWidth / 4 - MIN_SLIDER_WIDTH / 2);
   });
 
   it('repositions slider on resize', () => {

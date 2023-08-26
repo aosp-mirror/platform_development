@@ -107,6 +107,20 @@ export class ParserTransitionsWm extends AbstractParser {
       );
     }
 
+    const startingWindowRemoveTime = null;
+    if (
+      entry.startingWindowRemoveTimeNs &&
+      BigInt(entry.startingWindowRemoveTimeNs.toString()) !== 0n
+    ) {
+      const unixNs =
+        BigInt(entry.startingWindowRemoveTimeNs.toString()) + this.realToElapsedTimeOffsetNs;
+      finishTime = CrossPlatform.timestamp.fromString(
+        entry.startingWindowRemoveTimeNs.toString(),
+        null,
+        unixNs.toString()
+      );
+    }
+
     let startTransactionId = null;
     if (entry.startTransactionId && BigInt(entry.startTransactionId.toString()) !== 0n) {
       startTransactionId = BigInt(entry.startTransactionId.toString());
@@ -129,6 +143,7 @@ export class ParserTransitionsWm extends AbstractParser {
         sendTime,
         abortTime,
         finishTime,
+        startingWindowRemoveTime,
         startTransactionId?.toString(),
         finishTransactionId?.toString(),
         type,

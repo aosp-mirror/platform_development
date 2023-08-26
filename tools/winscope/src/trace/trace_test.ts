@@ -63,6 +63,26 @@ describe('Trace', () => {
     }).toThrow();
   });
 
+  it('prefetchPartialProtos()', async () => {
+    const trace = new TraceBuilder<object>()
+      .setEntries([{theKey: 0}, {theKey: 10}, {theKey: 20}, {theKey: 30}])
+      .setFrame(0, 0)
+      .setFrame(1, 1)
+      .setFrame(2, 2)
+      .setFrame(3, 3)
+      .build();
+    const slice = trace.sliceEntries(1, -1);
+    const entries = await slice.prefetchPartialProtos('theKey');
+
+    expect(entries.length).toEqual(2);
+
+    expect(entries[0].getPrefetchedPartialProto()).toEqual({theKey: 10});
+    expect(entries[0].getFramesRange()).toEqual({start: 1, end: 2});
+
+    expect(entries[1].getPrefetchedPartialProto()).toEqual({theKey: 20});
+    expect(entries[1].getFramesRange()).toEqual({start: 2, end: 3});
+  });
+
   it('getFrame()', async () => {
     expect(await TraceUtils.extractFrames(trace.getFrame(0))).toEqual(
       new Map<AbsoluteFrameIndex, string[]>([[0, ['entry-0']]])

@@ -185,13 +185,12 @@ export class SliderComponent {
   }
 
   computeSliderWidth() {
-    const minSliderWidth = 15;
     const transformer = this.getTransformer();
     let width =
       transformer.transform(assertDefined(this.zoomRange).to) -
       transformer.transform(assertDefined(this.zoomRange).from);
-    if (width < minSliderWidth) {
-      width = minSliderWidth;
+    if (width < MIN_SLIDER_WIDTH) {
+      width = MIN_SLIDER_WIDTH;
     }
 
     return width;
@@ -291,3 +290,5 @@ export class SliderComponent {
     addEventListener('mouseup', mouseUpListener);
   }
 }
+
+export const MIN_SLIDER_WIDTH = 50;

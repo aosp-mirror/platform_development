@@ -35,20 +35,8 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
   const bounds = toRectF(proto.bounds);
   const color = toColor(proto.color);
   const screenBounds = toRectF(proto.screenBounds);
-  const sourceBounds = toRectF(proto.sourceBounds);
   const transform = Transform.fromProto(proto.transform, proto.position);
   const bufferTransform = Transform.fromProto(proto.bufferTransform, /* position */ null);
-  const hwcCrop = toRectF(proto.hwcCrop);
-  const hwcFrame = toRect(proto.hwcFrame);
-  const requestedColor = toColor(proto.requestedColor);
-  const requestedTransform = Transform.fromProto(proto.requestedTransform, proto.requestedPosition);
-  const cornerRadiusCrop = toRectF(proto.cornerRadiusCrop);
-  const inputTransform = Transform.fromProto(
-    proto.inputWindowInfo ? proto.inputWindowInfo.transform : null
-  );
-  const inputRegion = toRegion(
-    proto.inputWindowInfo ? proto.inputWindowInfo.touchableRegion : null
-  );
   const crop: Rect = toCropRect(proto.crop);
 
   const properties = new LayerProperties(
@@ -60,25 +48,16 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
     /* isOpaque */ proto.isOpaque,
     /* shadowRadius */ proto.shadowRadius,
     /* cornerRadius */ proto.cornerRadius,
-    /* type */ proto.type ?? ``,
     screenBounds,
     transform,
-    sourceBounds,
     /* effectiveScalingMode */ proto.effectiveScalingMode,
     bufferTransform,
     /* hwcCompositionType */ new HwcCompositionType(proto.hwcCompositionType),
-    hwcCrop,
-    hwcFrame,
     /* backgroundBlurRadius */ proto.backgroundBlurRadius,
     crop,
     /* isRelativeOf */ proto.isRelativeOf,
     /* zOrderRelativeOfId */ proto.zOrderRelativeOf,
     /* stackId */ proto.layerStack,
-    requestedTransform,
-    requestedColor,
-    cornerRadiusCrop,
-    inputTransform,
-    inputRegion,
     excludesCompositionState
   );
 

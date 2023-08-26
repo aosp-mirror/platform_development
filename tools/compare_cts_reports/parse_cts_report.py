@@ -33,16 +33,49 @@ import zipfile
 # TODO(b/293809772): Logging.
 
 
+NO_DATA = 'null'
+
+
 class CtsReport:
   """Class to record the test result of a cts report."""
 
-  STATUS_ORDER = ['pass', 'IGNORED', 'ASSUMPTION_FAILURE', 'fail',
-                  'TEST_ERROR', 'TEST_STATUS_UNSPECIFIED']
+  STATUS_ORDER = [
+      'pass',
+      'IGNORED',
+      'ASSUMPTION_FAILURE',
+      'fail',
+      'TEST_ERROR',
+      'TEST_STATUS_UNSPECIFIED',
+  ]
+
+  FAIL_INDEX = STATUS_ORDER.index('fail')
 
   def __init__(self, info):
     self.info = info
     self.result_tree = {}
     self.module_summaries = {}
+
+  @staticmethod
+  def is_fail(status):
+    if status == NO_DATA:
+      return False
+    else:
+      return CtsReport.STATUS_ORDER.index(status) >= CtsReport.FAIL_INDEX
+
+  def gen_keys_list(self):
+    """Generate a 2D-list of keys."""
+
+    keys_list = []
+
+    modules = self.result_tree
+
+    for module_name, abis in modules.items():
+      for abi, test_classes in abis.items():
+        for class_name, tests in test_classes.items():
+          for test_name in tests.keys():
+            keys_list.append([module_name, abi, class_name, test_name])
+
+    return keys_list
 
   def is_compatible(self, info):
     return self.info['build_fingerprint'] == info['build_fingerprint']
@@ -51,24 +84,25 @@ class CtsReport:
     """Get test status from the CtsReport object."""
 
     if module_name not in self.result_tree:
-      return None
+      return NO_DATA
     abis = self.result_tree[module_name]
 
     if abi not in abis:
-      return None
+      return NO_DATA
     test_classes = abis[abi]
 
     if class_name not in test_classes:
-      return None
+      return NO_DATA
     tests = test_classes[class_name]
 
     if test_name not in tests:
-      return None
+      return NO_DATA
 
     return tests[test_name]
 
-  def set_test_status(self, module_name, abi,
-                      class_name, test_name, test_status):
+  def set_test_status(
+      self, module_name, abi, class_name, test_name, test_status
+  ):
     """Set test status to the CtsReport object."""
 
     previous = self.get_test_status(module_name, abi, class_name, test_name)
@@ -77,7 +111,7 @@ class CtsReport:
     test_classes = abis.setdefault(abi, {})
     tests = test_classes.setdefault(class_name, {})
 
-    if not previous:
+    if previous == NO_DATA:
       tests[test_name] = test_status
 
       module_summary = self.module_summaries.setdefault(module_name, {})
@@ -109,8 +143,7 @@ class CtsReport:
         for test in testcase.iter('Test'):
           test_name = test.attrib['name']
           result = test.attrib['result']
-          self.set_test_status(module_name, abi,
-                               class_name, test_name, result)
+          self.set_test_status(module_name, abi, class_name, test_name, result)
 
   def write_to_csv(self, result_csvfile, summary_csvfile):
     """Write the information of the report to the csv files.
@@ -124,21 +157,26 @@ class CtsReport:
     summary_writer.writerow(['module_name', 'abi'] + CtsReport.STATUS_ORDER)
 
     result_writer = csv.writer(result_csvfile)
-    result_writer.writerow(['module_name', 'abi',
-                            'class_name', 'test_name', 'result'])
+    result_writer.writerow(
+        ['module_name', 'abi', 'class_name', 'test_name', 'result']
+    )
 
     modules = self.result_tree
 
     for module_name, abis in modules.items():
       for abi, test_classes in abis.items():
         module_summary = self.module_summaries[module_name][abi]
+
         summary = module_summary.summary_list()
-        summary_writer.writerow([module_name, abi] + summary)
+
+        row = [module_name, abi] + summary
+        summary_writer.writerow(row)
 
         for class_name, tests in test_classes.items():
           for test_name, result in tests.items():
-            result_writer.writerow([module_name, abi,
-                                    class_name, test_name, result])
+            result_writer.writerow(
+                [module_name, abi, class_name, test_name, result]
+            )
 
   def output_files(self, output_dir):
     """Produce output files into the directory."""
@@ -171,9 +209,27 @@ class CtsReport:
     """Record the result summary of each (module, abi) pair."""
 
     def __init__(self):
-      self.counter = {}
+      self.counter = dict.fromkeys(CtsReport.STATUS_ORDER, 0)
+
+    @property
+    def tested_items(self):
+      """All tested items."""
+      items = 0
       for status in CtsReport.STATUS_ORDER:
-        self.counter[status] = 0
+        items += self.counter[status]
+      return items
+
+    @property
+    def pass_rate(self):
+      """Pass rate of the module."""
+      if self.tested_items == 0:
+        return 0.0
+      else:
+        pass_category = 0
+        for status in CtsReport.STATUS_ORDER:
+          if not CtsReport.is_fail(status):
+            pass_category += self.counter[status]
+        return pass_category / self.tested_items
 
     def print_summary(self):
       for key in CtsReport.STATUS_ORDER:
@@ -181,29 +237,31 @@ class CtsReport:
         print()
 
     def summary_list(self):
-      return [self.counter[type] for type in CtsReport.STATUS_ORDER]
+      return [self.counter[key] for key in CtsReport.STATUS_ORDER]
 
 
-ATTRS_TO_SHOW = ['Result::Build.build_model',
-                 'Result::Build.build_id',
-                 'Result::Build.build_fingerprint',
-                 'Result::Build.build_device',
-                 'Result::Build.build_version_sdk',
-                 'Result::Build.build_version_security_patch',
-                 'Result::Build.build_board',
-                 'Result::Build.build_type',
-                 'Result::Build.build_version_release',
-                 'Result.suite_name',
-                 'Result.suite_version',
-                 'Result.suite_plan',
-                 'Result.suite_build_number',]
+ATTRS_TO_SHOW = [
+    'Result::Build.build_model',
+    'Result::Build.build_id',
+    'Result::Build.build_fingerprint',
+    'Result::Build.build_device',
+    'Result::Build.build_version_sdk',
+    'Result::Build.build_version_security_patch',
+    'Result::Build.build_board',
+    'Result::Build.build_type',
+    'Result::Build.build_version_release',
+    'Result.suite_name',
+    'Result.suite_version',
+    'Result.suite_plan',
+    'Result.suite_build_number',
+]
 
 
 def parse_attrib_path(attrib_path):
   """Parse the path into xml tag and attribute name."""
   first_dot = attrib_path.index('.')
   tags = attrib_path[:first_dot].split('::')
-  attr_name = attrib_path[first_dot+1:]
+  attr_name = attrib_path[first_dot + 1 :]
   return tags, attr_name
 
 
@@ -236,7 +294,7 @@ def print_test_info(info):
 
   max_key_len = max([len(k) for k in info])
   max_value_len = max([len(info[k]) for k in info])
-  table_len = (max_key_len + 2 + max_value_len)
+  table_len = max_key_len + 2 + max_value_len
 
   print('=' * table_len)
 
@@ -266,7 +324,8 @@ def parse_report_file(report_file):
     xml_path = (
         extract_xml_from_zip(report_file, temp_dir)
         if zipfile.is_zipfile(report_file)
-        else report_file)
+        else report_file
+    )
 
     test_info = get_test_info_xml(xml_path)
     print_test_info(test_info)
@@ -280,11 +339,20 @@ def parse_report_file(report_file):
 def main():
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--report-file', required=True,
-                      help=('Path to a cts report, where a cts report could '
-                            'be a zip archive or a xml file.'))
-  parser.add_argument('-d', '--output-dir', required=True,
-                      help=('Path to the directory to store output files.'))
+  parser.add_argument(
+      '--report-file',
+      required=True,
+      help=(
+          'Path to a cts report, where a cts report could '
+          'be a zip archive or a xml file.'
+      ),
+  )
+  parser.add_argument(
+      '-d',
+      '--output-dir',
+      required=True,
+      help='Path to the directory to store output files.',
+  )
 
   args = parser.parse_args()
 
@@ -297,6 +365,7 @@ def main():
   report = parse_report_file(report_file)
 
   report.output_files(output_dir)
+
 
 if __name__ == '__main__':
   main()
