@@ -5,8 +5,8 @@ import os
 import time
 
 from utils import (
-    AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target,
-    copy_reference_dump, find_lib_lsdumps, get_build_vars_for_product,
+    AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, BuildTarget, Target,
+    copy_reference_dump, find_lib_lsdumps, get_build_vars,
     make_libraries, make_tree, read_lsdump_paths)
 
 
@@ -45,14 +45,13 @@ class GetVersionedRefDumpDirStem:
                             self.binder_bitness, arch)
 
 
-def make_libs_for_product(libs, product, variant, vndk_version, targets,
+def make_libs_for_product(libs, build_target, vndk_version, targets,
                           exclude_tags):
-    print('making libs for', product + '-' + variant)
+    print('making libs for', '-'.join(filter(None, build_target)))
     if libs:
-        make_libraries(product, variant, vndk_version, targets, libs,
-                       exclude_tags)
+        make_libraries(build_target, vndk_version, targets, libs, exclude_tags)
     else:
-        make_tree(product, variant)
+        make_tree(build_target)
 
 
 def tag_to_dir_name(tag):
@@ -95,14 +94,14 @@ def create_source_abi_reference_dumps(args, get_ref_dump_dir_stem,
 
 def create_source_abi_reference_dumps_for_all_products(args):
     """Create reference ABI dumps for all specified products."""
-
     num_processed = 0
 
     for product in args.products:
-        build_vars = get_build_vars_for_product(
+        build_target = BuildTarget(product, args.release, args.build_variant)
+        build_vars = get_build_vars(
             ['PLATFORM_VNDK_VERSION', 'BOARD_VNDK_VERSION', 'BINDER32BIT',
              'PLATFORM_VERSION_CODENAME', 'PLATFORM_SDK_VERSION'],
-            product, args.build_variant)
+            build_target)
 
         platform_vndk_version = build_vars[0]
         board_vndk_version = build_vars[1]
@@ -126,7 +125,8 @@ def create_source_abi_reference_dumps_for_all_products(args):
                                    if platform_version_codename == 'REL'
                                    else 'current')
 
-        targets = [t for t in (Target(True, product), Target(False, product))
+        targets = [t for t in
+                   (Target(True, build_target), Target(False, build_target))
                    if t.arch]
 
         if args.ref_dump_dir:
@@ -143,11 +143,11 @@ def create_source_abi_reference_dumps_for_all_products(args):
             if not args.no_make_lib:
                 # Build .lsdump for all the specified libs, or build
                 # `findlsdumps` if no libs are specified.
-                make_libs_for_product(args.libs, product, args.build_variant,
+                make_libs_for_product(args.libs, build_target,
                                       platform_vndk_version, targets,
                                       exclude_tags)
 
-            lsdump_paths = read_lsdump_paths(product, args.build_variant,
+            lsdump_paths = read_lsdump_paths(build_target,
                                              platform_vndk_version, targets,
                                              exclude_tags, build=False)
 
@@ -175,6 +175,9 @@ def _parse_args():
                         help='libs to create references for')
     parser.add_argument('-products', action='append',
                         help='products to create references for')
+    parser.add_argument('-release',
+                        help='release configuration to create references for. '
+                             'e.g., trunk_staging, next.')
     parser.add_argument('--build-variant', default='userdebug',
                         help='build variant to create references for')
     parser.add_argument('--compress', action='store_true',
