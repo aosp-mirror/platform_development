@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,68 +14,7 @@
  * limitations under the License.
  */
 
-import {MathUtils} from 'three/src/Three';
-import {Segment} from '../../utils';
-import {MiniTimelineDrawer} from './mini_timeline_drawer';
-
-export interface DrawConfig {
-  fillStyle: string;
-  fill: boolean;
-}
-
-export class DraggableCanvasObject {
-  private draggingPosition: number | undefined;
-
-  constructor(
-    private drawer: MiniTimelineDrawer,
-    private positionGetter: () => number,
-    private definePathFunc: (ctx: CanvasRenderingContext2D, position: number) => void,
-    private drawConfig: DrawConfig,
-    private onDrag: (x: number) => void,
-    private onDrop: (x: number) => void,
-    private rangeGetter: () => Segment
-  ) {
-    this.drawer.handler.registerDraggableObject(
-      this,
-      (x: number) => {
-        this.draggingPosition = this.clampPositionToRange(x);
-        this.onDrag(this.draggingPosition);
-        this.drawer.draw();
-      },
-      (x: number) => {
-        this.draggingPosition = undefined;
-        this.onDrop(this.clampPositionToRange(x));
-        this.drawer.draw();
-      }
-    );
-  }
-
-  get range(): Segment {
-    return this.rangeGetter();
-  }
-
-  get position(): number {
-    return this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
-  }
-
-  definePath(ctx: CanvasRenderingContext2D) {
-    this.definePathFunc(ctx, this.position);
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    this.doDraw(ctx);
-    this.drawer.handler.notifyDrawnOnTop(this);
-  }
-
-  private doDraw(ctx: CanvasRenderingContext2D) {
-    this.definePath(ctx);
-    ctx.fillStyle = this.drawConfig.fillStyle;
-    if (this.drawConfig.fill) {
-      ctx.fill();
-    }
-  }
-
-  private clampPositionToRange(x: number): number {
-    return MathUtils.clamp(x, this.range.from, this.range.to);
-  }
+export interface DraggableCanvasObject {
+  draw(ctx: CanvasRenderingContext2D): void;
+  definePath(ctx: CanvasRenderingContext2D): void;
 }

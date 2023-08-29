@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-import {CanvasMouseHandler} from './canvas_mouse_handler';
-
-export interface MiniTimelineDrawer {
-  draw(): Promise<void>;
-  getXScale(): number;
-  getYScale(): number;
-  getWidth(): number;
-  canvas: HTMLCanvasElement;
-  handler: CanvasMouseHandler;
-  padding: Padding;
-  usableRange: {from: number; to: number};
+interface Padding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
 }
