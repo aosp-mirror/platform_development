@@ -40,7 +40,8 @@ BuildTarget = collections.namedtuple(
     'BuildTarget', ['product', 'release', 'variant'])
 
 
-class Target(object):
+class Arch(object):
+    """A CPU architecture of a build target."""
     def __init__(self, is_2nd, build_target):
         extra = '_2ND' if is_2nd else ''
         build_vars_to_fetch = ['TARGET_ARCH',
@@ -139,11 +140,11 @@ def run_header_abi_dumper(input_path, output_path, cflags=tuple(),
     _validate_dump_content(output_path)
 
 
-def run_header_abi_linker(inputs, output_path, version_script, api, arch,
+def run_header_abi_linker(inputs, output_path, version_script, api, arch_str,
                           flags=tuple()):
     """Link inputs, taking version_script into account"""
     cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
-           '-api', api, '-arch', arch]
+           '-api', api, '-arch', arch_str]
     cmd += flags
     if '-input-format' not in flags:
         cmd += ['-input-format', DEFAULT_FORMAT]
@@ -154,13 +155,13 @@ def run_header_abi_linker(inputs, output_path, version_script, api, arch,
     _validate_dump_content(output_path)
 
 
-def make_targets(build_target, targets):
+def make_targets(build_target, args):
     make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
                 'TARGET_PRODUCT=' + build_target.product,
                 'TARGET_BUILD_VARIANT=' + build_target.variant]
     if build_target.release:
         make_cmd.append('TARGET_RELEASE=' + build_target.release)
-    make_cmd += targets
+    make_cmd += args
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
@@ -169,9 +170,9 @@ def make_tree(build_target):
     return make_targets(build_target, ['findlsdumps'])
 
 
-def make_libraries(build_target, vndk_version, targets, libs, exclude_tags):
+def make_libraries(build_target, vndk_version, arches, libs, exclude_tags):
     """Build lsdump files for specific libs."""
-    lsdump_paths = read_lsdump_paths(build_target, vndk_version, targets,
+    lsdump_paths = read_lsdump_paths(build_target, vndk_version, arches,
                                      exclude_tags, build=True)
     make_target_paths = []
     for name in libs:
@@ -210,7 +211,7 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
     raise ValueError(tag + ' is not a known tag.')
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
+def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
                        exclude_tags):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
@@ -248,8 +249,8 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
             dirnames.append(dirname)
             dirname = os.path.basename(dir_path)
             dirnames.append(dirname)
-            for target in targets:
-                arch_cpu = target.get_arch_cpu_str()
+            for arch in arches:
+                arch_cpu = arch.get_arch_cpu_str()
                 prefix = _get_module_variant_dir_name(tag, vndk_version,
                                                       arch_cpu)
                 variant = next((d for d in dirnames if d.startswith(prefix)),
@@ -266,7 +267,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
     return lsdump_paths
 
 
-def read_lsdump_paths(build_target, vndk_version, targets, exclude_tags,
+def read_lsdump_paths(build_target, vndk_version, arches, exclude_tags,
                       build):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(build_target)
@@ -276,11 +277,11 @@ def read_lsdump_paths(build_target, vndk_version, targets, exclude_tags,
             os.unlink(lsdump_paths_file_abspath)
         make_targets(build_target, [lsdump_paths_file_path])
     return _read_lsdump_paths(lsdump_paths_file_abspath, vndk_version,
-                              targets, exclude_tags)
+                              arches, exclude_tags)
 
 
-def find_lib_lsdumps(lsdump_paths, libs, target):
-    """Find the lsdump corresponding to libs for the given target.
+def find_lib_lsdumps(lsdump_paths, libs, arch):
+    """Find the lsdump corresponding to libs for the given architecture.
 
     This function returns a list of (tag, absolute_path).
     For example,
@@ -291,7 +292,7 @@ def find_lib_lsdumps(lsdump_paths, libs, target):
       )
     ]
     """
-    arch_cpu = target.get_arch_cpu_str()
+    arch_cpu = arch.get_arch_cpu_str()
     result = []
     if libs:
         for lib_name in libs:
@@ -306,10 +307,10 @@ def find_lib_lsdumps(lsdump_paths, libs, target):
     return [(tag, os.path.join(AOSP_DIR, path)) for tag, path in result]
 
 
-def run_abi_diff(old_dump_path, new_dump_path, output_path, arch, lib_name,
+def run_abi_diff(old_dump_path, new_dump_path, output_path, arch_str, lib_name,
                  flags):
     abi_diff_cmd = ['header-abi-diff', '-new', new_dump_path, '-old',
-                    old_dump_path, '-arch', arch, '-lib', lib_name,
+                    old_dump_path, '-arch', arch_str, '-lib', lib_name,
                     '-o', output_path]
     abi_diff_cmd += flags
     if '-input-format-old' not in flags:
@@ -319,12 +320,12 @@ def run_abi_diff(old_dump_path, new_dump_path, output_path, arch, lib_name,
     return subprocess.run(abi_diff_cmd).returncode
 
 
-def run_and_read_abi_diff(old_dump_path, new_dump_path, arch, lib_name,
+def run_and_read_abi_diff(old_dump_path, new_dump_path, arch_str, lib_name,
                           flags=tuple()):
     with tempfile.TemporaryDirectory() as tmp:
         output_name = os.path.join(tmp, lib_name) + '.abidiff'
-        result = run_abi_diff(old_dump_path, new_dump_path, output_name, arch,
-                              lib_name, flags)
+        result = run_abi_diff(old_dump_path, new_dump_path, output_name,
+                              arch_str, lib_name, flags)
         with open(output_name, 'r') as output_file:
             return result, output_file.read()
 
