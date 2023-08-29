@@ -24,10 +24,10 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {TimelineData, TimeRange} from 'app/timeline_data';
+import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {Timestamp} from 'trace/timestamp';
+import {TimeRange, Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

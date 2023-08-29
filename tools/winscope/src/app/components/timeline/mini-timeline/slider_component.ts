@@ -27,9 +27,8 @@ import {
   ViewChild,
 } from '@angular/core';
 import {Color} from 'app/colors';
-import {TimeRange} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'trace/timestamp';
+import {TimeRange, Timestamp} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import {TimeRange} from 'app/timeline_data';
+export interface TimeRange {
+  from: Timestamp;
+  to: Timestamp;
+}
 
 export enum TimestampType {
   ELAPSED = 'ELAPSED',

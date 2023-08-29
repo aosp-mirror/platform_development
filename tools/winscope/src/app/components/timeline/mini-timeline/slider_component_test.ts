@@ -25,10 +25,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {TimeRange} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {dragElement} from 'test/utils';
-import {RealTimestamp} from 'trace/timestamp';
+import {RealTimestamp, TimeRange} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {MIN_SLIDER_WIDTH, SliderComponent} from './slider_component';
 

@@ -17,17 +17,13 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TimeRange, TimestampType} from 'trace/timestamp';
 import {TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 
-export interface TimeRange {
-  from: Timestamp;
-  to: Timestamp;
-}
 const INVALID_TIMESTAMP = 0n;
 
 export class TimelineData {

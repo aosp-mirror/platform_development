@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {TimeRange} from 'app/timeline_data';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TimeRange, Timestamp, TimestampType} from 'trace/timestamp';
 import {Segment} from '../utils';
 
 export class Transformer {
