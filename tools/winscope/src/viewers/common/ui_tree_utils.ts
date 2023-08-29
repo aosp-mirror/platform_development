@@ -88,7 +88,7 @@ export class UiTreeUtils {
   }
 
   static isVisibleNode(kind: string, type?: string): boolean {
-    return kind === 'WindowState' || kind === 'Activity' || this.isSFEntryNode(type);
+    return kind === 'WindowState' || kind === 'Activity' || UiTreeUtils.isSFEntryNode(type);
   }
 
   private static isSFEntryNode(type?: string): boolean {
