@@ -16,8 +16,16 @@
 
 import {OnProgressUpdateType} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {Device} from './connection';
 import {ConfigMap} from './trace_collection_utils';
+
+export interface Device {
+  [key: string]: DeviceProperties;
+}
+
+export interface DeviceProperties {
+  authorised: boolean;
+  model: string;
+}
 
 export enum ProxyState {
   ERROR = 0,
