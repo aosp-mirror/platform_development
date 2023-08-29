@@ -22,7 +22,6 @@ import {
   toActiveBuffer,
   toColor,
   toCropRect,
-  toRect,
   toRectF,
   toRegion,
 } from '../common';
