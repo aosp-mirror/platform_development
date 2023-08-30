@@ -15,7 +15,7 @@
  */
 import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {Rectangle} from 'viewers/common/rectangle';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
 import {Distance2D} from './types3d';
@@ -89,9 +89,13 @@ import {Distance2D} from './types3d';
         <canvas
           class="large-rects-canvas"
           (click)="onRectClick($event)"
+          (dblclick)="onRectDblClick($event)"
           oncontextmenu="return false"></canvas>
         <div class="large-rects-labels"></div>
-        <canvas class="mini-rects-canvas" oncontextmenu="return false"></canvas>
+        <canvas
+          class="mini-rects-canvas"
+          (dblclick)="onMiniRectDblClick($event)"
+          oncontextmenu="return false"></canvas>
       </div>
       <div *ngIf="internalDisplayIds.length > 1" class="display-button-container">
         <button
@@ -322,6 +326,37 @@ export class RectsComponent implements OnInit, OnDestroy {
   onRectClick(event: MouseEvent) {
     event.preventDefault();
 
+    const id = this.findClickedRectId(event);
+    if (id !== undefined) {
+      this.notifyHighlightedItem(id);
+    }
+  }
+
+  onRectDblClick(event: MouseEvent) {
+    event.preventDefault();
+
+    const clickedRectId = this.findClickedRectId(event);
+    if (clickedRectId === undefined) {
+      return;
+    }
+
+    this.elementRef.nativeElement.dispatchEvent(
+      new CustomEvent(ViewerEvents.RectsDblClick, {
+        bubbles: true,
+        detail: new RectDblClickDetail(clickedRectId),
+      })
+    );
+  }
+
+  onMiniRectDblClick(event: MouseEvent) {
+    event.preventDefault();
+
+    this.elementRef.nativeElement.dispatchEvent(
+      new CustomEvent(ViewerEvents.MiniRectsDblClick, {bubbles: true})
+    );
+  }
+
+  private findClickedRectId(event: MouseEvent): string | undefined {
     const canvas = event.target as Element;
     const canvasOffset = canvas.getBoundingClientRect();
 
@@ -329,16 +364,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     const y = -((event.clientY - canvasOffset.top) / canvas.clientHeight) * 2 + 1;
     const z = 0;
 
-    const id = this.largeRectsCanvas?.getClickedRectId(x, y, z);
-    if (id !== undefined) {
-      this.notifyHighlightedItem(id);
-    }
-  }
-
-  onMiniRectsClick(event: MouseEvent) {
-    event.preventDefault();
-
-    // TODO: Go to SurfaceFlingerViewer
+    return this.largeRectsCanvas?.getClickedRectId(x, y, z);
   }
 
   private doZoomIn() {
