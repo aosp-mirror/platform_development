@@ -14,57 +14,49 @@
  * limitations under the License.
  */
 
-import {DisplayContent, DisplayCutout, Rect, Rotation, toInsets, toRect} from '../common';
+import {
+  DisplayContent,
+  DisplayCutout,
+  Rect,
+  Rotation,
+  toInsets,
+  toRect,
+  WindowContainer,
+} from '../common';
 import {shortenName} from '../mixin';
-import {WindowContainer} from './WindowContainer';
 
-DisplayContent.fromProto = (
-  proto: any,
-  isActivityInTree: boolean,
-  nextSeq: () => number
-): DisplayContent => {
-  if (proto == null) {
-    return null;
-  } else {
-    const windowContainer = WindowContainer.fromProto(
-      /* proto */ proto.rootDisplayArea.windowContainer,
-      /* protoChildren */ proto.rootDisplayArea.windowContainer?.children ?? [],
-      /* isActivityInTree */ isActivityInTree,
-      /* computedZ */ nextSeq,
-      /* nameOverride */ proto.displayInfo?.name ?? null
-    );
-    const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
-    const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;
-    const appRectWidth = proto.displayInfo?.appWidth ?? 0;
-    const appRectHeight = proto.displayInfo?.appHeight ?? 0;
-    const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null;
-    const movementBounds = proto.pinnedStackController?.movementBounds ?? null;
+DisplayContent.fromProto = (windowContainer: WindowContainer, proto: any): DisplayContent => {
+  const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
+  const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;
+  const appRectWidth = proto.displayInfo?.appWidth ?? 0;
+  const appRectHeight = proto.displayInfo?.appHeight ?? 0;
+  const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null;
+  const movementBounds = proto.pinnedStackController?.movementBounds ?? null;
 
-    const entry = new DisplayContent(
-      proto.id,
-      proto.focusedRootTaskId,
-      proto.resumedActivity?.title ?? '',
-      proto.singleTaskInstance,
-      toRect(defaultBounds),
-      toRect(movementBounds),
-      new Rect(0, 0, displayRectWidth, displayRectHeight),
-      new Rect(0, 0, appRectWidth, appRectHeight),
-      proto.dpi,
-      proto.displayInfo?.flags ?? 0,
-      toRect(proto.displayFrames?.stableBounds),
-      proto.surfaceSize,
-      proto.focusedApp,
-      proto.appTransition?.lastUsedAppTransition ?? '',
-      proto.appTransition?.appTransitionState ?? '',
-      Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
-      proto.displayRotation?.lastOrientation ?? 0,
-      createDisplayCutout(proto.displayInfo?.cutout),
-      windowContainer
-    );
+  const entry = new DisplayContent(
+    proto.id,
+    proto.focusedRootTaskId,
+    proto.resumedActivity?.title ?? '',
+    proto.singleTaskInstance,
+    toRect(defaultBounds),
+    toRect(movementBounds),
+    new Rect(0, 0, displayRectWidth, displayRectHeight),
+    new Rect(0, 0, appRectWidth, appRectHeight),
+    proto.dpi,
+    proto.displayInfo?.flags ?? 0,
+    toRect(proto.displayFrames?.stableBounds),
+    proto.surfaceSize,
+    proto.focusedApp,
+    proto.appTransition?.lastUsedAppTransition ?? '',
+    proto.appTransition?.appTransitionState ?? '',
+    Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
+    proto.displayRotation?.lastOrientation ?? 0,
+    createDisplayCutout(proto.displayInfo?.cutout),
+    windowContainer
+  );
 
-    addAttributes(entry, proto);
-    return entry;
-  }
+  addAttributes(entry, proto);
+  return entry;
 };
 
 function createDisplayCutout(proto: any | null): DisplayCutout | null {
