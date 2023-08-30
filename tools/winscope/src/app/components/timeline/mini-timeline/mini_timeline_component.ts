@@ -26,8 +26,8 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {TimeRange, Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
-import {TimeRange, Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

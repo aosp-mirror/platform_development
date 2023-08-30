@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {CrossPlatform, ShellTransitionData, Transition, WmTransitionData} from 'flickerlib/common';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ShellTransitionsTraceFileProto} from './proto_types';

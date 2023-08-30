@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+import {TimestampType} from 'common/time';
 import {ProgressListener} from 'interfaces/progress_listener';
 import {ParserError, ParserErrorType, ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {Parser} from 'trace/parser';
-import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';

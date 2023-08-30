@@ -15,10 +15,10 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
+import {RealTimestamp} from 'common/time';
 import {OnBugreportReceived, RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
 import {OnTimestampReceived, RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
 import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
-import {RealTimestamp} from 'trace/timestamp';
 import {Message, MessageBugReport, MessagePong, MessageTimestamp, MessageType} from './messages';
 import {OriginAllowList} from './origin_allow_list';
 

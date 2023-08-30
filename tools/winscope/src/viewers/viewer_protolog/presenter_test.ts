@@ -16,10 +16,10 @@
 
 import {TracePositionUpdate} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp} from 'common/time';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {LogMessage} from 'trace/protolog';
-import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';

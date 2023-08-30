@@ -15,6 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {Timestamp, TimestampType} from '../common/time';
 import {FrameMap} from './frame_map';
 import {
   AbsoluteEntryIndex,
@@ -24,7 +25,6 @@ import {
   RelativeEntryIndex,
 } from './index_types';
 import {Parser} from './parser';
-import {Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
 
 export {

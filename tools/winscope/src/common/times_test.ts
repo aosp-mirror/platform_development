@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from './timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from './time';
 
 describe('Timestamp', () => {
   describe('from', () => {

@@ -16,14 +16,8 @@
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {isPointInRect} from 'common/geometry_utils';
+import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
-import {
-  ElapsedTimestamp,
-  RealTimestamp,
-  TimeRange,
-  Timestamp,
-  TimestampType,
-} from 'trace/timestamp';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

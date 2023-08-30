@@ -28,7 +28,7 @@ import {
 } from '@angular/core';
 import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, Timestamp} from 'trace/timestamp';
+import {TimeRange, Timestamp} from 'common/time';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 

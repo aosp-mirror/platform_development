@@ -15,12 +15,12 @@
  */
 
 import {TracePositionUpdate} from 'app/app_event';
+import {RealTimestamp} from 'common/time';
 import {WindowManagerState} from 'flickerlib/common';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';

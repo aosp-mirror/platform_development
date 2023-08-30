@@ -16,9 +16,9 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {ObjectUtils} from 'common/object_utils';
+import {Timestamp, TimestampType} from 'common/time';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 

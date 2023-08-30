@@ -16,7 +16,7 @@
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {isPointInRect} from 'common/geometry_utils';
-import {TimeRange, Timestamp} from 'trace/timestamp';
+import {TimeRange, Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';

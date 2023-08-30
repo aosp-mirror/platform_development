@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TimeRange, Timestamp, TimestampType} from 'trace/timestamp';
+import {TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Segment} from '../utils';
 
 export class Transformer {
