@@ -99,12 +99,6 @@ export class Canvas {
 
     // set various factors for shading and shifting
     this.drawRects(scene.rects);
-
-    this.renderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.compile(this.scene, this.camera);
-    this.renderer.render(this.scene, this.camera);
-
     if (this.canvasLabels) {
       this.drawLabels(scene.labels);
 
@@ -112,6 +106,11 @@ export class Canvas {
       this.labelRenderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
       this.labelRenderer.render(this.scene, this.camera);
     }
+
+    this.renderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.compile(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
   }
 
   getClickedRectId(x: number, y: number, z: number): undefined | string {
