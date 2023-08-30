@@ -16,6 +16,7 @@
 
 import {Color} from 'app/colors';
 import {TRACE_INFO} from 'app/trace_info';
+import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {CanvasMouseHandlerImpl} from './canvas_mouse_handler_impl';

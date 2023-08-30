@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-interface Padding {
+export interface Padding {
   top: number;
   right: number;
   bottom: number;

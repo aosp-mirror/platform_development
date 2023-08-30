@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Padding} from 'common/padding';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 
 export interface MiniTimelineDrawer {
