@@ -29,7 +29,6 @@ import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
-import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -338,15 +337,14 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   }
 
   async onDownloadTracesButtonClick() {
-    const traceFiles = await this.makeTraceFilesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traceFiles);
-    const zipFileName = 'winscope.zip';
+    const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const archiveFilename = 'winscope.zip';
 
     const a = document.createElement('a');
     document.body.appendChild(a);
-    const url = window.URL.createObjectURL(zipFileBlob);
+    const url = window.URL.createObjectURL(archiveBlob);
     a.href = url;
-    a.download = zipFileName;
+    a.download = archiveFilename;
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
@@ -382,16 +380,5 @@ export class AppComponent implements AppEventListener, TraceDataListener {
       }
     });
     return activeTrace;
-  }
-
-  private async makeTraceFilesForDownload(): Promise<File[]> {
-    const loadedFiles = this.tracePipeline.getLoadedFiles();
-    return [...loadedFiles.keys()].map((traceType) => {
-      const file = loadedFiles.get(traceType)!;
-      const path = TRACE_INFO[traceType].downloadArchiveDir;
-
-      const newName = path + '/' + FileUtils.removeDirFromFileName(file.file.name);
-      return new File([file.file], newName);
-    });
   }
 }

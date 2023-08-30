@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FileUtils} from 'common/file_utils';
 import {KarmaTestUtils} from 'test/unit/karma_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceFile} from 'trace/trace_file';
@@ -225,6 +226,34 @@ describe('TracePipeline', () => {
     const video = await tracePipeline.getScreenRecordingVideo();
     expect(video).toBeDefined();
     expect(video!.size).toBeGreaterThan(0);
+  });
+
+  it('creates zip archive with loaded trace files', async () => {
+    const traceFiles = [
+      new TraceFile(
+        await KarmaTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+        )
+      ),
+      new TraceFile(
+        await KarmaTestUtils.getFixtureFile('traces/perfetto/transactions_trace.perfetto-trace')
+      ),
+    ];
+    await tracePipeline.loadTraceFiles(traceFiles);
+    const archiveBlob = await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const actualFiles = await FileUtils.unzipFile(archiveBlob);
+    const actualFilenames = actualFiles
+      .map((file) => {
+        return file.name;
+      })
+      .sort();
+
+    const expectedFilenames = [
+      'screen_recording_metadata_v2.mp4',
+      'transactions_trace.perfetto-trace',
+    ];
+
+    expect(actualFilenames).toEqual(expectedFilenames);
   });
 
   it('can be cleared', async () => {
