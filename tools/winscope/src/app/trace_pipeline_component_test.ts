@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {KarmaTestUtils} from 'test/unit/karma_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
-import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {TracePipeline} from './trace_pipeline';
@@ -28,10 +28,10 @@ describe('TracePipeline', () => {
 
   beforeEach(async () => {
     validSfTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb')
+      await KarmaTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb')
     );
     validWmTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/WindowManager.pb')
+      await KarmaTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/WindowManager.pb')
     );
     tracePipeline = new TracePipeline();
   });
@@ -65,45 +65,45 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
     // Could be any file, we just need an instance of File to be used as a fake bugreport archive
-    const bugreportArchive = await UnitTestUtils.getFixtureFile(
+    const bugreportArchive = await KarmaTestUtils.getFixtureFile(
       'bugreports/bugreport_stripped.zip'
     );
 
     const bugreportFiles = [
       new TraceFile(
-        await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
+        await KarmaTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
         bugreportArchive
       ),
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
           'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
         ),
         bugreportArchive
       ),
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
           'FS/data/misc/wmtrace/surface_flinger.bp'
         ),
         bugreportArchive
       ),
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/Transactions.pb',
           'FS/data/misc/wmtrace/transactions.bp'
         ),
         bugreportArchive
       ),
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/WindowManager.pb',
           'proto/window_CRITICAL.proto'
         ),
         bugreportArchive
       ),
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
           'FS/data/misc/ignored-dir/wm_transition_trace.bp'
         ),
@@ -118,7 +118,7 @@ describe('TracePipeline', () => {
     // The even weirder corner case where two bugreports are loaded at the same time is
     // currently not properly handled.
     const plainTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile(
+      await KarmaTestUtils.getFixtureFile(
         'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
         'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb'
       )
@@ -139,7 +139,7 @@ describe('TracePipeline', () => {
 
   it('is robust to invalid trace files', async () => {
     const invalidTraceFiles = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
+      new TraceFile(await KarmaTestUtils.getFixtureFile('winscope_homepage.png')),
     ];
 
     const errors = await tracePipeline.loadTraceFiles(invalidTraceFiles);
@@ -151,8 +151,8 @@ describe('TracePipeline', () => {
   it('is robust to mixed valid and invalid trace files', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
     const files = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
-      new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
+      new TraceFile(await KarmaTestUtils.getFixtureFile('winscope_homepage.png')),
+      new TraceFile(await KarmaTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
     ];
     const errors = await tracePipeline.loadTraceFiles(files);
     await tracePipeline.buildTraces();
@@ -162,7 +162,7 @@ describe('TracePipeline', () => {
 
   it('is robust to trace files with no entries', async () => {
     const traceFilesWithNoEntries = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb')),
+      new TraceFile(await KarmaTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb')),
     ];
 
     const errors = await tracePipeline.loadTraceFiles(traceFilesWithNoEntries);
@@ -214,7 +214,7 @@ describe('TracePipeline', () => {
   it('gets screenrecording data', async () => {
     const traceFiles = [
       new TraceFile(
-        await UnitTestUtils.getFixtureFile(
+        await KarmaTestUtils.getFixtureFile(
           'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
         )
       ),

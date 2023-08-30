@@ -19,7 +19,7 @@ import {FunctionUtils, OnProgressUpdateType} from './function_utils';
 export type OnFile = (file: File, parentArchive: File | undefined) => void;
 
 class FileUtils {
-  static getFileExtension(file: File) {
+  static getFileExtension(file: File): string | undefined {
     const split = file.name.split('.');
     if (split.length > 1) {
       return split.pop();
@@ -27,7 +27,7 @@ class FileUtils {
     return undefined;
   }
 
-  static removeDirFromFileName(name: string) {
+  static removeDirFromFileName(name: string): string {
     if (name.includes('/')) {
       const startIndex = name.lastIndexOf('/') + 1;
       return name.slice(startIndex);
