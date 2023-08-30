@@ -62,12 +62,12 @@ DEFAULT_OWNERS = "include platform/prebuilts/rust:master:/OWNERS\n"
 METADATA_CONTENT = """name: "{name}"
 description: {description}
 third_party {{
-  url {{
-    type: HOMEPAGE
+  identifier {{
+    type: "crates.io"
     value: "https://crates.io/crates/{name}"
   }}
-  url {{
-    type: ARCHIVE
+  identifier {{
+    type: "Archive"
     value: "https://static.crates.io/crates/{name}/{name}-{version}.crate"
   }}
   version: "{version}"
