@@ -8,7 +8,7 @@
     "eslint:fix": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx eslint --format=unix --fix",
     "tslint:check": "find src/ -regextype egrep -regex '^.*\\.ts$' |xargs npx tslint -c google.tslint.json --exclude 'src/trace_processor/*'",
     "tslint:fix": "find src/ -regextype egrep -regex '^.*\\.ts$' |xargs npx tslint -c google.tslint.json --exclude 'src/trace_processor/*' --fix",
-    "deps_graph:check_cycles": "count=$(npx madge --extensions ts,js src/ --circular 2>&1 | awk '/Found.*circular dependencies/ {print $3}'); test ${count:-0} -le 10",
+    "deps_graph:check_cycles": "npx madge --extensions ts,js src/ --circular",
     "start": "webpack serve --config webpack.config.dev.js --open --hot --port 8080",
     "start:remote_tool_mock": "webpack serve --config src/test/remote_tool_mock/webpack.config.js --open --hot --port 8081",
     "build:kotlin_legacy": "rm -rf deps_build/flickerlib && JAVA_OPTS='-Xmx2g -Xms1g' npx kotlinc-js -Xuse-deprecated-legacy-compiler -source-map -source-map-embed-sources always -module-kind commonjs -output deps_build/flickerlib/flicker.js ../../../platform_testing/libraries/flicker/src/android/tools/common",
