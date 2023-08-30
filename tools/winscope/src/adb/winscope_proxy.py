@@ -47,7 +47,32 @@ LOG_LEVEL = logging.DEBUG
 PORT = 5544
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '1.0'
+VERSION = '1.1'
+
+PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
+PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
+PERFETTO_SF_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy.surfaceflinger.conf'
+PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
+PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
+PERFETTO_UTILS = """
+function is_perfetto_data_source_available {
+    local data_source_name=$1
+    if perfetto --query | grep $data_source_name 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function is_any_perfetto_data_source_available {
+    if is_perfetto_data_source_available android.surfaceflinger.layers || \
+       is_perfetto_data_source_available android.surfaceflinger.transactions; then
+        return 0
+    else
+        return 1
+    fi
+}
+"""
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -132,6 +157,7 @@ class TraceTarget:
         self.trace_start = trace_start
         self.trace_stop = trace_stop
 
+
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
@@ -146,9 +172,22 @@ TRACE_TARGETS = {
     ),
     "layers_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
-        'su root service call SurfaceFlinger 1025 i32 1\necho "SF trace started."',
-        'su root service call SurfaceFlinger 1025 i32 0 >/dev/null 2>&1'
-    ),
+        f"""
+if is_perfetto_data_source_available android.surfaceflinger.layers; then
+    cat {PERFETTO_SF_CONFIG_FILE} >> {PERFETTO_TRACE_CONFIG_FILE}
+    echo 'SF trace (perfetto) configured to start along the other perfetto traces'
+else
+    su root service call SurfaceFlinger 1025 i32 1
+    echo 'SF layers trace (legacy) started'
+fi
+        """,
+        """
+if ! is_perfetto_data_source_available android.surfaceflinger.layers; then
+    su root service call SurfaceFlinger 1025 i32 0 >/dev/null 2>&1
+    echo 'SF layers trace (legacy) stopped.'
+fi
+"""
+),
     "screen_recording": TraceTarget(
         File(f'/data/local/tmp/screen.mp4', "screen_recording"),
         f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
@@ -156,8 +195,29 @@ TRACE_TARGETS = {
     ),
     "transactions": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
-        'su root service call SurfaceFlinger 1041 i32 1\necho "SF transactions recording started."',
-        'su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1'
+        f"""
+if is_perfetto_data_source_available android.surfaceflinger.transaction; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.surfaceflinger.transactions"
+        surfaceflinger_transactions_config: {{
+            mode: MODE_ACTIVE
+        }}
+    }}
+}}
+EOF
+    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces'
+else
+    su root service call SurfaceFlinger 1041 i32 1
+    echo 'SF transactions trace (legacy) started'
+fi
+""",
+        """
+if ! is_perfetto_data_source_available android.surfaceflinger.transaction; then
+    su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1
+fi
+"""
     ),
     "transactions_legacy": TraceTarget(
         [
@@ -203,6 +263,33 @@ TRACE_TARGETS = {
         'su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start\necho "Transition traces started."',
         'su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1'
     ),
+    "perfetto_trace": TraceTarget(
+        File(PERFETTO_TRACE_FILE, "trace.perfetto-trace"),
+        f"""
+if is_any_perfetto_data_source_available; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+buffers: {{
+    size_kb: 100000
+    fill_policy: RING_BUFFER
+}}
+duration_ms: 0
+flush_period_ms: 1000
+write_into_file: true
+max_file_size_bytes: 1000000000
+EOF
+
+    rm -f {PERFETTO_TRACE_FILE}
+    perfetto --out {PERFETTO_TRACE_FILE} --txt --config {PERFETTO_TRACE_CONFIG_FILE} --detach=WINSCOPE-PROXY-TRACING-SESSION
+    echo 'Started perfetto trace'
+fi
+""",
+        """
+if is_any_perfetto_data_source_available; then
+    perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
+    echo 'Stopped perfetto trace'
+fi
+""",
+    )
 }
 
 
@@ -211,16 +298,43 @@ class SurfaceFlingerTraceConfig:
     """
 
     def __init__(self) -> None:
-        self.flags = 0
+        self.flags = []
+        self.perfetto_flags = []
 
     def add(self, config: str) -> None:
-        self.flags |= CONFIG_FLAG[config]
+        self.flags.append(config)
 
     def is_valid(self, config: str) -> bool:
-        return config in CONFIG_FLAG
+        return config in SF_LEGACY_FLAGS_MAP
 
     def command(self) -> str:
-        return f'su root service call SurfaceFlinger 1033 i32 {self.flags}'
+        legacy_flags = 0
+        for flag in self.flags:
+            legacy_flags |= SF_LEGACY_FLAGS_MAP[flag]
+
+        perfetto_flags = "\n".join([f"""trace_flags: {SF_PERFETTO_FLAGS_MAP[flag]}""" for flag in self.flags])
+
+        return f"""
+{PERFETTO_UTILS}
+
+if is_perfetto_data_source_available android.surfaceflinger.layers; then
+    cat << EOF > {PERFETTO_SF_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.surfaceflinger.layers"
+        surfaceflinger_layers_config: {{
+            mode: MODE_ACTIVE
+            {perfetto_flags}
+        }}
+    }}
+}}
+EOF
+    echo 'SF trace (perfetto) configured.'
+else
+    su root service call SurfaceFlinger 1033 i32 {legacy_flags}
+    echo 'SF trace (legacy) configured'
+fi
+"""
 
 class SurfaceFlingerTraceSelectedConfig:
     """Handles optional selected configuration for surfaceflinger traces.
@@ -269,13 +383,22 @@ class WindowManagerTraceSelectedConfig:
         return f'su root cmd window tracing {self.selectedConfigs["tracingtype"]}'
 
 
-CONFIG_FLAG = {
+SF_LEGACY_FLAGS_MAP = {
     "input": 1 << 1,
     "composition": 1 << 2,
     "metadata": 1 << 3,
     "hwc": 1 << 4,
     "tracebuffers": 1 << 5,
     "virtualdisplays": 1 << 6
+}
+
+SF_PERFETTO_FLAGS_MAP = {
+    "input": "TRACE_FLAG_INPUT",
+    "composition": "TRACE_FLAG_COMPOSITION",
+    "metadata": "TRACE_FLAG_EXTRA",
+    "hwc": "TRACE_FLAG_HWC",
+    "tracebuffers": "TRACE_FLAG_BUFFERS",
+    "virtualdisplays": "TRACE_FLAG_VIRTUAL_DISPLAYS",
 }
 
 #Keep up to date with options in DataAdb.vue
@@ -310,9 +433,50 @@ DUMP_TARGETS = {
         File(f'/data/local/tmp/wm_dump{WINSCOPE_EXT}', "window_dump"),
         f'su root dumpsys window --proto > /data/local/tmp/wm_dump{WINSCOPE_EXT}'
     ),
+
     "layers_dump": DumpTarget(
         File(f'/data/local/tmp/sf_dump{WINSCOPE_EXT}', "layers_dump"),
-        f'su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}'
+        f"""
+if is_perfetto_data_source_available android.surfaceflinger.layers; then
+    cat << EOF >> {PERFETTO_DUMP_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.surfaceflinger.layers"
+        surfaceflinger_layers_config: {{
+            mode: MODE_DUMP
+            trace_flags: TRACE_FLAG_INPUT
+            trace_flags: TRACE_FLAG_COMPOSITION
+            trace_flags: TRACE_FLAG_HWC
+            trace_flags: TRACE_FLAG_BUFFERS
+            trace_flags: TRACE_FLAG_VIRTUAL_DISPLAYS
+        }}
+    }}
+}}
+EOF
+    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces'
+else
+    su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}
+fi
+"""
+    ),
+
+    "perfetto_dump": DumpTarget(
+        File(PERFETTO_DUMP_FILE, "dump.perfetto-trace"),
+        f"""
+if is_any_perfetto_data_source_available; then
+    cat << EOF >> {PERFETTO_DUMP_CONFIG_FILE}
+buffers: {{
+    size_kb: 100000
+    fill_policy: RING_BUFFER
+}}
+duration_ms: 1
+EOF
+
+    rm -f {PERFETTO_DUMP_FILE}
+    perfetto --out {PERFETTO_DUMP_FILE} --txt --config {PERFETTO_DUMP_CONFIG_FILE}
+    echo 'Recorded perfetto dump'
+fi
+        """
     )
 }
 
@@ -516,6 +680,18 @@ class DeviceRequestEndpoint(RequestEndpoint):
             raise BadRequest("Content length unreadable\n" + str(err))
         return json.loads(server.rfile.read(length).decode("utf-8"))
 
+    def move_perfetto_target_to_end_of_list(self, targets):
+        # Make sure a perfetto target (if present) comes last in the list of targets, i.e. will
+        # be processed last.
+        # A perfetto target must be processed last, so that perfetto tracing is started only after
+        # the other targets have been processed and have configured the perfetto config file.
+        def is_perfetto_target(target):
+            return target == TRACE_TARGETS["perfetto_trace"] or target == DUMP_TARGETS["perfetto_dump"]
+        non_perfetto_targets = [t for t in targets if not is_perfetto_target(t)]
+        perfetto_targets = [t for t in targets if is_perfetto_target(t)]
+        return non_perfetto_targets + perfetto_targets
+
+
 
 class FetchFilesEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
@@ -541,7 +717,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                     call_adb_outfile('exec-out su root cat ' +
                                      file_path, tmp, device_id)
                     log.debug(f"Deleting file {file_path} from device")
-                    call_adb('shell su root rm ' + file_path, device_id)
+                    call_adb('shell su root rm -f ' + file_path, device_id)
                     log.debug(f"Uploading file {tmp.name}")
                     if file_type not in file_buffers:
                         file_buffers[file_type] = []
@@ -642,6 +818,8 @@ class StartTrace(DeviceRequestEndpoint):
     TRACE_COMMAND = """
 set -e
 
+{perfetto_utils}
+
 echo "Starting trace..."
 echo "TRACE_START" > /data/local/tmp/winscope_status
 
@@ -655,14 +833,17 @@ function stop_trace() {{
 
   set -x
   trap - EXIT HUP INT
-  {}
+  {stop_commands}
   echo "TRACE_OK" > /data/local/tmp/winscope_status
 }}
 
 trap stop_trace EXIT HUP INT
 echo "Signal handler registered."
 
-{}
+# Clear perfetto config file. The start commands below are going to populate it.
+rm -f {perfetto_config_file}
+
+{start_commands}
 
 # ADB shell does not handle hung up well and does not call HUP handler when a child is active in foreground,
 # as a workaround we sleep for short intervals in a loop so the handler is called after a sleep interval.
@@ -674,6 +855,7 @@ while true; do sleep 0.1; done
             requested_types = self.get_request(server)
             log.debug(f"Clienting requested trace types {requested_types}")
             requested_traces = [TRACE_TARGETS[t] for t in requested_types]
+            requested_traces = self.move_perfetto_target_to_end_of_list(requested_traces)
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
         if device_id in TRACE_THREADS:
@@ -684,8 +866,10 @@ while true; do sleep 0.1; done
                 "Unable to acquire root privileges on the device - check the output of 'adb -s {} shell su root id'".format(
                     device_id))
         command = StartTrace.TRACE_COMMAND.format(
-            '\n'.join([t.trace_stop for t in requested_traces]),
-            '\n'.join([t.trace_start for t in requested_traces]))
+            perfetto_utils=PERFETTO_UTILS,
+            stop_commands='\n'.join([t.trace_stop for t in requested_traces]),
+            perfetto_config_file=PERFETTO_TRACE_CONFIG_FILE,
+            start_commands='\n'.join([t.trace_start for t in requested_traces]))
         log.debug("Trace requested for {} with targets {}".format(
             device_id, ','.join(requested_types)))
         log.debug(f"Executing command \"{command}\" on {device_id}...")
@@ -818,6 +1002,7 @@ class DumpEndpoint(DeviceRequestEndpoint):
         try:
             requested_types = self.get_request(server)
             requested_traces = [DUMP_TARGETS[t] for t in requested_types]
+            requested_traces = self.move_perfetto_target_to_end_of_list(requested_traces)
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
         if device_id in TRACE_THREADS:
@@ -826,7 +1011,15 @@ class DumpEndpoint(DeviceRequestEndpoint):
             raise AdbError(
                 "Unable to acquire root privileges on the device - check the output of 'adb -s {} shell su root id'"
                 .format(device_id))
-        command = '\n'.join(t.dump_command for t in requested_traces)
+        dump_commands = '\n'.join(t.dump_command for t in requested_traces)
+        command = f"""
+{PERFETTO_UTILS}
+
+# Clear perfetto config file. The commands below are going to populate it.
+rm -f {PERFETTO_DUMP_CONFIG_FILE}
+
+{dump_commands}
+"""
         shell = ['adb', '-s', device_id, 'shell']
         log.debug("Starting dump shell {}".format(' '.join(shell)))
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
