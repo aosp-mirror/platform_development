@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 <!-- This test config file is auto-generated. -->
-<configuration description="Runs AconfigDemoUnitTests2.">
+<configuration description="Runs AconfigDemoUnitTests.">
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="run-command" value="pm uninstall com.example.android.aconfig.demo" />
         <option name="run-command" value="pm uninstall com.example.android.aconfig.demo.tests" />
@@ -22,8 +22,8 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="AconfigDemoUnitTests2.apk" />
-        <option name="test-file-name" value="AconfigDemoActivityTest2.apk" />
+        <option name="test-file-name" value="AconfigDemoUnitTests.apk" />
+        <option name="test-file-name" value="AconfigDemoActivity.apk" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
