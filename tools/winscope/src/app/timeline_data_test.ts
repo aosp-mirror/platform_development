@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {TracesBuilder} from 'test/unit/traces_builder';
-import {RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {TimelineData} from './timeline_data';

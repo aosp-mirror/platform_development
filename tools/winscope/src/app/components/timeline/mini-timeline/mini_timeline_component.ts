@@ -24,14 +24,15 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {TimelineData, TimeRange} from 'app/timeline_data';
+import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {TimeRange, Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
-import {Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
+import {MiniTimelineDrawerImpl} from './drawer/mini_timeline_drawer_impl';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
 import {Transformer} from './transformer';
 
@@ -111,7 +112,7 @@ export class MiniTimelineComponent {
       this.onTracePositionUpdate.emit(TracePosition.fromTimestamp(timestamp));
     };
 
-    this.drawer = new MiniTimelineDrawer(
+    this.drawer = new MiniTimelineDrawerImpl(
       this.canvas,
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),

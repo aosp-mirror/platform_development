@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 
 export class TimeUtils {
   static compareFn(a: Timestamp, b: Timestamp): number {

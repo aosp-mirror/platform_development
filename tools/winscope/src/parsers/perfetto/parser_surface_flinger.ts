@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import {assertDefined, assertTrue} from 'common/assert_utils';
+import {TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {winscopeJson} from 'parsers/proto_types';
-import {TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';

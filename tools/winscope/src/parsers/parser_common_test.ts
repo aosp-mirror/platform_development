@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {CommonTestUtils} from 'test/common/utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {ParserFactory} from './parser_factory';

@@ -18,6 +18,7 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {TimestampType} from 'common/time';
 import {
   CrossPlatform,
   ShellTransitionData,
@@ -26,7 +27,6 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
-import {TimestampType} from 'trace/timestamp';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 

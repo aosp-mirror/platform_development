@@ -15,8 +15,14 @@
  */
 
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {proxyClient, ProxyEndpoint, proxyRequest, ProxyState} from 'trace_collection/proxy_client';
-import {Connection, DeviceProperties} from './connection';
+import {
+  DeviceProperties,
+  proxyClient,
+  ProxyEndpoint,
+  proxyRequest,
+  ProxyState,
+} from 'trace_collection/proxy_client';
+import {Connection} from './connection';
 import {ConfigMap} from './trace_collection_utils';
 import {TracingConfig} from './tracing_config';
 

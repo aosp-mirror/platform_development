@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import {TimestampType} from 'common/time';
 import {LayerTraceEntry, WindowManagerState} from 'flickerlib/common';
 import {ParserFactory} from 'parsers/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {CommonTestUtils} from 'test/common/utils';
 import {Parser} from 'trace/parser';
-import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -42,7 +42,7 @@ class UnitTestUtils extends CommonTestUtils {
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
-      .toEqual(1);
+      .toBeGreaterThanOrEqual(1);
     return parsers[0].parser;
   }
 

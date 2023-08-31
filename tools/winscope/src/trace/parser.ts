@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from '../common/time';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
-import {Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
 
 export interface Parser<T> {

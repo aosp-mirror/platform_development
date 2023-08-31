@@ -15,9 +15,9 @@
  */
 
 import {ObjectUtils} from 'common/object_utils';
+import {RealTimestamp, Timestamp, TimestampType} from '../common/time';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';
-import {RealTimestamp, Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
 
 export class ParserMock<T> implements Parser<T> {

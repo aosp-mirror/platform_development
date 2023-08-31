@@ -25,9 +25,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {RealTimestamp} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
-import {RealTimestamp} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {DefaultTimelineRowComponent} from './default_timeline_row_component';
 

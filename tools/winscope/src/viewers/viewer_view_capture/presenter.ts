@@ -89,11 +89,12 @@ export class Presenter {
   );
 
   constructor(
+    traceType: TraceType,
     traces: Traces,
     private readonly storage: Storage,
     private readonly notifyUiDataCallback: (data: UiData) => void
   ) {
-    this.viewCaptureTrace = assertDefined(traces.getTrace(TraceType.VIEW_CAPTURE));
+    this.viewCaptureTrace = assertDefined(traces.getTrace(traceType));
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 

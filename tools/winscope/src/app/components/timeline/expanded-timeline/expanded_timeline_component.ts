@@ -27,7 +27,7 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {Timestamp} from 'trace/timestamp';
+import {Timestamp} from 'common/time';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

@@ -15,9 +15,9 @@
  */
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {StringUtils} from 'common/string_utils';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';

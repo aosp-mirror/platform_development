@@ -482,7 +482,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
   private requestedTraces() {
     const tracesFromCollection: string[] = [];
     const tracingConfig = this.tracingConfig.getTraceConfig();
-    const req = Object.keys(tracingConfig).filter((traceKey: string) => {
+    const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
       const traceConfig = tracingConfig[traceKey];
       if (traceConfig.isTraceCollection) {
         traceConfig.config?.enableConfigs.forEach((innerTrace: EnableConfiguration) => {
@@ -494,14 +494,18 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
       }
       return traceConfig.run;
     });
-    return req.concat(tracesFromCollection);
+    requested.push(...tracesFromCollection);
+    requested.push('perfetto_trace'); // always start/stop/fetch perfetto trace
+    return requested;
   }
 
   private requestedDumps() {
     const dumpConfig = this.tracingConfig.getDumpConfig();
-    return Object.keys(dumpConfig).filter((dumpKey: string) => {
+    const requested = Object.keys(dumpConfig).filter((dumpKey: string) => {
       return dumpConfig[dumpKey].run;
     });
+    requested.push('perfetto_dump'); // always dump/fetch perfetto dump
+    return requested;
   }
 
   private requestedEnableConfig(): string[] {

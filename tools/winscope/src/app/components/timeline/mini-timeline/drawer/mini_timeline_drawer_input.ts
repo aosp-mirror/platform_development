@@ -1,6 +1,6 @@
-import {TimelineData, TimeRange} from 'app/timeline_data';
+import {TimelineData} from 'app/timeline_data';
+import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';

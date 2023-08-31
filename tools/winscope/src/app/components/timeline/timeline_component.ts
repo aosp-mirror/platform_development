@@ -33,13 +33,13 @@ import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {StringUtils} from 'common/string_utils';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {
   OnTracePositionUpdate,
   TracePositionUpdateEmitter,
 } from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';

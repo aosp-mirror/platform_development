@@ -33,13 +33,21 @@ class KarmaTestUtils {
   }
 
   static async getPerfettoParsers(fixturePath: string): Promise<Array<Parser<object>>> {
-    const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + fixturePath;
+    const file = await KarmaTestUtils.getFixtureFile(fixturePath);
+    const traceFile = new TraceFile(file);
+    return await new PerfettoParserFactory().createParsers(traceFile);
+  }
+
+  static async getFixtureFile(
+    srcFilename: string,
+    dstFilename: string = srcFilename
+  ): Promise<File> {
+    const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
     const response = await fetch(url);
     expect(response.ok).toBeTrue();
     const blob = await response.blob();
-    const file = new File([blob], 'temp-downloaded.perfetto-trace');
-    const traceFile = new TraceFile(file);
-    return await new PerfettoParserFactory().createParsers(traceFile);
+    const file = new File([blob], dstFilename);
+    return file;
   }
 }
 

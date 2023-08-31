@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
 import {FrameMap} from 'trace/frame_map';
 import {FrameMapBuilder} from 'trace/frame_map_builder';
 import {AbsoluteEntryIndex, AbsoluteFrameIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {ParserMock} from 'trace/parser_mock';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 

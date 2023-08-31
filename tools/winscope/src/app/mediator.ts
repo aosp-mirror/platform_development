@@ -15,6 +15,7 @@
  */
 
 import {FileUtils, OnFile} from 'common/file_utils';
+import {Timestamp, TimestampType} from 'common/time';
 import {AppEventEmitter} from 'interfaces/app_event_emitter';
 import {AppEventListener} from 'interfaces/app_event_listener';
 import {BuganizerAttachmentsDownloadEmitter} from 'interfaces/buganizer_attachments_download_emitter';
@@ -27,7 +28,6 @@ import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {TracePositionUpdateEmitter} from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {UserNotificationListener} from 'interfaces/user_notification_listener';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TracePosition} from 'trace/trace_position';
 import {Viewer} from 'viewers/viewer';

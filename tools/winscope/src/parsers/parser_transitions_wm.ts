@@ -1,3 +1,4 @@
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {
   CrossPlatform,
   ShellTransitionData,
@@ -6,7 +7,6 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {WmTransitionsTraceFileProto} from './proto_types';
