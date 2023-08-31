@@ -289,8 +289,8 @@ export class Mediator {
       })
     );
 
-    // Set position as soon as the viewers are created
-    await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
+    // Set position to initialize viewers as soon as they are created
+    await this.propagateTracePosition(this.getTracePositionForViewersInitialization(), true);
 
     this.appComponent.onTraceDataLoaded(this.viewers);
     this.isTraceDataVisualized = true;
@@ -298,6 +298,34 @@ export class Mediator {
     if (this.lastRemoteToolTimestampReceived !== undefined) {
       await this.onRemoteTimestampReceived(this.lastRemoteToolTimestampReceived);
     }
+  }
+
+  private getTracePositionForViewersInitialization(): TracePosition | undefined {
+    const position = this.timelineData.getCurrentPosition();
+    if (position) {
+      return position;
+    }
+
+    // TimelineData might not provide a TracePosition because all the loaded traces are
+    // dumps with invalid timestamps (value zero). In this case let's create a TracePosition
+    // out of any timestamp from the loaded traces (if available).
+    const firstTimestamps = this.tracePipeline
+      .getTraces()
+      .mapTrace((trace) => {
+        if (trace.lengthEntries > 0) {
+          return trace.getEntry(0).getTimestamp();
+        }
+        return undefined;
+      })
+      .filter((timestamp) => {
+        return timestamp !== undefined;
+      }) as Timestamp[];
+
+    if (firstTimestamps.length > 0) {
+      return TracePosition.fromTimestamp(firstTimestamps[0]);
+    }
+
+    return undefined;
   }
 
   private resetAppToInitialState() {
