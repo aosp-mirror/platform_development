@@ -39,7 +39,7 @@ describe('TraceViewComponent', () => {
     component = fixture.componentInstance;
     component.viewers = [
       new ViewerStub('Title0', 'Content0', [TraceType.SURFACE_FLINGER]),
-      new ViewerStub('Title1', 'Content1', [TraceType.VIEW_CAPTURE]),
+      new ViewerStub('Title1', 'Content1', [TraceType.WINDOW_MANAGER]),
     ];
     component.ngOnChanges();
     fixture.detectChanges();
@@ -115,7 +115,7 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE));
+    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
