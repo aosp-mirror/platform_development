@@ -42,14 +42,12 @@ export class TimelineData {
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
-      if (type === TraceType.WINDOW_MANAGER) {
-        // Filter out WindowManager dumps with no timestamp from timeline
-        if (
-          trace.lengthEntries === 1 &&
-          trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
-        ) {
-          return;
-        }
+      // Filter out dumps with invalid timestamp (would mess up the timeline)
+      if (
+        trace.lengthEntries === 1 &&
+        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
+      ) {
+        return;
       }
 
       this.traces.setTrace(type, trace);
