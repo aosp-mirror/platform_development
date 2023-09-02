@@ -24,7 +24,7 @@ java_test_host {
 }
 
 android_test {
-    name: "AconfigDemoUnitTests1",
+    name: "AconfigDemoUnitTests",
     srcs: ["*.java"],
     certificate: "platform",
     static_libs: [
@@ -34,23 +34,7 @@ android_test {
         "platform-test-annotations",
     ],
     manifest: "AndroidManifest.xml",
-    test_config: "AconfigDemoUnitTests1.xml",
-    data: [":AconfigDemoActivityTest1"],
-    instrumentation_for: "AconfigDemoActivityTest1",
-}
-
-android_test {
-    name: "AconfigDemoUnitTests2",
-    srcs: ["*.java"],
-    certificate: "platform",
-    static_libs: [
-        "junit",
-        "androidx.test.runner",
-        "flag-junit-base",
-        "platform-test-annotations",
-    ],
-    manifest: "AndroidManifest.xml",
-    test_config: "AconfigDemoUnitTests2.xml",
-    data: [":AconfigDemoActivityTest2"],
-    instrumentation_for: "AconfigDemoActivityTest2",
+    test_config: "AconfigDemoUnitTests.xml",
+    data: [":AconfigDemoActivity"],
+    instrumentation_for: "AconfigDemoActivity",
 }

@@ -216,6 +216,20 @@ describe('Mediator', () => {
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(2);
   });
 
+  it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
+    spyOn(viewerStub, 'onAppEvent');
+
+    const dumpFile = await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb');
+    await mediator.onWinscopeFilesUploaded([dumpFile]);
+    await mediator.onWinscopeViewTracesRequest();
+
+    expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
+  });
+
   describe('timestamp received from remote tool', () => {
     it('propagates trace position update', async () => {
       await loadTraceFiles();
