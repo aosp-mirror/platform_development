@@ -19,10 +19,15 @@ import {CrossPlatform, ShellTransitionData, Transition, WmTransitionData} from '
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ShellTransitionsTraceFileProto} from './proto_types';
+import { TraceFile } from 'trace/trace_file';
 
 export class ParserTransitionsShell extends AbstractParser {
   private realToElapsedTimeOffsetNs: undefined | bigint;
   private handlerMapping: undefined | Map<number, string>;
+
+  constructor(trace: TraceFile) {
+    super(trace);
+  }
 
   override getTraceType(): TraceType {
     return TraceType.SHELL_TRANSITION;
