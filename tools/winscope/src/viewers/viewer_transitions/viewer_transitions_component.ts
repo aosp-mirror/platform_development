@@ -109,10 +109,7 @@ import {UiData} from './ui_data';
           [isLeaf]="isLeaf"
           [isAlwaysCollapsed]="true">
         </tree-view>
-        <div *ngIf="!uiData.selectedTransitionPropertiesTree">
-          No selected transition.<br />
-          Select the tranitions below.
-        </div>
+        <div *ngIf="!uiData.selectedTransitionPropertiesTree">No selected transition.</div>
       </div>
     </div>
   `,
@@ -121,7 +118,7 @@ import {UiData} from './ui_data';
       .container {
         display: flex;
         flex-grow: 1;
-        flex-direction: column;
+        flex-direction: row;
       }
 
       .entries {
@@ -408,7 +405,7 @@ export class ViewerTransitionsComponent {
     return Math.max(...this.assignRowsToTransitions().values());
   }
 
-  private emitEvent(event: string, data: any) {
+  emitEvent(event: string, data: any) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
       detail: data,
