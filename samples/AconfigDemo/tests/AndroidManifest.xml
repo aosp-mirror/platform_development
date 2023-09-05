@@ -26,7 +26,7 @@
     </application>
 
      <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
-          android:targetPackage="com.example.android.aconfig.demo.tests"
+          android:targetPackage="com.example.android.aconfig.demo"
           android:label="AconfigDemoActivity sample tests">
      </instrumentation>
 </manifest>
