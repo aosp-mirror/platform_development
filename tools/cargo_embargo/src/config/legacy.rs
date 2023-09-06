@@ -35,6 +35,8 @@ pub struct Config {
     #[serde(default)]
     features: String,
     #[serde(default)]
+    host_first_multilib: bool,
+    #[serde(default)]
     no_host: bool,
     patch: Option<PathBuf>,
     #[serde(default = "default_true")]
@@ -62,6 +64,7 @@ impl Config {
         let package_config = PackageConfig {
             device_supported: self.device,
             host_supported: !self.no_host,
+            host_first_multilib: self.host_first_multilib,
             dep_blocklist: self.dependency_blocklist.clone(),
             patch: self.patch.clone(),
             ..Default::default()

@@ -506,6 +506,10 @@ fn crate_to_bp_modules(
             m.props.set("host_supported", true);
         }
 
+        if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
+            m.props.set("compile_multilib", "first");
+        }
+
         m.props.set("crate_name", crate_.name.clone());
         m.props.set("cargo_env_compat", true);
 

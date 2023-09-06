@@ -123,6 +123,9 @@ pub struct PackageConfig {
     /// Whether to compile for host. Defaults to true.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub host_supported: bool,
+    /// Add a `compile_multilib: "first"` property to host modules.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub host_first_multilib: bool,
     /// Generate "rust_library_rlib" instead of "rust_library".
     #[serde(default, skip_serializing_if = "is_false")]
     pub force_rlib: bool,
@@ -155,6 +158,7 @@ impl Default for PackageConfig {
         Self {
             device_supported: true,
             host_supported: true,
+            host_first_multilib: false,
             force_rlib: false,
             no_presubmit: false,
             add_toplevel_block: None,

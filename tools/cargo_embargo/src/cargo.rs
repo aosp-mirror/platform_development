@@ -59,6 +59,11 @@ impl CrateType {
     pub fn is_library(self) -> bool {
         matches!(self, Self::Lib | Self::RLib | Self::DyLib | Self::CDyLib | Self::StaticLib)
     }
+
+    /// Returns whether the crate type is a kind of test.
+    pub fn is_test(self) -> bool {
+        matches!(self, Self::Test | Self::TestNoHarness)
+    }
 }
 
 /// Info extracted from `CargoOut` for a crate.
