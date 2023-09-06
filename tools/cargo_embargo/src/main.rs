@@ -403,7 +403,7 @@ fn crate_to_bp_modules(
 ) -> Result<Vec<BpModule>> {
     let mut modules = Vec::new();
     for crate_type in &crate_.types {
-        let host = if package_cfg.device_supported.unwrap_or(true) { "" } else { "_host" };
+        let host = if package_cfg.device_supported { "" } else { "_host" };
         let rlib = if package_cfg.force_rlib { "_rlib" } else { "" };
         let (module_type, module_name, stem) = match crate_type {
             CrateType::Bin => {
@@ -458,8 +458,8 @@ fn crate_to_bp_modules(
             m.props.set("defaults", vec![defaults.clone()]);
         }
 
-        if package_cfg.host_supported.unwrap_or(true)
-            && package_cfg.device_supported.unwrap_or(true)
+        if package_cfg.host_supported
+            && package_cfg.device_supported
             && module_type != "rust_proc_macro"
         {
             m.props.set("host_supported", true);
@@ -475,7 +475,7 @@ fn crate_to_bp_modules(
         if crate_.types.contains(&CrateType::Test) {
             m.props.set("test_suites", vec!["general-tests"]);
             m.props.set("auto_gen_config", true);
-            if package_cfg.host_supported.unwrap_or(true) {
+            if package_cfg.host_supported {
                 m.props.object("test_options").set("unit_test", !package_cfg.no_presubmit);
             }
         }
