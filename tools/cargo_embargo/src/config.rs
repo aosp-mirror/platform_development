@@ -75,15 +75,15 @@ pub struct Config {
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
 /// Cargo.toml file).
-#[derive(Deserialize, Default)]
+#[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PackageConfig {
     /// Whether to compile for device. Defaults to true.
-    #[serde(default)]
-    pub device_supported: Option<bool>,
+    #[serde(default = "default_true")]
+    pub device_supported: bool,
     /// Whether to compile for host. Defaults to true.
-    #[serde(default)]
-    pub host_supported: Option<bool>,
+    #[serde(default = "default_true")]
+    pub host_supported: bool,
     /// Generate "rust_library_rlib" instead of "rust_library".
     #[serde(default)]
     pub force_rlib: bool,
@@ -106,4 +106,20 @@ pub struct PackageConfig {
     ///     include!(concat!(env!("OUT_DIR"), "/<some_file>.rs"))
     #[serde(default)]
     pub copy_out: bool,
+}
+
+impl Default for PackageConfig {
+    fn default() -> Self {
+        Self {
+            device_supported: true,
+            host_supported: true,
+            force_rlib: false,
+            no_presubmit: false,
+            add_toplevel_block: None,
+            add_module_block: None,
+            dep_blocklist: Default::default(),
+            patch: None,
+            copy_out: false,
+        }
+    }
 }
