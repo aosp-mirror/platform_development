@@ -70,6 +70,8 @@ pub struct Config {
     /// Value to use for every generated library module's `vendor_available` field.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
+    /// Minimum SDK version.
+    pub min_sdk_version: Option<String>,
     /// Map of renames for modules. For example, if a "libfoo" would be generated and there is an
     /// entry ("libfoo", "libbar"), the generated module will be called "libbar" instead.
     ///
@@ -103,6 +105,7 @@ impl Default for Config {
             apex_available: default_apex_available(),
             product_available: true,
             vendor_available: true,
+            min_sdk_version: None,
             module_name_overrides: Default::default(),
             package: Default::default(),
             module_blocklist: Default::default(),

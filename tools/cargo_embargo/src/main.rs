@@ -593,6 +593,12 @@ fn crate_to_bp_modules(
             if cfg.vendor_available {
                 m.props.set("vendor_available", true);
             }
+
+            if package_cfg.device_supported {
+                if let Some(min_sdk_version) = &cfg.min_sdk_version {
+                    m.props.set("min_sdk_version", min_sdk_version.clone());
+                }
+            }
         }
 
         if let Some(visibility) = cfg.module_visibility.get(module_name) {

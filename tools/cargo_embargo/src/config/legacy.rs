@@ -36,6 +36,7 @@ pub struct Config {
     features: String,
     #[serde(default)]
     host_first_multilib: bool,
+    min_sdk_version: Option<String>,
     #[serde(default)]
     no_host: bool,
     patch: Option<PathBuf>,
@@ -80,6 +81,7 @@ impl Config {
             apex_available,
             product_available: self.product_available,
             vendor_available: self.vendor_available,
+            min_sdk_version: self.min_sdk_version.clone(),
             package: [(package_name.to_owned(), package_config)].into_iter().collect(),
             run_cargo,
             ..Default::default()
