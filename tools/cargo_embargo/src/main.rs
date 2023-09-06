@@ -30,6 +30,7 @@ mod bp;
 mod cargo;
 mod config;
 
+use crate::config::legacy;
 use crate::config::Config;
 use crate::config::PackageConfig;
 use anyhow::bail;
@@ -40,6 +41,7 @@ use cargo::{
     cargo_out::parse_cargo_out, metadata::parse_cargo_metadata_file, Crate, CrateType, ExternType,
 };
 use clap::Parser;
+use clap::Subcommand;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -54,7 +56,6 @@ use std::process::Command;
 
 /// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
-#[clap()]
 struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to cargo in $PATH.
     ///
@@ -68,6 +69,19 @@ struct Args {
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
+    #[command(subcommand)]
+    mode: Option<Mode>,
+}
+
+#[derive(Clone, Debug, Subcommand)]
+enum Mode {
+    /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
+    /// config.
+    Convert {
+        package_name: String,
+        #[arg(long)]
+        no_build: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -77,7 +91,27 @@ fn main() -> Result<()> {
         .with_context(|| format!("failed to read file: {:?}", args.cfg))?;
     // Add some basic support for comments to JSON.
     let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
-    let cfg: Config = serde_json::from_str(&json_str).context("failed to parse config")?;
+
+    match args.mode {
+        Some(Mode::Convert { package_name, no_build }) => {
+            let legacy_config: legacy::Config =
+                serde_json::from_str(&json_str).context("failed to parse legacy config")?;
+            let new_config = legacy_config.to_embargo(&package_name, !no_build)?;
+            let new_config_str = serde_json::to_string_pretty(&new_config)
+                .context("failed to serialize new config")?;
+            println!("{}", new_config_str);
+        }
+        None => {
+            run_embargo(args, &json_str)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Runs cargo_embargo with the given JSON configuration string.
+fn run_embargo(args: Args, json_str: &str) -> Result<()> {
+    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
 
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
@@ -659,12 +693,21 @@ mod tests {
                 module_type: "rust_library".to_string(),
                 props: BpProperties {
                     map: [
+                        (
+                            "apex_available".to_string(),
+                            BpValue::List(vec![
+                                BpValue::String("//apex_available:platform".to_string()),
+                                BpValue::String("//apex_available:anyapex".to_string()),
+                            ])
+                        ),
                         ("cargo_env_compat".to_string(), BpValue::Bool(true)),
                         ("crate_name".to_string(), BpValue::String("name".to_string())),
                         ("edition".to_string(), BpValue::String("2021".to_string())),
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libname".to_string())),
+                        ("product_available".to_string(), BpValue::Bool(true)),
                         ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
                     .collect(),
