@@ -202,7 +202,12 @@ export class Presenter {
   static getDisplayRects(entry: LayerTraceEntry): any[] {
     return (
       entry.displays.map((display: any) => {
-        const rect = display.layerStackSpace;
+        const rect = {
+          left: 0,
+          right: display.size.width,
+          top: 0,
+          bottom: display.size.height,
+        } as any;
         rect.label = 'Display';
         if (display.name) {
           rect.label += ` - ${display.name}`;
