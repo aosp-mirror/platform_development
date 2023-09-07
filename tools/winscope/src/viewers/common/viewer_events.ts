@@ -22,4 +22,10 @@ export const ViewerEvents = {
   PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
   PropertiesFilterChange: 'PropertiesFilterChange',
   AdditionalPropertySelected: 'AdditionalPropertySelected',
+  RectsDblClick: 'RectsDblClick',
+  MiniRectsDblClick: 'MiniRectsDblClick',
 };
+
+export class RectDblClickDetail {
+  constructor(public clickedRectId: string) {}
+}

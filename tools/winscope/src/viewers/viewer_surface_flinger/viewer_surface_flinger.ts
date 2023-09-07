@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
+import {AppEvent, TabbedViewSwitchRequest} from 'app/app_event';
+import {FunctionUtils} from 'common/function_utils';
+import {EmitAppEvent} from 'interfaces/app_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {NEXUS_LAUNCHER_PACKAGE_NAME} from 'viewers/common/view_capture_constants';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
+  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
 
@@ -55,14 +59,24 @@ class ViewerSurfaceFlinger implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
       this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
     );
+    this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
+      if ((event as CustomEvent).detail.clickedRectId.includes(NEXUS_LAUNCHER_PACKAGE_NAME)) {
+        this.switchToNexusLauncherViewer();
+      }
+    });
   }
 
   async onAppEvent(event: AppEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent() {
-    // do nothing
+  setEmitAppEvent(callback: EmitAppEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  // TODO: Make this generic by package name once TraceType is not explicitly defined
+  async switchToNexusLauncherViewer() {
+    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY));
   }
 
   getViews(): View[] {
