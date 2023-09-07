@@ -51,7 +51,6 @@ describe('ViewerTransitionsComponent', () => {
   let fixture: ComponentFixture<ViewerTransitionsComponent>;
   let component: ViewerTransitionsComponent;
   let htmlElement: HTMLElement;
-  let mockTransitionIdCounter = 0;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -71,7 +70,6 @@ describe('ViewerTransitionsComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    mockTransitionIdCounter = 0;
     component.uiData = makeUiData();
     fixture.detectChanges();
   });
@@ -182,11 +180,13 @@ describe('ViewerTransitionsComponent', () => {
 });
 
 function makeUiData(): UiData {
+  let mockTransitionIdCounter = 0;
+
   const transitions = [
-    createMockTransition(10, 20, 30),
-    createMockTransition(40, 42, 50),
-    createMockTransition(45, 46, 49),
-    createMockTransition(55, 58, 70),
+    createMockTransition(10, 20, 30, mockTransitionIdCounter++),
+    createMockTransition(40, 42, 50, mockTransitionIdCounter++),
+    createMockTransition(45, 46, 49, mockTransitionIdCounter++),
+    createMockTransition(55, 58, 70, mockTransitionIdCounter++),
   ];
 
   const selectedTransition = undefined;
@@ -204,7 +204,8 @@ function makeUiData(): UiData {
 function createMockTransition(
   createTimeNanos: number,
   sendTimeNanos: number,
-  finishTimeNanos: number
+  finishTimeNanos: number,
+  id: number
 ): Transition {
   const createTime = CrossPlatform.timestamp.fromString(createTimeNanos.toString(), null, null);
   const sendTime = CrossPlatform.timestamp.fromString(sendTimeNanos.toString(), null, null);
@@ -218,7 +219,7 @@ function createMockTransition(
   const changes: TransitionChange[] = [];
 
   return new Transition(
-    mockTransitionIdCounter++,
+    id,
     new WmTransitionData(
       createTime,
       sendTime,
