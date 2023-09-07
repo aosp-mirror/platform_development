@@ -83,11 +83,6 @@ RENAME_MAP = {
     'libx86_64': 'libx86_64_rust',
     'libxml': 'libxml_rust',
     'protoc_gen_rust': 'protoc-gen-rust',
-    # Due to incorrect branching by a downstream project, we cannot
-    # rename libsyn to libsyn_legacy or fully upgrade it to libsyn2
-    # in place. We change the default name to allow the legacy package
-    # to squat on the `libsyn` name.
-    'libsyn': 'libsyn2',
 }
 
 RENAME_STEM_MAP = {
