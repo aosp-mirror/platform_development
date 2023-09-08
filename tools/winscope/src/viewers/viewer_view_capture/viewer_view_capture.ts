@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
+import {AppEvent, TabbedViewSwitchRequest} from 'app/app_event';
+import {FunctionUtils} from 'common/function_utils';
+import {EmitAppEvent} from 'interfaces/app_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -22,9 +24,9 @@ import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-// TODO: Fix "flatten tree hierarchy view" behavior.
 export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
+  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 
@@ -55,14 +57,21 @@ export class ViewerViewCapture implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
       this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
     );
+    this.htmlElement.addEventListener(ViewerEvents.MiniRectsDblClick, (event) => {
+      this.switchToSurfaceFlingerView();
+    });
   }
 
   async onAppEvent(event: AppEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent() {
-    // do nothing
+  setEmitAppEvent(callback: EmitAppEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  async switchToSurfaceFlingerView() {
+    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
   }
 
   getViews(): View[] {

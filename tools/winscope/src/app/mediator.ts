@@ -271,11 +271,14 @@ export class Mediator {
   private async processLoadedTraceFiles() {
     this.currentProgressListener?.onProgressUpdate('Computing frame mapping...', undefined);
 
+    // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
     await new Promise<void>((resolve) => setTimeout(resolve, 10));
 
     await this.tracePipeline.buildTraces();
     this.currentProgressListener?.onOperationFinished();
+
+    this.currentProgressListener?.onProgressUpdate('Initializing UI...', undefined);
 
     this.timelineData.initialize(
       this.tracePipeline.getTraces(),
