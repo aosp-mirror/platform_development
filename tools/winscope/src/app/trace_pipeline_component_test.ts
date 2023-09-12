@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 import {KarmaTestUtils} from 'test/unit/karma_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceFile} from 'trace/trace_file';
@@ -171,6 +172,32 @@ describe('TracePipeline', () => {
 
     expect(errors.length).toEqual(0);
 
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+  });
+
+  it('is robust to multiple trace files of same type', async () => {
+    const traceFilesOfSameType = [
+      new TraceFile(
+        await KarmaTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          'file0.pb'
+        )
+      ),
+      new TraceFile(
+        await KarmaTestUtils.getFixtureFile(
+          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+          'file1.pb'
+        )
+      ),
+    ];
+
+    // Expect one trace to be overridden/discarded
+    const errors = await tracePipeline.loadTraceFiles(traceFilesOfSameType);
+    expect(errors).toEqual([
+      new ParserError(ParserErrorType.OVERRIDE, 'file1.pb', TraceType.SURFACE_FLINGER),
+    ]);
+
+    await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
   });
 
