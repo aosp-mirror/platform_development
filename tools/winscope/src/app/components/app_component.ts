@@ -63,7 +63,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         <button color="primary" mat-button>Open legacy Winscope</button>
       </a>
 
-      <div class="spacer">
+      <div class="trace-descriptor">
         <mat-icon
           *ngIf="dataLoaded && activeTrace"
           class="icon"
@@ -103,7 +103,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
     <mat-divider></mat-divider>
 
-    <mat-drawer-container class="example-container" autosize disableClose autoFocus>
+    <mat-drawer-container autosize disableClose autoFocus>
       <mat-drawer-content>
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
           <trace-view
@@ -165,12 +165,20 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow: auto;
         height: 820px;
       }
-      .spacer {
+      .trace-descriptor {
         flex: 1;
         text-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow-x: hidden;
+      }
+      .trace-descriptor .icon {
+        overflow: unset;
+      }
+      .trace-descriptor .active-trace-file-info {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
       }
       .viewers {
         height: 0;
