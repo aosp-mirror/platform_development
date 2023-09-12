@@ -52,6 +52,7 @@ If there are rustc warning messages, this script will add
 a warning comment to the owner crate module in Android.bp.
 """
 
+from __future__ import annotations
 import argparse
 import glob
 import json
@@ -212,9 +213,9 @@ def escape_quotes(s):  # replace '"' with '\\"'
 class Crate(object):
   """Information of a Rust crate to collect/emit for an Android.bp module."""
 
-  def __init__(self, runner, outf_name):
+  def __init__(self, runner: Runner, outf_name):
     # Remembered global runner and its members.
-    self.runner = runner
+    self.runner: Runner = runner
     self.debug = runner.args.debug
     self.cargo_dir = ''  # directory of my Cargo.toml
     self.outf_name = outf_name  # path to Android.bp
@@ -258,7 +259,7 @@ class Crate(object):
     # convenient way to output one line at a time with EOL.
     self.outf.write(s + '\n')
 
-  def same_flags(self, other):
+  def same_flags(self, other: Crate):
     # host_supported, device_supported, has_warning are not compared but merged
     # target is not compared, to merge different target/host modules
     # externs is not compared; only core_externs is compared
@@ -272,7 +273,7 @@ class Crate(object):
             self.static_libs == other.static_libs and
             self.shared_libs == other.shared_libs and self.cfgs == other.cfgs)
 
-  def merge_host_device(self, other):
+  def merge_host_device(self, other: Crate):
     """Returns true if attributes are the same except host/device support."""
     return (self.crate_name == other.crate_name and
             self.crate_types == other.crate_types and
@@ -282,7 +283,7 @@ class Crate(object):
             self.root_pkg == other.root_pkg and not self.skip_crate() and
             self.same_flags(other))
 
-  def merge_test(self, other):
+  def merge_test(self, other: Crate):
     """Returns true if self and other are tests of same root_pkg."""
     # Before merger, each test has its own crate_name.
     # A merged test uses its source file base name as output file name,
@@ -297,7 +298,7 @@ class Crate(object):
              self.device_supported == other.device_supported) and
             self.same_flags(other))
 
-  def merge(self, other, outf_name):
+  def merge(self, other: Crate, outf_name):
     """Try to merge crate into self."""
     # Cargo build --tests could recompile a library for tests.
     # We need to merge such duplicated calls to rustc, with
@@ -315,7 +316,7 @@ class Crate(object):
       return True
     return False
 
-  def do_merge(self, other, should_merge_test):
+  def do_merge(self, other: Crate, should_merge_test):
     """Merge attributes of other to self."""
     if self.debug:
       self.write('\n// Before merge definition (1):')
@@ -358,7 +359,7 @@ class Crate(object):
           return
         dir_name = os.path.dirname(dir_name)
 
-  def add_codegens_flag(self, flag):
+  def add_codegens_flag(self, flag: str):
     """Ignore options not used in Android."""
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
@@ -1138,7 +1139,7 @@ class CCObject(object):
 class Runner(object):
   """Main class to parse cargo -v output and print Android module definitions."""
 
-  def __init__(self, args):
+  def __init__(self, args: argparse.Namespace):
     self.bp_files = set()  # Remember all output Android.bp files.
     self.root_pkg = ''  # name of package in ./Cargo.toml
     # Saved flags, modes, and data.
@@ -1155,7 +1156,7 @@ class Runner(object):
     self.pkg_obj2cc = {}
     # pkg_obj2cc[cc_object[i].pkg][cc_objects[i].obj] = cc_objects[i]
     self.ar_objects = list()
-    self.crates = list()
+    self.crates: list[Crate] = list()
     self.warning_files = set()
     # Keep a unique mapping from (module name) to crate
     self.name_owners = {}
@@ -1657,7 +1658,7 @@ class Runner(object):
     self.find_warning_owners()
 
 
-def get_parser():
+def get_parser() -> argparse.ArgumentParser:
   """Parse main arguments."""
   parser = argparse.ArgumentParser('cargo2android')
   parser.add_argument(
@@ -1900,7 +1901,7 @@ def get_parser():
   return parser
 
 
-def parse_args(parser):
+def parse_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
   """Parses command-line options."""
   args = parser.parse_args()
   # Use the values specified in a config file if one was found.
@@ -1913,7 +1914,7 @@ def parse_args(parser):
   return args
 
 
-def dump_config(parser, args):
+def dump_config(parser: argparse.ArgumentParser, args):
   """Writes the non-default command-line options to the specified file."""
   args_dict = vars(args)
   # Filter out the arguments that have their default value.
