@@ -983,9 +983,11 @@ class WindowManagerSelectedConfigTrace(DeviceRequestEndpoint):
         setTracingLevel = config.setTracingLevel()
         shell = ['adb', '-s', device_id, 'shell']
         log.debug(f"Starting shell {' '.join(shell)}")
-        execute_command(server, device_id, shell, "wm buffer size", setBufferSize)
         execute_command(server, device_id, shell, "tracing type", setTracingType)
         execute_command(server, device_id, shell, "tracing level", setTracingLevel)
+        # /!\ buffer size must be configured last
+        # otherwise the other configurations might override it
+        execute_command(server, device_id, shell, "wm buffer size", setBufferSize)
 
 
 class StatusEndpoint(DeviceRequestEndpoint):
