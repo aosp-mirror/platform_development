@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
@@ -151,6 +152,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     MatSnackBarModule,
     ScrollingModule,
     DragDropModule,
+    ClipboardModule,
     ReactiveFormsModule,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
