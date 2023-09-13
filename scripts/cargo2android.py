@@ -337,7 +337,7 @@ class Crate(object):
       self.srcs.append(other.main_src)
       # use a short unique name as the merged module name.
       prefix = self.root_pkg + '_tests'
-      self.module_name = self.runner.claim_module_name(prefix, self, 0)
+      self.module_name = self.runner.claim_module_name(prefix, self, 0) + self.runner.args.name_suffix
       self.stem = self.module_name
       # This normalized root_pkg name although might be the same
       # as other module's crate_name, it is not actually used for
@@ -502,7 +502,7 @@ class Crate(object):
     self.shared_libs = sorted(set(self.shared_libs))
     self.crate_types = sorted(set(self.crate_types))
     self.decide_module_type()
-    self.module_name = altered_name(self.stem)
+    self.module_name = altered_name(self.stem) + self.runner.args.name_suffix
     return self
 
   def get_pkg_version(self):
@@ -822,30 +822,30 @@ class Crate(object):
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
       # be renamed to use as a plugin for protoc.
-      self.stem = altered_stem(self.crate_name) + suffix
+      self.stem = altered_stem(self.crate_name) + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'lib':  # rust_library[_host]
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
       self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
       self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
       self.module_type = 'rust_library' + host + '_dylib'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_dylib'
     elif crate_type == 'cdylib':  # rust_library[_host]_shared
       self.module_type = 'rust_ffi' + host + '_shared'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_shared'
     elif crate_type == 'staticlib':  # rust_library[_host]_static
       self.module_type = 'rust_ffi' + host + '_static'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_static'
     elif crate_type == 'test':  # rust_test[_host]
       self.module_type = 'rust_test' + host
@@ -863,12 +863,12 @@ class Crate(object):
         # crate name. We ignore -C and use claim_module_name to get
         # unique sequential suffix.
         self.module_name = self.runner.claim_module_name(
-            self.module_name, self, 0)
+            self.module_name, self, 0) + self.runner.args.name_suffix
         # Now the module name is unique, stem should also match and unique.
         self.stem = self.module_name
     elif crate_type == 'proc-macro':  # rust_proc_macro
       self.module_type = 'rust_proc_macro'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     else:  # unknown module type, rust_prebuilt_dylib? rust_library[_host]?
       self.module_type = ''
@@ -949,6 +949,8 @@ class Crate(object):
         lib_name = re.sub(' .*$', '', lib)
       if lib_name in self.runner.variant_args.dependency_blocklist:
         continue
+      if lib_name in self.runner.args.dep_suffixes:
+        lib_name += self.runner.args.dep_suffixes[lib_name]
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name + dependency_suffix) + '",\n'
@@ -1893,6 +1895,15 @@ def get_parser() -> argparse.ArgumentParser:
       type=str,
       help=('Dump command-line arguments (minus this flag) to a config file and exit. ' +
             'This is intended to help migrate from command line options to config files.'))
+  parser.add_argument(
+      '--name-suffix',
+      type=str,
+      default='',
+      help=('Add this suffix to the module name.'))
+  parser.add_argument(
+      '--dep-suffixes',
+      default={},
+      help=('Add these suffixes to the specified dependencies'))
   parser.add_argument(
       '--config',
       type=str,
