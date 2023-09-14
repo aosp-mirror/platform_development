@@ -36,6 +36,6 @@ declare const require: {
 
 TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
 
-// load all tests of Angular components
-const context = require.context('./', true, /_component_test\.ts$/);
+// filter matches all "*_test.ts" files that are not within the /test/e2e/ directory
+const context = require.context('./', true, /(?<!\/test\/e2e\/.*)_test.ts$/);
 context.keys().forEach(context);
