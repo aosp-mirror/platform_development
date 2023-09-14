@@ -242,7 +242,8 @@ export class Presenter {
       if (zOrderA > zOrderB) return -1;
       if (zOrderA < zOrderB) return 1;
     }
-    return b.zOrderPath.length - a.zOrderPath.length;
+    // When z-order is the same, the layer with larger ID is on top
+    return a.id > b.id ? -1 : 1;
   }
 
   private updateSelectedTreeUiData() {
