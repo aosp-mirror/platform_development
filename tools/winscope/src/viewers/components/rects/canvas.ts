@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from './types3d';
+import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, TransformMatrix} from './types3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -194,7 +194,7 @@ export class Canvas {
     this.scene?.add(labelCss);
   }
 
-  private static toMatrix4(transform: Transform3D): THREE.Matrix4 {
+  private static toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
     return new THREE.Matrix4().set(
       transform.dsdx,
       transform.dsdy,

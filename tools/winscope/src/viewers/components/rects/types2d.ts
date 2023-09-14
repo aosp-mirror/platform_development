@@ -18,10 +18,9 @@ export interface Rectangle {
   topLeft: Point;
   bottomRight: Point;
   label: string;
-  transform: RectTransform | null;
+  transform?: TransformMatrix;
   isVisible: boolean;
   isDisplay: boolean;
-  ref: any;
   id: string;
   displayId: number;
   isVirtual: boolean;
@@ -41,17 +40,7 @@ export interface Size {
   height: number;
 }
 
-export interface RectTransform {
-  matrix?: RectMatrix;
-  dsdx?: number;
-  dsdy?: number;
-  dtdx?: number;
-  dtdy?: number;
-  tx?: number;
-  ty?: number;
-}
-
-export interface RectMatrix {
+export interface TransformMatrix {
   dsdx: number;
   dsdy: number;
   dtdx: number;

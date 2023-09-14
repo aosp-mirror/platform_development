@@ -15,9 +15,9 @@
  */
 import {Layer} from 'flickerlib/common';
 import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {Rectangle} from 'viewers/components/rects/types2d';
 
 export class UiData {
   dependencies: TraceType[];
