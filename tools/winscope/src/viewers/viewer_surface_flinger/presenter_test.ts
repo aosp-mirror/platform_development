@@ -94,7 +94,7 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 0});
-    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 118});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 74});
   });
 
   it('updates pinned items', () => {

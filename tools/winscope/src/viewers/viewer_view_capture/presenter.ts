@@ -18,17 +18,16 @@ import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {LayerTraceEntry, Point} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
+import {SurfaceFlingerUtils} from 'viewers/common/surface_flinger_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {Presenter as SurfaceFlingerPresenter} from 'viewers/viewer_surface_flinger/presenter';
+import {Rectangle} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 export class Presenter {
@@ -113,13 +112,16 @@ export class Presenter {
       this.previousFrameData = await prevVcEntry?.getValue();
 
       if (this.uiData && this.surfaceFlingerTrace) {
-        this.uiData.sfRects = Presenter.generateSurfaceFlingerRectangles(
-          await TraceEntryFinder.findCorrespondingEntry(
-            this.surfaceFlingerTrace,
-            event.position
-          )?.getValue(),
-          this.hierarchyUserOptions
-        );
+        const surfaceFlingerEntry = await TraceEntryFinder.findCorrespondingEntry(
+          this.surfaceFlingerTrace,
+          event.position
+        )?.getValue();
+        if (surfaceFlingerEntry) {
+          this.uiData.sfRects = SurfaceFlingerUtils.makeRects(
+            surfaceFlingerEntry,
+            this.hierarchyUserOptions
+          );
+        }
       }
       this.refreshUI();
     });
@@ -159,16 +161,18 @@ export class Presenter {
 
     function inner(node: any /* ViewNode */) {
       const aRectangle: Rectangle = {
-        topLeft: new Point(node.boxPos.left, node.boxPos.top),
-        bottomRight: new Point(
-          node.boxPos.left + node.boxPos.width,
-          node.boxPos.top + node.boxPos.height
-        ),
+        topLeft: {
+          x: node.boxPos.left,
+          y: node.boxPos.top,
+        },
+        bottomRight: {
+          x: node.boxPos.left + node.boxPos.width,
+          y: node.boxPos.top + node.boxPos.height,
+        },
         label: '',
-        transform: null,
+        transform: undefined,
         isVisible: node.isVisible,
         isDisplay: false,
-        ref: {},
         id: node.id,
         displayId: 0,
         isVirtual: false,
@@ -318,26 +322,5 @@ export class Presenter {
     // won't detect the new input
     const copy = Object.assign({}, this.uiData);
     this.notifyUiDataCallback(copy);
-  }
-
-  private static generateSurfaceFlingerRectangles(
-    entry: LayerTraceEntry,
-    hierarchyUserOptions: UserOptions
-  ): Rectangle[] {
-    const rects = SurfaceFlingerPresenter.getRectsViewLayers(hierarchyUserOptions, entry)
-      .sort(SurfaceFlingerPresenter.compareLayerZ)
-      .map((it: any) => {
-        const rect = it.rect;
-        rect.displayId = it.stackId;
-        rect.cornerRadius = it.cornerRadius;
-        rect.transform = {
-          matrix: rect.transform.matrix,
-        };
-        return rect;
-      });
-
-    return SurfaceFlingerPresenter.rectsToUiData(
-      rects.concat(SurfaceFlingerPresenter.getDisplayRects(entry))
-    );
   }
 }

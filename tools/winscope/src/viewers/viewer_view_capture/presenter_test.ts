@@ -16,7 +16,6 @@
 
 import {TracePositionUpdate} from 'app/app_event';
 import {RealTimestamp, TimestampType} from 'common/time';
-import {Point} from 'flickerlib/common';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -89,8 +88,8 @@ describe('PresenterViewCapture', () => {
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].topLeft).toEqual(new Point(0, 0));
-    expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 249));
+    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 0});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 249});
   });
 
   it('updates pinned items', async () => {
