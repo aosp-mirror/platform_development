@@ -94,10 +94,9 @@ TEST(VersionScriptParserTest, ExcludeSymbolVersions) {
     EXPECT_NE(vars.end(), vars.find("bar2"));
   }
 
-  // excluded_symbol_versions = {"LIBEX_PRIVATE"}
   {
     VersionScriptParser parser;
-    parser.AddExcludedSymbolVersion("LIBEX_PRIVATE");
+    parser.AddExcludedSymbolVersion("*_PRIVATE");
 
     std::istringstream stream(testdata);
     std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
