@@ -18,6 +18,7 @@ package com.example.android.aconfig.demo;
 
 import static com.example.android.aconfig.demo.flags.Flags.appendStaticContent;
 import static com.example.android.aconfig.demo.flags.Flags.thirdFlag;
+import static com.example.android.aconfig.demo.flags.Flags.readOnlyFlag;
 
 public class StaticContent {
 
@@ -37,6 +38,12 @@ public class StaticContent {
             sBuffer.append("The flag: thirdFlag is ON!!\n\n");
         } else {
             sBuffer.append("The flag: thirdFlag is OFF!!\n\n");
+        }
+
+        if (readOnlyFlag()) {
+            sBuffer.append("The flag: read only flag static is ON!!\n\n");
+        } else {
+            sBuffer.append("The flag: read only flag static is OFF!!\n\n");
         }
 
         return sBuffer.toString();
