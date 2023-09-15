@@ -14,12 +14,11 @@
 
 #include "repr/symbol/exported_symbol_set.h"
 
+#include <cxxabi.h>
+
 #include "repr/ir_representation.h"
 #include "utils/stl_utils.h"
 #include "utils/string_utils.h"
-
-#include <fnmatch.h>
-#include <cxxabi.h>
 
 
 namespace header_checker {
@@ -28,24 +27,6 @@ namespace repr {
 
 static inline bool IsCppSymbol(const std::string &name) {
   return utils::StartsWith(name, "_Z");
-}
-
-
-static inline bool HasMatchingGlobPattern(
-    const ExportedSymbolSet::GlobPatternSet &patterns, const char *text) {
-  for (auto &&pattern : patterns) {
-    if (fnmatch(pattern.c_str(), text, 0) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
-
-static inline bool HasMatchingGlobPattern(
-    const ExportedSymbolSet::GlobPatternSet &patterns,
-    const std::string &text) {
-  return HasMatchingGlobPattern(patterns, text.c_str());
 }
 
 
@@ -70,7 +51,7 @@ bool ExportedSymbolSet::HasSymbol(const std::string &name) const {
     return true;
   }
 
-  if (HasMatchingGlobPattern(glob_patterns_, name)) {
+  if (utils::HasMatchingGlobPattern(glob_patterns_, name.c_str())) {
     return true;
   }
 
@@ -86,8 +67,8 @@ bool ExportedSymbolSet::HasSymbol(const std::string &name) const {
         return true;
       }
 
-      if (HasMatchingGlobPattern(demangled_cpp_glob_patterns_,
-                                 demangled_name_c_str.get())) {
+      if (utils::HasMatchingGlobPattern(demangled_cpp_glob_patterns_,
+                                        demangled_name_c_str.get())) {
         return true;
       }
     }
