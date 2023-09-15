@@ -116,8 +116,8 @@ class VersionScriptParser {
   std::string introduced_arch_tag_;
   utils::ApiLevel api_level_;
 
-  std::set<std::string, std::less<>> excluded_symbol_versions_;
-  std::set<std::string, std::less<>> excluded_symbol_tags_;
+  utils::StringSet excluded_symbol_versions_;
+  utils::StringSet excluded_symbol_tags_;
 
   std::istream *stream_;
   int line_no_;

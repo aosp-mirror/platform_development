@@ -16,6 +16,7 @@
 #define EXPORTED_SYMBOL_SET_
 
 #include "repr/ir_representation.h"
+#include <utils/string_utils.h>
 
 #include <functional>
 #include <map>
@@ -31,8 +32,8 @@ class ExportedSymbolSet {
  public:
   using FunctionMap = std::map<std::string, ElfFunctionIR, std::less<>>;
   using VarMap = std::map<std::string, ElfObjectIR, std::less<>>;
-  using NameSet = std::set<std::string, std::less<>>;
-  using GlobPatternSet = std::set<std::string, std::less<>>;
+  using NameSet = utils::StringSet;
+  using GlobPatternSet = utils::StringSet;
 
 
  public:
