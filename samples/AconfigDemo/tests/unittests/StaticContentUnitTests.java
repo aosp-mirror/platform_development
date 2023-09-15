@@ -34,6 +34,7 @@ public final class StaticContentUnitTests {
     public void staticContent_enable_staticFlag_disable_thirdFlag() throws Exception {
         mSetFlagsRule.enableFlags(Flags.FLAG_APPEND_STATIC_CONTENT);
         mSetFlagsRule.disableFlags(Flags.FLAG_THIRD_FLAG);
+        mSetFlagsRule.disableFlags(Flags.FLAG_READ_ONLY_FLAG);
         StaticContent statiContent = new StaticContent();
         String ret = statiContent.getContent();
         StringBuilder expected = new StringBuilder();
