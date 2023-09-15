@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
-import {Rectangle} from 'viewers/common/rectangle';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {Rectangle} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
 import {Distance2D} from './types3d';

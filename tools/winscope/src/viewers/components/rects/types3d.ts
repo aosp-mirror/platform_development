@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import {TransformMatrix} from 'viewers/components/rects/types2d';
+
+export {TransformMatrix};
+
 export enum ColorType {
   VISIBLE,
   NOT_VISIBLE,
@@ -41,17 +45,8 @@ export interface Rect3D {
   darkFactor: number;
   colorType: ColorType;
   isClickable: boolean;
-  transform: Transform3D;
+  transform: TransformMatrix;
   isOversized: boolean;
-}
-
-export interface Transform3D {
-  dsdx: number;
-  dsdy: number;
-  tx: number;
-  dtdx: number;
-  dtdy: number;
-  ty: number;
 }
 
 export interface Point3D {
