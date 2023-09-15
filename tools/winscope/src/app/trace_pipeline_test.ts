@@ -16,26 +16,30 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {UserNotificationListenerStub} from 'interfaces/user_notification_listener_stub';
 import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {TracePipeline} from './trace_pipeline';
 
 describe('TracePipeline', () => {
-  let validSfTraceFile: TraceFile;
-  let validWmTraceFile: TraceFile;
+  let validSfFile: File;
+  let validWmFile: File;
+  let userNotificationListener: UserNotificationListenerStub;
+  let parserErrorsSpy: jasmine.Spy<(errors: ParserError[]) => void>;
   let tracePipeline: TracePipeline;
 
   beforeEach(async () => {
-    validSfTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb')
+    validSfFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
     );
-    validWmTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/WindowManager.pb')
+    validWmFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/WindowManager.pb'
     );
-    tracePipeline = new TracePipeline();
+    userNotificationListener = new UserNotificationListenerStub();
+    parserErrorsSpy = spyOn(userNotificationListener, 'onParserErrors');
+    tracePipeline = new TracePipeline(userNotificationListener);
   });
 
   it('can load valid trace files', async () => {
@@ -53,82 +57,62 @@ describe('TracePipeline', () => {
   it('can load a new file without dropping already-loaded traces', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
-    await tracePipeline.loadTraceFiles([validSfTraceFile]);
+    await tracePipeline.loadFiles([validSfFile]);
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
 
-    await tracePipeline.loadTraceFiles([validWmTraceFile]);
+    await tracePipeline.loadFiles([validWmFile]);
     expect(tracePipeline.getTraces().getSize()).toEqual(2);
 
-    await tracePipeline.loadTraceFiles([validWmTraceFile]); // ignored (duplicated)
+    await tracePipeline.loadFiles([validWmFile]); // ignored (duplicated)
     expect(tracePipeline.getTraces().getSize()).toEqual(2);
   });
 
   it('can load bugreport and ignores non-trace dirs', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
 
-    // Could be any file, we just need an instance of File to be used as a fake bugreport archive
-    const bugreportArchive = await UnitTestUtils.getFixtureFile(
-      'bugreports/bugreport_stripped.zip'
-    );
-
     const bugreportFiles = [
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
-        bugreportArchive
+      await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
+      await UnitTestUtils.getFixtureFile(
+        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-          'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
-        ),
-        bugreportArchive
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'FS/data/misc/wmtrace/surface_flinger.bp'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-          'FS/data/misc/wmtrace/surface_flinger.bp'
-        ),
-        bugreportArchive
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/Transactions.pb',
+        'FS/data/misc/wmtrace/transactions.bp'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/Transactions.pb',
-          'FS/data/misc/wmtrace/transactions.bp'
-        ),
-        bugreportArchive
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/WindowManager.pb',
+        'proto/window_CRITICAL.proto'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/WindowManager.pb',
-          'proto/window_CRITICAL.proto'
-        ),
-        bugreportArchive
-      ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-          'FS/data/misc/ignored-dir/wm_transition_trace.bp'
-        ),
-        bugreportArchive
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+        'FS/data/misc/ignored-dir/wm_transition_trace.bp'
       ),
     ];
 
+    const bugreportArchive = new File(
+      [await FileUtils.createZipArchive(bugreportFiles)],
+      'bugreport.zip'
+    );
+
     // Corner case:
-    // A plain trace file is loaded along the bugreport -> trace file must not be ignored
+    // Another file is loaded along the bugreport -> the file must not be ignored
     //
     // Note:
     // The even weirder corner case where two bugreports are loaded at the same time is
     // currently not properly handled.
-    const plainTraceFile = new TraceFile(
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
-        'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb'
-      )
+    const otherFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/InputMethodClients.pb',
+      'would-be-ignored-if-was-in-bugreport-archive/input_method_clients.pb'
     );
 
-    const mergedFiles = bugreportFiles.concat([plainTraceFile]);
-    const errors = await tracePipeline.loadTraceFiles(mergedFiles);
-    expect(errors.length).toEqual(0);
+    await tracePipeline.loadFiles([bugreportArchive, otherFile]);
+    expect(parserErrorsSpy).not.toHaveBeenCalled();
+
     await tracePipeline.buildTraces();
     const traces = tracePipeline.getTraces();
 
@@ -140,60 +124,56 @@ describe('TracePipeline', () => {
   });
 
   it('is robust to invalid trace files', async () => {
-    const invalidTraceFiles = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
-    ];
+    const invalidFiles = [await UnitTestUtils.getFixtureFile('winscope_homepage.png')];
 
-    const errors = await tracePipeline.loadTraceFiles(invalidTraceFiles);
+    await tracePipeline.loadFiles(invalidFiles);
+    expect(parserErrorsSpy).toHaveBeenCalledTimes(1); //TODO: more specific
+
     await tracePipeline.buildTraces();
-    expect(errors.length).toEqual(1);
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
     const files = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('winscope_homepage.png')),
-      new TraceFile(await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb')),
+      await UnitTestUtils.getFixtureFile('winscope_homepage.png'),
+      await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb'),
     ];
-    const errors = await tracePipeline.loadTraceFiles(files);
+
+    await tracePipeline.loadFiles(files);
+    expect(parserErrorsSpy).toHaveBeenCalledTimes(1); //TODO: more specific
+
     await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
-    expect(errors.length).toEqual(1);
   });
 
   it('is robust to trace files with no entries', async () => {
     const traceFilesWithNoEntries = [
-      new TraceFile(await UnitTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb')),
+      await UnitTestUtils.getFixtureFile('traces/no_entries_InputMethodClients.pb'),
     ];
 
-    const errors = await tracePipeline.loadTraceFiles(traceFilesWithNoEntries);
+    await tracePipeline.loadFiles(traceFilesWithNoEntries);
+    expect(parserErrorsSpy).not.toHaveBeenCalled();
+
     await tracePipeline.buildTraces();
-
-    expect(errors.length).toEqual(0);
-
     expect(tracePipeline.getTraces().getSize()).toEqual(1);
   });
 
-  it('is robust to multiple trace files of same type', async () => {
-    const traceFilesOfSameType = [
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-          'file0.pb'
-        )
+  it('is robust to multiple files of same trace type', async () => {
+    const filesOfSameTraceType = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'file0.pb'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-          'file1.pb'
-        )
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'file1.pb'
       ),
     ];
 
     // Expect one trace to be overridden/discarded
-    const errors = await tracePipeline.loadTraceFiles(traceFilesOfSameType);
-    expect(errors).toEqual([
+    await tracePipeline.loadFiles(filesOfSameTraceType);
+    expect(parserErrorsSpy).toHaveBeenCalledOnceWith([
       new ParserError(ParserErrorType.OVERRIDE, 'file1.pb', TraceType.SURFACE_FLINGER),
     ]);
 
@@ -240,14 +220,12 @@ describe('TracePipeline', () => {
   });
 
   it('gets screenrecording data', async () => {
-    const traceFiles = [
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
-        )
+    const files = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
       ),
     ];
-    await tracePipeline.loadTraceFiles(traceFiles);
+    await tracePipeline.loadFiles(files);
     await tracePipeline.buildTraces();
 
     const video = await tracePipeline.getScreenRecordingVideo();
@@ -256,17 +234,13 @@ describe('TracePipeline', () => {
   });
 
   it('creates zip archive with loaded trace files', async () => {
-    const traceFiles = [
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile(
-          'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
-        )
+    const files = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
       ),
-      new TraceFile(
-        await UnitTestUtils.getFixtureFile('traces/perfetto/transactions_trace.perfetto-trace')
-      ),
+      await UnitTestUtils.getFixtureFile('traces/perfetto/transactions_trace.perfetto-trace'),
     ];
-    await tracePipeline.loadTraceFiles(traceFiles);
+    await tracePipeline.loadFiles(files);
     const archiveBlob = await tracePipeline.makeZipArchiveWithLoadedTraceFiles();
     const actualFiles = await FileUtils.unzipFile(archiveBlob);
     const actualFilenames = actualFiles
@@ -292,9 +266,9 @@ describe('TracePipeline', () => {
   });
 
   const loadValidSfWmTraces = async () => {
-    const traceFiles = [validSfTraceFile, validWmTraceFile];
-    const errors = await tracePipeline.loadTraceFiles(traceFiles);
-    expect(errors.length).toEqual(0);
+    const files = [validSfFile, validWmFile];
+    await tracePipeline.loadFiles(files);
+    expect(parserErrorsSpy).not.toHaveBeenCalled();
     await tracePipeline.buildTraces();
   };
 });
