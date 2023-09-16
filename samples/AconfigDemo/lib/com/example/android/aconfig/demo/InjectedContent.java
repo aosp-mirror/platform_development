@@ -39,6 +39,12 @@ public class InjectedContent {
             sBuffer.append("The flag: appendInjectedContent is OFF!!\n\n");
         }
 
+        if (featureFlags.readOnlyFlag()) {
+            sBuffer.append("The flag: read only flag injected is ON!!\n\n");
+        } else {
+            sBuffer.append("The flag: read only flag injected is OFF!!\n\n");
+        }
+
         return sBuffer.toString();
     }
 }

@@ -562,7 +562,7 @@ TEST_MODULES = [
                 'integration/version_script_example/prebuilts/' +
                 'libversion_script_example.so'
             ),
-            '--exclude-symbol-version', 'LIBVERSION_SCRIPT_EXAMPLE_PRIVATE',
+            '--exclude-symbol-version', '*_PRIVATE',
         ],
         has_reference_dump=True,
     ),

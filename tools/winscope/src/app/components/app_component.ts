@@ -212,7 +212,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
   snackbarOpener: SnackBarOpener;
-  tracePipeline = new TracePipeline();
+  tracePipeline: TracePipeline;
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
@@ -242,6 +242,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
 
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
+    this.tracePipeline = new TracePipeline(this.snackbarOpener);
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,

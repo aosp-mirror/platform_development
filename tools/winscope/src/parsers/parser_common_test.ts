@@ -15,7 +15,6 @@
  */
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
-import {CommonTestUtils} from 'test/common/utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -24,7 +23,7 @@ import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
-    const trace = new TraceFile(await CommonTestUtils.getFixtureFile('traces/empty.pb'), undefined);
+    const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
     const [parsers, errors] = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
   });

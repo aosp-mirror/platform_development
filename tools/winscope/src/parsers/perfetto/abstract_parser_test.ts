@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {KarmaTestUtils} from 'test/unit/karma_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
 
 describe('Perfetto AbstractParser', () => {
   it('fails parsing if there are no trace entries', async () => {
-    const parsers = await KarmaTestUtils.getPerfettoParsers(
+    const parsers = await UnitTestUtils.getPerfettoParsers(
       'traces/perfetto/no_winscope_traces.perfetto-trace'
     );
     expect(parsers.length).toEqual(0);
@@ -26,7 +26,7 @@ describe('Perfetto AbstractParser', () => {
 
   it('retrieves partial trace entries', async () => {
     {
-      const parser = await KarmaTestUtils.getPerfettoParser(
+      const parser = await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace'
       );
@@ -34,7 +34,7 @@ describe('Perfetto AbstractParser', () => {
       expect(entries).toEqual([{vsyncId: 4891n}, {vsyncId: 5235n}, {vsyncId: 5748n}]);
     }
     {
-      const parser = await KarmaTestUtils.getPerfettoParser(
+      const parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSACTIONS,
         'traces/perfetto/transactions_trace.perfetto-trace'
       );

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// TODO(b/290183109): merge with the other unit test utilities, once NodeJs tests are migrated to Karma.
-
 import {ComponentFixture, flush} from '@angular/core/testing';
 
 export function dispatchMouseEvent(

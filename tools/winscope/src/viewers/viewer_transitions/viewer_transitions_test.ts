@@ -32,7 +32,7 @@ import {
 import {ParserTransitionsShell} from 'parsers/parser_transitions_shell';
 import {ParserTransitionsWm} from 'parsers/parser_transitions_wm';
 import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
-import {KarmaTestUtils} from 'test/unit/karma_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
@@ -127,12 +127,10 @@ describe('ViewerTransitionsComponent', () => {
 
   it('updates tree view on TracePositionUpdate event', async () => {
     const wmTransFile = new TraceFile(
-      await KarmaTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
-      )
+      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/wm_transition_trace.pb')
     );
     const shellTransFile = new TraceFile(
-      await KarmaTestUtils.getFixtureFile(
+      await UnitTestUtils.getFixtureFile(
         'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
       )
     );

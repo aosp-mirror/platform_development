@@ -17,7 +17,7 @@ import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {Layer} from 'flickerlib/common';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
-import {KarmaTestUtils} from 'test/unit/karma_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 
@@ -25,7 +25,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
   let parser: Parser<LayerTraceEntry>;
 
   beforeAll(async () => {
-    parser = await KarmaTestUtils.getPerfettoParser(
+    parser = await UnitTestUtils.getPerfettoParser(
       TraceType.SURFACE_FLINGER,
       'traces/perfetto/layers_trace.perfetto-trace'
     );

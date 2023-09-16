@@ -15,7 +15,7 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
-import {KarmaTestUtils} from 'test/unit/karma_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 
@@ -23,7 +23,7 @@ describe('Perfetto ParserTransactions', () => {
   let parser: Parser<object>;
 
   beforeAll(async () => {
-    parser = await KarmaTestUtils.getPerfettoParser(
+    parser = await UnitTestUtils.getPerfettoParser(
       TraceType.TRANSACTIONS,
       'traces/perfetto/transactions_trace.perfetto-trace'
     );
