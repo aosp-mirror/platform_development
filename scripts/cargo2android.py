@@ -828,11 +828,11 @@ class Crate(object):
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + rlib + host
+      self.module_type = 'rust_library' + host + rlib
       self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
-      self.module_type = 'rust_library' + rlib + host
+      self.module_type = 'rust_library' + host + rlib
       self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
