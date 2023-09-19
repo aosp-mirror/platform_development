@@ -47,10 +47,7 @@ import tempfile
 
 import aggregate_cts_reports
 import parse_cts_report
-
-
-TESTED_ITEMS = 'tested_items'
-PASS_RATE = 'pass_rate'
+import constant
 
 
 def one_way_compare(reports, diff_csv):
@@ -113,7 +110,7 @@ def two_way_compare(reports, diff_csv):
       result = report.get_test_status(module_name, abi, class_name, test_name)
 
       if test_name not in tests:
-        tests[test_name] = [parse_cts_report.NO_DATA, parse_cts_report.NO_DATA]
+        tests[test_name] = [constant.NO_DATA, constant.NO_DATA]
 
       tests[test_name][i] = result
 
@@ -163,10 +160,10 @@ def gen_summary_row(reports, module_with_abi, item):
     summary = module_summary[abi] if abi in module_summary else None
 
     if not summary:
-      row.append(0.0 if item == PASS_RATE else 0)
-    elif item == TESTED_ITEMS:
+      row.append(0.0 if item == constant.PASS_RATE else 0)
+    elif item == constant.TESTED_ITEMS:
       row.append(summary.tested_items)
-    elif item == PASS_RATE:
+    elif item == constant.PASS_RATE:
       row.append(summary.pass_rate)
     elif item in parse_cts_report.CtsReport.STATUS_ORDER:
       row.append(summary.counter[item])
@@ -215,7 +212,10 @@ def n_way_compare(reports, diff_csv):
       module_names, key=lambda module_name: modules_min_rate[module_name]
   )
 
-  items = parse_cts_report.CtsReport.STATUS_ORDER + [TESTED_ITEMS, PASS_RATE]
+  items = parse_cts_report.CtsReport.STATUS_ORDER + [
+      constant.TESTED_ITEMS,
+      constant.PASS_RATE,
+  ]
 
   with open(diff_csv, 'w') as diff_csvfile:
     diff_writer = csv.writer(diff_csvfile)
@@ -238,7 +238,7 @@ def load_parsed_report(report_dir):
 
   for f in [info_path, result_path]:
     if not os.path.exists(f):
-      raise FileNotFoundError(f'file {f} doesn\'t exist.')
+      raise FileNotFoundError(f"file {f} doesn't exist.")
 
   with open(info_path, 'r') as info_jsonfile:
     info = json.load(info_jsonfile)
@@ -254,11 +254,11 @@ def load_parsed_report(report_dir):
 def main():
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--reports', '-r', nargs='+',
+  parser.add_argument('-r', '--report', nargs='+',
                       dest='cts_reports', action='append',
                       help=('Path to cts reports. Each flag -r is followed by '
                             'a group of files to be aggregated as one report.'))
-  parser.add_argument('--folder', '-f',
+  parser.add_argument('-f', '--folder',
                       dest='cts_reports', action='append',
                       help=('Path to folder that stores intermediate files '
                             'of parsed reports.'))
