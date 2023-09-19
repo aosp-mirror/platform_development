@@ -1,0 +1,4 @@
+module_name,abi,pass,IGNORED,ASSUMPTION_FAILURE,fail,TEST_ERROR,TEST_STATUS_UNSPECIFIED
+module_1,arm64-v8a,1,0,0,1,0,0
+module_2,arm64-v8a,1,1,1,2,0,1
+module_3,arm64-v8a,1,0,0,0,1,0
