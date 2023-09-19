@@ -40,6 +40,7 @@ public final class StaticContentUnitTests {
         StringBuilder expected = new StringBuilder();
         expected.append("The flag: appendStaticContent is ON!!\n\n");
         expected.append("The flag: thirdFlag is OFF!!\n\n");
+        expected.append("The flag: read only flag static is OFF!!\n\n");
         assertEquals("Expected message", expected.toString(), ret);
     }
 }
