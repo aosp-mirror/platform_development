@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Result suite_name="CTS" suite_plan="cts" suite_build_number="7654321" start_display="Tue Aug 01 08:34:01 CST 2023" suite_version="14_r1">
+	<Build build_model="that_model" build_device="that_device" build_id="0621" build_version_sdk="34" build_version_security_patch="2023-06-05" build_board="that_board" build_type="userdebug" build_version_release="14" build_fingerprint="this_build_fingerprint" />
+	<Summary pass="4" failed="4" modules_done="4" modules_total="4" />
+	<Module name="module_1" abi="arm64-v8a" done="true" pass="1" total_tests="2">
+		<TestCase name="testcase_1">
+			<Test result="pass" name="test_1">
+			</Test>
+			<Test result="fail" name="test_2">
+			</Test>
+		</TestCase>
+	</Module>
+	<Module name="module_2" abi="arm64-v8a" done="true" pass="2" total_tests="6">
+		<TestCase name="testcase_2">
+			<Test result="IGNORED" name="test_3">
+			</Test>
+		</TestCase>
+		<TestCase name="testcase_3">
+			<Test result="fail" name="test_4">
+			</Test>
+			<Test result="TEST_STATUS_UNSPECIFIED" name="test_5">
+			</Test>
+		</TestCase>
+		<TestCase name="testcase_4">
+			<Test result="pass" name="test_6">
+			</Test>
+			<Test result="pass" name="test_7">
+			</Test>
+			<Test result="fail" name="test_8">
+			</Test>
+		</TestCase>
+	</Module>
+	<Module name="module_3" abi="arm64-v8a" done="true" pass="1" total_tests="1">
+		<TestCase name="testcase_5">
+			<Test result="pass" name="test_11">
+			</Test>
+		</TestCase>
+	</Module>
+	<Module name="module_4" abi="arm64-v8a" done="true" pass="0" total_tests="1">
+		<TestCase name="testcase_6">
+			<Test result="fail" name="test_12">
+			</Test>
+		</TestCase>
+	</Module>
+</Result>
