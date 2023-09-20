@@ -28,12 +28,10 @@ import shutil
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+import constant
 
 
 # TODO(b/293809772): Logging.
-
-
-NO_DATA = 'null'
 
 
 class CtsReport:
@@ -57,7 +55,7 @@ class CtsReport:
 
   @staticmethod
   def is_fail(status):
-    if status == NO_DATA:
+    if status == constant.NO_DATA:
       return False
     else:
       return CtsReport.STATUS_ORDER.index(status) >= CtsReport.FAIL_INDEX
@@ -84,19 +82,20 @@ class CtsReport:
     """Get test status from the CtsReport object."""
 
     if module_name not in self.result_tree:
-      return NO_DATA
+      return constant.NO_DATA
     abis = self.result_tree[module_name]
 
     if abi not in abis:
-      return NO_DATA
+      return constant.NO_DATA
     test_classes = abis[abi]
 
     if class_name not in test_classes:
-      return NO_DATA
+      return constant.NO_DATA
+
     tests = test_classes[class_name]
 
     if test_name not in tests:
-      return NO_DATA
+      return constant.NO_DATA
 
     return tests[test_name]
 
@@ -111,7 +110,7 @@ class CtsReport:
     test_classes = abis.setdefault(abi, {})
     tests = test_classes.setdefault(class_name, {})
 
-    if previous == NO_DATA:
+    if previous == constant.NO_DATA:
       tests[test_name] = test_status
 
       module_summary = self.module_summaries.setdefault(module_name, {})
@@ -290,7 +289,10 @@ def get_test_info_xml(test_result_path):
   tree = ET.parse(test_result_path)
   root = tree.getroot()
 
-  test_info = {'source_path': test_result_path}
+  test_info = {
+      'tool_version': constant.VERSION,
+      'source_path': test_result_path,
+  }
 
   for attrib_path in ATTRS_TO_SHOW:
     tags, attr_name = parse_attrib_path(attrib_path)
@@ -359,7 +361,8 @@ def main():
   parser = argparse.ArgumentParser()
 
   parser.add_argument(
-      '--report-file',
+      '-r',
+      '--report',
       required=True,
       help=(
           'Path to a cts report, where a cts report could '
@@ -375,7 +378,7 @@ def main():
 
   args = parser.parse_args()
 
-  report_file = args.report_file
+  report_file = args.report
   output_dir = args.output_dir
 
   if not os.path.exists(output_dir):
