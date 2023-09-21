@@ -175,7 +175,8 @@ export class PropertiesComponent {
       this.traceType === TraceType.VIEW_CAPTURE &&
       this.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
-      this.userOptions['showDiff']?.enabled === false
+      this.userOptions['showDiff']?.enabled === false &&
+      this.selectedItem
     );
   }
 
