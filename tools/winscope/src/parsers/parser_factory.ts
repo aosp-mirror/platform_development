@@ -146,6 +146,7 @@ export class ParserFactory {
 }
 
 export enum ParserErrorType {
+  CORRUPTED_ARCHIVE,
   NO_INPUT_FILES,
   UNSUPPORTED_FORMAT,
   OVERRIDE,
