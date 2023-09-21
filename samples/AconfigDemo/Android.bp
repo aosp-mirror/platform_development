@@ -18,16 +18,11 @@ android_app {
     jni_libs: [
         "libexample_cpp_lib",
     ],
-    optimize: {
-        enabled: true,
-        proguard_compatibility: false,
-        shrink: true,
-        optimize: false,
-        obfuscate: false,
-        shrink_resources: true,
-    },
     required: ["libexample_rust_jni"],
-    plugins: ["dagger2-compiler"]
+    plugins: ["dagger2-compiler"],
+    optimize: {
+        proguard_flags_files: ["proguard.flags"],
+    },
 }
 
 aconfig_declarations {
@@ -35,7 +30,6 @@ aconfig_declarations {
     package: "com.example.android.aconfig.demo.flags",
     srcs: ["aconfig_demo_flags.aconfig"],
 }
-
 
 java_aconfig_library {
     name: "aconfig_demo_flags_java_lib",
@@ -49,17 +43,23 @@ filegroup {
     ],
 }
 
-java_library {
-    name: "ContentLibs",
+java_defaults {
+    name: "ContentLibsDefault",
+    sdk_version: "current",
     srcs: [
         ":ContentLibsFile",
     ],
-    sdk_version: "current",
+    libs: ["jsr330"],
+}
+
+java_library {
+    name: "ContentLibs",
+    defaults: ["ContentLibsDefault"],
     static_libs: [
         "aconfig_demo_flags_java_lib",
     ],
-    libs: ["jsr330"],
 }
+
 
 cc_aconfig_library {
     name: "aconfig_demo_flags_c_lib",
@@ -102,4 +102,18 @@ rust_ffi_shared {
         "libjni",
         "libaconfig_demo_flags_rust",
     ]
+}
+
+// Test setup
+
+// Create test verion of the jave flag library
+// It needs to use the same aconfig_declarations as
+// the production one
+java_aconfig_library {
+    name: "aconfig_demo_flags_java_lib_test",
+    aconfig_declarations: "aconfig_demo_flags",
+    // host_supported is set to true here for test running
+    // one host, in tests/unittests/Android.bp
+    host_supported: true,
+    test: true
 }

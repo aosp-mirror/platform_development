@@ -25,13 +25,17 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
           <p class="mat-body-1">
             Launch the Winscope ADB Connect proxy to capture traces directly from your browser.
           </p>
-          <p class="mat-body-1">Python 3.5+ and ADB are required.</p>
-          <p class="mat-body-1">
-            Run:
-            <code>
-              python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
-            </code>
-          </p>
+          <p class="mat-body-1">Python 3.5+ and ADB are required. Run this command:</p>
+          <mat-form-field class="proxy-command-form" appearance="outline">
+            <input matInput readonly [value]="proxyCommand" />
+            <button
+              mat-icon-button
+              matSuffix
+              [cdkCopyToClipboard]="proxyCommand"
+              matTooltip="Copy command">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </mat-form-field>
           <p class="mat-body-1">Or get it from the AOSP repository.</p>
         </div>
 
@@ -51,13 +55,19 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
             <mat-icon class="adb-icon">update</mat-icon>
             <span class="adb-info">Your local proxy version is incompatible with Winscope.</span>
           </p>
-          <p class="mat-body-1">Please update the proxy to version {{ proxyVersion }}.</p>
           <p class="mat-body-1">
-            Run:
-            <code>
-              python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
-            </code>
+            Please update the proxy to version {{ proxyVersion }}. Run this command:
           </p>
+          <mat-form-field class="proxy-command-container" appearance="outline">
+            <input matInput readonly [value]="proxyCommand" />
+            <button
+              mat-icon-button
+              matSuffix
+              [cdkCopyToClipboard]="proxyCommand"
+              matTooltip="Copy command">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </mat-form-field>
           <p class="mat-body-1">Or get it from the AOSP repository.</p>
         </div>
 
@@ -116,6 +126,14 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
         flex-wrap: wrap;
         gap: 10px;
       }
+      /* TODO(b/300063426): remove after migration to angular 15, replace with subscriptSizing */
+      ::ng-deep .proxy-command-form .mat-form-field-wrapper {
+        padding: 0;
+      }
+      .proxy-command-text {
+        user-select: all;
+        overflow: auto;
+      }
       .adb-info {
         margin-left: 5px;
       }
@@ -137,6 +155,8 @@ export class AdbProxyComponent {
   readonly proxyVersion = this.proxy.VERSION;
   readonly downloadProxyUrl: string =
     'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py';
+  readonly proxyCommand: string =
+    'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
 
   restart() {
     this.addKey.emit(this.proxyKeyItem);

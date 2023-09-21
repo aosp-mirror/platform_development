@@ -14,31 +14,14 @@
  * limitations under the License.
  */
 
-import {DisplayArea} from '../common';
+import {DisplayArea, WindowContainer} from '../common';
 import {shortenName} from '../mixin';
-import {WindowContainer} from './WindowContainer';
 
-DisplayArea.fromProto = (
-  proto: any,
-  isActivityInTree: boolean,
-  nextSeq: () => number
-): DisplayArea => {
-  if (proto == null) {
-    return null;
-  } else {
-    const windowContainer = WindowContainer.fromProto(
-      /* proto */ proto.windowContainer,
-      /* protoChildren */ proto.windowContainer?.children ?? [],
-      /* isActivityInTree */ isActivityInTree,
-      /* computedZ */ nextSeq,
-      /* nameOverride */ proto.name
-    );
+DisplayArea.fromProto = (windowContainer: WindowContainer, proto: any): DisplayArea => {
+  const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
-    const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
-
-    addAttributes(entry, proto);
-    return entry;
-  }
+  addAttributes(entry, proto);
+  return entry;
 };
 
 function addAttributes(entry: DisplayArea, proto: any) {

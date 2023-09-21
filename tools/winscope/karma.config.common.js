@@ -22,7 +22,7 @@ module.exports = (config) => {
     frameworks: ['jasmine', 'webpack'],
     plugins: ['karma-webpack', 'karma-chrome-launcher', 'karma-jasmine', 'karma-sourcemap-loader'],
     files: [
-      {pattern: 'src/main_component_test.ts', watched: false},
+      {pattern: 'src/main_unit_test.ts', watched: false},
       {pattern: 'src/test/fixtures/**/*', included: false, served: true},
       {
         pattern: 'deps_build/trace_processor/to_be_served/engine_bundle.js',
@@ -36,7 +36,7 @@ module.exports = (config) => {
       },
     ],
     preprocessors: {
-      'src/main_component_test.ts': ['webpack', 'sourcemap'],
+      'src/main_unit_test.ts': ['webpack', 'sourcemap'],
     },
     webpack: webpackConfig,
   });

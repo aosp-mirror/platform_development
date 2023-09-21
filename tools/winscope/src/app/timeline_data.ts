@@ -15,19 +15,15 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimeRange, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 
-export interface TimeRange {
-  from: Timestamp;
-  to: Timestamp;
-}
 const INVALID_TIMESTAMP = 0n;
 
 export class TimelineData {
@@ -46,14 +42,12 @@ export class TimelineData {
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
-      if (type === TraceType.WINDOW_MANAGER) {
-        // Filter out WindowManager dumps with no timestamp from timeline
-        if (
-          trace.lengthEntries === 1 &&
-          trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
-        ) {
-          return;
-        }
+      // Filter out dumps with invalid timestamp (would mess up the timeline)
+      if (
+        trace.lengthEntries === 1 &&
+        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
+      ) {
+        return;
       }
 
       this.traces.setTrace(type, trace);
@@ -65,18 +59,31 @@ export class TimelineData {
     this.timestampType = this.firstEntry?.getTimestamp().getType();
   }
 
+  private lastReturnedCurrentPosition?: TracePosition;
   getCurrentPosition(): TracePosition | undefined {
     if (this.explicitlySetPosition) {
       return this.explicitlySetPosition;
     }
+
+    let currentPosition: TracePosition | undefined = undefined;
+    if (this.firstEntry) {
+      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
+    }
+
     const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
     if (firstActiveEntry) {
-      return TracePosition.fromTraceEntry(firstActiveEntry);
+      currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
-    if (this.firstEntry) {
-      return TracePosition.fromTraceEntry(this.firstEntry);
+
+    if (
+      this.lastReturnedCurrentPosition === undefined ||
+      currentPosition === undefined ||
+      !this.lastReturnedCurrentPosition.isEqual(currentPosition)
+    ) {
+      this.lastReturnedCurrentPosition = currentPosition;
     }
-    return undefined;
+
+    return this.lastReturnedCurrentPosition;
   }
 
   setPosition(position: TracePosition | undefined) {
@@ -105,14 +112,26 @@ export class TimelineData {
     return this.timestampType;
   }
 
+  private lastReturnedFullTimeRange?: TimeRange;
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');
     }
-    return {
+
+    const fullTimeRange = {
       from: this.firstEntry.getTimestamp(),
       to: this.lastEntry.getTimestamp(),
     };
+
+    if (
+      this.lastReturnedFullTimeRange === undefined ||
+      this.lastReturnedFullTimeRange.from.getValueNs() !== fullTimeRange.from.getValueNs() ||
+      this.lastReturnedFullTimeRange.to.getValueNs() !== fullTimeRange.to.getValueNs()
+    ) {
+      this.lastReturnedFullTimeRange = fullTimeRange;
+    }
+
+    return this.lastReturnedFullTimeRange;
   }
 
   getSelectionTimeRange(): TimeRange {
@@ -205,15 +224,23 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
+  private lastReturnedCurrentEntries: Map<TraceType, TraceEntry<any> | undefined> = new Map();
   findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {
       return undefined;
     }
-    return TraceEntryFinder.findCorrespondingEntry(
+
+    const entry = TraceEntryFinder.findCorrespondingEntry(
       assertDefined(this.traces.getTrace(type)),
       position
     );
+
+    if (this.lastReturnedCurrentEntries.get(type)?.getIndex() !== entry?.getIndex()) {
+      this.lastReturnedCurrentEntries.set(type, entry);
+    }
+
+    return this.lastReturnedCurrentEntries.get(type);
   }
 
   moveToPreviousEntryFor(type: TraceType) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'trace/timestamp';
+import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';

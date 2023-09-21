@@ -14,34 +14,20 @@
  * limitations under the License.
  */
 
-import {Activity} from '../common';
+import {Activity, WindowContainer} from '../common';
 import {shortenName} from '../mixin';
-import {WindowContainer} from './WindowContainer';
 
-Activity.fromProto = (proto: any, nextSeq: () => number): Activity => {
-  if (proto == null) {
-    return null;
-  } else {
-    const windowContainer = WindowContainer.fromProto(
-      /* proto */ proto.windowToken.windowContainer,
-      /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
-      /* isActivityInTree */ true,
-      /* computedZ */ nextSeq,
-      /* nameOverride */ proto.name,
-      /* identifierOverride */ proto.identifier
-    );
+Activity.fromProto = (windowContainer: WindowContainer, proto: any): Activity => {
+  const entry = new Activity(
+    proto.state,
+    proto.frontOfTask,
+    proto.procId,
+    proto.translucent,
+    windowContainer
+  );
 
-    const entry = new Activity(
-      proto.state,
-      proto.frontOfTask,
-      proto.procId,
-      proto.translucent,
-      windowContainer
-    );
-
-    addAttributes(entry, proto);
-    return entry;
-  }
+  addAttributes(entry, proto);
+  return entry;
 };
 
 function addAttributes(entry: Activity, proto: any) {

@@ -40,7 +40,7 @@ describe('PropertyGroupsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('it renders verbose flags if available', async () => {
+  it('renders verbose flags if available', async () => {
     const layer = new LayerBuilder().setFlags(3).build();
     component.item = layer;
     fixture.detectChanges();
@@ -50,7 +50,7 @@ describe('PropertyGroupsComponent', () => {
     expect(flags!.innerHTML).toMatch('Flags:.*HIDDEN|OPAQUE \\(0x3\\)');
   });
 
-  it('it renders numeric flags if verbose flags not available', async () => {
+  it('renders numeric flags if verbose flags not available', async () => {
     const layer = new LayerBuilder().setFlags(0).build();
     component.item = layer;
     fixture.detectChanges();

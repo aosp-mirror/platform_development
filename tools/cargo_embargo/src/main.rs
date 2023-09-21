@@ -27,7 +27,7 @@
 //! available to tweak it via a config file.
 
 mod bp;
-mod cargo_out;
+mod cargo;
 mod config;
 
 use crate::config::Config;
@@ -36,10 +36,8 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo_out::{parse_cargo_out, Crate, CrateType};
+use cargo::{cargo_out::parse_cargo_out, Crate, CrateType, ExternType};
 use clap::Parser;
-use once_cell::sync::Lazy;
-use regex::Regex;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -52,6 +50,7 @@ use std::process::Command;
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
+/// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
 #[clap()]
 struct Args {
@@ -404,7 +403,7 @@ fn crate_to_bp_modules(
 ) -> Result<Vec<BpModule>> {
     let mut modules = Vec::new();
     for crate_type in &crate_.types {
-        let host = if package_cfg.device_supported.unwrap_or(true) { "" } else { "_host" };
+        let host = if package_cfg.device_supported { "" } else { "_host" };
         let rlib = if package_cfg.force_rlib { "_rlib" } else { "" };
         let (module_type, module_name, stem) = match crate_type {
             CrateType::Bin => {
@@ -459,8 +458,8 @@ fn crate_to_bp_modules(
             m.props.set("defaults", vec![defaults.clone()]);
         }
 
-        if package_cfg.host_supported.unwrap_or(true)
-            && package_cfg.device_supported.unwrap_or(true)
+        if package_cfg.host_supported
+            && package_cfg.device_supported
             && module_type != "rust_proc_macro"
         {
             m.props.set("host_supported", true);
@@ -476,7 +475,7 @@ fn crate_to_bp_modules(
         if crate_.types.contains(&CrateType::Test) {
             m.props.set("test_suites", vec!["general-tests"]);
             m.props.set("auto_gen_config", true);
-            if package_cfg.host_supported.unwrap_or(true) {
+            if package_cfg.host_supported {
                 m.props.object("test_options").set("unit_test", !package_cfg.no_presubmit);
             }
         }
@@ -504,27 +503,10 @@ fn crate_to_bp_modules(
 
         let mut rust_libs = Vec::new();
         let mut proc_macro_libs = Vec::new();
-        for (extern_name, filename) in &crate_.externs {
-            if extern_name == "proc_macro" {
-                continue;
-            }
-            let filename =
-                filename.as_ref().unwrap_or_else(|| panic!("no filename for {}", extern_name));
-            // Example filename: "libgetrandom-fd8800939535fc59.rmeta"
-            static REGEX: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$").unwrap());
-            let lib_name = if let Some(x) = REGEX.captures(filename).and_then(|x| x.get(1)) {
-                x
-            } else {
-                bail!("bad filename for extern {}: {}", extern_name, filename);
-            };
-            if filename.ends_with(".rlib") || filename.ends_with(".rmeta") {
-                rust_libs.push(lib_name.as_str().to_string());
-            } else if filename.ends_with(".so") {
-                // Assume .so files are always proc_macros. May not always be right.
-                proc_macro_libs.push(lib_name.as_str().to_string());
-            } else {
-                unreachable!();
+        for extern_dep in &crate_.externs {
+            match extern_dep.extern_type {
+                ExternType::Rust => rust_libs.push(extern_dep.lib_name.clone()),
+                ExternType::ProcMacro => proc_macro_libs.push(extern_dep.lib_name.clone()),
             }
         }
 

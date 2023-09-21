@@ -16,11 +16,13 @@
 
 import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData} from './ui_data';
@@ -48,15 +50,19 @@ export class Presenter {
       const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, event.position);
 
       this.uiData.selectedTransition = await entry?.getValue();
+      if (this.uiData.selectedTransition !== undefined) {
+        await this.onTransitionSelected(this.uiData.selectedTransition);
+      }
 
       this.notifyUiDataCallback(this.uiData);
     });
   }
 
-  onTransitionSelected(transition: Transition): void {
+  async onTransitionSelected(transition: Transition): Promise<void> {
     this.uiData.selectedTransition = transition;
-    this.uiData.selectedTransitionPropertiesTree =
-      this.makeSelectedTransitionPropertiesTree(transition);
+    this.uiData.selectedTransitionPropertiesTree = await this.makeSelectedTransitionPropertiesTree(
+      transition
+    );
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -82,39 +88,78 @@ export class Presenter {
     );
   }
 
-  private makeSelectedTransitionPropertiesTree(transition: Transition): PropertiesTreeNode {
+  private async makeSelectedTransitionPropertiesTree(
+    transition: Transition
+  ): Promise<PropertiesTreeNode> {
     const changes: PropertiesTreeNode[] = [];
+
+    const createTime = BigInt(transition.createTime.unixNanos.toString());
+    const finishTime = BigInt(transition.finishTime.unixNanos.toString());
+    const middleOfTransitionTimestamp = new RealTimestamp((createTime + finishTime) / 2n);
+    const middleOfTransitionPosition = TracePosition.fromTimestamp(middleOfTransitionTimestamp);
 
     for (const change of transition.changes) {
       let layerName: string | undefined = undefined;
       let windowName: string | undefined = undefined;
 
       if (this.surfaceFlingerTrace) {
-        this.surfaceFlingerTrace.forEachEntry((entry, originalIndex) => {
-          if (layerName !== undefined) {
-            return;
-          }
-          const layerTraceEntry = entry.getValue() as LayerTraceEntry;
+        const entry = TraceEntryFinder.findCorrespondingEntry(
+          this.surfaceFlingerTrace,
+          middleOfTransitionPosition
+        );
+        if (entry !== undefined) {
+          const layerTraceEntry = (await entry.getValue()) as LayerTraceEntry;
           for (const layer of layerTraceEntry.flattenedLayers) {
             if (layer.id === change.layerId) {
               layerName = layer.name;
             }
           }
-        });
+        } else {
+          // Fallback
+          await Promise.all(
+            this.surfaceFlingerTrace.mapEntry(async (entry, originalIndex) => {
+              if (layerName !== undefined) {
+                return;
+              }
+              const layerTraceEntry = (await entry.getValue()) as LayerTraceEntry;
+              for (const layer of layerTraceEntry.flattenedLayers) {
+                if (layer.id === change.layerId) {
+                  layerName = layer.name;
+                }
+              }
+            })
+          );
+        }
       }
 
       if (this.windowManagerTrace) {
-        this.windowManagerTrace.forEachEntry((entry, originalIndex) => {
-          if (windowName !== undefined) {
-            return;
-          }
-          const wmState = entry.getValue() as WindowManagerState;
+        const entry = TraceEntryFinder.findCorrespondingEntry(
+          this.windowManagerTrace,
+          middleOfTransitionPosition
+        );
+        if (entry !== undefined) {
+          const wmState = (await entry.getValue()) as WindowManagerState;
           for (const window of wmState.windowContainers) {
             if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
               windowName = window.title;
             }
           }
-        });
+        } else {
+          // Fallback
+          await Promise.all(
+            this.windowManagerTrace.mapEntry(async (entry, originalIndex) => {
+              if (windowName !== undefined) {
+                return;
+              }
+              const wmState = (await entry.getValue()) as WindowManagerState;
+              for (const window of wmState.windowContainers) {
+                if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
+                  windowName = window.title;
+                }
+              }
+            })
+          );
+        }
       }
 
       const layerIdValue = layerName ? `${change.layerId} (${layerName})` : change.layerId;

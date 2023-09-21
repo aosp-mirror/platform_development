@@ -14,55 +14,41 @@
  * limitations under the License.
  */
 
-import {Size, toRect, WindowLayoutParams, WindowState} from '../common';
+import {Size, toRect, WindowContainer, WindowLayoutParams, WindowState} from '../common';
 import {shortenName} from '../mixin';
-import {WindowContainer} from './WindowContainer';
 
 WindowState.fromProto = (
+  windowContainer: WindowContainer,
   proto: any,
-  isActivityInTree: boolean,
-  nextSeq: () => number
+  isActivityInTree: boolean
 ): WindowState => {
-  if (proto == null) {
-    return null;
-  } else {
-    const windowParams = createWindowLayoutParams(proto.attributes);
-    const identifierName = getIdentifier(proto);
-    const windowType = getWindowType(proto, identifierName);
-    const name = getName(identifierName);
-    const windowContainer = WindowContainer.fromProto(
-      /* proto */ proto.windowContainer,
-      /* protoChildren */ proto.windowContainer?.children ?? [],
-      /* isActivityInTree */ isActivityInTree,
-      /* computedZ */ nextSeq,
-      /* nameOverride */ name,
-      /* identifierOverride */ proto.identifier
-    );
+  const windowParams = createWindowLayoutParams(proto.attributes);
+  const identifierName = WindowStateUtils.getIdentifier(proto);
+  const windowType = WindowStateUtils.getWindowType(proto, identifierName);
 
-    const entry = new WindowState(
-      windowParams,
-      proto.displayId,
-      proto.stackId,
-      proto.animator?.surface?.layer ?? 0,
-      proto.animator?.surface?.shown ?? false,
-      windowType,
-      new Size(proto.requestedWidth, proto.requestedHeight),
-      toRect(proto.surfacePosition),
-      toRect(proto.windowFrames?.frame ?? null),
-      toRect(proto.windowFrames?.containingFrame ?? null),
-      toRect(proto.windowFrames?.parentFrame ?? null),
-      toRect(proto.windowFrames?.contentFrame ?? null),
-      toRect(proto.windowFrames?.contentInsets ?? null),
-      toRect(proto.surfaceInsets),
-      toRect(proto.givenContentInsets),
-      toRect(proto.animator?.lastClipRect ?? null),
-      windowContainer,
-      /* isAppWindow */ isActivityInTree
-    );
+  const entry = new WindowState(
+    windowParams,
+    proto.displayId,
+    proto.stackId,
+    proto.animator?.surface?.layer ?? 0,
+    proto.animator?.surface?.shown ?? false,
+    windowType,
+    new Size(proto.requestedWidth, proto.requestedHeight),
+    toRect(proto.surfacePosition),
+    toRect(proto.windowFrames?.frame ?? null),
+    toRect(proto.windowFrames?.containingFrame ?? null),
+    toRect(proto.windowFrames?.parentFrame ?? null),
+    toRect(proto.windowFrames?.contentFrame ?? null),
+    toRect(proto.windowFrames?.contentInsets ?? null),
+    toRect(proto.surfaceInsets),
+    toRect(proto.givenContentInsets),
+    toRect(proto.animator?.lastClipRect ?? null),
+    windowContainer,
+    /* isAppWindow */ isActivityInTree
+  );
 
-    addAttributes(entry, proto);
-    return entry;
-  }
+  addAttributes(entry, proto);
+  return entry;
 };
 
 function createWindowLayoutParams(proto: any): WindowLayoutParams {
@@ -100,32 +86,34 @@ function createWindowLayoutParams(proto: any): WindowLayoutParams {
   );
 }
 
-function getWindowType(proto: any, identifierName: string): number {
-  if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
-    return WindowState.WINDOW_TYPE_STARTING;
-  } else if (proto.animatingExit) {
-    return WindowState.WINDOW_TYPE_EXITING;
-  } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
-    return WindowState.WINDOW_TYPE_STARTING;
+export class WindowStateUtils {
+  static getWindowType(proto: any, identifierName: string): number {
+    if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+      return WindowState.WINDOW_TYPE_STARTING;
+    } else if (proto.animatingExit) {
+      return WindowState.WINDOW_TYPE_EXITING;
+    } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+      return WindowState.WINDOW_TYPE_STARTING;
+    }
+
+    return 0;
   }
 
-  return 0;
-}
+  static getName(identifierName: string): string {
+    let name = identifierName;
 
-function getName(identifierName: string): string {
-  let name = identifierName;
+    if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+      name = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length);
+    } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+      name = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length);
+    }
 
-  if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
-    name = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length);
-  } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
-    name = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length);
+    return name;
   }
 
-  return name;
-}
-
-function getIdentifier(proto: any): string {
-  return proto.windowContainer.identifier?.title ?? proto.identifier?.title ?? '';
+  static getIdentifier(proto: any): string {
+    return proto.windowContainer.identifier?.title ?? proto.identifier?.title ?? '';
+  }
 }
 
 function addAttributes(entry: WindowState, proto: any) {

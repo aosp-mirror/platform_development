@@ -15,12 +15,12 @@
  */
 
 import {TracePositionUpdate} from 'app/app_event';
+import {RealTimestamp} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -50,10 +50,9 @@ describe('PresenterSurfaceFlinger', () => {
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('Dim layer#53')
-      .setStableId('EffectLayer 53 Dim layer#53')
+      .setStableId('53 Dim layer#53')
       .setFilteredView(true)
       .setKind('53')
-      .setDiffType('EffectLayer')
       .setId(53)
       .build();
   });
@@ -95,7 +94,7 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 0});
-    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 118});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 74});
   });
 
   it('updates pinned items', () => {

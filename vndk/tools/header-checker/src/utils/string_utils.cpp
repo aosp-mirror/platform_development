@@ -14,13 +14,15 @@
 
 #include "utils/string_utils.h"
 
-#include <llvm/ADT/Optional.h>
+#include <fnmatch.h>
 
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <string>
 #include <utility>
+
+#include <llvm/ADT/Optional.h>
 
 
 namespace header_checker {
@@ -101,6 +103,16 @@ bool ParseBool(const std::string &s) {
 
 bool IsGlobPattern(std::string_view s) {
   return s.find_first_of("*?[") != std::string::npos;
+}
+
+
+bool HasMatchingGlobPattern(const StringSet &patterns, const char *text) {
+  for (auto &&pattern : patterns) {
+    if (fnmatch(pattern.c_str(), text, 0) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 

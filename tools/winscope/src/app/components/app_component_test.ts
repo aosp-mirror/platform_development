@@ -33,7 +33,7 @@ import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
 import {MatDrawer, MatDrawerContainer, MatDrawerContent} from './bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './collect_traces_component';
-import {MiniTimelineComponent} from './timeline/mini_timeline_component';
+import {MiniTimelineComponent} from './timeline/mini-timeline/mini_timeline_component';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {TraceViewComponent} from './trace_view_component';

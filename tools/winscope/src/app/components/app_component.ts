@@ -29,13 +29,12 @@ import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
-import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {CrossPlatform, NoCache} from 'flickerlib/common';
 import {AppEventListener} from 'interfaces/app_event_listener';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
-import {Timestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
@@ -64,7 +63,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         <button color="primary" mat-button>Open legacy Winscope</button>
       </a>
 
-      <div class="spacer">
+      <div class="trace-descriptor">
         <mat-icon
           *ngIf="dataLoaded && activeTrace"
           class="icon"
@@ -104,7 +103,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
     <mat-divider></mat-divider>
 
-    <mat-drawer-container class="example-container" autosize disableClose autoFocus>
+    <mat-drawer-container autosize disableClose autoFocus>
       <mat-drawer-content>
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
           <trace-view
@@ -166,12 +165,20 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow: auto;
         height: 820px;
       }
-      .spacer {
+      .trace-descriptor {
         flex: 1;
         text-align: center;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow-x: hidden;
+      }
+      .trace-descriptor .icon {
+        overflow: unset;
+      }
+      .trace-descriptor .active-trace-file-info {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
       }
       .viewers {
         height: 0;
@@ -205,7 +212,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
   snackbarOpener: SnackBarOpener;
-  tracePipeline = new TracePipeline();
+  tracePipeline: TracePipeline;
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
@@ -235,6 +242,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
 
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
+    this.tracePipeline = new TracePipeline(this.snackbarOpener);
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,
@@ -338,15 +346,14 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   }
 
   async onDownloadTracesButtonClick() {
-    const traceFiles = await this.makeTraceFilesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traceFiles);
-    const zipFileName = 'winscope.zip';
+    const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const archiveFilename = 'winscope.zip';
 
     const a = document.createElement('a');
     document.body.appendChild(a);
-    const url = window.URL.createObjectURL(zipFileBlob);
+    const url = window.URL.createObjectURL(archiveBlob);
     a.href = url;
-    a.download = zipFileName;
+    a.download = archiveFilename;
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
@@ -382,16 +389,5 @@ export class AppComponent implements AppEventListener, TraceDataListener {
       }
     });
     return activeTrace;
-  }
-
-  private async makeTraceFilesForDownload(): Promise<File[]> {
-    const loadedFiles = this.tracePipeline.getLoadedFiles();
-    return [...loadedFiles.keys()].map((traceType) => {
-      const file = loadedFiles.get(traceType)!;
-      const path = TRACE_INFO[traceType].downloadArchiveDir;
-
-      const newName = path + '/' + FileUtils.removeDirFromFileName(file.file.name);
-      return new File([file.file], newName);
-    });
   }
 }

@@ -18,11 +18,11 @@ import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {RealTimestamp} from '../common/time';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
-import {RealTimestamp} from './timestamp';
 import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
@@ -282,9 +282,9 @@ describe('FrameMapper', () => {
 
       surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
         .setEntries([
-          {id: 0, vSyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
-          {id: 1, vSyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
-          {id: 2, vSyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
+          {id: 0, vsyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
+          {id: 1, vsyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
+          {id: 2, vsyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
         ])
         .setTimestamps([time0, time1, time2])
         .build();

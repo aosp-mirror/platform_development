@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp} from '../common/time';
 import {AbsoluteFrameIndex} from './index_types';
-import {Timestamp} from './timestamp';
 import {Trace} from './trace';
 import {TraceEntryTypeMap, TraceType} from './trace_type';
 

@@ -15,13 +15,13 @@
  */
 
 import {AbtChromeExtensionProtocolStub} from 'abt_chrome_extension/abt_chrome_extension_protocol_stub';
+import {RealTimestamp} from 'common/time';
 import {CrossToolProtocolStub} from 'cross_tool/cross_tool_protocol_stub';
 import {AppEventListenerEmitterStub} from 'interfaces/app_event_listener_emitter_stub';
 import {ProgressListenerStub} from 'interfaces/progress_listener_stub';
+import {UserNotificationListenerStub} from 'interfaces/user_notification_listener_stub';
 import {MockStorage} from 'test/unit/mock_storage';
 import {UnitTestUtils} from 'test/unit/utils';
-import {RealTimestamp} from 'trace/timestamp';
-import {TraceFile} from 'trace/trace_file';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -37,6 +37,7 @@ import {TracePipeline} from './trace_pipeline';
 describe('Mediator', () => {
   const viewerStub = new ViewerStub('Title');
   let inputFiles: File[];
+  let userNotificationListener: UserNotificationListenerStub;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: AbtChromeExtensionProtocolStub;
@@ -65,7 +66,8 @@ describe('Mediator', () => {
   });
 
   beforeEach(async () => {
-    tracePipeline = new TracePipeline();
+    userNotificationListener = new UserNotificationListenerStub();
+    tracePipeline = new TracePipeline(userNotificationListener);
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = new AbtChromeExtensionProtocolStub();
     crossToolProtocol = new CrossToolProtocolStub();
@@ -184,7 +186,7 @@ describe('Mediator', () => {
   });
 
   it('propagates trace position update from timeline component', async () => {
-    await loadTraceFiles();
+    await loadFiles();
     await mediator.onWinscopeViewTracesRequest();
 
     spyOn(viewerStub, 'onAppEvent');
@@ -216,9 +218,23 @@ describe('Mediator', () => {
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(2);
   });
 
+  it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
+    spyOn(viewerStub, 'onAppEvent');
+
+    const dumpFile = await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb');
+    await mediator.onWinscopeFilesUploaded([dumpFile]);
+    await mediator.onWinscopeViewTracesRequest();
+
+    expect(viewerStub.onAppEvent).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({
+        type: AppEventType.TRACE_POSITION_UPDATE,
+      } as AppEvent)
+    );
+  });
+
   describe('timestamp received from remote tool', () => {
     it('propagates trace position update', async () => {
-      await loadTraceFiles();
+      await loadFiles();
       await mediator.onWinscopeViewTracesRequest();
 
       spyOn(viewerStub, 'onAppEvent');
@@ -247,7 +263,7 @@ describe('Mediator', () => {
     });
 
     it("doesn't propagate timestamp back to remote tool", async () => {
-      await loadTraceFiles();
+      await loadFiles();
       await mediator.onWinscopeViewTracesRequest();
 
       spyOn(viewerStub, 'onAppEvent');
@@ -275,7 +291,7 @@ describe('Mediator', () => {
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledTimes(0);
 
       // apply timestamp
-      await loadTraceFiles();
+      await loadFiles();
       await mediator.onWinscopeViewTracesRequest();
       expect(timelineComponent.onTracePositionUpdate).toHaveBeenCalledWith(POSITION_11);
     });
@@ -312,9 +328,9 @@ describe('Mediator', () => {
     );
   });
 
-  const loadTraceFiles = async () => {
-    const traceFiles = inputFiles.map((file) => new TraceFile(file));
-    const errors = await tracePipeline.loadTraceFiles(traceFiles);
-    expect(errors).toEqual([]);
+  const loadFiles = async () => {
+    const parserErrorsSpy = spyOn(userNotificationListener, 'onParserErrors');
+    await tracePipeline.loadFiles(inputFiles);
+    expect(parserErrorsSpy).not.toHaveBeenCalled();
   };
 });

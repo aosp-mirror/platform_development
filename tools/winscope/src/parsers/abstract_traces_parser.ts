@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
+import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 export abstract class AbstractTracesParser<T> implements Parser<T> {
@@ -28,7 +29,11 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
 
   abstract getTraceType(): TraceType;
 
-  abstract getEntry(index: number, timestampType: TimestampType): Promise<T>;
+  abstract getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
+
+  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
+    throw new Error('Not implemented');
+  }
 
   abstract getLengthEntries(): number;
 

@@ -25,11 +25,11 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
-import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {Rectangle, TransformMatrix} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
@@ -166,8 +166,8 @@ export class Presenter {
       this.previousEntry = (await prevEntry?.getValue()) ?? null;
       if (this.entry) {
         this.uiData.highlightedItems = this.highlightedItems;
-        this.uiData.rects = this.generateRects();
-        this.uiData.displayIds = this.displayIds;
+        this.uiData.rects = this.generateRects(this.entry);
+        this.uiData.displayIds = this.getDisplayIds(this.entry);
         this.uiData.tree = this.generateTree();
       }
 
@@ -175,34 +175,64 @@ export class Presenter {
     });
   }
 
-  private generateRects(): Rectangle[] {
+  private generateRects(entry: TraceTreeNode): Rectangle[] {
+    const identityMatrix: TransformMatrix = {
+      dsdx: 1,
+      dsdy: 0,
+      tx: 0,
+      dtdx: 0,
+      dtdy: 1,
+      ty: 0,
+    };
     const displayRects: Rectangle[] =
-      this.entry?.displays?.map((display: DisplayContent) => {
-        const rect = display.displayRect;
-        rect.label = `Display - ${display.title}`;
-        rect.stableId = display.stableId;
-        rect.displayId = display.id;
-        rect.isDisplay = true;
-        rect.cornerRadius = 0;
-        rect.isVirtual = false;
+      entry.displays?.map((display: DisplayContent) => {
+        const rect: Rectangle = {
+          topLeft: {x: display.displayRect.left, y: display.displayRect.top},
+          bottomRight: {x: display.displayRect.right, y: display.displayRect.bottom},
+          label: `Display - ${display.title}`,
+          transform: identityMatrix,
+          isVisible: false, //TODO: check if displayRect.ref.isVisible exists
+          isDisplay: true,
+          id: display.stableId,
+          displayId: display.id,
+          isVirtual: false,
+          isClickable: false,
+          cornerRadius: 0,
+        };
         return rect;
       }) ?? [];
-    this.displayIds = [];
-    const rects: Rectangle[] =
-      this.entry?.windowStates
+
+    const windowRects: Rectangle[] =
+      entry.windowStates
         ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
         .map((it: any) => {
-          const rect = it.rect;
-          rect.id = it.layerId;
-          rect.displayId = it.displayId;
-          rect.cornerRadius = 0;
-          if (!this.displayIds.includes(it.displayId)) {
-            this.displayIds.push(it.displayId);
-          }
+          const rect: Rectangle = {
+            topLeft: {x: it.rect.left, y: it.rect.top},
+            bottomRight: {x: it.rect.right, y: it.rect.bottom},
+            label: it.rect.label,
+            transform: identityMatrix,
+            isVisible: it.isVisible,
+            isDisplay: false,
+            id: it.stableId,
+            displayId: it.displayId,
+            isVirtual: false, //TODO: is this correct?
+            isClickable: true,
+            cornerRadius: 0,
+          };
           return rect;
         }) ?? [];
-    this.displayIds.sort();
-    return this.rectsToUiData(rects.concat(displayRects));
+
+    return windowRects.concat(displayRects);
+  }
+
+  private getDisplayIds(entry: TraceTreeNode): number[] {
+    const ids = new Set<number>();
+    entry.windowStates?.map((it: any) => {
+      ids.add(it.displayId);
+    });
+    return Array.from(ids.values()).sort((a, b) => {
+      return a - b;
+    });
   }
 
   private updateSelectedTreeUiData() {
@@ -236,40 +266,6 @@ export class Presenter {
     this.pinnedItems = generator.getPinnedItems();
     this.uiData.pinnedItems = this.pinnedItems;
     return tree;
-  }
-
-  private rectsToUiData(rects: any[]): Rectangle[] {
-    const uiRects: Rectangle[] = [];
-    const identityMatrix: RectMatrix = {
-      dsdx: 1,
-      dsdy: 0,
-      tx: 0,
-      dtdx: 0,
-      dtdy: 1,
-      ty: 0,
-    };
-    rects.forEach((rect: any) => {
-      const transform: RectTransform = {
-        matrix: identityMatrix,
-      };
-
-      const newRect: Rectangle = {
-        topLeft: {x: rect.left, y: rect.top},
-        bottomRight: {x: rect.right, y: rect.bottom},
-        label: rect.label,
-        transform,
-        isVisible: rect.ref?.isVisible ?? false,
-        isDisplay: rect.isDisplay ?? false,
-        ref: rect.ref,
-        id: rect.stableId ?? rect.ref.stableId,
-        displayId: rect.displayId ?? rect.ref.stackId,
-        isVirtual: rect.isVirtual ?? false,
-        isClickable: !rect.isDisplay,
-        cornerRadius: rect.cornerRadius,
-      };
-      uiRects.push(newRect);
-    });
-    return uiRects;
   }
 
   private updatePinnedIds(newId: string) {

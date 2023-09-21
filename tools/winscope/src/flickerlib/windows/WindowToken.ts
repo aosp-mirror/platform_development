@@ -14,28 +14,10 @@
  * limitations under the License.
  */
 
-import {WindowToken} from '../common';
+import {WindowContainer, WindowToken} from '../common';
 import {shortenName} from '../mixin';
-import {WindowContainer} from './WindowContainer';
 
-WindowToken.fromProto = (
-  proto: any,
-  isActivityInTree: boolean,
-  nextSeq: () => number
-): WindowToken => {
-  if (!proto) {
-    return null;
-  }
-
-  const windowContainer = WindowContainer.fromProto(
-    /* proto */ proto.windowContainer,
-    /* protoChildren */ proto.windowContainer?.children ?? [],
-    /* isActivityInTree */ isActivityInTree,
-    /* computedZ */ nextSeq,
-    /* nameOverride */ proto.hashCode.toString(16),
-    /* identifierOverride */ null,
-    /* tokenOverride */ proto.hashCode
-  );
+WindowToken.fromProto = (windowContainer: WindowContainer, proto: any): WindowToken => {
   const entry = new WindowToken(windowContainer);
   entry.kind = entry.constructor.name;
   entry.proto = proto;

@@ -278,9 +278,15 @@ export class Presenter {
     const formattingOptions = ObjectFormatter.displayDefaults;
     ObjectFormatter.displayDefaults = true;
 
+    const entryProtos = await Promise.all(
+      this.trace.mapEntry(async (entry) => {
+        return await entry.getValue();
+      })
+    );
+
     for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
       const entry = this.trace.getEntry(originalIndex);
-      const entryProto = (await entry.getValue()) as any;
+      const entryProto = entryProtos[originalIndex] as any;
 
       for (const transactionStateProto of entryProto.transactions) {
         for (const layerStateProto of transactionStateProto.layerChanges) {

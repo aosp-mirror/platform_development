@@ -509,7 +509,7 @@ class TraceConverter:
 
         if build_id:
           # If we have the build_id, do a brute-force search of the symbols directory.
-          basename = os.path.basename(lib)
+          basename = os.path.basename(lib).split("!")[-1]
           lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, build_id)
           if not lib:
             print("WARNING: Cannot find {} with build id {} in symbols directory."
