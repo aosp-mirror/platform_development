@@ -123,11 +123,26 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeDefined();
   });
 
+  it('is robust to corrupted archive', async () => {
+    const corruptedArchive = await UnitTestUtils.getFixtureFile('corrupted_archive.zip');
+
+    await tracePipeline.loadFiles([corruptedArchive]);
+    expect(parserErrorsSpy).toHaveBeenCalledOnceWith([
+      new ParserError(ParserErrorType.CORRUPTED_ARCHIVE, 'corrupted_archive.zip'),
+      new ParserError(ParserErrorType.NO_INPUT_FILES),
+    ]);
+
+    await tracePipeline.buildTraces();
+    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+  });
+
   it('is robust to invalid trace files', async () => {
     const invalidFiles = [await UnitTestUtils.getFixtureFile('winscope_homepage.png')];
 
     await tracePipeline.loadFiles(invalidFiles);
-    expect(parserErrorsSpy).toHaveBeenCalledTimes(1); //TODO: more specific
+    expect(parserErrorsSpy).toHaveBeenCalledOnceWith([
+      new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, 'winscope_homepage.png'),
+    ]);
 
     await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
@@ -141,7 +156,9 @@ describe('TracePipeline', () => {
     ];
 
     await tracePipeline.loadFiles(files);
-    expect(parserErrorsSpy).toHaveBeenCalledTimes(1); //TODO: more specific
+    expect(parserErrorsSpy).toHaveBeenCalledOnceWith([
+      new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, 'winscope_homepage.png'),
+    ]);
 
     await tracePipeline.buildTraces();
     expect(tracePipeline.getTraces().getSize()).toEqual(1);

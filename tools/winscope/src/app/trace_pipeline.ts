@@ -46,17 +46,17 @@ export class TracePipeline {
   }
 
   async loadFiles(files: File[], progressListener?: ProgressListener) {
-    const traceFiles = await this.unzipFiles(files, progressListener);
+    const [traceFiles, errors] = await this.unzipFiles(files, progressListener);
 
     const filterResult = await this.traceFileFilter.filter(traceFiles);
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
       progressListener?.onOperationFinished();
-      const errors = [new ParserError(ParserErrorType.NO_INPUT_FILES)];
+      errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
       this.userNotificationListener?.onParserErrors(errors);
       return;
     }
 
-    const errors = filterResult.errors;
+    errors.push(...filterResult.errors);
 
     if (filterResult.perfetto) {
       const perfettoParsers = await new PerfettoParserFactory().createParsers(
@@ -168,22 +168,49 @@ export class TracePipeline {
   private async unzipFiles(
     files: File[],
     progressListener?: ProgressListener
-  ): Promise<TraceFile[]> {
-    let progressMessage = '';
+  ): Promise<[TraceFile[], ParserError[]]> {
+    const traceFiles: TraceFile[] = [];
+    const errors: ParserError[] = [];
+    const progressMessage = 'Unzipping files...';
+
     const onProgressUpdate = (progressPercentage: number) => {
       progressListener?.onProgressUpdate(progressMessage, progressPercentage);
     };
 
-    const traceFiles: TraceFile[] = [];
     const onFile: OnFile = (file: File, parentArchive?: File) => {
       traceFiles.push(new TraceFile(file, parentArchive));
     };
 
-    progressMessage = 'Unzipping files...';
     progressListener?.onProgressUpdate(progressMessage, 0);
-    await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
 
-    return traceFiles;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      const onSubProgressUpdate = (subPercentage: number) => {
+        const totalPercentage = (100 * i) / files.length + subPercentage / files.length;
+        progressListener?.onProgressUpdate(progressMessage, totalPercentage);
+      };
+
+      if (FileUtils.isZipFile(file)) {
+        try {
+          const subFiles = await FileUtils.unzipFile(file, onSubProgressUpdate);
+          const subTraceFiles = subFiles.map((subFile) => {
+            return new TraceFile(subFile, file);
+          });
+          traceFiles.push(...subTraceFiles);
+          onSubProgressUpdate(100);
+        } catch (e) {
+          errors.push(new ParserError(ParserErrorType.CORRUPTED_ARCHIVE, file.name));
+        }
+      } else {
+        traceFiles.push(new TraceFile(file, undefined));
+        onSubProgressUpdate(100);
+      }
+    }
+
+    progressListener?.onProgressUpdate(progressMessage, 100);
+
+    return [traceFiles, errors];
   }
 
   private getCommonTimestampType(): TimestampType {

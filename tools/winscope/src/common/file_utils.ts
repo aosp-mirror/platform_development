@@ -72,28 +72,6 @@ class FileUtils {
     return unzippedFiles;
   }
 
-  static async unzipFilesIfNeeded(
-    files: File[],
-    onFile: OnFile,
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
-  ) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
-      const onSubprogressUpdate = (subPercentage: number) => {
-        const percentage = (100 * i) / files.length + subPercentage / files.length;
-        onProgressUpdate(percentage);
-      };
-
-      if (FileUtils.isZipFile(file)) {
-        const unzippedFile = await FileUtils.unzipFile(file, onSubprogressUpdate);
-        unzippedFile.forEach((unzippedFile) => onFile(unzippedFile, file));
-      } else {
-        onFile(file, undefined);
-      }
-    }
-  }
-
   static isZipFile(file: File) {
     return FileUtils.getFileExtension(file) === 'zip';
   }
