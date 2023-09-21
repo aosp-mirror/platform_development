@@ -141,7 +141,6 @@ describe('SliderComponent', () => {
   });
 
   it('draws current position cursor', () => {
-    component.currentPosition = TracePosition.fromTimestamp(new RealTimestamp(150n));
     fixture.detectChanges();
     component.ngOnChanges({
       currentPosition: {
