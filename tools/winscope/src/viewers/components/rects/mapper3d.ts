@@ -47,7 +47,7 @@ class Mapper3D {
   };
 
   private rects: Rectangle[] = [];
-  private highlightedRectIds: string[] = [];
+  private highlightedRectId: string = '';
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
@@ -60,8 +60,8 @@ class Mapper3D {
     this.rects = rects;
   }
 
-  setHighlightedRectIds(ids: string[]) {
-    this.highlightedRectIds = ids;
+  setHighlightedRectId(id: string) {
+    this.highlightedRectId = id;
   }
 
   getCameraRotationFactor(): number {
@@ -217,7 +217,7 @@ class Mapper3D {
 
   private getColorType(rect2d: Rectangle): ColorType {
     let colorType: ColorType;
-    if (this.highlightedRectIds.includes(rect2d.id)) {
+    if (this.highlightedRectId === rect2d.id) {
       colorType = ColorType.HIGHLIGHTED;
     } else if (rect2d.hasContent === true) {
       colorType = ColorType.HAS_CONTENT;
@@ -321,7 +321,7 @@ class Mapper3D {
         z: lineStart.z,
       };
 
-      const isHighlighted = this.highlightedRectIds.includes(rect2d.id);
+      const isHighlighted = this.highlightedRectId === rect2d.id;
 
       const label3d: Label3D = {
         circle: {

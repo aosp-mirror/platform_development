@@ -19,6 +19,7 @@ import {TraceType, ViewNode} from 'trace/trace_type';
 import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'properties-view',
@@ -71,6 +72,9 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           *ngIf="objectKeys(propertiesTree).length > 0 && !showViewCaptureFormat()"
           [item]="propertiesTree"
           [showNode]="showNode"
+          [itemsClickable]="true"
+          [highlightedItem]="highlightedProperty"
+          (highlightedChange)="onHighlightedPropertyChange($event)"
           [isLeaf]="isLeaf"
           [isAlwaysCollapsed]="true"></tree-view>
       </div>
@@ -120,6 +124,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         overflow: auto;
       }
     `,
+    nodeStyles,
   ],
 })
 export class PropertiesComponent {
@@ -128,6 +133,7 @@ export class PropertiesComponent {
 
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNode = {};
+  @Input() highlightedProperty: string = '';
   @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
@@ -139,6 +145,14 @@ export class PropertiesComponent {
     const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  onHighlightedPropertyChange(newId: string) {
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
+      bubbles: true,
+      detail: {id: newId},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

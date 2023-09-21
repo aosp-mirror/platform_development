@@ -35,7 +35,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       *ngIf="item && showNode(item)"
       class="node"
       [class.leaf]="isLeaf(this.item)"
-      [class.selected]="isHighlighted(item, highlightedItems)"
+      [class.selected]="isHighlighted(item, highlightedItem)"
       [class.clickable]="isClickable()"
       [class.child-selected]="hasSelectedChild()"
       [class.hover]="nodeHover"
@@ -49,6 +49,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
       [hasChildren]="hasChildren()"
       [isPinned]="isPinned()"
+      [isSelected]="isHighlighted(item, highlightedItem)"
       (toggleTreeChange)="toggleTree()"
       (click)="onNodeClick($event)"
       (expandTreeChange)="expandTree()"
@@ -70,12 +71,12 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
         [isFlattened]="isFlattened"
         [useGlobalCollapsedState]="useGlobalCollapsedState"
         [initialDepth]="initialDepth + 1"
-        [highlightedItems]="highlightedItems"
+        [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
-        (highlightedItemChange)="propagateNewHighlightedItem($event)"
+        [itemsClickable]="itemsClickable"
+        (highlightedChange)="propagateNewHighlightedItem($event)"
         (pinnedItemChange)="propagateNewPinnedItem($event)"
         (selectedTreeChange)="propagateNewSelectedTree($event)"
-        [itemsClickable]="itemsClickable"
         (hoverStart)="childHover = true"
         (hoverEnd)="childHover = false"></tree-view>
     </div>
@@ -95,7 +96,7 @@ export class TreeComponent {
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
-  @Input() highlightedItems: string[] = [];
+  @Input() highlightedItem: string = '';
   @Input() pinnedItems?: HierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
   @Input() useGlobalCollapsedState?: boolean;
@@ -105,7 +106,7 @@ export class TreeComponent {
     return !item || !item.children || item.children.length === 0;
   };
 
-  @Output() highlightedItemChange = new EventEmitter<string>();
+  @Output() highlightedChange = new EventEmitter<string>();
   @Output() selectedTreeChange = new EventEmitter<UiTreeNode>();
   @Output() pinnedItemChange = new EventEmitter<UiTreeNode>();
   @Output() hoverStart = new EventEmitter<void>();
@@ -145,7 +146,7 @@ export class TreeComponent {
   ngOnChanges() {
     if (
       this.item instanceof HierarchyTreeNode &&
-      UiTreeUtils.isHighlighted(this.item, this.highlightedItems)
+      UiTreeUtils.isHighlighted(this.item, this.highlightedItem)
     ) {
       this.selectedTreeChange.emit(this.item);
     }
@@ -168,7 +169,7 @@ export class TreeComponent {
       event.preventDefault();
       this.toggleTree();
     } else {
-      this.updateHighlightedItems();
+      this.updateHighlightedItem();
     }
   }
 
@@ -181,9 +182,9 @@ export class TreeComponent {
     };
   }
 
-  private updateHighlightedItems() {
+  private updateHighlightedItem() {
     if (this.item?.stableId) {
-      this.highlightedItemChange.emit(`${this.item.stableId}`);
+      this.highlightedChange.emit(`${this.item.stableId}`);
     }
   }
 
@@ -195,7 +196,7 @@ export class TreeComponent {
   }
 
   propagateNewHighlightedItem(newId: string) {
-    this.highlightedItemChange.emit(newId);
+    this.highlightedChange.emit(newId);
   }
 
   propagateNewPinnedItem(newPinnedItem: UiTreeNode) {
@@ -250,7 +251,7 @@ export class TreeComponent {
       return false;
     }
     for (const child of this.item!.children!) {
-      if (child.stableId && this.highlightedItems.includes(child.stableId)) {
+      if (child.stableId && this.highlightedItem === child.stableId) {
         return true;
       }
     }

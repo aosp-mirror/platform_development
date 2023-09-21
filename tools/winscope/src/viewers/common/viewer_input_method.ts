@@ -56,7 +56,7 @@ abstract class ViewerInputMethod implements Viewer {
       this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`)
+      this.presenter.updateHighlightedItem(`${(event as CustomEvent).detail.id}`)
     );
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
       this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)

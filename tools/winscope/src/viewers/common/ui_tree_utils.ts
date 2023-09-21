@@ -83,8 +83,8 @@ export class UiTreeUtils {
     return diffType ?? '';
   }
 
-  static isHighlighted(item: UiTreeNode, highlightedItems: string[]): boolean {
-    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.stableId}`);
+  static isHighlighted(item: UiTreeNode, highlighted: string): boolean {
+    return highlighted === `${item.stableId}`;
   }
 
   static isVisibleNode(kind: string, type?: string): boolean {

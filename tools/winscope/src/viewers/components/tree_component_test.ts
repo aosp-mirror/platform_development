@@ -41,11 +41,26 @@ describe('TreeComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('shows node', () => {
+    const treeNode = htmlElement.querySelector('tree-node');
+    expect(treeNode).toBeTruthy();
+  });
+
   it('can identify if a parent node has a selected child', () => {
     expect(component.treeComponent.hasSelectedChild()).toBeFalse();
-    component.highlightedItems.push('3');
+    component.highlightedItem = '3';
     fixture.detectChanges();
     expect(component.treeComponent.hasSelectedChild()).toBeTrue();
+  });
+
+  it('highlights item upon node click', () => {
+    const treeNode: HTMLButtonElement | null = htmlElement.querySelector('tree-node');
+    expect(treeNode).toBeTruthy();
+
+    const spy = spyOn(component.treeComponent.highlightedChange, 'emit');
+    treeNode!.dispatchEvent(new MouseEvent('click', {detail: 1}));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
   });
 
   @Component({
@@ -56,7 +71,7 @@ describe('TreeComponent', () => {
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
-        [highlightedItems]="highlightedItems"
+        [highlightedItem]="highlightedItem"
         [itemsClickable]="true"></tree-view>
     `,
   })
@@ -69,7 +84,7 @@ describe('TreeComponent', () => {
       children: [{kind: '3', stableId: '3', name: 'Child1'}],
     };
     store = new PersistentStore();
-    highlightedItems: string[] = [];
+    highlightedItem = '';
 
     @ViewChild(TreeComponent)
     treeComponent!: TreeComponent;

@@ -34,14 +34,14 @@ import {UiData} from './ui_data';
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displayIds]="[0]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
         [tree]="inputData?.tree ?? null"
         [dependencies]="inputData?.dependencies ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
