@@ -25,7 +25,7 @@ import {ParserTransactions} from './parser_transactions';
 
 export class ParserFactory {
   private static readonly PARSERS = [ParserSurfaceFlinger, ParserTransactions];
-  private static readonly CHUNK_SIZE_BYTES = 100 * 1024 * 1024;
+  private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
   private static traceProcessor?: WasmEngineProxy;
 
   async createParsers(
