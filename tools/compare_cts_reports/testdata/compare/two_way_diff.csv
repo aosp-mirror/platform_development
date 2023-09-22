@@ -1,0 +1,11 @@
+module_name,abi,class_name,test_name,result in A,result in B
+module_2,arm64-v8a,testcase_2,test_3,pass,IGNORED
+module_2,arm64-v8a,testcase_3,test_4,ASSUMPTION_FAILURE,fail
+module_2,arm64-v8a,testcase_3,test_5,fail,TEST_STATUS_UNSPECIFIED
+module_2,arm64-v8a,testcase_4,test_6,IGNORED,pass
+module_2,arm64-v8a,testcase_4,test_7,fail,pass
+module_2,arm64-v8a,testcase_4,test_8,TEST_STATUS_UNSPECIFIED,fail
+module_3,arm64-v8a,testcase_5,test_9,pass,null
+module_3,arm64-v8a,testcase_5,test_10,TEST_ERROR,null
+module_3,arm64-v8a,testcase_5,test_11,null,pass
+module_4,arm64-v8a,testcase_6,test_12,null,fail

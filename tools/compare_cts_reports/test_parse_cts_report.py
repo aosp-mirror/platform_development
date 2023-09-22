@@ -140,15 +140,15 @@ class TestParse(unittest.TestCase):
       parsed_result_path = os.path.join(temp_dir, 'result.csv')
       parsed_summary_path = os.path.join(temp_dir, 'summary.csv')
 
-      files = [parsed_info_path, parsed_result_path, parsed_summary_path]
-
-      match, mismatch, errors = filecmp.cmpfiles(
-          'testdata/output', temp_dir, files
+      self.assertTrue(
+          filecmp.cmp('testdata/output/info_1.json', parsed_info_path)
       )
-
-      self.assertEqual(match, files)
-      self.assertEqual(mismatch, [])
-      self.assertEqual(errors, [])
+      self.assertTrue(
+          filecmp.cmp('testdata/output/result_1.csv', parsed_result_path)
+      )
+      self.assertTrue(
+          filecmp.cmp('testdata/output/summary_1.csv', parsed_summary_path)
+      )
 
 
 if __name__ == '__main__':
