@@ -1,4 +1,5 @@
 {
+  "tool_version": "1.0",
   "source_path": "testdata/test_result_1.xml",
   "build_model": "this_model",
   "build_id": "1412",
