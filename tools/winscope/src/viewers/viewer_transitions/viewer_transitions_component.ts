@@ -131,6 +131,7 @@ import {UiData} from './ui_data';
       .container-properties {
         flex: 1;
         padding: 16px;
+        overflow-y: scroll;
       }
 
       .entries .scroll {

@@ -72,8 +72,10 @@ export class SnackBarOpener implements UserNotificationListener {
       error.traceType !== undefined ? ` of type ${TRACE_INFO[error.traceType].name}` : '';
 
     switch (error.type) {
+      case ParserErrorType.CORRUPTED_ARCHIVE:
+        return `${fileName}: corrupted archive`;
       case ParserErrorType.NO_INPUT_FILES:
-        return 'No input files';
+        return `Input doesn't contain trace files`;
       case ParserErrorType.UNSUPPORTED_FORMAT:
         return `${fileName}: unsupported file format`;
       case ParserErrorType.OVERRIDE: {
