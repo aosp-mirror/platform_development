@@ -15,7 +15,7 @@
  */
 
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import {ChangeDetectionStrategy} from '@angular/core';
+import {ChangeDetectionStrategy, DebugElement} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -201,14 +201,7 @@ describe('TimelineComponent', () => {
   });
 
   it('next button disabled if no next entry', () => {
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
-      .build();
-    component.timelineData.initialize(traces, undefined);
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
+    loadTraces();
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
 
@@ -230,14 +223,7 @@ describe('TimelineComponent', () => {
   });
 
   it('prev button disabled if no prev entry', () => {
-    const builder = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112]);
-    const traces = builder.build();
-    component.timelineData.initialize(traces, undefined);
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
+    loadTraces();
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css('#prev_entry_button'));
@@ -258,87 +244,93 @@ describe('TimelineComponent', () => {
   });
 
   it('changes timestamp on next entry button press', () => {
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
-      .build();
-    component.timelineData.initialize(traces, undefined);
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
+    loadTraces();
+
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
     const nextEntryButton = fixture.debugElement.query(By.css('#next_entry_button'));
     expect(nextEntryButton).toBeTruthy();
 
-    component.timelineData.setPosition(position105);
-    fixture.detectChanges();
-    nextEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(110n);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position105, 110n);
 
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
-    nextEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(110n);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position100, 110n);
 
-    component.timelineData.setPosition(position90);
-    fixture.detectChanges();
-    nextEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position90, 100n);
 
     // No change when we are already on the last timestamp of the active trace
-    component.timelineData.setPosition(position110);
-    fixture.detectChanges();
-    nextEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(110n);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position110, 110n);
 
     // No change when we are after the last entry of the active trace
-    component.timelineData.setPosition(position112);
-    fixture.detectChanges();
-    nextEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(112n);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position112, 112n);
   });
 
   it('changes timestamp on previous entry button press', () => {
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
-      .build();
-    component.timelineData.initialize(traces, undefined);
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
+    loadTraces();
+
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css('#prev_entry_button'));
     expect(prevEntryButton).toBeTruthy();
 
     // In this state we are already on the first entry at timestamp 100, so
     // there is no entry to move to before and we just don't update the timestamp
-    component.timelineData.setPosition(position105);
-    fixture.detectChanges();
-    prevEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(105n);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position105, 105n);
 
-    component.timelineData.setPosition(position110);
-    fixture.detectChanges();
-    prevEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position110, 100n);
 
     // Active entry here should be 110 so moving back means moving to 100.
-    component.timelineData.setPosition(position112);
-    fixture.detectChanges();
-    prevEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position112, 100n);
 
     // No change when we are already on the first timestamp of the active trace
-    component.timelineData.setPosition(position100);
-    fixture.detectChanges();
-    prevEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position100, 100n);
 
     // No change when we are before the first entry of the active trace
-    component.timelineData.setPosition(position90);
-    fixture.detectChanges();
-    prevEntryButton.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(90n);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position90, 90n);
   });
+
+  it('performs expected action on arrow key press depending on input form focus', () => {
+    loadTraces();
+
+    const spyNextEntry = spyOn(component, 'moveToNextEntry');
+    const spyPrevEntry = spyOn(component, 'moveToPreviousEntry');
+
+    component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
+    expect(spyNextEntry).toHaveBeenCalled();
+
+    const formElement = fixture.nativeElement.querySelector('.time-selector-form');
+    formElement.dispatchEvent(new Event('focusin'));
+    fixture.detectChanges();
+
+    component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+    fixture.detectChanges();
+    expect(spyPrevEntry).not.toHaveBeenCalled();
+
+    formElement.dispatchEvent(new Event('focusout'));
+    fixture.detectChanges();
+
+    component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+    fixture.detectChanges();
+    expect(spyPrevEntry).toHaveBeenCalled();
+  });
+
+  const loadTraces = () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
+      .build();
+    component.timelineData.initialize(traces, undefined);
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.timelineData.setPosition(position100);
+    fixture.detectChanges();
+  };
+
+  const testCurrentTimestampOnButtonClick = (
+    button: DebugElement,
+    pos: TracePosition,
+    expectedNs: bigint
+  ) => {
+    component.timelineData.setPosition(pos);
+    fixture.detectChanges();
+    button.nativeElement.click();
+    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
+  };
 });
