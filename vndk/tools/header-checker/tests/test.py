@@ -356,6 +356,7 @@ class HeaderCheckerTest(unittest.TestCase):
             'libversion_script_example',
             'libversion_script_example_no_mytag',
             'libversion_script_example_no_private',
+            'libversion_script_example_api_level',
         ]
 
         for module_name in cases:
