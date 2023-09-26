@@ -165,14 +165,33 @@ TEST(VersionScriptParserTest, VisibilityLabels) {
 
 TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
   static const char testdata[] = R"TESTDATA(
-    LIBEX_1.0 {
+    LIBEX_1.0 {  # introduced=18
       global:
         test1;  # introduced=19
         test2;  # introduced=19 introduced-arm64=20
         test3;  # introduced-arm64=20 introduced=19
         test4;  # future
+        test5;  # introduced=17
     };
   )TESTDATA";
+
+  {
+    VersionScriptParser parser;
+    parser.SetArch("arm64");
+    parser.SetApiLevel(17);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_EQ(funcs.end(), funcs.find("test1"));
+    EXPECT_EQ(funcs.end(), funcs.find("test2"));
+    EXPECT_EQ(funcs.end(), funcs.find("test3"));
+    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_EQ(funcs.end(), funcs.find("test5"));
+  }
 
   {
     VersionScriptParser parser;
@@ -189,6 +208,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     EXPECT_EQ(funcs.end(), funcs.find("test2"));
     EXPECT_EQ(funcs.end(), funcs.find("test3"));
     EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_NE(funcs.end(), funcs.find("test5"));
   }
 
   {
@@ -206,6 +226,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     EXPECT_EQ(funcs.end(), funcs.find("test2"));
     EXPECT_EQ(funcs.end(), funcs.find("test3"));
     EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_NE(funcs.end(), funcs.find("test5"));
   }
 
   {
@@ -223,6 +244,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     EXPECT_NE(funcs.end(), funcs.find("test2"));
     EXPECT_NE(funcs.end(), funcs.find("test3"));
     EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_NE(funcs.end(), funcs.find("test5"));
   }
 
   {
@@ -240,6 +262,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     EXPECT_NE(funcs.end(), funcs.find("test2"));
     EXPECT_NE(funcs.end(), funcs.find("test3"));
     EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_NE(funcs.end(), funcs.find("test5"));
   }
 
   {
@@ -257,6 +280,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     EXPECT_NE(funcs.end(), funcs.find("test2"));
     EXPECT_NE(funcs.end(), funcs.find("test3"));
     EXPECT_NE(funcs.end(), funcs.find("test4"));
+    EXPECT_NE(funcs.end(), funcs.find("test5"));
   }
 }
 
@@ -324,10 +348,10 @@ TEST(VersionScriptParserTest, ParseSymbolTagsArch) {
 
 TEST(VersionScriptParserTest, ExcludeSymbolTags) {
   static const char testdata[] = R"TESTDATA(
-    LIBEX_1.0 {
+    LIBEX_1.0 {  # exclude-tag-1
       global:
         test1;
-        test2;  # exclude-tag
+        test2;  # exclude-tag-2
     };
   )TESTDATA";
 
@@ -345,10 +369,23 @@ TEST(VersionScriptParserTest, ExcludeSymbolTags) {
     EXPECT_NE(funcs.end(), funcs.find("test2"));
   }
 
-  // exclude_symbol_tags = {"exclude-tag"}
   {
     VersionScriptParser parser;
-    parser.AddExcludedSymbolTag("exclude-tag");
+    parser.AddExcludedSymbolTag("exclude-tag-1");
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_EQ(funcs.end(), funcs.find("test1"));
+    EXPECT_EQ(funcs.end(), funcs.find("test2"));
+  }
+
+  {
+    VersionScriptParser parser;
+    parser.AddExcludedSymbolTag("exclude-tag-2");
 
     std::istringstream stream(testdata);
     std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
