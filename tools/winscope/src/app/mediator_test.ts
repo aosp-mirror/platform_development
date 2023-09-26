@@ -52,6 +52,7 @@ describe('Mediator', () => {
 
   const TIMESTAMP_10 = new RealTimestamp(10n);
   const TIMESTAMP_11 = new RealTimestamp(11n);
+
   const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
   const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
 

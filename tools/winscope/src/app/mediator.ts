@@ -27,6 +27,7 @@ import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {TracePositionUpdateEmitter} from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -228,7 +229,7 @@ export class Mediator {
       return;
     }
 
-    const position = TracePosition.fromTimestamp(timestamp);
+    const position = this.timelineData.makePositionFromActiveTrace(timestamp);
     this.timelineData.setPosition(position);
 
     await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
@@ -282,21 +283,21 @@ export class Mediator {
 
     // TimelineData might not provide a TracePosition because all the loaded traces are
     // dumps with invalid timestamps (value zero). In this case let's create a TracePosition
-    // out of any timestamp from the loaded traces (if available).
-    const firstTimestamps = this.tracePipeline
+    // out of any entry from the loaded traces (if available).
+    const firstEntries = this.tracePipeline
       .getTraces()
       .mapTrace((trace) => {
         if (trace.lengthEntries > 0) {
-          return trace.getEntry(0).getTimestamp();
+          return trace.getEntry(0);
         }
         return undefined;
       })
-      .filter((timestamp) => {
-        return timestamp !== undefined;
-      }) as Timestamp[];
+      .filter((entry) => {
+        return entry !== undefined;
+      }) as Array<TraceEntry<object>>;
 
-    if (firstTimestamps.length > 0) {
-      return TracePosition.fromTimestamp(firstTimestamps[0]);
+    if (firstEntries.length > 0) {
+      return TracePosition.fromTraceEntry(firstEntries[0]);
     }
 
     return undefined;
