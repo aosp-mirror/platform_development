@@ -434,7 +434,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
 
   updateSeekTimestamp(timestamp: Timestamp | undefined) {
     if (timestamp) {
-      this.seekTracePosition = TracePosition.fromTimestamp(timestamp);
+      this.seekTracePosition = this.timelineData.makePositionFromActiveTrace(timestamp);
     } else {
       this.seekTracePosition = undefined;
     }
@@ -531,7 +531,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     }
     const target = event.target as HTMLInputElement;
     const timestamp = TimeUtils.parseHumanElapsed(target.value);
-    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -542,7 +542,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     const target = event.target as HTMLInputElement;
 
     const timestamp = TimeUtils.parseHumanReal(target.value);
-    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -556,7 +556,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
       this.timelineData.getTimestampType()!,
       StringUtils.parseBigIntStrippingUnit(target.value)
     );
-    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 }

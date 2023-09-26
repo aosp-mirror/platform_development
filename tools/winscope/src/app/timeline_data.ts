@@ -15,10 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, TimestampType} from 'common/time';
+import {TimeRange, Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {TraceEntry} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
@@ -102,6 +102,24 @@ export class TimelineData {
     }
 
     this.explicitlySetPosition = position;
+  }
+
+  makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
+    let trace: Trace<object> | undefined;
+    if (this.activeViewTraceTypes.length > 0) {
+      trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
+    }
+
+    if (!trace) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    const entry = trace.findClosestEntry(timestamp);
+    if (!entry) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
   setActiveViewTraceTypes(types: TraceType[]) {

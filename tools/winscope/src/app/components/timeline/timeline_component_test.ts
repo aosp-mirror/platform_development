@@ -47,12 +47,13 @@ describe('TimelineComponent', () => {
   const time90 = new RealTimestamp(90n);
   const time100 = new RealTimestamp(100n);
   const time101 = new RealTimestamp(101n);
+  const time105 = new RealTimestamp(105n);
   const time110 = new RealTimestamp(110n);
   const time112 = new RealTimestamp(112n);
 
   const position90 = TracePosition.fromTimestamp(time90);
   const position100 = TracePosition.fromTimestamp(time100);
-  const position105 = TracePosition.fromTimestamp(new RealTimestamp(105n));
+  const position105 = TracePosition.fromTimestamp(time105);
   const position110 = TracePosition.fromTimestamp(time110);
   const position112 = TracePosition.fromTimestamp(time112);
 

@@ -109,7 +109,7 @@ export class MiniTimelineComponent {
 
     const updateTimestampCallback = (timestamp: Timestamp) => {
       this.onSeekTimestampUpdate.emit(undefined);
-      this.onTracePositionUpdate.emit(TracePosition.fromTimestamp(timestamp));
+      this.onTracePositionUpdate.emit(this.timelineData.makePositionFromActiveTrace(timestamp));
     };
 
     this.drawer = new MiniTimelineDrawerImpl(
