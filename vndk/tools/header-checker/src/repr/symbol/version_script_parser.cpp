@@ -280,7 +280,8 @@ std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
     bool exclude_symbol_version = utils::HasMatchingGlobPattern(
         excluded_symbol_versions_, version.c_str());
 
-    if (!ParseVersionBlock(exclude_symbol_version)) {
+    ParsedTags tags = ParseSymbolTags(line);
+    if (!ParseVersionBlock(exclude_symbol_version || !IsSymbolExported(tags))) {
       return nullptr;
     }
   }
