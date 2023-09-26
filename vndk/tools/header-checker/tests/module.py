@@ -594,7 +594,7 @@ TEST_MODULES = [
         srcs=[
             'integration/weak_symbols/example.c',
         ],
-        version_script='integration/weak_symbols/libexample_old.map.txt',
+        version_script='integration/weak_symbols/old_map.txt',
         export_include_dirs=[],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -609,7 +609,7 @@ TEST_MODULES = [
         srcs=[
             'integration/weak_symbols/example.c',
         ],
-        version_script='integration/weak_symbols/libexample_new.map.txt',
+        version_script='integration/weak_symbols/new_map.txt',
         export_include_dirs=[],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
