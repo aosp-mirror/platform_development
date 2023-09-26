@@ -38,6 +38,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           *ngFor="let option of objectKeys(userOptions)"
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
+          [disabled]="userOptions[option].isUnavailable ?? false"
           (ngModelChange)="updateTree()"
           >{{ userOptions[option].name }}</mat-checkbox
         >

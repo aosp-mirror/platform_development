@@ -90,6 +90,20 @@ describe('PresenterSurfaceFlinger', () => {
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
+  it('disables show diff and generates non-diff tree if no prev entry available', async () => {
+    await presenter.onAppEvent(positionUpdate);
+
+    const hierarchyOpts = uiData.hierarchyUserOptions ?? null;
+    expect(hierarchyOpts).toBeTruthy();
+    expect(hierarchyOpts!['showDiff'].isUnavailable).toBeTrue();
+
+    const propertyOpts = uiData.propertiesUserOptions ?? null;
+    expect(propertyOpts).toBeTruthy();
+    expect(propertyOpts!['showDiff'].isUnavailable).toBeTrue();
+
+    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+  });
+
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
