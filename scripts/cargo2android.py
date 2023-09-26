@@ -744,18 +744,20 @@ class Crate(object):
         self.write('        "libcompiler_builtins.rust_sysroot",')
         self.write('        "libcore.rust_sysroot",')
         self.write('    ],')
-      if self.runner.variant_args.native_bridge_supported:
-        self.write('    native_bridge_supported: true,')
-      if self.runner.variant_args.product_available:
-        self.write('    product_available: true,')
-      if self.runner.variant_args.recovery_available:
-        self.write('    recovery_available: true,')
-      if self.runner.variant_args.vendor_available:
-        self.write('    vendor_available: true,')
-      if self.runner.variant_args.vendor_ramdisk_available:
-        self.write('    vendor_ramdisk_available: true,')
-      if self.runner.variant_args.ramdisk_available:
-        self.write('    ramdisk_available: true,')
+      if self.device_supported:
+        # These configurations are meaningful only if it is for device.
+        if self.runner.variant_args.native_bridge_supported:
+          self.write('    native_bridge_supported: true,')
+        if self.runner.variant_args.product_available:
+          self.write('    product_available: true,')
+        if self.runner.variant_args.recovery_available:
+          self.write('    recovery_available: true,')
+        if self.runner.variant_args.vendor_available:
+          self.write('    vendor_available: true,')
+        if self.runner.variant_args.vendor_ramdisk_available:
+          self.write('    vendor_ramdisk_available: true,')
+        if self.runner.variant_args.ramdisk_available:
+          self.write('    ramdisk_available: true,')
     if self.runner.variant_args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES and self.device_supported:
       self.write('    min_sdk_version: "%s",' % self.runner.variant_args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
