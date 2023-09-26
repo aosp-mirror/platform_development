@@ -533,7 +533,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -552,7 +552,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -572,7 +572,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[

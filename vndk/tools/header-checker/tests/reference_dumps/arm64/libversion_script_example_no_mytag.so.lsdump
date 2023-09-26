@@ -12,10 +12,7 @@
  "elf_functions" :
  [
   {
-   "name" : "_ZN5Test44testEv"
-  },
-  {
-   "name" : "test2"
+   "name" : "test1"
   }
  ],
  "elf_objects" : [],
@@ -24,21 +21,8 @@
  "functions" :
  [
   {
-   "function_name" : "Test4::test",
-   "linker_set_key" : "_ZN5Test44testEv",
-   "parameters" :
-   [
-    {
-     "is_this_ptr" : true,
-     "referenced_type" : "_ZTIP5Test4"
-    }
-   ],
-   "return_type" : "_ZTIv",
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
-  },
-  {
-   "function_name" : "test2",
-   "linker_set_key" : "test2",
+   "function_name" : "test1",
+   "linker_set_key" : "test1",
    "return_type" : "_ZTIv",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
