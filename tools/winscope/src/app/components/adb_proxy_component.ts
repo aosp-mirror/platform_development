@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {UrlUtils} from 'common/url_utils';
 import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_client';
 
 @Component({
@@ -36,14 +37,18 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
               <mat-icon>content_copy</mat-icon>
             </button>
           </mat-form-field>
-          <p class="mat-body-1">Or get it from the AOSP repository.</p>
+          <p class="mat-body-1">Or download below.</p>
         </div>
 
         <div class="further-adb-info-actions">
-          <button color="primary" mat-stroked-button (click)="downloadFromAosp()">
-            Download from AOSP
+          <button
+            class="download-proxy-btn"
+            color="primary"
+            mat-stroked-button
+            (click)="onDownloadProxyClick()">
+            Download Proxy
           </button>
-          <button color="primary" mat-stroked-button class="retry" (click)="restart()">
+          <button color="primary" mat-stroked-button class="retry" (click)="onRetryButtonClick()">
             Retry
           </button>
         </div>
@@ -68,14 +73,18 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
               <mat-icon>content_copy</mat-icon>
             </button>
           </mat-form-field>
-          <p class="mat-body-1">Or get it from the AOSP repository.</p>
+          <p class="mat-body-1">Or download below.</p>
         </div>
 
         <div class="further-adb-info-actions">
-          <button color="primary" mat-stroked-button (click)="downloadFromAosp()">
-            Download from AOSP
+          <button
+            class="download-proxy-btn"
+            color="primary"
+            mat-stroked-button
+            (click)="onDownloadProxyClick()">
+            Download Proxy
           </button>
-          <button color="primary" mat-stroked-button class="retry" (click)="restart()">
+          <button color="primary" mat-stroked-button class="retry" (click)="onRetryButtonClick()">
             Retry
           </button>
         </div>
@@ -97,7 +106,7 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
         </div>
 
         <div class="further-adb-info-actions">
-          <button color="primary" mat-stroked-button class="retry" (click)="restart()">
+          <button color="primary" mat-stroked-button class="retry" (click)="onRetryButtonClick()">
             Connect
           </button>
         </div>
@@ -153,18 +162,17 @@ export class AdbProxyComponent {
   states = ProxyState;
   proxyKeyItem = '';
   readonly proxyVersion = this.proxy.VERSION;
-  readonly downloadProxyUrl: string =
-    'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py';
+  readonly downloadProxyUrl: string = UrlUtils.getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
 
-  restart() {
+  onRetryButtonClick() {
     this.addKey.emit(this.proxyKeyItem);
     this.proxy.setState(this.states.CONNECTING);
     this.proxyChange.emit(this.proxy);
   }
 
-  downloadFromAosp() {
+  onDownloadProxyClick() {
     window.open(this.downloadProxyUrl, '_blank')?.focus();
   }
 }
