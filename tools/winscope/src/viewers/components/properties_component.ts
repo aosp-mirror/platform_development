@@ -39,6 +39,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           *ngFor="let option of objectKeys(userOptions)"
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
+          [disabled]="userOptions[option].isUnavailable ?? false"
           (ngModelChange)="updateTree()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
           >{{ userOptions[option].name }}</mat-checkbox

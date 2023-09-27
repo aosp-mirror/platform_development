@@ -64,9 +64,10 @@ describe('HierarchyComponent', () => {
 
     component.store = new PersistentStore();
     component.userOptions = {
-      onlyVisible: {
-        name: 'Only visible',
+      showDiff: {
+        name: 'Show diff',
         enabled: false,
+        isUnavailable: true,
       },
     };
     component.pinnedItems = [component.tree];
@@ -93,5 +94,11 @@ describe('HierarchyComponent', () => {
     expect(treeView).toBeTruthy();
     expect(treeView!.innerHTML).toContain('Root node');
     expect(treeView!.innerHTML).toContain('Child node');
+  });
+
+  it('disables checkboxes if option unavailable', async () => {
+    const viewControls = htmlElement.querySelector('.view-controls');
+    expect(viewControls).toBeTruthy();
+    expect(viewControls!.innerHTML).toContain('disabled=""');
   });
 });
