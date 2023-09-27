@@ -18,29 +18,34 @@ import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/co
 import {PersistentStore} from 'common/persistent_store';
 import {UiTreeNode} from 'viewers/common/ui_tree_utils';
 import {TreeComponent} from './tree_component';
+import {TreeNodeComponent} from './tree_node_component';
 
 describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeComponent, TestHostComponent],
+      declarations: [TreeComponent, TestHostComponent, TreeNodeComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    fixture.detectChanges();
   });
 
   it('can be created', () => {
-    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  it('can identify if a parent node has a selected child', () => {
+    expect(component.treeComponent.hasSelectedChild()).toBeFalse();
+    component.highlightedItems.push('3');
+    fixture.detectChanges();
+    expect(component.treeComponent.hasSelectedChild()).toBeTrue();
   });
 
   @Component({
@@ -49,26 +54,22 @@ describe('TreeComponent', () => {
       <tree-view
         [item]="item"
         [store]="store"
-        [isFlattened]="isFlattened"
-        [diffClass]="diffClass"
-        [isHighlighted]="isHighlighted"
-        [hasChildren]="hasChildren"></tree-view>
+        [isFlattened]="false"
+        [isPinned]="false"
+        [highlightedItems]="highlightedItems"
+        [itemsClickable]="true"></tree-view>
     `,
   })
   class TestHostComponent {
-    isFlattened = true;
     item: UiTreeNode = {
       simplifyNames: false,
       kind: 'entry',
       name: 'LayerTraceEntry',
-      shortName: 'LTE',
-      chips: [],
+      stableId: '2',
       children: [{kind: '3', stableId: '3', name: 'Child1'}],
     };
     store = new PersistentStore();
-    diffClass = jasmine.createSpy().and.returnValue('none');
-    isHighlighted = jasmine.createSpy().and.returnValue(false);
-    hasChildren = jasmine.createSpy().and.returnValue(true);
+    highlightedItems: string[] = [];
 
     @ViewChild(TreeComponent)
     treeComponent!: TreeComponent;
