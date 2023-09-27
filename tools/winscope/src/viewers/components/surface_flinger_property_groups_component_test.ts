@@ -16,6 +16,7 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {Color} from 'flickerlib/common';
 import {LayerBuilder} from 'test/unit/layer_builder';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
@@ -40,7 +41,7 @@ describe('PropertyGroupsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders verbose flags if available', async () => {
+  it('renders verbose flags if available', () => {
     const layer = new LayerBuilder().setFlags(3).build();
     component.item = layer;
     fixture.detectChanges();
@@ -50,7 +51,7 @@ describe('PropertyGroupsComponent', () => {
     expect(flags!.innerHTML).toMatch('Flags:.*HIDDEN|OPAQUE \\(0x3\\)');
   });
 
-  it('renders numeric flags if verbose flags not available', async () => {
+  it('renders numeric flags if verbose flags not available', () => {
     const layer = new LayerBuilder().setFlags(0).build();
     component.item = layer;
     fixture.detectChanges();
@@ -58,5 +59,24 @@ describe('PropertyGroupsComponent', () => {
     const flags = htmlElement.querySelector('.flags');
     expect(flags).toBeTruthy();
     expect(flags!.innerHTML).toMatch('Flags:.*0');
+  });
+
+  it('displays empty color and alpha value', () => {
+    const layer = new LayerBuilder().setFlags(0).build();
+    layer.color.a = 1;
+    component.item = layer;
+    fixture.detectChanges();
+
+    const effectsElement = htmlElement.querySelector('.color');
+    expect(effectsElement?.innerHTML).toContain('[empty], alpha: 1');
+  });
+
+  it('displays rgba color', () => {
+    const layer = new LayerBuilder().setFlags(0).setColor(new Color(0, 0, 0, 1)).build();
+    component.item = layer;
+    fixture.detectChanges();
+
+    const effectsElement = htmlElement.querySelector('.color');
+    expect(effectsElement?.innerHTML).toContain('(0, 0, 0, 1)');
   });
 });
