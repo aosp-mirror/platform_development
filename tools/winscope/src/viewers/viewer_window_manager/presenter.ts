@@ -53,6 +53,7 @@ export class Presenter {
       showDiff: {
         name: 'Show diff',
         enabled: false,
+        isUnavailable: false,
       },
       simplifyNames: {
         name: 'Simplify names',
@@ -75,6 +76,7 @@ export class Presenter {
       showDiff: {
         name: 'Show diff',
         enabled: false,
+        isUnavailable: false,
       },
       showDefaults: {
         name: 'Show defaults',
@@ -154,23 +156,29 @@ export class Presenter {
 
   async onAppEvent(event: AppEvent) {
     await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
-      this.uiData = new UiData();
-      this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-      this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       const prevEntry =
         entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
 
       this.entry = (await entry?.getValue()) ?? null;
       this.previousEntry = (await prevEntry?.getValue()) ?? null;
+      if (this.hierarchyUserOptions['showDiff'].isUnavailable !== undefined) {
+        this.hierarchyUserOptions['showDiff'].isUnavailable = this.previousEntry == null;
+      }
+      if (this.propertiesUserOptions['showDiff'].isUnavailable !== undefined) {
+        this.propertiesUserOptions['showDiff'].isUnavailable = this.previousEntry == null;
+      }
+
+      this.uiData = new UiData();
+      this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+      this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+
       if (this.entry) {
         this.uiData.highlightedItems = this.highlightedItems;
         this.uiData.rects = this.generateRects(this.entry);
         this.uiData.displayIds = this.getDisplayIds(this.entry);
         this.uiData.tree = this.generateTree();
       }
-
       this.notifyViewCallback(this.uiData);
     });
   }
@@ -255,7 +263,10 @@ export class Presenter {
       .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
     let tree: HierarchyTreeNode | null;
-    if (!this.hierarchyUserOptions['showDiff']?.enabled) {
+    if (
+      !this.hierarchyUserOptions['showDiff']?.enabled ||
+      this.hierarchyUserOptions['showDiff']?.isUnavailable
+    ) {
       tree = generator.generateTree();
     } else {
       tree = generator
@@ -283,7 +294,10 @@ export class Presenter {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
       .setOnlyProtoDump(true)
       .setIsShowDefaults(this.propertiesUserOptions['showDefaults']?.enabled)
-      .setIsShowDiff(this.propertiesUserOptions['showDiff']?.enabled)
+      .setIsShowDiff(
+        this.propertiesUserOptions['showDiff']?.enabled &&
+          !this.propertiesUserOptions['showDiff']?.isUnavailable
+      )
       .setTransformerOptions({skip: selectedTree.skip})
       .setProperties(this.entry)
       .setDiffProperties(this.previousEntry);
