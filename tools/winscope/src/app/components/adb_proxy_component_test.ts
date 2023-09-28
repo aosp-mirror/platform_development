@@ -87,15 +87,32 @@ describe('AdbProxyComponent', () => {
     expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
   });
 
-  it('check retry button acts as expected', () => {
+  it('check retry button if no proxy trys to reconnect proxy', () => {
     component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    const spy = spyOn(component.proxyChange, 'emit');
     const button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
     expect(component.proxy.state).toBe(ProxyState.CONNECTING);
+  });
+
+  it('check input proxy token saved as expected', () => {
+    const spy = spyOn(component.addKey, 'emit');
+
+    component.proxy.setState(ProxyState.UNAUTH);
+    fixture.detectChanges();
+    let button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
+    button?.click();
+    fixture.detectChanges();
+    expect(spy).not.toHaveBeenCalled();
+
+    component.proxy.setState(ProxyState.UNAUTH);
+    component.proxyKeyItem = '12345';
+    fixture.detectChanges();
+    button = htmlElement.querySelector('.retry');
+    button?.click();
+    fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 });
