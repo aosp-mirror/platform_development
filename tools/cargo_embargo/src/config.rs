@@ -154,6 +154,10 @@ pub struct PackageConfig {
     ///     include!(concat!(env!("OUT_DIR"), "/<some_file>.rs"))
     #[serde(default, skip_serializing_if = "is_false")]
     pub copy_out: bool,
+    /// Add the given files to the given tests' `data` property. The key is the test source filename
+    /// relative to the crate root.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub test_data: BTreeMap<String, Vec<String>>,
 }
 
 impl Default for PackageConfig {
@@ -169,6 +173,7 @@ impl Default for PackageConfig {
             dep_blocklist: Default::default(),
             patch: None,
             copy_out: false,
+            test_data: Default::default(),
         }
     }
 }

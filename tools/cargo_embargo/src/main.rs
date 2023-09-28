@@ -600,6 +600,13 @@ fn crate_to_bp_modules(
                 }
             }
         }
+        if crate_type.is_test() {
+            if let Some(data) =
+                package_cfg.test_data.get(crate_.main_src.to_string_lossy().as_ref())
+            {
+                m.props.set("data", data.clone());
+            }
+        }
 
         if let Some(visibility) = cfg.module_visibility.get(module_name) {
             m.props.set("visibility", visibility.clone());

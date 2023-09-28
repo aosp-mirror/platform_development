@@ -15,8 +15,9 @@
 //! Code for dealing with legacy cargo2android.json config files.
 
 use super::{default_apex_available, default_true, PackageConfig};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 /// A legacy `cargo2android.json` configuration.
@@ -45,6 +46,8 @@ pub struct Config {
     #[serde(default)]
     run: bool,
     #[serde(default)]
+    test_data: Vec<String>,
+    #[serde(default)]
     tests: bool,
     #[serde(default = "default_true")]
     vendor_available: bool,
@@ -62,12 +65,20 @@ impl Config {
         } else {
             self.features.split(',').map(ToOwned::to_owned).collect()
         };
+        let mut test_data: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for entry in &self.test_data {
+            let (test_name, data) = entry
+                .split_once('=')
+                .ok_or_else(|| anyhow!("Invalid test-data entry {}", entry))?;
+            test_data.entry(test_name.to_owned()).or_default().push(data.to_owned());
+        }
         let package_config = PackageConfig {
             device_supported: self.device,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
             dep_blocklist: self.dependency_blocklist.clone(),
             patch: self.patch.clone(),
+            test_data,
             ..Default::default()
         };
         let apex_available = if self.apex_available.is_empty() {
