@@ -199,6 +199,7 @@ cc_test_host {
 
     static_libs: [
         "libbase",
+        "libgmock",
         "libgtest",
         "libgtest_main",
         "libheader-checker",

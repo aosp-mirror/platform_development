@@ -49,6 +49,7 @@ const configDev = {
       patterns: [
         'deps_build/trace_processor/to_be_served/trace_processor.wasm',
         'deps_build/trace_processor/to_be_served/engine_bundle.js',
+        {from: 'src/adb/winscope_proxy.py', to: 'winscope_proxy.py'},
       ],
     }),
   ],

@@ -76,14 +76,26 @@ describe('AdbProxyComponent', () => {
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('lock');
   });
 
-  it('check retry button acts as expected', async () => {
+  it('check download proxy button downloads proxy', () => {
     component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    spyOn(component, 'restart').and.callThrough();
+    const spy = spyOn(window, 'open');
+    const button: HTMLButtonElement | null = htmlElement.querySelector('.download-proxy-btn');
+    expect(button).toBeInstanceOf(HTMLButtonElement);
+    button?.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
+  });
+
+  it('check retry button acts as expected', () => {
+    component.proxy.setState(ProxyState.NO_PROXY);
+    fixture.detectChanges();
+    const spy = spyOn(component.proxyChange, 'emit');
     const button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
-    button?.dispatchEvent(new Event('click'));
-    await fixture.whenStable();
-    expect(component.restart).toHaveBeenCalled();
+    button?.click();
+    fixture.detectChanges();
+    expect(component.proxy.state).toBe(ProxyState.CONNECTING);
+    expect(spy).toHaveBeenCalled();
   });
 });

@@ -16,6 +16,7 @@
 
 import {
   ActiveBuffer,
+  Color,
   EMPTY_COLOR,
   EMPTY_RECT,
   EMPTY_RECTF,
@@ -30,13 +31,18 @@ class LayerBuilder {
     return this;
   }
 
+  setColor(color: Color): LayerBuilder {
+    this.color = color;
+    return this;
+  }
+
   build(): Layer {
     const properties = new LayerProperties(
       null /* visibleRegion */,
       new ActiveBuffer(0, 0, 0, 0),
       this.flags,
       EMPTY_RECTF /* bounds */,
-      EMPTY_COLOR,
+      this.color,
       false /* isOpaque */,
       0 /* shadowRadius */,
       0 /* cornerRadius */,
@@ -64,6 +70,7 @@ class LayerBuilder {
   }
 
   private flags = 0;
+  private color = EMPTY_COLOR;
 }
 
 export {LayerBuilder};

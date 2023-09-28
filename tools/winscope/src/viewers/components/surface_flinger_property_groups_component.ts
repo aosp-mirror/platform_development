@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {Layer} from 'flickerlib/common';
+import {Color, Layer} from 'flickerlib/common';
 
 @Component({
   selector: 'surface-flinger-property-groups',
@@ -146,10 +146,10 @@ import {Layer} from 'flickerlib/common';
       <h3 class="group-header mat-subheading-2">Effects</h3>
       <div class="left-column">
         <p class="column-header mat-small">Calculated</p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 color">
           <span class="mat-body-2">Color:</span>
           &ngsp;
-          {{ item.color }}
+          {{ item.color ? formatColor(item.color) : '' }}
         </p>
         <p class="mat-body-1">
           <span class="mat-body-2">Shadow:</span>
@@ -183,7 +183,7 @@ import {Layer} from 'flickerlib/common';
         <p class="mat-body-1">
           <span class="mat-body-2">Color:</span>
           &ngsp;
-          {{ item.requestedColor }}
+          {{ item.requestedColor ? formatColor(item.requestedColor) : '' }}
         </p>
         <p class="mat-body-1">
           <span class="mat-body-2">Shadow:</span>
@@ -297,6 +297,14 @@ export class SurfaceFlingerPropertyGroupsComponent {
 
   formatFloat(num: number) {
     return Math.round(num * 100) / 100;
+  }
+
+  formatColor(color: Color) {
+    if (color.isEmpty) {
+      return `[empty], alpha: ${color.a}`;
+    } else {
+      return `(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    }
   }
 
   summary(): TreeSummary {
