@@ -23,7 +23,8 @@ export class UiData {
   dependencies: TraceType[];
   rects: Rectangle[] = [];
   displayIds: number[] = [];
-  highlightedItems: string[] = [];
+  highlightedItem: string = '';
+  highlightedProperty: string = '';
   pinnedItems: HierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};

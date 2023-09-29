@@ -42,7 +42,7 @@ export const nodeStyles = `
         color: white;
     }
 
-    .selected {background-color: #365179;color: white;}
+    .selected {background-color: #87ACEC;}
 `;
 
 // FIXME: child-hover selector is not working.

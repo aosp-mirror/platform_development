@@ -15,30 +15,46 @@
  */
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatIconModule} from '@angular/material/icon';
 import {TreeNodeComponent} from './tree_node_component';
+import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
 
 describe('TreeNodeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [MatIconModule],
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodeComponent, TestHostComponent],
+      declarations: [TreeNodeComponent, TreeNodeDataViewComponent, TestHostComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    fixture.detectChanges();
   });
 
   it('can be created', () => {
-    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  it('can generate data view component', () => {
+    component.treeNodeComponent.isPropertiesTreeNode = jasmine.createSpy().and.returnValue(false);
+    fixture.detectChanges();
+    const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
+    expect(treeNodeDataView).toBeTruthy();
+  });
+
+  it('can scroll selected element into view', () => {
+    const treeNode = htmlElement.querySelector('tree-node');
+    expect(treeNode).toBeTruthy();
+    const spy = spyOn(treeNode!, 'scrollIntoView');
+    component.isSelected = true;
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
   });
 
   @Component({
@@ -49,17 +65,18 @@ describe('TreeNodeComponent', () => {
         [isCollapsed]="true"
         [isPinned]="false"
         [isInPinnedSection]="false"
-        [hasChildren]="false"></tree-node>
+        [hasChildren]="false"
+        [isSelected]="isSelected"></tree-node>
     `,
   })
   class TestHostComponent {
     item = {
-      simplifyNames: false,
       kind: 'entry',
       name: 'LayerTraceEntry',
-      shortName: 'LTE',
-      chips: [],
+      stableId: '4',
     };
+
+    isSelected = false;
 
     @ViewChild(TreeNodeComponent)
     treeNodeComponent!: TreeNodeComponent;

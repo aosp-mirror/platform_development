@@ -185,7 +185,7 @@ export class Canvas {
     div.style.pointerEvents = 'auto';
     div.style.cursor = 'pointer';
     div.addEventListener('click', (event) =>
-      this.propagateUpdateHighlightedItems(event, label.rectId)
+      this.propagateUpdateHighlightedItem(event, label.rectId)
     );
 
     const labelCss = new CSS2DObject(div);
@@ -341,7 +341,7 @@ export class Canvas {
     return mesh;
   }
 
-  private propagateUpdateHighlightedItems(event: MouseEvent, newId: string) {
+  private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,

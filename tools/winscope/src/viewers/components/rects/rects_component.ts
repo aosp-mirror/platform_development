@@ -202,16 +202,16 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Input() set highlightedItems(stableIds: string[]) {
-    this.internalHighlightedItems = stableIds;
-    this.mapper3d.setHighlightedRectIds(this.internalHighlightedItems);
+  @Input() set highlightedItem(stableId: string) {
+    this.internalHighlightedItem = stableId;
+    this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
     this.drawLargeRectsAndLabels();
   }
 
   private internalRects: Rectangle[] = [];
   private internalMiniRects?: Rectangle[];
   private internalDisplayIds: number[] = [];
-  private internalHighlightedItems: string[] = [];
+  private internalHighlightedItem: string = '';
 
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;

@@ -86,7 +86,7 @@ describe('PresenterWindowManager', () => {
     const propertyOpts = uiData.propertiesUserOptions
       ? Object.keys(uiData.propertiesUserOptions)
       : null;
-    expect(uiData.highlightedItems?.length).toEqual(0);
+    expect(uiData.highlightedItem?.length).toEqual(0);
     expect(filteredUiDataRectLabels?.length).toEqual(14);
     expect(uiData.displayIds).toContain(0);
     expect(hierarchyOpts).toBeTruthy();
@@ -131,11 +131,18 @@ describe('PresenterWindowManager', () => {
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted items', () => {
-    expect(uiData.highlightedItems).toEqual([]);
+  it('updates highlighted item', () => {
+    expect(uiData.highlightedItem).toEqual('');
     const id = '4';
-    presenter.updateHighlightedItems(id);
-    expect(uiData.highlightedItems).toContain(id);
+    presenter.updateHighlightedItem(id);
+    expect(uiData.highlightedItem).toBe(id);
+  });
+
+  it('updates highlighted property', () => {
+    expect(uiData.highlightedProperty).toEqual('');
+    const id = '4';
+    presenter.updateHighlightedProperty(id);
+    expect(uiData.highlightedProperty).toBe(id);
   });
 
   it('updates hierarchy tree', async () => {

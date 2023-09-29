@@ -39,7 +39,8 @@ export class Presenter {
   private uiData: UiData;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private highlightedItems: string[] = [];
+  private highlightedItem: string = '';
+  private highlightedProperty: string = '';
   private pinnedItems: HierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
@@ -122,7 +123,8 @@ export class Presenter {
       this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
       if (this.entry) {
-        this.uiData.highlightedItems = this.highlightedItems;
+        this.uiData.highlightedItem = this.highlightedItem;
+        this.uiData.highlightedProperty = this.highlightedProperty;
         this.uiData.rects = SurfaceFlingerUtils.makeRects(this.entry, this.hierarchyUserOptions);
         this.uiData.displayIds = this.getDisplayIds(this.entry);
         this.uiData.tree = this.generateTree();
@@ -143,14 +145,23 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  updateHighlightedItems(id: string) {
-    if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
+  updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
     } else {
-      this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
-      this.highlightedItems.push(id);
+      this.highlightedItem = id;
     }
-    this.uiData.highlightedItems = this.highlightedItems;
+    this.uiData.highlightedItem = this.highlightedItem;
+    this.copyUiDataAndNotifyView();
+  }
+
+  updateHighlightedProperty(id: string) {
+    if (this.highlightedProperty === id) {
+      this.highlightedProperty = '';
+    } else {
+      this.highlightedProperty = id;
+    }
+    this.uiData.highlightedProperty = this.highlightedProperty;
     this.copyUiDataAndNotifyView();
   }
 

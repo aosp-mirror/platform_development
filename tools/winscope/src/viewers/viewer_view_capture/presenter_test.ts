@@ -77,7 +77,7 @@ describe('PresenterViewCapture', () => {
     await presenter.onAppEvent(positionUpdate);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.highlightedItems?.length).toEqual(0);
+    expect(uiData.highlightedItem?.length).toEqual(0);
     const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
     expect(hierarchyOpts).toBeTruthy();
     const propertyOpts = Object.keys(uiData.propertiesUserOptions);
@@ -99,13 +99,13 @@ describe('PresenterViewCapture', () => {
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted items', async () => {
+  it('updates highlighted item', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.highlightedItems).toEqual([]);
+    expect(uiData.highlightedItem).toEqual('');
 
     const id = '4';
-    presenter.updateHighlightedItems(id);
-    expect(uiData.highlightedItems).toContain(id);
+    presenter.updateHighlightedItem(id);
+    expect(uiData.highlightedItem).toBe(id);
   });
 
   it('updates hierarchy tree', async () => {

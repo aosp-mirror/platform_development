@@ -21,7 +21,7 @@ import {UserOptions} from 'viewers/common/user_options';
 
 export class ImeUiData {
   dependencies: TraceType[];
-  highlightedItems: string[] = [];
+  highlightedItem: string = '';
   pinnedItems: HierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};

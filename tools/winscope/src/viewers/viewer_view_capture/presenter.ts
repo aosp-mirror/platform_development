@@ -43,7 +43,7 @@ export class Presenter {
   private pinnedItems: HierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
-  private highlightedItems: string[] = [];
+  private highlightedItem: string = '';
 
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
@@ -148,7 +148,7 @@ export class Presenter {
       this.hierarchyUserOptions,
       this.propertiesUserOptions,
       this.pinnedItems,
-      this.highlightedItems,
+      this.highlightedItem,
       this.getTreeWithTransformedProperties(this.selectedHierarchyTree),
       selectedViewNode
     );
@@ -236,14 +236,13 @@ export class Presenter {
     }
   }
 
-  updateHighlightedItems(id: string) {
-    if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
+  updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
     } else {
-      this.highlightedItems = [];
-      this.highlightedItems.push(id);
+      this.highlightedItem = id;
     }
-    this.uiData!!.highlightedItems = this.highlightedItems;
+    this.uiData!!.highlightedItem = this.highlightedItem;
     this.copyUiDataAndNotifyView();
   }
 
