@@ -167,7 +167,9 @@ export class AdbProxyComponent {
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
 
   onRetryButtonClick() {
-    this.addKey.emit(this.proxyKeyItem);
+    if (this.proxyKeyItem.length > 0) {
+      this.addKey.emit(this.proxyKeyItem);
+    }
     this.proxy.setState(this.states.CONNECTING);
     this.proxyChange.emit(this.proxy);
   }

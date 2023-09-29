@@ -37,6 +37,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       [class.leaf]="isLeaf(this.item)"
       [class.selected]="isHighlighted(item, highlightedItems)"
       [class.clickable]="isClickable()"
+      [class.child-selected]="hasSelectedChild()"
       [class.hover]="nodeHover"
       [class.childHover]="childHover"
       [isAlwaysCollapsed]="isAlwaysCollapsed"
@@ -242,6 +243,18 @@ export class TreeComponent {
     const isParentEntryInFlatView =
       UiTreeUtils.isParentNode(this.item.kind ?? '') && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
+  }
+
+  hasSelectedChild() {
+    if (!this.hasChildren()) {
+      return false;
+    }
+    for (const child of this.item!.children!) {
+      if (child.stableId && this.highlightedItems.includes(child.stableId)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private setCollapseValue(isCollapsed: boolean) {
