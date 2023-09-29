@@ -49,6 +49,7 @@ export const nodeStyles = `
 export const treeNodeDataViewStyles = `
     .node + .children:not(.flattened) {margin-left: 12px;padding-left: 11px;border-left: 1px solid var(--border-color);}
     .node.selected + .children {border-left: 1px solid rgb(150, 150, 150);}
+    .node.child-selected + .children {border-left: 1px solid rgb(100, 100, 100);}
     .node:hover + .children {border-left: 1px solid rgba(150, 150, 150, 0.75);}
     .node.child-hover + .children {border-left: 1px solid #b4b4b4;}
 `;
