@@ -16,6 +16,7 @@
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
+import {assertDefined} from 'common/assert_utils';
 import {TreeNodeComponent} from './tree_node_component';
 import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
 
@@ -51,10 +52,40 @@ describe('TreeNodeComponent', () => {
   it('can scroll selected element into view', () => {
     const treeNode = htmlElement.querySelector('tree-node');
     expect(treeNode).toBeTruthy();
-    const spy = spyOn(treeNode!, 'scrollIntoView');
+    const spy = spyOn(assertDefined(treeNode), 'scrollIntoView');
     component.isSelected = true;
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('can trigger tree toggle on click of chevron', () => {
+    component.treeNodeComponent.showChevron = jasmine.createSpy().and.returnValue(true);
+    fixture.detectChanges();
+
+    const spy = spyOn(component.treeNodeComponent.toggleTreeChange, 'emit');
+    const toggleButton = htmlElement.querySelector('.toggle-tree-btn');
+    expect(toggleButton).toBeTruthy();
+    (toggleButton as HTMLButtonElement).click();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('can trigger tree expansion on click of expand tree button', () => {
+    const spy = spyOn(component.treeNodeComponent.expandTreeChange, 'emit');
+    const expandButton = htmlElement.querySelector('.expand-tree-btn');
+    expect(expandButton).toBeTruthy();
+    (expandButton as HTMLButtonElement).click();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('can trigger node pin on click of star', () => {
+    component.treeNodeComponent.showPinNodeIcon = jasmine.createSpy().and.returnValue(true);
+    fixture.detectChanges();
+
+    const spy = spyOn(component.treeNodeComponent.pinNodeChange, 'emit');
+    const pinNodeButton = htmlElement.querySelector('.pin-node-btn');
+    expect(pinNodeButton).toBeTruthy();
+    (pinNodeButton as HTMLButtonElement).click();
+    expect(spy).toHaveBeenCalledWith(component.item);
   });
 
   @Component({
@@ -62,10 +93,10 @@ describe('TreeNodeComponent', () => {
     template: `
       <tree-node
         [item]="item"
-        [isCollapsed]="true"
+        [isCollapsed]="false"
         [isPinned]="false"
         [isInPinnedSection]="false"
-        [hasChildren]="false"
+        [hasChildren]="true"
         [isSelected]="isSelected"></tree-node>
     `,
   })
@@ -74,6 +105,7 @@ describe('TreeNodeComponent', () => {
       kind: 'entry',
       name: 'LayerTraceEntry',
       stableId: '4',
+      children: [{stableId: 'child'}],
     };
 
     isSelected = false;

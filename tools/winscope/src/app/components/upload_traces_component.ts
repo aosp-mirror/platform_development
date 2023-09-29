@@ -31,7 +31,7 @@ import {LoadProgressComponent} from './load_progress_component';
         ref="drop-box"
         (dragleave)="onFileDragOut($event)"
         (dragover)="onFileDragIn($event)"
-        (drop)="onHandleFileDrop($event)"
+        (drop)="onFileDrop($event)"
         (click)="fileDropRef.click()">
         <input
           id="fileDropRef"
@@ -88,7 +88,13 @@ import {LoadProgressComponent} from './load_progress_component';
           Upload another file
         </button>
 
-        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">Clear all</button>
+        <button
+          class="clear-all-btn"
+          color="primary"
+          mat-stroked-button
+          (click)="onClearButtonClick()">
+          Clear all
+        </button>
       </div>
     </mat-card>
   `,
@@ -217,7 +223,7 @@ export class UploadTracesComponent implements ProgressListener {
     e.stopPropagation();
   }
 
-  onHandleFileDrop(e: DragEvent) {
+  onFileDrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
