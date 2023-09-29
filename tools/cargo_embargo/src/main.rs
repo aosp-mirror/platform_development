@@ -42,6 +42,7 @@ use cargo::{
 };
 use clap::Parser;
 use clap::Subcommand;
+use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -53,6 +54,35 @@ use std::process::Command;
 // Major TODOs
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
+
+/// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
+static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+    [
+        ("libash", "libash_rust"),
+        ("libatomic", "libatomic_rust"),
+        ("libbacktrace", "libbacktrace_rust"),
+        ("libbase", "libbase_rust"),
+        ("libbase64", "libbase64_rust"),
+        ("libfuse", "libfuse_rust"),
+        ("libgcc", "libgcc_rust"),
+        ("liblog", "liblog_rust"),
+        ("libminijail", "libminijail_rust"),
+        ("libsync", "libsync_rust"),
+        ("libx86_64", "libx86_64_rust"),
+        ("libxml", "libxml_rust"),
+        ("protoc_gen_rust", "protoc-gen-rust"),
+    ]
+    .into_iter()
+    .collect()
+});
+
+fn renamed_module(name: &str) -> &str {
+    if let Some(renamed) = RENAME_MAP.get(name) {
+        renamed
+    } else {
+        name
+    }
+}
 
 /// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
@@ -487,11 +517,12 @@ fn crate_to_bp_modules(
 
         let mut m = BpModule::new(module_type.clone());
         let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-        if cfg.module_blocklist.contains(module_name) {
+        let module_name = renamed_module(module_name);
+        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
             continue;
         }
         m.props.set("name", module_name.clone());
-        if &stem != module_name {
+        if stem != module_name {
             m.props.set("stem", stem);
         }
 
@@ -562,7 +593,8 @@ fn crate_to_bp_modules(
                 let module_name = "lib".to_string() + x.as_str();
                 let module_name =
                     cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-                if package_cfg.dep_blocklist.contains(module_name) {
+                let module_name = renamed_module(module_name);
+                if package_cfg.dep_blocklist.iter().any(|blocked| blocked == module_name) {
                     continue;
                 }
                 result.push(module_name.to_string());
@@ -724,6 +756,50 @@ mod tests {
                         ("name".to_string(), BpValue::String("libname".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
                         ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("vendor_available".to_string(), BpValue::Bool(true)),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    raw_block: None
+                }
+            }]
+        );
+    }
+
+    #[test]
+    fn crate_to_bp_rename() {
+        let c = Crate {
+            name: "ash".to_string(),
+            package_name: "package_name".to_string(),
+            edition: "2021".to_string(),
+            types: vec![CrateType::Lib],
+            ..Default::default()
+        };
+        let cfg = Config { ..Default::default() };
+        let package_cfg = PackageConfig { ..Default::default() };
+        let modules = crate_to_bp_modules(&c, &cfg, &package_cfg, &[]).unwrap();
+
+        assert_eq!(
+            modules,
+            vec![BpModule {
+                module_type: "rust_library".to_string(),
+                props: BpProperties {
+                    map: [
+                        (
+                            "apex_available".to_string(),
+                            BpValue::List(vec![
+                                BpValue::String("//apex_available:platform".to_string()),
+                                BpValue::String("//apex_available:anyapex".to_string()),
+                            ])
+                        ),
+                        ("cargo_env_compat".to_string(), BpValue::Bool(true)),
+                        ("crate_name".to_string(), BpValue::String("ash".to_string())),
+                        ("edition".to_string(), BpValue::String("2021".to_string())),
+                        ("host_supported".to_string(), BpValue::Bool(true)),
+                        ("name".to_string(), BpValue::String("libash_rust".to_string())),
+                        ("product_available".to_string(), BpValue::Bool(true)),
+                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("stem".to_string(), BpValue::String("libash".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
