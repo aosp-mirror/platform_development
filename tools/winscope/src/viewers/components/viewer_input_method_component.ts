@@ -28,7 +28,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
           class="hierarchy-view"
           [tree]="inputData?.tree ?? null"
           [dependencies]="inputData?.dependencies ?? []"
-          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [highlightedItem]="inputData?.highlightedItem ?? []"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"

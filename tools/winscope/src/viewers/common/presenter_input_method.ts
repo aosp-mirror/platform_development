@@ -49,7 +49,7 @@ export abstract class PresenterInputMethod {
   readonly notifyViewCallback: NotifyImeViewCallbackType;
   protected readonly dependencies: TraceType[];
   protected uiData: ImeUiData;
-  protected highlightedItems: string[] = [];
+  protected highlightedItem: string = '';
   protected entry: TraceTreeNode | null = null;
   protected additionalPropertyEntry: TraceTreeNode | null = null;
   protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
@@ -112,7 +112,7 @@ export abstract class PresenterInputMethod {
 
       if (imeEntry) {
         this.entry = (await imeEntry.getValue()) as TraceTreeNode;
-        this.uiData.highlightedItems = this.highlightedItems;
+        this.uiData.highlightedItem = this.highlightedItem;
         this.uiData.additionalProperties = this.getAdditionalProperties(
           await wmEntry?.getValue(),
           await sfEntry?.getValue()
@@ -136,14 +136,13 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  updateHighlightedItems(id: string) {
-    if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
+  updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
     } else {
-      this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
-      this.highlightedItems.push(id);
+      this.highlightedItem = id; //if multi-select surfaces implemented, remove this line
     }
-    this.uiData.highlightedItems = this.highlightedItems;
+    this.uiData.highlightedItem = this.highlightedItem;
     this.notifyViewCallback(this.uiData);
   }
 

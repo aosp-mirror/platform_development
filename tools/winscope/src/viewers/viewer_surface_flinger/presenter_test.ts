@@ -77,7 +77,7 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onAppEvent(positionUpdate);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.highlightedItems?.length).toEqual(0);
+    expect(uiData.highlightedItem?.length).toEqual(0);
     expect(uiData.displayIds).toContain(0);
     const hierarchyOpts = uiData.hierarchyUserOptions
       ? Object.keys(uiData.hierarchyUserOptions)
@@ -123,12 +123,20 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted items', () => {
-    expect(uiData.highlightedItems).toEqual([]);
+  it('updates highlighted item', () => {
+    expect(uiData.highlightedItem).toEqual('');
 
     const id = '4';
-    presenter.updateHighlightedItems(id);
-    expect(uiData.highlightedItems).toContain(id);
+    presenter.updateHighlightedItem(id);
+    expect(uiData.highlightedItem).toBe(id);
+  });
+
+  it('updates highlighted property', () => {
+    expect(uiData.highlightedProperty).toEqual('');
+
+    const id = '4';
+    presenter.updateHighlightedProperty(id);
+    expect(uiData.highlightedProperty).toBe(id);
   });
 
   it('updates hierarchy tree', async () => {

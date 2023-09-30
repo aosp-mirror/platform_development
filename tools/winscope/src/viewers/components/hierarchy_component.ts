@@ -52,12 +52,13 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           *ngFor="let pinnedItem of pinnedItems"
           class="node"
           [class]="diffClass(pinnedItem)"
-          [class.selected]="isHighlighted(pinnedItem, highlightedItems)"
+          [class.selected]="isHighlighted(pinnedItem, highlightedItem)"
           [class.clickable]="true"
           [item]="pinnedItem"
           [isPinned]="true"
           [isInPinnedSection]="true"
-          (pinNodeChange)="pinnedItemChange($event)"
+          [isSelected]="isHighlighted(pinnedItem, highlightedItem)"
+          (pinNodeChange)="onPinnedItemChange($event)"
           (click)="onPinnedNodeClick($event, pinnedItem)"></tree-node>
       </div>
     </div>
@@ -71,11 +72,11 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         [store]="store"
         [useGlobalCollapsedState]="true"
         [itemsClickable]="true"
-        [highlightedItems]="highlightedItems"
+        [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
-        (highlightedItemChange)="highlightedItemChange($event)"
-        (pinnedItemChange)="pinnedItemChange($event)"
-        (selectedTreeChange)="selectedTreeChange($event)"></tree-view>
+        (highlightedChange)="onHighlightedItemChange($event)"
+        (pinnedItemChange)="onPinnedItemChange($event)"
+        (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
     </div>
   `,
   styles: [
@@ -112,7 +113,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       .pinned-items {
         width: 100%;
         box-sizing: border-box;
-        border: 2px solid yellow;
+        border: 2px solid #ffd58b;
       }
 
       tree-view {
@@ -131,7 +132,7 @@ export class HierarchyComponent {
   @Input() tree!: HierarchyTreeNode | null;
   @Input() tableProperties?: TableProperties | null;
   @Input() dependencies: TraceType[] = [];
-  @Input() highlightedItems: string[] = [];
+  @Input() highlightedItem: string = '';
   @Input() pinnedItems: HierarchyTreeNode[] = [];
   @Input() store!: PersistentStore;
   @Input() userOptions: UserOptions = {};
@@ -147,8 +148,8 @@ export class HierarchyComponent {
     if (window.getSelection()?.type === 'range') {
       return;
     }
-    if (pinnedItem.id) this.highlightedItemChange(`${pinnedItem.id}`);
-    this.selectedTreeChange(pinnedItem);
+    if (pinnedItem.id) this.onHighlightedItemChange(`${pinnedItem.id}`);
+    this.onSelectedTreeChange(pinnedItem);
   }
 
   updateTree() {
@@ -167,7 +168,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  highlightedItemChange(newId: string) {
+  onHighlightedItemChange(newId: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},
@@ -175,7 +176,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  selectedTreeChange(item: UiTreeNode) {
+  onSelectedTreeChange(item: UiTreeNode) {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
@@ -186,7 +187,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  pinnedItemChange(item: UiTreeNode) {
+  onPinnedItemChange(item: UiTreeNode) {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }

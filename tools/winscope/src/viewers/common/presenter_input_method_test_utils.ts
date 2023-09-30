@@ -113,11 +113,11 @@ export function executePresenterInputMethodTests(
       expect(uiData.pinnedItems).toContain(pinnedItem);
     });
 
-    it('can update highlighted items', () => {
-      expect(uiData.highlightedItems).toEqual([]);
+    it('can update highlighted item', () => {
+      expect(uiData.highlightedItem).toEqual('');
       const id = 'entry';
-      presenter.updateHighlightedItems(id);
-      expect(uiData.highlightedItems).toContain(id);
+      presenter.updateHighlightedItem(id);
+      expect(uiData.highlightedItem).toBe(id);
     });
 
     it('can update hierarchy tree', async () => {

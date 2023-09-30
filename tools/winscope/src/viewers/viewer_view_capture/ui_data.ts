@@ -30,7 +30,7 @@ export class UiData {
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
     public pinnedItems: HierarchyTreeNode[],
-    public highlightedItems: string[],
+    public highlightedItem: string,
     public propertiesTree: PropertiesTreeNode | null,
     public selectedViewNode: ViewNode
   ) {}
