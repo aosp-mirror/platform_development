@@ -28,13 +28,13 @@ import {UiData} from './ui_data';
         title="Windows"
         [rects]="inputData?.rects ?? []"
         [displayIds]="inputData?.displayIds ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"></rects-view>
+        [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
         [tree]="inputData?.tree ?? null"
         [dependencies]="inputData?.dependencies ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
@@ -43,6 +43,7 @@ import {UiData} from './ui_data';
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
+        [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [isProtoDump]="true"></properties-view>
     </div>
   `,

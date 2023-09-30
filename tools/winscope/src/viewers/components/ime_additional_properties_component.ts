@@ -321,12 +321,12 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 export class ImeAdditionalPropertiesComponent {
   @Input() additionalProperties!: ImeAdditionalProperties;
   @Input() isImeManagerService?: boolean;
-  @Input() highlightedItems: string[] = [];
+  @Input() highlightedItem: string = '';
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   isHighlighted(item: any) {
-    return UiTreeUtils.isHighlighted(item, this.highlightedItems);
+    return UiTreeUtils.isHighlighted(item, this.highlightedItem);
   }
 
   formatProto(item: any) {
@@ -459,13 +459,13 @@ export class ImeAdditionalPropertiesComponent {
 
   onClickShowInPropertiesPanel(item: any, name?: string) {
     if (item.id) {
-      this.updateHighlightedItems(item.id);
+      this.updateHighlightedItem(item.id);
     } else {
       this.updateAdditionalPropertySelected(item, name);
     }
   }
 
-  private updateHighlightedItems(newId: string) {
+  private updateHighlightedItem(newId: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},

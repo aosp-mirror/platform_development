@@ -40,8 +40,8 @@ export class Presenter {
   private uiData: UiData;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private highlightedItems: string[] = [];
-  private displayIds: number[] = [];
+  private highlightedItem: string = '';
+  private highlightedProperty: string = '';
   private pinnedItems: HierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
@@ -99,7 +99,7 @@ export class Presenter {
     this.trace = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   updatePinnedItems(pinnedItem: HierarchyTreeNode) {
@@ -111,31 +111,40 @@ export class Presenter {
     }
     this.updatePinnedIds(pinnedId);
     this.uiData.pinnedItems = this.pinnedItems;
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
-  updateHighlightedItems(id: string) {
-    if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
+  updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
     } else {
-      this.highlightedItems = []; //if multi-select implemented, remove this line
-      this.highlightedItems.push(id);
+      this.highlightedItem = id;
     }
-    this.uiData.highlightedItems = this.highlightedItems;
-    this.notifyViewCallback(this.uiData);
+    this.uiData.highlightedItem = this.highlightedItem;
+    this.copyUiDataAndNotifyView();
+  }
+
+  updateHighlightedProperty(id: string) {
+    if (this.highlightedProperty === id) {
+      this.highlightedProperty = '';
+    } else {
+      this.highlightedProperty = id;
+    }
+    this.uiData.highlightedProperty = this.highlightedProperty;
+    this.copyUiDataAndNotifyView();
   }
 
   updateHierarchyTree(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   filterHierarchyTree(filterString: string) {
     this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   updatePropertiesTree(userOptions: UserOptions) {
@@ -174,12 +183,14 @@ export class Presenter {
       this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
       if (this.entry) {
-        this.uiData.highlightedItems = this.highlightedItems;
+        this.uiData.highlightedItem = this.highlightedItem;
+        this.uiData.highlightedProperty = this.highlightedProperty;
         this.uiData.rects = this.generateRects(this.entry);
         this.uiData.displayIds = this.getDisplayIds(this.entry);
         this.uiData.tree = this.generateTree();
       }
-      this.notifyViewCallback(this.uiData);
+
+      this.copyUiDataAndNotifyView();
     });
   }
 
@@ -249,7 +260,7 @@ export class Presenter {
         this.selectedHierarchyTree
       );
     }
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   private generateTree() {
@@ -303,5 +314,12 @@ export class Presenter {
       .setDiffProperties(this.previousEntry);
     const transformedTree = transformer.transform();
     return transformedTree;
+  }
+
+  private copyUiDataAndNotifyView() {
+    // Create a shallow copy of the data, otherwise the Angular OnPush change detection strategy
+    // won't detect the new input
+    const copy = Object.assign({}, this.uiData);
+    this.notifyViewCallback(copy);
   }
 }

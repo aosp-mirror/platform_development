@@ -269,7 +269,7 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 buffers: {{
-    size_kb: 100000
+    size_kb: 50000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 0
@@ -466,7 +466,7 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_DUMP_CONFIG_FILE}
 buffers: {{
-    size_kb: 100000
+    size_kb: 50000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 1
