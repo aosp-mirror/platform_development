@@ -54,13 +54,23 @@ describe('TreeComponent', () => {
   });
 
   it('highlights item upon node click', () => {
-    const treeNode: HTMLButtonElement | null = htmlElement.querySelector('tree-node');
+    const treeNode = htmlElement.querySelector('tree-node');
     expect(treeNode).toBeTruthy();
 
     const spy = spyOn(component.treeComponent.highlightedChange, 'emit');
-    treeNode!.dispatchEvent(new MouseEvent('click', {detail: 1}));
+    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 1}));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('toggles tree upon node double click', () => {
+    const treeNode = htmlElement.querySelector('tree-node');
+    expect(treeNode).toBeTruthy();
+
+    const currCollapseValue = component.treeComponent.localCollapsedState;
+    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 2}));
+    fixture.detectChanges();
+    expect(!currCollapseValue).toBe(component.treeComponent.localCollapsedState);
   });
 
   @Component({
