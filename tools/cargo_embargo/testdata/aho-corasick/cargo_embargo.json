@@ -1,0 +1,13 @@
+{
+  "tests": true,
+  "apex_available": [
+    "//apex_available:platform",
+    "com.android.compos",
+    "com.android.virt"
+  ],
+  "min_sdk_version": null,
+  "package": {
+    "aho-corasick": {
+    }
+  }
+}
