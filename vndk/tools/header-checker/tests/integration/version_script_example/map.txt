@@ -1,6 +1,6 @@
 LIBVERSION_SCRIPT_EXAMPLE_1.0 {
   global:
-    test1;  # mytag
+    test1;
     extern "C++" {
       Test3::*;  # mytag
     };
@@ -8,7 +8,7 @@ LIBVERSION_SCRIPT_EXAMPLE_1.0 {
     *;
 };
 
-LIBVERSION_SCRIPT_EXAMPLE_PRIVATE {
+LIBVERSION_SCRIPT_EXAMPLE_PRIVATE {  # mytag
   global:
     test2;
     extern "C++" {

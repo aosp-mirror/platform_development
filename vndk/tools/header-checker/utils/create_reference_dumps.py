@@ -5,8 +5,8 @@ import os
 import time
 
 from utils import (
-    AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target,
-    copy_reference_dump, find_lib_lsdumps, get_build_vars_for_product,
+    AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, BuildTarget, Arch,
+    copy_reference_dump, find_lib_lsdumps, get_build_vars,
     make_libraries, make_tree, read_lsdump_paths)
 
 
@@ -23,8 +23,8 @@ class GetRefDumpDirStem:
     def __init__(self, ref_dump_dir):
         self.ref_dump_dir = ref_dump_dir
 
-    def __call__(self, subdir, arch):
-        return os.path.join(self.ref_dump_dir, arch)
+    def __call__(self, subdir, arch_str):
+        return os.path.join(self.ref_dump_dir, arch_str)
 
 
 class GetVersionedRefDumpDirStem:
@@ -34,7 +34,7 @@ class GetVersionedRefDumpDirStem:
         self.chosen_platform_version = chosen_platform_version
         self.binder_bitness = binder_bitness
 
-    def __call__(self, subdir, arch):
+    def __call__(self, subdir, arch_str):
         if subdir not in PREBUILTS_ABI_DUMPS_SUBDIRS:
             raise ValueError(f'"{subdir}" is not a valid dump directory under '
                              f'{PREBUILTS_ABI_DUMPS_DIR}.')
@@ -42,17 +42,16 @@ class GetVersionedRefDumpDirStem:
                         if subdir == 'vndk'
                         else self.chosen_platform_version)
         return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir, version_stem,
-                            self.binder_bitness, arch)
+                            self.binder_bitness, arch_str)
 
 
-def make_libs_for_product(libs, product, variant, vndk_version, targets,
+def make_libs_for_product(libs, build_target, vndk_version, arches,
                           exclude_tags):
-    print('making libs for', product + '-' + variant)
+    print('making libs for', '-'.join(filter(None, build_target)))
     if libs:
-        make_libraries(product, variant, vndk_version, targets, libs,
-                       exclude_tags)
+        make_libraries(build_target, vndk_version, arches, libs, exclude_tags)
     else:
-        make_tree(product, variant)
+        make_tree(build_target)
 
 
 def tag_to_dir_name(tag):
@@ -67,13 +66,13 @@ def tag_to_dir_name(tag):
     raise ValueError(tag + ' is not a known tag.')
 
 
-def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, target, libs,
+def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, arch, libs,
                               lsdump_paths):
-    arch_lsdump_paths = find_lib_lsdumps(lsdump_paths, libs, target)
+    arch_lsdump_paths = find_lib_lsdumps(lsdump_paths, libs, arch)
     num_created = 0
     for tag, path in arch_lsdump_paths:
         ref_dump_dir_stem = get_ref_dump_dir_stem(tag_to_dir_name(tag),
-                                                  target.get_arch_str())
+                                                  arch.get_arch_str())
         copy_reference_dump(
             path, os.path.join(ref_dump_dir_stem, 'source-based'))
         num_created += 1
@@ -81,28 +80,28 @@ def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, target, libs,
 
 
 def create_source_abi_reference_dumps(args, get_ref_dump_dir_stem,
-                                      lsdump_paths, targets):
+                                      lsdump_paths, arches):
     num_libs_copied = 0
-    for target in targets:
-        assert target.primary_arch != ''
-        print(f'Creating dumps for arch: {target.arch}, '
-              f'primary arch: {target.primary_arch}')
+    for arch in arches:
+        assert arch.primary_arch != ''
+        print(f'Creating dumps for arch: {arch.arch}, '
+              f'primary arch: {arch.primary_arch}')
 
         num_libs_copied += find_and_copy_lib_lsdumps(
-            get_ref_dump_dir_stem, target, args.libs, lsdump_paths)
+            get_ref_dump_dir_stem, arch, args.libs, lsdump_paths)
     return num_libs_copied
 
 
 def create_source_abi_reference_dumps_for_all_products(args):
     """Create reference ABI dumps for all specified products."""
-
     num_processed = 0
 
     for product in args.products:
-        build_vars = get_build_vars_for_product(
+        build_target = BuildTarget(product, args.release, args.build_variant)
+        build_vars = get_build_vars(
             ['PLATFORM_VNDK_VERSION', 'BOARD_VNDK_VERSION', 'BINDER32BIT',
              'PLATFORM_VERSION_CODENAME', 'PLATFORM_SDK_VERSION'],
-            product, args.build_variant)
+            build_target)
 
         platform_vndk_version = build_vars[0]
         board_vndk_version = build_vars[1]
@@ -126,8 +125,9 @@ def create_source_abi_reference_dumps_for_all_products(args):
                                    if platform_version_codename == 'REL'
                                    else 'current')
 
-        targets = [t for t in (Target(True, product), Target(False, product))
-                   if t.arch]
+        arches = [arch for arch in
+                  (Arch(True, build_target), Arch(False, build_target))
+                  if arch.arch]
 
         if args.ref_dump_dir:
             get_ref_dump_dir_stem = GetRefDumpDirStem(args.ref_dump_dir)
@@ -143,16 +143,16 @@ def create_source_abi_reference_dumps_for_all_products(args):
             if not args.no_make_lib:
                 # Build .lsdump for all the specified libs, or build
                 # `findlsdumps` if no libs are specified.
-                make_libs_for_product(args.libs, product, args.build_variant,
-                                      platform_vndk_version, targets,
+                make_libs_for_product(args.libs, build_target,
+                                      platform_vndk_version, arches,
                                       exclude_tags)
 
-            lsdump_paths = read_lsdump_paths(product, args.build_variant,
-                                             platform_vndk_version, targets,
+            lsdump_paths = read_lsdump_paths(build_target,
+                                             platform_vndk_version, arches,
                                              exclude_tags, build=False)
 
             num_processed += create_source_abi_reference_dumps(
-                args, get_ref_dump_dir_stem, lsdump_paths, targets)
+                args, get_ref_dump_dir_stem, lsdump_paths, arches)
         except KeyError as e:
             if args.libs or not args.ref_dump_dir:
                 raise RuntimeError('Please check the lib name or specify '
@@ -175,6 +175,9 @@ def _parse_args():
                         help='libs to create references for')
     parser.add_argument('-products', action='append',
                         help='products to create references for')
+    parser.add_argument('-release',
+                        help='release configuration to create references for. '
+                             'e.g., trunk_staging, next.')
     parser.add_argument('--build-variant', default='userdebug',
                         help='build variant to create references for')
     parser.add_argument('--compress', action='store_true',

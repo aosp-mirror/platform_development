@@ -1,0 +1,1036 @@
+{
+  "metadata": null,
+  "packages": [
+    {
+      "authors": [
+        "bluss"
+      ],
+      "categories": [
+        "data-structures",
+        "no-std"
+      ],
+      "default_run": null,
+      "dependencies": [
+        {
+          "features": [
+            "derive"
+          ],
+          "kind": null,
+          "name": "serde",
+          "optional": true,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "serde_json",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        }
+      ],
+      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
+      "documentation": "https://docs.rs/either/1/",
+      "edition": "2018",
+      "features": {
+        "default": [
+          "use_std"
+        ],
+        "serde": [
+          "dep:serde"
+        ],
+        "use_std": []
+      },
+      "homepage": null,
+      "id": "either 1.8.1 (path+file://.)",
+      "keywords": [
+        "data-structure",
+        "no_std"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
+      "links": null,
+      "manifest_path": "Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "features": [
+              "serde"
+            ]
+          }
+        },
+        "release": {
+          "no-dev-version": true,
+          "tag-name": "{{version}}"
+        }
+      },
+      "name": "either",
+      "publish": null,
+      "readme": "README-crates.io.md",
+      "repository": "https://github.com/bluss/either",
+      "rust_version": "1.36",
+      "source": null,
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2018",
+          "kind": [
+            "lib"
+          ],
+          "name": "either",
+          "src_path": "src/lib.rs",
+          "test": true
+        }
+      ],
+      "version": "1.8.1"
+    },
+    {
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "categories": [
+        "value-formatting",
+        "no-std",
+        "no-std::no-alloc"
+      ],
+      "default_run": null,
+      "dependencies": [
+        {
+          "features": [],
+          "kind": null,
+          "name": "no-panic",
+          "optional": true,
+          "registry": null,
+          "rename": null,
+          "req": "^0.1",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        }
+      ],
+      "description": "Fast integer primitive to string conversion",
+      "documentation": "https://docs.rs/itoa",
+      "edition": "2018",
+      "features": {
+        "no-panic": [
+          "dep:no-panic"
+        ]
+      },
+      "homepage": null,
+      "id": "itoa 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
+      "keywords": [
+        "integer"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
+      "links": null,
+      "manifest_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/itoa-1.0.9/Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "rustdoc-args": [
+              "--generate-link-to-definition"
+            ],
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ]
+          }
+        }
+      },
+      "name": "itoa",
+      "publish": null,
+      "readme": "README.md",
+      "repository": "https://github.com/dtolnay/itoa",
+      "rust_version": "1.36",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2018",
+          "kind": [
+            "lib"
+          ],
+          "name": "itoa",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/itoa-1.0.9/src/lib.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/itoa-1.0.9/tests/test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "bench"
+          ],
+          "name": "bench",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/itoa-1.0.9/benches/bench.rs",
+          "test": false
+        }
+      ],
+      "version": "1.0.9"
+    },
+    {
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "categories": [
+        "value-formatting",
+        "no-std",
+        "no-std::no-alloc"
+      ],
+      "default_run": null,
+      "dependencies": [
+        {
+          "features": [],
+          "kind": null,
+          "name": "no-panic",
+          "optional": true,
+          "registry": null,
+          "rename": null,
+          "req": "^0.1",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "num_cpus",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.8",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "rand",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^0.8",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "rand_xorshift",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^0.3",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        }
+      ],
+      "description": "Fast floating point to string conversion",
+      "documentation": "https://docs.rs/ryu",
+      "edition": "2018",
+      "features": {
+        "no-panic": [
+          "dep:no-panic"
+        ],
+        "small": []
+      },
+      "homepage": null,
+      "id": "ryu 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+      "keywords": [
+        "float"
+      ],
+      "license": "Apache-2.0 OR BSL-1.0",
+      "license_file": null,
+      "links": null,
+      "manifest_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "rustdoc-args": [
+              "--generate-link-to-definition"
+            ],
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ]
+          }
+        }
+      },
+      "name": "ryu",
+      "publish": null,
+      "readme": "README.md",
+      "repository": "https://github.com/dtolnay/ryu",
+      "rust_version": "1.36",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2018",
+          "kind": [
+            "lib"
+          ],
+          "name": "ryu",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/src/lib.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "example"
+          ],
+          "name": "upstream_benchmark",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/examples/upstream_benchmark.rs",
+          "test": false
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "s2d_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/s2d_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "d2s_table_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/d2s_table_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "s2f_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/s2f_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "exhaustive",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/exhaustive.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "f2s_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/f2s_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "d2s_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/d2s_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "test"
+          ],
+          "name": "common_test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/tests/common_test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2018",
+          "kind": [
+            "bench"
+          ],
+          "name": "bench",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ryu-1.0.15/benches/bench.rs",
+          "test": false
+        }
+      ],
+      "version": "1.0.15"
+    },
+    {
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "categories": [
+        "encoding",
+        "no-std",
+        "no-std::no-alloc"
+      ],
+      "default_run": null,
+      "dependencies": [
+        {
+          "features": [],
+          "kind": null,
+          "name": "serde_derive",
+          "optional": true,
+          "registry": null,
+          "rename": null,
+          "req": "=1.0.175",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "serde_derive",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        }
+      ],
+      "description": "A generic serialization/deserialization framework",
+      "documentation": "https://docs.rs/serde",
+      "edition": "2015",
+      "features": {
+        "alloc": [],
+        "default": [
+          "std"
+        ],
+        "derive": [
+          "serde_derive"
+        ],
+        "rc": [],
+        "serde_derive": [
+          "dep:serde_derive"
+        ],
+        "std": [],
+        "unstable": []
+      },
+      "homepage": "https://serde.rs",
+      "id": "serde 1.0.175 (registry+https://github.com/rust-lang/crates.io-index)",
+      "keywords": [
+        "serde",
+        "serialization",
+        "no_std"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
+      "links": null,
+      "manifest_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.175/Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "features": [
+              "derive"
+            ],
+            "rustdoc-args": [
+              "--generate-link-to-definition"
+            ],
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ]
+          }
+        },
+        "playground": {
+          "features": [
+            "derive",
+            "rc"
+          ]
+        }
+      },
+      "name": "serde",
+      "publish": null,
+      "readme": "crates-io.md",
+      "repository": "https://github.com/serde-rs/serde",
+      "rust_version": "1.19",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2015",
+          "kind": [
+            "lib"
+          ],
+          "name": "serde",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.175/src/lib.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2015",
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.175/build.rs",
+          "test": false
+        }
+      ],
+      "version": "1.0.175"
+    },
+    {
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "categories": [
+        "encoding",
+        "parser-implementations",
+        "no-std"
+      ],
+      "default_run": null,
+      "dependencies": [
+        {
+          "features": [],
+          "kind": null,
+          "name": "indexmap",
+          "optional": true,
+          "registry": null,
+          "rename": null,
+          "req": "^2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": null,
+          "name": "itoa",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": null,
+          "name": "ryu",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": null,
+          "name": "serde",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.166",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": false
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "automod",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.11",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "indoc",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^2.0.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "ref-cast",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.18",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "rustversion",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.13",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [
+            "derive"
+          ],
+          "kind": "dev",
+          "name": "serde",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.166",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "serde_bytes",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^0.11.10",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "serde_derive",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.166",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [],
+          "kind": "dev",
+          "name": "serde_stacker",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^0.1.8",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        },
+        {
+          "features": [
+            "diff"
+          ],
+          "kind": "dev",
+          "name": "trybuild",
+          "optional": false,
+          "registry": null,
+          "rename": null,
+          "req": "^1.0.81",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "target": null,
+          "uses_default_features": true
+        }
+      ],
+      "description": "A JSON serialization file format",
+      "documentation": "https://docs.rs/serde_json",
+      "edition": "2021",
+      "features": {
+        "alloc": [
+          "serde/alloc"
+        ],
+        "arbitrary_precision": [],
+        "default": [
+          "std"
+        ],
+        "float_roundtrip": [],
+        "indexmap": [
+          "dep:indexmap"
+        ],
+        "preserve_order": [
+          "indexmap",
+          "std"
+        ],
+        "raw_value": [],
+        "std": [
+          "serde/std"
+        ],
+        "unbounded_depth": []
+      },
+      "homepage": null,
+      "id": "serde_json 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
+      "keywords": [
+        "json",
+        "serde",
+        "serialization"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "license_file": null,
+      "links": null,
+      "manifest_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "features": [
+              "raw_value",
+              "unbounded_depth"
+            ],
+            "rustdoc-args": [
+              "--cfg",
+              "docsrs",
+              "--generate-link-to-definition"
+            ],
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ]
+          }
+        },
+        "playground": {
+          "features": [
+            "raw_value"
+          ]
+        }
+      },
+      "name": "serde_json",
+      "publish": null,
+      "readme": "README.md",
+      "repository": "https://github.com/serde-rs/json",
+      "rust_version": "1.56",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "targets": [
+        {
+          "crate_types": [
+            "lib"
+          ],
+          "doc": true,
+          "doctest": true,
+          "edition": "2021",
+          "kind": [
+            "lib"
+          ],
+          "name": "serde_json",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/src/lib.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "test",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/test.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "stream",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/stream.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "map",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/map.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "regression",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/regression.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "lexical",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/lexical.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "compiletest",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/compiletest.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "test"
+          ],
+          "name": "debug",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/tests/debug.rs",
+          "test": true
+        },
+        {
+          "crate_types": [
+            "bin"
+          ],
+          "doc": false,
+          "doctest": false,
+          "edition": "2021",
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde_json-1.0.103/build.rs",
+          "test": false
+        }
+      ],
+      "version": "1.0.103"
+    }
+  ],
+  "resolve": {
+    "nodes": [
+      {
+        "dependencies": [
+          "serde_json 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)"
+        ],
+        "deps": [
+          {
+            "dep_kinds": [
+              {
+                "kind": "dev",
+                "target": null
+              }
+            ],
+            "name": "serde_json",
+            "pkg": "serde_json 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)"
+          }
+        ],
+        "features": [
+          "default",
+          "use_std"
+        ],
+        "id": "either 1.8.1 (path+file://.)"
+      },
+      {
+        "dependencies": [],
+        "deps": [],
+        "features": [],
+        "id": "itoa 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)"
+      },
+      {
+        "dependencies": [],
+        "deps": [],
+        "features": [],
+        "id": "ryu 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)"
+      },
+      {
+        "dependencies": [],
+        "deps": [],
+        "features": [
+          "std"
+        ],
+        "id": "serde 1.0.175 (registry+https://github.com/rust-lang/crates.io-index)"
+      },
+      {
+        "dependencies": [
+          "itoa 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)",
+          "ryu 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+          "serde 1.0.175 (registry+https://github.com/rust-lang/crates.io-index)"
+        ],
+        "deps": [
+          {
+            "dep_kinds": [
+              {
+                "kind": null,
+                "target": null
+              }
+            ],
+            "name": "itoa",
+            "pkg": "itoa 1.0.9 (registry+https://github.com/rust-lang/crates.io-index)"
+          },
+          {
+            "dep_kinds": [
+              {
+                "kind": null,
+                "target": null
+              }
+            ],
+            "name": "ryu",
+            "pkg": "ryu 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)"
+          },
+          {
+            "dep_kinds": [
+              {
+                "kind": null,
+                "target": null
+              }
+            ],
+            "name": "serde",
+            "pkg": "serde 1.0.175 (registry+https://github.com/rust-lang/crates.io-index)"
+          }
+        ],
+        "features": [
+          "default",
+          "std"
+        ],
+        "id": "serde_json 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)"
+      }
+    ],
+    "root": "either 1.8.1 (path+file://.)"
+  },
+  "target_directory": "target",
+  "version": 1,
+  "workspace_members": [
+    "either 1.8.1 (path+file://.)"
+  ],
+  "workspace_root": "."
+}

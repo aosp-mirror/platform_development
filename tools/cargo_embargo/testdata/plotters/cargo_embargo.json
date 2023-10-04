@@ -1,0 +1,7 @@
+{
+  "features": ["svg_backend", "area_series", "line_series"],
+  "package": {
+    "plotters": {
+    }
+  }
+}

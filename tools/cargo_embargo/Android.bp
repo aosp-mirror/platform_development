@@ -16,8 +16,8 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-rust_binary_host {
-    name: "cargo_embargo",
+rust_defaults {
+    name: "cargo_embargo.defaults",
     srcs: ["src/main.rs"],
     // Disable LTO for faster builds. Don't need the performance here.
     flags: ["-C lto=off"],
@@ -30,4 +30,15 @@ rust_binary_host {
         "libserde",
         "libserde_json",
     ],
+}
+
+rust_binary_host {
+    name: "cargo_embargo",
+    defaults: ["cargo_embargo.defaults"],
+}
+
+rust_test_host {
+    name: "cargo_embargo.test",
+    defaults: ["cargo_embargo.defaults"],
+    data: ["testdata/**/*"],
 }

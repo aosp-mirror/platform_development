@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use super::metadata::WorkspaceMetadata;
+use super::{Crate, CrateType, Extern, ExternType};
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
@@ -19,95 +21,56 @@ use anyhow::Result;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
+use std::env;
+use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::path::PathBuf;
 
-/// Combined representation of --crate-type and --test flags.
-#[derive(Debug, PartialEq, Eq)]
-pub enum CrateType {
-    // --crate-type types
-    Bin,
-    Lib,
-    RLib,
-    DyLib,
-    CDyLib,
-    StaticLib,
-    ProcMacro,
-    // --test
-    Test,
-    // "--cfg test" without --test. (Assume it is a test with the harness disabled.
-    TestNoHarness,
-}
-
-/// Info extracted from `CargoOut` for a crate.
+/// Reads the given `cargo.out` and `cargo.metadata` files, and generates a list of crates based on
+/// the rustc invocations.
 ///
-/// Note that there is a 1-to-many relationship between a Cargo.toml file and these `Crate`
-/// objects. For example, a Cargo.toml file might have a bin, a lib, and various tests. Each of
-/// those will be a separate `Crate`. All of them will have the same `package_name`.
-#[derive(Debug, Default)]
-pub struct Crate {
-    pub name: String,
-    pub package_name: String,
-    pub version: Option<String>,
-    pub types: Vec<CrateType>,
-    pub target: Option<String>,                 // --target
-    pub features: Vec<String>,                  // --cfg feature=
-    pub cfgs: Vec<String>,                      // non-feature --cfg
-    pub externs: Vec<(String, Option<String>)>, // name => rlib file
-    pub codegens: Vec<String>,                  // -C
-    pub cap_lints: String,
-    pub static_libs: Vec<String>,
-    pub shared_libs: Vec<String>,
-    pub emit_list: String,
-    pub edition: String,
-    pub package_dir: PathBuf, // canonicalized
-    pub main_src: PathBuf,    // relative to package_dir
-}
-
-pub fn parse_cargo_out(cargo_out_path: &str, cargo_metadata_path: &str) -> Result<Vec<Crate>> {
-    let metadata: WorkspaceMetadata = serde_json::from_str(
-        &std::fs::read_to_string(cargo_metadata_path).context("failed to read cargo.metadata")?,
+/// Ignores crates outside the current directory and build script crates.
+pub fn parse_cargo_out(
+    cargo_out_path: impl AsRef<Path>,
+    cargo_metadata_path: impl AsRef<Path>,
+) -> Result<Vec<Crate>> {
+    let cargo_out = read_to_string(cargo_out_path).context("failed to read cargo.out")?;
+    let metadata = serde_json::from_reader(
+        File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
     )
     .context("failed to parse cargo.metadata")?;
+    parse_cargo_out_str(&cargo_out, &metadata, env::current_dir().unwrap().canonicalize().unwrap())
+}
 
-    let cargo_out = CargoOut::parse(
-        &std::fs::read_to_string(cargo_out_path).context("failed to read cargo.out")?,
-    )
-    .context("failed to parse cargo.out")?;
+/// Parses the given `cargo.out` and `cargo.metadata` file contents and generates a list of crates
+/// based on the rustc invocations.
+///
+/// Ignores crates outside `base_directory` and build script crates.
+fn parse_cargo_out_str(
+    cargo_out: &str,
+    metadata: &WorkspaceMetadata,
+    base_directory: impl AsRef<Path>,
+) -> Result<Vec<Crate>> {
+    let cargo_out = CargoOut::parse(cargo_out).context("failed to parse cargo.out")?;
 
     assert!(cargo_out.cc_invocations.is_empty(), "cc not supported yet");
     assert!(cargo_out.ar_invocations.is_empty(), "ar not supported yet");
 
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let c = Crate::from_rustc_invocation(rustc, &metadata)
+        let c = Crate::from_rustc_invocation(rustc, metadata)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
             continue;
         }
-        // Ignore crates outside the current directory.
-        let cwd = std::env::current_dir().unwrap().canonicalize().unwrap();
-        if !c.package_dir.starts_with(cwd) {
+        // Ignore crates outside the base directory.
+        if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
         crates.push(c);
     }
     Ok(crates)
-}
-
-/// `cargo metadata` output.
-#[derive(serde::Deserialize)]
-struct WorkspaceMetadata {
-    packages: Vec<PackageMetadata>,
-}
-
-#[derive(serde::Deserialize)]
-struct PackageMetadata {
-    name: String,
-    version: String,
-    edition: String,
-    manifest_path: String,
 }
 
 /// Raw-ish data extracted from cargo.out file.
@@ -232,21 +195,6 @@ impl CargoOut {
     }
 }
 
-impl CrateType {
-    fn from_str(s: &str) -> CrateType {
-        match s {
-            "bin" => CrateType::Bin,
-            "lib" => CrateType::Lib,
-            "rlib" => CrateType::RLib,
-            "dylib" => CrateType::DyLib,
-            "cdylib" => CrateType::CDyLib,
-            "staticlib" => CrateType::StaticLib,
-            "proc-macro" => CrateType::ProcMacro,
-            _ => panic!("unexpected --crate-type: {}", s),
-        }
-    }
-}
-
 impl Crate {
     fn from_rustc_invocation(rustc: &str, metadata: &WorkspaceMetadata) -> Result<Crate> {
         let mut out = Crate::default();
@@ -288,12 +236,32 @@ impl Crate {
                     // example: memoffset=/some/path/libmemoffset-2cfda327d156e680.rmeta
                     let arg = arg_iter.next().unwrap();
                     if let Some((name, path)) = arg.split_once('=') {
-                        out.externs.push((
-                            name.to_string(),
-                            Some(path.split('/').last().unwrap().to_string()),
-                        ));
-                    } else {
-                        out.externs.push((arg.to_string(), None));
+                        let filename = path.split('/').last().unwrap();
+
+                        // Example filename: "libgetrandom-fd8800939535fc59.rmeta"
+                        static REGEX: Lazy<Regex> = Lazy::new(|| {
+                            Regex::new(r"^lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$").unwrap()
+                        });
+
+                        let Some(lib_name) = REGEX.captures(filename).and_then(|x| x.get(1)) else {
+                            bail!("bad filename for extern {}: {}", name, filename);
+                        };
+                        let extern_type =
+                            if filename.ends_with(".rlib") || filename.ends_with(".rmeta") {
+                                ExternType::Rust
+                            } else if filename.ends_with(".so") {
+                                // Assume .so files are always proc_macros. May not always be right.
+                                ExternType::ProcMacro
+                            } else {
+                                bail!("Unexpected extension for extern filename {}", filename);
+                            };
+                        out.externs.push(Extern {
+                            name: name.to_string(),
+                            lib_name: lib_name.as_str().to_string(),
+                            extern_type,
+                        });
+                    } else if arg != "proc_macro" {
+                        panic!("No filename for {}", arg);
                     }
                 }
                 _ if arg.starts_with("-C") => {
@@ -330,31 +298,8 @@ impl Crate {
                         out.shared_libs.push(arg.to_string());
                     }
                 }
-                _ if arg.starts_with("--emit=") => {
-                    out.emit_list = arg.strip_prefix("--emit=").unwrap().to_string();
-                }
                 _ if !arg.starts_with('-') => {
-                    let src_path = Path::new(arg);
-                    // Canonicalize the path because:
-                    //
-                    // 1. We don't consistently get relative or absolute paths elsewhere. If we
-                    //    canonicalize everything, it becomes easy to compare paths.
-                    //
-                    // 2. We don't want to consider symlinks to code outside the cwd as part of the
-                    //    project (e.g. AOSP's import of crosvm has symlinks from crosvm's own 3p
-                    //    directory to the android 3p directories).
-                    let src_path = src_path
-                        .canonicalize()
-                        .unwrap_or_else(|e| panic!("failed to canonicalize {src_path:?}: {}", e));
-                    out.package_dir = src_path.parent().unwrap().to_path_buf();
-                    while !out.package_dir.join("Cargo.toml").try_exists()? {
-                        if let Some(parent) = out.package_dir.parent() {
-                            out.package_dir = parent.to_path_buf();
-                        } else {
-                            bail!("No Cargo.toml found in parents of {:?}", src_path);
-                        }
-                    }
-                    out.main_src = src_path.strip_prefix(&out.package_dir).unwrap().to_path_buf();
+                    (out.package_dir, out.main_src) = split_src_path(Path::new(arg))?;
                 }
 
                 // ignored flags
@@ -368,6 +313,7 @@ impl Crate {
                     arg_iter.next().unwrap();
                 }
                 _ if arg.starts_with("--error-format=") => {}
+                _ if arg.starts_with("--emit=") => {}
                 _ if arg.starts_with("--edition=") => {}
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
@@ -419,4 +365,36 @@ impl Crate {
 
         Ok(out)
     }
+}
+
+/// Given a path to the main source file of some Rust crate, returns the canonical path to the
+/// package directory, and the relative path to the source file within that directory.
+fn split_src_path(src_path: &Path) -> Result<(PathBuf, PathBuf)> {
+    // Canonicalize the path because:
+    //
+    // 1. We don't consistently get relative or absolute paths elsewhere. If we
+    //    canonicalize everything, it becomes easy to compare paths.
+    //
+    // 2. We don't want to consider symlinks to code outside the cwd as part of the
+    //    project (e.g. AOSP's import of crosvm has symlinks from crosvm's own 3p
+    //    directory to the android 3p directories).
+    let src_path = src_path
+        .canonicalize()
+        .unwrap_or_else(|e| panic!("failed to canonicalize {src_path:?}: {}", e));
+    let package_dir = find_cargo_toml(&src_path)?;
+    let main_src = src_path.strip_prefix(&package_dir).unwrap().to_path_buf();
+
+    Ok((package_dir, main_src))
+}
+
+/// Given a path to a Rust source file, finds the closest ancestor directory containing a
+/// `Cargo.toml` file.
+fn find_cargo_toml(src_path: &Path) -> Result<PathBuf> {
+    let mut package_dir = src_path.parent().unwrap();
+    while !package_dir.join("Cargo.toml").try_exists()? {
+        package_dir = package_dir
+            .parent()
+            .ok_or_else(|| anyhow!("No Cargo.toml found in parents of {:?}", src_path))?;
+    }
+    Ok(package_dir.to_path_buf())
 }
