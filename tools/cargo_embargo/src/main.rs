@@ -615,18 +615,19 @@ fn crate_to_bp_modules(
             m.props.set("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
         }
 
-        if crate_type.is_library() {
-            if !cfg.apex_available.is_empty() {
-                m.props.set("apex_available", cfg.apex_available.clone());
+        if package_cfg.device_supported {
+            if !crate_type.is_test() {
+                if cfg.product_available {
+                    m.props.set("product_available", true);
+                }
+                if cfg.vendor_available {
+                    m.props.set("vendor_available", true);
+                }
             }
-            if cfg.product_available {
-                m.props.set("product_available", true);
-            }
-            if cfg.vendor_available {
-                m.props.set("vendor_available", true);
-            }
-
-            if package_cfg.device_supported {
+            if crate_type.is_library() {
+                if !cfg.apex_available.is_empty() {
+                    m.props.set("apex_available", cfg.apex_available.clone());
+                }
                 if let Some(min_sdk_version) = &cfg.min_sdk_version {
                     m.props.set("min_sdk_version", min_sdk_version.clone());
                 }
