@@ -148,7 +148,7 @@ export class HierarchyComponent {
     if (window.getSelection()?.type === 'range') {
       return;
     }
-    if (pinnedItem.id) this.onHighlightedItemChange(`${pinnedItem.id}`);
+    if (pinnedItem.stableId) this.onHighlightedItemChange(`${pinnedItem.stableId}`);
     this.onSelectedTreeChange(pinnedItem);
   }
 

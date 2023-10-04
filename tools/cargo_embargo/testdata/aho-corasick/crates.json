@@ -1,0 +1,40 @@
+[
+  {
+    "name": "aho_corasick",
+    "package_name": "aho-corasick",
+    "version": "0.7.20",
+    "types": ["lib"],
+    "target": "x86_64-unknown-linux-gnu",
+    "features": ["default", "std"],
+    "cfgs": [],
+    "externs": [
+      { "name": "memchr", "lib_name": "memchr", "extern_type": "Rust" }
+    ],
+    "codegens": [],
+    "cap_lints": "",
+    "static_libs": [],
+    "shared_libs": [],
+    "edition": "2018",
+    "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
+    "main_src": "src/lib.rs"
+  },
+  {
+    "name": "aho_corasick",
+    "package_name": "aho-corasick",
+    "version": "0.7.20",
+    "types": ["test"],
+    "target": "x86_64-unknown-linux-gnu",
+    "features": ["default", "std"],
+    "cfgs": [],
+    "externs": [
+      { "name": "memchr", "lib_name": "memchr", "extern_type": "Rust" }
+    ],
+    "codegens": [],
+    "cap_lints": "",
+    "static_libs": [],
+    "shared_libs": [],
+    "edition": "2018",
+    "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
+    "main_src": "src/lib.rs"
+  }
+]
