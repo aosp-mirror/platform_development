@@ -81,6 +81,11 @@ impl Config {
             test_data,
             ..Default::default()
         };
+        let mut package = BTreeMap::new();
+        // Skip package config if everything matches the defaults.
+        if package_config != Default::default() {
+            package.insert(package_name.to_owned(), package_config);
+        }
         let apex_available = if self.apex_available.is_empty() {
             default_apex_available()
         } else {
@@ -93,7 +98,7 @@ impl Config {
             product_available: self.product_available,
             vendor_available: self.vendor_available,
             min_sdk_version: self.min_sdk_version.clone(),
-            package: [(package_name.to_owned(), package_config)].into_iter().collect(),
+            package,
             run_cargo,
             ..Default::default()
         };
