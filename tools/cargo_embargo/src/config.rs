@@ -43,7 +43,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// Options that apply to everything.
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
     /// Whether to output "rust_test" modules.
@@ -117,7 +117,7 @@ impl Default for Config {
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
 /// Cargo.toml file).
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct PackageConfig {
     /// Whether to compile for device. Defaults to true.
