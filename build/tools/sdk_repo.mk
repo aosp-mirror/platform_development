@@ -33,9 +33,8 @@ endef
 define mk-sdk-repo-pkg-1
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	@echo "Building SDK repository package $(4) from $(notdir $(3))"
-	$(hide) cd $(basename $(3)) && \
-	        rm  -f   ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
-	        zip -9rq ../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) $(4)/*
+	$(hide) rm -f $$@ && \
+	        $(SOONG_ZIP) -o $$@ -C $(basename $(3)) -D $(basename $(3))/$(4)
 $(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
@@ -59,39 +58,8 @@ endef
 define mk-sdk-repo-pkg-2
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 	@echo "Building SDK repository package $(4) from $(notdir $(3))"
-	$(hide) cd $(basename $(3))/$(4) && \
-	        rm  -f   ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
-	        zip -9rq ../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
-$(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-$(1) += $(4) $(2) \
-    $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-
-$(call declare-1p-container,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),sdk_repo)
-$(call declare-container-license-deps,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),$(3),$(PRODUCT_OUT)/:/)
-endef
-
-# Defines the rule to build an SDK repository package when the
-# package directory contains 3 levels from the sdk dir, for example
-# to package SDK/extra/android/support or SDK/system-images/android-N/armeabi.
-# Because we do not know the intermediary directory name, this only works
-# if each directory contains a single sub-directory (e.g. sdk/$4/*/* must be
-# unique.)
-#
-# $1=variable where to accumulate args for mk_sdk_repo_xml.
-# $2=OS (e.g. linux, darwin)
-# $3=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
-# $4=package to create (e.g. system-images, support, etc.)
-# $5=the root of directory to package in the sdk (e.g. extra/android).
-#    this must be a 2-segment path, the last one can be *.
-#
-# The rule depends on the SDK zip file, which is defined by $2.
-#
-define mk-sdk-repo-pkg-3
-$(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
-	@echo "Building SDK repository package $(4) from $(notdir $(3))"
-	$(hide) cd $(basename $(3))/$(5) && \
-	        rm  -f   ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) && \
-	        zip -9rq ../../../$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4))) *
+	$(hide) rm -f $$@ && \
+	        $(SOONG_ZIP) -o $$@ -C $(basename $(3))/$(4) -D $(basename $(3))/$(4)
 $(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
@@ -108,11 +76,13 @@ endef
 # $4=package to create, must be "sources"
 #
 define mk-sdk-repo-sources
-$(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) development/build/tools/mk_sources_zip.py $(HOST_OUT)/development/sdk/source_source.properties
+bcp_srcjar := $(call intermediates-dir-for,ETC,platform-bootclasspath.srcjar)/platform-bootclasspath.srcjar
+source_props := $(HOST_OUT)/development/sdk/source_source.properties
+$(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) $$(bcp_srcjar) $$(source_props)
 	@echo "Building SDK sources package"
-	development/build/tools/mk_sources_zip.py --exec-zip \
-	            $(HOST_OUT)/development/sdk/source_source.properties \
-	            $$@ .
+	unzip -qd $(dir $$@)/tmp $$(bcp_srcjar)
+	$$(SOONG_ZIP) -o $$@ -P src -e source.properties -f $$(source_props) -C $(dir $$@)/tmp -D $(dir $$@)/tmp
+	rm -r $(dir $$@)/tmp
 $(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
@@ -266,7 +236,6 @@ SDK_SYSIMG_XML_ARGS :=
 
 mk-sdk-repo-pkg-1 :=
 mk-sdk-repo-pkg-2 :=
-mk-sdk-repo-pkg-3 :=
 mk-sdk-repo-sources :=
 mk-sdk-repo-xml :=
 sdk-repo-pkg-zip :=

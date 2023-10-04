@@ -58,7 +58,7 @@ class Updater:
         prebuilts_project = self.src_dir / "prebuilts/abi-dumps"
         prebuilts_dir = prebuilts_project / "ndk"
         abi_out = self.build_dir / "soong/abi-dumps/ndk"
-        for dump in abi_out.glob("**/abi.xml"):
+        for dump in abi_out.glob("**/abi.stg"):
             install_path = prebuilts_dir / dump.relative_to(abi_out)
             install_dir = install_path.parent
             if not install_dir.exists():

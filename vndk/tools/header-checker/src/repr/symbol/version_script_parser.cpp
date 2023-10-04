@@ -277,10 +277,11 @@ std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
     }
 
     std::string version(utils::Trim(line.substr(0, lparen_pos - 1)));
-    bool exclude_symbol_version = (excluded_symbol_versions_.find(version) !=
-                                   excluded_symbol_versions_.end());
+    bool exclude_symbol_version = utils::HasMatchingGlobPattern(
+        excluded_symbol_versions_, version.c_str());
 
-    if (!ParseVersionBlock(exclude_symbol_version)) {
+    ParsedTags tags = ParseSymbolTags(line);
+    if (!ParseVersionBlock(exclude_symbol_version || !IsSymbolExported(tags))) {
       return nullptr;
     }
   }
