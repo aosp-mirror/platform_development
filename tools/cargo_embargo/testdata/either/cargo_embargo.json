@@ -1,7 +1,3 @@
 {
-  "tests": true,
-  "package": {
-    "either": {
-    }
-  }
+  "tests": true
 }
