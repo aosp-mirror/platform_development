@@ -47,6 +47,8 @@ pub struct Config {
     #[serde(default)]
     run: bool,
     #[serde(default)]
+    test_blocklist: Vec<String>,
+    #[serde(default)]
     test_data: Vec<String>,
     #[serde(default)]
     tests: bool,
@@ -78,6 +80,11 @@ impl Config {
             .iter()
             .map(|package_name| package_to_library_name(package_name))
             .collect();
+        let module_blocklist = self
+            .test_blocklist
+            .iter()
+            .map(|test_filename| test_filename_to_module_name(package_name, test_filename))
+            .collect();
         let package_config = PackageConfig {
             device_supported: self.device,
             host_supported: !self.no_host,
@@ -104,6 +111,7 @@ impl Config {
             product_available: self.product_available,
             vendor_available: self.vendor_available,
             min_sdk_version: self.min_sdk_version.clone(),
+            module_blocklist,
             package,
             run_cargo,
             ..Default::default()
@@ -115,4 +123,8 @@ impl Config {
 fn package_to_library_name(package_name: &str) -> String {
     let module_name = format!("lib{}", package_name);
     renamed_module(&module_name).to_owned()
+}
+
+fn test_filename_to_module_name(package_name: &str, test_filename: &str) -> String {
+    format!("{}_test_{}", package_name, test_filename.replace('/', "_").replace(".rs", ""))
 }
