@@ -72,7 +72,7 @@ def aggregate_cts_reports(report_files):
 def main():
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--report-files', required=True, nargs='+',
+  parser.add_argument('-r', '--report', required=True, nargs='+',
                       help=('Path to cts report(s), where a cts report could '
                             'be a zip archive or a xml file.'))
   parser.add_argument('-d', '--output-dir', required=True,
@@ -80,7 +80,7 @@ def main():
 
   args = parser.parse_args()
 
-  report_files = args.report_files
+  report_files = args.report
   output_dir = args.output_dir
 
   if not os.path.exists(output_dir):

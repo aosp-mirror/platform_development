@@ -17,6 +17,7 @@
 
 #include <llvm/ADT/Optional.h>
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,9 @@
 namespace header_checker {
 namespace utils {
 
+
+// This comparison function allows finding elements by string_view.
+using StringSet = std::set<std::string, std::less<>>;
 
 std::string_view Trim(std::string_view s);
 
@@ -39,6 +43,8 @@ llvm::Optional<int> ParseInt(const std::string &s);
 bool ParseBool(const std::string &s);
 
 bool IsGlobPattern(std::string_view s);
+
+bool HasMatchingGlobPattern(const StringSet &patterns, const char *text);
 
 
 }  // namespace utils

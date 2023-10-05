@@ -1,0 +1,17 @@
+{
+  "tool_version": "1.0",
+  "source_path": "testdata/test_result_1.xml",
+  "build_model": "this_model",
+  "build_id": "1412",
+  "build_fingerprint": "this_build_fingerprint",
+  "build_device": "this_device",
+  "build_version_sdk": "34",
+  "build_version_security_patch": "2023-06-05",
+  "build_board": "this_board",
+  "build_type": "userdebug",
+  "build_version_release": "14",
+  "suite_name": "CTS",
+  "suite_version": "14_r1",
+  "suite_plan": "cts",
+  "suite_build_number": "1234567"
+}

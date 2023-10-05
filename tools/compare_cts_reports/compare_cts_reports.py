@@ -20,8 +20,10 @@ Given two report files (A and B), this script compare them in two modes:
   One-way mode: For all the failed tests in A, list the tests and the results in
                 both reports.
   Two-way mode: For all the tests in A and B, list the tests and the results in
-                both reports. If a test only exists in one report, show NO_DATA
+                both reports. If a test only exists in one report, show null
                 in another one.
+  N-way mode: Summarize each module in all reports. The module with the lowest
+              pass rate among all reports will be listed at top.
 
 Usage example:
   ./compare_cts_reports.py -r test_result_1.xml test_result_2.xml
@@ -29,20 +31,23 @@ Usage example:
   For this command line, the script aggregates test_result_1.xml and
   test_result_2.xml as one report, and then compare it with test_result_3.xml
   under one-way mode. The comparison result is written into output_dir/diff.csv.
+
+  ./compare_cts_reports.py -f parsed_result -r test_result.xml -m n -d tmp/
+  For this command line, the script load the report from the directory
+  parsed_result/, and then summarize the comparison between this report and
+  test_result.xml.
 """
 
 import argparse
 import csv
+import json
 import os
 import re
 import tempfile
 
 import aggregate_cts_reports
 import parse_cts_report
-
-
-TESTED_ITEMS = 'tested_items'
-PASS_RATE = 'pass_rate'
+import constant
 
 
 def one_way_compare(reports, diff_csv):
@@ -105,7 +110,7 @@ def two_way_compare(reports, diff_csv):
       result = report.get_test_status(module_name, abi, class_name, test_name)
 
       if test_name not in tests:
-        tests[test_name] = [parse_cts_report.NO_DATA, parse_cts_report.NO_DATA]
+        tests[test_name] = [constant.NO_DATA, constant.NO_DATA]
 
       tests[test_name][i] = result
 
@@ -155,10 +160,10 @@ def gen_summary_row(reports, module_with_abi, item):
     summary = module_summary[abi] if abi in module_summary else None
 
     if not summary:
-      row.append(0.0 if item == PASS_RATE else 0)
-    elif item == TESTED_ITEMS:
+      row.append(0.0 if item == constant.PASS_RATE else 0)
+    elif item == constant.TESTED_ITEMS:
       row.append(summary.tested_items)
-    elif item == PASS_RATE:
+    elif item == constant.PASS_RATE:
       row.append(summary.pass_rate)
     elif item in parse_cts_report.CtsReport.STATUS_ORDER:
       row.append(summary.counter[item])
@@ -184,7 +189,11 @@ def n_way_compare(reports, diff_csv):
   report_titles = []
 
   for i, report in enumerate(reports):
-    device_name = report.info['build_device']
+    device_name = (
+        f'device_{report.info["build_device"]}'
+        if 'build_device' in report.info
+        else f'build_id_{report.info["build_id"]}'
+    )
     report_titles.append(f'{i}_{device_name}')
 
     for module_name, abis in report.module_summaries.items():
@@ -203,7 +212,10 @@ def n_way_compare(reports, diff_csv):
       module_names, key=lambda module_name: modules_min_rate[module_name]
   )
 
-  items = parse_cts_report.CtsReport.STATUS_ORDER + [TESTED_ITEMS, PASS_RATE]
+  items = parse_cts_report.CtsReport.STATUS_ORDER + [
+      constant.TESTED_ITEMS,
+      constant.PASS_RATE,
+  ]
 
   with open(diff_csv, 'w') as diff_csvfile:
     diff_writer = csv.writer(diff_csvfile)
@@ -215,13 +227,41 @@ def n_way_compare(reports, diff_csv):
         diff_writer.writerow([module_with_abi, item] + row)
 
 
+def load_parsed_report(report_dir):
+  """Load CtsReport() from a directory that stores a parsed report."""
+
+  if not os.path.isdir(report_dir):
+    raise FileNotFoundError(f'{report_dir} is not a directory')
+
+  info_path = os.path.join(report_dir, 'info.json')
+  result_path = os.path.join(report_dir, 'result.csv')
+
+  for f in [info_path, result_path]:
+    if not os.path.exists(f):
+      raise FileNotFoundError(f"file {f} doesn't exist.")
+
+  with open(info_path, 'r') as info_jsonfile:
+    info = json.load(info_jsonfile)
+
+  report = parse_cts_report.CtsReport(info)
+
+  with open(result_path, 'r') as result_csvfile:
+    report.load_from_csv(result_csvfile)
+
+  return report
+
+
 def main():
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--reports', '-r', required=True, nargs='+',
-                      help=('Path to cts reports. Each flag -r is followed by'
-                            'a group of files to be aggregated as one report.'),
-                      action='append')
+  parser.add_argument('-r', '--report', nargs='+',
+                      dest='cts_reports', action='append',
+                      help=('Path to cts reports. Each flag -r is followed by '
+                            'a group of files to be aggregated as one report.'))
+  parser.add_argument('-f', '--folder',
+                      dest='cts_reports', action='append',
+                      help=('Path to folder that stores intermediate files '
+                            'of parsed reports.'))
   parser.add_argument('--mode', '-m', required=True, choices=['1', '2', 'n'],
                       help=('Comparison mode. 1: One-way mode. '
                             '2: Two-way mode. n: N-way mode.'))
@@ -233,9 +273,10 @@ def main():
 
   args = parser.parse_args()
 
-  report_files = args.reports
   mode = args.mode
-  if (mode in ['1', '2']) and (len(report_files) != 2):
+  reports = args.cts_reports
+
+  if (mode in ['1', '2']) and (len(reports) != 2):
     msg = 'Two sets of reports are required for one-way and two-way mode.'
     raise UserWarning(msg)
 
@@ -246,10 +287,15 @@ def main():
   diff_csv = os.path.join(output_dir, args.csv)
 
   ctsreports = []
-  for i, report_group in enumerate(report_files):
-    report = aggregate_cts_reports.aggregate_cts_reports(report_group)
+  for i, report_path in enumerate(reports):
+    is_report_files = isinstance(report_path, list)
+    report = (
+        aggregate_cts_reports.aggregate_cts_reports(report_path)
+        if is_report_files  # path(s) come from --report flag
+        else load_parsed_report(report_path)
+    )
 
-    if args.output_files:
+    if is_report_files and args.output_files:
       device_name = report.info['build_device']
       sub_dir_name = tempfile.mkdtemp(
           prefix=f'{i}_{device_name}_', dir=output_dir
