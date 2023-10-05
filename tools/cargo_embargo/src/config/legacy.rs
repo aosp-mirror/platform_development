@@ -15,6 +15,7 @@
 //! Code for dealing with legacy cargo2android.json config files.
 
 use super::{default_apex_available, default_true, PackageConfig};
+use crate::renamed_module;
 use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -72,11 +73,16 @@ impl Config {
                 .ok_or_else(|| anyhow!("Invalid test-data entry {}", entry))?;
             test_data.entry(test_name.to_owned()).or_default().push(data.to_owned());
         }
+        let dep_blocklist = self
+            .dependency_blocklist
+            .iter()
+            .map(|package_name| package_to_library_name(package_name))
+            .collect();
         let package_config = PackageConfig {
             device_supported: self.device,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
-            dep_blocklist: self.dependency_blocklist.clone(),
+            dep_blocklist,
             patch: self.patch.clone(),
             test_data,
             ..Default::default()
@@ -104,4 +110,9 @@ impl Config {
         };
         Ok(config)
     }
+}
+
+fn package_to_library_name(package_name: &str) -> String {
+    let module_name = format!("lib{}", package_name);
+    renamed_module(&module_name).to_owned()
 }
