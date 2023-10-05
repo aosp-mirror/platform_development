@@ -562,7 +562,15 @@ fn crate_to_bp_modules(
 
         m.props.set("edition", crate_.edition.clone());
         m.props.set_if_nonempty("features", crate_.features.clone());
-        m.props.set_if_nonempty("cfgs", crate_.cfgs.clone());
+        m.props.set_if_nonempty(
+            "cfgs",
+            crate_
+                .cfgs
+                .clone()
+                .into_iter()
+                .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+                .collect(),
+        );
 
         let mut flags = Vec::new();
         if !crate_.cap_lints.is_empty() {
