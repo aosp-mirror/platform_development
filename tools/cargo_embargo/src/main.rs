@@ -561,21 +561,15 @@ fn crate_to_bp_modules(
         m.props.set("srcs", srcs);
 
         m.props.set("edition", crate_.edition.clone());
-        if !crate_.features.is_empty() {
-            m.props.set("features", crate_.features.clone());
-        }
-        if !crate_.cfgs.is_empty() {
-            m.props.set("cfgs", crate_.cfgs.clone());
-        }
+        m.props.set_if_nonempty("features", crate_.features.clone());
+        m.props.set_if_nonempty("cfgs", crate_.cfgs.clone());
 
         let mut flags = Vec::new();
         if !crate_.cap_lints.is_empty() {
             flags.push(crate_.cap_lints.clone());
         }
         flags.extend(crate_.codegens.clone());
-        if !flags.is_empty() {
-            m.props.set("flags", flags);
-        }
+        m.props.set_if_nonempty("flags", flags);
 
         let mut rust_libs = Vec::new();
         let mut proc_macro_libs = Vec::new();
@@ -602,18 +596,10 @@ fn crate_to_bp_modules(
             result.sort();
             result
         };
-        if !rust_libs.is_empty() {
-            m.props.set("rustlibs", process_lib_deps(rust_libs));
-        }
-        if !proc_macro_libs.is_empty() {
-            m.props.set("proc_macros", process_lib_deps(proc_macro_libs));
-        }
-        if !crate_.static_libs.is_empty() {
-            m.props.set("static_libs", process_lib_deps(crate_.static_libs.clone()));
-        }
-        if !crate_.shared_libs.is_empty() {
-            m.props.set("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
-        }
+        m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
+        m.props.set_if_nonempty("proc_macros", process_lib_deps(proc_macro_libs));
+        m.props.set_if_nonempty("static_libs", process_lib_deps(crate_.static_libs.clone()));
+        m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
@@ -625,9 +611,7 @@ fn crate_to_bp_modules(
                 }
             }
             if crate_type.is_library() {
-                if !cfg.apex_available.is_empty() {
-                    m.props.set("apex_available", cfg.apex_available.clone());
-                }
+                m.props.set_if_nonempty("apex_available", cfg.apex_available.clone());
                 if let Some(min_sdk_version) = &cfg.min_sdk_version {
                     m.props.set("min_sdk_version", min_sdk_version.clone());
                 }

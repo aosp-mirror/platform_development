@@ -83,6 +83,12 @@ impl BpProperties {
         self.map.insert(k.to_string(), v.into());
     }
 
+    pub fn set_if_nonempty<T: Into<BpValue>>(&mut self, k: &str, v: Vec<T>) {
+        if !v.is_empty() {
+            self.set(k, v);
+        }
+    }
+
     pub fn object(&mut self, k: &str) -> &mut BpProperties {
         let v =
             self.map.entry(k.to_string()).or_insert_with(|| BpValue::Object(BpProperties::new()));
