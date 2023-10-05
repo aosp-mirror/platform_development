@@ -59,6 +59,11 @@ impl CrateType {
     pub fn is_library(self) -> bool {
         matches!(self, Self::Lib | Self::RLib | Self::DyLib | Self::CDyLib | Self::StaticLib)
     }
+
+    /// Returns whether the crate type is a kind of test.
+    pub fn is_test(self) -> bool {
+        matches!(self, Self::Test | Self::TestNoHarness)
+    }
 }
 
 /// Info extracted from `CargoOut` for a crate.
@@ -66,7 +71,7 @@ impl CrateType {
 /// Note that there is a 1-to-many relationship between a Cargo.toml file and these `Crate`
 /// objects. For example, a Cargo.toml file might have a bin, a lib, and various tests. Each of
 /// those will be a separate `Crate`. All of them will have the same `package_name`.
-#[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Crate {
     pub name: String,
     pub package_name: String,
@@ -86,14 +91,14 @@ pub struct Crate {
 }
 
 /// A dependency of a Rust crate.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Extern {
     pub name: String,
     pub lib_name: String,
     pub extern_type: ExternType,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ExternType {
     Rust,
     ProcMacro,

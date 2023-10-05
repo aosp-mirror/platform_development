@@ -195,6 +195,8 @@ def do_report(args):
         '--show-region-summary=false'
     ] + object_flags + source_dirs)
 
+    check_output(['chmod', '+rx', temp_dir])
+
     print(f'Coverage report data written in {output_dir}')
 
 

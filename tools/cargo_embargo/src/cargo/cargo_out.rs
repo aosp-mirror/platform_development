@@ -324,6 +324,8 @@ impl Crate {
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
         }
+        out.cfgs.sort();
+        out.cfgs.dedup();
 
         if out.name.is_empty() {
             bail!("missing --crate-name");

@@ -30,14 +30,19 @@ mod bp;
 mod cargo;
 mod config;
 
+use crate::config::legacy;
 use crate::config::Config;
 use crate::config::PackageConfig;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
 use bp::*;
-use cargo::{cargo_out::parse_cargo_out, Crate, CrateType, ExternType};
+use cargo::{
+    cargo_out::parse_cargo_out, metadata::parse_cargo_metadata_file, Crate, CrateType, ExternType,
+};
 use clap::Parser;
+use clap::Subcommand;
+use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::fs::File;
@@ -50,9 +55,37 @@ use std::process::Command;
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
+/// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
+static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+    [
+        ("libash", "libash_rust"),
+        ("libatomic", "libatomic_rust"),
+        ("libbacktrace", "libbacktrace_rust"),
+        ("libbase", "libbase_rust"),
+        ("libbase64", "libbase64_rust"),
+        ("libfuse", "libfuse_rust"),
+        ("libgcc", "libgcc_rust"),
+        ("liblog", "liblog_rust"),
+        ("libminijail", "libminijail_rust"),
+        ("libsync", "libsync_rust"),
+        ("libx86_64", "libx86_64_rust"),
+        ("libxml", "libxml_rust"),
+        ("protoc_gen_rust", "protoc-gen-rust"),
+    ]
+    .into_iter()
+    .collect()
+});
+
+fn renamed_module(name: &str) -> &str {
+    if let Some(renamed) = RENAME_MAP.get(name) {
+        renamed
+    } else {
+        name
+    }
+}
+
 /// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
-#[clap()]
 struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to cargo in $PATH.
     ///
@@ -66,6 +99,19 @@ struct Args {
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
+    #[command(subcommand)]
+    mode: Option<Mode>,
+}
+
+#[derive(Clone, Debug, Subcommand)]
+enum Mode {
+    /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
+    /// config.
+    Convert {
+        package_name: String,
+        #[arg(long)]
+        no_build: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -75,7 +121,27 @@ fn main() -> Result<()> {
         .with_context(|| format!("failed to read file: {:?}", args.cfg))?;
     // Add some basic support for comments to JSON.
     let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
-    let cfg: Config = serde_json::from_str(&json_str).context("failed to parse config")?;
+
+    match args.mode {
+        Some(Mode::Convert { package_name, no_build }) => {
+            let legacy_config: legacy::Config =
+                serde_json::from_str(&json_str).context("failed to parse legacy config")?;
+            let new_config = legacy_config.to_embargo(&package_name, !no_build)?;
+            let new_config_str = serde_json::to_string_pretty(&new_config)
+                .context("failed to serialize new config")?;
+            println!("{}", new_config_str);
+        }
+        None => {
+            run_embargo(args, &json_str)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Runs cargo_embargo with the given JSON configuration string.
+fn run_embargo(args: Args, json_str: &str) -> Result<()> {
+    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
 
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
@@ -100,8 +166,11 @@ fn main() -> Result<()> {
             .context("generate_cargo_out failed")?;
     }
 
-    let crates =
-        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?;
+    let crates = if cfg.run_cargo {
+        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?
+    } else {
+        parse_cargo_metadata_file(cargo_metadata_path, &cfg)?
+    };
 
     // Find out files.
     // Example: target.tmp/x86_64-unknown-linux-gnu/debug/build/metrics-d2dd799cebf1888d/out/event_details.rs
@@ -211,28 +280,30 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             .args(&feature_args),
     )?;
 
-    // cargo build
-    run_cargo(
-        &mut cargo_out_file,
-        Command::new("cargo")
-            .args(["build", "--target", default_target])
-            .args(verbose_args)
-            .args(target_dir_args)
-            .args(&workspace_args)
-            .args(&feature_args),
-    )?;
-
-    if cfg.tests {
-        // cargo build --tests
+    if cfg.run_cargo {
+        // cargo build
         run_cargo(
             &mut cargo_out_file,
             Command::new("cargo")
-                .args(["build", "--target", default_target, "--tests"])
+                .args(["build", "--target", default_target])
                 .args(verbose_args)
                 .args(target_dir_args)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
+
+        if cfg.tests {
+            // cargo build --tests
+            run_cargo(
+                &mut cargo_out_file,
+                Command::new("cargo")
+                    .args(["build", "--target", default_target, "--tests"])
+                    .args(verbose_args)
+                    .args(target_dir_args)
+                    .args(&workspace_args)
+                    .args(&feature_args),
+            )?;
+        }
     }
 
     Ok(())
@@ -403,7 +474,7 @@ fn crate_to_bp_modules(
 ) -> Result<Vec<BpModule>> {
     let mut modules = Vec::new();
     for crate_type in &crate_.types {
-        let host = if package_cfg.device_supported.unwrap_or(true) { "" } else { "_host" };
+        let host = if package_cfg.device_supported { "" } else { "_host" };
         let rlib = if package_cfg.force_rlib { "_rlib" } else { "" };
         let (module_type, module_name, stem) = match crate_type {
             CrateType::Bin => {
@@ -446,11 +517,12 @@ fn crate_to_bp_modules(
 
         let mut m = BpModule::new(module_type.clone());
         let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-        if cfg.module_blocklist.contains(module_name) {
+        let module_name = renamed_module(module_name);
+        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
             continue;
         }
         m.props.set("name", module_name.clone());
-        if &stem != module_name {
+        if stem != module_name {
             m.props.set("stem", stem);
         }
 
@@ -458,11 +530,15 @@ fn crate_to_bp_modules(
             m.props.set("defaults", vec![defaults.clone()]);
         }
 
-        if package_cfg.host_supported.unwrap_or(true)
-            && package_cfg.device_supported.unwrap_or(true)
+        if package_cfg.host_supported
+            && package_cfg.device_supported
             && module_type != "rust_proc_macro"
         {
             m.props.set("host_supported", true);
+        }
+
+        if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
+            m.props.set("compile_multilib", "first");
         }
 
         m.props.set("crate_name", crate_.name.clone());
@@ -475,7 +551,7 @@ fn crate_to_bp_modules(
         if crate_.types.contains(&CrateType::Test) {
             m.props.set("test_suites", vec!["general-tests"]);
             m.props.set("auto_gen_config", true);
-            if package_cfg.host_supported.unwrap_or(true) {
+            if package_cfg.host_supported {
                 m.props.object("test_options").set("unit_test", !package_cfg.no_presubmit);
             }
         }
@@ -517,7 +593,8 @@ fn crate_to_bp_modules(
                 let module_name = "lib".to_string() + x.as_str();
                 let module_name =
                     cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-                if package_cfg.dep_blocklist.contains(module_name) {
+                let module_name = renamed_module(module_name);
+                if package_cfg.dep_blocklist.iter().any(|blocked| blocked == module_name) {
                     continue;
                 }
                 result.push(module_name.to_string());
@@ -538,15 +615,29 @@ fn crate_to_bp_modules(
             m.props.set("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
         }
 
-        if crate_type.is_library() {
-            if !cfg.apex_available.is_empty() {
-                m.props.set("apex_available", cfg.apex_available.clone());
+        if package_cfg.device_supported {
+            if !crate_type.is_test() {
+                if cfg.product_available {
+                    m.props.set("product_available", true);
+                }
+                if cfg.vendor_available {
+                    m.props.set("vendor_available", true);
+                }
             }
-            if cfg.product_available {
-                m.props.set("product_available", true);
+            if crate_type.is_library() {
+                if !cfg.apex_available.is_empty() {
+                    m.props.set("apex_available", cfg.apex_available.clone());
+                }
+                if let Some(min_sdk_version) = &cfg.min_sdk_version {
+                    m.props.set("min_sdk_version", min_sdk_version.clone());
+                }
             }
-            if cfg.vendor_available {
-                m.props.set("vendor_available", true);
+        }
+        if crate_type.is_test() {
+            if let Some(data) =
+                package_cfg.test_data.get(crate_.main_src.to_string_lossy().as_ref())
+            {
+                m.props.set("data", data.clone());
             }
         }
 
@@ -652,12 +743,65 @@ mod tests {
                 module_type: "rust_library".to_string(),
                 props: BpProperties {
                     map: [
+                        (
+                            "apex_available".to_string(),
+                            BpValue::List(vec![
+                                BpValue::String("//apex_available:platform".to_string()),
+                                BpValue::String("//apex_available:anyapex".to_string()),
+                            ])
+                        ),
                         ("cargo_env_compat".to_string(), BpValue::Bool(true)),
                         ("crate_name".to_string(), BpValue::String("name".to_string())),
                         ("edition".to_string(), BpValue::String("2021".to_string())),
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libname".to_string())),
+                        ("product_available".to_string(), BpValue::Bool(true)),
                         ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("vendor_available".to_string(), BpValue::Bool(true)),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    raw_block: None
+                }
+            }]
+        );
+    }
+
+    #[test]
+    fn crate_to_bp_rename() {
+        let c = Crate {
+            name: "ash".to_string(),
+            package_name: "package_name".to_string(),
+            edition: "2021".to_string(),
+            types: vec![CrateType::Lib],
+            ..Default::default()
+        };
+        let cfg = Config { ..Default::default() };
+        let package_cfg = PackageConfig { ..Default::default() };
+        let modules = crate_to_bp_modules(&c, &cfg, &package_cfg, &[]).unwrap();
+
+        assert_eq!(
+            modules,
+            vec![BpModule {
+                module_type: "rust_library".to_string(),
+                props: BpProperties {
+                    map: [
+                        (
+                            "apex_available".to_string(),
+                            BpValue::List(vec![
+                                BpValue::String("//apex_available:platform".to_string()),
+                                BpValue::String("//apex_available:anyapex".to_string()),
+                            ])
+                        ),
+                        ("cargo_env_compat".to_string(), BpValue::Bool(true)),
+                        ("crate_name".to_string(), BpValue::String("ash".to_string())),
+                        ("edition".to_string(), BpValue::String("2021".to_string())),
+                        ("host_supported".to_string(), BpValue::Bool(true)),
+                        ("name".to_string(), BpValue::String("libash_rust".to_string())),
+                        ("product_available".to_string(), BpValue::Bool(true)),
+                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("stem".to_string(), BpValue::String("libash".to_string())),
+                        ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
                     .collect(),
