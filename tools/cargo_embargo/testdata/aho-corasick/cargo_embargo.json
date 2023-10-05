@@ -5,9 +5,5 @@
     "com.android.compos",
     "com.android.virt"
   ],
-  "min_sdk_version": null,
-  "package": {
-    "aho-corasick": {
-    }
-  }
+  "min_sdk_version": null
 }
