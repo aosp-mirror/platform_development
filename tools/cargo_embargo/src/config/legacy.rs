@@ -15,6 +15,7 @@
 //! Code for dealing with legacy cargo2android.json config files.
 
 use super::{default_apex_available, default_true, PackageConfig};
+use crate::renamed_module;
 use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -72,15 +73,25 @@ impl Config {
                 .ok_or_else(|| anyhow!("Invalid test-data entry {}", entry))?;
             test_data.entry(test_name.to_owned()).or_default().push(data.to_owned());
         }
+        let dep_blocklist = self
+            .dependency_blocklist
+            .iter()
+            .map(|package_name| package_to_library_name(package_name))
+            .collect();
         let package_config = PackageConfig {
             device_supported: self.device,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
-            dep_blocklist: self.dependency_blocklist.clone(),
+            dep_blocklist,
             patch: self.patch.clone(),
             test_data,
             ..Default::default()
         };
+        let mut package = BTreeMap::new();
+        // Skip package config if everything matches the defaults.
+        if package_config != Default::default() {
+            package.insert(package_name.to_owned(), package_config);
+        }
         let apex_available = if self.apex_available.is_empty() {
             default_apex_available()
         } else {
@@ -93,10 +104,15 @@ impl Config {
             product_available: self.product_available,
             vendor_available: self.vendor_available,
             min_sdk_version: self.min_sdk_version.clone(),
-            package: [(package_name.to_owned(), package_config)].into_iter().collect(),
+            package,
             run_cargo,
             ..Default::default()
         };
         Ok(config)
     }
+}
+
+fn package_to_library_name(package_name: &str) -> String {
+    let module_name = format!("lib{}", package_name);
+    renamed_module(&module_name).to_owned()
 }
