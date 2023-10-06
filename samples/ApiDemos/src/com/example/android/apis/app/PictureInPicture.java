@@ -42,7 +42,6 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
@@ -66,12 +65,16 @@ public class PictureInPicture extends Activity {
     private static final int TABLET_BREAK_POINT_DP = 700;
 
     private static final String ACTION_CUSTOM_CLOSE = "demo.pip.custom_close";
+    private static final String ACTION_MOVE_TO_BACK = "demo.pip.move_to_back";
     private final BroadcastReceiver mRemoteActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getAction()) {
                 case ACTION_CUSTOM_CLOSE:
                     finish();
+                    break;
+                case ACTION_MOVE_TO_BACK:
+                    moveTaskToBack(false /* nonRoot */);
                     break;
             }
         }
@@ -110,6 +113,7 @@ public class PictureInPicture extends Activity {
     private Spinner mAspectRatioSpinner;
     private List<RemoteAction> mPipActions;
     private RemoteAction mCloseAction;
+    private RemoteAction mMoveToBackAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -264,19 +268,29 @@ public class PictureInPicture extends Activity {
 
     private void setupPipActions() {
         final IntentFilter remoteActionFilter = new IntentFilter();
+        mPipActions = new ArrayList<>();
+
         remoteActionFilter.addAction(ACTION_CUSTOM_CLOSE);
-        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
-        final Intent intent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
+        final Intent closeIntent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
         mCloseAction = new RemoteAction(
                 Icon.createWithResource(this, R.drawable.ic_call_end),
                 getString(R.string.action_custom_close),
                 getString(R.string.action_custom_close),
-                PendingIntent.getBroadcast(this, 0 /* requestCode */, intent,
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, closeIntent,
                         FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
-
-        // Add close action as a regular PiP action
-        mPipActions = new ArrayList<>(1);
         mPipActions.add(mCloseAction);
+
+        remoteActionFilter.addAction(ACTION_MOVE_TO_BACK);
+        final Intent backIntent = new Intent(ACTION_MOVE_TO_BACK).setPackage(getPackageName());
+        mMoveToBackAction = new RemoteAction(
+                Icon.createWithResource(this, R.drawable.ic_eject),
+                getString(R.string.action_move_to_back),
+                getString(R.string.action_move_to_back),
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, backIntent,
+                        FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
+        mPipActions.add(mMoveToBackAction);
+
+        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
     }
 
     private void setupPictureInPictureLayout() {

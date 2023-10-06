@@ -82,6 +82,9 @@ pub struct Config {
     /// Package specific config options.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub package: BTreeMap<String, PackageConfig>,
+    /// `cfg` flags in this list will not be included.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cfg_blocklist: Vec<String>,
     /// Modules in this list will not be generated.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub module_blocklist: Vec<String>,
@@ -108,6 +111,7 @@ impl Default for Config {
             min_sdk_version: None,
             module_name_overrides: Default::default(),
             package: Default::default(),
+            cfg_blocklist: Default::default(),
             module_blocklist: Default::default(),
             module_visibility: Default::default(),
             run_cargo: true,
