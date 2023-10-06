@@ -29,6 +29,8 @@ pub struct Config {
     apex_available: Vec<String>,
     #[serde(default)]
     cfg_blocklist: Vec<String>,
+    #[serde(default)]
+    dep_suffixes: BTreeMap<String, String>,
     #[allow(unused)] // Deprecated option.
     #[serde(default)]
     dependencies: bool,
@@ -89,6 +91,15 @@ impl Config {
             .iter()
             .map(|test_filename| test_filename_to_module_name(package_name, test_filename))
             .collect();
+        let module_name_overrides = self
+            .dep_suffixes
+            .iter()
+            .map(|(dependency, suffix)| {
+                let module_name = package_to_library_name(dependency);
+                let with_suffix = format!("{}{}", module_name, suffix);
+                (module_name, with_suffix)
+            })
+            .collect();
         let package_config = PackageConfig {
             device_supported: self.device,
             force_rlib: self.force_rlib,
@@ -118,6 +129,7 @@ impl Config {
             vendor_available: self.vendor_available,
             min_sdk_version: self.min_sdk_version.clone(),
             module_blocklist,
+            module_name_overrides,
             package,
             run_cargo,
             ..Default::default()
