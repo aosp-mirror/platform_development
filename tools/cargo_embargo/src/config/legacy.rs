@@ -39,6 +39,8 @@ pub struct Config {
     #[serde(default)]
     features: String,
     #[serde(default)]
+    force_rlib: bool,
+    #[serde(default)]
     host_first_multilib: bool,
     min_sdk_version: Option<String>,
     #[serde(default)]
@@ -89,6 +91,7 @@ impl Config {
             .collect();
         let package_config = PackageConfig {
             device_supported: self.device,
+            force_rlib: self.force_rlib,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
             dep_blocklist,

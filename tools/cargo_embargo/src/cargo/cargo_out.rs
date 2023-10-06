@@ -326,6 +326,7 @@ impl Crate {
         }
         out.cfgs.sort();
         out.cfgs.dedup();
+        out.features.sort();
 
         if out.name.is_empty() {
             bail!("missing --crate-name");
