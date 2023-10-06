@@ -83,6 +83,12 @@ impl BpProperties {
         self.map.insert(k.to_string(), v.into());
     }
 
+    pub fn set_if_nonempty<T: Into<BpValue>>(&mut self, k: &str, v: Vec<T>) {
+        if !v.is_empty() {
+            self.set(k, v);
+        }
+    }
+
     pub fn object(&mut self, k: &str) -> &mut BpProperties {
         let v =
             self.map.entry(k.to_string()).or_insert_with(|| BpValue::Object(BpProperties::new()));
@@ -118,7 +124,19 @@ impl BpProperties {
             "arch",
             "target",
             "ld_flags",
+            "cfgs",
+            "compile_multilib",
+            "include_dirs",
             "apex_available",
+            "no_stdlibs",
+            "stdlibs",
+            "native_bridge_supported",
+            "product_available",
+            "recovery_available",
+            "vendor_available",
+            "vendor_ramdisk_available",
+            "ramdisk_available",
+            "min_sdk_version",
             "visibility",
         ];
         let mut props: Vec<(&String, &BpValue)> = self.map.iter().collect();
