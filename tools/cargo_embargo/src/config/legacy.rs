@@ -27,6 +27,8 @@ use std::path::PathBuf;
 pub struct Config {
     #[serde(default)]
     apex_available: Vec<String>,
+    #[serde(default)]
+    cfg_blocklist: Vec<String>,
     #[allow(unused)] // Deprecated option.
     #[serde(default)]
     dependencies: bool,
@@ -108,6 +110,7 @@ impl Config {
             tests: self.tests,
             features,
             apex_available,
+            cfg_blocklist: self.cfg_blocklist.clone(),
             product_available: self.product_available,
             vendor_available: self.vendor_available,
             min_sdk_version: self.min_sdk_version.clone(),
