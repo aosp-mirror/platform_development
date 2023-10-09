@@ -75,6 +75,7 @@ pub struct TargetMetadata {
 #[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde[rename_all = "kebab-case"]]
 pub enum TargetKind {
+    Bin,
     CustomBuild,
     Bench,
     Example,
@@ -133,25 +134,35 @@ fn parse_cargo_metadata(
             let [target_kind] = target.kind.deref() else {
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
-            if ![TargetKind::Lib, TargetKind::Test].contains(target_kind) {
+            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::Test].contains(target_kind) {
+                // Only binaries, libraries and integration tests are supported.
                 continue;
             }
             let main_src = split_src_path(&target.src_path, &package_dir);
-            crates.push(Crate {
-                name: target.name.to_owned(),
-                package_name: package.name.to_owned(),
-                version: Some(package.version.to_owned()),
-                types: target.crate_types.clone(),
-                features: features_without_deps.clone(),
-                edition: package.edition.to_owned(),
-                package_dir: package_dir.clone(),
-                main_src: main_src.to_owned(),
-                target: Some("x86_64-unknown-linux-gnu".to_string()),
-                externs: externs.clone(),
-                ..Default::default()
-            });
+            // Hypens are not allowed in crate names. See
+            // https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md
+            // for background.
+            let target_name = target.name.replace('-', "_");
+            // Don't generate an entry for integration tests, they will be covered by the test case
+            // below.
+            if *target_kind != TargetKind::Test {
+                crates.push(Crate {
+                    name: target_name.clone(),
+                    package_name: package.name.to_owned(),
+                    version: Some(package.version.to_owned()),
+                    types: target.crate_types.clone(),
+                    features: features_without_deps.clone(),
+                    edition: package.edition.to_owned(),
+                    package_dir: package_dir.clone(),
+                    main_src: main_src.to_owned(),
+                    target: Some("x86_64-unknown-linux-gnu".to_string()),
+                    externs: externs.clone(),
+                    ..Default::default()
+                });
+            }
+            // This includes both unit tests and integration tests.
             if target.test && include_tests {
-                let externs = package
+                let mut externs: Vec<Extern> = package
                     .dependencies
                     .iter()
                     .filter_map(|dependency| {
@@ -169,8 +180,16 @@ fn parse_cargo_metadata(
                         }
                     })
                     .collect();
+                // Add the library itself as a dependency for integration tests.
+                if *target_kind == TargetKind::Test {
+                    externs.push(Extern {
+                        name: package.name.to_owned(),
+                        lib_name: package.name.to_owned(),
+                        extern_type: ExternType::Rust,
+                    });
+                }
                 crates.push(Crate {
-                    name: target.name.to_owned(),
+                    name: target_name,
                     package_name: package.name.to_owned(),
                     version: Some(package.version.to_owned()),
                     types: vec![CrateType::Test],
