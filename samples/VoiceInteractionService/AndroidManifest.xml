@@ -1,0 +1,48 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.voiceinteractor">
+
+    <application android:label="@string/app_name">
+        <profileable android:shell="true"/>
+        <activity android:name=".MainActivity"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".SampleVoiceInteractionService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.voice_interaction"
+                android:resource="@xml/voice_interaction" />
+        </service>
+        <service
+            android:name=".SampleHotwordDetectionService"
+            android:permission="android.permission.BIND_HOTWORD_DETECTION_SERVICE"
+            android:isolatedProcess="true"
+            android:allowSharedIsolatedProcess="true"
+            android:exported="true">
+        </service>
+        <service
+            android:name=".SampleVisualQueryDetectionService"
+            android:permission="android.permission.BIND_VISUAL_QUERY_DETECTION_SERVICE"
+            android:isolatedProcess="true"
+            android:allowSharedIsolatedProcess="true"
+            android:exported="true">
+        </service>
+    </application>
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.RECORD_BACKGROUND_AUDIO" />
+    <uses-permission android:name="android.permission.CAPTURE_AUDIO_HOTWORD" />
+    <uses-permission android:name="android.permission.MANAGE_HOTWORD_DETECTION" />
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS" />
+
+</manifest>

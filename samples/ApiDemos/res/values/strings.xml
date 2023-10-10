@@ -70,6 +70,7 @@
     <string name="enter_content_pip">Enter content PiP</string>
     <string name="enter_picture_in_picture">Manually enter PiP</string>
     <string name="action_custom_close">Close PiP</string>
+    <string name="action_move_to_back">Background PiP</string>
     <string name="label_current_position">Current position</string>
     <string name="label_exit_position">Exit position</string>
     <string name="label_position_start">Start</string>
