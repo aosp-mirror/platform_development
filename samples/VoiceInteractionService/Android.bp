@@ -1,0 +1,22 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_app {
+    name: "SampleVoiceInteractor",
+    srcs: ["**/*.java"],
+    min_sdk_version: "30",
+    target_sdk_version: "30",
+    sdk_version: "system_current",
+    privileged: true,
+    static_libs: [
+        "androidx.annotation_annotation",
+    ],
+}
+
+prebuilt_etc {
+    name: "com.example.android.voiceinteractor.xml",
+    src: "com.example.android.voiceinteractor.xml",
+    sub_dir: "permissions",
+    filename_from_src: true,
+}
