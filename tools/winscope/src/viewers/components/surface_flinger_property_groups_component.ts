@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {Color, Layer} from 'flickerlib/common';
+import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
 
 @Component({
   selector: 'surface-flinger-property-groups',
@@ -25,7 +25,7 @@ import {Color, Layer} from 'flickerlib/common';
         <p class="mat-body-1 flags">
           <span class="mat-body-2">Flags:</span>
           &ngsp;
-          {{ item.verboseFlags ? item.verboseFlags : item.flags }}
+          {{ properties.flags }}
         </p>
         <p *ngFor="let reason of summary()" class="mat-body-1">
           <span class="mat-body-2">{{ reason.key }}:</span>
@@ -35,15 +35,16 @@ import {Color, Layer} from 'flickerlib/common';
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="group">
+    <div class="group geometry">
       <h3 class="group-header mat-subheading-2">Geometry</h3>
       <div class="left-column">
         <p class="column-header mat-small">Calculated</p>
         <p class="property mat-body-2">Transform:</p>
         <transform-matrix
-          [transform]="item.transform"
+          *ngIf="properties.calcTransform"
+          [transform]="properties.calcTransform"
           [formatFloat]="formatFloat"></transform-matrix>
-        <p class="mat-body-1">
+        <p class="mat-body-1 crop">
           <span
             class="mat-body-2"
             matTooltip="Raw value read from proto.bounds. This is the buffer size or
@@ -51,10 +52,10 @@ import {Color, Layer} from 'flickerlib/common';
             >Crop:</span
           >
           &ngsp;
-          {{ item.bounds }}
+          {{ properties.calcCrop }}
         </p>
 
-        <p class="mat-body-1">
+        <p class="mat-body-1 final-bounds">
           <span
             class="mat-body-2"
             matTooltip="Raw value read from proto.screenBounds. This is the calculated crop
@@ -62,37 +63,38 @@ import {Color, Layer} from 'flickerlib/common';
             >Final Bounds:</span
           >
           &ngsp;
-          {{ item.screenBounds }}
+          {{ properties.finalBounds }}
         </p>
       </div>
       <div class="right-column">
         <p class="column-header mat-small">Requested</p>
         <p class="property mat-body-2">Transform:</p>
         <transform-matrix
-          [transform]="item.requestedTransform"
+          *ngIf="properties.reqTransform"
+          [transform]="properties.reqTransform"
           [formatFloat]="formatFloat"></transform-matrix>
-        <p class="mat-body-1">
+        <p class="mat-body-1 crop">
           <span class="mat-body-2">Crop:</span>
           &ngsp;
-          {{ item.crop ? item.crop : '[empty]' }}
+          {{ properties.reqCrop }}
         </p>
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="group">
+    <div class="group buffer">
       <h3 class="group-header mat-subheading-2">Buffer</h3>
       <div class="left-column">
-        <p class="mat-body-1">
+        <p class="mat-body-1 size">
           <span class="mat-body-2">Size:</span>
           &ngsp;
-          {{ item.activeBuffer }}
+          {{ properties.bufferSize }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 frame-number">
           <span class="mat-body-2">Frame Number:</span>
           &ngsp;
-          {{ item.currFrame }}
+          {{ properties.frameNumber }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 transform">
           <span
             class="mat-body-2"
             matTooltip="Rotates or flips the buffer in place. Used with display transform
@@ -101,11 +103,11 @@ import {Color, Layer} from 'flickerlib/common';
             >Transform:</span
           >
           &ngsp;
-          {{ item.bufferTransform }}
+          {{ properties.bufferTransform }}
         </p>
       </div>
       <div class="right-column">
-        <p class="mat-body-1">
+        <p class="mat-body-1 dest-frame">
           <span
             class="mat-body-2"
             matTooltip="Scales buffer to the frame by overriding the requested transform
@@ -113,7 +115,7 @@ import {Color, Layer} from 'flickerlib/common';
             >Destination Frame:</span
           >
           &ngsp;
-          {{ getDestinationFrame() }}
+          {{ properties.destinationFrame }}
         </p>
         <p *ngIf="hasIgnoreDestinationFrame()" class="mat-body-1">
           Destination Frame ignored because item has eIgnoreDestinationFrame flag set.
@@ -121,15 +123,15 @@ import {Color, Layer} from 'flickerlib/common';
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="group">
+    <div class="group hierarchy-info">
       <h3 class="group-header mat-subheading-2">Hierarchy</h3>
       <div class="left-column">
-        <p class="mat-body-1">
+        <p class="mat-body-1 z-order">
           <span class="mat-body-2">z-order:</span>
           &ngsp;
-          {{ item.z }}
+          {{ properties.z }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 rel-parent">
           <span
             class="mat-body-2"
             matTooltip="item is z-ordered relative to its relative parents but its bounds
@@ -137,29 +139,29 @@ import {Color, Layer} from 'flickerlib/common';
             >relative parent:</span
           >
           &ngsp;
-          {{ item.zOrderRelativeOfId == -1 ? 'none' : item.zOrderRelativeOfId }}
+          {{ properties.relativeParent }}
         </p>
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="group">
+    <div class="group effects">
       <h3 class="group-header mat-subheading-2">Effects</h3>
       <div class="left-column">
         <p class="column-header mat-small">Calculated</p>
         <p class="mat-body-1 color">
           <span class="mat-body-2">Color:</span>
           &ngsp;
-          {{ item.color ? formatColor(item.color) : '' }}
+          {{ properties.calcColor }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 shadow">
           <span class="mat-body-2">Shadow:</span>
           &ngsp;
-          {{ item.shadowRadius }} px
+          {{ properties.calcShadowRadius }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 corner-radius">
           <span class="mat-body-2">Corner Radius:</span>
           &ngsp;
-          {{ formatFloat(item.cornerRadius) }} px
+          {{ properties.calcCornerRadius }}
         </p>
         <p class="mat-body-1">
           <span
@@ -170,12 +172,12 @@ import {Color, Layer} from 'flickerlib/common';
             >Corner Radius Crop:</span
           >
           &ngsp;
-          {{ item.cornerRadiusCrop }}
+          {{ properties.calcCornerRadiusCrop }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 blur">
           <span class="mat-body-2">Blur:</span>
           &ngsp;
-          {{ item.proto?.backgroundBlurRadius ? item.proto?.backgroundBlurRadius : 0 }} px
+          {{ properties.backgroundBlurRadius }}
         </p>
       </div>
       <div class="right-column">
@@ -183,58 +185,52 @@ import {Color, Layer} from 'flickerlib/common';
         <p class="mat-body-1">
           <span class="mat-body-2">Color:</span>
           &ngsp;
-          {{ item.requestedColor ? formatColor(item.requestedColor) : '' }}
+          {{ properties.reqColor }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 shadow">
           <span class="mat-body-2">Shadow:</span>
           &ngsp;
-          {{ item.proto?.requestedShadowRadius ? item.proto?.requestedShadowRadius : 0 }} px
+          {{ properties.reqShadowRadius }}
         </p>
-        <p class="mat-body-1">
+        <p class="mat-body-1 corner-radius">
           <span class="mat-body-2">Corner Radius:</span>
           &ngsp;
-          {{
-            item.proto?.requestedCornerRadius ? formatFloat(item.proto?.requestedCornerRadius) : 0
-          }}
-          px
+          {{ properties.reqCornerRadius }}
         </p>
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="group">
+    <div class="group inputs">
       <h3 class="group-header mat-subheading-2">Input</h3>
       <ng-container *ngIf="hasInputChannel()">
         <div class="left-column">
           <p class="property mat-body-2">To Display Transform:</p>
           <transform-matrix
-            [transform]="item.inputTransform"
+            *ngIf="properties.inputTransform"
+            [transform]="properties.inputTransform"
             [formatFloat]="formatFloat"></transform-matrix>
           <p class="mat-body-1">
             <span class="mat-body-2">Touchable Region:</span>
             &ngsp;
-            {{ item.inputRegion }}
+            {{ properties.inputRegion }}
           </p>
         </div>
         <div class="right-column">
           <p class="column-header mat-small">Config</p>
-          <p class="mat-body-1">
+          <p class="mat-body-1 focusable">
             <span class="mat-body-2">Focusable:</span>
             &ngsp;
-            {{ item.proto?.inputWindowInfo.focusable }}
+            {{ properties.focusable }}
           </p>
-          <p class="mat-body-1">
+          <p class="mat-body-1 crop-touch-region">
             <span class="mat-body-2">Crop touch region with item:</span>
             &ngsp;
-            {{
-              item.proto?.inputWindowInfo.cropLayerId &lt;= 0
-                ? "none"
-                : item.proto?.inputWindowInfo.cropLayerId
-            }}
+            {{ properties.cropTouchRegionWithItem }}
           </p>
-          <p class="mat-body-1">
+          <p class="mat-body-1 replace-touch-region">
             <span class="mat-body-2">Replace touch region with crop:</span>
             &ngsp;
-            {{ item.proto?.inputWindowInfo.replaceTouchableRegionWithCrop }}
+            {{ properties.replaceTouchRegionWithCrop }}
           </p>
         </div>
       </ng-container>
@@ -279,16 +275,41 @@ import {Color, Layer} from 'flickerlib/common';
 })
 export class SurfaceFlingerPropertyGroupsComponent {
   @Input() item!: Layer;
+  properties: any; // TODO(b/278163557): change to proper type when layer's TreeNode data type is defined
+
+  // TODO(b/278163557): move all properties computation into parser and pass properties as @Input, as soon as layer's TreeNode data type is defined
+  ngOnChanges() {
+    this.properties = {
+      flags: this.item.verboseFlags ? this.item.verboseFlags : this.item.flags,
+      calcTransform: this.item.transform,
+      calcCrop: this.item.bounds,
+      finalBounds: this.item.screenBounds,
+      reqTransform: this.getReqTransform(),
+      reqCrop: this.item.crop ? this.item.crop : '[empty]',
+      bufferSize: this.item.activeBuffer,
+      frameNumber: this.item.currFrame,
+      bufferTransform: this.item.bufferTransform,
+      destinationFrame: this.getDestinationFrame(),
+      z: this.item.z,
+      relativeParent: this.getRelativeParent(),
+      calcColor: this.getCalcColor(),
+      calcShadowRadius: this.getPixelPropertyValue(this.item.shadowRadius),
+      calcCornerRadius: this.getPixelPropertyValue(this.item.cornerRadius),
+      calcCornerRadiusCrop: this.getCalcCornerRadiusCrop(),
+      backgroundBlurRadius: this.getPixelPropertyValue(this.item.backgroundBlurRadius),
+      reqColor: this.getReqColor(),
+      reqShadowRadius: this.getPixelPropertyValue(this.item.proto?.requestedShadowRadius),
+      reqCornerRadius: this.getPixelPropertyValue(this.item.proto?.requestedCornerRadius),
+      inputTransform: this.getInputTransform(),
+      inputRegion: this.item.inputRegion,
+      focusable: this.item.proto?.inputWindowInfo?.focusable,
+      cropTouchRegionWithItem: this.getCropTouchRegionWithItem(),
+      replaceTouchRegionWithCrop: this.item.proto?.inputWindowInfo?.replaceTouchableRegionWithCrop,
+    };
+  }
 
   hasInputChannel() {
     return this.item.proto?.inputWindowInfo;
-  }
-
-  getDestinationFrame() {
-    const frame = this.item.proto?.destinationFrame;
-    if (frame) {
-      return ` left: ${frame.left}, top: ${frame.top}, right: ${frame.right}, bottom: ${frame.bottom}`;
-    } else return '';
   }
 
   hasIgnoreDestinationFrame() {
@@ -297,14 +318,6 @@ export class SurfaceFlingerPropertyGroupsComponent {
 
   formatFloat(num: number) {
     return Math.round(num * 100) / 100;
-  }
-
-  formatColor(color: Color) {
-    if (color.isEmpty) {
-      return `[empty], alpha: ${color.a}`;
-    } else {
-      return `(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-    }
   }
 
   summary(): TreeSummary {
@@ -343,6 +356,72 @@ export class SurfaceFlingerPropertyGroupsComponent {
     }
 
     return summary;
+  }
+
+  private getReqTransform() {
+    const proto = this.item.proto;
+    return Transform.fromProto(proto?.requestedTransform, proto?.requestedPosition);
+  }
+
+  private getDestinationFrame() {
+    const frame = this.item.proto?.destinationFrame;
+    if (frame) {
+      return ` left: ${frame.left}, top: ${frame.top}, right: ${frame.right}, bottom: ${frame.bottom}`;
+    }
+    return '[empty]';
+  }
+
+  private getCalcCornerRadiusCrop() {
+    if (this.item.proto?.cornerRadiusCrop) {
+      return toCropRect(this.item.proto?.cornerRadiusCrop);
+    }
+    return '[empty]';
+  }
+
+  private getRelativeParent() {
+    if (this.item.zOrderRelativeOfId === -1) {
+      return 'none';
+    }
+    return this.item.zOrderRelativeOfId;
+  }
+
+  private formatColor(color: Color) {
+    if (color.isEmpty) {
+      return `[empty], alpha: ${color.a}`;
+    } else {
+      return `(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    }
+  }
+
+  private getCalcColor() {
+    if (this.item.color) {
+      return this.formatColor(this.item.color);
+    }
+    return 'no color found';
+  }
+
+  private getReqColor() {
+    const proto = this.item.proto;
+    if (proto?.requestedColor) {
+      return this.formatColor(toColor(proto?.requestedColor));
+    }
+    return 'no color found';
+  }
+
+  private getPixelPropertyValue(propVal: number | undefined) {
+    return `${propVal ? this.formatFloat(propVal) : 0} px`;
+  }
+
+  private getInputTransform() {
+    const inputWindowInfo = this.item.proto?.inputWindowInfo;
+    return Transform.fromProto(inputWindowInfo?.transform, /* position */ null);
+  }
+
+  private getCropTouchRegionWithItem() {
+    if (this.item.proto?.inputWindowInfo?.cropLayerId <= 0) {
+      return 'none';
+    }
+    return this.item.proto?.inputWindowInfo?.cropLayerId;
   }
 }
 
