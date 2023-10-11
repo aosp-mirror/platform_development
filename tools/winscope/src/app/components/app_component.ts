@@ -110,7 +110,7 @@ import {UploadTracesComponent} from './upload_traces_component';
             class="viewers"
             [viewers]="viewers"
             [store]="store"
-            (downloadTracesButtonClick)="onDownloadTracesButtonClick()"></trace-view>
+            (downloadTracesButtonClick)="onDownloadTracesButtonClick($event)"></trace-view>
 
           <mat-divider></mat-divider>
         </ng-container>
@@ -345,9 +345,8 @@ export class AppComponent implements AppEventListener, TraceDataListener {
     this.isDarkModeOn = enabled;
   }
 
-  async onDownloadTracesButtonClick() {
+  async onDownloadTracesButtonClick(archiveFilename: string) {
     const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const archiveFilename = 'winscope.zip';
 
     const a = document.createElement('a');
     document.body.appendChild(a);

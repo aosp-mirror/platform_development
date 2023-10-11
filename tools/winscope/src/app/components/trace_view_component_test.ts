@@ -16,9 +16,14 @@
 import {CommonModule} from '@angular/common';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AppEvent, AppEventType, TabbedViewSwitchRequest} from 'app/app_event';
+import {assertDefined} from 'common/assert_utils';
 import {TraceType} from 'trace/trace_type';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
@@ -31,7 +36,16 @@ describe('TraceViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [TraceViewComponent],
-      imports: [CommonModule, MatCardModule, MatDividerModule],
+      imports: [
+        CommonModule,
+        MatCardModule,
+        MatDividerModule,
+        FormsModule,
+        ReactiveFormsModule,
+        BrowserAnimationsModule,
+        MatInputModule,
+        MatFormFieldModule,
+      ],
       schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TraceViewComponent);
@@ -132,16 +146,46 @@ describe('TraceViewComponent', () => {
   it('emits event on download button click', () => {
     const spy = spyOn(component.downloadTracesButtonClick, 'emit');
 
-    const downloadButton: null | HTMLButtonElement = htmlElement.querySelector('.save-button');
-    expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
-
-    downloadButton?.dispatchEvent(new Event('click'));
+    const downloadButton = assertDefined(htmlElement.querySelector('.save-button'));
+    downloadButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledOnceWith('winscope.zip');
 
-    downloadButton?.dispatchEvent(new Event('click'));
+    downloadButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not emit event if invalid file name chosen', () => {
+    const spy = spyOn(component.downloadTracesButtonClick, 'emit');
+    const downloadButton = assertDefined(htmlElement.querySelector('.save-button'));
+    const inputEl = assertDefined(htmlElement.querySelector('.file-name-input-field input'));
+
+    // all invalid file names
+    updateFileNameInput(inputEl, downloadButton, 'w?in$scope');
+    updateFileNameInput(inputEl, downloadButton, 'winscope.');
+    updateFileNameInput(inputEl, downloadButton, 'w..scope');
+    updateFileNameInput(inputEl, downloadButton, 'wins--pe');
+    updateFileNameInput(inputEl, downloadButton, 'wi##cope');
+    expect(spy).not.toHaveBeenCalled();
+
+    // valid file name
+    updateFileNameInput(inputEl, downloadButton, 'Winscope2');
+    expect(spy).toHaveBeenCalledWith('Winscope2.zip');
+
+    // invalid, so spy should only have been called once
+    updateFileNameInput(inputEl, downloadButton, 'w^^scope');
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    // all valid file names
+    updateFileNameInput(inputEl, downloadButton, 'win_scope');
+    expect(spy).toHaveBeenCalledWith('win_scope.zip');
+    updateFileNameInput(inputEl, downloadButton, 'win-scope');
+    expect(spy).toHaveBeenCalledWith('win-scope.zip');
+    updateFileNameInput(inputEl, downloadButton, 'win.scope');
+    expect(spy).toHaveBeenCalledWith('win.scope.zip');
+    updateFileNameInput(inputEl, downloadButton, 'win.sc.ope');
+    expect(spy).toHaveBeenCalledWith('win.sc.ope.zip');
   });
 
   it('emits tab set onChanges', () => {
@@ -168,5 +212,12 @@ describe('TraceViewComponent', () => {
       }
     });
     return contents;
+  };
+
+  const updateFileNameInput = (inputEl: Element, button: Element, name: string) => {
+    (inputEl as HTMLInputElement).value = name;
+    inputEl.dispatchEvent(new Event('input'));
+    button.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
   };
 });

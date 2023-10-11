@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
+import {FormControl, Validators} from '@angular/forms';
 import {AppEvent, AppEventType, TabbedViewSwitched} from 'app/app_event';
 import {TRACE_INFO} from 'app/trace_info';
 import {FunctionUtils} from 'common/function_utils';
@@ -60,13 +69,25 @@ interface Tab extends View {
           </p>
         </a>
       </nav>
-      <button
-        color="primary"
-        mat-button
-        class="save-button"
-        (click)="downloadTracesButtonClick.emit()">
-        Download all traces
-      </button>
+      <div class="download-traces">
+        <mat-form-field
+          class="file-name-input-field"
+          floatLabel="always"
+          matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
+          <mat-label>Zip file name</mat-label>
+          <input matInput class="right-align" [formControl]="fileNameFormControl" />
+          <span matSuffix>.zip</span>
+        </mat-form-field>
+        &nbsp; &nbsp;
+        <button
+          color="primary"
+          mat-stroked-button
+          class="save-button"
+          (click)="onDownloadTracesButtonClick()">
+          Download all traces
+        </button>
+        &nbsp;
+      </div>
     </div>
     <mat-divider></mat-divider>
     <div class="trace-view-content"></div>
@@ -103,19 +124,44 @@ interface Tab extends View {
         height: 100%;
         overflow: auto;
       }
+
+      .file-name-input-field .right-align {
+        text-align: right;
+      }
+
+      .download-traces {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      .file-name-input-field .mat-form-field-wrapper {
+        margin-bottom: -1.25em;
+      }
+
+      .file-name-input-field .mat-form-field-infix {
+        padding-top: 0px;
+      }
     `,
   ],
+  encapsulation: ViewEncapsulation.None,
 })
 export class TraceViewComponent implements AppEventEmitter, AppEventListener {
+  readonly FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/; //allow: letters/numbers/underscores with delimeters . - # (except at start and end)
+
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
+  @Output() downloadTracesButtonClick = new EventEmitter<string>();
 
   TRACE_INFO = TRACE_INFO;
+  tabs: Tab[] = [];
+  fileNameFormControl = new FormControl(
+    'winscope',
+    Validators.compose([Validators.required, Validators.pattern(this.FILENAME_REGEX)])
+  );
 
   private elementRef: ElementRef;
-
-  tabs: Tab[] = [];
   private currentActiveTab: undefined | Tab;
   private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
@@ -141,8 +187,18 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     });
   }
 
+  onDownloadTracesButtonClick() {
+    if (this.fileNameFormControl.valid) {
+      this.downloadTracesButtonClick.emit(`${this.fileNameFormControl.value}.zip`);
+    }
+  }
+
   setEmitAppEvent(callback: EmitAppEvent) {
     this.emitAppEvent = callback;
+  }
+
+  isCurrentActiveTab(tab: Tab) {
+    return tab === this.currentActiveTab;
   }
 
   private renderViewsTab() {
@@ -217,9 +273,5 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     this.currentActiveTab = tab;
 
     await this.emitAppEvent(new TabbedViewSwitched(tab));
-  }
-
-  isCurrentActiveTab(tab: Tab) {
-    return tab === this.currentActiveTab;
   }
 }
