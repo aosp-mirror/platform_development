@@ -26,6 +26,10 @@ use std::path::PathBuf;
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
+    add_module_block: Option<PathBuf>,
+    #[serde(default)]
+    add_toplevel_block: Option<PathBuf>,
+    #[serde(default)]
     apex_available: Vec<String>,
     #[serde(default)]
     cfg_blocklist: Vec<String>,
@@ -101,6 +105,8 @@ impl Config {
             })
             .collect();
         let package_config = PackageConfig {
+            add_module_block: self.add_module_block.clone(),
+            add_toplevel_block: self.add_toplevel_block.clone(),
             device_supported: self.device,
             force_rlib: self.force_rlib,
             host_supported: !self.no_host,
