@@ -41,6 +41,7 @@ LayerTraceEntry.fromProto = (
   const layers = protos.map((it) => Layer.fromProto(it, excludesCompositionState));
   const displays = (displayProtos || []).map((it) => newDisplay(it));
   const builder = new LayerTraceEntryBuilder()
+    .setDuplicateLayerCallback(() => {})
     .setElapsedTimestamp(`${elapsedTimestamp}`)
     .setLayers(layers)
     .setDisplays(displays)
@@ -48,6 +49,7 @@ LayerTraceEntry.fromProto = (
     .setHwcBlob(hwcBlob)
     .setWhere(where)
     .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`);
+
   const entry: LayerTraceEntry = builder.build();
 
   addAttributes(entry, protos, realToElapsedTimeOffsetNs === undefined || useElapsedTime);

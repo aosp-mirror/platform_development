@@ -82,6 +82,14 @@ describe('ParserSurfaceFlinger', () => {
       expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(14631249355n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089233029344n);
     });
+
+    it('is robust to duplicated layer ids', async () => {
+      const parser = await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb'
+      );
+      const entry = await parser.getEntry(0, TimestampType.REAL);
+      expect(entry).toBeTruthy();
+    });
   });
 
   describe('trace with elapsed (only) timestamp', () => {
