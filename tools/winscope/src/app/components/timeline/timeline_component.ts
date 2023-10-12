@@ -42,7 +42,6 @@ import {
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
 
 @Component({
   selector: 'timeline',
@@ -76,11 +75,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             [disabled]="!hasPrevEntry()">
             <mat-icon>chevron_left</mat-icon>
           </button>
-          <form
-            [formGroup]="timestampForm"
-            class="time-selector-form"
-            (focusin)="onInputFocusChange()"
-            (focusout)="onInputFocusChange()">
+          <form [formGroup]="timestampForm" class="time-selector-form">
             <mat-form-field
               class="time-input"
               appearance="fill"
@@ -325,19 +320,17 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     this.selectedTraces = [...this.selectedTraces];
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
-  internalActiveTrace: TraceType | undefined = undefined;
 
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
 
   @Output() collapsedTimelineSizeChanged = new EventEmitter<number>();
 
-  @ViewChild('miniTimeline') private miniTimelineComponent!: MiniTimelineComponent;
   @ViewChild('collapsedTimeline') private collapsedTimelineRef!: ElementRef;
 
+  internalActiveTrace: TraceType | undefined = undefined;
   selectedTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl();
-
   selectedElapsedTimeFormControl = new FormControl(
     'undefined',
     Validators.compose([
@@ -361,15 +354,11 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     selectedRealTime: this.selectedRealTimeFormControl,
     selectedNs: this.selectedNsFormControl,
   });
-
   videoUrl: SafeUrl | undefined;
+  TRACE_INFO = TRACE_INFO;
+  isInputFormFocused = false;
 
   private expanded = false;
-
-  TRACE_INFO = TRACE_INFO;
-
-  isTimestampFormFocused = false;
-
   private onTracePositionUpdateCallback: OnTracePositionUpdate = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
@@ -486,13 +475,31 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     this.selectedTraces = this.selectedTracesFormControl.value;
   }
 
-  onInputFocusChange() {
-    this.isTimestampFormFocused = !this.isTimestampFormFocused;
+  @HostListener('document:focusin', ['$event'])
+  handleFocusInEvent(event: FocusEvent) {
+    if (
+      (event.target as HTMLInputElement)?.tagName === 'INPUT' &&
+      (event.target as HTMLInputElement)?.type === 'text'
+    ) {
+      //check if text input field focused
+      this.isInputFormFocused = true;
+    }
+  }
+
+  @HostListener('document:focusout', ['$event'])
+  handleFocusOutEvent(event: FocusEvent) {
+    if (
+      (event.target as HTMLInputElement)?.tagName === 'INPUT' &&
+      (event.target as HTMLInputElement)?.type === 'text'
+    ) {
+      //check if text input field focused
+      this.isInputFormFocused = false;
+    }
   }
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
-    if (this.isTimestampFormFocused) {
+    if (this.isInputFormFocused) {
       return;
     }
     if (event.key === 'ArrowLeft') {

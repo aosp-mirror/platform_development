@@ -631,6 +631,14 @@ fn crate_to_bp_modules(
             {
                 m.props.set("data", data.clone());
             }
+        } else if package_cfg.no_std {
+            m.props.set("prefer_rlib", true);
+            m.props.set("no_stdlibs", true);
+            let mut stdlibs = vec!["libcompiler_builtins.rust_sysroot", "libcore.rust_sysroot"];
+            if package_cfg.alloc {
+                stdlibs.push("liballoc.rust_sysroot");
+            }
+            m.props.set("stdlibs", stdlibs);
         }
 
         if let Some(visibility) = cfg.module_visibility.get(module_name) {
