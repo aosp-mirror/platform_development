@@ -80,9 +80,10 @@ bcp_srcjar := $(call intermediates-dir-for,ETC,platform-bootclasspath.srcjar)/pl
 source_props := $(HOST_OUT)/development/sdk/source_source.properties
 $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) $$(bcp_srcjar) $$(source_props)
 	@echo "Building SDK sources package"
-	unzip -qd $(dir $$@)/tmp $$(bcp_srcjar)
-	$$(SOONG_ZIP) -o $$@ -P src -e source.properties -f $$(source_props) -C $(dir $$@)/tmp -D $(dir $$@)/tmp
-	rm -r $(dir $$@)/tmp
+	rm -rf $$(dir $$@)/tmp
+	unzip -qd $$(dir $$@)/tmp $$(bcp_srcjar)
+	$$(SOONG_ZIP) -o $$@ -P src -e source.properties -f $$(source_props) -C $$(dir $$@)/tmp -D $$(dir $$@)/tmp
+	rm -rf $$(dir $$@)/tmp
 $(call dist-for-goals-with-filenametag, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
