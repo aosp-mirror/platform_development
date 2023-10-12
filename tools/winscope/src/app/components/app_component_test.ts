@@ -22,14 +22,12 @@ import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {assertDefined} from 'common/assert_utils';
+
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
@@ -64,8 +62,6 @@ describe('AppComponent', () => {
         MatToolbarModule,
         MatTooltipModule,
         ReactiveFormsModule,
-        MatInputModule,
-        BrowserAnimationsModule,
       ],
       declarations: [
         AdbProxyComponent,
@@ -101,8 +97,7 @@ describe('AppComponent', () => {
   });
 
   it('renders the page title', () => {
-    const title = assertDefined(htmlElement.querySelector('.app-title'));
-    expect(title.innerHTML).toContain('Winscope');
+    expect(htmlElement.querySelector('.app-title')?.innerHTML).toContain('Winscope');
   });
 
   it('displays correct elements when no data loaded', () => {
