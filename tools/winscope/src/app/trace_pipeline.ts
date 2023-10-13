@@ -58,15 +58,6 @@ export class TracePipeline {
 
     errors.push(...filterResult.errors);
 
-    if (filterResult.perfetto) {
-      const perfettoParsers = await new PerfettoParserFactory().createParsers(
-        filterResult.perfetto,
-        progressListener
-      );
-      this.loadedPerfettoTraceFile = perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
-      this.parsers = this.parsers.concat(perfettoParsers);
-    }
-
     const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
       filterResult.legacy,
       progressListener
@@ -78,6 +69,15 @@ export class TracePipeline {
 
     const newParsers = fileAndParsers.map((it) => it.parser);
     this.parsers = this.parsers.concat(newParsers);
+
+    if (filterResult.perfetto) {
+      const perfettoParsers = await new PerfettoParserFactory().createParsers(
+        filterResult.perfetto,
+        progressListener
+      );
+      this.loadedPerfettoTraceFile = perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
+      this.parsers = this.parsers.concat(perfettoParsers);
+    }
 
     const tracesParsers = await this.tracesParserFactory.createParsers(this.parsers);
 

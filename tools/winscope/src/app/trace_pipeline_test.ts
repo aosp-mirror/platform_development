@@ -123,6 +123,22 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeDefined();
   });
 
+  it('prioritizes perfetto traces over legacy traces', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile('traces/elapsed_and_real_timestamp/Transactions.pb'),
+      await UnitTestUtils.getFixtureFile('traces/perfetto/transactions_trace.perfetto-trace'),
+    ];
+
+    await tracePipeline.loadFiles(files);
+    await tracePipeline.buildTraces();
+    const traces = tracePipeline.getTraces();
+
+    expect(traces.getSize()).toEqual(1);
+    expect(assertDefined(traces.getTrace(TraceType.TRANSACTIONS)).getDescriptors()).toEqual([
+      'transactions_trace.perfetto-trace',
+    ]);
+  });
+
   it('is robust to corrupted archive', async () => {
     const corruptedArchive = await UnitTestUtils.getFixtureFile('corrupted_archive.zip');
 
