@@ -27,21 +27,13 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   private readonly descriptors: string[];
   private decodedEntries: Transition[] | undefined;
 
-  constructor(parsers: Array<Parser<object>>) {
+  constructor(parsers: Map<TraceType, Parser<object>>) {
     super();
-    const wmTransitionTraces = parsers.filter(
-      (it) => it.getTraceType() === TraceType.WM_TRANSITION
-    );
-    if (wmTransitionTraces.length > 0) {
-      this.wmTransitionTrace = wmTransitionTraces[0];
-    }
-    const shellTransitionTraces = parsers.filter(
-      (it) => it.getTraceType() === TraceType.SHELL_TRANSITION
-    );
-    if (shellTransitionTraces.length > 0) {
-      this.shellTransitionTrace = shellTransitionTraces[0];
-    }
-    if (this.wmTransitionTrace !== undefined && this.shellTransitionTrace !== undefined) {
+    const wmTransitionTrace = parsers.get(TraceType.WM_TRANSITION);
+    const shellTransitionTrace = parsers.get(TraceType.SHELL_TRANSITION);
+    if (wmTransitionTrace && shellTransitionTrace) {
+      this.wmTransitionTrace = wmTransitionTrace;
+      this.shellTransitionTrace = shellTransitionTrace;
       this.descriptors = this.wmTransitionTrace
         .getDescriptors()
         .concat(this.shellTransitionTrace.getDescriptors());

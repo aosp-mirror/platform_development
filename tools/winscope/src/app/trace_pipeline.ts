@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FileUtils, OnFile} from 'common/file_utils';
 import {TimestampType} from 'common/time';
 import {ProgressListener} from 'interfaces/progress_listener';
@@ -31,12 +32,14 @@ import {FilesSource} from './files_source';
 import {TraceFileFilter} from './trace_file_filter';
 import {TRACE_INFO} from './trace_info';
 
+type TraceFilesFromArchive = TraceFile[];
+
 export class TracePipeline {
   private userNotificationListener?: UserNotificationListener;
   private traceFileFilter = new TraceFileFilter();
   private parserFactory = new ParserFactory();
   private tracesParserFactory = new TracesParserFactory();
-  private parsers: Array<Parser<object>> = [];
+  private parsers = new Map<TraceType, Parser<object>>();
   private loadedPerfettoTraceFile?: TraceFile;
   private loadedTraceFiles = new Map<TraceType, TraceFile>();
   private traces = new Traces();
@@ -54,47 +57,74 @@ export class TracePipeline {
   ) {
     this.downloadArchiveFilename = this.makeDownloadArchiveFilename(files, source);
 
-    const [traceFiles, errors] = await this.unzipFiles(files, progressListener);
+    const [unzippedArchives, errors] = await this.unzipFiles(files, progressListener);
 
-    const filterResult = await this.traceFileFilter.filter(traceFiles);
-    if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+    const currParsers = new Map<TraceType, Parser<object>>();
+
+    const maybeAddFileAndParser = (p: Parser<object>, f: TraceFile) => {
+      if (this.shouldUseParser(p, errors, currParsers)) {
+        const traceType = p.getTraceType();
+        currParsers.set(traceType, p);
+        this.parsers.set(traceType, p);
+        this.loadedTraceFiles.set(traceType, f);
+      }
+    };
+
+    if (unzippedArchives.length === 0) {
       progressListener?.onOperationFinished();
       errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
       this.userNotificationListener?.onParserErrors(errors);
       return;
     }
 
-    errors.push(...filterResult.errors);
+    for (const traceFilesFromArchive of unzippedArchives) {
+      const filterResult = await this.traceFileFilter.filter(traceFilesFromArchive);
+      if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+        errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
+      } else {
+        errors.push(...filterResult.errors);
 
-    const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
-      filterResult.legacy,
-      progressListener
-    );
-    errors.push(...legacyErrors);
-    for (const fileAndParser of fileAndParsers) {
-      this.loadedTraceFiles.set(fileAndParser.parser.getTraceType(), fileAndParser.file);
+        const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
+          filterResult.legacy,
+          progressListener
+        );
+        errors.push(...legacyErrors);
+
+        for (const fileAndParser of fileAndParsers) {
+          maybeAddFileAndParser(fileAndParser.parser, fileAndParser.file);
+        }
+
+        if (filterResult.perfetto) {
+          const perfettoParsers = await new PerfettoParserFactory().createParsers(
+            filterResult.perfetto,
+            progressListener
+          );
+          this.loadedPerfettoTraceFile =
+            perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
+          perfettoParsers.forEach((parser) => {
+            this.parsers.set(parser.getTraceType(), parser);
+          });
+        }
+      }
     }
 
-    const newParsers = fileAndParsers.map((it) => it.parser);
-    this.parsers = this.parsers.concat(newParsers);
-
-    if (filterResult.perfetto) {
-      const perfettoParsers = await new PerfettoParserFactory().createParsers(
-        filterResult.perfetto,
-        progressListener
-      );
-      this.loadedPerfettoTraceFile = perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
-      this.parsers = this.parsers.concat(perfettoParsers);
+    if (currParsers.size === 0) {
+      this.userNotificationListener?.onParserErrors(errors);
+      return;
     }
 
     const tracesParsers = await this.tracesParserFactory.createParsers(this.parsers);
 
-    const allParsers = this.parsers.concat(tracesParsers);
-
     this.traces = new Traces();
-    allParsers.forEach((parser) => {
+
+    this.parsers.forEach((parser, traceType) => {
       const trace = Trace.newUninitializedTrace(parser);
-      this.traces?.setTrace(parser.getTraceType(), trace);
+      this.traces.setTrace(traceType, trace);
+    });
+
+    tracesParsers.forEach((tracesParser, traceType) => {
+      const trace = Trace.newUninitializedTrace(tracesParser);
+      this.traces.setTrace(traceType, trace);
     });
 
     const hasTransitionTrace = this.traces
@@ -113,10 +143,9 @@ export class TracePipeline {
   }
 
   removeTrace(trace: Trace<object>) {
-    this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== trace.type);
+    this.parsers.delete(trace.type);
     this.traces.deleteTrace(trace.type);
     this.loadedTraceFiles.delete(trace.type);
-    this.parserFactory.removeParser(trace.type);
   }
 
   async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
@@ -172,7 +201,7 @@ export class TracePipeline {
 
   clear() {
     this.parserFactory = new ParserFactory();
-    this.parsers = [];
+    this.parsers = new Map<TraceType, Parser<object>>();
     this.traces = new Traces();
     this.commonTimestampType = undefined;
     this.loadedPerfettoTraceFile = undefined;
@@ -196,8 +225,8 @@ export class TracePipeline {
   private async unzipFiles(
     files: File[],
     progressListener?: ProgressListener
-  ): Promise<[TraceFile[], ParserError[]]> {
-    const traceFiles: TraceFile[] = [];
+  ): Promise<[TraceFilesFromArchive[], ParserError[]]> {
+    const unzippedArchives: TraceFilesFromArchive[] = [];
     const errors: ParserError[] = [];
     const progressMessage = 'Unzipping files...';
 
@@ -206,7 +235,7 @@ export class TracePipeline {
     };
 
     const onFile: OnFile = (file: File, parentArchive?: File) => {
-      traceFiles.push(new TraceFile(file, parentArchive));
+      unzippedArchives.push([new TraceFile(file, parentArchive)]);
     };
 
     progressListener?.onProgressUpdate(progressMessage, 0);
@@ -225,20 +254,20 @@ export class TracePipeline {
           const subTraceFiles = subFiles.map((subFile) => {
             return new TraceFile(subFile, file);
           });
-          traceFiles.push(...subTraceFiles);
+          unzippedArchives.push([...subTraceFiles]);
           onSubProgressUpdate(100);
         } catch (e) {
           errors.push(new ParserError(ParserErrorType.CORRUPTED_ARCHIVE, file.name));
         }
       } else {
-        traceFiles.push(new TraceFile(file, undefined));
+        unzippedArchives.push([new TraceFile(file, undefined)]);
         onSubProgressUpdate(100);
       }
     }
 
     progressListener?.onProgressUpdate(progressMessage, 100);
 
-    return [traceFiles, errors];
+    return [unzippedArchives, errors];
   }
 
   private getCommonTimestampType(): TimestampType {
@@ -248,12 +277,79 @@ export class TracePipeline {
 
     const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
     for (const type of priorityOrder) {
-      if (this.parsers.every((it) => it.getTimestamps(type) !== undefined)) {
+      const parsers = Array.from(this.parsers.values());
+      if (parsers.every((it) => it.getTimestamps(type) !== undefined)) {
         this.commonTimestampType = type;
         return this.commonTimestampType;
       }
     }
 
     throw Error('Failed to find common timestamp type across all traces');
+  }
+
+  private shouldUseParser(
+    newParser: Parser<object>,
+    errors: ParserError[],
+    currParsers: Map<TraceType, Parser<object>>
+  ): boolean {
+    const oldParser = this.parsers.get(newParser.getTraceType());
+    const currParser = currParsers.get(newParser.getTraceType());
+    if (!oldParser && !currParser) {
+      console.log(
+        `Loaded trace ${newParser
+          .getDescriptors()
+          .join()} (trace type: ${newParser.getTraceType()})`
+      );
+      return true;
+    }
+
+    if (oldParser && !currParser) {
+      console.log(
+        `Loaded trace ${newParser
+          .getDescriptors()
+          .join()} (trace type: ${newParser.getTraceType()}).` +
+          ` Replace trace ${oldParser.getDescriptors().join()}`
+      );
+      errors.push(
+        new ParserError(
+          ParserErrorType.OVERRIDE,
+          oldParser.getDescriptors().join(),
+          oldParser.getTraceType()
+        )
+      );
+      return true;
+    }
+
+    if (currParser && newParser.getLengthEntries() > currParser.getLengthEntries()) {
+      console.log(
+        `Loaded trace ${newParser
+          .getDescriptors()
+          .join()} (trace type: ${newParser.getTraceType()}).` +
+          ` Replace trace ${currParser.getDescriptors().join()}`
+      );
+      errors.push(
+        new ParserError(
+          ParserErrorType.OVERRIDE,
+          currParser.getDescriptors().join(),
+          currParser.getTraceType()
+        )
+      );
+      return true;
+    }
+
+    console.log(
+      `Skipping trace ${newParser
+        .getDescriptors()
+        .join()} (trace type: ${newParser.getTraceType()}).` +
+        ` Keep trace ${assertDefined(currParser).getDescriptors().join()}`
+    );
+    errors.push(
+      new ParserError(
+        ParserErrorType.OVERRIDE,
+        newParser.getDescriptors().join(),
+        newParser.getTraceType()
+      )
+    );
+    return false;
   }
 }
