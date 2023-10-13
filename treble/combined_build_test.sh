@@ -97,7 +97,7 @@ run_command() {
 
 read_df() {
     # read the available disk size
-    df . | awk '{print $4}' | sed -n '2p'
+    df -k . | awk '{print $4}' | sed -n '2p'
 }
 
 write_output() {
