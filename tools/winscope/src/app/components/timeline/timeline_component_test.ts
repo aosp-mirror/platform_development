@@ -285,6 +285,7 @@ describe('TimelineComponent', () => {
     testCurrentTimestampOnButtonClick(prevEntryButton, position90, 90n);
   });
 
+  //TODO(b/304982982): find a way to test via dom interactions, not calling listener directly
   it('performs expected action on arrow key press depending on input form focus', () => {
     loadTraces();
 
@@ -292,18 +293,21 @@ describe('TimelineComponent', () => {
     const spyPrevEntry = spyOn(component, 'moveToPreviousEntry');
 
     component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
-    fixture.detectChanges();
     expect(spyNextEntry).toHaveBeenCalled();
 
-    const formElement = htmlElement.querySelector('.time-input .mat-input-element');
-    (assertDefined(formElement) as HTMLElement).focus();
+    const formElement = htmlElement.querySelector('.time-input input');
+    const focusInEvent = new FocusEvent('focusin');
+    Object.defineProperty(focusInEvent, 'target', {value: formElement});
+    component.handleFocusInEvent(focusInEvent);
     fixture.detectChanges();
 
     component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
     fixture.detectChanges();
     expect(spyPrevEntry).not.toHaveBeenCalled();
 
-    (assertDefined(formElement) as HTMLElement).blur();
+    const focusOutEvent = new FocusEvent('focusout');
+    Object.defineProperty(focusOutEvent, 'target', {value: formElement});
+    component.handleFocusOutEvent(focusOutEvent);
     fixture.detectChanges();
 
     component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
