@@ -586,7 +586,29 @@ TEST_MODULES = [
         ],
         has_reference_dump=True,
     ),
-
+    LsdumpModule(
+        name='libversion_script_example_api_level',
+        arch='arm64',
+        srcs=[
+            'integration/version_script_example/example.cpp',
+        ],
+        version_script='integration/version_script_example/map.txt',
+        export_include_dirs=['integration/version_script_example'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+            '-so', relative_to_abs_path(
+                'integration/version_script_example/prebuilts/' +
+                'libversion_script_example.so'
+            ),
+            '-api', '32',
+            '-api-map', relative_to_abs_path(
+                'integration/version_script_example/api_levels.json'
+            ),
+        ],
+        has_reference_dump=True,
+    ),
     # Test data for test_allow_adding_removing_weak_symbols
     LsdumpModule(
         name='libweak_symbols_old',
