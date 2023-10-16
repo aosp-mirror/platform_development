@@ -54,7 +54,7 @@ def aggregate_cts_reports(report_files):
 
     for report_file in report_files[1:]:
       xml_path = (
-          parse_cts_report.extract_xml_from_zip(report_file, temp_dir)
+          parse_cts_report.extract_test_result_from_zip(report_file, temp_dir)
           if zipfile.is_zipfile(report_file)
           else report_file)
 
