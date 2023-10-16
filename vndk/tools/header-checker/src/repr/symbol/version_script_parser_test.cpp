@@ -14,6 +14,7 @@
 
 #include "repr/symbol/version_script_parser.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <map>
@@ -23,6 +24,10 @@
 
 namespace header_checker {
 namespace repr {
+
+
+using testing::ElementsAre;
+using testing::Key;
 
 
 TEST(VersionScriptParserTest, SmokeTest) {
@@ -49,16 +54,10 @@ TEST(VersionScriptParserTest, SmokeTest) {
   ASSERT_TRUE(result);
 
   const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
-  EXPECT_NE(funcs.end(), funcs.find("foo1"));
-  EXPECT_NE(funcs.end(), funcs.find("foo2"));
-  EXPECT_EQ(funcs.end(), funcs.find("bar1"));
-  EXPECT_EQ(funcs.end(), funcs.find("bar2"));
+  EXPECT_THAT(funcs, ElementsAre(Key("foo1"), Key("foo2")));
 
   const ExportedSymbolSet::VarMap &vars = result->GetVars();
-  EXPECT_NE(vars.end(), vars.find("bar1"));
-  EXPECT_NE(vars.end(), vars.find("bar2"));
-  EXPECT_EQ(vars.end(), vars.find("foo1"));
-  EXPECT_EQ(vars.end(), vars.find("foo2"));
+  EXPECT_THAT(vars, ElementsAre(Key("bar1"), Key("bar2")));
 }
 
 
@@ -88,26 +87,25 @@ TEST(VersionScriptParserTest, ExcludeSymbolVersions) {
     ASSERT_TRUE(result);
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
-    EXPECT_NE(funcs.end(), funcs.find("foo2"));
+    EXPECT_THAT(funcs, ElementsAre(Key("foo1"), Key("foo2")));
 
     const ExportedSymbolSet::VarMap &vars = result->GetVars();
-    EXPECT_NE(vars.end(), vars.find("bar2"));
+    EXPECT_THAT(vars, ElementsAre(Key("bar1"), Key("bar2")));
   }
 
-  // excluded_symbol_versions = {"LIBEX_PRIVATE"}
   {
     VersionScriptParser parser;
-    parser.AddExcludedSymbolVersion("LIBEX_PRIVATE");
+    parser.AddExcludedSymbolVersion("*_PRIVATE");
 
     std::istringstream stream(testdata);
     std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
     ASSERT_TRUE(result);
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
-    EXPECT_EQ(funcs.end(), funcs.find("foo2"));
+    EXPECT_THAT(funcs, ElementsAre(Key("foo1")));
 
     const ExportedSymbolSet::VarMap &vars = result->GetVars();
-    EXPECT_EQ(vars.end(), vars.find("bar2"));
+    EXPECT_THAT(vars, ElementsAre(Key("bar1")));
   }
 }
 
@@ -144,36 +142,41 @@ TEST(VersionScriptParserTest, VisibilityLabels) {
 
   const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-  EXPECT_NE(funcs.end(), funcs.find("global_f1"));
-  EXPECT_NE(funcs.end(), funcs.find("global_f3"));
-  EXPECT_NE(funcs.end(), funcs.find("global_f4"));
-
-  EXPECT_EQ(funcs.end(), funcs.find("local_f2"));
-  EXPECT_EQ(funcs.end(), funcs.find("local_f5"));
-  EXPECT_EQ(funcs.end(), funcs.find("local_f6"));
+  EXPECT_THAT(
+      funcs, ElementsAre(Key("global_f1"), Key("global_f3"), Key("global_f4")));
 
   const ExportedSymbolSet::VarMap &vars = result->GetVars();
 
-  EXPECT_NE(vars.end(), vars.find("global_v1"));
-  EXPECT_NE(vars.end(), vars.find("global_v3"));
-  EXPECT_NE(vars.end(), vars.find("global_v4"));
-
-  EXPECT_EQ(vars.end(), vars.find("local_v2"));
-  EXPECT_EQ(vars.end(), vars.find("local_v5"));
-  EXPECT_EQ(vars.end(), vars.find("local_v6"));
+  EXPECT_THAT(
+      vars, ElementsAre(Key("global_v1"), Key("global_v3"), Key("global_v4")));
 }
 
 
 TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
   static const char testdata[] = R"TESTDATA(
-    LIBEX_1.0 {
+    LIBEX_1.0 {  # introduced=18
       global:
         test1;  # introduced=19
         test2;  # introduced=19 introduced-arm64=20
         test3;  # introduced-arm64=20 introduced=19
         test4;  # future
+        test5;  # introduced=17
     };
   )TESTDATA";
+
+  {
+    VersionScriptParser parser;
+    parser.SetArch("arm64");
+    parser.SetApiLevel(17);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_TRUE(funcs.empty());
+  }
 
   {
     VersionScriptParser parser;
@@ -186,10 +189,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_EQ(funcs.end(), funcs.find("test1"));
-    EXPECT_EQ(funcs.end(), funcs.find("test2"));
-    EXPECT_EQ(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test5")));
   }
 
   {
@@ -203,10 +203,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_EQ(funcs.end(), funcs.find("test2"));
-    EXPECT_EQ(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test5")));
   }
 
   {
@@ -220,10 +217,8 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
-    EXPECT_NE(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2"), Key("test3"),
+                                   Key("test5")));
   }
 
   {
@@ -237,10 +232,8 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
-    EXPECT_NE(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2"), Key("test3"),
+                                   Key("test5")));
   }
 
   {
@@ -254,10 +247,8 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
-    EXPECT_NE(funcs.end(), funcs.find("test3"));
-    EXPECT_NE(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2"), Key("test3"),
+                                   Key("test4"), Key("test5")));
   }
 }
 
@@ -283,10 +274,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsArch) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
-    EXPECT_EQ(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2")));
   }
 
   {
@@ -299,10 +287,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsArch) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
-    EXPECT_NE(funcs.end(), funcs.find("test3"));
-    EXPECT_EQ(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2"), Key("test3")));
   }
 
   {
@@ -315,20 +300,17 @@ TEST(VersionScriptParserTest, ParseSymbolTagsArch) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_EQ(funcs.end(), funcs.find("test2"));
-    EXPECT_EQ(funcs.end(), funcs.find("test3"));
-    EXPECT_NE(funcs.end(), funcs.find("test4"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test4")));
   }
 }
 
 
 TEST(VersionScriptParserTest, ExcludeSymbolTags) {
   static const char testdata[] = R"TESTDATA(
-    LIBEX_1.0 {
+    LIBEX_1.0 {  # exclude-tag-1
       global:
         test1;
-        test2;  # exclude-tag
+        test2;  # exclude-tag-2
     };
   )TESTDATA";
 
@@ -342,14 +324,12 @@ TEST(VersionScriptParserTest, ExcludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_NE(funcs.end(), funcs.find("test2"));
+    EXPECT_THAT(funcs, ElementsAre(Key("test1"), Key("test2")));
   }
 
-  // exclude_symbol_tags = {"exclude-tag"}
   {
     VersionScriptParser parser;
-    parser.AddExcludedSymbolTag("exclude-tag");
+    parser.AddExcludedSymbolTag("exclude-tag-1");
 
     std::istringstream stream(testdata);
     std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
@@ -357,8 +337,20 @@ TEST(VersionScriptParserTest, ExcludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_NE(funcs.end(), funcs.find("test1"));
-    EXPECT_EQ(funcs.end(), funcs.find("test2"));
+    EXPECT_TRUE(funcs.empty());
+  }
+
+  {
+    VersionScriptParser parser;
+    parser.AddExcludedSymbolTag("exclude-tag-2");
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs, ElementsAre(Key("test1")));
   }
 }
 
@@ -386,16 +378,12 @@ TEST(VersionScriptParserTest, ParseExternCpp) {
   const ExportedSymbolSet::NameSet &cpp_symbols =
       result->GetDemangledCppSymbols();
 
-  EXPECT_NE(cpp_symbols.end(), cpp_symbols.find("Test2::test()"));
-  EXPECT_NE(cpp_symbols.end(), cpp_symbols.find("Test3::test()"));
-
-  EXPECT_EQ(cpp_symbols.end(), cpp_symbols.find("test1"));
-  EXPECT_EQ(cpp_symbols.end(), cpp_symbols.find("test4"));
+  EXPECT_THAT(cpp_symbols, ElementsAre("Test2::test()", "Test3::test()"));
 
   const ExportedSymbolSet::GlobPatternSet &cpp_glob_patterns =
       result->GetDemangledCppGlobPatterns();
 
-  EXPECT_NE(cpp_glob_patterns.end(), cpp_glob_patterns.find("Test4::*"));
+  EXPECT_THAT(cpp_glob_patterns, ElementsAre("Test4::*"));
 }
 
 
@@ -420,11 +408,7 @@ TEST(VersionScriptParserTest, ParseGlobPattern) {
   const ExportedSymbolSet::GlobPatternSet &glob_patterns =
       result->GetGlobPatterns();
 
-  EXPECT_NE(glob_patterns.end(), glob_patterns.find("test1*"));
-  EXPECT_NE(glob_patterns.end(), glob_patterns.find("test2[Aa]"));
-  EXPECT_NE(glob_patterns.end(), glob_patterns.find("test3?"));
-
-  EXPECT_EQ(glob_patterns.end(), glob_patterns.find("test4"));
+  EXPECT_THAT(glob_patterns, ElementsAre("test1*", "test2[Aa]", "test3?"));
 }
 
 

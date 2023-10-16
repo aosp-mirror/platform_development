@@ -74,6 +74,8 @@ class VersionScriptParser {
     api_level_ = api_level;
   }
 
+  void SetApiLevelMap(utils::ApiLevelMap api_level_map);
+
   void AddExcludedSymbolVersion(const std::string &version) {
     excluded_symbol_versions_.insert(version);
   }
@@ -115,9 +117,10 @@ class VersionScriptParser {
   std::string arch_;
   std::string introduced_arch_tag_;
   utils::ApiLevel api_level_;
+  utils::ApiLevelMap api_level_map_;
 
-  std::set<std::string, std::less<>> excluded_symbol_versions_;
-  std::set<std::string, std::less<>> excluded_symbol_tags_;
+  utils::StringSet excluded_symbol_versions_;
+  utils::StringSet excluded_symbol_tags_;
 
   std::istream *stream_;
   int line_no_;

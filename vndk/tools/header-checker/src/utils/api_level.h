@@ -17,6 +17,8 @@
 
 #include <llvm/ADT/Optional.h>
 
+#include <istream>
+#include <map>
 #include <string>
 
 
@@ -26,11 +28,20 @@ namespace utils {
 
 using ApiLevel = int;
 
-
 constexpr ApiLevel FUTURE_API_LEVEL = 10000;
 
+class ApiLevelMap {
+ public:
+  ApiLevelMap() : codename_to_api_level_{{"current", FUTURE_API_LEVEL}} {}
 
-llvm::Optional<ApiLevel> ParseApiLevel(const std::string &api);
+  // Load a json object and return whether the operation succeeds.
+  bool Load(std::istream &stream);
+
+  llvm::Optional<ApiLevel> Parse(const std::string &api) const;
+
+ private:
+  std::map<std::string, ApiLevel> codename_to_api_level_;
+};
 
 
 }  // namespace utils
