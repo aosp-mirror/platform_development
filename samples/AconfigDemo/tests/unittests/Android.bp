@@ -9,20 +9,6 @@ java_library_host {
     libs: ["jsr330"],
 }
 
-java_test_host {
-    name: "ContentLibsTestHost",
-    srcs: ["*.java"],
-    static_libs: [
-        "ContentLibsHost",
-        "junit",
-        "flag-junit-base",
-    ],
-    test_options: {
-        unit_test: true,
-    },
-    test_suites: ["general-tests"],
-}
-
 android_test {
     name: "AconfigDemoUnitTests",
     srcs: ["*.java"],
@@ -32,6 +18,7 @@ android_test {
         "androidx.test.runner",
         "flag-junit-base",
         "platform-test-annotations",
+        "aconfig_demo_flags_java_lib",
     ],
     manifest: "AndroidManifest.xml",
     test_config: "AconfigDemoUnitTests.xml",
