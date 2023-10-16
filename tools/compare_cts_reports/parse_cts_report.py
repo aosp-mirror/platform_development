@@ -326,16 +326,19 @@ def print_test_info(info):
   print()
 
 
-def extract_xml_from_zip(zip_file_path, dest_dir):
+def extract_test_result_from_zip(zip_file_path, dest_dir):
   """Extract test_result.xml from the zip file."""
 
-  sub_dir_name = os.path.splitext(os.path.basename(zip_file_path))[0]
-  xml_path = os.path.join(sub_dir_name, 'test_result.xml')
-  extracted_xml = os.path.join(dest_dir, 'test_result.xml')
+  result_name = 'test_result.xml'
+  extracted = os.path.join(dest_dir, result_name)
   with zipfile.ZipFile(zip_file_path) as myzip:
-    with myzip.open(xml_path) as source, open(extracted_xml, 'wb') as target:
+    result_list = [f for f in myzip.namelist() if result_name in f]
+    if len(result_list) != 1:
+      raise RuntimeError(f'Cannot extract {result_name} from {zip_file_path}, '
+                         f'matched files: {" ".join(result_list)}')
+    with myzip.open(result_list[0]) as source, open(extracted, 'wb') as target:
       shutil.copyfileobj(source, target)
-  return extracted_xml
+  return extracted
 
 
 def parse_report_file(report_file):
@@ -343,7 +346,7 @@ def parse_report_file(report_file):
 
   with tempfile.TemporaryDirectory() as temp_dir:
     xml_path = (
-        extract_xml_from_zip(report_file, temp_dir)
+        extract_test_result_from_zip(report_file, temp_dir)
         if zipfile.is_zipfile(report_file)
         else report_file
     )
