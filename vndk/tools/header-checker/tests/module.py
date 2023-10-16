@@ -533,7 +533,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -552,7 +552,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -562,7 +562,7 @@ TEST_MODULES = [
                 'integration/version_script_example/prebuilts/' +
                 'libversion_script_example.so'
             ),
-            '--exclude-symbol-version', 'LIBVERSION_SCRIPT_EXAMPLE_PRIVATE',
+            '--exclude-symbol-version', '*_PRIVATE',
         ],
         has_reference_dump=True,
     ),
@@ -572,7 +572,7 @@ TEST_MODULES = [
         srcs=[
             'integration/version_script_example/example.cpp',
         ],
-        version_script='integration/version_script_example/example.map.txt',
+        version_script='integration/version_script_example/map.txt',
         export_include_dirs=['integration/version_script_example'],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -586,7 +586,29 @@ TEST_MODULES = [
         ],
         has_reference_dump=True,
     ),
-
+    LsdumpModule(
+        name='libversion_script_example_api_level',
+        arch='arm64',
+        srcs=[
+            'integration/version_script_example/example.cpp',
+        ],
+        version_script='integration/version_script_example/map.txt',
+        export_include_dirs=['integration/version_script_example'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+            '-so', relative_to_abs_path(
+                'integration/version_script_example/prebuilts/' +
+                'libversion_script_example.so'
+            ),
+            '-api', '32',
+            '-api-map', relative_to_abs_path(
+                'integration/version_script_example/api_levels.json'
+            ),
+        ],
+        has_reference_dump=True,
+    ),
     # Test data for test_allow_adding_removing_weak_symbols
     LsdumpModule(
         name='libweak_symbols_old',
@@ -594,7 +616,7 @@ TEST_MODULES = [
         srcs=[
             'integration/weak_symbols/example.c',
         ],
-        version_script='integration/weak_symbols/libexample_old.map.txt',
+        version_script='integration/weak_symbols/old_map.txt',
         export_include_dirs=[],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[
@@ -609,7 +631,7 @@ TEST_MODULES = [
         srcs=[
             'integration/weak_symbols/example.c',
         ],
-        version_script='integration/weak_symbols/libexample_new.map.txt',
+        version_script='integration/weak_symbols/new_map.txt',
         export_include_dirs=[],
         dumper_flags=['-output-format', 'Json'],
         linker_flags=[

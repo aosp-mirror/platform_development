@@ -1,31 +1,27 @@
-java_aconfig_library {
-    name: "aconfig_demo_flags_lib_test",
-    aconfig_declarations: "aconfig_demo_flags",
-    host_supported: true,
-    test: true
-}
-
 java_library_host {
-    name: "ContentLibs_test",
+    name: "ContentLibsHost",
     srcs: [
         ":ContentLibsFile",
     ],
     static_libs: [
-        "aconfig_demo_flags_lib_test",
+        "aconfig_demo_flags_java_lib_test",
     ],
     libs: ["jsr330"],
 }
 
-java_test_host {
-    name: "ContentLibs_test_host",
+android_test {
+    name: "AconfigDemoUnitTests",
     srcs: ["*.java"],
+    certificate: "platform",
     static_libs: [
-        "ContentLibs_test",
         "junit",
+        "androidx.test.runner",
         "flag-junit-base",
+        "platform-test-annotations",
+        "aconfig_demo_flags_java_lib",
     ],
-    test_options: {
-        unit_test: true,
-    },
-    test_suites: ["general-tests"],
+    manifest: "AndroidManifest.xml",
+    test_config: "AconfigDemoUnitTests.xml",
+    data: [":AconfigDemoActivity"],
+    instrumentation_for: "AconfigDemoActivity",
 }

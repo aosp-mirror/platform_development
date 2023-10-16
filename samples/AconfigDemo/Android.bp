@@ -8,23 +8,21 @@ android_app {
     srcs: [
         "src/**/*.java"
     ],
+    platform_apis: true,
     certificate: "platform",
-    sdk_version: "current",
     static_libs: [
         "ContentLibs",
         "dagger2",
         "jsr330",
     ],
+    jni_libs: [
+        "libexample_cpp_lib",
+    ],
+    required: ["libexample_rust_jni"],
+    plugins: ["dagger2-compiler"],
     optimize: {
-        enabled: true,
-        proguard_compatibility: false,
-        shrink: true,
-        optimize: false,
-        obfuscate: false,
-        shrink_resources: true,
+        proguard_flags_files: ["proguard.flags"],
     },
-
-    plugins: ["dagger2-compiler"]
 }
 
 aconfig_declarations {
@@ -33,9 +31,8 @@ aconfig_declarations {
     srcs: ["aconfig_demo_flags.aconfig"],
 }
 
-
 java_aconfig_library {
-    name: "aconfig_demo_flags_lib",
+    name: "aconfig_demo_flags_java_lib",
     aconfig_declarations: "aconfig_demo_flags",
 }
 
@@ -46,14 +43,77 @@ filegroup {
     ],
 }
 
-java_library {
-    name: "ContentLibs",
+java_defaults {
+    name: "ContentLibsDefault",
+    sdk_version: "current",
     srcs: [
         ":ContentLibsFile",
     ],
-    sdk_version: "current",
-    static_libs: [
-        "aconfig_demo_flags_lib",
-    ],
     libs: ["jsr330"],
+}
+
+java_library {
+    name: "ContentLibs",
+    defaults: ["ContentLibsDefault"],
+    static_libs: [
+        "aconfig_demo_flags_java_lib",
+    ],
+}
+
+
+cc_aconfig_library {
+    name: "aconfig_demo_flags_c_lib",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+cc_library {
+    name: "libexample_cpp_lib",
+    srcs: ["src/example_cpp_lib.cc"],
+    double_loadable: true,
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-function",
+        "-Wno-unused-parameter",
+    ],
+    header_libs: [
+      "jni_headers",
+    ],
+    shared_libs: [
+        "server_configurable_flags",
+    ],
+    static_libs: [
+        "aconfig_demo_flags_c_lib",
+    ],
+    export_include_dirs: ["src/include"],
+}
+
+rust_aconfig_library {
+    name: "libaconfig_demo_flags_rust",
+    crate_name: "aconfig_demo_flags_rust",
+    aconfig_declarations: "aconfig_demo_flags",
+}
+
+rust_ffi_shared {
+    name: "libexample_rust_jni",
+    crate_name: "example_rust_jni",
+    srcs: ["src/lib.rs"],
+    rustlibs: [
+        "libjni",
+        "libaconfig_demo_flags_rust",
+    ]
+}
+
+// Test setup
+
+// Create test verion of the jave flag library
+// It needs to use the same aconfig_declarations as
+// the production one
+java_aconfig_library {
+    name: "aconfig_demo_flags_java_lib_test",
+    aconfig_declarations: "aconfig_demo_flags",
+    // host_supported is set to true here for test running
+    // one host, in tests/unittests/Android.bp
+    host_supported: true,
+    test: true
 }

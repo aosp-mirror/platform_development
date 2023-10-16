@@ -18,6 +18,7 @@ package com.android.commands.monkey;
 
 import android.app.IActivityManager;
 import android.hardware.input.InputManager;
+import android.hardware.input.InputManagerGlobal;
 import android.os.SystemClock;
 import android.util.SparseArray;
 import android.view.IWindowManager;
@@ -185,7 +186,7 @@ public abstract class MonkeyMotionEvent extends MonkeyEvent {
             Logger.out.println(msg.toString());
         }
         try {
-            if (!InputManager.getInstance().injectInputEvent(me,
+            if (!InputManagerGlobal.getInstance().injectInputEvent(me,
                     InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_RESULT)) {
                 return MonkeyEvent.INJECT_FAIL;
             }

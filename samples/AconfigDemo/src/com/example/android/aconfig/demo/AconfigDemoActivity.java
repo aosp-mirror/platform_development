@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.text.method.ScrollingMovementMethod;
 
 import com.example.android.aconfig.demo.flags.Flags;
 
@@ -43,12 +44,17 @@ public class AconfigDemoActivity extends Activity {
 
         setContentView(R.layout.main);
         TextView simpleTextView = (TextView) findViewById(R.id.simpleTextView);
-        simpleTextView.setText("Show Flags: \n\n");
+        simpleTextView.setMovementMethod(new ScrollingMovementMethod());
+
+        simpleTextView.setText("Show Java Flags: \n\n");
 
         StaticContent cp = new StaticContent();
         simpleTextView.append(cp.getContent());
 
         simpleTextView.append(injectedContent.getContent());
+
+        simpleTextView.append("Show C/C++ Flags: \n\n");
+        simpleTextView.append(printCFlag());
 
         if (Flags.awesomeFlag1()) {
             Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_1 + " is on!");
@@ -57,6 +63,16 @@ public class AconfigDemoActivity extends Activity {
         if (Flags.awesomeFlag2()) {
             Log.v("AconfigDemoActivity", Flags.FLAG_AWESOME_FLAG_2 + " is on!");
         }
+
+        simpleTextView.append("\n\nShow Rust Flags: \n\n");
+        simpleTextView.append(printRustFlag());
+    }
+
+    public native String printCFlag();
+    public native String printRustFlag();
+
+    static {
+        System.loadLibrary("example_cpp_lib");
+        System.loadLibrary("example_rust_jni");
     }
 }
-

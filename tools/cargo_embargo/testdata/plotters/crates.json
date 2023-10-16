@@ -1,0 +1,31 @@
+[
+  {
+    "name": "plotters",
+    "package_name": "plotters",
+    "version": "0.3.4",
+    "types": ["lib"],
+    "target": "x86_64-unknown-linux-gnu",
+    "features": ["area_series", "line_series", "plotters-svg", "svg_backend"],
+    "cfgs": [],
+    "externs": [
+      { "name": "num_traits", "lib_name": "num_traits", "extern_type": "Rust" },
+      {
+        "name": "plotters_backend",
+        "lib_name": "plotters_backend",
+        "extern_type": "Rust"
+      },
+      {
+        "name": "plotters_svg",
+        "lib_name": "plotters_svg",
+        "extern_type": "Rust"
+      }
+    ],
+    "codegens": [],
+    "cap_lints": "",
+    "static_libs": [],
+    "shared_libs": [],
+    "edition": "2018",
+    "package_dir": ".",
+    "main_src": "src/lib.rs"
+  }
+]

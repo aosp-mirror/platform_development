@@ -52,6 +52,7 @@ If there are rustc warning messages, this script will add
 a warning comment to the owner crate module in Android.bp.
 """
 
+from __future__ import annotations
 import argparse
 import glob
 import json
@@ -212,9 +213,9 @@ def escape_quotes(s):  # replace '"' with '\\"'
 class Crate(object):
   """Information of a Rust crate to collect/emit for an Android.bp module."""
 
-  def __init__(self, runner, outf_name):
+  def __init__(self, runner: Runner, outf_name):
     # Remembered global runner and its members.
-    self.runner = runner
+    self.runner: Runner = runner
     self.debug = runner.args.debug
     self.cargo_dir = ''  # directory of my Cargo.toml
     self.outf_name = outf_name  # path to Android.bp
@@ -258,7 +259,7 @@ class Crate(object):
     # convenient way to output one line at a time with EOL.
     self.outf.write(s + '\n')
 
-  def same_flags(self, other):
+  def same_flags(self, other: Crate):
     # host_supported, device_supported, has_warning are not compared but merged
     # target is not compared, to merge different target/host modules
     # externs is not compared; only core_externs is compared
@@ -272,7 +273,7 @@ class Crate(object):
             self.static_libs == other.static_libs and
             self.shared_libs == other.shared_libs and self.cfgs == other.cfgs)
 
-  def merge_host_device(self, other):
+  def merge_host_device(self, other: Crate):
     """Returns true if attributes are the same except host/device support."""
     return (self.crate_name == other.crate_name and
             self.crate_types == other.crate_types and
@@ -282,7 +283,7 @@ class Crate(object):
             self.root_pkg == other.root_pkg and not self.skip_crate() and
             self.same_flags(other))
 
-  def merge_test(self, other):
+  def merge_test(self, other: Crate):
     """Returns true if self and other are tests of same root_pkg."""
     # Before merger, each test has its own crate_name.
     # A merged test uses its source file base name as output file name,
@@ -297,7 +298,7 @@ class Crate(object):
              self.device_supported == other.device_supported) and
             self.same_flags(other))
 
-  def merge(self, other, outf_name):
+  def merge(self, other: Crate, outf_name):
     """Try to merge crate into self."""
     # Cargo build --tests could recompile a library for tests.
     # We need to merge such duplicated calls to rustc, with
@@ -315,7 +316,7 @@ class Crate(object):
       return True
     return False
 
-  def do_merge(self, other, should_merge_test):
+  def do_merge(self, other: Crate, should_merge_test):
     """Merge attributes of other to self."""
     if self.debug:
       self.write('\n// Before merge definition (1):')
@@ -336,7 +337,7 @@ class Crate(object):
       self.srcs.append(other.main_src)
       # use a short unique name as the merged module name.
       prefix = self.root_pkg + '_tests'
-      self.module_name = self.runner.claim_module_name(prefix, self, 0)
+      self.module_name = self.runner.claim_module_name(prefix, self, 0) + self.runner.args.name_suffix
       self.stem = self.module_name
       # This normalized root_pkg name although might be the same
       # as other module's crate_name, it is not actually used for
@@ -358,7 +359,7 @@ class Crate(object):
           return
         dir_name = os.path.dirname(dir_name)
 
-  def add_codegens_flag(self, flag):
+  def add_codegens_flag(self, flag: str):
     """Ignore options not used in Android."""
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
@@ -501,7 +502,7 @@ class Crate(object):
     self.shared_libs = sorted(set(self.shared_libs))
     self.crate_types = sorted(set(self.crate_types))
     self.decide_module_type()
-    self.module_name = altered_name(self.stem)
+    self.module_name = altered_name(self.stem) + self.runner.args.name_suffix
     return self
 
   def get_pkg_version(self):
@@ -743,18 +744,20 @@ class Crate(object):
         self.write('        "libcompiler_builtins.rust_sysroot",')
         self.write('        "libcore.rust_sysroot",')
         self.write('    ],')
-      if self.runner.variant_args.native_bridge_supported:
-        self.write('    native_bridge_supported: true,')
-      if self.runner.variant_args.product_available:
-        self.write('    product_available: true,')
-      if self.runner.variant_args.recovery_available:
-        self.write('    recovery_available: true,')
-      if self.runner.variant_args.vendor_available:
-        self.write('    vendor_available: true,')
-      if self.runner.variant_args.vendor_ramdisk_available:
-        self.write('    vendor_ramdisk_available: true,')
-      if self.runner.variant_args.ramdisk_available:
-        self.write('    ramdisk_available: true,')
+      if self.device_supported:
+        # These configurations are meaningful only if it is for device.
+        if self.runner.variant_args.native_bridge_supported:
+          self.write('    native_bridge_supported: true,')
+        if self.runner.variant_args.product_available:
+          self.write('    product_available: true,')
+        if self.runner.variant_args.recovery_available:
+          self.write('    recovery_available: true,')
+        if self.runner.variant_args.vendor_available:
+          self.write('    vendor_available: true,')
+        if self.runner.variant_args.vendor_ramdisk_available:
+          self.write('    vendor_ramdisk_available: true,')
+        if self.runner.variant_args.ramdisk_available:
+          self.write('    ramdisk_available: true,')
     if self.runner.variant_args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES and self.device_supported:
       self.write('    min_sdk_version: "%s",' % self.runner.variant_args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
@@ -821,30 +824,30 @@ class Crate(object):
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
       # be renamed to use as a plugin for protoc.
-      self.stem = altered_stem(self.crate_name) + suffix
+      self.stem = altered_stem(self.crate_name) + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'lib':  # rust_library[_host]
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name + suffix
+      self.module_type = 'rust_library' + host + rlib
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
-      self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name + suffix
+      self.module_type = 'rust_library' + host + rlib
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
       self.module_type = 'rust_library' + host + '_dylib'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_dylib'
     elif crate_type == 'cdylib':  # rust_library[_host]_shared
       self.module_type = 'rust_ffi' + host + '_shared'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_shared'
     elif crate_type == 'staticlib':  # rust_library[_host]_static
       self.module_type = 'rust_ffi' + host + '_static'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem) + '_static'
     elif crate_type == 'test':  # rust_test[_host]
       self.module_type = 'rust_test' + host
@@ -862,12 +865,12 @@ class Crate(object):
         # crate name. We ignore -C and use claim_module_name to get
         # unique sequential suffix.
         self.module_name = self.runner.claim_module_name(
-            self.module_name, self, 0)
+            self.module_name, self, 0) + self.runner.args.name_suffix
         # Now the module name is unique, stem should also match and unique.
         self.stem = self.module_name
     elif crate_type == 'proc-macro':  # rust_proc_macro
       self.module_type = 'rust_proc_macro'
-      self.stem = 'lib' + self.crate_name + suffix
+      self.stem = 'lib' + self.crate_name + suffix + self.runner.args.name_suffix
       self.module_name = altered_name(self.stem)
     else:  # unknown module type, rust_prebuilt_dylib? rust_library[_host]?
       self.module_type = ''
@@ -948,6 +951,8 @@ class Crate(object):
         lib_name = re.sub(' .*$', '', lib)
       if lib_name in self.runner.variant_args.dependency_blocklist:
         continue
+      if lib_name in self.runner.args.dep_suffixes:
+        lib_name += self.runner.args.dep_suffixes[lib_name]
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name + dependency_suffix) + '",\n'
@@ -1138,7 +1143,7 @@ class CCObject(object):
 class Runner(object):
   """Main class to parse cargo -v output and print Android module definitions."""
 
-  def __init__(self, args):
+  def __init__(self, args: argparse.Namespace):
     self.bp_files = set()  # Remember all output Android.bp files.
     self.root_pkg = ''  # name of package in ./Cargo.toml
     # Saved flags, modes, and data.
@@ -1155,7 +1160,7 @@ class Runner(object):
     self.pkg_obj2cc = {}
     # pkg_obj2cc[cc_object[i].pkg][cc_objects[i].obj] = cc_objects[i]
     self.ar_objects = list()
-    self.crates = list()
+    self.crates: list[Crate] = list()
     self.warning_files = set()
     # Keep a unique mapping from (module name) to crate
     self.name_owners = {}
@@ -1657,7 +1662,7 @@ class Runner(object):
     self.find_warning_owners()
 
 
-def get_parser():
+def get_parser() -> argparse.ArgumentParser:
   """Parse main arguments."""
   parser = argparse.ArgumentParser('cargo2android')
   parser.add_argument(
@@ -1893,6 +1898,15 @@ def get_parser():
       help=('Dump command-line arguments (minus this flag) to a config file and exit. ' +
             'This is intended to help migrate from command line options to config files.'))
   parser.add_argument(
+      '--name-suffix',
+      type=str,
+      default='',
+      help=('Add this suffix to the module name.'))
+  parser.add_argument(
+      '--dep-suffixes',
+      default={},
+      help=('Add these suffixes to the specified dependencies'))
+  parser.add_argument(
       '--config',
       type=str,
       help=('Load command-line options from the given config file. ' +
@@ -1900,7 +1914,7 @@ def get_parser():
   return parser
 
 
-def parse_args(parser):
+def parse_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
   """Parses command-line options."""
   args = parser.parse_args()
   # Use the values specified in a config file if one was found.
@@ -1913,7 +1927,7 @@ def parse_args(parser):
   return args
 
 
-def dump_config(parser, args):
+def dump_config(parser: argparse.ArgumentParser, args):
   """Writes the non-default command-line options to the specified file."""
   args_dict = vars(args)
   # Filter out the arguments that have their default value.
