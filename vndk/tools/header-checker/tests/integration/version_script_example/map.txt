@@ -1,14 +1,14 @@
-LIBVERSION_SCRIPT_EXAMPLE_1.0 {
+LIBVERSION_SCRIPT_EXAMPLE_1.0 {  # introduced=32
   global:
     test1;
     extern "C++" {
-      Test3::*;  # mytag
+      Test3::*;  # mytag introduced-arm64=Tiramisu
     };
   local:
     *;
 };
 
-LIBVERSION_SCRIPT_EXAMPLE_PRIVATE {  # mytag
+LIBVERSION_SCRIPT_EXAMPLE_PRIVATE {  # mytag introduced=33
   global:
     test2;
     extern "C++" {

@@ -14,23 +14,44 @@
 
 #include "utils/api_level.h"
 
+#include <json/reader.h>
+#include <llvm/Support/raw_ostream.h>
+
 #include "utils/string_utils.h"
-
-#include <llvm/ADT/Optional.h>
-
-#include <cassert>
-#include <string>
 
 
 namespace header_checker {
 namespace utils {
 
 
-llvm::Optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
-  if (api_level_str == "current") {
-    return FUTURE_API_LEVEL;
+bool ApiLevelMap::Load(std::istream &stream) {
+  Json::CharReaderBuilder builder;
+  Json::Value json;
+  std::string error_message;
+  if (!Json::parseFromStream(builder, stream, &json, &error_message)) {
+    llvm::errs() << "Cannot load ApiLevelMap: " << error_message << "\n";
+    return false;
   }
-  return ParseInt(api_level_str);
+
+  const Json::Value null_value;
+  for (const Json::String &key : json.getMemberNames()) {
+    Json::Value value = json.get(key, null_value);
+    if (!value.isInt()) {
+      llvm::errs() << "Cannot load ApiLevelMap: " << key
+                   << " is not mapped to an integer.\n";
+      return false;
+    }
+    codename_to_api_level_[key] = value.asInt();
+  }
+  return true;
+}
+
+llvm::Optional<ApiLevel> ApiLevelMap::Parse(const std::string &api) const {
+  auto it = codename_to_api_level_.find(api);
+  if (it != codename_to_api_level_.end()) {
+    return it->second;
+  }
+  return ParseInt(api);
 }
 
 
