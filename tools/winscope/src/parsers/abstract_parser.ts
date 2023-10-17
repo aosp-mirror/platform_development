@@ -20,7 +20,7 @@ import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
-abstract class AbstractParser<T extends object = object> implements Parser<object> {
+abstract class AbstractParser<T extends object = object> implements Parser<T> {
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
@@ -78,8 +78,9 @@ abstract class AbstractParser<T extends object = object> implements Parser<objec
     return this.timestamps.get(type);
   }
 
-  getEntry(index: number, timestampType: TimestampType): T {
-    return this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
+  getEntry(index: number, timestampType: TimestampType): Promise<T> {
+    const entry = this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
+    return Promise.resolve(entry);
   }
 
   // Add default values to the proto objects.

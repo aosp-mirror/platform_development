@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
+import {
+  OnTracePositionUpdate,
+  TracePositionUpdateEmitter,
+} from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {TracePosition} from 'trace/trace_position';
 
-export class TimelineComponentStub implements TracePositionUpdateListener {
+export class TimelineComponentStub
+  implements TracePositionUpdateEmitter, TracePositionUpdateListener
+{
+  setOnTracePositionUpdate(callback: OnTracePositionUpdate) {
+    // do nothing
+  }
+
   onTracePositionUpdate(position: TracePosition) {
     // do nothing
   }
