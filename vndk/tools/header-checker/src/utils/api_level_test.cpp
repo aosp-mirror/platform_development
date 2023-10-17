@@ -14,6 +14,8 @@
 
 #include "utils/api_level.h"
 
+#include <sstream>
+
 #include <gtest/gtest.h>
 
 
@@ -21,15 +23,22 @@ namespace header_checker {
 namespace utils {
 
 
-TEST(ApiLevelTest, ParseApiLevel) {
-  EXPECT_FALSE(ParseApiLevel(""));
-  EXPECT_FALSE(ParseApiLevel("A"));
+TEST(ApiLevelTest, Parse) {
+  std::istringstream json_stream("{\"UpsideDownCake\":9000}");
+  utils::ApiLevelMap api_level_map;
+  api_level_map.Load(json_stream);
 
-  EXPECT_TRUE(ParseApiLevel("current").has_value());
-  EXPECT_EQ(FUTURE_API_LEVEL, ParseApiLevel("current").value());
+  EXPECT_FALSE(api_level_map.Parse(""));
+  EXPECT_FALSE(api_level_map.Parse("A"));
 
-  EXPECT_TRUE(ParseApiLevel("16").has_value());
-  EXPECT_EQ(16l, ParseApiLevel("16").value());
+  EXPECT_TRUE(api_level_map.Parse("current").has_value());
+  EXPECT_EQ(FUTURE_API_LEVEL, api_level_map.Parse("current").value());
+
+  EXPECT_TRUE(api_level_map.Parse("UpsideDownCake").has_value());
+  EXPECT_EQ(9000, api_level_map.Parse("UpsideDownCake").value());
+
+  EXPECT_TRUE(api_level_map.Parse("16").has_value());
+  EXPECT_EQ(16l, api_level_map.Parse("16").value());
 }
 
 
