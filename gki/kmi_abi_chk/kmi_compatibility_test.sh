@@ -16,15 +16,18 @@
 
 # Usage:
 #   development/gki/kmi_abi_chk/kmi_static_chk.sh \
-#     <current_symbol_info> <previous_symbol_info> ...
+#     <current_symbol_info> <previous_symbol_info> (abi_symbollist.report)
 #
+#   abi_symbollist.report is from the previous/old GKI and optional.
+#   If it's not on the command line, all symbols from the previous/old GKI
+#   are considered KMI and will be checked.
 if [[ "$#" -lt 2 ]]; then
-  echo "Usage: $0 <current_symbol_info> <previous_symbol_info> ..."
+  echo "Usage: $0 <current_symbol_info> <previous_symbol_info> (abi_symbollist.report)"
   exit 1
 fi
 
 ret=0
-for f in "$@"; do
+for f in $1 $2; do
   if [[ ! -e "$f" ]]; then
     echo "Kernel symbol file $f does not exist!" >&2
     ret=1
@@ -34,12 +37,25 @@ for f in "$@"; do
   fi
 done
 
+unset abi_list
+if [[ "$#" -gt 2 ]]; then
+  if [[ ! -e "$3" ]]; then
+    echo "ABI symbol list $3 does not exist!" >&2
+    ret=1
+  else
+    abi_list=$3
+  fi
+fi
+
 if [[ ! ret -eq 0 ]]; then
   exit $ret
 fi
 
-tmp=$(mktemp /tmp/linux-symvers.XXXXXX)
-trap "rm -f $tmp" EXIT
+tmp_symvers_new=$(mktemp /tmp/linux-symvers.XXXXXX)
+tmp_symvers_old=$(mktemp /tmp/linux-symvers.XXXXXX)
+tmp_abi_lst_old=$(mktemp /tmp/linux-symvers.XXXXXX)
+
+trap "rm -f $tmp_symvers_new tmp_symvers_old tmp_abi_lst_old" EXIT
 
 curr=$1
 shift
@@ -58,18 +74,29 @@ shift
 # break KMI ABI, because the requirement is "relaxed". We want this case to
 # pass so a keyword like "...EXPORT_SYMBOL" in the current symbol file can
 # still match "...EXPORT_SYMBOL_GPL" in the previous symbol file.
-grep "EXPORT_SYMBOL" $curr | sed 's/[ \t]*$//' > $tmp
+grep "EXPORT_SYMBOL" $curr | sed 's/[ \t]*$//' > $tmp_symvers_new
+
+if [[ -v abi_list ]]; then
+  awk '{print $1}' $abi_list > $tmp_abi_lst_old
+  echo "ABI list: $abi_list"
+fi
 
 echo "Current kernel symbol file, $curr, is checking against:"
 
-for f in "$@"; do
+for f in $1; do
+  if [[ -v abi_list ]]; then
+    grep -wf $tmp_abi_lst_old $f > $tmp_symvers_old
+  else
+    cp $f $tmp_symvers_old
+  fi
+
   echo "	$f"
 # if nothing is found, grep returns 1, which means every symbol in the
 # previous release (usually in *.symvers-$BID) can be found in the current
 # release, so is considered successful here.
 # if grep returns 0, which means some symbols are found in the previous
 # symbol file but not in the current symbol file, then something wrong!
-  if grep -vf $tmp $f; then
+  if grep -vf $tmp_symvers_new $tmp_symvers_old; then
     ret=1
     echo "$f contains symbol(s) not found in, or incompatible with, $curr." >&2
   fi
