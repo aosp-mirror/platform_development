@@ -158,7 +158,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             *ngIf="wmProtoOrNull()"
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header wm-state"
             [class]="{selected: isHighlighted(wmProtoOrNull())}"
             (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
             WMState
@@ -230,7 +230,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           <button
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header ime-container"
             [class]="{selected: isHighlighted(additionalProperties.sf.imeContainer)}"
             (click)="onClickShowInPropertiesPanel(additionalProperties.sf.imeContainer)">
             Ime Container
@@ -252,7 +252,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           <button
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header input-method-surface"
             [class]="{selected: isHighlighted(additionalProperties.sf.inputMethodSurface)}"
             (click)="onClickShowInPropertiesPanel(additionalProperties.sf.inputMethodSurface)">
             Input Method Surface
@@ -458,8 +458,8 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   onClickShowInPropertiesPanel(item: any, name?: string) {
-    if (item.id) {
-      this.updateHighlightedItem(item.id);
+    if (item.stableId) {
+      this.updateHighlightedItem(item.stableId);
     } else {
       this.updateAdditionalPropertySelected(item, name);
     }
