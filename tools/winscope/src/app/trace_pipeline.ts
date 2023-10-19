@@ -107,6 +107,8 @@ export class TracePipeline {
   removeTrace(trace: Trace<object>) {
     this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== trace.type);
     this.traces.deleteTrace(trace.type);
+    this.loadedTraceFiles.delete(trace.type);
+    this.parserFactory.removeParser(trace.type);
   }
 
   async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {

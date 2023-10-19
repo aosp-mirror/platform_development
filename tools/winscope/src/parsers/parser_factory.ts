@@ -100,6 +100,10 @@ export class ParserFactory {
     return [parsers, errors];
   }
 
+  removeParser(type: TraceType) {
+    this.parsers.delete(type);
+  }
+
   private shouldUseParser(newParser: Parser<object>, errors: ParserError[]): boolean {
     const oldParser = this.parsers.get(newParser.getTraceType());
     if (!oldParser) {
