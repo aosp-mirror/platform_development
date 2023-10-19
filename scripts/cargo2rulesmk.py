@@ -596,25 +596,14 @@ class Crate(object):
             path = CUSTOM_MODULE_CRATES.get(
                 name, f"external/rust/crates/{name}"
             )
-            abspath = os.path.normpath(os.path.join(TOP_DIR, path))
-            # just check for directory, not whether it contains rules.mk, since
-            # we do not generate makefile rules in topological order
-            if os.path.isdir(abspath):
-                library_deps.append(path)
-            elif dependency["optional"]:
+            if dependency["optional"]:
                 if feats := [
                     f
                     for f in self.features
                     if name in self.feature_dependencies.get(f, [])
                 ]:
-                    print(
-                        f"### WARNING: missing dependency {name} needed by features "
-                        + ", ".join(feats)
-                    )
-                    return
-            else:
-                print(f"### WARNING: missing non-optional dependency: {path}")
-                return
+                    continue
+            library_deps.append(path)
         if library_deps:
             self.write("MODULE_LIBRARY_DEPS := \\")
             for path in library_deps:
