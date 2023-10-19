@@ -88,6 +88,8 @@ pub struct Crate {
     pub edition: String,
     pub package_dir: PathBuf, // canonicalized
     pub main_src: PathBuf,    // relative to package_dir
+    /// Whether it is a test crate which doesn't actually contain any tests or benchmarks.
+    pub empty_test: bool,
 }
 
 /// A dependency of a Rust crate.

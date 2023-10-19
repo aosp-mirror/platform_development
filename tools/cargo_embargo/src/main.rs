@@ -303,6 +303,16 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
                     .args(&workspace_args)
                     .args(&feature_args),
             )?;
+            // cargo test -- --list
+            run_cargo(
+                &mut cargo_out_file,
+                Command::new("cargo")
+                    .args(["test", "--target", default_target])
+                    .args(target_dir_args)
+                    .args(&workspace_args)
+                    .args(&feature_args)
+                    .args(["--", "--list"]),
+            )?;
         }
     }
 
@@ -504,6 +514,9 @@ fn crate_to_bp_modules(
                 let suffix = crate_.main_src.to_string_lossy().into_owned();
                 let suffix = suffix.replace('/', "_").replace(".rs", "");
                 let stem = crate_.package_name.clone() + "_test_" + &suffix;
+                if crate_.empty_test {
+                    return Ok(Vec::new());
+                }
                 if crate_type == &CrateType::TestNoHarness {
                     eprintln!(
                         "WARNING: ignoring test \"{}\" with harness=false. not supported yet",
