@@ -112,6 +112,8 @@ enum Mode {
         #[arg(long)]
         no_build: bool,
     },
+    /// Dumps information about the crates to the given JSON file.
+    DumpCrates { crates: PathBuf },
 }
 
 fn main() -> Result<()> {
@@ -122,27 +124,40 @@ fn main() -> Result<()> {
     // Add some basic support for comments to JSON.
     let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
 
-    match args.mode {
+    match &args.mode {
         Some(Mode::Convert { package_name, no_build }) => {
             let legacy_config: legacy::Config =
                 serde_json::from_str(&json_str).context("failed to parse legacy config")?;
-            let new_config = legacy_config.to_embargo(&package_name, !no_build)?;
+            let new_config = legacy_config.to_embargo(package_name, !no_build)?;
             let new_config_str = serde_json::to_string_pretty(&new_config)
                 .context("failed to serialize new config")?;
             println!("{}", new_config_str);
         }
+        Some(Mode::DumpCrates { crates }) => {
+            dump_crates(&args, &json_str, crates)?;
+        }
         None => {
-            run_embargo(args, &json_str)?;
+            run_embargo(&args, &json_str)?;
         }
     }
 
     Ok(())
 }
 
-/// Runs cargo_embargo with the given JSON configuration string.
-fn run_embargo(args: Args, json_str: &str) -> Result<()> {
+/// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
+/// given `crates.json` file rather than generating an `Android.bp`.
+fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
     let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let crates = make_crates(args, &cfg)?;
+    serde_json::to_writer(
+        File::create(crates_filename)
+            .with_context(|| format!("Failed to create {:?}", crates_filename))?,
+        &crates,
+    )?;
+    Ok(())
+}
 
+fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
     }
@@ -151,10 +166,10 @@ fn run_embargo(args: Args, json_str: &str) -> Result<()> {
     // NOTE: If the directory with cargo has more binaries, this could have some unpredictable side
     // effects. That is partly intended though, because we want to use that cargo binary's
     // associated rustc.
-    if let Some(cargo_bin) = args.cargo_bin {
+    if let Some(cargo_bin) = &args.cargo_bin {
         let path = std::env::var_os("PATH").unwrap();
         let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
-        paths.push_front(cargo_bin);
+        paths.push_front(cargo_bin.to_owned());
         let new_path = std::env::join_paths(paths)?;
         std::env::set_var("PATH", new_path);
     }
@@ -162,15 +177,21 @@ fn run_embargo(args: Args, json_str: &str) -> Result<()> {
     let cargo_out_path = "cargo.out";
     let cargo_metadata_path = "cargo.metadata";
     if !args.reuse_cargo_out || !Path::new(cargo_out_path).exists() {
-        generate_cargo_out(&cfg, cargo_out_path, cargo_metadata_path)
+        generate_cargo_out(cfg, cargo_out_path, cargo_metadata_path)
             .context("generate_cargo_out failed")?;
     }
 
-    let crates = if cfg.run_cargo {
-        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?
+    if cfg.run_cargo {
+        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")
     } else {
-        parse_cargo_metadata_file(cargo_metadata_path, &cfg)?
-    };
+        parse_cargo_metadata_file(cargo_metadata_path, cfg)
+    }
+}
+
+/// Runs cargo_embargo with the given JSON configuration string.
+fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
+    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let crates = make_crates(args, &cfg)?;
 
     // Find out files.
     // Example: target.tmp/x86_64-unknown-linux-gnu/debug/build/metrics-d2dd799cebf1888d/out/event_details.rs
