@@ -53,7 +53,7 @@ MULTI_LICENSE_COMMENT = ("# Dual-licensed, using the least restrictive "
         "per go/thirdpartylicenses#same.\n  ")
 
 # default owners added to OWNERS
-DEFAULT_OWNERS = "include platform/prebuilts/rust:master:/OWNERS\n"
+DEFAULT_OWNERS = "include platform/prebuilts/rust:main:/OWNERS\n"
 
 # See b/159487435 Official policy for rust imports METADATA URLs.
 # "license_type: NOTICE" might be optional,
