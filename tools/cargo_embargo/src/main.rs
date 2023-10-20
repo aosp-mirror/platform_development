@@ -271,7 +271,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
     let target_dir_args = ["--target-dir", "target.tmp"];
 
     // cargo clean
-    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))?;
+    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))
+        .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
     let feature_args = if cfg.features.is_empty() {
@@ -302,7 +303,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             .arg("--format-version")
             .arg("1")
             .args(&feature_args),
-    )?;
+    )
+    .context("Running cargo metadata")?;
 
     if cfg.run_cargo {
         // cargo build
@@ -469,7 +471,8 @@ fn write_format_android_bp(
 ) -> Result<()> {
     File::create(bp_path)?.write_all(bp_contents.as_bytes())?;
 
-    let bpfmt_output = Command::new("bpfmt").arg("-w").arg(bp_path).output()?;
+    let bpfmt_output =
+        Command::new("bpfmt").arg("-w").arg(bp_path).output().context("Running bpfmt")?;
     if !bpfmt_output.status.success() {
         eprintln!(
             "WARNING: bpfmt -w {:?} failed before patch: {}",
@@ -479,12 +482,21 @@ fn write_format_android_bp(
     }
 
     if let Some(patch_path) = patch_path {
-        let patch_output = Command::new("patch").arg("-s").arg(bp_path).arg(patch_path).output()?;
+        let patch_output = Command::new("patch")
+            .arg("-s")
+            .arg(bp_path)
+            .arg(patch_path)
+            .output()
+            .context("Running patch")?;
         if !patch_output.status.success() {
             eprintln!("WARNING: failed to apply patch {:?}", patch_path);
         }
         // Re-run bpfmt after the patch so
-        let bpfmt_output = Command::new("bpfmt").arg("-w").arg(bp_path).output()?;
+        let bpfmt_output = Command::new("bpfmt")
+            .arg("-w")
+            .arg(bp_path)
+            .output()
+            .context("Running bpfmt after patch")?;
         if !bpfmt_output.status.success() {
             eprintln!(
                 "WARNING: bpfmt -w {:?} failed after patch: {}",
