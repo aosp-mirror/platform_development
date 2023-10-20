@@ -310,7 +310,13 @@ mod tests {
         for testdata_directory_path in testdata_directories() {
             let cfg: Config = serde_json::from_reader(
                 File::open(testdata_directory_path.join("cargo_embargo.json"))
-                    .expect("Failed to open cargo_embargo.json"),
+                    .with_context(|| {
+                        format!(
+                            "Failed to open {:?}",
+                            testdata_directory_path.join("cargo_embargo.json")
+                        )
+                    })
+                    .unwrap(),
             )
             .unwrap();
             let cargo_metadata_path = testdata_directory_path.join("cargo.metadata");
