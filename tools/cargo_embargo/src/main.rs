@@ -42,6 +42,7 @@ use cargo::{
 };
 use clap::Parser;
 use clap::Subcommand;
+use log::debug;
 use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
@@ -117,6 +118,7 @@ enum Mode {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
     let args = Args::parse();
 
     let json_str = std::fs::read_to_string(&args.cfg)
@@ -171,6 +173,7 @@ fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
         let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
         paths.push_front(cargo_bin.to_owned());
         let new_path = std::env::join_paths(paths)?;
+        debug!("Set PATH to {:?}", new_path);
         std::env::set_var("PATH", new_path);
     }
 
@@ -251,7 +254,7 @@ fn run_cargo(cargo_out: &mut File, cmd: &mut Command) -> Result<()> {
     use std::os::unix::io::OwnedFd;
     use std::process::Stdio;
     let fd: OwnedFd = cargo_out.try_clone()?.into();
-    // eprintln!("Running: {:?}\n", cmd);
+    debug!("Running: {:?}\n", cmd);
     let output = cmd.stdout(Stdio::from(fd.try_clone()?)).stderr(Stdio::from(fd)).output()?;
     if !output.status.success() {
         bail!("cargo command failed with exit status: {:?}", output.status);

@@ -18,6 +18,7 @@ use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
+use log::debug;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
@@ -52,6 +53,7 @@ fn parse_cargo_out_str(
     base_directory: impl AsRef<Path>,
 ) -> Result<Vec<Crate>> {
     let cargo_out = CargoOut::parse(cargo_out).context("failed to parse cargo.out")?;
+    debug!("Parsed cargo output: {:?}", cargo_out);
 
     assert!(cargo_out.cc_invocations.is_empty(), "cc not supported yet");
     assert!(cargo_out.ar_invocations.is_empty(), "ar not supported yet");
