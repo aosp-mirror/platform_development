@@ -14,7 +14,8 @@
     "shared_libs": [],
     "edition": "2018",
     "package_dir": ".",
-    "main_src": "src/lib.rs"
+    "main_src": "src/lib.rs",
+    "empty_test": false
   },
   {
     "name": "either",
@@ -33,6 +34,7 @@
     "shared_libs": [],
     "edition": "2018",
     "package_dir": ".",
-    "main_src": "src/lib.rs"
+    "main_src": "src/lib.rs",
+    "empty_test": false
   }
 ]

@@ -71,6 +71,7 @@ pub struct Config {
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
     /// Minimum SDK version.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub min_sdk_version: Option<String>,
     /// Map of renames for modules. For example, if a "libfoo" would be generated and there is an
     /// entry ("libfoo", "libbar"), the generated module will be called "libbar" instead.
