@@ -99,7 +99,7 @@ pub fn parse_cargo_metadata_file(
 
 fn parse_cargo_metadata(
     metadata: &WorkspaceMetadata,
-    features: &[String],
+    features: &Option<Vec<String>>,
     include_tests: bool,
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
@@ -249,17 +249,17 @@ fn split_src_path<'a>(src_path: &'a Path, package_dir: &Path) -> &'a Path {
 /// Given a set of chosen features, and the feature dependencies from a package's metadata, returns
 /// the full set of features which should be enabled.
 fn resolve_features(
-    chosen_features: &[String],
+    chosen_features: &Option<Vec<String>>,
     package_features: &BTreeMap<String, Vec<String>>,
 ) -> Vec<String> {
     let mut features = Vec::new();
-
-    // If there is a default feature and no chosen features, then enable it.
-    if chosen_features.is_empty() && package_features.contains_key("default") {
+    if let Some(chosen_features) = chosen_features {
+        for feature in chosen_features {
+            add_feature_and_dependencies(&mut features, feature, package_features);
+        }
+    } else if package_features.contains_key("default") {
+        // If there is a default feature and no chosen features, then enable it.
         add_feature_and_dependencies(&mut features, "default", package_features);
-    }
-    for feature in chosen_features {
-        add_feature_and_dependencies(&mut features, feature, package_features);
     }
     features.sort();
     features.dedup();
@@ -304,7 +304,7 @@ mod tests {
         .into_iter()
         .collect();
         assert_eq!(
-            resolve_features(&chosen, &package_features),
+            resolve_features(&Some(chosen), &package_features),
             vec![
                 "alloc".to_string(),
                 "default".to_string(),
