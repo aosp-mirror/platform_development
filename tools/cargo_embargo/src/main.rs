@@ -687,6 +687,7 @@ fn crate_to_bp_modules(
             if package_cfg.alloc {
                 stdlibs.push("liballoc.rust_sysroot");
             }
+            stdlibs.sort();
             m.props.set("stdlibs", stdlibs);
         }
 
