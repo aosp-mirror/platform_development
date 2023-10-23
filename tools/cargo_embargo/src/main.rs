@@ -275,10 +275,14 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
         .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
-    let feature_args = if cfg.features.is_empty() {
-        vec![]
+    let feature_args = if let Some(features) = &cfg.features {
+        if features.is_empty() {
+            vec!["--no-default-features".to_string()]
+        } else {
+            vec!["--no-default-features".to_string(), "--features".to_string(), features.join(",")]
+        }
     } else {
-        vec!["--no-default-features".to_string(), "--features".to_string(), cfg.features.join(",")]
+        vec![]
     };
 
     let workspace_args = if cfg.workspace {

@@ -45,7 +45,7 @@ pub struct Config {
     #[serde(default)]
     device: bool,
     #[serde(default)]
-    features: String,
+    features: Option<String>,
     #[serde(default)]
     force_rlib: bool,
     #[serde(default)]
@@ -77,11 +77,13 @@ impl Config {
             bail!("run was not true");
         }
 
-        let features = if self.features.is_empty() {
-            Vec::new()
-        } else {
-            self.features.split(',').map(ToOwned::to_owned).collect()
-        };
+        let features = self.features.as_ref().map(|features| {
+            if features.is_empty() {
+                Vec::new()
+            } else {
+                features.split(',').map(ToOwned::to_owned).collect()
+            }
+        });
         let mut test_data: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for entry in &self.test_data {
             let (test_name, data) = entry
