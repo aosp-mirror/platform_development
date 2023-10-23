@@ -94,9 +94,7 @@ pub fn parse_cargo_metadata_file(
         File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
     )
     .context("failed to parse cargo.metadata")?;
-    let features =
-        if cfg.features.is_empty() { vec!["default".to_string()] } else { cfg.features.clone() };
-    parse_cargo_metadata(&metadata, &features, cfg.tests)
+    parse_cargo_metadata(&metadata, &cfg.features, cfg.tests)
 }
 
 fn parse_cargo_metadata(
@@ -248,6 +246,11 @@ fn resolve_features(
     package_features: &BTreeMap<String, Vec<String>>,
 ) -> Vec<String> {
     let mut features = Vec::new();
+
+    // If there is a default feature and no chosen features, then enable it.
+    if chosen_features.is_empty() && package_features.contains_key("default") {
+        add_feature_and_dependencies(&mut features, "default", package_features);
+    }
     for feature in chosen_features {
         add_feature_and_dependencies(&mut features, feature, package_features);
     }
