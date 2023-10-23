@@ -27,6 +27,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {FilesSource} from './files_source';
 import {TraceFileFilter} from './trace_file_filter';
 import {TRACE_INFO} from './trace_info';
 
@@ -40,12 +41,19 @@ export class TracePipeline {
   private loadedTraceFiles = new Map<TraceType, TraceFile>();
   private traces = new Traces();
   private commonTimestampType?: TimestampType;
+  private downloadArchiveFilename?: string;
 
   constructor(userNotificationListener?: UserNotificationListener) {
     this.userNotificationListener = userNotificationListener;
   }
 
-  async loadFiles(files: File[], progressListener?: ProgressListener) {
+  async loadFiles(
+    files: File[],
+    progressListener?: ProgressListener,
+    source: FilesSource = FilesSource.UNKNOWN
+  ) {
+    this.downloadArchiveFilename = this.makeDownloadArchiveFilename(files, source);
+
     const [traceFiles, errors] = await this.unzipFiles(files, progressListener);
 
     const filterResult = await this.traceFileFilter.filter(traceFiles);
@@ -150,6 +158,10 @@ export class TracePipeline {
     return this.traces;
   }
 
+  getDownloadArchiveFilename(): string {
+    return this.downloadArchiveFilename ?? 'winscope';
+  }
+
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
     const screenRecording = this.getTraces().getTrace(TraceType.SCREEN_RECORDING);
     if (!screenRecording || screenRecording.lengthEntries === 0) {
@@ -165,6 +177,20 @@ export class TracePipeline {
     this.commonTimestampType = undefined;
     this.loadedPerfettoTraceFile = undefined;
     this.loadedTraceFiles = new Map<TraceType, TraceFile>();
+    this.downloadArchiveFilename = undefined;
+  }
+
+  private makeDownloadArchiveFilename(files: File[], source: FilesSource): string {
+    // set download archive file name, used to download all traces
+    const currTime = new Date().toISOString().slice(0, -5).replace(/:/g, '-').replace('T', '_');
+    if (!this.downloadArchiveFilename && files.length === 1) {
+      const filenameNoDir = FileUtils.removeDirFromFileName(files[0].name);
+      const filenameNoDirOrExt = FileUtils.removeExtensionFromFilename(filenameNoDir);
+      const filenameNoDirOrExtOrWhitespace = filenameNoDirOrExt.replace(/\s/g, '-');
+      return `${filenameNoDirOrExtOrWhitespace}_${currTime}`;
+    } else {
+      return `${source}_${currTime}`;
+    }
   }
 
   private async unzipFiles(

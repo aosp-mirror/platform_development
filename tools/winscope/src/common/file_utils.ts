@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,15 @@ class FileUtils {
     if (name.includes('/')) {
       const startIndex = name.lastIndexOf('/') + 1;
       return name.slice(startIndex);
+    } else {
+      return name;
+    }
+  }
+
+  static removeExtensionFromFilename(name: string): string {
+    if (name.includes('.')) {
+      const lastIndex = name.lastIndexOf('.');
+      return name.slice(0, lastIndex);
     } else {
       return name;
     }
@@ -75,6 +84,9 @@ class FileUtils {
   static isZipFile(file: File) {
     return FileUtils.getFileExtension(file) === 'zip';
   }
+
+  //allow: letters/numbers/underscores with delimeters . - # (except at start and end)
+  static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
 }
 
 export {FileUtils};

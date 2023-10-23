@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {AppEvent, AppEventType, TabbedViewSwitched} from 'app/app_event';
 import {TRACE_INFO} from 'app/trace_info';
 import {FunctionUtils} from 'common/function_utils';
@@ -60,13 +60,6 @@ interface Tab extends View {
           </p>
         </a>
       </nav>
-      <button
-        color="primary"
-        mat-button
-        class="save-button"
-        (click)="downloadTracesButtonClick.emit()">
-        Download all traces
-      </button>
     </div>
     <mat-divider></mat-divider>
     <div class="trace-view-content"></div>
@@ -109,13 +102,11 @@ interface Tab extends View {
 export class TraceViewComponent implements AppEventEmitter, AppEventListener {
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
 
   TRACE_INFO = TRACE_INFO;
+  tabs: Tab[] = [];
 
   private elementRef: ElementRef;
-
-  tabs: Tab[] = [];
   private currentActiveTab: undefined | Tab;
   private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
@@ -143,6 +134,10 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
 
   setEmitAppEvent(callback: EmitAppEvent) {
     this.emitAppEvent = callback;
+  }
+
+  isCurrentActiveTab(tab: Tab) {
+    return tab === this.currentActiveTab;
   }
 
   private renderViewsTab() {
@@ -217,9 +212,5 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     this.currentActiveTab = tab;
 
     await this.emitAppEvent(new TabbedViewSwitched(tab));
-  }
-
-  isCurrentActiveTab(tab: Tab) {
-    return tab === this.currentActiveTab;
   }
 }
