@@ -135,7 +135,9 @@ fn parse_cargo_metadata(
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
             // TODO: Consider whether to support Staticlib and Cdylib.
-            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::Test].contains(target_kind) {
+            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::ProcMacro, TargetKind::Test]
+                .contains(target_kind)
+            {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
             }
@@ -144,6 +146,11 @@ fn parse_cargo_metadata(
             // https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md
             // for background.
             let target_name = target.name.replace('-', "_");
+            let target_triple = if *target_kind == TargetKind::ProcMacro {
+                None
+            } else {
+                Some("x86_64-unknown-linux-gnu".to_string())
+            };
             // Don't generate an entry for integration tests, they will be covered by the test case
             // below.
             if *target_kind != TargetKind::Test {
@@ -156,7 +163,7 @@ fn parse_cargo_metadata(
                     edition: package.edition.to_owned(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
-                    target: Some("x86_64-unknown-linux-gnu".to_string()),
+                    target: target_triple.clone(),
                     externs: externs.clone(),
                     ..Default::default()
                 });
@@ -199,7 +206,7 @@ fn parse_cargo_metadata(
                     edition: package.edition.to_owned(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
-                    target: Some("x86_64-unknown-linux-gnu".to_string()),
+                    target: target_triple.clone(),
                     externs,
                     ..Default::default()
                 });
