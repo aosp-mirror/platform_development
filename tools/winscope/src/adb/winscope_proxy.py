@@ -47,7 +47,7 @@ LOG_LEVEL = logging.DEBUG
 PORT = 5544
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '1.1'
+VERSION = '1.2'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -160,6 +160,11 @@ class TraceTarget:
 
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
+    "view_capture_trace": TraceTarget(
+        File('/data/misc/wmtrace/view_capture_trace.zip', "view_capture_trace.zip"),
+        'su root settings put global view_capture_enabled 1\necho "View capture trace started."',
+        "su root sh -c 'cmd launcherapps dump-view-hierarchies >/data/misc/wmtrace/view_capture_trace.zip'; su root settings put global view_capture_enabled 0"
+    ),
     "window_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
         'su root cmd window tracing start\necho "WM trace started."',
