@@ -185,9 +185,10 @@ fn parse_cargo_metadata(
                     .collect();
                 // Add the library itself as a dependency for integration tests.
                 if *target_kind == TargetKind::Test {
+                    let package_name = package.name.replace('-', "_");
                     externs.push(Extern {
-                        name: package.name.to_owned(),
-                        lib_name: package.name.to_owned(),
+                        name: package_name.to_owned(),
+                        lib_name: package_name.to_owned(),
                         extern_type: ExternType::Rust,
                     });
                 }
