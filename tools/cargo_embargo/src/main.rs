@@ -46,6 +46,7 @@ use log::debug;
 use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
+use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -88,9 +89,7 @@ fn renamed_module(name: &str) -> &str {
 /// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
 struct Args {
-    /// Use the cargo binary in the `cargo_bin` directory. Defaults to cargo in $PATH.
-    ///
-    /// TODO: Should default to android prebuilts.
+    /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
     /// Config file.
@@ -159,6 +158,38 @@ fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()
     Ok(())
 }
 
+/// Finds the path to the directory containing the Android prebuilt Rust toolchain.
+fn find_android_rust_toolchain() -> Result<PathBuf> {
+    let platform_rustfmt = if cfg!(all(target_arch = "x86_64", target_os = "linux")) {
+        "linux-x86/stable/rustfmt"
+    } else if cfg!(all(target_arch = "x86_64", target_os = "macos")) {
+        "darwin-x86/stable/rustfmt"
+    } else if cfg!(all(target_arch = "x86_64", target_os = "windows")) {
+        "windows-x86/stable/rustfmt.exe"
+    } else {
+        bail!("No prebuilt Rust toolchain available for this platform.");
+    };
+
+    let android_top = env::var("ANDROID_BUILD_TOP")
+        .context("ANDROID_BUILD_TOP was not set. Did you forget to run envsetup.sh?")?;
+    let stable_rustfmt = [android_top.as_str(), "prebuilts", "rust", platform_rustfmt]
+        .into_iter()
+        .collect::<PathBuf>();
+    let canonical_rustfmt = stable_rustfmt.canonicalize()?;
+    Ok(canonical_rustfmt.parent().unwrap().to_owned())
+}
+
+/// Adds the given path to the start of the `PATH` environment variable.
+fn add_to_path(extra_path: PathBuf) -> Result<()> {
+    let path = env::var_os("PATH").unwrap();
+    let mut paths = env::split_paths(&path).collect::<VecDeque<_>>();
+    paths.push_front(extra_path);
+    let new_path = env::join_paths(paths)?;
+    debug!("Set PATH to {:?}", new_path);
+    std::env::set_var("PATH", new_path);
+    Ok(())
+}
+
 fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
@@ -168,14 +199,13 @@ fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
     // NOTE: If the directory with cargo has more binaries, this could have some unpredictable side
     // effects. That is partly intended though, because we want to use that cargo binary's
     // associated rustc.
-    if let Some(cargo_bin) = &args.cargo_bin {
-        let path = std::env::var_os("PATH").unwrap();
-        let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
-        paths.push_front(cargo_bin.to_owned());
-        let new_path = std::env::join_paths(paths)?;
-        debug!("Set PATH to {:?}", new_path);
-        std::env::set_var("PATH", new_path);
-    }
+    let cargo_bin = if let Some(cargo_bin) = &args.cargo_bin {
+        cargo_bin.to_owned()
+    } else {
+        // Find the Android prebuilt.
+        find_android_rust_toolchain()?
+    };
+    add_to_path(cargo_bin)?;
 
     let cargo_out_path = "cargo.out";
     let cargo_metadata_path = "cargo.metadata";
