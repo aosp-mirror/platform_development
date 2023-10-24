@@ -129,21 +129,6 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
   });
 
-  it('emits event on download button click', () => {
-    const spy = spyOn(component.downloadTracesButtonClick, 'emit');
-
-    const downloadButton: null | HTMLButtonElement = htmlElement.querySelector('.save-button');
-    expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
-
-    downloadButton?.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
-
-    downloadButton?.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(2);
-  });
-
   it('emits tab set onChanges', () => {
     const emitAppEvent = jasmine.createSpy();
     component.setEmitAppEvent(emitAppEvent);

@@ -32,6 +32,7 @@ import {TracePosition} from 'trace/trace_position';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {AppEvent, AppEventType, TracePositionUpdate} from './app_event';
+import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
@@ -129,12 +130,12 @@ export class Mediator {
 
   async onWinscopeFilesUploaded(files: File[]) {
     this.currentProgressListener = this.uploadTracesComponent;
-    await this.tracePipeline.loadFiles(files, this.currentProgressListener);
+    await this.tracePipeline.loadFiles(files, this.currentProgressListener, FilesSource.UPLOADED);
   }
 
   async onWinscopeFilesCollected(files: File[]) {
     this.currentProgressListener = this.collectTracesComponent;
-    await this.tracePipeline.loadFiles(files, this.currentProgressListener);
+    await this.tracePipeline.loadFiles(files, this.currentProgressListener, FilesSource.COLLECTED);
     await this.processLoadedTraceFiles();
   }
 
@@ -202,12 +203,12 @@ export class Mediator {
 
   private async onBuganizerAttachmentsDownloaded(attachments: File[]) {
     this.currentProgressListener = this.uploadTracesComponent;
-    await this.processRemoteFilesReceived(attachments);
+    await this.processRemoteFilesReceived(attachments, FilesSource.BUGANIZER);
   }
 
   private async onRemoteBugreportReceived(bugreport: File, timestamp?: Timestamp) {
     this.currentProgressListener = this.uploadTracesComponent;
-    await this.processRemoteFilesReceived([bugreport]);
+    await this.processRemoteFilesReceived([bugreport], FilesSource.BUGREPORT);
     if (timestamp !== undefined) {
       await this.onRemoteTimestampReceived(timestamp);
     }
@@ -235,9 +236,9 @@ export class Mediator {
     await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
   }
 
-  private async processRemoteFilesReceived(files: File[]) {
+  private async processRemoteFilesReceived(files: File[], defaultFileName = FilesSource.REMOTE) {
     this.resetAppToInitialState();
-    await this.tracePipeline.loadFiles(files, this.currentProgressListener);
+    await this.tracePipeline.loadFiles(files, this.currentProgressListener, defaultFileName);
   }
 
   private async processLoadedTraceFiles() {

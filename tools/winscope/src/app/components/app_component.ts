@@ -23,12 +23,15 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import {createCustomElement} from '@angular/elements';
+import {FormControl, Validators} from '@angular/forms';
+import {Title} from '@angular/platform-browser';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {AppEvent, AppEventType} from 'app/app_event';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
+import {FileUtils} from 'common/file_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -57,48 +60,86 @@ import {UploadTracesComponent} from './upload_traces_component';
   selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
-      <span class="app-title">Winscope</span>
+      <div class="horizontal-align vertical-align">
+        <span class="app-title">Winscope</span>
+        <div *ngIf="dataLoaded" class="file-descriptor vertical-align">
+          <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
+            {{ filenameFormControl.value }}.zip
+          </span>
+          <mat-form-field
+            class="file-name-input-field"
+            *ngIf="isEditingFilename"
+            floatLabel="always"
+            (focusout)="onCheckIconClick()"
+            matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
+            <mat-label>Edit file name</mat-label>
+            <input matInput class="right-align" [formControl]="filenameFormControl" />
+            <span matSuffix>.zip</span>
+          </mat-form-field>
+          <button
+            *ngIf="isEditingFilename"
+            mat-icon-button
+            class="check-button"
+            matTooltip="Submit file name"
+            (click)="onCheckIconClick()">
+            <mat-icon>check</mat-icon>
+          </button>
+          <button
+            *ngIf="!isEditingFilename"
+            mat-icon-button
+            class="edit-button"
+            matTooltip="Edit file name"
+            (click)="onPencilIconClick()">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            *ngIf="!isEditingFilename"
+            matTooltip="Download all traces"
+            class="save-button"
+            (click)="onDownloadTracesButtonClick()">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </div>
 
-      <a href="http://go/winscope-legacy">
-        <button color="primary" mat-button>Open legacy Winscope</button>
-      </a>
-
-      <div class="trace-descriptor">
+      <div class="horizontal-align vertical-align active" *ngIf="dataLoaded">
         <mat-icon
-          *ngIf="dataLoaded && activeTrace"
+          *ngIf="activeTrace"
           class="icon"
           [matTooltip]="TRACE_INFO[activeTrace.type].name"
           [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
           {{ TRACE_INFO[activeTrace.type].icon }}
         </mat-icon>
-        <span *ngIf="dataLoaded" class="active-trace-file-info mat-body-2">
+        <span class="trace-file-info mat-body-2" [matTooltip]="activeTraceFileInfo">
           {{ activeTraceFileInfo }}
         </span>
       </div>
 
-      <button
-        *ngIf="dataLoaded"
-        color="primary"
-        mat-stroked-button
-        (click)="mediator.onWinscopeUploadNew()">
-        Upload New
-      </button>
+      <div class="horizontal-align vertical-align">
+        <button
+          *ngIf="dataLoaded"
+          color="primary"
+          mat-stroked-button
+          (click)="mediator.onWinscopeUploadNew()">
+          Upload New
+        </button>
+        <button
+          mat-icon-button
+          matTooltip="Report bug"
+          (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
+          <mat-icon>bug_report</mat-icon>
+        </button>
 
-      <button
-        mat-icon-button
-        matTooltip="Report bug"
-        (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
-        <mat-icon> bug_report</mat-icon>
-      </button>
-
-      <button
-        mat-icon-button
-        matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
-        (click)="setDarkMode(!isDarkModeOn)">
-        <mat-icon>
-          {{ isDarkModeOn ? 'brightness_5' : 'brightness_4' }}
-        </mat-icon>
-      </button>
+        <button
+          mat-icon-button
+          matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
+          (click)="setDarkMode(!isDarkModeOn)">
+          <mat-icon>
+            {{ isDarkModeOn ? 'brightness_5' : 'brightness_4' }}
+          </mat-icon>
+        </button>
+      </div>
     </mat-toolbar>
 
     <mat-divider></mat-divider>
@@ -106,11 +147,7 @@ import {UploadTracesComponent} from './upload_traces_component';
     <mat-drawer-container autosize disableClose autoFocus>
       <mat-drawer-content>
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
-          <trace-view
-            class="viewers"
-            [viewers]="viewers"
-            [store]="store"
-            (downloadTracesButtonClick)="onDownloadTracesButtonClick()"></trace-view>
+          <trace-view class="viewers" [viewers]="viewers" [store]="store"></trace-view>
 
           <mat-divider></mat-divider>
         </ng-container>
@@ -153,6 +190,7 @@ import {UploadTracesComponent} from './upload_traces_component';
     `
       .toolbar {
         gap: 10px;
+        justify-content: space-between;
       }
       .welcome-info {
         margin: 16px 0 6px 0;
@@ -165,20 +203,37 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow: auto;
         height: 820px;
       }
-      .trace-descriptor {
-        flex: 1;
-        text-align: center;
-        display: flex;
-        align-items: center;
+      .file-descriptor {
+        font-size: 14px;
+        padding-left: 10px;
+        width: 350px;
+      }
+      .horizontal-align {
         justify-content: center;
+      }
+      .vertical-align {
+        text-align: center;
+        align-items: center;
         overflow-x: hidden;
+        display: flex;
       }
-      .trace-descriptor .icon {
-        overflow: unset;
-      }
-      .trace-descriptor .active-trace-file-info {
+      .download-file-info {
         text-overflow: ellipsis;
         overflow-x: hidden;
+        padding-top: 3px;
+        max-width: 300px;
+      }
+      .file-name-input-field .right-align {
+        text-align: right;
+      }
+      .file-name-input-field .mat-form-field-wrapper {
+        padding-bottom: 10px;
+        width: 300px;
+      }
+      .trace-file-info {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+        max-width: 100%;
       }
       .viewers {
         height: 0;
@@ -210,33 +265,38 @@ import {UploadTracesComponent} from './upload_traces_component';
 })
 export class AppComponent implements AppEventListener, TraceDataListener {
   title = 'winscope';
-  changeDetectorRef: ChangeDetectorRef;
-  snackbarOpener: SnackBarOpener;
-  tracePipeline: TracePipeline;
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
-  mediator: Mediator;
   states = ProxyState;
-  store: PersistentStore = new PersistentStore();
-  currentTimestamp?: Timestamp;
-  viewers: Viewer[] = [];
-  isDarkModeOn!: boolean;
   dataLoaded = false;
-  activeView?: View;
-  activeTrace?: Trace<object>;
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
+  TRACE_INFO = TRACE_INFO;
+  isEditingFilename = false;
+  store: PersistentStore = new PersistentStore();
+  viewers: Viewer[] = [];
+
+  isDarkModeOn!: boolean;
+  changeDetectorRef: ChangeDetectorRef;
+  snackbarOpener: SnackBarOpener;
+  tracePipeline: TracePipeline;
+  mediator: Mediator;
+  currentTimestamp?: Timestamp;
+  activeView?: View;
+  activeTrace?: Trace<object>;
+  filenameFormControl?: FormControl;
+
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
   @ViewChild(TraceViewComponent) traceViewComponent?: TraceViewComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
-  TRACE_INFO = TRACE_INFO;
 
   constructor(
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    @Inject(SnackBarOpener) snackBar: SnackBarOpener
+    @Inject(SnackBarOpener) snackBar: SnackBarOpener,
+    @Inject(Title) private pageTitle: Title
   ) {
     CrossPlatform.setCache(new NoCache());
 
@@ -330,12 +390,22 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   onTraceDataLoaded(viewers: Viewer[]) {
     this.viewers = viewers;
     this.dataLoaded = true;
+    this.isEditingFilename = false;
+    this.filenameFormControl = new FormControl(
+      this.tracePipeline.getDownloadArchiveFilename(),
+      Validators.compose([
+        Validators.required,
+        Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
+      ])
+    );
+    this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
     this.changeDetectorRef.detectChanges();
   }
 
   onTraceDataUnloaded() {
     proxyClient.adbData = [];
     this.dataLoaded = false;
+    this.pageTitle.setTitle('Winscope');
     this.changeDetectorRef.detectChanges();
   }
 
@@ -345,9 +415,28 @@ export class AppComponent implements AppEventListener, TraceDataListener {
     this.isDarkModeOn = enabled;
   }
 
+  onPencilIconClick() {
+    this.isEditingFilename = true;
+  }
+
+  onCheckIconClick() {
+    if (this.filenameFormControl?.invalid) {
+      return;
+    }
+    this.isEditingFilename = false;
+    this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl?.value}`);
+  }
+
   async onDownloadTracesButtonClick() {
+    if (this.filenameFormControl?.invalid) {
+      return;
+    }
+    await this.downloadTraces();
+  }
+
+  async downloadTraces() {
     const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const archiveFilename = 'winscope.zip';
+    const archiveFilename = `${this.filenameFormControl?.value}.zip`;
 
     const a = document.createElement('a');
     document.body.appendChild(a);

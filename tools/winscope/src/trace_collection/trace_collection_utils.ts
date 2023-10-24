@@ -214,6 +214,12 @@ export const traceConfigurations: TraceConfigurationMap = {
     run: false,
     config: undefined,
   },
+  view_capture_traces: {
+    name: 'View Capture',
+    isTraceCollection: undefined,
+    run: false,
+    config: undefined,
+  },
 };
 
 export const TRACES: {[key: string]: TraceConfigurationMap} = {
@@ -227,6 +233,7 @@ export const TRACES: {[key: string]: TraceConfigurationMap} = {
     ime_tracing: traceConfigurations['ime_tracing'],
     eventlog: traceConfigurations['eventlog'],
     transition_traces: traceConfigurations['transition_traces'],
+    view_capture_trace: traceConfigurations['view_capture_traces'],
   },
   arc: {
     wayland_trace: traceConfigurations['wayland_trace'],
