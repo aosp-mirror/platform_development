@@ -21,6 +21,7 @@ import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
+import {FilesSource} from './files_source';
 import {TracePipeline} from './trace_pipeline';
 
 describe('TracePipeline', () => {
@@ -47,11 +48,28 @@ describe('TracePipeline', () => {
 
     await loadValidSfWmTraces();
 
+    expect(tracePipeline.getDownloadArchiveFilename()).toMatch(
+      new RegExp(`${FilesSource.UNKNOWN}_`)
+    );
     expect(tracePipeline.getTraces().getSize()).toEqual(2);
 
     const traceEntries = await TracesUtils.extractEntries(tracePipeline.getTraces());
     expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(0);
     expect(traceEntries.get(TraceType.SURFACE_FLINGER)?.length).toBeGreaterThan(0);
+  });
+
+  it('can set download archive filename based on files source', async () => {
+    await tracePipeline.loadFiles([validSfFile]);
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    expect(tracePipeline.getDownloadArchiveFilename()).toMatch(new RegExp('SurfaceFlinger_'));
+
+    tracePipeline.clear();
+
+    await tracePipeline.loadFiles([validSfFile, validWmFile], undefined, FilesSource.COLLECTED);
+    expect(tracePipeline.getTraces().getSize()).toEqual(2);
+    expect(tracePipeline.getDownloadArchiveFilename()).toMatch(
+      new RegExp(`${FilesSource.COLLECTED}_`)
+    );
   });
 
   it('can load a new file without dropping already-loaded traces', async () => {
