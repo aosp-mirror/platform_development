@@ -18,6 +18,7 @@ use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
+use log::debug;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
@@ -52,13 +53,14 @@ fn parse_cargo_out_str(
     base_directory: impl AsRef<Path>,
 ) -> Result<Vec<Crate>> {
     let cargo_out = CargoOut::parse(cargo_out).context("failed to parse cargo.out")?;
+    debug!("Parsed cargo output: {:?}", cargo_out);
 
     assert!(cargo_out.cc_invocations.is_empty(), "cc not supported yet");
     assert!(cargo_out.ar_invocations.is_empty(), "ar not supported yet");
 
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let c = Crate::from_rustc_invocation(rustc, metadata)
+        let mut c = Crate::from_rustc_invocation(rustc, metadata)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
@@ -68,9 +70,19 @@ fn parse_cargo_out_str(
         if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
+        if let Some(test_contents) = cargo_out.tests.get(&c.main_src) {
+            c.empty_test = !test_contents.tests && !test_contents.benchmarks;
+        }
         crates.push(c);
     }
     Ok(crates)
+}
+
+/// Whether a test target contains any tests or benchmarks.
+#[derive(Debug)]
+struct TestContents {
+    tests: bool,
+    benchmarks: bool,
 }
 
 /// Raw-ish data extracted from cargo.out file.
@@ -86,6 +98,9 @@ struct CargoOut {
     // line number => line
     warning_lines: BTreeMap<usize, String>,
     warning_files: Vec<String>,
+
+    // test filename => whether it contains any tests or benchmarks
+    tests: BTreeMap<PathBuf, TestContents>,
 
     errors: Vec<String>,
     test_errors: Vec<String>,
@@ -109,6 +124,7 @@ impl CargoOut {
     fn parse(contents: &str) -> Result<CargoOut> {
         let mut result = CargoOut::default();
         let mut in_tests = false;
+        let mut cur_test_name = None;
         let mut lines_iter = contents.lines().enumerate();
         while let Some((n, line)) = lines_iter.next() {
             if line.starts_with("warning: ") {
@@ -186,6 +202,25 @@ impl CargoOut {
             if CARGO2ANDROID_RUNNING_REGEX.is_match(line) {
                 in_tests = line.contains("cargo test") && line.contains("--list");
                 continue;
+            }
+
+            // `cargo test -- --list` output
+            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> =
+                Lazy::new(|| Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*\)$").unwrap());
+            static CARGO_TEST_LIST_END_PAT: Lazy<Regex> =
+                Lazy::new(|| Regex::new(r"^(\d+) tests?, (\d+) benchmarks$").unwrap());
+            if let Some(captures) = CARGO_TEST_LIST_START_PAT.captures(line) {
+                cur_test_name = Some(captures.get(1).unwrap().as_str());
+            } else if let Some(test_name) = cur_test_name {
+                if let Some(captures) = CARGO_TEST_LIST_END_PAT.captures(line) {
+                    let num_tests = captures.get(1).unwrap().as_str().parse::<u32>().unwrap();
+                    let num_benchmarks = captures.get(2).unwrap().as_str().parse::<u32>().unwrap();
+                    result.tests.insert(
+                        PathBuf::from(test_name),
+                        TestContents { tests: num_tests != 0, benchmarks: num_benchmarks != 0 },
+                    );
+                    cur_test_name = None;
+                }
             }
         }
 
