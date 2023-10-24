@@ -17,12 +17,19 @@ import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {winscopeJson} from 'parsers/proto_types';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
 import {FakeProtoTransformer} from './fake_proto_transformer';
+import {Utils} from './utils';
 
 export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
   private layersSnapshotProtoTransformer = new FakeProtoTransformer(
@@ -41,7 +48,7 @@ export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
   }
 
   override async getEntry(index: number, timestampType: TimestampType): Promise<LayerTraceEntry> {
-    let snapshotProto = await this.querySnapshot(index);
+    let snapshotProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
     snapshotProto = this.layersSnapshotProtoTransformer.transform(snapshotProto);
     const layerProtos = (await this.querySnapshotLayers(index)).map((layerProto) =>
       this.layerProtoTransformer.transform(layerProto)
@@ -59,37 +66,42 @@ export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
     );
   }
 
-  protected override getTableName(): string {
-    return 'surfaceflinger_layers_snapshot';
+  override async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, async () => {
+        return Utils.queryVsyncId(this.traceProcessor, this.getTableName(), entriesRange);
+      })
+      .visit(CustomQueryType.SF_LAYERS_ID_AND_NAME, async () => {
+        const sql = `
+        SELECT DISTINCT group_concat(value) AS id_and_name FROM (
+          SELECT sfl.id AS id, args.key AS key, args.display_value AS value
+          FROM surfaceflinger_layer AS sfl
+          INNER JOIN args ON sfl.arg_set_id = args.arg_set_id
+          WHERE (args.key = 'id' OR args.key = 'name')
+          ORDER BY key
+        )
+        GROUP BY id;
+      `;
+        const querResult = await this.traceProcessor.query(sql).waitAllRows();
+        const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] = [];
+        for (const it = querResult.iter({}); it.valid(); it.next()) {
+          const idAndName = it.get('id_and_name') as string;
+          const indexDelimiter = idAndName.indexOf(',');
+          assertTrue(indexDelimiter > 0, () => `Unexpected value in query result: ${idAndName}`);
+          const id = Number(idAndName.slice(0, indexDelimiter));
+          const name = idAndName.slice(indexDelimiter + 1);
+          result.push({id, name});
+        }
+        return result;
+      })
+      .getResult();
   }
 
-  private async querySnapshot(index: number): Promise<FakeProto> {
-    const sql = `
-      SELECT
-      sfs.id AS snapshot_id,
-      sfs.ts as ts,
-      args.key,
-      args.value_type,
-      args.int_value,
-      args.string_value,
-      args.real_value
-      FROM surfaceflinger_layers_snapshot AS sfs
-      INNER JOIN args ON sfs.arg_set_id = args.arg_set_id
-      WHERE snapshot_id = ${index};
-    `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
-    assertTrue(result.numRows() > 0, () => `Layers snapshot not available (snapshot_id: ${index})`);
-    const builder = new FakeProtoBuilder();
-    for (const it = result.iter({}); it.valid(); it.next()) {
-      builder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
-      );
-    }
-    return builder.build();
+  protected override getTableName(): string {
+    return 'surfaceflinger_layers_snapshot';
   }
 
   private async querySnapshotLayers(index: number): Promise<FakeProto[]> {

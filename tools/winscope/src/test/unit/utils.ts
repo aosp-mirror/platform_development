@@ -22,8 +22,10 @@ import {ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {Parser} from 'trace/parser';
+import {Trace} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
+import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
+import {TraceBuilder} from './trace_builder';
 
 class UnitTestUtils {
   static async getFixtureFile(
@@ -38,22 +40,49 @@ class UnitTestUtils {
     return file;
   }
 
+  static async getTrace<T extends TraceType>(type: T, filename: string): Promise<Trace<T>> {
+    const legacyParsers = await UnitTestUtils.getParsers(filename);
+    expect(legacyParsers.length).toBeLessThanOrEqual(1);
+    if (legacyParsers.length === 1) {
+      expect(legacyParsers[0].getTraceType()).toEqual(type);
+      return new TraceBuilder<T>()
+        .setType(type)
+        .setParser(legacyParsers[0] as unknown as Parser<T>)
+        .build();
+    }
+
+    const perfettoParsers = await UnitTestUtils.getPerfettoParsers(filename);
+    expect(perfettoParsers.length).toEqual(1);
+    expect(perfettoParsers[0].getTraceType()).toEqual(type);
+    return new TraceBuilder<T>()
+      .setType(type)
+      .setParser(perfettoParsers[0] as unknown as Parser<T>)
+      .build();
+  }
+
   static async getParser(filename: string): Promise<Parser<object>> {
-    const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
-    const [parsers, errors] = await new ParserFactory().createParsers([file]);
+    const parsers = await UnitTestUtils.getParsers(filename);
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
       .toBeGreaterThanOrEqual(1);
-    return parsers[0].parser;
+    return parsers[0];
   }
 
-  static async getPerfettoParser(
-    traceType: TraceType,
+  static async getParsers(filename: string): Promise<Array<Parser<object>>> {
+    const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
+    const [fileAndParsers, errors] = await new ParserFactory().createParsers([file]);
+    return fileAndParsers.map((fileAndParser) => {
+      return fileAndParser.parser;
+    });
+  }
+
+  static async getPerfettoParser<T extends TraceType>(
+    traceType: T,
     fixturePath: string
-  ): Promise<Parser<object>> {
+  ): Promise<Parser<TraceEntryTypeMap[T]>> {
     const parsers = await UnitTestUtils.getPerfettoParsers(fixturePath);
     const parser = assertDefined(parsers.find((parser) => parser.getTraceType() === traceType));
-    return parser;
+    return parser as Parser<TraceEntryTypeMap[T]>;
   }
 
   static async getPerfettoParsers(fixturePath: string): Promise<Array<Parser<object>>> {

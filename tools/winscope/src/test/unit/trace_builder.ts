@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {FrameMap} from 'trace/frame_map';
 import {FrameMapBuilder} from 'trace/frame_map_builder';
 import {AbsoluteEntryIndex, AbsoluteFrameIndex, EntriesRange} from 'trace/index_types';
@@ -26,6 +27,7 @@ import {TraceType} from 'trace/trace_type';
 export class TraceBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
   private parser?: Parser<T>;
+  private parserCustomQueryResult = new Map<CustomQueryType, object>();
   private entries?: T[];
   private timestamps?: Timestamp[];
   private timestampType = TimestampType.REAL;
@@ -74,8 +76,11 @@ export class TraceBuilder<T> {
     return this;
   }
 
-  setDescriptors(descriptors: string[]): TraceBuilder<T> {
-    this.descriptors = descriptors;
+  setParserCustomQueryResult<Q extends CustomQueryType>(
+    type: Q,
+    result: CustomQueryParserResultTypeMap[Q]
+  ): TraceBuilder<T> {
+    this.parserCustomQueryResult.set(type, result);
     return this;
   }
 
@@ -121,7 +126,7 @@ export class TraceBuilder<T> {
       throw new Error('Entries and timestamps arrays must have the same length');
     }
 
-    return new ParserMock(this.timestamps, this.entries);
+    return new ParserMock(this.timestamps, this.entries, this.parserCustomQueryResult);
   }
 
   private createTimestamps(entries: T[]): Timestamp[] {

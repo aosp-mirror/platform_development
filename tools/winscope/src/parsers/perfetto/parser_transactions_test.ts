@@ -15,7 +15,9 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 
@@ -102,5 +104,12 @@ describe('Perfetto ParserTransactions', () => {
         'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged'
       );
     }
+  });
+
+  it('supports VSYNCID custom query', async () => {
+    const trace = new TraceBuilder().setType(TraceType.TRANSACTIONS).setParser(parser).build();
+    const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+    const values = entries.map((entry) => entry.getValue());
+    expect(values).toEqual([1n, 2n, 3n]);
   });
 });

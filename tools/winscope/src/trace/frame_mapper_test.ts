@@ -19,6 +19,7 @@ import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {RealTimestamp} from '../common/time';
+import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
 import {LogMessage} from './protolog';
@@ -271,22 +272,24 @@ describe('FrameMapper', () => {
       // SURFACE_FLINGER:   0     1        2
       transactions = new TraceBuilder<object>()
         .setEntries([
-          {id: 0, vsyncId: createVsyncId(0)},
-          {id: 1, vsyncId: createVsyncId(10)},
-          {id: 2, vsyncId: createVsyncId(10)},
-          {id: 3, vsyncId: createVsyncId(20)},
-          {id: 4, vsyncId: createVsyncId(30)},
+          'entry-0' as unknown as LayerTraceEntry,
+          'entry-1' as unknown as LayerTraceEntry,
+          'entry-2' as unknown as LayerTraceEntry,
+          'entry-3' as unknown as LayerTraceEntry,
+          'entry-4' as unknown as LayerTraceEntry,
         ])
         .setTimestamps([time0, time1, time2, time5, time6])
+        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 10n, 20n, 30n])
         .build();
 
       surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
         .setEntries([
-          {id: 0, vsyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
-          {id: 1, vsyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
-          {id: 2, vsyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
+          'entry-0' as unknown as object,
+          'entry-1' as unknown as object,
+          'entry-2' as unknown as object,
         ])
         .setTimestamps([time0, time1, time2])
+        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
         .build();
 
       traces = new Traces();
@@ -416,12 +419,4 @@ describe('FrameMapper', () => {
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
-
-  const createVsyncId = (value: number): object => {
-    return {
-      toString() {
-        return value.toString();
-      },
-    };
-  };
 });
