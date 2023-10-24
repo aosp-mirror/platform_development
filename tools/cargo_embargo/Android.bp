@@ -24,7 +24,9 @@ rust_defaults {
     rustlibs: [
         "libanyhow",
         "libclap",
+        "libenv_logger",
         "libglob",
+        "liblog_rust",
         "libonce_cell",
         "libregex",
         "libserde",

@@ -16,7 +16,8 @@
     "shared_libs": [],
     "edition": "2018",
     "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
-    "main_src": "src/lib.rs"
+    "main_src": "src/lib.rs",
+    "empty_test": false
   },
   {
     "name": "aho_corasick",
@@ -35,6 +36,7 @@
     "shared_libs": [],
     "edition": "2018",
     "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/aho-corasick",
-    "main_src": "src/lib.rs"
+    "main_src": "src/lib.rs",
+    "empty_test": false
   }
 ]

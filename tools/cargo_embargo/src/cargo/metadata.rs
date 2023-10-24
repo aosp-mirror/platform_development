@@ -94,14 +94,12 @@ pub fn parse_cargo_metadata_file(
         File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
     )
     .context("failed to parse cargo.metadata")?;
-    let features =
-        if cfg.features.is_empty() { vec!["default".to_string()] } else { cfg.features.clone() };
-    parse_cargo_metadata(&metadata, &features, cfg.tests)
+    parse_cargo_metadata(&metadata, &cfg.features, cfg.tests)
 }
 
 fn parse_cargo_metadata(
     metadata: &WorkspaceMetadata,
-    features: &[String],
+    features: &Option<Vec<String>>,
     include_tests: bool,
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
@@ -137,7 +135,9 @@ fn parse_cargo_metadata(
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
             // TODO: Consider whether to support Staticlib and Cdylib.
-            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::Test].contains(target_kind) {
+            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::ProcMacro, TargetKind::Test]
+                .contains(target_kind)
+            {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
             }
@@ -146,6 +146,11 @@ fn parse_cargo_metadata(
             // https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md
             // for background.
             let target_name = target.name.replace('-', "_");
+            let target_triple = if *target_kind == TargetKind::ProcMacro {
+                None
+            } else {
+                Some("x86_64-unknown-linux-gnu".to_string())
+            };
             // Don't generate an entry for integration tests, they will be covered by the test case
             // below.
             if *target_kind != TargetKind::Test {
@@ -158,7 +163,7 @@ fn parse_cargo_metadata(
                     edition: package.edition.to_owned(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
-                    target: Some("x86_64-unknown-linux-gnu".to_string()),
+                    target: target_triple.clone(),
                     externs: externs.clone(),
                     ..Default::default()
                 });
@@ -185,9 +190,10 @@ fn parse_cargo_metadata(
                     .collect();
                 // Add the library itself as a dependency for integration tests.
                 if *target_kind == TargetKind::Test {
+                    let package_name = package.name.replace('-', "_");
                     externs.push(Extern {
-                        name: package.name.to_owned(),
-                        lib_name: package.name.to_owned(),
+                        name: package_name.to_owned(),
+                        lib_name: package_name.to_owned(),
                         extern_type: ExternType::Rust,
                     });
                 }
@@ -200,7 +206,7 @@ fn parse_cargo_metadata(
                     edition: package.edition.to_owned(),
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
-                    target: Some("x86_64-unknown-linux-gnu".to_string()),
+                    target: target_triple.clone(),
                     externs,
                     ..Default::default()
                 });
@@ -243,12 +249,17 @@ fn split_src_path<'a>(src_path: &'a Path, package_dir: &Path) -> &'a Path {
 /// Given a set of chosen features, and the feature dependencies from a package's metadata, returns
 /// the full set of features which should be enabled.
 fn resolve_features(
-    chosen_features: &[String],
+    chosen_features: &Option<Vec<String>>,
     package_features: &BTreeMap<String, Vec<String>>,
 ) -> Vec<String> {
     let mut features = Vec::new();
-    for feature in chosen_features {
-        add_feature_and_dependencies(&mut features, feature, package_features);
+    if let Some(chosen_features) = chosen_features {
+        for feature in chosen_features {
+            add_feature_and_dependencies(&mut features, feature, package_features);
+        }
+    } else if package_features.contains_key("default") {
+        // If there is a default feature and no chosen features, then enable it.
+        add_feature_and_dependencies(&mut features, "default", package_features);
     }
     features.sort();
     features.dedup();
@@ -293,7 +304,7 @@ mod tests {
         .into_iter()
         .collect();
         assert_eq!(
-            resolve_features(&chosen, &package_features),
+            resolve_features(&Some(chosen), &package_features),
             vec![
                 "alloc".to_string(),
                 "default".to_string(),
@@ -310,7 +321,13 @@ mod tests {
         for testdata_directory_path in testdata_directories() {
             let cfg: Config = serde_json::from_reader(
                 File::open(testdata_directory_path.join("cargo_embargo.json"))
-                    .expect("Failed to open cargo_embargo.json"),
+                    .with_context(|| {
+                        format!(
+                            "Failed to open {:?}",
+                            testdata_directory_path.join("cargo_embargo.json")
+                        )
+                    })
+                    .unwrap(),
             )
             .unwrap();
             let cargo_metadata_path = testdata_directory_path.join("cargo.metadata");
