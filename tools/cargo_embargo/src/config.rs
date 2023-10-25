@@ -49,9 +49,9 @@ pub struct Config {
     /// Whether to output "rust_test" modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tests: bool,
-    /// Set of features to enable. If non-empty, disables the default crate features.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub features: Vec<String>,
+    /// Set of features to enable. If not set, uses the default crate features.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<String>>,
     /// Whether to build with --workspace.
     #[serde(default, skip_serializing_if = "is_false")]
     pub workspace: bool,
