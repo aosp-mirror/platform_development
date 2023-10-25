@@ -1,3 +1,7 @@
 {
-  "features": ["svg_backend", "area_series", "line_series"]
+  "variants": [
+    {
+      "features": ["svg_backend", "area_series", "line_series"]
+    }
+  ]
 }

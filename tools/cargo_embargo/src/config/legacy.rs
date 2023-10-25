@@ -14,7 +14,7 @@
 
 //! Code for dealing with legacy cargo2android.json config files.
 
-use super::{default_apex_available, default_true, PackageConfig};
+use super::{default_apex_available, default_true, PackageConfig, PackageVariantConfig};
 use crate::renamed_module;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
@@ -26,9 +26,54 @@ use std::path::PathBuf;
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
-    add_module_block: Option<PathBuf>,
-    #[serde(default)]
     add_toplevel_block: Option<PathBuf>,
+    #[allow(unused)] // Deprecated option.
+    #[serde(default)]
+    dependencies: bool,
+    patch: Option<PathBuf>,
+    #[serde(default)]
+    run: bool,
+    variants: Vec<VariantConfig>,
+}
+
+impl Config {
+    /// Parses an instance of this config from a string of JSON.
+    pub fn from_json_str(json_str: &str) -> Result<Self> {
+        serde_json::from_str(json_str).context("failed to parse legacy config")
+    }
+
+    /// Converts this configuration to the equivalent `cargo_embargo` configuration.
+    pub fn to_embargo(&self, package_name: &str, run_cargo: bool) -> Result<super::Config> {
+        if !self.run {
+            bail!("run was not true");
+        }
+
+        let variants = self
+            .variants
+            .iter()
+            .map(|variant| variant.to_embargo(package_name, run_cargo))
+            .collect::<Result<_>>()?;
+
+        let package_config = PackageConfig {
+            add_toplevel_block: self.add_toplevel_block.clone(),
+            patch: self.patch.clone(),
+        };
+        let mut package = BTreeMap::new();
+        // Skip package config if everything matches the defaults.
+        if package_config != Default::default() {
+            package.insert(package_name.to_owned(), package_config);
+        }
+
+        Ok(super::Config { variants, package })
+    }
+}
+
+/// Legacy `cargo2android.json` configuration for a particular variant.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+pub struct VariantConfig {
+    #[serde(default)]
+    add_module_block: Option<PathBuf>,
     #[serde(default)]
     alloc: bool,
     #[serde(default)]
@@ -37,9 +82,6 @@ pub struct Config {
     cfg_blocklist: Vec<String>,
     #[serde(default)]
     dep_suffixes: BTreeMap<String, String>,
-    #[allow(unused)] // Deprecated option.
-    #[serde(default)]
-    dependencies: bool,
     #[serde(default)]
     dependency_blocklist: Vec<String>,
     #[serde(default)]
@@ -55,11 +97,8 @@ pub struct Config {
     no_host: bool,
     #[serde(default)]
     no_std: bool,
-    patch: Option<PathBuf>,
     #[serde(default = "default_true")]
     product_available: bool,
-    #[serde(default)]
-    run: bool,
     #[serde(default)]
     test_blocklist: Vec<String>,
     #[serde(default)]
@@ -70,18 +109,9 @@ pub struct Config {
     vendor_available: bool,
 }
 
-impl Config {
-    /// Parses an instance of this config from a string of JSON.
-    pub fn from_json_str(json_str: &str) -> Result<Self> {
-        serde_json::from_str(json_str).context("failed to parse legacy config")
-    }
-
-    /// Converts this configuration to the equivalent `cargo_embargo` configuration.
-    pub fn to_embargo(&self, package_name: &str, run_cargo: bool) -> Result<super::Config> {
-        if !self.run {
-            bail!("run was not true");
-        }
-
+impl VariantConfig {
+    /// Converts this variant configuration to the equivalent `cargo_embargo` configuration.
+    pub fn to_embargo(&self, package_name: &str, run_cargo: bool) -> Result<super::VariantConfig> {
         let features = self.features.as_ref().map(|features| {
             if features.is_empty() {
                 Vec::new()
@@ -115,9 +145,8 @@ impl Config {
                 (module_name, with_suffix)
             })
             .collect();
-        let package_config = PackageConfig {
+        let package_config = PackageVariantConfig {
             add_module_block: self.add_module_block.clone(),
-            add_toplevel_block: self.add_toplevel_block.clone(),
             alloc: self.alloc,
             device_supported: self.device,
             force_rlib: self.force_rlib,
@@ -125,7 +154,6 @@ impl Config {
             host_first_multilib: self.host_first_multilib,
             dep_blocklist,
             no_std: self.no_std,
-            patch: self.patch.clone(),
             test_data,
             ..Default::default()
         };
@@ -139,7 +167,7 @@ impl Config {
         } else {
             self.apex_available.clone()
         };
-        let config = super::Config {
+        let config = super::VariantConfig {
             tests: self.tests,
             features,
             apex_available,
