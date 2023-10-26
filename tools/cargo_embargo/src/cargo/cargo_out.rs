@@ -70,7 +70,9 @@ fn parse_cargo_out_str(
         if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
-        if let Some(test_contents) = cargo_out.tests.get(&c.main_src) {
+        if let Some(test_contents) =
+            cargo_out.tests.get(&c.package_name).and_then(|m| m.get(&c.main_src))
+        {
             c.empty_test = !test_contents.tests && !test_contents.benchmarks;
         }
         crates.push(c);
@@ -99,8 +101,8 @@ struct CargoOut {
     warning_lines: BTreeMap<usize, String>,
     warning_files: Vec<String>,
 
-    // test filename => whether it contains any tests or benchmarks
-    tests: BTreeMap<PathBuf, TestContents>,
+    // package name => test filename => whether it contains any tests or benchmarks
+    tests: BTreeMap<String, BTreeMap<PathBuf, TestContents>>,
 
     errors: Vec<String>,
     test_errors: Vec<String>,
@@ -124,7 +126,7 @@ impl CargoOut {
     fn parse(contents: &str) -> Result<CargoOut> {
         let mut result = CargoOut::default();
         let mut in_tests = false;
-        let mut cur_test_name = None;
+        let mut cur_test_key = None;
         let mut lines_iter = contents.lines().enumerate();
         while let Some((n, line)) = lines_iter.next() {
             if line.starts_with("warning: ") {
@@ -205,21 +207,25 @@ impl CargoOut {
             }
 
             // `cargo test -- --list` output
-            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> =
-                Lazy::new(|| Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*\)$").unwrap());
+            // Example: Running unittests src/lib.rs (target.tmp/x86_64-unknown-linux-gnu/debug/deps/aarch64-58b675be7dc09833)
+            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> = Lazy::new(|| {
+                Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*/(.*)-[[:xdigit:]]{16}\)$")
+                    .unwrap()
+            });
             static CARGO_TEST_LIST_END_PAT: Lazy<Regex> =
                 Lazy::new(|| Regex::new(r"^(\d+) tests?, (\d+) benchmarks$").unwrap());
             if let Some(captures) = CARGO_TEST_LIST_START_PAT.captures(line) {
-                cur_test_name = Some(captures.get(1).unwrap().as_str());
-            } else if let Some(test_name) = cur_test_name {
+                cur_test_key =
+                    Some((captures.get(2).unwrap().as_str(), captures.get(1).unwrap().as_str()));
+            } else if let Some((package_name, main_src)) = cur_test_key {
                 if let Some(captures) = CARGO_TEST_LIST_END_PAT.captures(line) {
                     let num_tests = captures.get(1).unwrap().as_str().parse::<u32>().unwrap();
                     let num_benchmarks = captures.get(2).unwrap().as_str().parse::<u32>().unwrap();
-                    result.tests.insert(
-                        PathBuf::from(test_name),
+                    result.tests.entry(package_name.to_owned()).or_default().insert(
+                        PathBuf::from(main_src),
                         TestContents { tests: num_tests != 0, benchmarks: num_benchmarks != 0 },
                     );
-                    cur_test_name = None;
+                    cur_test_key = None;
                 }
             }
         }
