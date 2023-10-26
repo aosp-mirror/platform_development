@@ -100,8 +100,8 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   async handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX * this.canvasDrawer.getXScale();
-    const mouseY = e.offsetY * this.canvasDrawer.getYScale();
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
 
     const transitionEntry = await this.getEntryAt(mouseX, mouseY);
     // TODO: This can probably get made better by getting the transition and checking both the end and start timestamps match
@@ -115,8 +115,8 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX * this.canvasDrawer.getXScale();
-    const mouseY = e.offsetY * this.canvasDrawer.getYScale();
+    const mouseX = e.offsetX;
+    const mouseY = e.offsetY;
 
     this.updateCursor(mouseX, mouseY);
     this.onHover(mouseX, mouseY);

@@ -142,8 +142,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   private getTimestampOf(x: number): Timestamp {
     const start = this.selectionRange.from.getValueNs();
     const end = this.selectionRange.to.getValueNs();
-
-    const ts = (BigInt(x) * (end - start)) / BigInt(this.availableWidth) + start;
+    const ts = (BigInt(Math.floor(x)) * (end - start)) / BigInt(this.availableWidth) + start;
     return new Timestamp(this.selectionRange.from.getType(), ts);
   }
 

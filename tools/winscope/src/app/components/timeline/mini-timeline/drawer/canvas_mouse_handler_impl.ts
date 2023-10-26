@@ -140,7 +140,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     for (const object of this.draggableObjects) {
       const ctx = assertDefined(this.drawer.canvas.getContext('2d'));
       object.definePath(ctx);
-      if (ctx.isPointInPath(mouseX * this.drawer.getXScale(), mouseY * this.drawer.getYScale())) {
+      if (ctx.isPointInPath(mouseX, mouseY)) {
         return object;
       }
     }
