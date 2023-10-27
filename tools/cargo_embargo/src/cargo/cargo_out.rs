@@ -70,8 +70,10 @@ fn parse_cargo_out_str(
         if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
-        if let Some(test_contents) =
-            cargo_out.tests.get(&c.package_name).and_then(|m| m.get(&c.main_src))
+        if let Some(test_contents) = c
+            .output_filename
+            .as_ref()
+            .and_then(|f| cargo_out.tests.get(f).and_then(|m| m.get(&c.main_src)))
         {
             c.empty_test = !test_contents.tests && !test_contents.benchmarks;
         }
@@ -101,7 +103,7 @@ struct CargoOut {
     warning_lines: BTreeMap<usize, String>,
     warning_files: Vec<String>,
 
-    // package name => test filename => whether it contains any tests or benchmarks
+    // output filename => test filename => whether it contains any tests or benchmarks
     tests: BTreeMap<String, BTreeMap<PathBuf, TestContents>>,
 
     errors: Vec<String>,
@@ -208,20 +210,18 @@ impl CargoOut {
 
             // `cargo test -- --list` output
             // Example: Running unittests src/lib.rs (target.tmp/x86_64-unknown-linux-gnu/debug/deps/aarch64-58b675be7dc09833)
-            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> = Lazy::new(|| {
-                Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*/(.*)-[[:xdigit:]]{16}\)$")
-                    .unwrap()
-            });
+            static CARGO_TEST_LIST_START_PAT: Lazy<Regex> =
+                Lazy::new(|| Regex::new(r"^\s*Running (?:unittests )?(.*) \(.*/(.*)\)$").unwrap());
             static CARGO_TEST_LIST_END_PAT: Lazy<Regex> =
                 Lazy::new(|| Regex::new(r"^(\d+) tests?, (\d+) benchmarks$").unwrap());
             if let Some(captures) = CARGO_TEST_LIST_START_PAT.captures(line) {
                 cur_test_key =
                     Some((captures.get(2).unwrap().as_str(), captures.get(1).unwrap().as_str()));
-            } else if let Some((package_name, main_src)) = cur_test_key {
+            } else if let Some((output_filename, main_src)) = cur_test_key {
                 if let Some(captures) = CARGO_TEST_LIST_END_PAT.captures(line) {
                     let num_tests = captures.get(1).unwrap().as_str().parse::<u32>().unwrap();
                     let num_benchmarks = captures.get(2).unwrap().as_str().parse::<u32>().unwrap();
-                    result.tests.entry(package_name.to_owned()).or_default().insert(
+                    result.tests.entry(output_filename.to_owned()).or_default().insert(
                         PathBuf::from(main_src),
                         TestContents { tests: num_tests != 0, benchmarks: num_benchmarks != 0 },
                     );
@@ -239,6 +239,7 @@ impl CargoOut {
 impl Crate {
     fn from_rustc_invocation(rustc: &str, metadata: &WorkspaceMetadata) -> Result<Crate> {
         let mut out = Crate::default();
+        let mut extra_filename = String::new();
 
         // split into args
         let args: Vec<&str> = rustc.split_whitespace().collect();
@@ -327,6 +328,9 @@ impl Crate {
                     {
                         out.codegens.push(arg.to_string());
                     }
+                    if let Some(x) = arg.strip_prefix("extra-filename=") {
+                        extra_filename = x.to_string();
+                    }
                 }
                 "--cap-lints" => out.cap_lints = arg_iter.next().unwrap().to_string(),
                 "-l" => {
@@ -404,6 +408,7 @@ impl Crate {
                 )
             })?;
         out.package_name = package_metadata.name.clone();
+        out.output_filename = Some(out.name.clone() + &extra_filename);
         out.version = Some(package_metadata.version.clone());
         out.edition = package_metadata.edition.clone();
 
