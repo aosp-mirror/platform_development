@@ -316,10 +316,10 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
 
-  const loadValidSfWmTraces = async () => {
+  async function loadValidSfWmTraces() {
     const files = [validSfFile, validWmFile];
     await tracePipeline.loadFiles(files);
     expect(parserErrorsSpy).not.toHaveBeenCalled();
     await tracePipeline.buildTraces();
-  };
+  }
 });
