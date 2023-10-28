@@ -28,6 +28,7 @@ import {
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
+  private static readonly Z_FIGHTING_EPSILON = 5;
   private static readonly Z_SPACING_FACTOR_INIT = 1;
   private static readonly Z_SPACING_MAX = 200;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
@@ -175,13 +176,25 @@ class Mapper3D {
       }
     });
 
-    let z = 0;
-
     const maxDisplaySize = this.getMaxDisplaySize(rects2d);
 
+    const depthToCountOfRects = new Map<number, number>();
+    const computeAntiZFightingOffset = (rectDepth: number) => {
+      // Rendering overlapping rects with equal Z value causes Z-fighting (b/307951779).
+      // Here we compute a Z-offset to be applied to the rect to guarantee that
+      // eventually all rects will have unique Z-values.
+      const countOfRectsAtSameDepth = depthToCountOfRects.get(rectDepth) ?? 0;
+      const antiZFightingOffset = countOfRectsAtSameDepth * Mapper3D.Z_FIGHTING_EPSILON;
+      depthToCountOfRects.set(rectDepth, countOfRectsAtSameDepth + 1);
+      return antiZFightingOffset;
+    };
+
+    let z = 0;
     const rects3d = rects2d.map((rect2d): Rect3D => {
       if (rect2d.depth !== undefined) {
-        z = Mapper3D.Z_SPACING_MAX * this.zSpacingFactor * rect2d.depth;
+        z =
+          this.zSpacingFactor *
+          (Mapper3D.Z_SPACING_MAX * rect2d.depth + computeAntiZFightingOffset(rect2d.depth));
       } else {
         z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
       }

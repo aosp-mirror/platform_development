@@ -329,9 +329,9 @@ describe('Mediator', () => {
     );
   });
 
-  const loadFiles = async () => {
+  async function loadFiles() {
     const parserErrorsSpy = spyOn(userNotificationListener, 'onParserErrors');
     await tracePipeline.loadFiles(inputFiles);
     expect(parserErrorsSpy).not.toHaveBeenCalled();
-  };
+  }
 });
