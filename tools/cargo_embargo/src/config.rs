@@ -49,9 +49,9 @@ pub struct Config {
     /// Whether to output "rust_test" modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tests: bool,
-    /// Set of features to enable. If non-empty, disables the default crate features.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub features: Vec<String>,
+    /// Set of features to enable. If not set, uses the default crate features.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<String>>,
     /// Whether to build with --workspace.
     #[serde(default, skip_serializing_if = "is_false")]
     pub workspace: bool,
@@ -71,6 +71,7 @@ pub struct Config {
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
     /// Minimum SDK version.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub min_sdk_version: Option<String>,
     /// Map of renames for modules. For example, if a "libfoo" would be generated and there is an
     /// entry ("libfoo", "libbar"), the generated module will be called "libbar" instead.

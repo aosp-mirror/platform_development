@@ -75,6 +75,9 @@ impl CrateType {
 pub struct Crate {
     pub name: String,
     pub package_name: String,
+    // usually crate name + hash, e.g. hypervisor-659eaf3d33eb0c3f
+    // None when generated from metadata.
+    pub output_filename: Option<String>,
     pub version: Option<String>,
     pub types: Vec<CrateType>,
     pub target: Option<String>, // --target
@@ -88,6 +91,8 @@ pub struct Crate {
     pub edition: String,
     pub package_dir: PathBuf, // canonicalized
     pub main_src: PathBuf,    // relative to package_dir
+    /// Whether it is a test crate which doesn't actually contain any tests or benchmarks.
+    pub empty_test: bool,
 }
 
 /// A dependency of a Rust crate.

@@ -42,9 +42,11 @@ use cargo::{
 };
 use clap::Parser;
 use clap::Subcommand;
+use log::debug;
 use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
+use std::env;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -87,9 +89,7 @@ fn renamed_module(name: &str) -> &str {
 /// Command-line parameters for `cargo_embargo`.
 #[derive(Parser, Debug)]
 struct Args {
-    /// Use the cargo binary in the `cargo_bin` directory. Defaults to cargo in $PATH.
-    ///
-    /// TODO: Should default to android prebuilts.
+    /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
     /// Config file.
@@ -112,9 +112,12 @@ enum Mode {
         #[arg(long)]
         no_build: bool,
     },
+    /// Dumps information about the crates to the given JSON file.
+    DumpCrates { crates: PathBuf },
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
     let args = Args::parse();
 
     let json_str = std::fs::read_to_string(&args.cfg)
@@ -122,27 +125,72 @@ fn main() -> Result<()> {
     // Add some basic support for comments to JSON.
     let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
 
-    match args.mode {
+    match &args.mode {
         Some(Mode::Convert { package_name, no_build }) => {
             let legacy_config: legacy::Config =
                 serde_json::from_str(&json_str).context("failed to parse legacy config")?;
-            let new_config = legacy_config.to_embargo(&package_name, !no_build)?;
+            let new_config = legacy_config.to_embargo(package_name, !no_build)?;
             let new_config_str = serde_json::to_string_pretty(&new_config)
                 .context("failed to serialize new config")?;
             println!("{}", new_config_str);
         }
+        Some(Mode::DumpCrates { crates }) => {
+            dump_crates(&args, &json_str, crates)?;
+        }
         None => {
-            run_embargo(args, &json_str)?;
+            run_embargo(&args, &json_str)?;
         }
     }
 
     Ok(())
 }
 
-/// Runs cargo_embargo with the given JSON configuration string.
-fn run_embargo(args: Args, json_str: &str) -> Result<()> {
+/// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
+/// given `crates.json` file rather than generating an `Android.bp`.
+fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
     let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let crates = make_crates(args, &cfg)?;
+    serde_json::to_writer(
+        File::create(crates_filename)
+            .with_context(|| format!("Failed to create {:?}", crates_filename))?,
+        &crates,
+    )?;
+    Ok(())
+}
 
+/// Finds the path to the directory containing the Android prebuilt Rust toolchain.
+fn find_android_rust_toolchain() -> Result<PathBuf> {
+    let platform_rustfmt = if cfg!(all(target_arch = "x86_64", target_os = "linux")) {
+        "linux-x86/stable/rustfmt"
+    } else if cfg!(all(target_arch = "x86_64", target_os = "macos")) {
+        "darwin-x86/stable/rustfmt"
+    } else if cfg!(all(target_arch = "x86_64", target_os = "windows")) {
+        "windows-x86/stable/rustfmt.exe"
+    } else {
+        bail!("No prebuilt Rust toolchain available for this platform.");
+    };
+
+    let android_top = env::var("ANDROID_BUILD_TOP")
+        .context("ANDROID_BUILD_TOP was not set. Did you forget to run envsetup.sh?")?;
+    let stable_rustfmt = [android_top.as_str(), "prebuilts", "rust", platform_rustfmt]
+        .into_iter()
+        .collect::<PathBuf>();
+    let canonical_rustfmt = stable_rustfmt.canonicalize()?;
+    Ok(canonical_rustfmt.parent().unwrap().to_owned())
+}
+
+/// Adds the given path to the start of the `PATH` environment variable.
+fn add_to_path(extra_path: PathBuf) -> Result<()> {
+    let path = env::var_os("PATH").unwrap();
+    let mut paths = env::split_paths(&path).collect::<VecDeque<_>>();
+    paths.push_front(extra_path);
+    let new_path = env::join_paths(paths)?;
+    debug!("Set PATH to {:?}", new_path);
+    std::env::set_var("PATH", new_path);
+    Ok(())
+}
+
+fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
     }
@@ -151,26 +199,32 @@ fn run_embargo(args: Args, json_str: &str) -> Result<()> {
     // NOTE: If the directory with cargo has more binaries, this could have some unpredictable side
     // effects. That is partly intended though, because we want to use that cargo binary's
     // associated rustc.
-    if let Some(cargo_bin) = args.cargo_bin {
-        let path = std::env::var_os("PATH").unwrap();
-        let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
-        paths.push_front(cargo_bin);
-        let new_path = std::env::join_paths(paths)?;
-        std::env::set_var("PATH", new_path);
-    }
+    let cargo_bin = if let Some(cargo_bin) = &args.cargo_bin {
+        cargo_bin.to_owned()
+    } else {
+        // Find the Android prebuilt.
+        find_android_rust_toolchain()?
+    };
+    add_to_path(cargo_bin)?;
 
     let cargo_out_path = "cargo.out";
     let cargo_metadata_path = "cargo.metadata";
     if !args.reuse_cargo_out || !Path::new(cargo_out_path).exists() {
-        generate_cargo_out(&cfg, cargo_out_path, cargo_metadata_path)
+        generate_cargo_out(cfg, cargo_out_path, cargo_metadata_path)
             .context("generate_cargo_out failed")?;
     }
 
-    let crates = if cfg.run_cargo {
-        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")?
+    if cfg.run_cargo {
+        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")
     } else {
-        parse_cargo_metadata_file(cargo_metadata_path, &cfg)?
-    };
+        parse_cargo_metadata_file(cargo_metadata_path, cfg)
+    }
+}
+
+/// Runs cargo_embargo with the given JSON configuration string.
+fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
+    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let crates = make_crates(args, &cfg)?;
 
     // Find out files.
     // Example: target.tmp/x86_64-unknown-linux-gnu/debug/build/metrics-d2dd799cebf1888d/out/event_details.rs
@@ -230,7 +284,7 @@ fn run_cargo(cargo_out: &mut File, cmd: &mut Command) -> Result<()> {
     use std::os::unix::io::OwnedFd;
     use std::process::Stdio;
     let fd: OwnedFd = cargo_out.try_clone()?.into();
-    // eprintln!("Running: {:?}\n", cmd);
+    debug!("Running: {:?}\n", cmd);
     let output = cmd.stdout(Stdio::from(fd.try_clone()?)).stderr(Stdio::from(fd)).output()?;
     if !output.status.success() {
         bail!("cargo command failed with exit status: {:?}", output.status);
@@ -247,13 +301,18 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
     let target_dir_args = ["--target-dir", "target.tmp"];
 
     // cargo clean
-    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))?;
+    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))
+        .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
-    let feature_args = if cfg.features.is_empty() {
-        vec![]
+    let feature_args = if let Some(features) = &cfg.features {
+        if features.is_empty() {
+            vec!["--no-default-features".to_string()]
+        } else {
+            vec!["--no-default-features".to_string(), "--features".to_string(), features.join(",")]
+        }
     } else {
-        vec!["--no-default-features".to_string(), "--features".to_string(), cfg.features.join(",")]
+        vec![]
     };
 
     let workspace_args = if cfg.workspace {
@@ -278,7 +337,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             .arg("--format-version")
             .arg("1")
             .args(&feature_args),
-    )?;
+    )
+    .context("Running cargo metadata")?;
 
     if cfg.run_cargo {
         // cargo build
@@ -302,6 +362,16 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
                     .args(target_dir_args)
                     .args(&workspace_args)
                     .args(&feature_args),
+            )?;
+            // cargo test -- --list
+            run_cargo(
+                &mut cargo_out_file,
+                Command::new("cargo")
+                    .args(["test", "--target", default_target])
+                    .args(target_dir_args)
+                    .args(&workspace_args)
+                    .args(&feature_args)
+                    .args(["--", "--list"]),
             )?;
         }
     }
@@ -435,7 +505,8 @@ fn write_format_android_bp(
 ) -> Result<()> {
     File::create(bp_path)?.write_all(bp_contents.as_bytes())?;
 
-    let bpfmt_output = Command::new("bpfmt").arg("-w").arg(bp_path).output()?;
+    let bpfmt_output =
+        Command::new("bpfmt").arg("-w").arg(bp_path).output().context("Running bpfmt")?;
     if !bpfmt_output.status.success() {
         eprintln!(
             "WARNING: bpfmt -w {:?} failed before patch: {}",
@@ -445,12 +516,21 @@ fn write_format_android_bp(
     }
 
     if let Some(patch_path) = patch_path {
-        let patch_output = Command::new("patch").arg("-s").arg(bp_path).arg(patch_path).output()?;
+        let patch_output = Command::new("patch")
+            .arg("-s")
+            .arg(bp_path)
+            .arg(patch_path)
+            .output()
+            .context("Running patch")?;
         if !patch_output.status.success() {
             eprintln!("WARNING: failed to apply patch {:?}", patch_path);
         }
         // Re-run bpfmt after the patch so
-        let bpfmt_output = Command::new("bpfmt").arg("-w").arg(bp_path).output()?;
+        let bpfmt_output = Command::new("bpfmt")
+            .arg("-w")
+            .arg(bp_path)
+            .output()
+            .context("Running bpfmt after patch")?;
         if !bpfmt_output.status.success() {
             eprintln!(
                 "WARNING: bpfmt -w {:?} failed after patch: {}",
@@ -504,6 +584,9 @@ fn crate_to_bp_modules(
                 let suffix = crate_.main_src.to_string_lossy().into_owned();
                 let suffix = suffix.replace('/', "_").replace(".rs", "");
                 let stem = crate_.package_name.clone() + "_test_" + &suffix;
+                if crate_.empty_test {
+                    return Ok(Vec::new());
+                }
                 if crate_type == &CrateType::TestNoHarness {
                     eprintln!(
                         "WARNING: ignoring test \"{}\" with harness=false. not supported yet",
@@ -638,6 +721,7 @@ fn crate_to_bp_modules(
             if package_cfg.alloc {
                 stdlibs.push("liballoc.rust_sysroot");
             }
+            stdlibs.sort();
             m.props.set("stdlibs", stdlibs);
         }
 
