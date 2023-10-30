@@ -30,6 +30,7 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(len(licenses), 2)
     preferred_license = licenses[0]
     self.assertEqual(preferred_license.type, add3prf.LicenseType.APACHE2)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
     self.assertEqual(preferred_license.filename, "LICENSE-APACHE")
 
   def test_mit_license(self):
@@ -38,6 +39,7 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(len(licenses), 1)
     preferred_license = licenses[0]
     self.assertEqual(preferred_license.type, add3prf.LicenseType.MIT)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
     self.assertEqual(preferred_license.filename, "LICENSE")
 
   def test_misc_license(self):
@@ -46,11 +48,21 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(len(licenses), 1)
     preferred_license = licenses[0]
     self.assertEqual(preferred_license.type, add3prf.LicenseType.BSD_LIKE)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
     self.assertEqual(preferred_license.filename, "LICENSE.txt")
 
   def test_missing_license_file(self):
     with self.assertRaises(FileNotFoundError):
       add3prf.decide_license_type("MIT OR Apache-2.0")
+
+  def test_mpl_license(self):
+    self.fs.create_file("LICENSE")
+    licenses = add3prf.decide_license_type("MPL")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.MPL)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.RECIPROCAL)
+    self.assertEqual(preferred_license.filename, "LICENSE")
 
 
 class AddModuleLicenseTestCase(fake_filesystem_unittest.TestCase):
