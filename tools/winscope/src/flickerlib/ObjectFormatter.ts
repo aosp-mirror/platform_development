@@ -177,6 +177,8 @@ export class ObjectFormatter {
         return toColor(obj);
       case `Long`:
         return obj?.toString();
+      case `BigInt`:
+        return obj?.toString();
       case `PointProto`:
         return toPoint(obj);
       case `PositionProto`:

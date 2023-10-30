@@ -64,7 +64,7 @@ class LayerBuilder {
       0 /* id */,
       -1 /*parentId */,
       0 /* z */,
-      0 /* currFrame */,
+      '0' /* currFrameString */,
       properties
     );
   }
