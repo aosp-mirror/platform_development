@@ -67,13 +67,13 @@ import {UiData} from './ui_data';
               <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
             </div>
             <div class="status">
-              <div *ngIf="transition.mergeTarget">
+              <div *ngIf="transition.merged">
                 <span>MERGED</span>
                 <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
                 </mat-icon>
               </div>
 
-              <div *ngIf="transition.aborted && !transition.mergeTarget">
+              <div *ngIf="transition.aborted && !transition.merged">
                 <span>ABORTED</span>
                 <mat-icon
                   aria-hidden="false"
@@ -83,16 +83,14 @@ import {UiData} from './ui_data';
                   icon-red></mat-icon>
               </div>
 
-              <div *ngIf="transition.played && !transition.aborted && !transition.mergeTarget">
+              <div *ngIf="transition.played && !transition.aborted && !transition.merged">
                 <span>PLAYED</span>
                 <mat-icon
                   aria-hidden="false"
                   fontIcon="check"
                   matTooltip="played"
                   style="color: green"
-                  *ngIf="
-                    transition.played && !transition.aborted && !transition.mergeTarget
-                  "></mat-icon>
+                  *ngIf="transition.played && !transition.aborted && !transition.merged"></mat-icon>
               </div>
             </div>
           </div>
