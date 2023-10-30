@@ -180,43 +180,53 @@ describe('DefaultTimelineRowComponent', () => {
     expect(drawRectBorderSpy).toHaveBeenCalledWith(0, 0, 32, 32);
   });
 
-  it('can select and draw first entry', async () => {
+  it('can draw correct entry on click of first entry', async () => {
     setTraceAndSelectionRange(10n, 110n);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    await selectAndDrawCorrectEntry(1, 10n);
+    // 9 rect draws - 4 entry rects present + 4 for redraw + 1 for selected entry
+    await drawCorrectEntryOnClick(0, 10n, 9);
   });
 
-  it('can select and draw correct entry based on mouse position', async () => {
+  it('can draw correct entry on click of middle entry', async () => {
     setTraceAndSelectionRange(10n, 110n);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const secondEntryPos = Math.floor(component.canvasDrawer.getScaledCanvasWidth() * 0.02);
-    await selectAndDrawCorrectEntry(secondEntryPos, 12n);
+    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const entryPos = Math.floor((canvasWidth * 5) / 100);
+
+    // 9 rect draws - 4 entry rects present + 4 for redraw + 1 for selected entry
+    await drawCorrectEntryOnClick(entryPos, 15n, 9);
   });
 
-  it('can select and draw correct entry based on mouse position when timeline zoomed in near start', async () => {
+  it('can draw correct entry on click when timeline zoomed in near start', async () => {
     setTraceAndSelectionRange(10n, 15n);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const secondEntryPos = Math.floor(component.canvasDrawer.getScaledCanvasWidth() * 0.4);
-    selectAndDrawCorrectEntry(secondEntryPos, 12n);
+    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const entryPos = Math.floor((canvasWidth * 2) / 5);
+
+    // 5 rect draws - 2 entry rects present + 2 for redraw + 1 for selected entry
+    await drawCorrectEntryOnClick(entryPos, 12n, 5);
   });
 
-  it('can select and draw correct entry based on mouse position when timeline zoomed in near end', async () => {
+  it('can draw correct entry on click when timeline zoomed in near end', async () => {
     setTraceAndSelectionRange(60n, 80n);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const secondEntryPos = Math.floor(component.canvasDrawer.getScaledCanvasWidth() * 0.5);
-    selectAndDrawCorrectEntry(secondEntryPos, 70n);
+    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const entryPos = Math.floor((canvasWidth * 10) / 20);
+
+    // 3 rect draws - 1 entry rects present + 1 for redraw + 1 for selected entry
+    await drawCorrectEntryOnClick(entryPos, 70n, 3);
   });
 
   function setTraceAndSelectionRange(low: bigint, high: bigint) {
@@ -233,14 +243,21 @@ describe('DefaultTimelineRowComponent', () => {
     component.selectionRange = {from: new RealTimestamp(low), to: new RealTimestamp(high)};
   }
 
-  async function selectAndDrawCorrectEntry(xPos: number, expectedTimestampNs: bigint) {
+  async function drawCorrectEntryOnClick(
+    xPos: number,
+    expectedTimestampNs: bigint,
+    rectSpyCalls: number
+  ) {
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect').and.callThrough();
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder').and.callThrough();
 
-    const waitPromises = [waitToBeCalled(drawRectSpy, 1), waitToBeCalled(drawRectBorderSpy, 1)];
+    const waitPromises = [
+      waitToBeCalled(drawRectSpy, rectSpyCalls),
+      waitToBeCalled(drawRectBorderSpy, 1),
+    ];
 
     await component.handleMouseDown({
-      offsetX: xPos,
+      offsetX: xPos + 1,
       offsetY: component.canvasDrawer.getScaledCanvasHeight() / 2,
       preventDefault: () => {},
       stopPropagation: () => {},
@@ -254,8 +271,10 @@ describe('DefaultTimelineRowComponent', () => {
     expect(assertDefined(component.selectedEntry).getTimestamp().getValueNs()).toBe(
       expectedTimestampNs
     );
+
+    expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
     expect(drawRectSpy).toHaveBeenCalledWith({
-      x: xPos,
+      x: xPos + 1,
       y: 1,
       w: 30,
       h: 30,
@@ -264,6 +283,6 @@ describe('DefaultTimelineRowComponent', () => {
     });
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(xPos, 1, 30, 30);
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(xPos + 1, 1, 30, 30);
   }
 });
