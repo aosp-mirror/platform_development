@@ -65,7 +65,7 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
     /* id */ proto.id,
     /*parentId */ proto.parent,
     /* z */ proto.z,
-    /* currFrame */ proto.currFrame,
+    /* currFrameString */ `${proto.currFrame}`,
     properties
   );
 
