@@ -27,7 +27,6 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {Timestamp} from 'common/time';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -40,7 +39,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
-        *ngFor="let trace of this.timelineData.getTraces(); trackBy: trackTraceBySelectedTimestamp"
+        *ngFor="let trace of this.timelineData.getTraces(); trackBy: trackTraceByType"
         class="timeline row">
         <div class="icon-wrapper">
           <mat-icon
@@ -174,8 +173,8 @@ export class ExpandedTimelineComponent {
     this.resizeCanvases();
   }
 
-  trackTraceBySelectedTimestamp = (index: number, trace: Trace<{}>): Timestamp | undefined => {
-    return this.timelineData.findCurrentEntryFor(trace.type)?.getTimestamp();
+  trackTraceByType = (index: number, trace: Trace<{}>): TraceType => {
+    return trace.type;
   };
 
   private resizeCanvases() {
