@@ -241,8 +241,11 @@ export class Presenter {
       });
     }
 
-    if (transition.mergedInto) {
-      properties.push({propertyKey: 'mergedInto', propertyValue: transition.mergedInto});
+    if (transition.mergeTarget) {
+      properties.push({
+        propertyKey: 'mergeTarget',
+        propertyValue: transition.mergeTarget,
+      });
     }
 
     if (transition.startTransactionId !== -1) {
