@@ -26,6 +26,12 @@ use std::path::PathBuf;
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
+    add_module_block: Option<PathBuf>,
+    #[serde(default)]
+    add_toplevel_block: Option<PathBuf>,
+    #[serde(default)]
+    alloc: bool,
+    #[serde(default)]
     apex_available: Vec<String>,
     #[serde(default)]
     cfg_blocklist: Vec<String>,
@@ -39,7 +45,7 @@ pub struct Config {
     #[serde(default)]
     device: bool,
     #[serde(default)]
-    features: String,
+    features: Option<String>,
     #[serde(default)]
     force_rlib: bool,
     #[serde(default)]
@@ -47,6 +53,8 @@ pub struct Config {
     min_sdk_version: Option<String>,
     #[serde(default)]
     no_host: bool,
+    #[serde(default)]
+    no_std: bool,
     patch: Option<PathBuf>,
     #[serde(default = "default_true")]
     product_available: bool,
@@ -69,11 +77,13 @@ impl Config {
             bail!("run was not true");
         }
 
-        let features = if self.features.is_empty() {
-            Vec::new()
-        } else {
-            self.features.split(',').map(ToOwned::to_owned).collect()
-        };
+        let features = self.features.as_ref().map(|features| {
+            if features.is_empty() {
+                Vec::new()
+            } else {
+                features.split(',').map(ToOwned::to_owned).collect()
+            }
+        });
         let mut test_data: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for entry in &self.test_data {
             let (test_name, data) = entry
@@ -101,11 +111,15 @@ impl Config {
             })
             .collect();
         let package_config = PackageConfig {
+            add_module_block: self.add_module_block.clone(),
+            add_toplevel_block: self.add_toplevel_block.clone(),
+            alloc: self.alloc,
             device_supported: self.device,
             force_rlib: self.force_rlib,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
             dep_blocklist,
+            no_std: self.no_std,
             patch: self.patch.clone(),
             test_data,
             ..Default::default()

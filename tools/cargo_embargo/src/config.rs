@@ -49,9 +49,9 @@ pub struct Config {
     /// Whether to output "rust_test" modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tests: bool,
-    /// Set of features to enable. If non-empty, disables the default crate features.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub features: Vec<String>,
+    /// Set of features to enable. If not set, uses the default crate features.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<String>>,
     /// Whether to build with --workspace.
     #[serde(default, skip_serializing_if = "is_false")]
     pub workspace: bool,
@@ -71,6 +71,7 @@ pub struct Config {
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
     /// Minimum SDK version.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub min_sdk_version: Option<String>,
     /// Map of renames for modules. For example, if a "libfoo" would be generated and there is an
     /// entry ("libfoo", "libbar"), the generated module will be called "libbar" instead.
@@ -124,6 +125,9 @@ impl Default for Config {
 #[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct PackageConfig {
+    /// Link against `alloc`. Only valid if `no_std` is also true.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub alloc: bool,
     /// Whether to compile for device. Defaults to true.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub device_supported: bool,
@@ -150,6 +154,9 @@ pub struct PackageConfig {
     /// Modules in this list will not be added as dependencies of generated modules.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dep_blocklist: Vec<String>,
+    /// Don't link against `std`, only `core`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub no_std: bool,
     /// Patch file to apply after Android.bp is generated.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub patch: Option<PathBuf>,
@@ -167,6 +174,7 @@ pub struct PackageConfig {
 impl Default for PackageConfig {
     fn default() -> Self {
         Self {
+            alloc: false,
             device_supported: true,
             host_supported: true,
             host_first_multilib: false,
@@ -175,6 +183,7 @@ impl Default for PackageConfig {
             add_toplevel_block: None,
             add_module_block: None,
             dep_blocklist: Default::default(),
+            no_std: false,
             patch: None,
             copy_out: false,
             test_data: Default::default(),

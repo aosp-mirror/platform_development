@@ -24,7 +24,9 @@ rust_defaults {
     rustlibs: [
         "libanyhow",
         "libclap",
+        "libenv_logger",
         "libglob",
+        "liblog_rust",
         "libonce_cell",
         "libregex",
         "libserde",
@@ -40,5 +42,6 @@ rust_binary_host {
 rust_test_host {
     name: "cargo_embargo.test",
     defaults: ["cargo_embargo.defaults"],
+    test_config: "AndroidTest.xml",
     data: ["testdata/**/*"],
 }
