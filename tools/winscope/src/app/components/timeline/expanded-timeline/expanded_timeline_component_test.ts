@@ -26,9 +26,11 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
+import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
 import {Transition} from 'flickerlib/common';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {DefaultTimelineRowComponent} from './default_timeline_row_component';
 import {ExpandedTimelineComponent} from './expanded_timeline_component';
@@ -86,6 +88,7 @@ describe('ExpandedTimelineComponent', () => {
         } as Transition,
       ])
       .setTimestamps(TraceType.TRANSITION, [new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps(TraceType.PROTO_LOG, [])
       .build();
     timelineData.initialize(traces, undefined);
     component.timelineData = timelineData;
@@ -98,7 +101,56 @@ describe('ExpandedTimelineComponent', () => {
   it('renders all timelines', () => {
     fixture.detectChanges();
 
-    const timelines = htmlElement.querySelectorAll('.timeline.row');
-    expect(timelines.length).toEqual(4);
+    const timelineElements = htmlElement.querySelectorAll('.timeline.row single-timeline');
+    expect(timelineElements.length).toEqual(4);
+
+    const transitionElement = htmlElement.querySelectorAll('.timeline.row transition-timeline');
+    expect(transitionElement.length).toEqual(1);
+  });
+
+  it('passes initial selectedEntry of correct type into each timeline', () => {
+    fixture.detectChanges();
+
+    const singleTimelines = assertDefined(component.singleTimelines);
+    expect(singleTimelines.length).toBe(4);
+
+    // initially only first entry of SF is set
+    singleTimelines.forEach((timeline) => {
+      if (timeline.trace.type === TraceType.SURFACE_FLINGER) {
+        const entry = assertDefined(timeline.selectedEntry);
+        expect(entry.getFullTrace().type).toBe(TraceType.SURFACE_FLINGER);
+      } else {
+        expect(timeline.selectedEntry).toBeUndefined();
+      }
+    });
+
+    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    expect(transitionTimeline.selectedEntry).toBeUndefined();
+  });
+
+  it('passes selectedEntry of correct type into each timeline on position change', () => {
+    // 3 out of the 5 traces have timestamps before or at 11n
+    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(11n)));
+    fixture.detectChanges();
+
+    const singleTimelines = assertDefined(component.singleTimelines);
+    expect(singleTimelines.length).toBe(4);
+
+    singleTimelines.forEach((timeline) => {
+      // protolog and transactions traces have no timestamps before current position
+      if (
+        timeline.trace.type === TraceType.PROTO_LOG ||
+        timeline.trace.type === TraceType.TRANSACTIONS
+      ) {
+        expect(timeline.selectedEntry).toBeUndefined();
+      } else {
+        const selectedEntry = assertDefined(timeline.selectedEntry);
+        expect(selectedEntry.getFullTrace().type).toEqual(timeline.trace.type);
+      }
+    });
+
+    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    const selectedEntry = assertDefined(transitionTimeline.selectedEntry);
+    expect(selectedEntry.getFullTrace().type).toEqual(transitionTimeline.trace.type);
   });
 });
