@@ -86,6 +86,12 @@ static llvm::cl::opt<std::string> api(
     llvm::cl::init("current"),
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::opt<std::string> api_map(
+    "api-map",
+    llvm::cl::desc("Specify the path to the json file that maps codenames to "
+                   "API levels."),
+    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
 static llvm::cl::opt<std::string> arch(
     "arch", llvm::cl::desc("<arch>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
@@ -130,11 +136,13 @@ class HeaderAbiLinker {
       const std::string &linked_dump,
       const std::string &arch,
       const std::string &api,
+      const utils::ApiLevelMap &api_level_map,
       const std::vector<std::string> &excluded_symbol_versions,
       const std::vector<std::string> &excluded_symbol_tags)
       : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
         version_script_(version_script), so_file_(so_file),
-        out_dump_name_(linked_dump), arch_(arch), api_(api),
+        out_dump_name_(linked_dump),
+        arch_(arch), api_(api), api_level_map_(api_level_map),
         excluded_symbol_versions_(excluded_symbol_versions),
         excluded_symbol_tags_(excluded_symbol_tags) {}
 
@@ -184,6 +192,7 @@ class HeaderAbiLinker {
   const std::string &out_dump_name_;
   const std::string &arch_;
   const std::string &api_;
+  const utils::ApiLevelMap &api_level_map_;
   const std::vector<std::string> &excluded_symbol_versions_;
   const std::vector<std::string> &excluded_symbol_tags_;
 
@@ -420,7 +429,7 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  llvm::Optional<utils::ApiLevel> api_level = utils::ParseApiLevel(api_);
+  llvm::Optional<utils::ApiLevel> api_level = api_level_map_.Parse(api_);
   if (!api_level) {
     llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
     return false;
@@ -435,6 +444,7 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
   repr::VersionScriptParser parser;
   parser.SetArch(arch_);
   parser.SetApiLevel(api_level.value());
+  parser.SetApiLevelMap(api_level_map_);
   for (auto &&version : excluded_symbol_versions_) {
     parser.AddExcludedSymbolVersion(version);
   }
@@ -476,14 +486,26 @@ int main(int argc, const char **argv) {
     return -1;
   }
 
+  utils::ApiLevelMap api_level_map;
+  if (!api_map.empty()) {
+    std::ifstream stream(api_map);
+    if (!stream) {
+      llvm::errs() << "Failed to open " << api_map << "\n";
+      return -1;
+    }
+    if (!api_level_map.Load(stream)) {
+      llvm::errs() << "Failed to load " << api_map << "\n";
+      return -1;
+    }
+  }
+
   if (no_filter) {
     static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
 
   HeaderAbiLinker Linker(dump_files, exported_header_dirs, version_script,
-                         so_file, linked_dump, arch, api,
-                         excluded_symbol_versions,
-                         excluded_symbol_tags);
+                         so_file, linked_dump, arch, api, api_level_map,
+                         excluded_symbol_versions, excluded_symbol_tags);
 
   if (!Linker.LinkAndDump()) {
     llvm::errs() << "Failed to link and dump elements\n";

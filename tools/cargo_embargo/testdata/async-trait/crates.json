@@ -1,0 +1,28 @@
+[
+  {
+    "name": "async_trait",
+    "package_name": "async-trait",
+    "version": "0.1.73",
+    "types": ["proc-macro"],
+    "target": null,
+    "features": [],
+    "cfgs": [],
+    "externs": [
+      {
+        "name": "proc_macro2",
+        "lib_name": "proc_macro2",
+        "extern_type": "Rust"
+      },
+      { "name": "quote", "lib_name": "quote", "extern_type": "Rust" },
+      { "name": "syn", "lib_name": "syn", "extern_type": "Rust" }
+    ],
+    "codegens": [],
+    "cap_lints": "",
+    "static_libs": [],
+    "shared_libs": [],
+    "edition": "2021",
+    "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/async-trait",
+    "main_src": "src/lib.rs",
+    "empty_test": false
+  }
+]

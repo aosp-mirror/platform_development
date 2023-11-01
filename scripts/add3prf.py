@@ -49,11 +49,13 @@ MIT_PATTERN = r"^.*MIT License.*$"
 MIT_MATCHER = re.compile(MIT_PATTERN)
 BSD_PATTERN = r"^.*BSD .*License.*$"
 BSD_MATCHER = re.compile(BSD_PATTERN)
+MPL_PATTERN = r"^.Mozilla Public License.*$"
+MPL_MATCHER = re.compile(MPL_PATTERN)
 MULTI_LICENSE_COMMENT = ("# Dual-licensed, using the least restrictive "
         "per go/thirdpartylicenses#same.\n  ")
 
 # default owners added to OWNERS
-DEFAULT_OWNERS = "include platform/prebuilts/rust:master:/OWNERS\n"
+DEFAULT_OWNERS = "include platform/prebuilts/rust:main:/OWNERS\n"
 
 # See b/159487435 Official policy for rust imports METADATA URLs.
 # "license_type: NOTICE" might be optional,
@@ -71,7 +73,7 @@ third_party {{
     value: "https://static.crates.io/crates/{name}/{name}-{version}.crate"
   }}
   version: "{version}"
-  {license_comment}license_type: NOTICE
+  {license_comment}license_type: {license_type}
   last_upgrade_date {{
     year: {year}
     month: {month}
@@ -108,7 +110,7 @@ def get_metadata_date():
   return today.year, today.month, today.day
 
 
-def add_metadata(name, version, description, multi_license):
+def add_metadata(name, version, description, license_group, multi_license):
   """Update or add METADATA file."""
   if os.path.exists("METADATA"):
     print("### Updating METADATA")
@@ -121,7 +123,7 @@ def add_metadata(name, version, description, multi_license):
   with open("METADATA", "w") as outf:
     outf.write(METADATA_CONTENT.format(
         name=name, description=description, version=version,
-        license_comment=license_comment, year=year, month=month, day=day))
+        license_comment=license_comment, license_type=license_group, year=year, month=month, day=day))
 
 
 def grep_license_keyword(license_file):
@@ -129,14 +131,16 @@ def grep_license_keyword(license_file):
   with open(license_file, "r") as input_file:
     for line in input_file:
       if APACHE_MATCHER.match(line):
-        return License(LicenseType.APACHE2, license_file)
+        return License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file)
       if MIT_MATCHER.match(line):
-        return License(LicenseType.MIT, license_file)
+        return License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)
       if BSD_MATCHER.match(line):
-        return License(LicenseType.BSD_LIKE, license_file)
+        return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
+      if MPL_MATCHER(LicenseType.MPL, license_file):
+        return License(LicenseType.MPL, LicenseGroup.RECIPROCAL, license_file)
   print("ERROR: cannot decide license type in", license_file,
         "assume BSD_LIKE")
-  return License(LicenseType.BSD_LIKE, license_file)
+  return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
 
 
 class LicenseType(enum.IntEnum):
@@ -150,9 +154,23 @@ class LicenseType(enum.IntEnum):
   MIT = 2
   BSD_LIKE = 3
   ISC = 4
+  MPL = 5
+
+class LicenseGroup(enum.Enum):
+  """A group of license as defined by go/thirdpartylicenses#types
+
+  Note, go/thirdpartylicenses#types calls them "types". But LicenseType was
+  already taken so this script calls them groups.
+  """
+  RESTRICTED = 1
+  RESTRICTED_IF_STATICALLY_LINKED = 2
+  RECIPROCAL = 3
+  NOTICE = 4
+  PERMISSIVE = 5
+  BY_EXCEPTION_ONLY = 6
 
 
-License = collections.namedtuple('License', ['type', 'filename'])
+License = collections.namedtuple('License', ['type', 'group', 'filename'])
 
 
 def decide_license_type(cargo_license):
@@ -167,9 +185,9 @@ def decide_license_type(cargo_license):
   for license_file in glob.glob("LICENSE*") + glob.glob("COPYING*"):
     lowered_name = license_file.lower()
     if lowered_name == "license-apache":
-      licenses.append(License(LicenseType.APACHE2, license_file))
+      licenses.append(License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-mit":
-      licenses.append(License(LicenseType.MIT, license_file))
+      licenses.append(License(LicenseType.MIT, LicenseGroup.NOTICE, license_file))
   if licenses:
     licenses.sort(key=lambda l: l.type)
     return licenses
@@ -178,13 +196,15 @@ def decide_license_type(cargo_license):
   # There is a LICENSE* or COPYING* file, use cargo_license found in
   # Cargo.toml.
   if "Apache" in cargo_license:
-    return [License(LicenseType.APACHE2, license_file)]
+    return [License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file)]
   if "MIT" in cargo_license:
-    return [License(LicenseType.MIT, license_file)]
+    return [License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)]
   if "BSD" in cargo_license:
-    return [License(LicenseType.BSD_LIKE, license_file)]
+    return [License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)]
   if "ISC" in cargo_license:
-    return [License(LicenseType.ISC, license_file)]
+    return [License(LicenseType.ISC, LicenseGroup.NOTICE, license_file)]
+  if "MPL" in cargo_license:
+    return [License(LicenseType.MPL, LicenseGroup.RECIPROCAL, license_file)]
   return [grep_license_keyword(license_file)]
 
 
@@ -223,7 +243,7 @@ def add_license(target):
 def add_module_license(license_type):
   """Touch MODULE_LICENSE_type file."""
   # Do not change existing MODULE_* files.
-  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE"]:
+  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE", "MPL"]:
     module_file = "MODULE_LICENSE_" + suffix
     if os.path.exists(module_file):
       if license_type.name != suffix:
@@ -309,7 +329,7 @@ def main():
   print("### Cargo.toml license:", cargo_license)
   licenses = decide_license_type(cargo_license)
   preferred_license = licenses[0]
-  add_metadata(name, version, description, len(licenses) > 1)
+  add_metadata(name, version, description, preferred_license.group.name, len(licenses) > 1)
   add_owners()
   add_license(preferred_license.filename)
   add_module_license(preferred_license.type)
