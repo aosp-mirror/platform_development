@@ -153,4 +153,24 @@ describe('ExpandedTimelineComponent', () => {
     const selectedEntry = assertDefined(transitionTimeline.selectedEntry);
     expect(selectedEntry.getFullTrace().type).toEqual(transitionTimeline.trace.type);
   });
+
+  it('getAllLoadedTraces causes timelines to render in correct order', () => {
+    // traces in timelineData are in order of being set in Traces API
+    expect(component.timelineData.getTraces().mapTrace((trace) => trace.type)).toEqual([
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+      TraceType.TRANSACTIONS,
+      TraceType.TRANSITION,
+      TraceType.PROTO_LOG,
+    ]);
+
+    // getAllLoadedTraces returns traces in enum order
+    expect(component.getTracesSortedByDisplayOrder().map((trace) => trace.type)).toEqual([
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+      TraceType.TRANSACTIONS,
+      TraceType.PROTO_LOG,
+      TraceType.TRANSITION,
+    ]);
+  });
 });
