@@ -14,15 +14,19 @@
 
 //! Code for dealing with legacy cargo2android.json config files.
 
-use super::{default_apex_available, default_true, PackageConfig, PackageVariantConfig};
+use super::{
+    add_defaults_to_variant, default_apex_available, default_true, PackageConfig,
+    PackageVariantConfig,
+};
 use crate::renamed_module;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
+use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 /// A legacy `cargo2android.json` configuration.
-#[derive(Deserialize)]
+#[derive(Debug, Default, Deserialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct Config {
     #[serde(default)]
@@ -37,9 +41,37 @@ pub struct Config {
 }
 
 impl Config {
+    /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
+    const FIELD_NAMES: [&str; 4] = ["add-toplevel-block", "dependencies", "patch", "run"];
+
     /// Parses an instance of this config from a string of JSON.
     pub fn from_json_str(json_str: &str) -> Result<Self> {
-        serde_json::from_str(json_str).context("failed to parse legacy config")
+        // First parse into untyped map.
+        let mut config: Map<String, Value> =
+            serde_json::from_str(json_str).context("failed to parse legacy config")?;
+
+        // Flatten variants. First, get the variants from the config file.
+        let mut variants = match config.remove("variants") {
+            Some(Value::Array(v)) => v,
+            Some(_) => bail!("Failed to parse legacy config: variants is not an array"),
+            None => {
+                // There are no variants, so just put everything into a single variant.
+                vec![Value::Object(Map::new())]
+            }
+        };
+        // Set default values in variants from top-level config.
+        for variant in &mut variants {
+            let variant = variant
+                .as_object_mut()
+                .context("Failed to parse legacy config: variant is not an object")?;
+            add_defaults_to_variant(variant, &config, &Self::FIELD_NAMES);
+        }
+        // Remove other entries from the top-level config, and put variants back.
+        config.retain(|key, _| Self::FIELD_NAMES.contains(&key.as_str()));
+        config.insert("variants".to_string(), Value::Array(variants));
+
+        // Parse into `Config` struct.
+        serde_json::from_value(Value::Object(config)).context("failed to parse legacy config")
     }
 
     /// Converts this configuration to the equivalent `cargo_embargo` configuration.
@@ -69,7 +101,7 @@ impl Config {
 }
 
 /// Legacy `cargo2android.json` configuration for a particular variant.
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct VariantConfig {
     #[serde(default)]
@@ -107,6 +139,31 @@ pub struct VariantConfig {
     tests: bool,
     #[serde(default = "default_true")]
     vendor_available: bool,
+}
+
+impl Default for VariantConfig {
+    fn default() -> Self {
+        Self {
+            add_module_block: None,
+            alloc: false,
+            apex_available: Default::default(),
+            cfg_blocklist: Default::default(),
+            dep_suffixes: Default::default(),
+            dependency_blocklist: Default::default(),
+            device: false,
+            features: None,
+            force_rlib: false,
+            host_first_multilib: false,
+            min_sdk_version: None,
+            no_host: false,
+            no_std: false,
+            product_available: true,
+            test_blocklist: Default::default(),
+            test_data: Default::default(),
+            tests: false,
+            vendor_available: true,
+        }
+    }
 }
 
 impl VariantConfig {
@@ -192,4 +249,51 @@ fn package_to_library_name(package_name: &str) -> String {
 
 fn test_filename_to_module_name(package_name: &str, test_filename: &str) -> String {
     format!("{}_test_{}", package_name, test_filename.replace('/', "_").replace(".rs", ""))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn variant_config() {
+        let config = Config::from_json_str(
+            r#"{
+            "dependencies": true,
+            "device": true,
+            "run": true,
+            "variants": [
+              {
+              },
+              {
+                "features": "",
+                "force-rlib": true,
+                "no-host": true,
+                "no-std": true
+              }
+            ]
+          }"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            config,
+            Config {
+                dependencies: true,
+                run: true,
+                variants: vec![
+                    VariantConfig { device: true, ..Default::default() },
+                    VariantConfig {
+                        device: true,
+                        features: Some("".to_string()),
+                        force_rlib: true,
+                        no_host: true,
+                        no_std: true,
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            }
+        );
+    }
 }
