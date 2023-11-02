@@ -199,6 +199,51 @@ describe('TimelineComponent', () => {
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
 
+  it('updates trace selection using selector', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110])
+      .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
+      .setTimestamps(TraceType.PROTO_LOG, [time100])
+      .build();
+    component.timelineData.initialize(traces, undefined);
+    component.availableTraces = [
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+      TraceType.SCREEN_RECORDING,
+      TraceType.PROTO_LOG,
+    ];
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    fixture.detectChanges();
+
+    const selectTrigger = assertDefined(htmlElement.querySelector('.mat-select-trigger'));
+    (selectTrigger as HTMLElement).click();
+    fixture.detectChanges();
+
+    fixture.whenStable().then(() => {
+      const matOptions = Array.from(
+        assertDefined(htmlElement.querySelectorAll('mat-select mat-option'))
+      );
+
+      expect((matOptions[0] as HTMLInputElement).value).toEqual(`${TraceType.SURFACE_FLINGER}`);
+      expect((matOptions[0] as HTMLInputElement).disabled).toBeTrue();
+      for (let i = 1; i < 4; i++) {
+        expect((matOptions[i] as HTMLInputElement).disabled).toBeFalse();
+      }
+
+      (matOptions[1] as HTMLElement).click();
+      (matOptions[2] as HTMLElement).click();
+      expect(component.selectedTraces).toEqual([
+        TraceType.SURFACE_FLINGER,
+        TraceType.WINDOW_MANAGER,
+        TraceType.SCREEN_RECORDING,
+      ]);
+
+      expect((matOptions[3] as HTMLInputElement).value).toEqual(`${TraceType.PROTO_LOG}`);
+      expect((matOptions[3] as HTMLInputElement).disabled).toBeTrue();
+    });
+  });
+
   it('next button disabled if no next entry', () => {
     loadTraces();
 
@@ -315,7 +360,7 @@ describe('TimelineComponent', () => {
     expect(spyPrevEntry).toHaveBeenCalled();
   });
 
-  const loadTraces = () => {
+  function loadTraces() {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
@@ -324,16 +369,16 @@ describe('TimelineComponent', () => {
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setPosition(position100);
     fixture.detectChanges();
-  };
+  }
 
-  const testCurrentTimestampOnButtonClick = (
+  function testCurrentTimestampOnButtonClick(
     button: DebugElement,
     pos: TracePosition,
     expectedNs: bigint
-  ) => {
+  ) {
     component.timelineData.setPosition(pos);
     fixture.detectChanges();
     button.nativeElement.click();
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
-  };
+  }
 });
