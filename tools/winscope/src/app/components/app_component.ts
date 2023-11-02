@@ -406,6 +406,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
     proxyClient.adbData = [];
     this.dataLoaded = false;
     this.pageTitle.setTitle('Winscope');
+    this.activeView = undefined;
     this.changeDetectorRef.detectChanges();
   }
 
