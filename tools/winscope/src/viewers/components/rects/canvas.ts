@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {TransformMatrix} from 'common/geometry_utils';
 import * as THREE from 'three';
 import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, TransformMatrix} from './types3d';
+import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
