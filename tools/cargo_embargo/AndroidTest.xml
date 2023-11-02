@@ -15,6 +15,8 @@
 -->
 <configuration description="Config to run cargo_embargo tests.">
     <test class="com.android.tradefed.testtype.rust.RustBinaryHostTest" >
+        <option name="test-file" value="cargo_embargo.test" />
+        <option name="test-timeout" value="5m" />
         <!-- Run tests serially, because some of them change the CWD. -->
         <option name="native-test-flag" value="--test-threads=1" />
     </test>
