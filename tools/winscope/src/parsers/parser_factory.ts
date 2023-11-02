@@ -53,22 +53,12 @@ export class ParserFactory {
     ParserViewCapture,
   ];
 
-  private parsers = new Map<TraceType, Parser<object>>();
-
   async createParsers(
     traceFiles: TraceFile[],
     progressListener?: ProgressListener
   ): Promise<[Array<{file: TraceFile; parser: Parser<object>}>, ParserError[]]> {
     const errors: ParserError[] = [];
-
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
-
-    const maybeAddParser = (p: Parser<object>, f: TraceFile) => {
-      if (this.shouldUseParser(p, errors)) {
-        this.parsers.set(p.getTraceType(), p);
-        parsers.push({file: f, parser: p});
-      }
-    };
 
     for (const [index, traceFile] of traceFiles.entries()) {
       progressListener?.onProgressUpdate('Parsing proto files', (index / traceFiles.length) * 100);
@@ -77,13 +67,13 @@ export class ParserFactory {
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const parser = new ParserType(traceFile);
-          await parser.parse();
+          const p = new ParserType(traceFile);
+          await p.parse();
           hasFoundParser = true;
-          if (parser instanceof ParserViewCapture) {
-            parser.windowParsers.forEach((it) => maybeAddParser(it, traceFile));
+          if (p instanceof ParserViewCapture) {
+            p.windowParsers.forEach((it) => parsers.push({file: traceFile, parser: it}));
           } else {
-            maybeAddParser(parser, traceFile);
+            parsers.push({file: traceFile, parser: p});
           }
           break;
         } catch (error) {
@@ -96,56 +86,7 @@ export class ParserFactory {
         errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.getDescriptor()));
       }
     }
-
     return [parsers, errors];
-  }
-
-  removeParser(type: TraceType) {
-    this.parsers.delete(type);
-  }
-
-  private shouldUseParser(newParser: Parser<object>, errors: ParserError[]): boolean {
-    const oldParser = this.parsers.get(newParser.getTraceType());
-    if (!oldParser) {
-      console.log(
-        `Loaded trace ${newParser
-          .getDescriptors()
-          .join()} (trace type: ${newParser.getTraceType()})`
-      );
-      return true;
-    }
-
-    if (newParser.getLengthEntries() > oldParser.getLengthEntries()) {
-      console.log(
-        `Loaded trace ${newParser
-          .getDescriptors()
-          .join()} (trace type: ${newParser.getTraceType()}).` +
-          ` Replace trace ${oldParser.getDescriptors().join()}`
-      );
-      errors.push(
-        new ParserError(
-          ParserErrorType.OVERRIDE,
-          oldParser.getDescriptors().join(),
-          oldParser.getTraceType()
-        )
-      );
-      return true;
-    }
-
-    console.log(
-      `Skipping trace ${newParser
-        .getDescriptors()
-        .join()} (trace type: ${newParser.getTraceType()}).` +
-        ` Keep trace ${oldParser.getDescriptors().join()}`
-    );
-    errors.push(
-      new ParserError(
-        ParserErrorType.OVERRIDE,
-        newParser.getDescriptors().join(),
-        newParser.getTraceType()
-      )
-    );
-    return false;
   }
 }
 
