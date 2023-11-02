@@ -114,11 +114,7 @@ import {TraceType} from 'trace/trace_type';
         </div>
         <div id="trace-selector">
           <mat-form-field appearance="none">
-            <mat-select
-              #traceSelector
-              [formControl]="selectedTracesFormControl"
-              multiple
-              (closed)="onTraceSelectionClosed()">
+            <mat-select #traceSelector [formControl]="selectedTracesFormControl" multiple>
               <div class="tip">Select up to 2 additional traces to display.</div>
               <mat-option
                 *ngFor="let trace of availableTraces"
@@ -127,17 +123,14 @@ import {TraceType} from 'trace/trace_type';
                   color: TRACE_INFO[trace].color,
                   opacity: isOptionDisabled(trace) ? 0.5 : 1.0
                 }"
-                [disabled]="isOptionDisabled(trace)">
+                [disabled]="isOptionDisabled(trace)"
+                (click)="applyNewTraceSelection()">
                 <mat-icon>{{ TRACE_INFO[trace].icon }}</mat-icon>
                 {{ TRACE_INFO[trace].name }}
               </mat-option>
               <div class="actions">
-                <button mat-button color="primary" (click)="traceSelector.close()">Cancel</button>
-                <button
-                  mat-flat-button
-                  color="primary"
-                  (click)="applyNewTraceSelection(); traceSelector.close()">
-                  Apply
+                <button mat-flat-button color="primary" (click)="traceSelector.close()">
+                  Done
                 </button>
               </div>
               <mat-select-trigger class="shown-selection">
@@ -330,7 +323,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
 
   internalActiveTrace: TraceType | undefined = undefined;
   selectedTraces: TraceType[] = [];
-  selectedTracesFormControl = new FormControl();
+  selectedTracesFormControl = new FormControl<TraceType[]>([]);
   selectedElapsedTimeFormControl = new FormControl(
     'undefined',
     Validators.compose([
@@ -467,12 +460,8 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     return false;
   }
 
-  onTraceSelectionClosed() {
-    this.selectedTracesFormControl.setValue(this.selectedTraces);
-  }
-
   applyNewTraceSelection() {
-    this.selectedTraces = this.selectedTracesFormControl.value;
+    this.selectedTraces = this.selectedTracesFormControl.value ?? [];
   }
 
   @HostListener('document:focusin', ['$event'])
