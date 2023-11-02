@@ -18,6 +18,10 @@ import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {AbstractParser} from 'parsers/abstract_parser';
+import {AddDefaults} from 'parsers/operations/add_defaults';
+import {SetFormatters} from 'parsers/operations/set_formatters';
+import {TranslateIntDef} from 'parsers/operations/translate_intdef';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {
@@ -28,11 +32,29 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
+import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
+import {AddDisplayProperties} from './operations/add_display_properties';
+import {AddExcludesCompositionState} from './operations/add_excludes_composition_state';
+import {AddVerboseFlags} from './operations/add_verbose_flags';
+import {UpdateTransforms} from './operations/update_transforms';
+import {ParserSfUtils} from './parser_surface_flinger_utils';
 
 class ParserSurfaceFlinger extends AbstractParser {
-  private static readonly LayersTraceFileProto = root.lookupType(
-    'android.surfaceflinger.LayersTraceFileProto'
+  private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
+    root.lookupType('android.surfaceflinger.LayersTraceFileProto')
   );
+  private readonly entryField = ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
+  private readonly entryType = assertDefined(this.entryField.tamperedMessageType);
+
+  private readonly layerField = assertDefined(this.entryType.fields['layers'].tamperedMessageType)
+    .fields['layers'];
+  private readonly layerType = assertDefined(this.layerField.tamperedMessageType);
+
+  private realToElapsedTimeOffsetNs: undefined | bigint;
+  private static readonly MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -112,9 +134,9 @@ class ParserSurfaceFlinger extends AbstractParser {
         const result: Array<{id: number; name: string}> = [];
         this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
-          .forEach((entry: LayerTraceEntry) => {
-            entry.layers.layers.forEach((layer: any) => {
-              result.push({id: layer.id, name: layer.name});
+          .forEach((entry: android.surfaceflinger.ILayersTraceProto) => {
+            entry.layers?.layers?.forEach((layer: android.surfaceflinger.ILayerProto) => {
+              result.push({id: assertDefined(layer.id), name: assertDefined(layer.name)});
             });
           });
         return Promise.resolve(result);
@@ -122,8 +144,59 @@ class ParserSurfaceFlinger extends AbstractParser {
       .getResult();
   }
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
-  private static readonly MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
+  private makeHierarchyTree(
+    entryProto: android.surfaceflinger.ILayersTraceProto
+  ): HierarchyTreeNode {
+    const excludesCompositionState = entryProto?.excludesCompositionState ?? false;
+
+    const processed = new Map<number, number>();
+
+    const layers: PropertiesProvider[] = assertDefined(entryProto.layers?.layers).map(
+      (layer: android.surfaceflinger.ILayerProto) => {
+        const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
+        processed.set(assertDefined(layer.id), duplicateCount + 1);
+        const eagerProperties = ParserSfUtils.makeEagerPropertiesTree(layer, duplicateCount);
+        const lazyProperties = ParserSfUtils.makeLayerLazyPropertiesStrategy(layer, duplicateCount);
+
+        const layerProps = new PropertiesProviderBuilder()
+          .setEagerProperties(eagerProperties)
+          .setLazyPropertiesStrategy(lazyProperties)
+          .addCommonOperation(new UpdateTransforms())
+          .addCommonOperation(new AddVerboseFlags())
+          .addCommonOperation(new AddExcludesCompositionState(excludesCompositionState))
+          .addCommonOperation(new SetFormatters(this.layerField, ParserSfUtils.CUSTOM_FORMATTERS))
+          .addCommonOperation(new TranslateIntDef(this.layerField))
+          .addEagerOperation(new AddDefaults(this.layerType, ParserSfUtils.EAGER_PROPERTIES))
+          .addLazyOperation(
+            new AddDefaults(
+              this.layerType,
+              undefined,
+              ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES)
+            )
+          )
+          .build();
+        return layerProps;
+      }
+    );
+
+    const entry = new PropertiesProviderBuilder()
+      .setEagerProperties(ParserSfUtils.makeEntryEagerPropertiesTree(entryProto))
+      .setLazyPropertiesStrategy(ParserSfUtils.makeEntryLazyPropertiesStrategy(entryProto))
+      .addEagerOperation(new AddDefaults(this.entryType, ['displays']))
+      .addLazyOperation(
+        new AddDefaults(this.entryType, undefined, ParserSfUtils.DENYLIST_PROPERTIES)
+      )
+      .addCommonOperation(new AddDisplayProperties())
+      .addCommonOperation(new SetFormatters(this.entryField))
+      .addCommonOperation(new TranslateIntDef(this.entryField))
+      .build();
+
+    return new HierarchyTreeBuilderSf()
+      .setEntry(entry)
+      .setLayers(layers)
+      .setExcludesCompositionState(excludesCompositionState)
+      .build();
+  }
 }
 
 export {ParserSurfaceFlinger};
