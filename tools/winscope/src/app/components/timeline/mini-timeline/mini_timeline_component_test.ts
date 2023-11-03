@@ -74,6 +74,7 @@ describe('MiniTimelineComponent', () => {
     timelineData = new TimelineData();
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.TRANSACTIONS, [timestamp10, timestamp20])
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp20])
       .build();
     timelineData.initialize(traces, undefined);
@@ -178,6 +179,20 @@ describe('MiniTimelineComponent', () => {
     for (const type of component.selectedTraces) {
       expect(types).toContain(type);
     }
+  });
+
+  it('getTracesToShow adds traces in correct order', () => {
+    component.selectedTraces = [
+      TraceType.WINDOW_MANAGER,
+      TraceType.SURFACE_FLINGER,
+      TraceType.TRANSACTIONS,
+    ];
+    const traces = component.getTracesToShow().mapTrace((trace, type) => trace.type);
+    expect(traces).toEqual([
+      TraceType.TRANSACTIONS,
+      TraceType.WINDOW_MANAGER,
+      TraceType.SURFACE_FLINGER,
+    ]);
   });
 
   it('moving slider around updates zoom', fakeAsync(async () => {

@@ -81,3 +81,54 @@ export interface TraceEntryTypeMap {
   [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: FrameData;
   [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: FrameData;
 }
+
+export class TraceTypeUtils {
+  private static UI_PIPELINE_ORDER = [
+    TraceType.INPUT_METHOD_CLIENTS,
+    TraceType.INPUT_METHOD_SERVICE,
+    TraceType.INPUT_METHOD_MANAGER_SERVICE,
+    TraceType.PROTO_LOG,
+    TraceType.WINDOW_MANAGER,
+    TraceType.TRANSACTIONS,
+    TraceType.SURFACE_FLINGER,
+    TraceType.SCREEN_RECORDING,
+  ];
+
+  private static DISPLAY_ORDER = [
+    TraceType.SCREEN_RECORDING,
+    TraceType.SURFACE_FLINGER,
+    TraceType.WINDOW_MANAGER,
+    TraceType.INPUT_METHOD_CLIENTS,
+    TraceType.INPUT_METHOD_MANAGER_SERVICE,
+    TraceType.INPUT_METHOD_SERVICE,
+    TraceType.TRANSACTIONS,
+    TraceType.TRANSACTIONS_LEGACY,
+    TraceType.PROTO_LOG,
+    TraceType.WM_TRANSITION,
+    TraceType.SHELL_TRANSITION,
+    TraceType.TRANSITION,
+    TraceType.VIEW_CAPTURE,
+    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+    TraceType.EVENT_LOG,
+  ];
+
+  static compareByUiPipelineOrder(t: TraceType, u: TraceType) {
+    const tIndex = TraceTypeUtils.findIndexInOrder(t, TraceTypeUtils.UI_PIPELINE_ORDER);
+    const uIndex = TraceTypeUtils.findIndexInOrder(u, TraceTypeUtils.UI_PIPELINE_ORDER);
+    return tIndex >= 0 && uIndex >= 0 && tIndex < uIndex;
+  }
+
+  static compareByDisplayOrder(t: TraceType, u: TraceType) {
+    const tIndex = TraceTypeUtils.findIndexInOrder(t, TraceTypeUtils.DISPLAY_ORDER);
+    const uIndex = TraceTypeUtils.findIndexInOrder(u, TraceTypeUtils.DISPLAY_ORDER);
+    return tIndex - uIndex;
+  }
+
+  private static findIndexInOrder(traceType: TraceType, order: TraceType[]): number {
+    return order.findIndex((type) => {
+      return type === traceType;
+    });
+  }
+}

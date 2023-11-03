@@ -166,8 +166,7 @@ describe('TracePipeline', () => {
       new ParserError(ParserErrorType.NO_INPUT_FILES),
     ]);
 
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+    await expectNumberOfBuiltTraces(0);
   });
 
   it('is robust to invalid trace files', async () => {
@@ -178,8 +177,7 @@ describe('TracePipeline', () => {
       new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, 'winscope_homepage.png'),
     ]);
 
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+    await expectNumberOfBuiltTraces(0);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
@@ -194,8 +192,7 @@ describe('TracePipeline', () => {
       new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, 'winscope_homepage.png'),
     ]);
 
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    await expectNumberOfBuiltTraces(1);
   });
 
   it('is robust to trace files with no entries', async () => {
@@ -206,11 +203,10 @@ describe('TracePipeline', () => {
     await tracePipeline.loadFiles(traceFilesWithNoEntries);
     expect(parserErrorsSpy).not.toHaveBeenCalled();
 
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    await expectNumberOfBuiltTraces(1);
   });
 
-  it('is robust to multiple files of same trace type', async () => {
+  it('is robust to multiple files of same trace type in the same archive', async () => {
     const filesOfSameTraceType = [
       await UnitTestUtils.getFixtureFile(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
@@ -228,8 +224,33 @@ describe('TracePipeline', () => {
       new ParserError(ParserErrorType.OVERRIDE, 'file1.pb', TraceType.SURFACE_FLINGER),
     ]);
 
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    await expectNumberOfBuiltTraces(1);
+  });
+
+  it('always overrides trace of same type when new file is uploaded', async () => {
+    const sfFileOrig = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'file_orig.pb'
+      ),
+    ];
+    const sfFileNew = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'file_new.pb'
+      ),
+    ];
+
+    await tracePipeline.loadFiles(sfFileOrig);
+    expect(parserErrorsSpy).not.toHaveBeenCalled();
+
+    // Expect original trace to be overridden/discarded
+    await tracePipeline.loadFiles(sfFileNew);
+    expect(parserErrorsSpy).toHaveBeenCalledOnceWith([
+      new ParserError(ParserErrorType.OVERRIDE, 'file_orig.pb', TraceType.SURFACE_FLINGER),
+    ]);
+
+    await expectNumberOfBuiltTraces(1);
   });
 
   it('can remove traces', async () => {
@@ -240,12 +261,10 @@ describe('TracePipeline', () => {
     const wmTrace = assertDefined(tracePipeline.getTraces().getTrace(TraceType.WINDOW_MANAGER));
 
     tracePipeline.removeTrace(sfTrace);
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    await expectNumberOfBuiltTraces(1);
 
     tracePipeline.removeTrace(wmTrace);
-    await tracePipeline.buildTraces();
-    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+    await expectNumberOfBuiltTraces(0);
   });
 
   it('gets loaded traces', async () => {
@@ -317,9 +336,13 @@ describe('TracePipeline', () => {
   });
 
   async function loadValidSfWmTraces() {
-    const files = [validSfFile, validWmFile];
-    await tracePipeline.loadFiles(files);
+    await tracePipeline.loadFiles([validSfFile, validWmFile]);
     expect(parserErrorsSpy).not.toHaveBeenCalled();
     await tracePipeline.buildTraces();
+  }
+
+  async function expectNumberOfBuiltTraces(n: number) {
+    await tracePipeline.buildTraces();
+    expect(tracePipeline.getTraces().getSize()).toEqual(n);
   }
 });

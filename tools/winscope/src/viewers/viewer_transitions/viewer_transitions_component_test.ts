@@ -33,6 +33,7 @@ import {ParserTransitionsShell} from 'parsers/parser_transitions_shell';
 import {ParserTransitionsWm} from 'parsers/parser_transitions_wm';
 import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
 import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
@@ -140,7 +141,11 @@ describe('ViewerTransitionsComponent', () => {
     const shellTrans = new ParserTransitionsShell(shellTransFile);
     await shellTrans.parse();
 
-    const transitionsTraceParser = new TracesParserTransitions([wmTrans, shellTrans]);
+    const parsers = new Map<TraceType, Parser<object>>([
+      [TraceType.WM_TRANSITION, wmTrans],
+      [TraceType.SHELL_TRANSITION, shellTrans],
+    ]);
+    const transitionsTraceParser = new TracesParserTransitions(parsers);
     await transitionsTraceParser.parse();
 
     const traces = new Traces();

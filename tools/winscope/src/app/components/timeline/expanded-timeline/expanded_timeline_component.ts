@@ -29,7 +29,7 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 import {DefaultTimelineRowComponent} from './default_timeline_row_component';
 import {TransitionTimelineComponent} from './transition_timeline_component';
@@ -39,7 +39,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
-        *ngFor="let trace of this.timelineData.getTraces(); trackBy: trackTraceByType"
+        *ngFor="let trace of getTracesSortedByDisplayOrder(); trackBy: trackTraceByType"
         class="timeline row">
         <div class="icon-wrapper">
           <mat-icon
@@ -176,6 +176,11 @@ export class ExpandedTimelineComponent {
   trackTraceByType = (index: number, trace: Trace<{}>): TraceType => {
     return trace.type;
   };
+
+  getTracesSortedByDisplayOrder(): Array<Trace<{}>> {
+    const traces = this.timelineData.getTraces().mapTrace((trace) => trace);
+    return traces.sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type));
+  }
 
   private resizeCanvases() {
     // Reset any size before computing new size to avoid it interfering with size computations.
