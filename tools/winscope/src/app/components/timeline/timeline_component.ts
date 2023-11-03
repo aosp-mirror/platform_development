@@ -41,7 +41,7 @@ import {
 } from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 
 @Component({
   selector: 'timeline',
@@ -117,7 +117,7 @@ import {TraceType} from 'trace/trace_type';
             <mat-select #traceSelector [formControl]="selectedTracesFormControl" multiple>
               <div class="tip">Select up to 2 additional traces to display.</div>
               <mat-option
-                *ngFor="let trace of availableTraces"
+                *ngFor="let trace of sortedAvailableTraces"
                 [value]="trace"
                 [style]="{
                   color: TRACE_INFO[trace].color,
@@ -135,7 +135,7 @@ import {TraceType} from 'trace/trace_type';
               </div>
               <mat-select-trigger class="shown-selection">
                 <mat-icon
-                  *ngFor="let selectedTrace of selectedTraces"
+                  *ngFor="let selectedTrace of getSelectedTracesSortedByDisplayOrder()"
                   [style]="{color: TRACE_INFO[selectedTrace].color}">
                   {{ TRACE_INFO[selectedTrace].icon }}
                 </mat-icon>
@@ -234,6 +234,9 @@ import {TraceType} from 'trace/trace_type';
       #expanded-timeline {
         flex-grow: 1;
       }
+      #trace-selector {
+        padding-bottom: 20px;
+      }
       #trace-selector .mat-form-field-infix {
         width: 50px;
         padding: 0 0.75rem 0 0.5rem;
@@ -300,9 +303,9 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
 
     this.internalActiveTrace = types[0];
 
-    if (!this.selectedTraces.includes(this.internalActiveTrace)) {
-      this.selectedTraces.push(this.internalActiveTrace);
-    }
+    // Even if new active trace already selected, push to array as most recent selection
+    this.selectedTraces = this.selectedTraces.filter((type) => type !== this.internalActiveTrace);
+    this.selectedTraces.push(this.internalActiveTrace);
 
     if (this.selectedTraces.length > this.MAX_SELECTED_TRACES) {
       // Maxed capacity so remove oldest selected trace
@@ -321,8 +324,11 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
 
   @ViewChild('collapsedTimeline') private collapsedTimelineRef!: ElementRef;
 
+  videoUrl: SafeUrl | undefined;
+
   internalActiveTrace: TraceType | undefined = undefined;
   selectedTraces: TraceType[] = [];
+  sortedAvailableTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl<TraceType[]>([]);
   selectedElapsedTimeFormControl = new FormControl(
     'undefined',
@@ -347,7 +353,6 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     selectedRealTime: this.selectedRealTimeFormControl,
     selectedNs: this.selectedNsFormControl,
   });
-  videoUrl: SafeUrl | undefined;
   TRACE_INFO = TRACE_INFO;
   isInputFormFocused = false;
 
@@ -370,6 +375,10 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
         URL.createObjectURL(screenRecordingVideo)
       );
     }
+
+    this.sortedAvailableTraces = this.availableTraces.sort((a, b) =>
+      TraceTypeUtils.compareByDisplayOrder(a, b)
+    ); // to display in fixed order corresponding to viewer tabs
   }
 
   ngAfterViewInit() {
@@ -400,6 +409,10 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     }
 
     return position;
+  }
+
+  getSelectedTracesSortedByDisplayOrder(): TraceType[] {
+    return this.selectedTraces.slice().sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a, b));
   }
 
   onTracePositionUpdate(position: TracePosition) {

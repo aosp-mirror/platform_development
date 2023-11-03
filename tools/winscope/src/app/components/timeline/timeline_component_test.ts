@@ -32,6 +32,7 @@ import {
   MatDrawerContent,
 } from 'app/components/bottomnav/bottom_drawer_component';
 import {TimelineData} from 'app/timeline_data';
+import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
 import {TracesBuilder} from 'test/unit/traces_builder';
@@ -160,6 +161,7 @@ describe('TimelineComponent', () => {
     expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
+    // setting same trace as active does not affect selected traces
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
@@ -176,12 +178,30 @@ describe('TimelineComponent', () => {
       TraceType.WINDOW_MANAGER,
     ]);
 
+    // oldest trace to be selected is replaced (SF)
     component.activeViewTraceTypes = [TraceType.PROTO_LOG];
     expect(component.internalActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(component.selectedTraces).toEqual([
       TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
+    ]);
+
+    // setting active trace that is already selected causes it to become most recent selection
+    component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
+    expect(component.internalActiveTrace).toEqual(TraceType.TRANSACTIONS);
+    expect(component.selectedTraces).toEqual([
+      TraceType.WINDOW_MANAGER,
+      TraceType.PROTO_LOG,
+      TraceType.TRANSACTIONS,
+    ]);
+
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.selectedTraces).toEqual([
+      TraceType.PROTO_LOG,
+      TraceType.TRANSACTIONS,
+      TraceType.SURFACE_FLINGER,
     ]);
   });
 
@@ -199,22 +219,56 @@ describe('TimelineComponent', () => {
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
 
+  it('sorts selected traces correctly for display in selection trigger', () => {
+    loadTracesForSelectorTest();
+
+    fixture.whenStable().then(() => {
+      let selectionTriggerIcons = Array.from(
+        htmlElement.querySelectorAll('.mat-select-trigger .mat-icon')
+      );
+      expect(selectionTriggerIcons.length).toEqual(1);
+      expect(selectionTriggerIcons[0].innerHTML).toContain(
+        TRACE_INFO[TraceType.SURFACE_FLINGER].icon
+      );
+
+      component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
+      selectionTriggerIcons = Array.from(
+        htmlElement.querySelectorAll('.mat-select-trigger mat-icon')
+      );
+      expect(selectionTriggerIcons.length).toEqual(2);
+      expect(selectionTriggerIcons[0].innerHTML).toContain(
+        TRACE_INFO[TraceType.SURFACE_FLINGER].icon
+      );
+      expect(selectionTriggerIcons[1].innerHTML).toContain(TRACE_INFO[TraceType.TRANSACTIONS].icon);
+
+      component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
+      selectionTriggerIcons = Array.from(
+        htmlElement.querySelectorAll('.mat-select-trigger mat-icon')
+      );
+      expect(selectionTriggerIcons.length).toEqual(3);
+      expect(selectionTriggerIcons[0].innerHTML).toContain(
+        TRACE_INFO[TraceType.SURFACE_FLINGER].icon
+      );
+      expect(selectionTriggerIcons[1].innerHTML).toContain(
+        TRACE_INFO[TraceType.WINDOW_MANAGER].icon
+      );
+      expect(selectionTriggerIcons[2].innerHTML).toContain(TRACE_INFO[TraceType.TRANSACTIONS].icon);
+
+      component.activeViewTraceTypes = [TraceType.PROTO_LOG];
+      selectionTriggerIcons = Array.from(
+        htmlElement.querySelectorAll('.mat-select-trigger mat-icon')
+      );
+      expect(selectionTriggerIcons.length).toEqual(3);
+      expect(selectionTriggerIcons[0].innerHTML).toContain(
+        TRACE_INFO[TraceType.WINDOW_MANAGER].icon
+      );
+      expect(selectionTriggerIcons[1].innerHTML).toContain(TRACE_INFO[TraceType.TRANSACTIONS].icon);
+      expect(selectionTriggerIcons[2].innerHTML).toContain(TRACE_INFO[TraceType.PROTO_LOG].icon);
+    });
+  });
+
   it('updates trace selection using selector', () => {
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110])
-      .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
-      .setTimestamps(TraceType.PROTO_LOG, [time100])
-      .build();
-    component.timelineData.initialize(traces, undefined);
-    component.availableTraces = [
-      TraceType.SURFACE_FLINGER,
-      TraceType.WINDOW_MANAGER,
-      TraceType.SCREEN_RECORDING,
-      TraceType.PROTO_LOG,
-    ];
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    fixture.detectChanges();
+    loadTracesForSelectorTest();
 
     const selectTrigger = assertDefined(htmlElement.querySelector('.mat-select-trigger'));
     (selectTrigger as HTMLElement).click();
@@ -368,6 +422,24 @@ describe('TimelineComponent', () => {
     component.timelineData.initialize(traces, undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setPosition(position100);
+    fixture.detectChanges();
+  }
+
+  function loadTracesForSelectorTest() {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110])
+      .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
+      .setTimestamps(TraceType.PROTO_LOG, [time100])
+      .build();
+    component.timelineData.initialize(traces, undefined);
+    component.availableTraces = [
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+      TraceType.SCREEN_RECORDING,
+      TraceType.PROTO_LOG,
+    ];
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
   }
 

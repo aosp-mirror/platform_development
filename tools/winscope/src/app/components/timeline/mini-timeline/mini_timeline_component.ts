@@ -30,7 +30,7 @@ import {TimeRange, Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
 import {MiniTimelineDrawerImpl} from './drawer/mini_timeline_drawer_impl';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
@@ -149,6 +149,7 @@ export class MiniTimelineComponent {
     const traces = new Traces();
     this.selectedTraces
       .filter((type) => this.timelineData.getTraces().getTrace(type) !== undefined)
+      .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(b, a)) // reversed to ensure display is ordered top to bottom
       .forEach((type) => {
         traces.setTrace(type, assertDefined(this.timelineData.getTraces().getTrace(type)));
       });

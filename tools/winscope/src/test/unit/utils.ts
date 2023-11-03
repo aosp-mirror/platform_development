@@ -63,14 +63,16 @@ class UnitTestUtils {
   }
 
   static async getTracesParser(filenames: string[]): Promise<Parser<object>> {
-    const parsers = await Promise.all(
+    const parsersArray = await Promise.all(
       filenames.map((filename) => UnitTestUtils.getParser(filename))
     );
+    const parsers = new Map<TraceType, Parser<object>>();
+    parsersArray.forEach((p) => parsers.set(p.getTraceType(), p));
     const tracesParsers = await new TracesParserFactory().createParsers(parsers);
-    expect(tracesParsers.length)
+    expect(tracesParsers.size)
       .withContext(`Should have been able to create a traces parser for [${filenames.join()}]`)
       .toEqual(1);
-    return tracesParsers[0];
+    return tracesParsers.values().next().value;
   }
 
   static async getWindowManagerState(): Promise<WindowManagerState> {

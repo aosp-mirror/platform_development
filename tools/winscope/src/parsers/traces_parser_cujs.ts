@@ -27,15 +27,12 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
   private readonly descriptors: string[];
   private decodedEntries: Cuj[] | undefined;
 
-  constructor(parsers: Array<Parser<object>>) {
+  constructor(parsers: Map<TraceType, Parser<object>>) {
     super();
 
-    const eventlogTraces = parsers.filter((it) => it.getTraceType() === TraceType.EVENT_LOG);
-    if (eventlogTraces.length > 0) {
-      this.eventLogTrace = eventlogTraces[0] as ParserEventLog;
-    }
-
-    if (this.eventLogTrace !== undefined) {
+    const eventlogTrace = parsers.get(TraceType.EVENT_LOG);
+    if (eventlogTrace !== undefined) {
+      this.eventLogTrace = eventlogTrace as ParserEventLog;
       this.descriptors = this.eventLogTrace.getDescriptors();
     } else {
       this.descriptors = [];
