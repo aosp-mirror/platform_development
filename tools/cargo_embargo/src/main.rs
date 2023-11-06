@@ -604,7 +604,7 @@ fn crate_to_bp_modules(
         if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
             continue;
         }
-        m.props.set("name", module_name.clone());
+        m.props.set("name", module_name);
         if stem != module_name {
             m.props.set("stem", stem);
         }
