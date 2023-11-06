@@ -16,6 +16,7 @@
 
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 
 export class PropertiesProvider {
   private eagerPropertiesRoot: PropertyTreeNode;
@@ -47,7 +48,7 @@ export class PropertiesProvider {
   async getAll(): Promise<PropertyTreeNode> {
     if (this.allPropertiesRoot) return this.allPropertiesRoot;
 
-    const root = new PropertyTreeNode(
+    const root = new PropertyTreeNodeFactory().makePropertyRoot(
       this.eagerPropertiesRoot.id,
       this.eagerPropertiesRoot.name,
       PropertySource.PROTO,
