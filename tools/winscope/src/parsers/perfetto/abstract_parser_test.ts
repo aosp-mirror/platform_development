@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {UnitTestUtils} from 'test/unit/utils';
-import {TraceType} from 'trace/trace_type';
 
 describe('Perfetto AbstractParser', () => {
   it('fails parsing if there are no trace entries', async () => {
@@ -22,24 +21,5 @@ describe('Perfetto AbstractParser', () => {
       'traces/perfetto/no_winscope_traces.perfetto-trace'
     );
     expect(parsers.length).toEqual(0);
-  });
-
-  it('retrieves partial trace entries', async () => {
-    {
-      const parser = await UnitTestUtils.getPerfettoParser(
-        TraceType.SURFACE_FLINGER,
-        'traces/perfetto/layers_trace.perfetto-trace'
-      );
-      const entries = await parser.getPartialProtos({start: 0, end: 3}, 'vsyncId');
-      expect(entries).toEqual([{vsyncId: 4891n}, {vsyncId: 5235n}, {vsyncId: 5748n}]);
-    }
-    {
-      const parser = await UnitTestUtils.getPerfettoParser(
-        TraceType.TRANSACTIONS,
-        'traces/perfetto/transactions_trace.perfetto-trace'
-      );
-      const entries = await parser.getPartialProtos({start: 0, end: 3}, 'vsyncId');
-      expect(entries).toEqual([{vsyncId: 1n}, {vsyncId: 2n}, {vsyncId: 3n}]);
-    }
   });
 });

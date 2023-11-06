@@ -15,12 +15,19 @@
  */
 import {TimestampType} from 'common/time';
 import {TransactionsTraceFileProto, winscopeJson} from 'parsers/proto_types';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
-import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
+import {FakeProto} from './fake_proto_builder';
 import {FakeProtoTransformer} from './fake_proto_transformer';
+import {Utils} from './utils';
 
 export class ParserTransactions extends AbstractParser<object> {
   private protoTransformer = new FakeProtoTransformer(
@@ -38,7 +45,7 @@ export class ParserTransactions extends AbstractParser<object> {
   }
 
   override async getEntry(index: number, timestampType: TimestampType): Promise<object> {
-    let entryProto = await this.queryEntry(index);
+    let entryProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
     entryProto = this.protoTransformer.transform(entryProto);
     entryProto = this.decodeWhatBitsetFields(entryProto);
     return entryProto;
@@ -48,32 +55,15 @@ export class ParserTransactions extends AbstractParser<object> {
     return 'surfaceflinger_transactions';
   }
 
-  private async queryEntry(index: number): Promise<FakeProto> {
-    const sql = `
-      SELECT
-          sft.id AS trace_entry_id,
-          args.key,
-          args.value_type,
-          args.int_value,
-          args.string_value,
-          args.real_value
-      FROM surfaceflinger_transactions AS sft
-      INNER JOIN args ON sft.arg_set_id = args.arg_set_id
-      WHERE trace_entry_id = ${index};
-    `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
-
-    const builder = new FakeProtoBuilder();
-    for (const it = result.iter({}); it.valid(); it.next()) {
-      builder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
-      );
-    }
-    return builder.build();
+  override async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, async () => {
+        return Utils.queryVsyncId(this.traceProcessor, this.getTableName(), entriesRange);
+      })
+      .getResult();
   }
 
   private decodeWhatBitsetFields(transactionTraceEntry: FakeProto): FakeProto {

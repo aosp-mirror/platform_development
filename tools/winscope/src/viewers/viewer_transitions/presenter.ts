@@ -16,21 +16,23 @@
 
 import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData} from './ui_data';
 
 export class Presenter {
+  private isInitialized = false;
   private transitionTrace: Trace<object>;
-  private surfaceFlingerTrace: Trace<object> | undefined;
-  private windowManagerTrace: Trace<object> | undefined;
+  private surfaceFlingerTrace: Trace<LayerTraceEntry> | undefined;
+  private windowManagerTrace: Trace<WindowManagerState> | undefined;
+  private layerIdToName = new Map<number, string>();
+  private windowTokenToTitle = new Map<string, string>();
   private uiData = UiData.EMPTY;
   private readonly notifyUiDataCallback: (data: UiData) => void;
 
@@ -43,6 +45,8 @@ export class Presenter {
 
   async onAppEvent(event: AppEvent) {
     await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+
       if (this.uiData === UiData.EMPTY) {
         this.uiData = await this.computeUiData();
       }
@@ -64,6 +68,32 @@ export class Presenter {
       transition
     );
     this.notifyUiDataCallback(this.uiData);
+  }
+
+  private async initializeIfNeeded() {
+    if (this.isInitialized) {
+      return;
+    }
+
+    if (this.surfaceFlingerTrace) {
+      const layersIdAndName = await this.surfaceFlingerTrace.customQuery(
+        CustomQueryType.SF_LAYERS_ID_AND_NAME
+      );
+      layersIdAndName.forEach((value) => {
+        this.layerIdToName.set(value.id, value.name);
+      });
+    }
+
+    if (this.windowManagerTrace) {
+      const windowsTokenAndTitle = await this.windowManagerTrace.customQuery(
+        CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE
+      );
+      windowsTokenAndTitle.forEach((value) => {
+        this.windowTokenToTitle.set(value.token, value.title);
+      });
+    }
+
+    this.isInitialized = true;
   }
 
   private async computeUiData(): Promise<UiData> {
@@ -93,78 +123,13 @@ export class Presenter {
   ): Promise<PropertiesTreeNode> {
     const changes: PropertiesTreeNode[] = [];
 
-    const createTime = BigInt(transition.createTime.unixNanos.toString());
-    const finishTime = BigInt(transition.finishTime.unixNanos.toString());
-    const middleOfTransitionTimestamp = new RealTimestamp((createTime + finishTime) / 2n);
-    const middleOfTransitionPosition = TracePosition.fromTimestamp(middleOfTransitionTimestamp);
-
     for (const change of transition.changes) {
-      let layerName: string | undefined = undefined;
-      let windowName: string | undefined = undefined;
-
-      if (this.surfaceFlingerTrace) {
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.surfaceFlingerTrace,
-          middleOfTransitionPosition
-        );
-        if (entry !== undefined) {
-          const layerTraceEntry = (await entry.getValue()) as LayerTraceEntry;
-          for (const layer of layerTraceEntry.flattenedLayers) {
-            if (layer.id === change.layerId) {
-              layerName = layer.name;
-            }
-          }
-        } else {
-          // Fallback
-          await Promise.all(
-            this.surfaceFlingerTrace.mapEntry(async (entry, originalIndex) => {
-              if (layerName !== undefined) {
-                return;
-              }
-              const layerTraceEntry = (await entry.getValue()) as LayerTraceEntry;
-              for (const layer of layerTraceEntry.flattenedLayers) {
-                if (layer.id === change.layerId) {
-                  layerName = layer.name;
-                }
-              }
-            })
-          );
-        }
-      }
-
-      if (this.windowManagerTrace) {
-        const entry = TraceEntryFinder.findCorrespondingEntry(
-          this.windowManagerTrace,
-          middleOfTransitionPosition
-        );
-        if (entry !== undefined) {
-          const wmState = (await entry.getValue()) as WindowManagerState;
-          for (const window of wmState.windowContainers) {
-            if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
-              windowName = window.title;
-            }
-          }
-        } else {
-          // Fallback
-          await Promise.all(
-            this.windowManagerTrace.mapEntry(async (entry, originalIndex) => {
-              if (windowName !== undefined) {
-                return;
-              }
-              const wmState = (await entry.getValue()) as WindowManagerState;
-              for (const window of wmState.windowContainers) {
-                if (window.token.toLowerCase() === change.windowId.toString(16).toLowerCase()) {
-                  windowName = window.title;
-                }
-              }
-            })
-          );
-        }
-      }
+      const layerName = this.layerIdToName.get(change.layerId);
+      const windowTitle = this.windowTokenToTitle.get(change.windowId.toString(16));
 
       const layerIdValue = layerName ? `${change.layerId} (${layerName})` : change.layerId;
-      const windowIdValue = windowName
-        ? `0x${change.windowId.toString(16)} (${windowName})`
+      const windowIdValue = windowTitle
+        ? `0x${change.windowId.toString(16)} (${windowTitle})`
         : `0x${change.windowId.toString(16)}`;
 
       changes.push({

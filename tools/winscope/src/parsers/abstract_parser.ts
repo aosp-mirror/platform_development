@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -80,8 +81,11 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
     return Promise.resolve(entry);
   }
 
-  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
-    return ParsingUtils.getPartialProtos(this.decodedEntries, entriesRange, fieldPath);
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    throw new Error('Not implemented');
   }
 
   protected abstract getMagicNumber(): undefined | number[];

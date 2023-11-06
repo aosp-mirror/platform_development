@@ -15,16 +15,21 @@
  */
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
+import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserWindowManager', () => {
   describe('trace with elapsed + real timestamp', () => {
     let parser: Parser<WindowManagerState>;
+    let trace: Trace<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/WindowManager.pb');
+      trace = new TraceBuilder().setType(TraceType.WINDOW_MANAGER).setParser(parser).build();
     });
 
     it('has expected trace type', () => {
@@ -59,6 +64,29 @@ describe('ParserWindowManager', () => {
     it('formats entry timestamps', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(entry.name).toEqual('2022-07-29T15:04:49.999048960');
+    });
+
+    it('supports WM_WINDOWS_TOKEN_AND_NAME custom query', async () => {
+      const tokenAndTitles = await trace
+        .sliceEntries(0, 1)
+        .customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
+      tokenAndTitles
+        .map((entry) => entry.title)
+        .sort()
+        .forEach((title) => {
+          console.log(title);
+        });
+      expect(tokenAndTitles.length).toEqual(69);
+      expect(tokenAndTitles).toContain({token: '478edff', title: 'WindowContainer'}); // RootWindowContainerProto
+      expect(tokenAndTitles).toContain({token: '1f3454e', title: 'Built-in Screen'}); // DisplayContentProto
+      expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'}); // DisplayAreaProto
+      expect(tokenAndTitles).toContain({token: '509ad2f', title: '509ad2f'}); // WindowTokenProto
+      expect(tokenAndTitles).toContain({token: 'b3b210d', title: 'ScreenDecorOverlay'}); // WindowStateProto
+      expect(tokenAndTitles).toContain({token: '7493986', title: 'Task'}); // TaskProto
+      expect(tokenAndTitles).toContain({
+        token: 'f7092ed',
+        title: 'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
+      }); // ActivityRecordProto
     });
   });
 
