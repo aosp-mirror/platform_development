@@ -16,7 +16,7 @@
 
 use super::{default_apex_available, default_true, PackageConfig};
 use crate::renamed_module;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -71,6 +71,11 @@ pub struct Config {
 }
 
 impl Config {
+    /// Parses an instance of this config from a string of JSON.
+    pub fn from_json_str(json_str: &str) -> Result<Self> {
+        serde_json::from_str(json_str).context("failed to parse legacy config")
+    }
+
     /// Converts this configuration to the equivalent `cargo_embargo` configuration.
     pub fn to_embargo(&self, package_name: &str, run_cargo: bool) -> Result<super::Config> {
         if !self.run {

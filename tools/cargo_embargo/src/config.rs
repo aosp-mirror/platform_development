@@ -18,6 +18,7 @@
 
 pub mod legacy;
 
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -117,6 +118,18 @@ impl Default for Config {
             module_visibility: Default::default(),
             run_cargo: true,
         }
+    }
+}
+
+impl Config {
+    /// Parses an instance of this config from a string of JSON.
+    pub fn from_json_str(json_str: &str) -> Result<Self> {
+        serde_json::from_str(json_str).context("failed to parse config")
+    }
+
+    /// Serializes an instance of this config to a string of pretty-printed JSON.
+    pub fn to_json_string(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).context("failed to serialize config")
     }
 }
 

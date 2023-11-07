@@ -288,7 +288,7 @@ fn add_feature_and_dependencies(
 mod tests {
     use super::*;
     use crate::tests::testdata_directories;
-    use std::fs::File;
+    use std::fs::{read_to_string, File};
 
     #[test]
     fn resolve_multi_level_feature_dependencies() {
@@ -319,8 +319,8 @@ mod tests {
     #[test]
     fn parse_metadata() {
         for testdata_directory_path in testdata_directories() {
-            let cfg: Config = serde_json::from_reader(
-                File::open(testdata_directory_path.join("cargo_embargo.json"))
+            let cfg = Config::from_json_str(
+                &read_to_string(testdata_directory_path.join("cargo_embargo.json"))
                     .with_context(|| {
                         format!(
                             "Failed to open {:?}",
