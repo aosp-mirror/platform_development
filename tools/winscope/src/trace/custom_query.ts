@@ -16,12 +16,25 @@
 import {RelativeEntryIndex, TraceEntryEager} from './trace';
 
 export enum CustomQueryType {
-  VSYNCID,
   SF_LAYERS_ID_AND_NAME,
+  VIEW_CAPTURE_PACKAGE_NAME,
+  VSYNCID,
   WM_WINDOWS_TOKEN_AND_TITLE,
 }
 
 export class ProcessParserResult {
+  static [CustomQueryType.SF_LAYERS_ID_AND_NAME]<T>(
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME]
+  ): CustomQueryResultTypeMap<T>[CustomQueryType.SF_LAYERS_ID_AND_NAME] {
+    return parserResult;
+  }
+
+  static [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]<T>(
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]
+  ): CustomQueryResultTypeMap<T>[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME] {
+    return parserResult;
+  }
+
   static [CustomQueryType.VSYNCID]<T>(
     parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VSYNCID],
     makeTraceEntry: (index: RelativeEntryIndex, vsyncId: bigint) => TraceEntryEager<T, bigint>
@@ -29,12 +42,6 @@ export class ProcessParserResult {
     return parserResult.map((vsyncId, index) => {
       return makeTraceEntry(index, vsyncId);
     });
-  }
-
-  static [CustomQueryType.SF_LAYERS_ID_AND_NAME]<T>(
-    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME]
-  ): CustomQueryResultTypeMap<T>[CustomQueryType.SF_LAYERS_ID_AND_NAME] {
-    return parserResult;
   }
 
   static [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]<T>(
@@ -45,14 +52,16 @@ export class ProcessParserResult {
 }
 
 export interface CustomQueryParserResultTypeMap {
-  [CustomQueryType.VSYNCID]: Array<bigint>;
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
+  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
+  [CustomQueryType.VSYNCID]: Array<bigint>;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{token: string; title: string}>;
 }
 
 export interface CustomQueryResultTypeMap<T> {
-  [CustomQueryType.VSYNCID]: Array<TraceEntryEager<T, bigint>>;
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
+  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
+  [CustomQueryType.VSYNCID]: Array<TraceEntryEager<T, bigint>>;
   [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{token: string; title: string}>;
 }
 

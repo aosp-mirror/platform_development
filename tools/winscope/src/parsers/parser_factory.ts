@@ -71,7 +71,7 @@ export class ParserFactory {
           await p.parse();
           hasFoundParser = true;
           if (p instanceof ParserViewCapture) {
-            p.windowParsers.forEach((it) => parsers.push({file: traceFile, parser: it}));
+            p.getWindowParsers().forEach((it) => parsers.push({file: traceFile, parser: it}));
           } else {
             parsers.push({file: traceFile, parser: p});
           }

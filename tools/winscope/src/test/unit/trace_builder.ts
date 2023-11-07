@@ -27,7 +27,7 @@ import {TraceType} from 'trace/trace_type';
 export class TraceBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
   private parser?: Parser<T>;
-  private parserCustomQueryResult = new Map<CustomQueryType, object>();
+  private parserCustomQueryResult = new Map<CustomQueryType, {}>();
   private entries?: T[];
   private timestamps?: Timestamp[];
   private timestampType = TimestampType.REAL;
