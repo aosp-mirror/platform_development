@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -31,7 +32,10 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
 
   abstract getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
 
-  getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
   }
 

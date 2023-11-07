@@ -17,19 +17,24 @@ import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {Layer} from 'flickerlib/common';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
+import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 
 describe('Perfetto ParserSurfaceFlinger', () => {
   describe('valid trace', () => {
     let parser: Parser<LayerTraceEntry>;
+    let trace: Trace<LayerTraceEntry>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace'
       );
+      trace = new TraceBuilder().setType(TraceType.SURFACE_FLINGER).setParser(parser).build();
     });
 
     it('has expected trace type', () => {
@@ -90,6 +95,20 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         expect(layer.flags).toEqual(0x100);
         expect(layer.verboseFlags).toEqual('ENABLE_BACKPRESSURE (0x100)');
       }
+    });
+
+    it('supports VSYNCID custom query', async () => {
+      const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+      const values = entries.map((entry) => entry.getValue());
+      expect(values).toEqual([4891n, 5235n, 5748n]);
+    });
+
+    it('supports SF_LAYERS_ID_AND_NAME custom query', async () => {
+      const idAndNames = await trace
+        .sliceEntries(0, 1)
+        .customQuery(CustomQueryType.SF_LAYERS_ID_AND_NAME);
+      expect(idAndNames).toContain({id: 4, name: 'WindowedMagnification:0:31#4'});
+      expect(idAndNames).toContain({id: 5, name: 'HideDisplayCutout:0:14#5'});
     });
   });
 

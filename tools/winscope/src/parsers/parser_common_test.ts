@@ -36,31 +36,6 @@ describe('Parser', () => {
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual([]);
   });
 
-  it('retrieves partial trace entries', async () => {
-    {
-      const parser = await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
-      );
-      const entries = await parser.getPartialProtos({start: 0, end: 3}, 'vsyncId');
-      entries.forEach((entry) => {
-        // convert Long to bigint
-        (entry as any).vsyncId = BigInt((entry as any).vsyncId.toString());
-      });
-      expect(entries).toEqual([{vsyncId: 4891n}, {vsyncId: 5235n}, {vsyncId: 5748n}]);
-    }
-    {
-      const parser = await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/Transactions.pb'
-      );
-      const entries = await parser.getPartialProtos({start: 0, end: 3}, 'vsyncId');
-      entries.forEach((entry) => {
-        // convert Long to bigint
-        (entry as any).vsyncId = BigInt((entry as any).vsyncId.toString());
-      });
-      expect(entries).toEqual([{vsyncId: 1n}, {vsyncId: 2n}, {vsyncId: 3n}]);
-    }
-  });
-
   describe('real timestamp', () => {
     let parser: Parser<WindowManagerState>;
 
