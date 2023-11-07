@@ -15,8 +15,6 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {ObjectUtils} from 'common/object_utils';
-import {EntriesRange} from 'trace/index_types';
 
 export class ParsingUtils {
   static throwIfMagicNumberDoesntMatch(traceBuffer: Uint8Array, magicNumber: number[] | undefined) {
@@ -63,21 +61,5 @@ export class ParsingUtils {
     }
 
     return protoObj;
-  }
-
-  static getPartialProtos(
-    decodedEntries: any[],
-    entriesRange: EntriesRange,
-    fieldPath: string
-  ): Promise<object[]> {
-    const partialProtos = decodedEntries
-      .slice(entriesRange.start, entriesRange.end)
-      .map((entry) => {
-        const fieldValue = ObjectUtils.getProperty(entry, fieldPath);
-        const proto = {};
-        ObjectUtils.setProperty(proto, fieldPath, fieldValue);
-        return proto;
-      });
-    return Promise.resolve(partialProtos);
   }
 }

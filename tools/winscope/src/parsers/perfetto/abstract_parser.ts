@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {StringUtils} from 'common/string_utils';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
-import {FakeProtoBuilder} from './fake_proto_builder';
 
 export abstract class AbstractParser<T> implements Parser<T> {
   protected traceProcessor: WasmEngineProxy;
@@ -77,38 +76,11 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   abstract getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
 
-  async getPartialProtos(entriesRange: EntriesRange, fieldPath: string): Promise<object[]> {
-    const fieldPathSnakeCase = StringUtils.convertCamelToSnakeCase(fieldPath);
-    const sql = `
-      SELECT
-        tbl.id as entry_index,
-        args.key,
-        args.value_type,
-        args.int_value,
-        args.string_value,
-        args.real_value
-      FROM ${this.getTableName()} AS tbl
-      INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
-      WHERE
-        entry_index BETWEEN ${entriesRange.start} AND ${entriesRange.end - 1}
-        AND (args.key = '${fieldPathSnakeCase}' OR args.key LIKE '${fieldPathSnakeCase}.%')
-        ORDER BY entry_index;
-    `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
-
-    const entries: object[] = [];
-    for (const it = result.iter({}); it.valid(); it.next()) {
-      const builder = new FakeProtoBuilder();
-      builder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
-      );
-      entries.push(builder.build());
-    }
-    return entries;
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    throw new Error('Not implemented');
   }
 
   getDescriptors(): string[] {
@@ -141,19 +113,5 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
     const real = result.iter({}).get('realtime') as bigint;
     return real - elapsedTimestamp;
-  }
-
-  private async queryLastClockSnapshot(clockName: string): Promise<bigint> {
-    const sql = `
-      SELECT
-          snapshot_id, clock_name, clock_value
-      FROM clock_snapshot
-      WHERE
-          snapshot_id = ( SELECT MAX(snapshot_id) FROM clock_snapshot )
-      AND clock_name = '${clockName}'`;
-
-    const result = await this.traceProcessor.query(sql).waitAllRows();
-    assertTrue(result.numRows() === 1, () => "Failed to query clock '${clockName}'");
-    return result.iter({}).get('clock_value') as bigint;
   }
 }

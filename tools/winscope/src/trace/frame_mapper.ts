@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {CustomQueryType} from './custom_query';
 import {FrameMapBuilder} from './frame_map_builder';
 import {FramesRange, TraceEntry} from './trace';
 import {Traces} from './traces';
@@ -100,18 +101,15 @@ export class FrameMapper {
     }
 
     const transactions = assertDefined(this.traces.getTrace(TraceType.TRANSACTIONS));
-    const transactionEntries = await transactions.prefetchPartialProtos('vsyncId');
+    const transactionEntries = await transactions.customQuery(CustomQueryType.VSYNCID);
 
     const surfaceFlinger = assertDefined(this.traces.getTrace(TraceType.SURFACE_FLINGER));
-    const surfaceFlingerEntries = await surfaceFlinger.prefetchPartialProtos('vsyncId');
+    const surfaceFlingerEntries = await surfaceFlinger.customQuery(CustomQueryType.VSYNCID);
 
     const vsyncIdToFrames = new Map<bigint, FramesRange>();
 
     surfaceFlingerEntries.forEach((srcEntry) => {
-      const vsyncId = this.getVsyncId(srcEntry);
-      if (vsyncId === undefined) {
-        return;
-      }
+      const vsyncId = srcEntry.getValue();
       const srcFrames = srcEntry.getFramesRange();
       if (!srcFrames) {
         return;
@@ -126,10 +124,7 @@ export class FrameMapper {
     });
 
     transactionEntries.forEach((dstEntry) => {
-      const vsyncId = this.getVsyncId(dstEntry);
-      if (vsyncId === undefined) {
-        return;
-      }
+      const vsyncId = dstEntry.getValue();
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {
         return;
@@ -278,20 +273,5 @@ export class FrameMapper {
     const framesRange = srcTrace.getFramesRange();
     const lengthFrames = framesRange ? framesRange.end : 0;
     return new FrameMapBuilder(dstTrace.lengthEntries, lengthFrames);
-  }
-
-  private getVsyncId(entry: TraceEntry<object>): bigint | undefined {
-    const proto = assertDefined(entry.getPrefetchedPartialProto());
-    const vsyncId = (proto as any).vsyncId;
-    if (vsyncId === undefined) {
-      console.error(`Failed to get partial trace entry's 'vsyncId' property:`, proto);
-      return undefined;
-    }
-    try {
-      return BigInt(vsyncId.toString());
-    } catch (e) {
-      console.error(`Failed to convert trace entry's vsyncId to bigint:`, proto);
-      return undefined;
-    }
   }
 }
