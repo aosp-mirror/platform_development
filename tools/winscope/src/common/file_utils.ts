@@ -87,6 +87,7 @@ class FileUtils {
 
   //allow: letters/numbers/underscores with delimeters . - # (except at start and end)
   static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
+  static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
 }
 
 export {FileUtils};
