@@ -20,7 +20,7 @@ import {EmitAppEvent} from 'interfaces/app_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {NEXUS_LAUNCHER_PACKAGE_NAME} from 'viewers/common/view_capture_constants';
+import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -63,7 +63,11 @@ class ViewerSurfaceFlinger implements Viewer {
       this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
     );
     this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
-      if ((event as CustomEvent).detail.clickedRectId.includes(NEXUS_LAUNCHER_PACKAGE_NAME)) {
+      if (
+        (event as CustomEvent).detail.clickedRectId.includes(
+          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME
+        )
+      ) {
         this.switchToNexusLauncherViewer();
       }
     });

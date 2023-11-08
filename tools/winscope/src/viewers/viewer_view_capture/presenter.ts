@@ -27,12 +27,15 @@ import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {Rectangle} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 export class Presenter {
-  private viewCaptureTrace: Trace<object>;
-  private surfaceFlingerTrace: Trace<object> | undefined;
+  private readonly traces: Traces;
+  private readonly surfaceFlingerTrace: Trace<object> | undefined;
+  private readonly viewCaptureTrace: Trace<object>;
+  private viewCapturePackageNames: string[] = [];
 
   private selectedFrameData: FrameData | undefined;
   private previousFrameData: FrameData | undefined;
@@ -93,12 +96,15 @@ export class Presenter {
     private readonly storage: Storage,
     private readonly notifyUiDataCallback: (data: UiData) => void
   ) {
+    this.traces = traces;
     this.viewCaptureTrace = assertDefined(traces.getTrace(traceType));
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
   async onAppEvent(event: AppEvent) {
     await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+
       const vcEntry = TraceEntryFinder.findCorrespondingEntry(
         this.viewCaptureTrace,
         event.position
@@ -119,12 +125,17 @@ export class Presenter {
         if (surfaceFlingerEntry) {
           this.uiData.sfRects = SurfaceFlingerUtils.makeRects(
             surfaceFlingerEntry,
+            this.viewCapturePackageNames,
             this.hierarchyUserOptions
           );
         }
       }
       this.refreshUI();
     });
+  }
+
+  private async initializeIfNeeded() {
+    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(this.traces);
   }
 
   private refreshUI() {
