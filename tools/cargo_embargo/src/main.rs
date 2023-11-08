@@ -127,11 +127,9 @@ fn main() -> Result<()> {
 
     match &args.mode {
         Some(Mode::Convert { package_name, no_build }) => {
-            let legacy_config: legacy::Config =
-                serde_json::from_str(&json_str).context("failed to parse legacy config")?;
+            let legacy_config = legacy::Config::from_json_str(&json_str)?;
             let new_config = legacy_config.to_embargo(package_name, !no_build)?;
-            let new_config_str = serde_json::to_string_pretty(&new_config)
-                .context("failed to serialize new config")?;
+            let new_config_str = new_config.to_json_string()?;
             println!("{}", new_config_str);
         }
         Some(Mode::DumpCrates { crates }) => {
@@ -148,7 +146,7 @@ fn main() -> Result<()> {
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
 fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
-    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let cfg = Config::from_json_str(json_str)?;
     let crates = make_crates(args, &cfg)?;
     serde_json::to_writer(
         File::create(crates_filename)
@@ -223,7 +221,7 @@ fn make_crates(args: &Args, cfg: &Config) -> Result<Vec<Crate>> {
 
 /// Runs cargo_embargo with the given JSON configuration string.
 fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
-    let cfg: Config = serde_json::from_str(json_str).context("failed to parse config")?;
+    let cfg = Config::from_json_str(json_str)?;
     let crates = make_crates(args, &cfg)?;
 
     // Find out files.
@@ -604,7 +602,7 @@ fn crate_to_bp_modules(
         if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
             continue;
         }
-        m.props.set("name", module_name.clone());
+        m.props.set("name", module_name);
         if stem != module_name {
             m.props.set("stem", stem);
         }
@@ -752,8 +750,8 @@ mod tests {
     #[test]
     fn generate_bp() {
         for testdata_directory_path in testdata_directories() {
-            let cfg: Config = serde_json::from_reader(
-                File::open(testdata_directory_path.join("cargo_embargo.json"))
+            let cfg = Config::from_json_str(
+                &read_to_string(testdata_directory_path.join("cargo_embargo.json"))
                     .expect("Failed to open cargo_embargo.json"),
             )
             .unwrap();
