@@ -40,8 +40,7 @@ export function resetEngineWorker(): MessagePort {
   // Swap the active worker with the idle one and create a new idle worker
   // for the next trace.
   activeWasmWorker = assertExists(idleWasmWorker);
-  const msg: EngineWorkerInitMessage = {enginePort: port};
-  activeWasmWorker.postMessage(msg, [port]);
+  activeWasmWorker.postMessage(port, [port]);
   idleWasmWorker = new Worker(bundlePath);
   return channel.port2;
 }

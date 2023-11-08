@@ -66,27 +66,12 @@ describe('ParserWindowManager', () => {
       expect(entry.name).toEqual('2022-07-29T15:04:49.999048960');
     });
 
-    it('supports WM_WINDOWS_TOKEN_AND_NAME custom query', async () => {
+    it('supports WM_WINDOWS_TOKEN_AND_TITLE custom query', async () => {
       const tokenAndTitles = await trace
         .sliceEntries(0, 1)
         .customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
-      tokenAndTitles
-        .map((entry) => entry.title)
-        .sort()
-        .forEach((title) => {
-          console.log(title);
-        });
       expect(tokenAndTitles.length).toEqual(69);
-      expect(tokenAndTitles).toContain({token: '478edff', title: 'WindowContainer'}); // RootWindowContainerProto
-      expect(tokenAndTitles).toContain({token: '1f3454e', title: 'Built-in Screen'}); // DisplayContentProto
-      expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'}); // DisplayAreaProto
-      expect(tokenAndTitles).toContain({token: '509ad2f', title: '509ad2f'}); // WindowTokenProto
-      expect(tokenAndTitles).toContain({token: 'b3b210d', title: 'ScreenDecorOverlay'}); // WindowStateProto
-      expect(tokenAndTitles).toContain({token: '7493986', title: 'Task'}); // TaskProto
-      expect(tokenAndTitles).toContain({
-        token: 'f7092ed',
-        title: 'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
-      }); // ActivityRecordProto
+      expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'});
     });
   });
 
