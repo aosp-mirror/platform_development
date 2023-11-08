@@ -18,7 +18,6 @@ import {ProgressListener} from 'interfaces/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {ParserAccessibility} from './parser_accessibility';
 import {ParserEventLog} from './parser_eventlog';
 import {ParserInputMethodClients} from './parser_input_method_clients';
 import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
@@ -36,7 +35,6 @@ import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
 export class ParserFactory {
   static readonly PARSERS = [
-    ParserAccessibility,
     ParserInputMethodClients,
     ParserInputMethodManagerService,
     ParserInputMethodService,

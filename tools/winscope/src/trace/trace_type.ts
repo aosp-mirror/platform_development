@@ -20,7 +20,6 @@ import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 
 export enum TraceType {
-  ACCESSIBILITY,
   WINDOW_MANAGER,
   SURFACE_FLINGER,
   SCREEN_RECORDING,
@@ -54,7 +53,6 @@ export type FrameData = any;
 export type WindowData = any;
 
 export interface TraceEntryTypeMap {
-  [TraceType.ACCESSIBILITY]: object;
   [TraceType.PROTO_LOG]: LogMessage;
   [TraceType.SURFACE_FLINGER]: LayerTraceEntry;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
