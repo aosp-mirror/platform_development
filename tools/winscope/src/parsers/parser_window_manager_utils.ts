@@ -21,22 +21,17 @@ type WindowsTokenAndTitle =
 export class ParserWindowManagerUtils {
   private static readonly NA = 'n/a';
 
-  static parseWindowsTokenAndTitle(
-    parseWindowManagerTraceProto: any,
-    result: WindowsTokenAndTitle
-  ) {
-    ParserWindowManagerUtils.parseRootWindowContainerProto(
-      parseWindowManagerTraceProto?.windowManagerService?.rootWindowContainer,
+  static parseWindowsTokenAndTitle(rootWindowContainerProto: any, result: WindowsTokenAndTitle) {
+    const token =
+      rootWindowContainerProto?.windowContainer?.identifier?.hashCode?.toString(16) ??
+      ParserWindowManagerUtils.NA;
+    const title =
+      rootWindowContainerProto?.windowContainer?.identifier?.title ?? ParserWindowManagerUtils.NA;
+    result.push({token, title});
+    ParserWindowManagerUtils.parseWindowContainerProto(
+      rootWindowContainerProto?.windowContainer,
       result
     );
-  }
-
-  private static parseRootWindowContainerProto(proto: any, result: WindowsTokenAndTitle) {
-    const token =
-      proto?.windowContainer?.identifier?.hashCode?.toString(16) ?? ParserWindowManagerUtils.NA;
-    const title = proto?.windowContainer?.identifier?.title ?? ParserWindowManagerUtils.NA;
-    result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(proto?.windowContainer, result);
   }
 
   private static parseWindowContainerProto(proto: any, result: WindowsTokenAndTitle) {

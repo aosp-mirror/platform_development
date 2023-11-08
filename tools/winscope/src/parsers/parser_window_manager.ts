@@ -85,9 +85,14 @@ export class ParserWindowManager extends AbstractParser {
       .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, () => {
         const result: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] =
           [];
-        this.decodedEntries.slice(entriesRange.start, entriesRange.end).forEach((proto) => {
-          ParserWindowManagerUtils.parseWindowsTokenAndTitle(proto, result);
-        });
+        this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .forEach((windowManagerTraceProto) => {
+            ParserWindowManagerUtils.parseWindowsTokenAndTitle(
+              windowManagerTraceProto?.windowManagerService?.rootWindowContainer,
+              result
+            );
+          });
         return Promise.resolve(result);
       })
       .getResult();
