@@ -39,7 +39,7 @@ fi
 readonly CHECK_DIFF_RESULT
 
 . build/envsetup.sh
-lunch aosp_arm64
+lunch aosp_arm64-next-userdebug
 build/soong/soong_ui.bash --make-mode compare_images
 COMMON_ALLOWLIST=development/vndk/tools/image-diff-tool/allowlist.txt
 out/host/linux-x86/bin/compare_images $1 -u -w "${COMMON_ALLOWLIST}"
