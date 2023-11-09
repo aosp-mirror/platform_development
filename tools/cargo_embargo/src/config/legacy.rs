@@ -132,6 +132,8 @@ pub struct VariantConfig {
     #[serde(default = "default_true")]
     product_available: bool,
     #[serde(default)]
+    suffix: Option<String>,
+    #[serde(default)]
     test_blocklist: Vec<String>,
     #[serde(default)]
     test_data: Vec<String>,
@@ -158,6 +160,7 @@ impl Default for VariantConfig {
             no_host: false,
             no_std: false,
             product_available: true,
+            suffix: None,
             test_blocklist: Default::default(),
             test_data: Default::default(),
             tests: false,
@@ -193,7 +196,7 @@ impl VariantConfig {
             .iter()
             .map(|test_filename| test_filename_to_module_name(package_name, test_filename))
             .collect();
-        let module_name_overrides = self
+        let mut module_name_overrides = self
             .dep_suffixes
             .iter()
             .map(|(dependency, suffix)| {
@@ -201,7 +204,12 @@ impl VariantConfig {
                 let with_suffix = format!("{}{}", module_name, suffix);
                 (module_name, with_suffix)
             })
-            .collect();
+            .collect::<BTreeMap<_, _>>();
+        if let Some(suffix) = &self.suffix {
+            let module_name = package_to_library_name(&package_name.replace('-', "_"));
+            let with_suffix = format!("{}{}", module_name, suffix);
+            module_name_overrides.insert(module_name, with_suffix);
+        }
         let package_config = PackageVariantConfig {
             add_module_block: self.add_module_block.clone(),
             alloc: self.alloc,
