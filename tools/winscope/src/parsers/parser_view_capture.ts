@@ -22,9 +22,7 @@ import {ParsingUtils} from './parsing_utils';
 import {ExportedData} from './proto_types';
 
 export class ParserViewCapture {
-  // TODO(b/291213403): viewer should read this data from the Trace object
-  static packageNames: string[] = [];
-  readonly windowParsers: Array<Parser<FrameData>> = [];
+  private readonly windowParsers: Array<Parser<FrameData>> = [];
 
   constructor(private readonly traceFile: TraceFile) {}
 
@@ -33,7 +31,6 @@ export class ParserViewCapture {
     ParsingUtils.throwIfMagicNumberDoesntMatch(traceBuffer, ParserViewCapture.MAGIC_NUMBER);
 
     const exportedData = ExportedData.decode(traceBuffer) as any;
-    ParserViewCapture.packageNames.push(exportedData.package);
 
     exportedData.windowData.forEach((windowData: WindowData) =>
       this.windowParsers.push(
@@ -42,6 +39,7 @@ export class ParserViewCapture {
           windowData.frameData,
           ParserViewCapture.toTraceType(windowData),
           BigInt(exportedData.realToElapsedTimeOffsetNanos),
+          exportedData.package,
           exportedData.classname
         )
       )
@@ -50,6 +48,10 @@ export class ParserViewCapture {
 
   getTraceType(): TraceType {
     return TraceType.VIEW_CAPTURE;
+  }
+
+  getWindowParsers(): Array<Parser<FrameData>> {
+    return this.windowParsers;
   }
 
   private static toTraceType(windowData: WindowData): TraceType {

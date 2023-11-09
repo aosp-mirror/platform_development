@@ -38,6 +38,7 @@ describe('TracePipeline', () => {
     validWmFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/WindowManager.pb'
     );
+
     userNotificationListener = new UserNotificationListenerStub();
     parserErrorsSpy = spyOn(userNotificationListener, 'onParserErrors');
     tracePipeline = new TracePipeline(userNotificationListener);
@@ -70,6 +71,16 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getDownloadArchiveFilename()).toMatch(
       new RegExp(`${FilesSource.COLLECTED}_`)
     );
+  });
+
+  it('can convert illegal uploaded archive filename to legal name for download archive', async () => {
+    const fileWithIllegalName = await UnitTestUtils.getFixtureFile(
+      'traces/SF_trace&(*_with:_illegal+_characters.pb'
+    );
+    await tracePipeline.loadFiles([fileWithIllegalName]);
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    const downloadFilename = tracePipeline.getDownloadArchiveFilename();
+    expect(FileUtils.DOWNLOAD_FILENAME_REGEX.test(downloadFilename)).toBeTrue();
   });
 
   it('can load a new file without dropping already-loaded traces', async () => {

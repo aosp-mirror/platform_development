@@ -211,14 +211,27 @@ export class TracePipeline {
 
   private makeDownloadArchiveFilename(files: File[], source: FilesSource): string {
     // set download archive file name, used to download all traces
-    const currTime = new Date().toISOString().slice(0, -5).replace(/:/g, '-').replace('T', '_');
+    let filenameWithCurrTime: string;
+    const currTime = new Date().toISOString().slice(0, -5).replace('T', '_');
     if (!this.downloadArchiveFilename && files.length === 1) {
       const filenameNoDir = FileUtils.removeDirFromFileName(files[0].name);
       const filenameNoDirOrExt = FileUtils.removeExtensionFromFilename(filenameNoDir);
-      const filenameNoDirOrExtOrWhitespace = filenameNoDirOrExt.replace(/\s/g, '-');
-      return `${filenameNoDirOrExtOrWhitespace}_${currTime}`;
+      filenameWithCurrTime = `${filenameNoDirOrExt}_${currTime}`;
     } else {
-      return `${source}_${currTime}`;
+      filenameWithCurrTime = `${source}_${currTime}`;
+    }
+
+    const archiveFilenameNoIllegalChars = filenameWithCurrTime.replace(
+      FileUtils.ILLEGAL_FILENAME_CHARACTERS_REGEX,
+      '_'
+    );
+    if (FileUtils.DOWNLOAD_FILENAME_REGEX.test(archiveFilenameNoIllegalChars)) {
+      return archiveFilenameNoIllegalChars;
+    } else {
+      console.error(
+        "Cannot convert uploaded archive filename to acceptable format for download. Defaulting download filename to 'winscope.zip'."
+      );
+      return 'winscope';
     }
   }
 

@@ -106,7 +106,7 @@ rust_ffi_shared {
 
 // Test setup
 
-// Create test verion of the jave flag library
+// Create test verion of the java flag library
 // It needs to use the same aconfig_declarations as
 // the production one
 java_aconfig_library {

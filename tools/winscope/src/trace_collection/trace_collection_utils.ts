@@ -178,12 +178,6 @@ export const traceConfigurations: TraceConfigurationMap = {
     run: true,
     config: undefined,
   },
-  accessibility_trace: {
-    name: 'Accessibility',
-    isTraceCollection: undefined,
-    run: false,
-    config: undefined,
-  },
   transactions: {
     name: 'Transaction',
     isTraceCollection: undefined,
@@ -225,7 +219,6 @@ export const traceConfigurations: TraceConfigurationMap = {
 export const TRACES: {[key: string]: TraceConfigurationMap} = {
   default: {
     window_trace: traceConfigurations['window_trace'],
-    accessibility_trace: traceConfigurations['accessibility_trace'],
     layers_trace: traceConfigurations['layers_trace'],
     transactions: traceConfigurations['transactions'],
     proto_log: traceConfigurations['proto_log'],

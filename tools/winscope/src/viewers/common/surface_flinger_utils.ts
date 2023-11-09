@@ -15,19 +15,27 @@
  */
 
 import {Layer, LayerTraceEntry} from 'flickerlib/common';
-import {ParserViewCapture} from 'parsers/parser_view_capture';
 import {Rectangle, TransformMatrix} from 'viewers/components/rects/types2d';
 import {UserOptions} from './user_options';
 
 export class SurfaceFlingerUtils {
-  static makeRects(entry: LayerTraceEntry, hierarchyUserOptions: UserOptions): Rectangle[] {
-    const layerRects = SurfaceFlingerUtils.makeLayerRects(entry, hierarchyUserOptions);
+  static makeRects(
+    entry: LayerTraceEntry,
+    viewCapturePackageNames: string[],
+    hierarchyUserOptions: UserOptions
+  ): Rectangle[] {
+    const layerRects = SurfaceFlingerUtils.makeLayerRects(
+      entry,
+      viewCapturePackageNames,
+      hierarchyUserOptions
+    );
     const displayRects = SurfaceFlingerUtils.makeDisplayRects(entry);
     return layerRects.concat(displayRects);
   }
 
   private static makeLayerRects(
     entry: LayerTraceEntry,
+    viewCapturePackageNames: string[],
     hierarchyUserOptions: UserOptions
   ): Rectangle[] {
     return entry.flattenedLayers
@@ -49,8 +57,7 @@ export class SurfaceFlingerUtils {
           isVirtual: false,
           isClickable: true,
           cornerRadius: it.cornerRadius,
-          // TODO(b/291213403): should read this data from the trace instead of a global variable
-          hasContent: ParserViewCapture.packageNames.includes(
+          hasContent: viewCapturePackageNames.includes(
             it.rect.label.substring(0, it.rect.label.indexOf('/'))
           ),
         };
