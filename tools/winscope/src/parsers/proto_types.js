@@ -21,7 +21,6 @@ protobuf.configure();
 
 import winscopeJson from 'external/perfetto/protos/perfetto/trace/android/winscope.proto';
 import protoLogJson from 'frameworks/base/core/proto/android/internal/protolog.proto';
-import accessibilityJson from 'frameworks/base/core/proto/android/server/accessibilitytrace.proto';
 import windowManagerJson from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
 import wmTransitionsJson from 'frameworks/base/core/proto/android/server/windowmanagertransitiontrace.proto';
 import inputMethodClientsJson from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
@@ -30,9 +29,6 @@ import viewCaptureJson from 'frameworks/libs/systemui/viewcapturelib/src/com/and
 import layersJson from 'protos/udc/surfaceflinger/layerstrace.proto';
 import transactionsJson from 'protos/udc/surfaceflinger/transactions.proto';
 
-const AccessibilityTraceFileProto = protobuf.Root.fromJSON(accessibilityJson).lookupType(
-  'com.android.server.accessibility.AccessibilityTraceFileProto'
-);
 const InputMethodClientsTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType(
   'android.view.inputmethod.InputMethodClientsTraceFileProto'
 );
@@ -69,7 +65,6 @@ const ExportedData = protobuf.Root.fromJSON(viewCaptureJson).lookupType(
 );
 
 export {
-  AccessibilityTraceFileProto,
   ExportedData,
   InputMethodClientsTraceFileProto,
   InputMethodManagerServiceTraceFileProto,

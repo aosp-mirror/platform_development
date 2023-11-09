@@ -15,7 +15,11 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
 import {EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
@@ -29,6 +33,7 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
     private readonly frameData: FrameData[],
     private readonly traceType: TraceType,
     private readonly realToElapsedTimeOffsetNanos: bigint,
+    private readonly packageName: string,
     private readonly classNames: string[]
   ) {
     /*
@@ -94,7 +99,11 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
     type: Q,
     entriesRange: EntriesRange
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
-    throw new Error('Not implemented');
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, async () => {
+        return Promise.resolve(this.packageName);
+      })
+      .getResult();
   }
 
   getDescriptors(): string[] {

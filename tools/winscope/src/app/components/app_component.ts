@@ -285,7 +285,10 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   currentTimestamp?: Timestamp;
   activeView?: View;
   activeTrace?: Trace<object>;
-  filenameFormControl?: FormControl;
+  filenameFormControl: FormControl = new FormControl(
+    'winscope',
+    Validators.compose([Validators.required, Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX)])
+  );
 
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
@@ -389,16 +392,10 @@ export class AppComponent implements AppEventListener, TraceDataListener {
 
   onTraceDataLoaded(viewers: Viewer[]) {
     this.viewers = viewers;
-    this.dataLoaded = true;
     this.isEditingFilename = false;
-    this.filenameFormControl = new FormControl(
-      this.tracePipeline.getDownloadArchiveFilename(),
-      Validators.compose([
-        Validators.required,
-        Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
-      ])
-    );
+    this.filenameFormControl.setValue(this.tracePipeline.getDownloadArchiveFilename());
     this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
+    this.dataLoaded = true;
     this.changeDetectorRef.detectChanges();
   }
 
@@ -421,15 +418,15 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   }
 
   onCheckIconClick() {
-    if (this.filenameFormControl?.invalid) {
+    if (this.filenameFormControl.invalid) {
       return;
     }
     this.isEditingFilename = false;
-    this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl?.value}`);
+    this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
   }
 
   async onDownloadTracesButtonClick() {
-    if (this.filenameFormControl?.invalid) {
+    if (this.filenameFormControl.invalid) {
       return;
     }
     await this.downloadTraces();
@@ -437,7 +434,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
 
   async downloadTraces() {
     const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
-    const archiveFilename = `${this.filenameFormControl?.value}.zip`;
+    const archiveFilename = `${this.filenameFormControl.value}.zip`;
 
     const a = document.createElement('a');
     document.body.appendChild(a);

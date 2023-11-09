@@ -170,11 +170,6 @@ TRACE_TARGETS = {
         'su root cmd window tracing start\necho "WM trace started."',
         'su root cmd window tracing stop >/dev/null 2>&1'
     ),
-    "accessibility_trace": TraceTarget(
-        WinscopeFileMatcher("/data/misc/a11ytrace", "a11y_trace", "accessibility_trace"),
-        'su root cmd accessibility start-trace\necho "Accessibility trace started."',
-        'su root cmd accessibility stop-trace >/dev/null 2>&1'
-    ),
     "layers_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
         f"""

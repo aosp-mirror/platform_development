@@ -25,7 +25,6 @@ const PROTO_LOG_ICON = 'notes';
 const SYSTEM_UI_ICON = 'filter_none';
 const VIEW_CAPTURE_ICON = 'filter_none';
 const IME_ICON = 'keyboard_alt';
-const ACCESSIBILITY_ICON = 'accessibility_new';
 const TAG_ICON = 'details';
 const TRACE_ERROR_ICON = 'warning';
 const EVENT_LOG_ICON = 'description';
@@ -42,12 +41,6 @@ interface TraceInfoMap {
 }
 
 export const TRACE_INFO: TraceInfoMap = {
-  [TraceType.ACCESSIBILITY]: {
-    name: 'Accessibility',
-    icon: ACCESSIBILITY_ICON,
-    color: '#FF63B8',
-    downloadArchiveDir: 'accessibility',
-  },
   [TraceType.WINDOW_MANAGER]: {
     name: 'Window Manager',
     icon: WINDOW_MANAGER_ICON,

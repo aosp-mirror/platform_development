@@ -27,7 +27,7 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 
-  protected constructor(trace: TraceFile) {
+  constructor(trace: TraceFile) {
     this.traceFile = trace;
   }
 
