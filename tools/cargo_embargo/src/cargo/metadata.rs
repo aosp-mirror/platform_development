@@ -15,7 +15,7 @@
 //! Types for parsing cargo.metadata JSON files.
 
 use super::{Crate, CrateType, Extern, ExternType};
-use crate::config::Config;
+use crate::config::VariantConfig;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -88,7 +88,7 @@ pub enum TargetKind {
 
 pub fn parse_cargo_metadata_file(
     cargo_metadata_path: impl AsRef<Path>,
-    cfg: &Config,
+    cfg: &VariantConfig,
 ) -> Result<Vec<Crate>> {
     let metadata: WorkspaceMetadata = serde_json::from_reader(
         File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
@@ -287,6 +287,7 @@ fn add_feature_and_dependencies(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
     use crate::tests::testdata_directories;
     use std::fs::{read_to_string, File};
 
@@ -331,12 +332,18 @@ mod tests {
             )
             .unwrap();
             let cargo_metadata_path = testdata_directory_path.join("cargo.metadata");
-            let expected_crates: Vec<Crate> = serde_json::from_reader(
+            let expected_crates: Vec<Vec<Crate>> = serde_json::from_reader(
                 File::open(testdata_directory_path.join("crates.json")).unwrap(),
             )
             .unwrap();
 
-            let crates = parse_cargo_metadata_file(cargo_metadata_path, &cfg).unwrap();
+            let crates = cfg
+                .variants
+                .iter()
+                .map(|variant_cfg| {
+                    parse_cargo_metadata_file(&cargo_metadata_path, variant_cfg).unwrap()
+                })
+                .collect::<Vec<_>>();
             assert_eq!(crates, expected_crates);
         }
     }
