@@ -154,7 +154,98 @@ impl Config {
 
     /// Serializes an instance of this config to a string of pretty-printed JSON.
     pub fn to_json_string(&self) -> Result<String> {
-        serde_json::to_string_pretty(self).context("failed to serialize config")
+        // First convert to an untyped map.
+        let Value::Object(mut config) = serde_json::to_value(self)? else {
+            panic!("Config wasn't a map.");
+        };
+
+        // Factor out common options which are set for all variants.
+        let Value::Array(mut variants) = config.remove("variants").unwrap() else {
+            panic!("variants wasn't an array.")
+        };
+        let mut packages = if let Some(Value::Object(packages)) = config.remove("package") {
+            packages
+        } else {
+            Map::new()
+        };
+        for (key, value) in variants[0].as_object().unwrap() {
+            if key == "package" {
+                for (package_name, package_config) in value.as_object().unwrap() {
+                    for (package_key, package_value) in package_config.as_object().unwrap() {
+                        // Check whether all other variants have the same entry for the same package.
+                        if variants[1..variants.len()].iter().all(|variant| {
+                            if let Some(Value::Object(variant_packages)) =
+                                variant.as_object().unwrap().get("package")
+                            {
+                                if let Some(Value::Object(variant_package_config)) =
+                                    variant_packages.get(package_name)
+                                {
+                                    return variant_package_config.get(package_key)
+                                        == Some(package_value);
+                                }
+                            }
+                            false
+                        }) {
+                            packages
+                                .entry(package_name)
+                                .or_insert_with(|| Map::new().into())
+                                .as_object_mut()
+                                .unwrap()
+                                .insert(package_key.to_owned(), package_value.to_owned());
+                        }
+                    }
+                }
+            } else {
+                // Check whether all the other variants have the same entry.
+                if variants[1..variants.len()]
+                    .iter()
+                    .all(|variant| variant.as_object().unwrap().get(key) == Some(value))
+                {
+                    // Add it to the top-level config.
+                    config.insert(key.to_owned(), value.to_owned());
+                }
+            }
+        }
+        // Remove factored out common options from all variants.
+        for key in config.keys() {
+            for variant in &mut variants {
+                variant.as_object_mut().unwrap().remove(key);
+            }
+        }
+        // Likewise, remove package options factored out from variants.
+        for (package_name, package_config) in &packages {
+            for package_key in package_config.as_object().unwrap().keys() {
+                for variant in &mut variants {
+                    if let Some(Value::Object(variant_packages)) = variant.get_mut("package") {
+                        if let Some(Value::Object(variant_package_config)) =
+                            variant_packages.get_mut(package_name)
+                        {
+                            variant_package_config.remove(package_key);
+                        }
+                    }
+                }
+            }
+        }
+        // Remove any variant packages which are now empty.
+        for variant in &mut variants {
+            if let Some(Value::Object(variant_packages)) = variant.get_mut("package") {
+                variant_packages
+                    .retain(|_, package_config| !package_config.as_object().unwrap().is_empty());
+                if variant_packages.is_empty() {
+                    variant.as_object_mut().unwrap().remove("package");
+                }
+            }
+        }
+        // Put packages and variants back into the top-level config.
+        if variants.len() > 1 || !variants[0].as_object().unwrap().is_empty() {
+            config.insert("variants".to_string(), Value::Array(variants));
+        }
+        if !packages.is_empty() {
+            config.insert("package".to_string(), Value::Object(packages));
+        }
+
+        // Serialise the map into a JSON string.
+        serde_json::to_string_pretty(&config).context("failed to serialize config")
     }
 }
 
@@ -426,6 +517,106 @@ mod tests {
                 .into_iter()
                 .collect(),
             }
+        );
+    }
+
+    /// Tests that variant configuration options are factored out to the top level where possible.
+    #[test]
+    fn factor_variants() {
+        let config = Config {
+            variants: vec![
+                VariantConfig {
+                    features: Some(vec![]),
+                    tests: true,
+                    vendor_available: false,
+                    package: [(
+                        "argh".to_string(),
+                        PackageVariantConfig {
+                            dep_blocklist: vec!["bad_dep".to_string()],
+                            ..Default::default()
+                        },
+                    )]
+                    .into_iter()
+                    .collect(),
+                    ..Default::default()
+                },
+                VariantConfig {
+                    features: Some(vec![]),
+                    tests: true,
+                    product_available: false,
+                    module_name_overrides: [("argh".to_string(), "argh_nostd".to_string())]
+                        .into_iter()
+                        .collect(),
+                    vendor_available: false,
+                    package: [(
+                        "argh".to_string(),
+                        PackageVariantConfig {
+                            dep_blocklist: vec!["bad_dep".to_string()],
+                            no_std: true,
+                            ..Default::default()
+                        },
+                    )]
+                    .into_iter()
+                    .collect(),
+                    ..Default::default()
+                },
+            ],
+            package: [(
+                "argh".to_string(),
+                PackageConfig { add_toplevel_block: Some("block.bp".into()), ..Default::default() },
+            )]
+            .into_iter()
+            .collect(),
+        };
+
+        assert_eq!(
+            config.to_json_string().unwrap(),
+            r#"{
+  "features": [],
+  "package": {
+    "argh": {
+      "add_toplevel_block": "block.bp",
+      "dep_blocklist": [
+        "bad_dep"
+      ]
+    }
+  },
+  "tests": true,
+  "variants": [
+    {},
+    {
+      "module_name_overrides": {
+        "argh": "argh_nostd"
+      },
+      "package": {
+        "argh": {
+          "no_std": true
+        }
+      },
+      "product_available": false
+    }
+  ],
+  "vendor_available": false
+}"#
+        );
+    }
+
+    #[test]
+    fn factor_trivial_variant() {
+        let config = Config {
+            variants: vec![VariantConfig {
+                tests: true,
+                package: [("argh".to_string(), Default::default())].into_iter().collect(),
+                ..Default::default()
+            }],
+            package: Default::default(),
+        };
+
+        assert_eq!(
+            config.to_json_string().unwrap(),
+            r#"{
+  "tests": true
+}"#
         );
     }
 }
