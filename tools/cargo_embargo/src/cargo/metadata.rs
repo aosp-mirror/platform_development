@@ -109,23 +109,6 @@ fn parse_cargo_metadata(
         }
 
         let features = resolve_features(features, &package.features);
-        let externs: Vec<Extern> = package
-            .dependencies
-            .iter()
-            .filter_map(|dependency| {
-                // Kind is None for normal dependencies, as opposed to dev dependencies.
-                if dependency.enabled(&features) && dependency.kind.is_none() {
-                    let dependency_name = dependency.name.replace('-', "_");
-                    Some(Extern {
-                        name: dependency_name.to_owned(),
-                        lib_name: dependency_name.to_owned(),
-                        extern_type: extern_type(&metadata.packages, &dependency.name),
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
         let features_without_deps: Vec<String> =
             features.clone().into_iter().filter(|feature| !feature.starts_with("dep:")).collect();
         let package_dir = package_dir_from_id(&package.id)?;
@@ -164,39 +147,18 @@ fn parse_cargo_metadata(
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
-                    externs: externs.clone(),
+                    externs: get_externs(
+                        package,
+                        &metadata.packages,
+                        &features,
+                        *target_kind,
+                        false,
+                    ),
                     ..Default::default()
                 });
             }
             // This includes both unit tests and integration tests.
             if target.test && include_tests {
-                let mut externs: Vec<Extern> = package
-                    .dependencies
-                    .iter()
-                    .filter_map(|dependency| {
-                        if dependency.enabled(&features)
-                            && dependency.kind.as_deref() != Some("build")
-                        {
-                            let dependency_name = dependency.name.replace('-', "_");
-                            Some(Extern {
-                                name: dependency_name.to_owned(),
-                                lib_name: dependency_name.to_owned(),
-                                extern_type: extern_type(&metadata.packages, &dependency.name),
-                            })
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                // Add the library itself as a dependency for integration tests.
-                if *target_kind == TargetKind::Test {
-                    let package_name = package.name.replace('-', "_");
-                    externs.push(Extern {
-                        name: package_name.to_owned(),
-                        lib_name: package_name.to_owned(),
-                        extern_type: ExternType::Rust,
-                    });
-                }
                 crates.push(Crate {
                     name: target_name,
                     package_name: package.name.to_owned(),
@@ -207,13 +169,57 @@ fn parse_cargo_metadata(
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
-                    externs,
+                    externs: get_externs(
+                        package,
+                        &metadata.packages,
+                        &features,
+                        *target_kind,
+                        true,
+                    ),
                     ..Default::default()
                 });
             }
         }
     }
     Ok(crates)
+}
+
+fn get_externs(
+    package: &PackageMetadata,
+    packages: &[PackageMetadata],
+    features: &[String],
+    target_kind: TargetKind,
+    test: bool,
+) -> Vec<Extern> {
+    let mut externs: Vec<Extern> = package
+        .dependencies
+        .iter()
+        .filter_map(|dependency| {
+            // Kind is None for normal dependencies, as opposed to dev dependencies.
+            if dependency.enabled(features)
+                && dependency.kind.as_deref() != Some("build")
+                && (dependency.kind.is_none() || test)
+            {
+                let dependency_name = dependency.name.replace('-', "_");
+                Some(Extern {
+                    name: dependency_name.to_owned(),
+                    lib_name: dependency_name.to_owned(),
+                    extern_type: extern_type(packages, &dependency.name),
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
+    // If there is a library target and this is a binary or integration test, add the library as an
+    // extern.
+    if matches!(target_kind, TargetKind::Bin | TargetKind::Test)
+        && package.targets.iter().any(|t| t.kind.contains(&TargetKind::Lib))
+    {
+        let lib_name = package.name.replace('-', "_");
+        externs.push(Extern { name: lib_name.clone(), lib_name, extern_type: ExternType::Rust });
+    }
+    externs
 }
 
 /// Checks whether the given package is a proc macro.
