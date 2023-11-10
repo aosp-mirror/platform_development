@@ -22,6 +22,7 @@ Builds a vendor image for given product and analyze ninja inputs.
 
   -d  device name to build (e.g. vsoc_x86_64)
   -p  product name to build (e.g. cf_x86_64_phone)
+  -t  release configuration to build (e.g. trunk_staging)
   -r  directory for dist (e.g. out/dist)
   -i  build ID
   -u  whether it is an unbundled build
@@ -31,11 +32,15 @@ EOF
   exit 1
 }
 
-while getopts d:p:r:i:uh flag
+# TODO(b/310040467): Delete this line
+release=unset
+
+while getopts d:p:t:r:i:uh flag
 do
     case "${flag}" in
         d) device=${OPTARG};;
         p) product=${OPTARG};;
+        t) release=${OPTARG};;
         r) dist_dir=${OPTARG};;
         i) build_id=${OPTARG};;
         u) unbundled_build=true;;
@@ -46,7 +51,13 @@ done
 
 extra_targets=${@: ${OPTIND}}
 
-if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
+# TODO(b/310040467): Delete this if clause
+if [ "$release" = "unset" ]; then
+  echo "WARNING: -t option not set; this will be a fatal error soon"
+  release=trunk_staging
+fi
+
+if [[ -z "$device" || -z "$product" || -z "$release" || -z "$dist_dir" || -z "$build_id" ]]; then
   echo "missing arguments"
   usage
 fi
@@ -60,7 +71,7 @@ export SKIP_VNDK_VARIANTS_CHECK=true
 export DIST_DIR=$dist_dir
 
 build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist $extra_targets \
-  TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
+  TARGET_PRODUCT=$product TARGET_RELEASE=$release TARGET_BUILD_VARIANT=userdebug
 
 cp out/target/product/$device/vendor.img $dist_dir
 
