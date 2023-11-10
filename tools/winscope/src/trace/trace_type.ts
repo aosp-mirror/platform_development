@@ -109,8 +109,28 @@ export class TraceTypeUtils {
     TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
     TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
     TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-    TraceType.EVENT_LOG,
   ];
+
+  private static TRACES_WITH_VIEWERS = [
+    TraceType.SCREEN_RECORDING,
+    TraceType.SURFACE_FLINGER,
+    TraceType.WINDOW_MANAGER,
+    TraceType.INPUT_METHOD_CLIENTS,
+    TraceType.INPUT_METHOD_MANAGER_SERVICE,
+    TraceType.INPUT_METHOD_SERVICE,
+    TraceType.TRANSACTIONS,
+    TraceType.TRANSACTIONS_LEGACY,
+    TraceType.PROTO_LOG,
+    TraceType.TRANSITION,
+    TraceType.VIEW_CAPTURE,
+    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  ];
+
+  static isTraceTypeWithViewer(t: TraceType): boolean {
+    return TraceTypeUtils.TRACES_WITH_VIEWERS.includes(t);
+  }
 
   static compareByUiPipelineOrder(t: TraceType, u: TraceType) {
     const tIndex = TraceTypeUtils.findIndexInOrder(t, TraceTypeUtils.UI_PIPELINE_ORDER);
