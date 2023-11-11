@@ -126,6 +126,8 @@ pub struct VariantConfig {
     host_first_multilib: bool,
     min_sdk_version: Option<String>,
     #[serde(default)]
+    name_suffix: Option<String>,
+    #[serde(default)]
     no_host: bool,
     #[serde(default)]
     no_std: bool,
@@ -157,6 +159,7 @@ impl Default for VariantConfig {
             force_rlib: false,
             host_first_multilib: false,
             min_sdk_version: None,
+            name_suffix: None,
             no_host: false,
             no_std: false,
             product_available: true,
@@ -205,7 +208,9 @@ impl VariantConfig {
                 (module_name, with_suffix)
             })
             .collect::<BTreeMap<_, _>>();
-        if let Some(suffix) = &self.suffix {
+        let suffix =
+            self.suffix.clone().unwrap_or_default() + &self.name_suffix.clone().unwrap_or_default();
+        if !suffix.is_empty() {
             let module_name = package_to_library_name(&package_name.replace('-', "_"));
             let with_suffix = format!("{}{}", module_name, suffix);
             module_name_overrides.insert(module_name, with_suffix);

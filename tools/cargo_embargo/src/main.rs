@@ -596,29 +596,27 @@ fn crate_to_bp_modules(
     for crate_type in &crate_.types {
         let host = if package_cfg.device_supported { "" } else { "_host" };
         let rlib = if package_cfg.force_rlib { "_rlib" } else { "" };
-        let (module_type, module_name, stem) = match crate_type {
-            CrateType::Bin => {
-                ("rust_binary".to_string() + host, crate_.name.clone(), crate_.name.clone())
-            }
+        let (module_type, module_name) = match crate_type {
+            CrateType::Bin => ("rust_binary".to_string() + host, crate_.name.clone()),
             CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + rlib + host, stem.clone(), stem)
+                ("rust_library".to_string() + rlib + host, stem)
             }
             CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + host + "_dylib", stem.clone() + "_dylib", stem)
+                ("rust_library".to_string() + host + "_dylib", stem + "_dylib")
             }
             CrateType::CDyLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_ffi".to_string() + host + "_shared", stem.clone() + "_shared", stem)
+                ("rust_ffi".to_string() + host + "_shared", stem + "_shared")
             }
             CrateType::StaticLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_ffi".to_string() + host + "_static", stem.clone() + "_static", stem)
+                ("rust_ffi".to_string() + host + "_static", stem + "_static")
             }
             CrateType::ProcMacro => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_proc_macro".to_string(), stem.clone(), stem)
+                ("rust_proc_macro".to_string(), stem)
             }
             CrateType::Test | CrateType::TestNoHarness => {
                 let suffix = crate_.main_src.to_string_lossy().into_owned();
@@ -634,7 +632,7 @@ fn crate_to_bp_modules(
                     );
                     return Ok(Vec::new());
                 }
-                ("rust_test".to_string() + host, stem.clone(), stem)
+                ("rust_test".to_string() + host, stem)
             }
         };
 
@@ -644,10 +642,18 @@ fn crate_to_bp_modules(
         if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
             continue;
         }
-        m.props.set("name", module_name);
-        if stem != module_name {
-            m.props.set("stem", stem);
+        if matches!(
+            crate_type,
+            CrateType::Lib
+                | CrateType::RLib
+                | CrateType::DyLib
+                | CrateType::CDyLib
+                | CrateType::StaticLib
+        ) && !module_name.starts_with(&format!("lib{}", crate_.name))
+        {
+            bail!("Module name must start with lib{} but was {}", crate_.name, module_name);
         }
+        m.props.set("name", module_name);
 
         if let Some(defaults) = &cfg.global_defaults {
             m.props.set("defaults", vec![defaults.clone()]);
@@ -962,7 +968,6 @@ mod tests {
                         ("name".to_string(), BpValue::String("libash_rust".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
                         ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
-                        ("stem".to_string(), BpValue::String("libash".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
