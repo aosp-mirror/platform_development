@@ -19,6 +19,7 @@ import {
   Component,
   Inject,
   Injector,
+  NgZone,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -62,7 +63,7 @@ import {UploadTracesComponent} from './upload_traces_component';
     <mat-toolbar class="toolbar">
       <div class="horizontal-align vertical-align">
         <span class="app-title">Winscope</span>
-        <div *ngIf="dataLoaded" class="file-descriptor vertical-align">
+        <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
           <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
             {{ filenameFormControl.value }}.zip
           </span>
@@ -103,7 +104,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         </div>
       </div>
 
-      <div class="horizontal-align vertical-align active" *ngIf="dataLoaded">
+      <div class="horizontal-align vertical-align active" *ngIf="showDataLoadedElements">
         <mat-icon
           *ngIf="activeTrace"
           class="icon"
@@ -118,7 +119,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
       <div class="horizontal-align vertical-align">
         <button
-          *ngIf="dataLoaded"
+          *ngIf="showDataLoadedElements"
           color="primary"
           mat-stroked-button
           (click)="mediator.onWinscopeUploadNew()">
@@ -270,6 +271,7 @@ export class AppComponent implements AppEventListener, TraceDataListener {
   crossToolProtocol = new CrossToolProtocol();
   states = ProxyState;
   dataLoaded = false;
+  showDataLoadedElements = false;
   activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   TRACE_INFO = TRACE_INFO;
@@ -299,7 +301,8 @@ export class AppComponent implements AppEventListener, TraceDataListener {
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
     @Inject(SnackBarOpener) snackBar: SnackBarOpener,
-    @Inject(Title) private pageTitle: Title
+    @Inject(Title) private pageTitle: Title,
+    @Inject(NgZone) private ngZone: NgZone
   ) {
     CrossPlatform.setCache(new NoCache());
 
@@ -392,16 +395,25 @@ export class AppComponent implements AppEventListener, TraceDataListener {
 
   onTraceDataLoaded(viewers: Viewer[]) {
     this.viewers = viewers;
-    this.isEditingFilename = false;
     this.filenameFormControl.setValue(this.tracePipeline.getDownloadArchiveFilename());
     this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
+    this.isEditingFilename = false;
+
+    // some elements e.g. timeline require dataLoaded to be set outside NgZone to render
     this.dataLoaded = true;
     this.changeDetectorRef.detectChanges();
+
+    // tooltips must be rendered inside ngZone due to limitation of MatTooltip,
+    // therefore toolbar elements controlled by a different boolean
+    this.ngZone.run(() => {
+      this.showDataLoadedElements = true;
+    });
   }
 
   onTraceDataUnloaded() {
     proxyClient.adbData = [];
     this.dataLoaded = false;
+    this.showDataLoadedElements = false;
     this.pageTitle.setTitle('Winscope');
     this.activeView = undefined;
     this.changeDetectorRef.detectChanges();

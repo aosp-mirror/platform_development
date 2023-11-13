@@ -118,6 +118,7 @@ describe('AppComponent', () => {
 
   it('displays correct elements when no data loaded', () => {
     component.dataLoaded = false;
+    component.showDataLoadedElements = false;
     fixture.detectChanges();
 
     expect(htmlElement.querySelector('.welcome-info')).toBeTruthy();
@@ -130,6 +131,7 @@ describe('AppComponent', () => {
 
   it('displays correct elements when data loaded', () => {
     component.dataLoaded = true;
+    component.showDataLoadedElements = true;
     fixture.detectChanges();
 
     expect(htmlElement.querySelector('.welcome-info')).toBeFalsy();
@@ -142,7 +144,7 @@ describe('AppComponent', () => {
   });
 
   it('downloads traces on download button click', () => {
-    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
     fixture.detectChanges();
     const spy = spyOn(component, 'downloadTraces');
 
@@ -154,7 +156,7 @@ describe('AppComponent', () => {
   });
 
   it('downloads traces after valid file name change', () => {
-    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
     fixture.detectChanges();
     const spy = spyOn(component, 'downloadTraces');
 
@@ -182,7 +184,7 @@ describe('AppComponent', () => {
   });
 
   it('does not download traces if invalid file name chosen', () => {
-    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
     fixture.detectChanges();
     const spy = spyOn(component, 'downloadTraces');
 
@@ -192,7 +194,7 @@ describe('AppComponent', () => {
   });
 
   it('behaves as expected when entering valid then invalid then valid file names', () => {
-    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
     fixture.detectChanges();
 
     const spy = spyOn(component, 'downloadTraces');
