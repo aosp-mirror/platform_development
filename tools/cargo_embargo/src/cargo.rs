@@ -96,14 +96,14 @@ pub struct Crate {
 }
 
 /// A dependency of a Rust crate.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Extern {
     pub name: String,
     pub lib_name: String,
     pub extern_type: ExternType,
 }
 
-#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub enum ExternType {
     Rust,
     ProcMacro,
