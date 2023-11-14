@@ -219,6 +219,8 @@ fn get_externs(
         let lib_name = package.name.replace('-', "_");
         externs.push(Extern { name: lib_name.clone(), lib_name, extern_type: ExternType::Rust });
     }
+    externs.sort();
+    externs.dedup();
     externs
 }
 
