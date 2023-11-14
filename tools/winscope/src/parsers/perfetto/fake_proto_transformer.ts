@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import * as protobuf from 'protobufjs';
+import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
 import {FakeProto} from './fake_proto_builder';
 
 export class FakeProtoTransformer {
-  constructor(private readonly rootMessageType: protobuf.Type) {}
+  constructor(private readonly rootMessageType: TamperedMessageType) {}
 
   transform(proto: FakeProto): FakeProto {
     return this.transformMessageRec(proto, this.rootMessageType);
   }
 
-  private transformFieldRec(proto: FakeProto, field: protobuf.Field): FakeProto {
+  private transformFieldRec(proto: FakeProto, field: TamperedProtoField): FakeProto {
     // Leaf (primitive type)
-    if (!field.repeated) {
+    if (this.shouldCheckIfPrimitiveLeaf(proto, field)) {
       switch (field.type) {
         case 'double':
           return Number(proto ?? 0);
@@ -64,46 +64,25 @@ export class FakeProtoTransformer {
     }
 
     // Leaf (enum)
-    if (
-      field.resolvedType &&
-      field.resolvedType instanceof protobuf.Enum &&
-      field.resolvedType.valuesById
-    ) {
-      if (typeof proto === 'string') {
-        return proto;
-      }
-      return field.resolvedType.valuesById[Number(proto ?? 0)];
-    }
-
-    // Leaf (enum)
-    let enumType: protobuf.Enum | undefined;
-    try {
-      enumType = field.parent?.lookupEnum(field.type);
-    } catch (e) {
-      // do nothing
-    }
     const enumId = this.tryGetEnumId(proto);
-    if (enumType && enumId !== undefined) {
-      return enumType.valuesById[enumId];
+    if (field.tamperedEnumType && enumId !== undefined) {
+      return this.getValuesByIdProto(enumId, field.tamperedEnumType.valuesById);
     }
 
     // Leaf (default value)
     if (proto === null || proto === undefined) {
-      return field.repeated ? [] : field.defaultValue;
+      return this.getDefaultValue(proto, field);
     }
 
-    let protoType: protobuf.Type | undefined;
-    try {
-      protoType = this.rootMessageType.lookupType(field.type);
-    } catch (e) {
+    if (!field.tamperedMessageType) {
       return proto;
     }
 
     // Field is message -> continue recursion
-    return this.transformMessageRec(proto, protoType);
+    return this.transformMessageRec(proto, field.tamperedMessageType);
   }
 
-  private transformMessageRec(proto: FakeProto, messageType: protobuf.Type): FakeProto {
+  private transformMessageRec(proto: FakeProto, messageType: TamperedMessageType): FakeProto {
     for (const childName in messageType.fields) {
       if (!Object.prototype.hasOwnProperty.call(messageType.fields, childName)) {
         continue;
@@ -120,6 +99,18 @@ export class FakeProtoTransformer {
     }
 
     return proto;
+  }
+
+  protected shouldCheckIfPrimitiveLeaf(proto: FakeProto, field: TamperedProtoField): boolean {
+    return !field.repeated;
+  }
+
+  protected getValuesByIdProto(enumId: FakeProto, valuesById: {[key: number]: string}): FakeProto {
+    return valuesById[Number(enumId)];
+  }
+
+  protected getDefaultValue(proto: FakeProto, field: TamperedProtoField) {
+    return field.repeated ? [] : field.defaultValue;
   }
 
   private tryGetEnumId(proto: FakeProto): number | undefined {

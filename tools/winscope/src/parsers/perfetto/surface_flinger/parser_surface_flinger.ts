@@ -13,13 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {AddDefaults} from 'parsers/operations/add_defaults';
+import {SetFormatters} from 'parsers/operations/set_formatters';
+import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
+import {HierarchyTreeBuilderSf} from 'parsers/surface_flinger/hierarchy_tree_builder_sf';
+import {AddDisplayProperties} from 'parsers/surface_flinger/operations/add_display_properties';
+import {AddExcludesCompositionState} from 'parsers/surface_flinger/operations/add_excludes_composition_state';
+import {AddVerboseFlags} from 'parsers/surface_flinger/operations/add_verbose_flags';
+import {UpdateTransforms} from 'parsers/surface_flinger/operations/update_transforms';
+import {ParserSfUtils} from 'parsers/surface_flinger/parser_surface_flinger_utils';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/surfaceflinger/latest/json';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {
@@ -30,28 +41,43 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
-  private layersSnapshotProtoTransformer = new FakeProtoTransformer(
-    root.lookupType('perfetto.protos.LayersSnapshotProto')
+  private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
+    root.lookupType('perfetto.protos.LayersTraceFileProto')
   );
-  private layerProtoTransformer = new FakeProtoTransformer(root.lookupType('LayerProto'));
+
+  private readonly entryField = ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
+  private readonly entryType = assertDefined(this.entryField.tamperedMessageType);
+
+  private readonly layerField = assertDefined(this.entryType.fields['layers'].tamperedMessageType)
+    .fields['layers'];
+  private readonly layerType = assertDefined(this.layerField.tamperedMessageType);
+
+  private layersSnapshotProtoTransformer: FakeProtoTransformer;
+  private layerProtoTransformer: FakeProtoTransformer;
 
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
+    this.layersSnapshotProtoTransformer = new FakeProtoTransformer(this.entryType);
+    this.layerProtoTransformer = new FakeProtoTransformer(this.layerType);
   }
 
   override getTraceType(): TraceType {
     return TraceType.SURFACE_FLINGER;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<LayerTraceEntry> {
+  override async getEntry(index: number, timestampType: TimestampType): Promise<HierarchyTreeNode> {
     let snapshotProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
     snapshotProto = this.layersSnapshotProtoTransformer.transform(snapshotProto);
     const layerProtos = (await this.querySnapshotLayers(index)).map((layerProto) =>
       this.layerProtoTransformer.transform(layerProto)
     );
+
     return LayerTraceEntry.fromProto(
       layerProtos,
       snapshotProto.displays,
@@ -101,6 +127,59 @@ export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
 
   protected override getTableName(): string {
     return 'surfaceflinger_layers_snapshot';
+  }
+
+  private makeHierarchyTree(
+    snapshotProto: perfetto.protos.ILayersSnapshotProto,
+    layerProtos: perfetto.protos.ILayerProto[]
+  ): HierarchyTreeNode {
+    const excludesCompositionState = snapshotProto?.excludesCompositionState ?? false;
+
+    const processed = new Map<number, number>();
+
+    const layers: PropertiesProvider[] = layerProtos.map((layer: perfetto.protos.ILayerProto) => {
+      const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
+      processed.set(assertDefined(layer.id), duplicateCount + 1);
+      const eagerProperties = ParserSfUtils.makeEagerPropertiesTree(layer, duplicateCount);
+      const lazyProperties = ParserSfUtils.makeLayerLazyPropertiesStrategy(layer, duplicateCount); //TODO: fetch these lazily instead
+
+      const layerProps = new PropertiesProviderBuilder()
+        .setEagerProperties(eagerProperties)
+        .setLazyPropertiesStrategy(lazyProperties)
+        .addCommonOperation(new UpdateTransforms())
+        .addCommonOperation(new AddVerboseFlags())
+        .addCommonOperation(new AddExcludesCompositionState(excludesCompositionState))
+        .addCommonOperation(new SetFormatters(this.layerField, ParserSfUtils.CUSTOM_FORMATTERS))
+        .addCommonOperation(new TranslateIntDef(this.layerField))
+        .addEagerOperation(new AddDefaults(this.layerType, ParserSfUtils.EAGER_PROPERTIES))
+        .addLazyOperation(
+          new AddDefaults(
+            this.layerType,
+            undefined,
+            ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES)
+          )
+        )
+        .build();
+      return layerProps;
+    });
+
+    const entry = new PropertiesProviderBuilder()
+      .setEagerProperties(ParserSfUtils.makeEntryEagerPropertiesTree(snapshotProto))
+      .setLazyPropertiesStrategy(ParserSfUtils.makeEntryLazyPropertiesStrategy(snapshotProto))
+      .addEagerOperation(new AddDefaults(this.entryType, ['displays']))
+      .addLazyOperation(
+        new AddDefaults(this.entryType, undefined, ParserSfUtils.DENYLIST_PROPERTIES)
+      )
+      .addCommonOperation(new AddDisplayProperties())
+      .addCommonOperation(new SetFormatters(this.entryField))
+      .addCommonOperation(new TranslateIntDef(this.entryField))
+      .build();
+
+    return new HierarchyTreeBuilderSf()
+      .setEntry(entry)
+      .setLayers(layers)
+      .setExcludesCompositionState(excludesCompositionState)
+      .build();
   }
 
   private async querySnapshotLayers(index: number): Promise<perfetto.protos.ILayerProto[]> {
