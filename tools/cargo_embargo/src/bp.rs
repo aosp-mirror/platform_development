@@ -117,6 +117,7 @@ impl BpProperties {
             "edition",
             "features",
             "cfgs",
+            "flags",
             "rustlibs",
             "proc_macros",
             "static_libs",
