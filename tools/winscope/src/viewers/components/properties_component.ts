@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,23 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
-import {TraceTreeNode} from 'trace/trace_tree_node';
-import {TraceType, ViewNode} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertiesTreeNodeLegacy, Terminal} from 'viewers/common/ui_tree_utils_legacy';
+import {TraceType} from 'trace/trace_type';
+import {CuratedProperties} from 'viewers/common/curated_properties';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: 'properties-view-legacy',
+  selector: 'properties-view',
   template: `
     <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
-        <mat-form-field (keydown.enter)="$event.target.blur()">
+
+        <mat-form-field>
           <mat-label>Filter...</mat-label>
+
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
@@ -47,40 +48,27 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         >
       </div>
 
-      <surface-flinger-property-groups-legacy
+      <surface-flinger-property-groups
         *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedItem"></surface-flinger-property-groups-legacy>
+        [properties]="curatedProperties"></surface-flinger-property-groups>
 
-      <view-capture-property-groups-legacy
+      <view-capture-property-groups
         *ngIf="showViewCaptureFormat()"
         class="property-groups"
-        [item]="selectedItem"></view-capture-property-groups-legacy>
+        [properties]="curatedProperties"></view-capture-property-groups>
     </div>
 
     <mat-divider></mat-divider>
 
     <div class="properties-content">
-      <h3
-        *ngIf="isProtoDump && (isValidTree() || isValidLegacyTree())"
-        class="properties-title mat-subheading-2">
+      <h3 *ngIf="propertiesTree && isProtoDump" class="properties-title mat-subheading-2">
         Properties - Proto Dump
       </h3>
 
       <div class="tree-wrapper">
-        <tree-view-legacy
-          *ngIf="isValidLegacyTree() && !showViewCaptureFormat()"
-          [item]="propertiesTree"
-          [showNode]="showNode"
-          [store]="store"
-          [useStoredExpandedState]="true"
-          [itemsClickable]="true"
-          [highlightedItem]="highlightedProperty"
-          (highlightedChange)="onHighlightedPropertyChange($event)"
-          [isLeaf]="isLeaf"></tree-view-legacy>
-
         <tree-view
-          *ngIf="isValidTree() && !showViewCaptureFormat()"
+          *ngIf="propertiesTree && !showViewCaptureFormat()"
           [node]="propertiesTree"
           [store]="store"
           [useStoredExpandedState]="true"
@@ -137,18 +125,18 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     nodeStyles,
   ],
 })
-export class PropertiesComponentLegacy {
+export class PropertiesComponent {
   objectKeys = Object.keys;
   filterString = '';
 
   @Input() userOptions: UserOptions = {};
-  @Input() propertiesTree: PropertiesTreeNodeLegacy | PropertyTreeNode = {};
+  @Input() propertiesTree: UiPropertyTreeNode | undefined;
   @Input() highlightedProperty: string = '';
-  @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
+  @Input() curatedProperties: CuratedProperties | undefined;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
-  @Input() store!: PersistentStore;
+  @Input() store: PersistentStore | undefined;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -176,24 +164,8 @@ export class PropertiesComponentLegacy {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  showNode(item: any) {
-    return (
-      !(item instanceof Terminal) &&
-      !(item.name instanceof Terminal) &&
-      !(item.propertyKey instanceof Terminal)
-    );
-  }
-
-  isLeaf(item: any) {
-    return (
-      !item.children ||
-      item.children.length === 0 ||
-      item.children.filter((c: any) => !(c instanceof Terminal)).length === 0
-    );
-  }
-
   itemIsSelected() {
-    return this.selectedItem && Object.keys(this.selectedItem).length > 0;
+    return this.curatedProperties && Object.keys(this.curatedProperties).length > 0;
   }
 
   showViewCaptureFormat(): boolean {
@@ -202,23 +174,11 @@ export class PropertiesComponentLegacy {
       this.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       this.userOptions['showDiff']?.enabled === false &&
-      this.selectedItem
+      this.curatedProperties !== undefined
     );
   }
 
   isSurfaceFlinger(): boolean {
     return this.traceType === TraceType.SURFACE_FLINGER;
-  }
-
-  isValidLegacyTree(): boolean {
-    return (
-      this.propertiesTree &&
-      !(this.propertiesTree instanceof PropertyTreeNode) &&
-      this.objectKeys(this.propertiesTree).length > 0
-    );
-  }
-
-  isValidTree(): boolean {
-    return this.propertiesTree instanceof PropertyTreeNode;
   }
 }

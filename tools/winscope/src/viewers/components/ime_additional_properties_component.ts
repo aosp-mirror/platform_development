@@ -38,15 +38,15 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmProtoOrNull())}"
-            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
+            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties?.wm?.name)">
             WMState
           </button>
           <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
           <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               {{ additionalProperties.wm.name }}
             </p>
-            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
             </p>
           </div>
@@ -162,15 +162,15 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             mat-button
             class="group-header wm-state"
             [class]="{selected: isHighlighted(wmProtoOrNull())}"
-            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
+            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties?.wm?.name)">
             WMState
           </button>
           <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
           <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               {{ additionalProperties.wm.name }}
             </p>
-            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
             </p>
           </div>
@@ -178,15 +178,15 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         <div class="group">
           <h3 class="group-header mat-subheading-2">SFLayer</h3>
           <div class="left-column">
-            <p *ngIf="additionalProperties.sf" class="mat-body-1">
+            <p *ngIf="additionalProperties?.sf" class="mat-body-1">
               {{ additionalProperties.sf.name }}
             </p>
-            <p *ngIf="!additionalProperties.sf" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.sf" class="mat-body-1">
               There is no corresponding SFLayer entry.
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.wm" class="group">
+        <div *ngIf="additionalProperties?.wm" class="group">
           <h3 class="group-header mat-subheading-2">Focus</h3>
           <div class="left-column">
             <p class="mat-body-1">
@@ -217,19 +217,19 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         <div class="group">
           <h3 class="group-header mat-subheading-2">Visibility</h3>
           <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               <span class="mat-body-2">InputMethod Window:</span>
               &ngsp;
               {{ additionalProperties.wm.isInputMethodWindowVisible }}
             </p>
-            <p *ngIf="additionalProperties.sf" class="mat-body-1">
+            <p *ngIf="additionalProperties?.sf" class="mat-body-1">
               <span class="mat-body-2">InputMethod Surface:</span>
               &ngsp;
               {{ additionalProperties.sf.inputMethodSurface?.isInputMethodSurfaceVisible ?? false }}
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group">
           <button
             color="primary"
             mat-button
@@ -251,7 +251,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group">
           <button
             color="primary"
             mat-button
@@ -323,8 +323,8 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
   ],
 })
 export class ImeAdditionalPropertiesComponent {
-  @Input() additionalProperties!: ImeAdditionalProperties;
-  @Input() isImeManagerService?: boolean;
+  @Input() additionalProperties: ImeAdditionalProperties | undefined;
+  @Input() isImeManagerService: boolean | undefined;
   @Input() highlightedItem: string = '';
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
@@ -340,11 +340,11 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   wmProtoOrNull() {
-    return this.additionalProperties.wm?.proto;
+    return this.additionalProperties?.wm?.proto;
   }
 
   wmInsetsSourceProviderOrNull() {
-    return this.additionalProperties.wm?.protoImeInsetsSourceProvider
+    return this.additionalProperties?.wm?.protoImeInsetsSourceProvider
       ? Object.assign(
           {name: 'Ime Insets Source Provider'},
           this.additionalProperties.wm.protoImeInsetsSourceProvider
@@ -354,49 +354,49 @@ export class ImeAdditionalPropertiesComponent {
 
   wmControlTargetFrameOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.controlTarget?.windowFrames?.frame || 'null'
     );
   }
 
   wmInsetsSourceProviderPositionOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.control
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.control
         ?.position || 'null'
     );
   }
 
   wmInsetsSourceProviderIsLeashReadyOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.isLeashReadyForDispatching || 'null'
     );
   }
 
   wmInsetsSourceProviderControllableOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.controllable || 'null'
     );
   }
 
   wmInsetsSourceProviderSourceFrameOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.frame || 'null'
     );
   }
 
   wmInsetsSourceProviderSourceVisibleOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.visible || 'null'
     );
   }
 
   wmInsetsSourceProviderSourceVisibleFrameOrNull() {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
+      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.visibleFrame || 'null'
     );
   }
@@ -446,18 +446,18 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   sfImeContainerScreenBoundsOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.screenBounds || 'null';
+    return this.additionalProperties?.sf?.inputMethodSurface?.screenBounds || 'null';
   }
 
   sfImeContainerRectOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.rect || 'null';
+    return this.additionalProperties?.sf?.inputMethodSurface?.rect || 'null';
   }
 
   isAllPropertiesNull() {
     if (this.isImeManagerService) {
-      return !this.additionalProperties.wm;
+      return !this.additionalProperties?.wm;
     } else {
-      return !(this.additionalProperties.wm || this.additionalProperties.sf);
+      return !(this.additionalProperties?.wm || this.additionalProperties?.sf);
     }
   }
 

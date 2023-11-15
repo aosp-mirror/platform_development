@@ -28,6 +28,9 @@ import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
 import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
 import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
+import {TreeComponent} from '../tree_component';
+import {TreeNodeComponent} from '../tree_node_component';
+import {TreeNodeDataViewComponent} from '../tree_node_data_view_component';
 import {HierarchyComponentLegacy} from './hierarchy_component';
 
 describe('HierarchyComponentLegacy', () => {
@@ -43,6 +46,9 @@ describe('HierarchyComponentLegacy', () => {
         TreeComponentLegacy,
         TreeNodeComponentLegacy,
         TreeNodeDataViewComponentLegacy,
+        TreeComponent,
+        TreeNodeComponent,
+        TreeNodeDataViewComponent,
       ],
       imports: [
         CommonModule,
