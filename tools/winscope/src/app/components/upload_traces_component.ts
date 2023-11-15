@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Inject,
+  Input,
+  NgZone,
+  Output,
+} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {ProgressListener} from 'interfaces/progress_listener';
 import {Trace} from 'trace/trace';
+import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';
 
 @Component({
@@ -80,6 +89,9 @@ import {LoadProgressComponent} from './load_progress_component';
           color="primary"
           mat-raised-button
           class="load-btn"
+          matTooltip="Upload trace with an associated viewer to visualise"
+          [matTooltipDisabled]="hasLoadedFilesWithViewers()"
+          [disabled]="!hasLoadedFilesWithViewers()"
           (click)="onViewTracesButtonClick()">
           View traces
         </button>
@@ -176,7 +188,10 @@ export class UploadTracesComponent implements ProgressListener {
   @Output() filesUploaded = new EventEmitter<File[]>();
   @Output() viewTracesButtonClick = new EventEmitter<void>();
 
-  constructor(@Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {}
+  constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(NgZone) private ngZone: NgZone
+  ) {}
 
   ngOnInit() {
     this.tracePipeline.clear();
@@ -236,6 +251,17 @@ export class UploadTracesComponent implements ProgressListener {
     event.stopPropagation();
     this.tracePipeline.removeTrace(trace);
     this.onOperationFinished();
+  }
+
+  hasLoadedFilesWithViewers(): boolean {
+    return this.ngZone.run(() => {
+      let hasFilesWithViewers = false;
+      this.tracePipeline.getTraces().forEachTrace((trace) => {
+        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) hasFilesWithViewers = true;
+      });
+
+      return hasFilesWithViewers;
+    });
   }
 
   private getInputFiles(event: Event): File[] {
