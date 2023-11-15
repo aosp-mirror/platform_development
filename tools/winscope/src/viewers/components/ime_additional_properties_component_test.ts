@@ -19,8 +19,8 @@ import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {CoordinatesTableComponent} from './coordinates_table_component';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
+import {CoordinatesTableComponentLegacy} from './legacy/coordinates_table_component';
 
 describe('ImeAdditionalPropertiesComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -33,7 +33,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
       declarations: [
         ImeAdditionalPropertiesComponent,
         TestHostComponent,
-        CoordinatesTableComponent,
+        CoordinatesTableComponentLegacy,
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);

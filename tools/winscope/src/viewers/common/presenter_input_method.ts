@@ -31,7 +31,10 @@ import {ImeLayers, ImeUtils, ProcessedWindowManagerState} from 'viewers/common/i
 import {TableProperties} from 'viewers/common/table_properties';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 
 type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
@@ -42,9 +45,9 @@ export abstract class PresenterInputMethod {
   private readonly sfTrace?: Trace<LayerTraceEntry>;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | null = null;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
   protected readonly dependencies: TraceType[];
@@ -124,7 +127,7 @@ export abstract class PresenterInputMethod {
     });
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -170,14 +173,14 @@ export abstract class PresenterInputMethod {
     this.updateSelectedTreeUiData();
   }
 
-  newPropertiesTree(selectedItem: HierarchyTreeNode) {
+  newPropertiesTree(selectedItem: HierarchyTreeNodeLegacy) {
     this.additionalPropertyEntry = null;
     this.selectedHierarchyTree = selectedItem;
     this.updateSelectedTreeUiData();
   }
 
   newAdditionalPropertiesTree(selectedItem: any) {
-    this.selectedHierarchyTree = new HierarchyTreeNode(
+    this.selectedHierarchyTree = new HierarchyTreeNodeLegacy(
       selectedItem.name,
       'AdditionalProperty',
       'AdditionalProperty'
@@ -228,7 +231,7 @@ export abstract class PresenterInputMethod {
       .setIsSimplifyNames(this.hierarchyUserOptions['simplifyNames']?.enabled)
       .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
-    const tree: HierarchyTreeNode | null = generator.generateTree();
+    const tree: HierarchyTreeNodeLegacy | null = generator.generateTree();
     this.pinnedItems = generator.getPinnedItems();
     this.uiData.pinnedItems = this.pinnedItems;
     return tree;
@@ -250,7 +253,9 @@ export abstract class PresenterInputMethod {
     }
   }
 
-  private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
+  private getTreeWithTransformedProperties(
+    selectedTree: HierarchyTreeNodeLegacy
+  ): PropertiesTreeNodeLegacy {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
       .setOnlyProtoDump(this.additionalPropertyEntry != null)
       .setIsShowDefaults(this.propertiesUserOptions['showDefaults']?.enabled)

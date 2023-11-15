@@ -26,14 +26,18 @@ import {
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  UiTreeNode,
+  UiTreeUtilsLegacy as UiTreeUtils,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: 'tree-view',
+  selector: 'tree-view-legacy',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <tree-node
+    <tree-node-legacy
       *ngIf="item && showNode(item)"
       class="node"
       [id]="'node' + item.stableId"
@@ -55,14 +59,14 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       (toggleTreeChange)="toggleTree()"
       (click)="onNodeClick($event)"
       (expandTreeChange)="expandTree()"
-      (pinNodeChange)="propagateNewPinnedItem($event)"></tree-node>
+      (pinNodeChange)="propagateNewPinnedItem($event)"></tree-node-legacy>
 
     <div
       *ngIf="hasChildren()"
       class="children"
       [class.flattened]="isFlattened"
       [hidden]="!isExpanded()">
-      <tree-view
+      <tree-view-legacy
         *ngFor="let child of children(); trackBy: childTrackById"
         class="childrenTree"
         [item]="child"
@@ -80,12 +84,12 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
         (pinnedItemChange)="propagateNewPinnedItem($event)"
         (selectedTreeChange)="propagateNewSelectedTree($event)"
         (hoverStart)="childHover = true"
-        (hoverEnd)="childHover = false"></tree-view>
+        (hoverEnd)="childHover = false"></tree-view-legacy>
     </div>
   `,
   styles: [nodeStyles, treeNodeDataViewStyles],
 })
-export class TreeComponent {
+export class TreeComponentLegacy {
   diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
 
@@ -99,7 +103,7 @@ export class TreeComponent {
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItem: string = '';
-  @Input() pinnedItems: HierarchyTreeNode[] = [];
+  @Input() pinnedItems: HierarchyTreeNodeLegacy[] = [];
   @Input() itemsClickable?: boolean;
 
   // Conditionally use stored states. Some traces (e.g. transactions) do not provide items with the "stable id" field needed to search values in the storage.
@@ -128,7 +132,7 @@ export class TreeComponent {
     if (child.stableId !== undefined) {
       return child.stableId;
     }
-    if (!(child instanceof HierarchyTreeNode) && typeof child.propertyKey === 'string') {
+    if (!(child instanceof HierarchyTreeNodeLegacy) && typeof child.propertyKey === 'string') {
       return child.propertyKey;
     }
 
@@ -155,7 +159,7 @@ export class TreeComponent {
       }
     }
     if (
-      this.item instanceof HierarchyTreeNode &&
+      this.item instanceof HierarchyTreeNodeLegacy &&
       UiTreeUtils.isHighlighted(this.item, this.highlightedItem)
     ) {
       this.selectedTreeChange.emit(this.item);
@@ -193,7 +197,7 @@ export class TreeComponent {
   }
 
   isPinned() {
-    if (this.item instanceof HierarchyTreeNode) {
+    if (this.item instanceof HierarchyTreeNodeLegacy) {
       return this.pinnedItems?.map((item) => `${item.stableId}`).includes(`${this.item.stableId}`);
     }
     return false;

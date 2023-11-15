@@ -15,11 +15,11 @@
  */
 import {Component, Input} from '@angular/core';
 import {Chip} from 'viewers/common/chip';
-import {HierarchyTreeNode, Terminal, UiTreeNode} from 'viewers/common/ui_tree_utils';
+import {HierarchyTreeNodeLegacy, Terminal, UiTreeNode} from 'viewers/common/ui_tree_utils_legacy';
 import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
-  selector: 'tree-node-data-view',
+  selector: 'tree-node-data-view-legacy',
   template: `
     <span class="mat-body-1">
       <span class="mat-body-2">{{ item.kind }}</span>
@@ -33,15 +33,15 @@ import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_v
   `,
   styles: [treeNodeDataViewStyles],
 })
-export class TreeNodeDataViewComponent {
+export class TreeNodeDataViewComponentLegacy {
   @Input() item!: UiTreeNode;
 
   chips() {
-    return this.item instanceof HierarchyTreeNode ? this.item.chips : [];
+    return this.item instanceof HierarchyTreeNodeLegacy ? this.item.chips : [];
   }
 
   itemShortName() {
-    return this.item instanceof HierarchyTreeNode && this.item.shortName
+    return this.item instanceof HierarchyTreeNodeLegacy && this.item.shortName
       ? this.item.shortName
       : this.item.name;
   }
@@ -55,7 +55,7 @@ export class TreeNodeDataViewComponent {
 
   showShortName() {
     return (
-      this.item instanceof HierarchyTreeNode &&
+      this.item instanceof HierarchyTreeNodeLegacy &&
       this.item.simplifyNames &&
       this.item.shortName &&
       this.item.shortName !== this.item.name

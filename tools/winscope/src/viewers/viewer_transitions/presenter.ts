@@ -23,7 +23,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {UiData} from './ui_data';
 
 export class Presenter {
@@ -120,8 +120,8 @@ export class Presenter {
 
   private async makeSelectedTransitionPropertiesTree(
     transition: Transition
-  ): Promise<PropertiesTreeNode> {
-    const changes: PropertiesTreeNode[] = [];
+  ): Promise<PropertiesTreeNodeLegacy> {
+    const changes: PropertiesTreeNodeLegacy[] = [];
 
     for (const change of transition.changes) {
       const layerName = this.layerIdToName.get(change.layerId);
@@ -142,7 +142,7 @@ export class Presenter {
       });
     }
 
-    const properties: PropertiesTreeNode[] = [
+    const properties: PropertiesTreeNodeLegacy[] = [
       {propertyKey: 'id', propertyValue: transition.id},
       {propertyKey: 'type', propertyValue: transition.type},
       {propertyKey: 'aborted', propertyValue: `${transition.aborted}`},

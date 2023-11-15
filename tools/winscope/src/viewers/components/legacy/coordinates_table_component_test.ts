@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {CoordinatesTableComponent} from './coordinates_table_component';
 
-describe('CoordinatesTableComponent', () => {
-  let fixture: ComponentFixture<CoordinatesTableComponent>;
-  let component: CoordinatesTableComponent;
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {CoordinatesTableComponentLegacy} from './coordinates_table_component';
+
+describe('CoordinatesTableComponentLegacy', () => {
+  let fixture: ComponentFixture<CoordinatesTableComponentLegacy>;
+  let component: CoordinatesTableComponentLegacy;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CoordinatesTableComponent],
+      declarations: [CoordinatesTableComponentLegacy],
       schemas: [],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CoordinatesTableComponent);
+    fixture = TestBed.createComponent(CoordinatesTableComponentLegacy);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

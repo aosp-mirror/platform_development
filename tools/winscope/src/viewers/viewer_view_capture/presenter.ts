@@ -25,7 +25,10 @@ import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
 import {SurfaceFlingerUtils} from 'viewers/common/surface_flinger_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
@@ -40,11 +43,11 @@ export class Presenter {
 
   private selectedFrameData: FrameData | undefined;
   private previousFrameData: FrameData | undefined;
-  private selectedHierarchyTree: HierarchyTreeNode | undefined;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | undefined;
 
   private uiData: UiData | undefined;
 
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private pinnedIds: string[] = [];
 
   private highlightedItem: string = '';
@@ -199,7 +202,7 @@ export class Presenter {
     return rectangles;
   }
 
-  private generateTree(): HierarchyTreeNode | null {
+  private generateTree(): HierarchyTreeNodeLegacy | null {
     if (!this.selectedFrameData?.node) {
       return null;
     }
@@ -224,7 +227,7 @@ export class Presenter {
     }
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -278,7 +281,7 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  newPropertiesTree(selectedItem: HierarchyTreeNode) {
+  newPropertiesTree(selectedItem: HierarchyTreeNodeLegacy) {
     this.selectedHierarchyTree = selectedItem;
     this.uiData!!.selectedViewNode = this.findViewNode(
       selectedItem.name,
@@ -309,8 +312,8 @@ export class Presenter {
   }
 
   private getTreeWithTransformedProperties(
-    selectedTree: HierarchyTreeNode | undefined
-  ): PropertiesTreeNode | null {
+    selectedTree: HierarchyTreeNodeLegacy | undefined
+  ): PropertiesTreeNodeLegacy | null {
     if (!selectedTree) {
       return null;
     }

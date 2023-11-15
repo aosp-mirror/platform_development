@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
+import {TreeNodePropertiesDataViewComponentLegacy} from './tree_node_properties_data_view_component';
 
-describe('TreeNodePropertiesDataViewComponent', () => {
-  let fixture: ComponentFixture<TreeNodePropertiesDataViewComponent>;
-  let component: TreeNodePropertiesDataViewComponent;
+describe('TreeNodePropertiesDataViewComponentLegacy', () => {
+  let fixture: ComponentFixture<TreeNodePropertiesDataViewComponentLegacy>;
+  let component: TreeNodePropertiesDataViewComponentLegacy;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodePropertiesDataViewComponent],
+      declarations: [TreeNodePropertiesDataViewComponentLegacy],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeNodePropertiesDataViewComponent);
+    fixture = TestBed.createComponent(TreeNodePropertiesDataViewComponentLegacy);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

@@ -16,19 +16,19 @@
 
 import {Chip} from './chip';
 
-export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
+export type UiTreeNode = HierarchyTreeNodeLegacy | PropertiesTreeNodeLegacy;
 
-export class HierarchyTreeNode {
+export class HierarchyTreeNodeLegacy {
   constructor(
     public name: string,
     public kind: string,
     public stableId: string,
-    children?: HierarchyTreeNode[]
+    children?: HierarchyTreeNodeLegacy[]
   ) {
     this.children = children ?? [];
   }
 
-  children: HierarchyTreeNode[];
+  children: HierarchyTreeNodeLegacy[];
   shortName?: string;
   type?: string;
   id?: string | number;
@@ -54,11 +54,11 @@ export interface PropertiesDump {
   [key: string]: any;
 }
 
-export interface PropertiesTreeNode {
+export interface PropertiesTreeNodeLegacy {
   properties?: any;
   kind?: string;
   stableId?: string;
-  children?: PropertiesTreeNode[];
+  children?: PropertiesTreeNodeLegacy[];
   propertyKey?: string | Terminal | null;
   propertyValue?: string | Terminal | null;
   name?: string | Terminal;
@@ -77,7 +77,7 @@ export const DiffType = {
 
 export class Terminal {}
 
-export class UiTreeUtils {
+export class UiTreeUtilsLegacy {
   static diffClass(item: UiTreeNode): string {
     const diffType = item.diffType;
     return diffType ?? '';
@@ -88,7 +88,7 @@ export class UiTreeUtils {
   }
 
   static isVisibleNode(kind: string, type?: string): boolean {
-    return kind === 'WindowState' || kind === 'Activity' || UiTreeUtils.isSFEntryNode(type);
+    return kind === 'WindowState' || kind === 'Activity' || UiTreeUtilsLegacy.isSFEntryNode(type);
   }
 
   private static isSFEntryNode(type?: string): boolean {
@@ -96,7 +96,7 @@ export class UiTreeUtils {
   }
 
   static isParentNode(kind: string): boolean {
-    return UiTreeUtils.PARENT_NODE_KINDS.includes(kind);
+    return UiTreeUtilsLegacy.PARENT_NODE_KINDS.includes(kind);
   }
 
   private static readonly PARENT_NODE_KINDS = [

@@ -16,14 +16,14 @@
 
 import {TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 
 export class UiData {
   constructor(
     public entries: Transition[],
     public selectedTransition: Transition,
     public timestampType: TimestampType,
-    public selectedTransitionPropertiesTree?: PropertiesTreeNode
+    public selectedTransitionPropertiesTree?: PropertiesTreeNodeLegacy
   ) {}
 
   static EMPTY = new UiData([], undefined, TimestampType.REAL, undefined);

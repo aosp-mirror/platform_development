@@ -15,7 +15,10 @@
  */
 import {Layer} from 'flickerlib/common';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 
@@ -25,11 +28,11 @@ export class UiData {
   displayIds: number[] = [];
   highlightedItem: string = '';
   highlightedProperty: string = '';
-  pinnedItems: HierarchyTreeNode[] = [];
+  pinnedItems: HierarchyTreeNodeLegacy[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNode | null = null;
-  propertiesTree: PropertiesTreeNode | null = null;
+  tree: HierarchyTreeNodeLegacy | null = null;
+  propertiesTree: PropertiesTreeNodeLegacy | null = null;
   selectedLayer: Layer = {};
   displayPropertyGroups = true;
 

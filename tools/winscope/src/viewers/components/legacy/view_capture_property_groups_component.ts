@@ -17,7 +17,7 @@ import {Component, Input} from '@angular/core';
 import {ViewNode} from 'trace/trace_type';
 
 @Component({
-  selector: 'view-capture-property-groups',
+  selector: 'view-capture-property-groups-legacy',
   template: `
     <div class="group">
       <h3 class="group-header mat-subheading-2">View</h3>
@@ -176,6 +176,6 @@ import {ViewNode} from 'trace/trace_type';
     `,
   ],
 })
-export class ViewCapturePropertyGroupsComponent {
+export class ViewCapturePropertyGroupsComponentLegacy {
   @Input() item: ViewNode;
 }

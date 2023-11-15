@@ -17,7 +17,7 @@ import {Component, Input} from '@angular/core';
 import {Transform} from 'flickerlib/common';
 
 @Component({
-  selector: 'transform-matrix',
+  selector: 'transform-matrix-legacy',
   template: `
     <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString() ?? ''">
       <p class="mat-body-1">
@@ -56,7 +56,7 @@ import {Transform} from 'flickerlib/common';
     `,
   ],
 })
-export class TransformMatrixComponent {
+export class TransformMatrixComponentLegacy {
   @Input() transform: Transform;
   @Input() formatFloat!: (num: number) => number;
 }

@@ -15,7 +15,10 @@
  */
 
 import {TraceType, ViewNode} from 'trace/trace_type';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 
@@ -26,12 +29,12 @@ export class UiData {
   constructor(
     readonly rects: UiRect[],
     public sfRects: UiRect[] | undefined,
-    public tree: HierarchyTreeNode | null,
+    public tree: HierarchyTreeNodeLegacy | null,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
-    public pinnedItems: HierarchyTreeNode[],
+    public pinnedItems: HierarchyTreeNodeLegacy[],
     public highlightedItem: string,
-    public propertiesTree: PropertiesTreeNode | null,
+    public propertiesTree: PropertiesTreeNodeLegacy | null,
     public selectedViewNode: ViewNode
   ) {}
 }

@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
-import {DiffType, HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  DiffType,
+  HierarchyTreeNodeLegacy,
+  UiTreeNode,
+  UiTreeUtilsLegacy as UiTreeUtils,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: 'tree-node',
+  selector: 'tree-node-legacy',
   template: `
     <div *ngIf="showChevron()" class="icon-wrapper">
       <button class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
@@ -41,10 +46,12 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
     </div>
 
     <div class="description">
-      <tree-node-data-view *ngIf="!isPropertiesTreeNode()" [item]="item"></tree-node-data-view>
-      <tree-node-properties-data-view
+      <tree-node-data-view-legacy
+        *ngIf="!isPropertiesTreeNode()"
+        [item]="item"></tree-node-data-view-legacy>
+      <tree-node-properties-data-view-legacy
         *ngIf="isPropertiesTreeNode()"
-        [item]="item"></tree-node-properties-data-view>
+        [item]="item"></tree-node-properties-data-view-legacy>
     </div>
 
     <div *ngIf="hasChildren && !isExpanded" class="icon-wrapper">
@@ -58,7 +65,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
   `,
   styles: [nodeInnerItemStyles],
 })
-export class TreeNodeComponent {
+export class TreeNodeComponentLegacy {
   @Input() item!: UiTreeNode;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
@@ -97,7 +104,7 @@ export class TreeNodeComponent {
   }
 
   isPropertiesTreeNode() {
-    return !(this.item instanceof HierarchyTreeNode);
+    return !(this.item instanceof HierarchyTreeNodeLegacy);
   }
 
   showPinNodeIcon() {

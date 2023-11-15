@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {PropertiesTreeNode} from './ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from './ui_tree_utils_legacy';
 
 class PropertiesTreeGenerator {
-  generate(key: string, value: any): PropertiesTreeNode {
+  generate(key: string, value: any): PropertiesTreeNodeLegacy {
     if (this.isLeaf(value)) {
       return {
         propertyKey: key,
@@ -25,7 +25,7 @@ class PropertiesTreeGenerator {
       };
     }
 
-    let children: PropertiesTreeNode[];
+    let children: PropertiesTreeNodeLegacy[];
 
     if (Array.isArray(value)) {
       children = value.map((element, index) => this.generate('' + index, element));

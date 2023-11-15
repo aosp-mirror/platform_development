@@ -28,7 +28,10 @@ import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
@@ -44,9 +47,9 @@ export class Presenter {
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
   private highlightedItem: string = '';
   private highlightedProperty: string = '';
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | null = null;
   private previousEntry: TraceTreeNode | null = null;
   private entry: TraceTreeNode | null = null;
   private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
@@ -104,7 +107,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -160,7 +163,7 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  newPropertiesTree(selectedTree: HierarchyTreeNode) {
+  newPropertiesTree(selectedTree: HierarchyTreeNodeLegacy) {
     this.selectedHierarchyTree = selectedTree;
     this.updateSelectedTreeUiData();
   }
@@ -277,7 +280,7 @@ export class Presenter {
       .setIsSimplifyNames(this.hierarchyUserOptions['simplifyNames']?.enabled)
       .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
-    let tree: HierarchyTreeNode | null;
+    let tree: HierarchyTreeNodeLegacy | null;
     if (
       !this.hierarchyUserOptions['showDiff']?.enabled ||
       this.hierarchyUserOptions['showDiff']?.isUnavailable
@@ -302,7 +305,9 @@ export class Presenter {
     }
   }
 
-  private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
+  private getTreeWithTransformedProperties(
+    selectedTree: HierarchyTreeNodeLegacy
+  ): PropertiesTreeNodeLegacy {
     if (!this.entry) {
       return {};
     }

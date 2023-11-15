@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
-  selector: 'tree-node-properties-data-view',
+  selector: 'tree-node-properties-data-view-legacy',
   template: `
     <p class="mat-body-1">
       {{ item.propertyKey }}
@@ -30,8 +30,8 @@ import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_n
   `,
   styles: [treeNodePropertiesDataViewStyles],
 })
-export class TreeNodePropertiesDataViewComponent {
-  @Input() item!: PropertiesTreeNode;
+export class TreeNodePropertiesDataViewComponentLegacy {
+  @Input() item!: PropertiesTreeNodeLegacy;
 
   valueClass() {
     if (!this.item.propertyValue) {

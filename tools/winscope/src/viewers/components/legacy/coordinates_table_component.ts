@@ -16,7 +16,7 @@
 import {Component, Input} from '@angular/core';
 
 @Component({
-  selector: 'coordinates-table',
+  selector: 'coordinates-table-legacy',
   template: `
     <p *ngIf="!hasCoordinates()" class="mat-body-1">null</p>
     <table *ngIf="hasCoordinates()" class="table">
@@ -70,7 +70,7 @@ import {Component, Input} from '@angular/core';
     `,
   ],
 })
-export class CoordinatesTableComponent {
+export class CoordinatesTableComponentLegacy {
   @Input() coordinates!: any;
 
   hasCoordinates() {

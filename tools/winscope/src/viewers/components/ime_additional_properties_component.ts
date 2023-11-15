@@ -15,7 +15,7 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
-import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {UiTreeUtilsLegacy as UiTreeUtils} from 'viewers/common/ui_tree_utils_legacy';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
@@ -67,16 +67,18 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           </button>
           <div class="left-column">
             <p class="mat-body-2">Source Frame:</p>
-            <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"></coordinates-table>
+            <coordinates-table-legacy
+              [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"></coordinates-table-legacy>
             <p class="mat-body-1">
               <span class="mat-body-2">Source Visible:</span>
               &ngsp;
               {{ wmInsetsSourceProviderSourceVisibleOrNull() }}
             </p>
             <p class="mat-body-2">Source Visible Frame:</p>
-            <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceVisibleFrameOrNull()"></coordinates-table>
+            <coordinates-table-legacy
+              [coordinates]="
+                wmInsetsSourceProviderSourceVisibleFrameOrNull()
+              "></coordinates-table-legacy>
             <p class="mat-body-1">
               <span class="mat-body-2">Position:</span>
               &ngsp;
@@ -208,7 +210,8 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
               {{ additionalProperties.sf.focusedWindow?.color }}
             </p>
             <p class="mat-body-2">Input Control Target Frame:</p>
-            <coordinates-table [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table>
+            <coordinates-table-legacy
+              [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table-legacy>
           </div>
         </div>
         <div class="group">
@@ -259,12 +262,13 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           </button>
           <div class="left-column">
             <p class="mat-body-2">ScreenBounds:</p>
-            <coordinates-table
-              [coordinates]="sfImeContainerScreenBoundsOrNull()"></coordinates-table>
+            <coordinates-table-legacy
+              [coordinates]="sfImeContainerScreenBoundsOrNull()"></coordinates-table-legacy>
           </div>
           <div class="right-column">
             <p class="mat-body-2">Rect:</p>
-            <coordinates-table [coordinates]="sfImeContainerRectOrNull()"></coordinates-table>
+            <coordinates-table-legacy
+              [coordinates]="sfImeContainerRectOrNull()"></coordinates-table-legacy>
           </div>
         </div>
       </ng-container>

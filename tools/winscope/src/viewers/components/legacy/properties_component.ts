@@ -17,13 +17,13 @@ import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType, ViewNode} from 'trace/trace_type';
-import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
+import {PropertiesTreeNodeLegacy, Terminal} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: 'properties-view',
+  selector: 'properties-view-legacy',
   template: `
     <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
@@ -46,15 +46,15 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         >
       </div>
 
-      <surface-flinger-property-groups
+      <surface-flinger-property-groups-legacy
         *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedItem"></surface-flinger-property-groups>
+        [item]="selectedItem"></surface-flinger-property-groups-legacy>
 
-      <view-capture-property-groups
+      <view-capture-property-groups-legacy
         *ngIf="showViewCaptureFormat()"
         class="property-groups"
-        [item]="selectedItem"></view-capture-property-groups>
+        [item]="selectedItem"></view-capture-property-groups-legacy>
     </div>
 
     <mat-divider></mat-divider>
@@ -67,7 +67,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       </h3>
 
       <div class="tree-wrapper">
-        <tree-view
+        <tree-view-legacy
           *ngIf="objectKeys(propertiesTree).length > 0 && !showViewCaptureFormat()"
           [item]="propertiesTree"
           [showNode]="showNode"
@@ -77,7 +77,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"
           (highlightedChange)="onHighlightedPropertyChange($event)"
-          [isLeaf]="isLeaf"></tree-view>
+          [isLeaf]="isLeaf"></tree-view-legacy>
       </div>
     </div>
   `,
@@ -128,12 +128,12 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     nodeStyles,
   ],
 })
-export class PropertiesComponent {
+export class PropertiesComponentLegacy {
   objectKeys = Object.keys;
   filterString = '';
 
   @Input() userOptions: UserOptions = {};
-  @Input() propertiesTree: PropertiesTreeNode = {};
+  @Input() propertiesTree: PropertiesTreeNodeLegacy = {};
   @Input() highlightedProperty: string = '';
   @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
   @Input() displayPropertyGroups = false;

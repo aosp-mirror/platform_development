@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import {Chip} from 'viewers/common/chip';
-import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
+import {HierarchyTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 
 class HierarchyTreeBuilder {
   stableId = '';
   name = '';
   kind = '';
-  children: HierarchyTreeNode[] = [];
+  children: HierarchyTreeNodeLegacy[] = [];
   shortName?: string;
   type?: string;
   id?: string | number;
@@ -76,7 +76,7 @@ class HierarchyTreeBuilder {
     return this;
   }
 
-  setChildren(children: HierarchyTreeNode[]) {
+  setChildren(children: HierarchyTreeNodeLegacy[]) {
     this.children = children;
     return this;
   }
@@ -116,8 +116,8 @@ class HierarchyTreeBuilder {
     return this;
   }
 
-  build(): HierarchyTreeNode {
-    const node = new HierarchyTreeNode(this.name, this.kind, this.stableId, this.children);
+  build(): HierarchyTreeNodeLegacy {
+    const node = new HierarchyTreeNodeLegacy(this.name, this.kind, this.stableId, this.children);
 
     node.chips = this.chips;
     node.showInFilteredView = this.showInFilteredView;

@@ -17,11 +17,11 @@ import {Component, NO_ERRORS_SCHEMA, QueryList, ViewChildren} from '@angular/cor
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {UiTreeNode} from 'viewers/common/ui_tree_utils';
-import {TreeComponent} from './tree_component';
-import {TreeNodeComponent} from './tree_node_component';
+import {UiTreeNode} from 'viewers/common/ui_tree_utils_legacy';
+import {TreeComponentLegacy} from './tree_component';
+import {TreeNodeComponentLegacy} from './tree_node_component';
 
-describe('TreeComponent', () => {
+describe('TreeComponentLegacy', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
@@ -30,7 +30,7 @@ describe('TreeComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeComponent, TestHostComponent, TreeNodeComponent],
+      declarations: [TreeComponentLegacy, TestHostComponent, TreeNodeComponentLegacy],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -44,7 +44,7 @@ describe('TreeComponent', () => {
   });
 
   it('shows node', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
+    const treeNode = htmlElement.querySelector('tree-node-legacy');
     expect(treeNode).toBeTruthy();
   });
 
@@ -56,7 +56,7 @@ describe('TreeComponent', () => {
   });
 
   it('highlights item upon node click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
+    const treeNode = htmlElement.querySelector('tree-node-legacy');
     expect(treeNode).toBeTruthy();
 
     const spy = spyOn(component.treeComponents.first.highlightedChange, 'emit');
@@ -66,7 +66,7 @@ describe('TreeComponent', () => {
   });
 
   it('toggles tree upon node double click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
+    const treeNode = htmlElement.querySelector('tree-node-legacy');
     expect(treeNode).toBeTruthy();
 
     const currCollapseValue = component.treeComponents.first.localExpandedState;
@@ -138,22 +138,22 @@ describe('TreeComponent', () => {
   @Component({
     selector: 'host-component',
     template: `
-      <tree-view
+      <tree-view-legacy
         [item]="item0"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
-        [itemsClickable]="true"></tree-view>
+        [itemsClickable]="true"></tree-view-legacy>
 
-      <tree-view
+      <tree-view-legacy
         [item]="itemWithStoredExpandedState"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [useStoredExpandedState]="true"
-        [itemsClickable]="true"></tree-view>
+        [itemsClickable]="true"></tree-view-legacy>
     `,
   })
   class TestHostComponent {
@@ -189,7 +189,7 @@ describe('TreeComponent', () => {
       localStorage.clear();
     }
 
-    @ViewChildren(TreeComponent)
-    treeComponents!: QueryList<TreeComponent>;
+    @ViewChildren(TreeComponentLegacy)
+    treeComponents!: QueryList<TreeComponentLegacy>;
   }
 });

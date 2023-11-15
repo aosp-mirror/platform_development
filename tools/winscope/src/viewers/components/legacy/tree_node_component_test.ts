@@ -16,10 +16,10 @@
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
-import {TreeNodeComponent} from './tree_node_component';
-import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
+import {TreeNodeComponentLegacy} from './tree_node_component';
+import {TreeNodeDataViewComponentLegacy} from './tree_node_data_view_component';
 
-describe('TreeNodeComponent', () => {
+describe('TreeNodeComponentLegacy', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
@@ -28,7 +28,7 @@ describe('TreeNodeComponent', () => {
     await TestBed.configureTestingModule({
       imports: [MatIconModule],
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodeComponent, TreeNodeDataViewComponent, TestHostComponent],
+      declarations: [TreeNodeComponentLegacy, TreeNodeDataViewComponentLegacy, TestHostComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -44,7 +44,7 @@ describe('TreeNodeComponent', () => {
   it('can generate data view component', () => {
     component.treeNodeComponent.isPropertiesTreeNode = jasmine.createSpy().and.returnValue(false);
     fixture.detectChanges();
-    const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
+    const treeNodeDataView = htmlElement.querySelector('tree-node-data-view-legacy');
     expect(treeNodeDataView).toBeTruthy();
   });
 
@@ -81,13 +81,13 @@ describe('TreeNodeComponent', () => {
   @Component({
     selector: 'host-component',
     template: `
-      <tree-node
+      <tree-node-legacy
         [item]="item"
         [isExpanded]="false"
         [isPinned]="false"
         [isInPinnedSection]="false"
         [hasChildren]="true"
-        [isSelected]="isSelected"></tree-node>
+        [isSelected]="isSelected"></tree-node-legacy>
     `,
   })
   class TestHostComponent {
@@ -100,7 +100,7 @@ describe('TreeNodeComponent', () => {
 
     isSelected = false;
 
-    @ViewChild(TreeNodeComponent)
-    treeNodeComponent!: TreeNodeComponent;
+    @ViewChild(TreeNodeComponentLegacy)
+    treeNodeComponent!: TreeNodeComponentLegacy;
   }
 });

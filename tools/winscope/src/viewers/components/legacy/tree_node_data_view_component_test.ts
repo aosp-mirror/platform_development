@@ -15,23 +15,23 @@
  */
 import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {TransformMatrixComponent} from './transform_matrix_component';
+import {TreeNodeDataViewComponentLegacy} from './tree_node_data_view_component';
 
-describe('TransformMatrixComponent', () => {
-  let fixture: ComponentFixture<TransformMatrixComponent>;
-  let component: TransformMatrixComponent;
+describe('TreeNodeDataViewComponentLegacy', () => {
+  let fixture: ComponentFixture<TreeNodeDataViewComponentLegacy>;
+  let component: TreeNodeDataViewComponentLegacy;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TransformMatrixComponent],
+      declarations: [TreeNodeDataViewComponentLegacy],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TransformMatrixComponent);
+    fixture = TestBed.createComponent(TreeNodeDataViewComponentLegacy);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

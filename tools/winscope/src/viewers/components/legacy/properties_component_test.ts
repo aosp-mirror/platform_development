@@ -16,55 +16,46 @@
 import {CommonModule} from '@angular/common';
 import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
-import {TreeComponent} from 'viewers/components/tree_component';
-import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
-import {HierarchyComponent} from './hierarchy_component';
+import {PropertiesComponentLegacy} from './properties_component';
+import {SurfaceFlingerPropertyGroupsComponentLegacy} from './surface_flinger_property_groups_component';
+import {TreeComponentLegacy} from './tree_component';
 
-describe('HierarchyComponent', () => {
-  let fixture: ComponentFixture<HierarchyComponent>;
-  let component: HierarchyComponent;
+describe('PropertiesComponentLegacy', () => {
+  let fixture: ComponentFixture<PropertiesComponentLegacy>;
+  let component: PropertiesComponentLegacy;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [
-        HierarchyComponent,
-        TreeComponent,
-        TreeNodeComponent,
-        TreeNodeDataViewComponent,
+        PropertiesComponentLegacy,
+        SurfaceFlingerPropertyGroupsComponentLegacy,
+        TreeComponentLegacy,
       ],
       imports: [
         CommonModule,
-        MatCheckboxModule,
-        MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
+        MatCheckboxModule,
+        MatDividerModule,
         BrowserAnimationsModule,
         FormsModule,
+        ReactiveFormsModule,
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(HierarchyComponent);
+    fixture = TestBed.createComponent(PropertiesComponentLegacy);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-
-    component.tree = new HierarchyTreeBuilder()
-      .setStableId('RootNode1')
-      .setName('Root node')
-      .setChildren([new HierarchyTreeBuilder().setName('Child node').build()])
-      .build();
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -82,8 +73,8 @@ describe('HierarchyComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders title', () => {
-    const title = htmlElement.querySelector('.hierarchy-title');
+  it('creates title', () => {
+    const title = htmlElement.querySelector('.properties-title');
     expect(title).toBeTruthy();
   });
 
@@ -116,35 +107,13 @@ describe('HierarchyComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('renders initial tree elements', () => {
-    const treeView = htmlElement.querySelector('tree-view');
-    expect(treeView).toBeTruthy();
-    expect(assertDefined(treeView).innerHTML).toContain('Root node');
-    expect(assertDefined(treeView).innerHTML).toContain('Child node');
-  });
-
-  it('renders pinned nodes', () => {
-    const pinnedNodesDiv = htmlElement.querySelector('.pinned-items');
-    expect(pinnedNodesDiv).toBeFalsy();
-
-    component.pinnedItems = [assertDefined(component.tree)];
+  it('renders tree in proto dump upon selected item', () => {
+    component.propertiesTree = {
+      stableId: 'selectedItemProperty',
+    };
     fixture.detectChanges();
-    const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
-    expect(pinnedNodeEl).toBeTruthy();
-  });
-
-  it('handles pinned node click', () => {
-    component.pinnedItems = [assertDefined(component.tree)];
-    fixture.detectChanges();
-    const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
-    expect(pinnedNodeEl).toBeTruthy();
-
-    const propertyTreeChangeSpy = spyOn(component, 'onSelectedTreeChange');
-    const highlightedChangeSpy = spyOn(component, 'onHighlightedItemChange');
-    (pinnedNodeEl as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(propertyTreeChangeSpy).toHaveBeenCalled();
-    expect(highlightedChangeSpy).toHaveBeenCalled();
+    const treeEl = htmlElement.querySelector('tree-view-legacy');
+    expect(treeEl).toBeTruthy();
   });
 
   it('handles change in filter', () => {

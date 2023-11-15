@@ -16,17 +16,20 @@
 import {TraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 
 export class ImeUiData {
   dependencies: TraceType[];
   highlightedItem: string = '';
-  pinnedItems: HierarchyTreeNode[] = [];
+  pinnedItems: HierarchyTreeNodeLegacy[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNode | null = null;
-  propertiesTree: PropertiesTreeNode | null = null;
+  tree: HierarchyTreeNodeLegacy | null = null;
+  propertiesTree: PropertiesTreeNodeLegacy | null = null;
   hierarchyTableProperties: TableProperties | null = null;
   additionalProperties: ImeAdditionalProperties | null = null;
 

@@ -24,7 +24,7 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
 export class Presenter {
@@ -262,7 +262,7 @@ export class Presenter {
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
     selectedEntryIndex: undefined | number
-  ): undefined | PropertiesTreeNode {
+  ): undefined | PropertiesTreeNodeLegacy {
     if (selectedEntryIndex !== undefined) {
       return entries[selectedEntryIndex].propertiesTree;
     }

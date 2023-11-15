@@ -17,7 +17,7 @@ import {Component, Input} from '@angular/core';
 import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
 
 @Component({
-  selector: 'surface-flinger-property-groups',
+  selector: 'surface-flinger-property-groups-legacy',
   template: `
     <div class="group">
       <h3 class="group-header mat-subheading-2">Visibility</h3>
@@ -40,10 +40,10 @@ import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
       <div class="left-column">
         <p class="column-header mat-small">Calculated</p>
         <p class="property mat-body-2">Transform:</p>
-        <transform-matrix
+        <transform-matrix-legacy
           *ngIf="properties.calcTransform"
           [transform]="properties.calcTransform"
-          [formatFloat]="formatFloat"></transform-matrix>
+          [formatFloat]="formatFloat"></transform-matrix-legacy>
         <p class="mat-body-1 crop">
           <span
             class="mat-body-2"
@@ -69,10 +69,10 @@ import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
       <div class="right-column">
         <p class="column-header mat-small">Requested</p>
         <p class="property mat-body-2">Transform:</p>
-        <transform-matrix
+        <transform-matrix-legacy
           *ngIf="properties.reqTransform"
           [transform]="properties.reqTransform"
-          [formatFloat]="formatFloat"></transform-matrix>
+          [formatFloat]="formatFloat"></transform-matrix-legacy>
         <p class="mat-body-1 crop">
           <span class="mat-body-2">Crop:</span>
           &ngsp;
@@ -205,10 +205,10 @@ import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
       <ng-container *ngIf="hasInputChannel()">
         <div class="left-column">
           <p class="property mat-body-2">To Display Transform:</p>
-          <transform-matrix
+          <transform-matrix-legacy
             *ngIf="properties.inputTransform"
             [transform]="properties.inputTransform"
-            [formatFloat]="formatFloat"></transform-matrix>
+            [formatFloat]="formatFloat"></transform-matrix-legacy>
           <p class="mat-body-1">
             <span class="mat-body-2">Touchable Region:</span>
             &ngsp;
@@ -273,7 +273,7 @@ import {Color, Layer, toColor, toCropRect, Transform} from 'flickerlib/common';
     `,
   ],
 })
-export class SurfaceFlingerPropertyGroupsComponent {
+export class SurfaceFlingerPropertyGroupsComponentLegacy {
   @Input() item!: Layer;
   properties: any; // TODO(b/278163557): change to proper type when layer's TreeNode data type is defined
 

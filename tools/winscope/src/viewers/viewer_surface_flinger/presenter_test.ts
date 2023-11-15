@@ -24,7 +24,10 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -35,7 +38,7 @@ describe('PresenterSurfaceFlinger', () => {
   let positionUpdateMultiDisplayEntry: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
-  let selectedTree: HierarchyTreeNode;
+  let selectedTree: HierarchyTreeNodeLegacy;
 
   beforeAll(async () => {
     trace = new TraceBuilder<LayerTraceEntry>()
@@ -237,7 +240,7 @@ describe('PresenterSurfaceFlinger', () => {
     presenter.newPropertiesTree(selectedTree);
     let nonTerminalChildren =
       uiData.propertiesTree?.children?.filter(
-        (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
+        (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
       ) ?? [];
 
     expect(nonTerminalChildren.length).toEqual(22);
@@ -245,7 +248,7 @@ describe('PresenterSurfaceFlinger', () => {
 
     nonTerminalChildren =
       uiData.propertiesTree?.children?.filter(
-        (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
+        (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
       ) ?? [];
     expect(nonTerminalChildren.length).toEqual(3);
   });

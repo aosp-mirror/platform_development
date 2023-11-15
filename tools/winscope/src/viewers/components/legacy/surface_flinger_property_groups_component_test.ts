@@ -20,10 +20,10 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {Color} from 'flickerlib/common';
 import {LayerBuilder} from 'test/unit/layer_builder';
-import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
-import {TransformMatrixComponent} from './transform_matrix_component';
+import {SurfaceFlingerPropertyGroupsComponentLegacy} from './surface_flinger_property_groups_component';
+import {TransformMatrixComponentLegacy} from './transform_matrix_component';
 
-describe('PropertyGroupsComponent', () => {
+describe('SurfaceFlingerPropertyGroupsComponentLegacy', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
@@ -34,8 +34,8 @@ describe('PropertyGroupsComponent', () => {
       imports: [MatDividerModule, MatTooltipModule],
       declarations: [
         TestHostComponent,
-        SurfaceFlingerPropertyGroupsComponent,
-        TransformMatrixComponent,
+        SurfaceFlingerPropertyGroupsComponentLegacy,
+        TransformMatrixComponentLegacy,
       ],
       schemas: [],
     }).compileComponents();
@@ -65,7 +65,7 @@ describe('PropertyGroupsComponent', () => {
 
   it('displays calculated geometry', () => {
     const calculatedDiv = assertDefined(htmlElement.querySelector('.geometry .left-column'));
-    expect(calculatedDiv.querySelector('transform-matrix')).toBeTruthy();
+    expect(calculatedDiv.querySelector('transform-matrix-legacy')).toBeTruthy();
     expect(assertDefined(calculatedDiv.querySelector('.crop')).innerHTML).toContain('[empty]');
     expect(assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML).toContain(
       '[empty]'
@@ -86,7 +86,7 @@ describe('PropertyGroupsComponent', () => {
     component.item = layer;
     fixture.detectChanges();
     const requestedDiv = assertDefined(htmlElement.querySelector('.geometry .right-column'));
-    expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
+    expect(requestedDiv.querySelector('transform-matrix-legacy')).toBeTruthy();
     expect(assertDefined(requestedDiv.querySelector('.crop')).innerHTML).toContain('[empty]');
   });
 
@@ -188,7 +188,7 @@ describe('PropertyGroupsComponent', () => {
     component.item = layer;
     fixture.detectChanges();
 
-    expect(htmlElement.querySelector('.inputs .left-column transform-matrix')).toBeTruthy();
+    expect(htmlElement.querySelector('.inputs .left-column transform-matrix-legacy')).toBeTruthy();
 
     const configDiv = assertDefined(htmlElement.querySelector('.inputs .right-column'));
     expect(assertDefined(configDiv.querySelector('.focusable')).innerHTML).toContain('false');
@@ -202,7 +202,10 @@ describe('PropertyGroupsComponent', () => {
 
   @Component({
     selector: 'host-component',
-    template: ` <surface-flinger-property-groups [item]="item"></surface-flinger-property-groups> `,
+    template: `
+      <surface-flinger-property-groups-legacy
+        [item]="item"></surface-flinger-property-groups-legacy>
+    `,
   })
   class TestHostComponent {
     item = new LayerBuilder().setFlags(0).build();
