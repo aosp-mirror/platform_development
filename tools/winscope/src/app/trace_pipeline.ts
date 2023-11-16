@@ -70,75 +70,74 @@ export class TracePipeline {
       }
     };
 
-    if (unzippedArchives.length === 0) {
-      progressListener?.onOperationFinished();
-      errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
-      this.userNotificationListener?.onParserErrors(errors);
-      return;
-    }
-
-    for (const traceFilesFromArchive of unzippedArchives) {
-      const filterResult = await this.traceFileFilter.filter(traceFilesFromArchive);
-      if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+    try {
+      if (unzippedArchives.length === 0) {
         errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
-      } else {
-        errors.push(...filterResult.errors);
+        return;
+      }
 
-        const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
-          filterResult.legacy,
-          progressListener
-        );
-        errors.push(...legacyErrors);
+      for (const traceFilesFromArchive of unzippedArchives) {
+        const filterResult = await this.traceFileFilter.filter(traceFilesFromArchive);
+        if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+          errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
+        } else {
+          errors.push(...filterResult.errors);
 
-        for (const fileAndParser of fileAndParsers) {
-          maybeAddFileAndParser(fileAndParser.parser, fileAndParser.file);
-        }
-
-        if (filterResult.perfetto) {
-          const perfettoParsers = await new PerfettoParserFactory().createParsers(
-            filterResult.perfetto,
+          const [fileAndParsers, legacyErrors] = await this.parserFactory.createParsers(
+            filterResult.legacy,
             progressListener
           );
-          this.loadedPerfettoTraceFile =
-            perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
-          perfettoParsers.forEach((parser) => {
-            this.parsers.set(parser.getTraceType(), parser);
-          });
+          errors.push(...legacyErrors);
+
+          for (const fileAndParser of fileAndParsers) {
+            maybeAddFileAndParser(fileAndParser.parser, fileAndParser.file);
+          }
+
+          if (filterResult.perfetto) {
+            const perfettoParsers = await new PerfettoParserFactory().createParsers(
+              filterResult.perfetto,
+              progressListener
+            );
+            this.loadedPerfettoTraceFile =
+              perfettoParsers.length > 0 ? filterResult.perfetto : undefined;
+            perfettoParsers.forEach((parser) => {
+              currParsers.set(parser.getTraceType(), parser);
+              this.parsers.set(parser.getTraceType(), parser);
+            });
+          }
         }
       }
-    }
 
-    if (currParsers.size === 0) {
-      this.userNotificationListener?.onParserErrors(errors);
-      return;
-    }
+      if (currParsers.size === 0) {
+        return;
+      }
 
-    const tracesParsers = await this.tracesParserFactory.createParsers(this.parsers);
+      const tracesParsers = await this.tracesParserFactory.createParsers(this.parsers);
 
-    this.traces = new Traces();
+      this.traces = new Traces();
 
-    this.parsers.forEach((parser, traceType) => {
-      const trace = Trace.newUninitializedTrace(parser);
-      this.traces.setTrace(traceType, trace);
-    });
+      this.parsers.forEach((parser, traceType) => {
+        const trace = Trace.newUninitializedTrace(parser);
+        this.traces.setTrace(traceType, trace);
+      });
 
-    tracesParsers.forEach((tracesParser, traceType) => {
-      const trace = Trace.newUninitializedTrace(tracesParser);
-      this.traces.setTrace(traceType, trace);
-    });
+      tracesParsers.forEach((tracesParser, traceType) => {
+        const trace = Trace.newUninitializedTrace(tracesParser);
+        this.traces.setTrace(traceType, trace);
+      });
 
-    const hasTransitionTrace = this.traces
-      .mapTrace((trace) => trace.type)
-      .some((type) => type === TraceType.TRANSITION);
-    if (hasTransitionTrace) {
-      this.traces.deleteTrace(TraceType.WM_TRANSITION);
-      this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
-    }
-
-    progressListener?.onOperationFinished();
-
-    if (errors.length > 0) {
-      this.userNotificationListener?.onParserErrors(errors);
+      const hasTransitionTrace = this.traces
+        .mapTrace((trace) => trace.type)
+        .some((type) => type === TraceType.TRANSITION);
+      if (hasTransitionTrace) {
+        this.traces.deleteTrace(TraceType.WM_TRANSITION);
+        this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
+      }
+    } finally {
+      progressListener?.onOperationFinished();
+      if (errors.length > 0) {
+        this.userNotificationListener?.onParserErrors(errors);
+      }
     }
   }
 
