@@ -669,6 +669,9 @@ fn crate_to_bp_modules(
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }
+        if crate_type.is_c_library() {
+            m.props.set_if_nonempty("include_dirs", package_cfg.exported_c_header_dir.clone());
+        }
 
         m.props.set("crate_name", crate_.name.clone());
         m.props.set("cargo_env_compat", true);
