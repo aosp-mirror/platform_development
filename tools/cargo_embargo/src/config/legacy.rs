@@ -134,6 +134,8 @@ pub struct VariantConfig {
     #[serde(default)]
     no_host: bool,
     #[serde(default)]
+    no_presubmit: bool,
+    #[serde(default)]
     no_std: bool,
     #[serde(default = "default_true")]
     product_available: bool,
@@ -169,6 +171,7 @@ impl Default for VariantConfig {
             min_sdk_version: None,
             name_suffix: None,
             no_host: false,
+            no_presubmit: false,
             no_std: false,
             product_available: true,
             suffix: None,
@@ -234,12 +237,12 @@ impl VariantConfig {
             force_rlib: self.force_rlib,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
+            no_presubmit: self.no_presubmit,
             dep_blocklist,
             no_std: self.no_std,
             copy_out: self.copy_out,
             test_data,
             whole_static_libs,
-            ..Default::default()
         };
         let mut package = BTreeMap::new();
         // Skip package config if everything matches the defaults.
