@@ -600,7 +600,7 @@ fn crate_to_bp_modules(
             CrateType::Bin => ("rust_binary".to_string() + host, crate_.name.clone()),
             CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + rlib + host, stem)
+                ("rust_library".to_string() + host + rlib, stem)
             }
             CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
