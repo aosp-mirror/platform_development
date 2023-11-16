@@ -735,7 +735,11 @@ fn crate_to_bp_modules(
         };
         m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
         m.props.set_if_nonempty("proc_macros", process_lib_deps(proc_macro_libs));
-        m.props.set_if_nonempty("static_libs", process_lib_deps(crate_.static_libs.clone()));
+        let (whole_static_libs, static_libs) = process_lib_deps(crate_.static_libs.clone())
+            .into_iter()
+            .partition(|static_lib| package_cfg.whole_static_libs.contains(static_lib));
+        m.props.set_if_nonempty("static_libs", static_libs);
+        m.props.set_if_nonempty("whole_static_libs", whole_static_libs);
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
 
         if package_cfg.device_supported {
