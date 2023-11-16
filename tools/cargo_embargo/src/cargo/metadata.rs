@@ -117,9 +117,15 @@ fn parse_cargo_metadata(
             let [target_kind] = target.kind.deref() else {
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
-            // TODO: Consider whether to support Staticlib and Cdylib.
-            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::ProcMacro, TargetKind::Test]
-                .contains(target_kind)
+            if ![
+                TargetKind::Bin,
+                TargetKind::Cdylib,
+                TargetKind::Lib,
+                TargetKind::ProcMacro,
+                TargetKind::Staticlib,
+                TargetKind::Test,
+            ]
+            .contains(target_kind)
             {
                 // Only binaries, libraries and integration tests are supported.
                 continue;

@@ -1,0 +1,52 @@
+[
+  [
+    {
+      "name": "rustc_demangle",
+      "package_name": "rustc-demangle-capi",
+      "version": "0.1.0",
+      "types": ["staticlib"],
+      "target": "x86_64-unknown-linux-gnu",
+      "features": [],
+      "cfgs": [],
+      "externs": [
+        {
+          "name": "rustc_demangle",
+          "lib_name": "rustc_demangle",
+          "extern_type": "Rust"
+        }
+      ],
+      "codegens": [],
+      "cap_lints": "",
+      "static_libs": [],
+      "shared_libs": [],
+      "edition": "2015",
+      "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi",
+      "main_src": "src/lib.rs",
+      "empty_test": false
+    },
+    {
+      "name": "rustc_demangle",
+      "package_name": "rustc-demangle-capi",
+      "version": "0.1.0",
+      "types": ["test"],
+      "target": "x86_64-unknown-linux-gnu",
+      "features": [],
+      "cfgs": [],
+      "externs": [
+        {
+          "name": "rustc_demangle",
+          "lib_name": "rustc_demangle",
+          "extern_type": "Rust"
+        }
+      ],
+      "codegens": [],
+      "cap_lints": "",
+      "static_libs": [],
+      "shared_libs": [],
+      "edition": "2015",
+      "package_dir": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi",
+      "main_src": "src/lib.rs",
+      "empty_test": false
+    }
+  ]
+]
