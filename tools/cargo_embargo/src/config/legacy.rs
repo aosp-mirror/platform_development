@@ -134,6 +134,8 @@ pub struct VariantConfig {
     #[serde(default)]
     name_suffix: Option<String>,
     #[serde(default)]
+    native_bridge_supported: bool,
+    #[serde(default)]
     no_host: bool,
     #[serde(default)]
     no_presubmit: bool,
@@ -141,6 +143,10 @@ pub struct VariantConfig {
     no_std: bool,
     #[serde(default = "default_true")]
     product_available: bool,
+    #[serde(default)]
+    ramdisk_available: bool,
+    #[serde(default)]
+    recovery_available: bool,
     #[serde(default)]
     suffix: Option<String>,
     #[serde(default)]
@@ -151,6 +157,8 @@ pub struct VariantConfig {
     tests: bool,
     #[serde(default = "default_true")]
     vendor_available: bool,
+    #[serde(default)]
+    vendor_ramdisk_available: bool,
     #[serde(default)]
     whole_static_libs: Vec<String>,
 }
@@ -173,15 +181,19 @@ impl Default for VariantConfig {
             lib_blocklist: Default::default(),
             min_sdk_version: None,
             name_suffix: None,
+            native_bridge_supported: false,
             no_host: false,
             no_presubmit: false,
             no_std: false,
             product_available: true,
+            ramdisk_available: false,
+            recovery_available: false,
             suffix: None,
             test_blocklist: Default::default(),
             test_data: Default::default(),
             tests: false,
             vendor_available: true,
+            vendor_ramdisk_available: false,
             whole_static_libs: Default::default(),
         }
     }
@@ -263,8 +275,12 @@ impl VariantConfig {
             features,
             apex_available,
             cfg_blocklist: self.cfg_blocklist.clone(),
+            native_bridge_supported: self.native_bridge_supported,
             product_available: self.product_available,
+            ramdisk_available: self.ramdisk_available,
+            recovery_available: self.recovery_available,
             vendor_available: self.vendor_available,
+            vendor_ramdisk_available: self.vendor_ramdisk_available,
             min_sdk_version: self.min_sdk_version.clone(),
             module_blocklist,
             module_name_overrides,
