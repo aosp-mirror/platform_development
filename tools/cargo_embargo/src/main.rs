@@ -705,7 +705,7 @@ fn crate_to_bp_modules(
         if !crate_.cap_lints.is_empty() {
             flags.push(crate_.cap_lints.clone());
         }
-        flags.extend(crate_.codegens.clone());
+        flags.extend(crate_.codegens.iter().map(|codegen| format!("-C {}", codegen)));
         m.props.set_if_nonempty("flags", flags);
 
         let mut rust_libs = Vec::new();
