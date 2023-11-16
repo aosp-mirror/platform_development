@@ -121,6 +121,8 @@ pub struct VariantConfig {
     #[serde(default)]
     device: bool,
     #[serde(default)]
+    exported_c_header_dir: Vec<PathBuf>,
+    #[serde(default)]
     features: Option<String>,
     #[serde(default)]
     force_rlib: bool,
@@ -164,6 +166,7 @@ impl Default for VariantConfig {
             dep_suffixes: Default::default(),
             dependency_blocklist: Default::default(),
             device: false,
+            exported_c_header_dir: Default::default(),
             features: None,
             force_rlib: false,
             host_first_multilib: false,
@@ -243,6 +246,7 @@ impl VariantConfig {
             copy_out: self.copy_out,
             test_data,
             whole_static_libs,
+            exported_c_header_dir: self.exported_c_header_dir.clone(),
         };
         let mut package = BTreeMap::new();
         // Skip package config if everything matches the defaults.
