@@ -121,6 +121,7 @@ impl BpProperties {
             "rustlibs",
             "proc_macros",
             "static_libs",
+            "whole_static_libs",
             "shared_libs",
             "arch",
             "target",
