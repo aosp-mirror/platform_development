@@ -113,6 +113,8 @@ pub struct VariantConfig {
     #[serde(default)]
     cfg_blocklist: Vec<String>,
     #[serde(default)]
+    copy_out: bool,
+    #[serde(default)]
     dep_suffixes: BTreeMap<String, String>,
     #[serde(default)]
     dependency_blocklist: Vec<String>,
@@ -152,6 +154,7 @@ impl Default for VariantConfig {
             alloc: false,
             apex_available: Default::default(),
             cfg_blocklist: Default::default(),
+            copy_out: false,
             dep_suffixes: Default::default(),
             dependency_blocklist: Default::default(),
             device: false,
@@ -224,6 +227,7 @@ impl VariantConfig {
             host_first_multilib: self.host_first_multilib,
             dep_blocklist,
             no_std: self.no_std,
+            copy_out: self.copy_out,
             test_data,
             ..Default::default()
         };
