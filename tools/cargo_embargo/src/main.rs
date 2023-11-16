@@ -747,11 +747,23 @@ fn crate_to_bp_modules(
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
+                if cfg.native_bridge_supported {
+                    m.props.set("native_bridge_supported", true);
+                }
                 if cfg.product_available {
                     m.props.set("product_available", true);
                 }
+                if cfg.ramdisk_available {
+                    m.props.set("ramdisk_available", true);
+                }
+                if cfg.recovery_available {
+                    m.props.set("recovery_available", true);
+                }
                 if cfg.vendor_available {
                     m.props.set("vendor_available", true);
+                }
+                if cfg.vendor_ramdisk_available {
+                    m.props.set("vendor_ramdisk_available", true);
                 }
             }
             if crate_type.is_library() {
