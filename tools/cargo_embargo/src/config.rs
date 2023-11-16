@@ -390,6 +390,9 @@ pub struct PackageVariantConfig {
     /// Static libraries in this list will instead be added as whole_static_libs.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub whole_static_libs: Vec<String>,
+    /// Directories with headers to export for C usage.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub exported_c_header_dir: Vec<PathBuf>,
 }
 
 impl Default for PackageVariantConfig {
@@ -407,6 +410,7 @@ impl Default for PackageVariantConfig {
             copy_out: false,
             test_data: Default::default(),
             whole_static_libs: Default::default(),
+            exported_c_header_dir: Default::default(),
         }
     }
 }
