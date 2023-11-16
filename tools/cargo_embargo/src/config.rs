@@ -270,12 +270,24 @@ pub struct VariantConfig {
     /// Value to use for every generated library module's "apex_available" field.
     #[serde(default = "default_apex_available", skip_serializing_if = "is_default_apex_available")]
     pub apex_available: Vec<String>,
+    /// Value to use for every generated library module's `native_bridge_supported` field.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub native_bridge_supported: bool,
     /// Value to use for every generated library module's `product_available` field.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub product_available: bool,
+    /// Value to use for every generated library module's `ramdisk_available` field.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub ramdisk_available: bool,
+    /// Value to use for every generated library module's `recovery_available` field.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub recovery_available: bool,
     /// Value to use for every generated library module's `vendor_available` field.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub vendor_available: bool,
+    /// Value to use for every generated library module's `vendor_ramdisk_available` field.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub vendor_ramdisk_available: bool,
     /// Minimum SDK version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_sdk_version: Option<String>,
@@ -313,8 +325,12 @@ impl Default for VariantConfig {
             workspace_excludes: Default::default(),
             global_defaults: None,
             apex_available: default_apex_available(),
+            native_bridge_supported: false,
             product_available: true,
+            ramdisk_available: false,
+            recovery_available: false,
             vendor_available: true,
+            vendor_ramdisk_available: false,
             min_sdk_version: None,
             module_name_overrides: Default::default(),
             package: Default::default(),
