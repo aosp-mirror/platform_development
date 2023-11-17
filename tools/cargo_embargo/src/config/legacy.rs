@@ -113,6 +113,8 @@ pub struct VariantConfig {
     #[serde(default)]
     cfg_blocklist: Vec<String>,
     #[serde(default)]
+    copy_out: bool,
+    #[serde(default)]
     dep_suffixes: BTreeMap<String, String>,
     #[serde(default)]
     dependency_blocklist: Vec<String>,
@@ -124,6 +126,8 @@ pub struct VariantConfig {
     force_rlib: bool,
     #[serde(default)]
     host_first_multilib: bool,
+    #[serde(default)]
+    lib_blocklist: Vec<String>,
     min_sdk_version: Option<String>,
     #[serde(default)]
     name_suffix: Option<String>,
@@ -143,6 +147,8 @@ pub struct VariantConfig {
     tests: bool,
     #[serde(default = "default_true")]
     vendor_available: bool,
+    #[serde(default)]
+    whole_static_libs: Vec<String>,
 }
 
 impl Default for VariantConfig {
@@ -152,12 +158,14 @@ impl Default for VariantConfig {
             alloc: false,
             apex_available: Default::default(),
             cfg_blocklist: Default::default(),
+            copy_out: false,
             dep_suffixes: Default::default(),
             dependency_blocklist: Default::default(),
             device: false,
             features: None,
             force_rlib: false,
             host_first_multilib: false,
+            lib_blocklist: Default::default(),
             min_sdk_version: None,
             name_suffix: None,
             no_host: false,
@@ -168,6 +176,7 @@ impl Default for VariantConfig {
             test_data: Default::default(),
             tests: false,
             vendor_available: true,
+            whole_static_libs: Default::default(),
         }
     }
 }
@@ -192,6 +201,7 @@ impl VariantConfig {
         let dep_blocklist = self
             .dependency_blocklist
             .iter()
+            .chain(self.lib_blocklist.iter())
             .map(|package_name| package_to_library_name(package_name))
             .collect();
         let module_blocklist = self
@@ -215,6 +225,8 @@ impl VariantConfig {
             let with_suffix = format!("{}{}", module_name, suffix);
             module_name_overrides.insert(module_name, with_suffix);
         }
+        let whole_static_libs =
+            self.whole_static_libs.iter().map(|package| package_to_library_name(package)).collect();
         let package_config = PackageVariantConfig {
             add_module_block: self.add_module_block.clone(),
             alloc: self.alloc,
@@ -224,7 +236,9 @@ impl VariantConfig {
             host_first_multilib: self.host_first_multilib,
             dep_blocklist,
             no_std: self.no_std,
+            copy_out: self.copy_out,
             test_data,
+            whole_static_libs,
             ..Default::default()
         };
         let mut package = BTreeMap::new();
