@@ -600,7 +600,7 @@ fn crate_to_bp_modules(
             CrateType::Bin => ("rust_binary".to_string() + host, crate_.name.clone()),
             CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + rlib + host, stem)
+                ("rust_library".to_string() + host + rlib, stem)
             }
             CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
@@ -668,6 +668,9 @@ fn crate_to_bp_modules(
 
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
+        }
+        if crate_type.is_c_library() {
+            m.props.set_if_nonempty("include_dirs", package_cfg.exported_c_header_dir.clone());
         }
 
         m.props.set("crate_name", crate_.name.clone());
@@ -744,11 +747,23 @@ fn crate_to_bp_modules(
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
+                if cfg.native_bridge_supported {
+                    m.props.set("native_bridge_supported", true);
+                }
                 if cfg.product_available {
                     m.props.set("product_available", true);
                 }
+                if cfg.ramdisk_available {
+                    m.props.set("ramdisk_available", true);
+                }
+                if cfg.recovery_available {
+                    m.props.set("recovery_available", true);
+                }
                 if cfg.vendor_available {
                     m.props.set("vendor_available", true);
+                }
+                if cfg.vendor_ramdisk_available {
+                    m.props.set("vendor_ramdisk_available", true);
                 }
             }
             if crate_type.is_library() {
