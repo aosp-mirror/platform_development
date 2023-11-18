@@ -121,6 +121,8 @@ pub struct VariantConfig {
     #[serde(default)]
     device: bool,
     #[serde(default)]
+    exported_c_header_dir: Vec<PathBuf>,
+    #[serde(default)]
     features: Option<String>,
     #[serde(default)]
     force_rlib: bool,
@@ -132,11 +134,19 @@ pub struct VariantConfig {
     #[serde(default)]
     name_suffix: Option<String>,
     #[serde(default)]
+    native_bridge_supported: bool,
+    #[serde(default)]
     no_host: bool,
+    #[serde(default)]
+    no_presubmit: bool,
     #[serde(default)]
     no_std: bool,
     #[serde(default = "default_true")]
     product_available: bool,
+    #[serde(default)]
+    ramdisk_available: bool,
+    #[serde(default)]
+    recovery_available: bool,
     #[serde(default)]
     suffix: Option<String>,
     #[serde(default)]
@@ -147,6 +157,8 @@ pub struct VariantConfig {
     tests: bool,
     #[serde(default = "default_true")]
     vendor_available: bool,
+    #[serde(default)]
+    vendor_ramdisk_available: bool,
     #[serde(default)]
     whole_static_libs: Vec<String>,
 }
@@ -162,20 +174,26 @@ impl Default for VariantConfig {
             dep_suffixes: Default::default(),
             dependency_blocklist: Default::default(),
             device: false,
+            exported_c_header_dir: Default::default(),
             features: None,
             force_rlib: false,
             host_first_multilib: false,
             lib_blocklist: Default::default(),
             min_sdk_version: None,
             name_suffix: None,
+            native_bridge_supported: false,
             no_host: false,
+            no_presubmit: false,
             no_std: false,
             product_available: true,
+            ramdisk_available: false,
+            recovery_available: false,
             suffix: None,
             test_blocklist: Default::default(),
             test_data: Default::default(),
             tests: false,
             vendor_available: true,
+            vendor_ramdisk_available: false,
             whole_static_libs: Default::default(),
         }
     }
@@ -234,12 +252,13 @@ impl VariantConfig {
             force_rlib: self.force_rlib,
             host_supported: !self.no_host,
             host_first_multilib: self.host_first_multilib,
+            no_presubmit: self.no_presubmit,
             dep_blocklist,
             no_std: self.no_std,
             copy_out: self.copy_out,
             test_data,
             whole_static_libs,
-            ..Default::default()
+            exported_c_header_dir: self.exported_c_header_dir.clone(),
         };
         let mut package = BTreeMap::new();
         // Skip package config if everything matches the defaults.
@@ -256,8 +275,12 @@ impl VariantConfig {
             features,
             apex_available,
             cfg_blocklist: self.cfg_blocklist.clone(),
+            native_bridge_supported: self.native_bridge_supported,
             product_available: self.product_available,
+            ramdisk_available: self.ramdisk_available,
+            recovery_available: self.recovery_available,
             vendor_available: self.vendor_available,
+            vendor_ramdisk_available: self.vendor_ramdisk_available,
             min_sdk_version: self.min_sdk_version.clone(),
             module_blocklist,
             module_name_overrides,

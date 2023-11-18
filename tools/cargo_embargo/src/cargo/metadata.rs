@@ -23,6 +23,17 @@ use std::fs::File;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
+/// `cfg` strings for dependencies which should be considered enabled. It would be better to parse
+/// them properly, but this is good enough in practice so far.
+const ENABLED_CFGS: [&str; 6] = [
+    r#"cfg(unix)"#,
+    r#"cfg(not(windows))"#,
+    r#"cfg(any(unix, target_os = "wasi"))"#,
+    r#"cfg(not(all(target_family = "wasm", target_os = "unknown")))"#,
+    r#"cfg(not(target_family = "wasm"))"#,
+    r#"cfg(any(target_os = "linux", target_os = "android"))"#,
+];
+
 /// `cargo metadata` output.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct WorkspaceMetadata {
@@ -53,9 +64,12 @@ pub struct DependencyMetadata {
 impl DependencyMetadata {
     /// Returns whether the dependency should be included when the given features are enabled.
     fn enabled(&self, features: &[String]) -> bool {
-        // TODO: Parse target properly.
-        self.target.is_none()
-            && (!self.optional || features.contains(&format!("dep:{}", self.name)))
+        if let Some(target) = &self.target {
+            if !ENABLED_CFGS.contains(&target.as_str()) {
+                return false;
+            }
+        }
+        !self.optional || features.contains(&format!("dep:{}", self.name))
     }
 }
 
@@ -117,9 +131,15 @@ fn parse_cargo_metadata(
             let [target_kind] = target.kind.deref() else {
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
-            // TODO: Consider whether to support Staticlib and Cdylib.
-            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::ProcMacro, TargetKind::Test]
-                .contains(target_kind)
+            if ![
+                TargetKind::Bin,
+                TargetKind::Cdylib,
+                TargetKind::Lib,
+                TargetKind::ProcMacro,
+                TargetKind::Staticlib,
+                TargetKind::Test,
+            ]
+            .contains(target_kind)
             {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
