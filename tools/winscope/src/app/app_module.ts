@@ -47,8 +47,6 @@ import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additiona
 import {CoordinatesTableComponentLegacy} from 'viewers/components/legacy/coordinates_table_component';
 import {HierarchyComponentLegacy} from 'viewers/components/legacy/hierarchy_component';
 import {PropertiesComponentLegacy} from 'viewers/components/legacy/properties_component';
-import {SurfaceFlingerPropertyGroupsComponentLegacy} from 'viewers/components/legacy/surface_flinger_property_groups_component';
-import {TransformMatrixComponentLegacy} from 'viewers/components/legacy/transform_matrix_component';
 import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
 import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
 import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
@@ -126,9 +124,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     TreeNodePropertiesDataViewComponent,
     TreeNodePropertiesDataViewComponentLegacy,
     SurfaceFlingerPropertyGroupsComponent,
-    SurfaceFlingerPropertyGroupsComponentLegacy,
     TransformMatrixComponent,
-    TransformMatrixComponentLegacy,
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
     CoordinatesTableComponent,

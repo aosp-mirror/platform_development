@@ -13,24 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {Layer} from 'flickerlib/layers/Layer';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 
 describe('ParserSurfaceFlinger', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser<LayerTraceEntry>;
-    let trace: Trace<LayerTraceEntry>;
+    let parser: Parser<HierarchyTreeNode>;
+    let trace: Trace<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb');
-      trace = new TraceBuilder().setType(TraceType.SURFACE_FLINGER).setParser(parser).build();
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
+      )) as Parser<HierarchyTreeNode>;
+      trace = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
+        .setParser(parser)
+        .build();
     });
 
     it('has expected trace type', () => {
@@ -55,32 +61,46 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('formats entry timestamps', async () => {
+    it('provides correct root entry node', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
-      expect(entry.name).toEqual('2022-07-29T15:04:49.233029376');
-      expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(14631249355n);
-      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089233029344n);
+      expect(entry.id).toEqual('LayerTraceEntry root');
+      expect(entry.name).toEqual('root');
     });
 
     it('decodes layer state flags', async () => {
       const entry = await parser.getEntry(0, TimestampType.REAL);
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 27);
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27'))
+        );
         expect(layer.name).toEqual('Leaf:24:25#27');
-        expect(layer.flags).toEqual(0x0);
-        expect(layer.verboseFlags).toEqual('');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('0');
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('');
       }
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 48);
+        const layer = assertDefined(entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')));
         expect(layer.name).toEqual('Task=4#48');
-        expect(layer.flags).toEqual(0x1);
-        expect(layer.verboseFlags).toEqual('HIDDEN (0x1)');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('1');
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('HIDDEN (0x1)');
       }
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 77);
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'))
+        );
         expect(layer.name).toEqual('Wallpaper BBQ wrapper#77');
-        expect(layer.flags).toEqual(0x100);
-        expect(layer.verboseFlags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual(
+          '256'
+        );
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('ENABLE_BACKPRESSURE (0x100)');
       }
     });
 
@@ -99,21 +119,42 @@ describe('ParserSurfaceFlinger', () => {
     });
 
     it('is robust to duplicated layer ids', async () => {
-      const parser = await UnitTestUtils.getParser(
+      const parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb'
-      );
+      )) as Parser<HierarchyTreeNode>;
       const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeTruthy();
+
+      const layer = assertDefined(
+        entry.findDfs(
+          UiTreeUtils.makeIdMatchFilter(
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)'
+          )
+        )
+      );
+      expect(layer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(layer.getAllChildren().length).toEqual(0);
+
+      const dupLayer = assertDefined(
+        entry.findDfs(
+          UiTreeUtils.makeIdMatchFilter(
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
+          )
+        )
+      );
+
+      expect(dupLayer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(dupLayer.getAllChildren().length).toEqual(0);
     });
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser<LayerTraceEntry>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_timestamp/SurfaceFlinger.pb'
-      )) as Parser<LayerTraceEntry>;
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -130,9 +171,10 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
     });
 
-    it('formats entry timestamps', async () => {
+    it('provides correct root entry node', async () => {
       const entry = await parser.getEntry(0, TimestampType.ELAPSED);
-      expect(entry.name).toEqual('14m10s335ms483446ns');
+      expect(entry.id).toEqual('LayerTraceEntry root');
+      expect(entry.name).toEqual('root');
     });
   });
 });

@@ -28,12 +28,10 @@ export abstract class AddDiffs<T extends DiffNode> {
 
   constructor(private isModified: IsModifiedCallbackType) {}
 
-  async execute(newRoot: T, oldRoot?: T): Promise<T> {
+  async executeInPlace(newRoot: T, oldRoot?: T): Promise<void> {
     this.newIdNodeMap = this.updateIdNodeMap(newRoot);
     this.oldIdNodeMap = this.updateIdNodeMap(oldRoot);
-
-    const diffTrees = await this.generateDiffNodes(newRoot, oldRoot, [], []);
-    return diffTrees[0];
+    await this.generateDiffNodes(newRoot, oldRoot, [], []);
   }
 
   private updateIdNodeMap(root: T | undefined): Map<string, T> {

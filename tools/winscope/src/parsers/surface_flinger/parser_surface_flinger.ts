@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -42,7 +41,8 @@ import {AddVerboseFlags} from './operations/add_verbose_flags';
 import {UpdateTransforms} from './operations/update_transforms';
 import {ParserSfUtils} from './parser_surface_flinger_utils';
 
-class ParserSurfaceFlinger extends AbstractParser {
+class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
+  private static readonly MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
   private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
     root.lookupType('android.surfaceflinger.LayersTraceFileProto')
   );
@@ -54,7 +54,7 @@ class ParserSurfaceFlinger extends AbstractParser {
   private readonly layerType = assertDefined(this.layerField.tamperedMessageType);
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-  private static readonly MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
+  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -103,18 +103,8 @@ class ParserSurfaceFlinger extends AbstractParser {
     index: number,
     timestampType: TimestampType,
     entry: android.surfaceflinger.ILayersTraceProto
-  ): LayerTraceEntry {
-    return LayerTraceEntry.fromProto(
-      entry?.layers?.layers,
-      entry.displays,
-      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
-      entry.vsyncId,
-      entry.hwcBlob,
-      entry.where,
-      this.realToElapsedTimeOffsetNs,
-      timestampType === TimestampType.ELAPSED /*useElapsedTime*/,
-      entry.excludesCompositionState ?? false
-    );
+  ): HierarchyTreeNode {
+    return this.makeHierarchyTree(entry);
   }
 
   override customQuery<Q extends CustomQueryType>(

@@ -15,10 +15,10 @@
  */
 
 import {Cuj, Event, Transition} from 'flickerlib/common';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
+import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 
 export enum TraceType {
   WINDOW_MANAGER,
@@ -54,7 +54,7 @@ export type FrameData = any;
 
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: LogMessage;
-  [TraceType.SURFACE_FLINGER]: LayerTraceEntry;
+  [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: object;

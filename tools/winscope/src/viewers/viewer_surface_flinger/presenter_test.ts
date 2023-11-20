@@ -14,50 +14,48 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {
-  HierarchyTreeNodeLegacy,
-  PropertiesTreeNodeLegacy,
-} from 'viewers/common/ui_tree_utils_legacy';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {DiffType} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 describe('PresenterSurfaceFlinger', () => {
-  let trace: Trace<LayerTraceEntry>;
+  let trace: Trace<HierarchyTreeNode>;
   let positionUpdate: TracePositionUpdate;
   let positionUpdateMultiDisplayEntry: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
-  let selectedTree: HierarchyTreeNodeLegacy;
+  let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
-    trace = new TraceBuilder<LayerTraceEntry>()
+    trace = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([
         await UnitTestUtils.getLayerTraceEntry(),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
       ])
       .build();
 
-    positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
+    const firstEntry = trace.getEntry(0);
+    positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
     positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(trace.getEntry(1));
 
-    selectedTree = new HierarchyTreeBuilder()
-      .setName('Dim layer#53')
-      .setStableId('53 Dim layer#53')
-      .setFilteredView(true)
-      .setKind('53')
-      .setId(53)
-      .build();
+    const firstEntryDataTree = await firstEntry.getValue();
+    selectedTree = UiHierarchyTreeNode.from(
+      assertDefined(firstEntryDataTree.findDfs(UiTreeUtils.makeIdMatchFilter('53 Dim layer#53')))
+    );
   });
 
   beforeEach(async () => {
@@ -65,7 +63,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const emptyTrace = new TraceBuilder<LayerTraceEntry>().setEntries([]).build();
+    const emptyTrace = new TraceBuilder<HierarchyTreeNode>().setEntries([]).build();
     const presenter = createPresenter(emptyTrace);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
@@ -90,7 +88,7 @@ describe('PresenterSurfaceFlinger', () => {
       ? Object.keys(uiData.propertiesUserOptions)
       : null;
     expect(propertyOpts).toBeTruthy();
-    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
   });
 
   it('disables show diff and generates non-diff tree if no prev entry available', async () => {
@@ -119,11 +117,11 @@ describe('PresenterSurfaceFlinger', () => {
   it('updates pinned items', () => {
     expect(uiData.pinnedItems).toEqual([]);
 
-    const pinnedItem = new HierarchyTreeBuilder()
-      .setName('FirstPinnedItem')
-      .setStableId('TestItem 4')
-      .setLayerId(4)
-      .build();
+    const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
+      id: 'TestItem 4',
+      label: 'FirstPinnedItem',
+    });
+
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
@@ -144,7 +142,7 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.highlightedProperty).toBe(id);
   });
 
-  it('updates hierarchy tree', async () => {
+  it('flattens hierarchy tree', async () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -153,7 +151,7 @@ describe('PresenterSurfaceFlinger', () => {
       },
       simplifyNames: {
         name: 'Simplify names',
-        enabled: true,
+        enabled: false,
       },
       onlyVisible: {
         name: 'Only visible',
@@ -166,12 +164,56 @@ describe('PresenterSurfaceFlinger', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.tree?.children.length).toEqual(3);
+    const oldDataTree = assertDefined(uiData.tree);
+    expect(oldDataTree.getAllChildren().length).toEqual(3);
 
-    presenter.updateHierarchyTree(userOptions);
+    await presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    // nested children should now be on same level as initial parents
-    expect(uiData.tree?.children.length).toEqual(94);
+    const newDataTree = assertDefined(uiData.tree);
+    expect(newDataTree.getAllChildren().length).toEqual(94);
+    newDataTree.getAllChildren().forEach((child) => {
+      expect(child.getAllChildren().length).toEqual(0);
+    });
+  });
+
+  it('simplifies names in hierarchy tree', async () => {
+    //change flat view to true
+    const userOptions: UserOptions = {
+      showDiff: {
+        name: 'Show diff',
+        enabled: false,
+      },
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: false,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    const longName =
+      'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
+    const id = `96 ${longName}`;
+    const nodeWithLongName = assertDefined(
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+    );
+    expect(nodeWithLongName.getDisplayName()).toEqual(
+      'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96'
+    );
+
+    await presenter.updateHierarchyTree(userOptions);
+    expect(uiData.hierarchyUserOptions).toEqual(userOptions);
+    const nodeWithShortName = assertDefined(
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+    );
+    expect(nodeWithShortName.getDisplayName()).toEqual(longName);
   });
 
   it('filters hierarchy tree', async () => {
@@ -194,22 +236,44 @@ describe('PresenterSurfaceFlinger', () => {
       },
     };
     await presenter.onAppEvent(positionUpdate);
-    presenter.updateHierarchyTree(userOptions);
-    expect(uiData.tree?.children.length).toEqual(94);
-    presenter.filterHierarchyTree('Wallpaper');
+    await presenter.updateHierarchyTree(userOptions);
+    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(94);
+
+    await presenter.filterHierarchyTree('Wallpaper');
     // All but four layers should be filtered out
-    expect(uiData.tree?.children.length).toEqual(4);
+    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(4);
   });
 
   it('sets properties tree and associated ui data', async () => {
     await presenter.onAppEvent(positionUpdate);
-    presenter.newPropertiesTree(selectedTree);
+    await presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
   });
 
-  it('updates properties tree', async () => {
+  it('updates properties tree to show diffs', async () => {
     //change flat view to true
+    const userOptions: UserOptions = {
+      showDiff: {
+        name: 'Show diff',
+        enabled: true,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.newPropertiesTree(selectedTree);
+    expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
+      DiffType.NONE
+    );
+
+    await presenter.updatePropertiesTree(userOptions);
+    expect(uiData.propertiesUserOptions).toEqual(userOptions);
+    expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
+      DiffType.ADDED
+    );
+  });
+
+  it('shows/hides defaults', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -218,39 +282,25 @@ describe('PresenterSurfaceFlinger', () => {
       showDefaults: {
         name: 'Show defaults',
         enabled: true,
-        tooltip: `
-                  If checked, shows the value of all properties.
-                  Otherwise, hides all properties whose value is
-                  the default for its data type.
-                `,
       },
     };
 
     await presenter.onAppEvent(positionUpdate);
-    presenter.newPropertiesTree(selectedTree);
-    expect(uiData.propertiesTree?.diffType).toBeFalsy();
+    await presenter.newPropertiesTree(selectedTree);
+    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
 
-    presenter.updatePropertiesTree(userOptions);
+    await presenter.updatePropertiesTree(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(uiData.propertiesTree?.diffType).toBeTruthy();
+    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(56);
   });
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-    presenter.newPropertiesTree(selectedTree);
-    let nonTerminalChildren =
-      uiData.propertiesTree?.children?.filter(
-        (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
-      ) ?? [];
+    await presenter.newPropertiesTree(selectedTree);
+    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
 
-    expect(nonTerminalChildren.length).toEqual(22);
-    presenter.filterPropertiesTree('bound');
-
-    nonTerminalChildren =
-      uiData.propertiesTree?.children?.filter(
-        (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
-      ) ?? [];
-    expect(nonTerminalChildren.length).toEqual(3);
+    await presenter.filterPropertiesTree('bound');
+    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(3);
   });
 
   it('handles displays with no visible layers', async () => {
@@ -260,11 +310,11 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.displayIds).toEqual([0, 2, 3, 4, 5]);
   });
 
-  const createPresenter = (trace: Trace<LayerTraceEntry>): Presenter => {
+  function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
     traces.setTrace(TraceType.SURFACE_FLINGER, trace);
     return new Presenter(traces, new MockStorage(), (newData: UiData) => {
       uiData = newData;
     });
-  };
+  }
 });

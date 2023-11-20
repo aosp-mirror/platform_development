@@ -27,6 +27,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
         <hierarchy-view-legacy
           class="hierarchy-view"
           [tree]="inputData?.tree ?? null"
+          [subtrees]="inputData?.sfSubtrees ?? []"
           [dependencies]="inputData?.dependencies ?? []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"

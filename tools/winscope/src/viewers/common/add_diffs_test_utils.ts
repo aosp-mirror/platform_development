@@ -37,7 +37,8 @@ export function executeAddDiffsTests<T extends DiffNode>(
     });
 
     it('handles two identical trees', async () => {
-      expect(await addDiffs.execute(newRoot, newRoot)).toEqual(newRoot);
+      await addDiffs.executeInPlace(newRoot, newRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('adds MODIFIED', async () => {
@@ -47,7 +48,8 @@ export function executeAddDiffsTests<T extends DiffNode>(
       const expectedChild = makeChildAndAddToRoot(expectedRoot);
       expectedChild.setDiff(DiffType.MODIFIED);
 
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(expectedRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('adds ADDED', async () => {
@@ -56,7 +58,8 @@ export function executeAddDiffsTests<T extends DiffNode>(
       const expectedChild = makeChildAndAddToRoot(expectedRoot);
       expectedChild.setDiff(DiffType.ADDED);
 
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(expectedRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('adds DELETED', async () => {
@@ -65,7 +68,8 @@ export function executeAddDiffsTests<T extends DiffNode>(
       const expectedChild = makeChildAndAddToRoot(expectedRoot);
       expectedChild.setDiff(DiffType.DELETED);
 
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(expectedRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
   });
 }

@@ -32,25 +32,25 @@ import {UiData} from './ui_data';
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displayIds]="inputData?.displayIds ?? []"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
-      <hierarchy-view-legacy
+      <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree ?? null"
+        [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
-        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view-legacy>
+        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
       <mat-divider [vertical]="true"></mat-divider>
-      <properties-view-legacy
+      <properties-view
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"
+        [propertiesTree]="inputData?.propertiesTree"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
-        [selectedItem]="inputData?.selectedLayer ?? {}"
+        [curatedProperties]="inputData?.curatedProperties"
         [traceType]="${TraceType.SURFACE_FLINGER}"
         [store]="store"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
-        [isProtoDump]="true"></properties-view-legacy>
+        [isProtoDump]="true"></properties-view>
     </div>
   `,
   styles: [

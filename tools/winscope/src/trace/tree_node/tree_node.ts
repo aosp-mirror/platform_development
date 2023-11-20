@@ -17,28 +17,33 @@
 import {Item} from 'trace/item';
 
 export abstract class TreeNode implements Item {
-  protected children = new Map<string, this>();
+  protected children: this[] = [];
 
   constructor(public id: string, public name: string) {}
 
-  addChild(child: this): void {
-    this.children.set(child.id, child);
+  addChild(newChild: this): void {
+    const currIndex = this.children.findIndex((child) => child.id === newChild.id);
+    if (currIndex !== -1) {
+      this.children[currIndex] = newChild;
+    } else {
+      this.children.push(newChild);
+    }
   }
 
   removeChild(childId: string) {
-    this.children.delete(childId);
+    this.children = this.children.filter((child) => child.id !== childId);
   }
 
   removeAllChildren() {
-    this.children.clear();
+    this.children = [];
   }
 
   getChildById(id: string): this | undefined {
-    return this.children.get(id);
+    return this.children.find((child) => child.id === id);
   }
 
   getAllChildren(): this[] {
-    return [...this.children.values()];
+    return this.children;
   }
 
   forEachNodeDfs(callback: (node: this) => void) {

@@ -46,12 +46,13 @@ describe('AddDiffsPropertiesTree', () => {
 
     it('does not add MODIFIED to property tree root', async () => {
       oldRoot = makeRoot('oldValue');
-
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(newRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('does not add any diffs to property tree that has no old tree', async () => {
-      expect(await addDiffs.execute(newRoot, undefined)).toEqual(newRoot);
+      await addDiffs.executeInPlace(newRoot, undefined);
+      expect(newRoot).toEqual(expectedRoot);
     });
   });
 

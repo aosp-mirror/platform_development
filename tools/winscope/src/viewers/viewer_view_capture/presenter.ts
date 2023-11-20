@@ -22,7 +22,8 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
-import {SurfaceFlingerUtils} from 'viewers/common/surface_flinger_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PresenterSfUtils} from 'viewers/common/presenter_sf_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {
@@ -37,7 +38,7 @@ import {UiData} from './ui_data';
 
 export class Presenter {
   private readonly traces: Traces;
-  private readonly surfaceFlingerTrace: Trace<object> | undefined;
+  private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private readonly viewCaptureTrace: Trace<object>;
   private viewCapturePackageNames: string[] = [];
 
@@ -122,15 +123,14 @@ export class Presenter {
       this.previousFrameData = await prevVcEntry?.getValue();
 
       if (this.uiData && this.surfaceFlingerTrace) {
-        const surfaceFlingerEntry = await TraceEntryFinder.findCorrespondingEntry(
+        const surfaceFlingerEntry = (await TraceEntryFinder.findCorrespondingEntry(
           this.surfaceFlingerTrace,
           event.position
-        )?.getValue();
+        )?.getValue()) as HierarchyTreeNode;
         if (surfaceFlingerEntry) {
-          this.uiData.sfRects = SurfaceFlingerUtils.makeRects(
+          this.uiData.sfRects = PresenterSfUtils.makeUiRects(
             surfaceFlingerEntry,
-            this.viewCapturePackageNames,
-            this.hierarchyUserOptions
+            this.viewCapturePackageNames
           );
         }
       }

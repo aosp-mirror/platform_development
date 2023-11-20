@@ -25,7 +25,6 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PersistentStore} from 'common/persistent_store';
 import {TreeComponent} from '../tree_component';
 import {PropertiesComponentLegacy} from './properties_component';
-import {SurfaceFlingerPropertyGroupsComponentLegacy} from './surface_flinger_property_groups_component';
 import {TreeComponentLegacy} from './tree_component';
 
 describe('PropertiesComponentLegacy', () => {
@@ -36,12 +35,7 @@ describe('PropertiesComponentLegacy', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [
-        PropertiesComponentLegacy,
-        SurfaceFlingerPropertyGroupsComponentLegacy,
-        TreeComponentLegacy,
-        TreeComponent,
-      ],
+      declarations: [PropertiesComponentLegacy, TreeComponentLegacy, TreeComponent],
       imports: [
         CommonModule,
         MatInputModule,

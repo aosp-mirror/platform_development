@@ -47,11 +47,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         >
       </div>
 
-      <surface-flinger-property-groups-legacy
-        *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
-        class="property-groups"
-        [item]="selectedItem"></surface-flinger-property-groups-legacy>
-
       <view-capture-property-groups-legacy
         *ngIf="showViewCaptureFormat()"
         class="property-groups"

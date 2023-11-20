@@ -16,13 +16,11 @@
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
-import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {HierarchyTreeBuilderSf} from 'parsers/surface_flinger/hierarchy_tree_builder_sf';
 import {AddDisplayProperties} from 'parsers/surface_flinger/operations/add_display_properties';
@@ -45,8 +43,9 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {FakeProtoTransformerSf} from './fake_proto_transformer_surface_flinger';
 
-export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
+export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
     root.lookupType('perfetto.protos.LayersTraceFileProto')
   );
@@ -58,13 +57,13 @@ export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
     .fields['layers'];
   private readonly layerType = assertDefined(this.layerField.tamperedMessageType);
 
-  private layersSnapshotProtoTransformer: FakeProtoTransformer;
-  private layerProtoTransformer: FakeProtoTransformer;
+  private layersSnapshotProtoTransformer: FakeProtoTransformerSf;
+  private layerProtoTransformer: FakeProtoTransformerSf;
 
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
-    this.layersSnapshotProtoTransformer = new FakeProtoTransformer(this.entryType);
-    this.layerProtoTransformer = new FakeProtoTransformer(this.layerType);
+    this.layersSnapshotProtoTransformer = new FakeProtoTransformerSf(this.entryType);
+    this.layerProtoTransformer = new FakeProtoTransformerSf(this.layerType);
   }
 
   override getTraceType(): TraceType {
@@ -78,17 +77,7 @@ export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
       this.layerProtoTransformer.transform(layerProto)
     );
 
-    return LayerTraceEntry.fromProto(
-      layerProtos,
-      snapshotProto.displays,
-      BigInt(snapshotProto.elapsedRealtimeNanos.toString()),
-      snapshotProto.vsyncId,
-      snapshotProto.hwcBlob,
-      snapshotProto.where,
-      this.realToElapsedTimeOffsetNs,
-      timestampType === TimestampType.ELAPSED /*useElapsedTime*/,
-      snapshotProto.excludesCompositionState ?? false
-    );
+    return this.makeHierarchyTree(snapshotProto, layerProtos);
   }
 
   override async customQuery<Q extends CustomQueryType>(

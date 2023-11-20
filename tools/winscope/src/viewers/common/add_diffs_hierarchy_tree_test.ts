@@ -35,15 +35,10 @@ describe('AddDiffsHierarchyTree', () => {
   const addDiffs = new AddDiffsHierarchyTree(isModified);
 
   describe('AddDiffs tests', () => {
-    it('does not add MODIFIED to hierarchy root', async () => {
-      oldRoot = makeRoot('oldValue');
-
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(newRoot);
-    });
     executeAddDiffsTests(nodeEqualityTester, makeRoot, makeChildAndAddToRoot, addDiffs);
   });
 
-  describe('Property tree tests', () => {
+  describe('Hierarchy tree tests', () => {
     beforeEach(() => {
       jasmine.addCustomEqualityTester(nodeEqualityTester);
       newRoot = makeRoot();
@@ -53,8 +48,8 @@ describe('AddDiffsHierarchyTree', () => {
 
     it('does not add MODIFIED to hierarchy root', async () => {
       oldRoot = makeRoot('oldValue');
-
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(newRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('adds ADDED_MOVE and DELETED_MOVE', async () => {
@@ -71,7 +66,8 @@ describe('AddDiffsHierarchyTree', () => {
       const expectedOldChild = makeChildAndAddToRoot(expectedRoot);
       expectedOldChild.setDiff(DiffType.DELETED_MOVE);
 
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(expectedRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
 
     it('adds ADDED, ADDED_MOVE and DELETED_MOVE', async () => {
@@ -88,16 +84,9 @@ describe('AddDiffsHierarchyTree', () => {
       const expectedNewChild = makeChildAndAddToRoot(expectedParent);
       expectedNewChild.setDiff(DiffType.ADDED_MOVE);
 
-      expect(await addDiffs.execute(newRoot, oldRoot)).toEqual(expectedRoot);
+      await addDiffs.executeInPlace(newRoot, oldRoot);
+      expect(newRoot).toEqual(expectedRoot);
     });
-  });
-
-  beforeEach(() => {
-    jasmine.addCustomEqualityTester(nodeEqualityTester);
-
-    newRoot = makeRoot();
-    oldRoot = makeRoot();
-    expectedRoot = makeRoot();
   });
 
   function makeRoot(value = 'value'): UiHierarchyTreeNode {

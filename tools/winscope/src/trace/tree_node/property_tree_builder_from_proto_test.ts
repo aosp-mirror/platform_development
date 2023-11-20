@@ -58,10 +58,10 @@ describe('PropertyTreeBuilderFromProto', () => {
     );
     expectedRoot.addChild(new PropertyTreeNode('1 rootName.id', 'id', PropertySource.PROTO, 1));
     expectedRoot.addChild(
-      new PropertyTreeNode('1 rootName.isPresent', 'isPresent', PropertySource.PROTO, true)
+      new PropertyTreeNode('1 rootName.name', 'name', PropertySource.PROTO, 'rootName')
     );
     expectedRoot.addChild(
-      new PropertyTreeNode('1 rootName.name', 'name', PropertySource.PROTO, 'rootName')
+      new PropertyTreeNode('1 rootName.isPresent', 'isPresent', PropertySource.PROTO, true)
     );
     const tree = builder.setData(proto).build();
     expect(tree).toEqual(expectedRoot);
@@ -79,12 +79,13 @@ describe('PropertyTreeBuilderFromProto', () => {
       PropertySource.PROTO,
       undefined
     );
-    expectedRoot.addChild(
-      new PropertyTreeNode('1 rootName.bigIntProp', 'bigIntProp', PropertySource.PROTO, BigInt(123))
-    );
+
     expectedRoot.addChild(new PropertyTreeNode('1 rootName.id', 'id', PropertySource.PROTO, 1));
     expectedRoot.addChild(
       new PropertyTreeNode('1 rootName.name', 'name', PropertySource.PROTO, 'rootName')
+    );
+    expectedRoot.addChild(
+      new PropertyTreeNode('1 rootName.bigIntProp', 'bigIntProp', PropertySource.PROTO, BigInt(123))
     );
 
     const tree = builder.setData(proto).build();

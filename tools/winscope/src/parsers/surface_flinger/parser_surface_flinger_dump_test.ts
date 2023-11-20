@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 import {Timestamp, TimestampType} from 'common/time';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserSurfaceFlingerDump', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser<LayerTraceEntry>;
+    let parser: Parser<HierarchyTreeNode>;
     const DUMP_REAL_TIME = 1659176624505188647n;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser(
+      parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb'
-      );
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -46,17 +46,17 @@ describe('ParserSurfaceFlingerDump', () => {
 
     it('retrieves trace entry', async () => {
       const entry = await parser.getEntry(0, TimestampType.ELAPSED);
-      expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(0n);
-      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(DUMP_REAL_TIME);
+      expect(entry).toBeTruthy();
     });
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser<LayerTraceEntry>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/dump_SurfaceFlinger.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/dump_SurfaceFlinger.pb'
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('has expected trace type', () => {

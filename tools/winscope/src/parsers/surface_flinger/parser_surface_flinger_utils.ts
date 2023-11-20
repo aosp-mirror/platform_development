@@ -22,6 +22,23 @@ import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builde
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class ParserSfUtils {
+  static readonly DENYLIST_PROPERTIES = [
+    'length',
+    'prototype',
+    'ref',
+    'parent',
+    'timestamp',
+    'layers',
+    'children',
+    'name',
+  ];
+
+  static readonly CUSTOM_FORMATTERS = new Map([
+    ['cropLayerId', LAYER_ID_FORMATTER],
+    ['zOrderRelativeOf', LAYER_ID_FORMATTER],
+    ['hwcCompositionType', new EnumFormatter(android.surfaceflinger.HwcCompositionType)],
+  ]);
+
   static makeEagerPropertiesTree(
     layer: android.surfaceflinger.ILayerProto | perfetto.protos.ILayerProto,
     duplicateCount: number
@@ -120,21 +137,4 @@ export class ParserSfUtils {
     'backgroundBlurRadius',
     'hwcCompositionType',
   ];
-
-  static readonly DENYLIST_PROPERTIES = [
-    'length',
-    'prototype',
-    'ref',
-    'parent',
-    'timestamp',
-    'layers',
-    'children',
-    'name',
-  ];
-
-  static readonly CUSTOM_FORMATTERS = new Map([
-    ['cropLayerId', LAYER_ID_FORMATTER],
-    ['zOrderRelativeOf', LAYER_ID_FORMATTER],
-    ['hwcCompositionType', new EnumFormatter(android.surfaceflinger.HwcCompositionType)],
-  ]);
 }

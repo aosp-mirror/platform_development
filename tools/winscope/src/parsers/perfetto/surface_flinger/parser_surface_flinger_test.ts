@@ -15,26 +15,29 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
-import {Layer} from 'flickerlib/common';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 
 describe('Perfetto ParserSurfaceFlinger', () => {
   describe('valid trace', () => {
-    let parser: Parser<LayerTraceEntry>;
-    let trace: Trace<LayerTraceEntry>;
+    let parser: Parser<HierarchyTreeNode>;
+    let trace: Trace<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getPerfettoParser(
+      parser = (await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace'
-      );
-      trace = new TraceBuilder().setType(TraceType.SURFACE_FLINGER).setParser(parser).build();
+      )) as Parser<HierarchyTreeNode>;
+      trace = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
+        .setParser(parser)
+        .build();
     });
 
     it('has expected trace type', () => {
@@ -61,39 +64,46 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       expect(actual).toEqual(expected);
     });
 
-    it('formats entry timestamps (elapsed)', async () => {
-      const entry = await parser.getEntry(1, TimestampType.ELAPSED);
-      expect(entry.name).toEqual('14s631ms249355ns');
-      expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(14631249355n);
-      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089233029344n);
-    });
-
-    it('formats entry timestamps (real)', async () => {
+    it('provides correct root entry node', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
-      expect(entry.name).toEqual('2022-07-29T15:04:49.233029376');
-      expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(14631249355n);
-      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089233029344n);
+      expect(entry.id).toEqual('LayerTraceEntry root');
+      expect(entry.name).toEqual('root');
     });
 
     it('decodes layer state flags', async () => {
       const entry = await parser.getEntry(0, TimestampType.REAL);
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 27);
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27'))
+        );
         expect(layer.name).toEqual('Leaf:24:25#27');
-        expect(layer.flags).toEqual(0x0);
-        expect(layer.verboseFlags).toEqual('');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('0');
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('');
       }
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 48);
+        const layer = assertDefined(entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')));
         expect(layer.name).toEqual('Task=4#48');
-        expect(layer.flags).toEqual(0x1);
-        expect(layer.verboseFlags).toEqual('HIDDEN (0x1)');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('1');
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('HIDDEN (0x1)');
       }
       {
-        const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 77);
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'))
+        );
         expect(layer.name).toEqual('Wallpaper BBQ wrapper#77');
-        expect(layer.flags).toEqual(0x100);
-        expect(layer.verboseFlags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+
+        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual(
+          '256'
+        );
+        expect(
+          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+        ).toEqual('ENABLE_BACKPRESSURE (0x100)');
       }
     });
 
@@ -120,6 +130,27 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       );
       const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeTruthy();
+
+      const layer = assertDefined(
+        entry.findDfs(
+          UiTreeUtils.makeIdMatchFilter(
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)'
+          )
+        )
+      );
+      expect(layer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(layer.getAllChildren().length).toEqual(0);
+
+      const dupLayer = assertDefined(
+        entry.findDfs(
+          UiTreeUtils.makeIdMatchFilter(
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
+          )
+        )
+      );
+
+      expect(dupLayer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(dupLayer.getAllChildren().length).toEqual(0);
     });
   });
 });

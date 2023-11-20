@@ -19,6 +19,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CoordinatesTableComponent} from './coordinates_table_component';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
 import {CoordinatesTableComponentLegacy} from './legacy/coordinates_table_component';
 
@@ -33,6 +34,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
       declarations: [
         ImeAdditionalPropertiesComponent,
         TestHostComponent,
+        CoordinatesTableComponent,
         CoordinatesTableComponentLegacy,
       ],
     }).compileComponents();
@@ -62,14 +64,14 @@ describe('ImeAdditionalPropertiesComponent', () => {
     const button: HTMLButtonElement | null = htmlElement.querySelector('.ime-container');
     assertDefined(button).click();
     fixture.detectChanges();
-    expect(component.highlightedItem).toBe('imeContainerId');
+    expect(component.highlightedItem).toBe('123');
   });
 
   it('propagates new input method surface layer on button click', () => {
     const button: HTMLButtonElement | null = htmlElement.querySelector('.input-method-surface');
     assertDefined(button).click();
     fixture.detectChanges();
-    expect(component.highlightedItem).toBe('inputMethodSurfaceId');
+    expect(component.highlightedItem).toBe('456');
   });
 
   @Component({
@@ -97,12 +99,16 @@ describe('ImeAdditionalPropertiesComponent', () => {
         proto: {name: 'wmStateProto'},
       },
       {
+        id: 'ime',
         name: 'imeLayers',
-        imeContainer: {name: 'imeContainer', stableId: 'imeContainerId'},
-        inputMethodSurface: {name: 'inputMethodSurface', stableId: 'inputMethodSurfaceId'},
-        focusedWindow: undefined,
-        taskOfImeContainer: undefined,
-        taskOfImeSnapshot: undefined,
+        properties: {
+          imeContainer: {id: '123', zOrderRelativeOfId: -1, z: 0},
+          inputMethodSurface: {id: '456', isVisible: false},
+          focusedWindowColor: undefined,
+          root: undefined,
+        },
+        taskLayerOfImeContainer: undefined,
+        taskLayerOfImeSnapshot: undefined,
       }
     );
     highlightedItem = '';
