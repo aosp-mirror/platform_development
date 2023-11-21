@@ -392,4 +392,26 @@ describe('TransitionTimelineComponent', () => {
       alpha: 0.25,
     });
   });
+
+  it('does not render transition with min creation time', async () => {
+    component.trace = new TraceBuilder()
+      .setType(TraceType.TRANSITION)
+      .setEntries([
+        {
+          createTime: {unixNanos: 10n, isMin: true},
+          finishTime: {unixNanos: 30n},
+        } as Transition,
+      ])
+      .setTimestamps([new RealTimestamp(10n)])
+      .build();
+    component.shouldNotRenderEntries.push(0);
+    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+
+    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    expect(drawRectSpy).not.toHaveBeenCalled();
+  });
 });

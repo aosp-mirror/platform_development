@@ -26,7 +26,11 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 @Component({
   selector: 'transition-timeline',
   template: `
-    <div class="transition-timeline" #wrapper>
+    <div
+      class="transition-timeline"
+      matTooltip="Some or all transitions will not be rendered in timeline due to unknown creation time"
+      [matTooltipDisabled]="shouldNotRenderEntries.length === 0"
+      #wrapper>
       <canvas #canvas></canvas>
     </div>
   `,
@@ -53,6 +57,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
 
   rowsToUse = new Map<number, number>();
   maxRowsRequires = 0;
+  shouldNotRenderEntries: number[] = [];
 
   ngOnInit() {
     if (!this.trace || !this.selectionRange) {
@@ -66,6 +71,10 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     await Promise.all(
       (this.trace as Trace<Transition>).mapEntry(async (entry) => {
         const transition = await entry.getValue();
+        const index = entry.getIndex();
+        if (transition.createTime.isMin) {
+          this.shouldNotRenderEntries.push(index);
+        }
         let rowToUse = 0;
         while (
           (rowAvailableFrom[rowToUse] ?? 0n) > BigInt(transition.createTime.unixNanos.toString())
@@ -78,7 +87,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
         if (rowToUse + 1 > this.maxRowsRequires) {
           this.maxRowsRequires = rowToUse + 1;
         }
-        this.rowsToUse.set(entry.getIndex(), rowToUse);
+        this.rowsToUse.set(index, rowToUse);
       })
     );
   }
@@ -87,7 +96,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     const rowToUse = this.rowsToUse.get(entry.getIndex());
     if (rowToUse === undefined) {
       console.error('Failed to find', entry, 'in', this.rowsToUse);
-      throw new Error(`Could not find entry in rowsToUse`);
+      throw new Error('Could not find entry in rowsToUse');
     }
     return rowToUse;
   }
@@ -114,7 +123,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
 
     this.hoveringEntry = currentHoverEntry;
 
-    if (!this.hoveringEntry) {
+    if (!this.hoveringEntry || this.shouldNotRenderEntry(this.hoveringEntry)) {
       return;
     }
 
@@ -122,14 +131,6 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     const rowToUse = this.getRowToUseFor(this.hoveringEntry);
     const {x, y, w, h} = this.getSegmentRect(hoveringSegment.from, hoveringSegment.to, rowToUse);
     this.canvasDrawer.drawRectBorder(x, y, w, h);
-  }
-
-  private async getSegmentAt(mouseX: number, mouseY: number): Promise<TimeRange | undefined> {
-    const transitionEntry = await this.getEntryAt(mouseX, mouseY);
-    if (transitionEntry) {
-      return this.getSegmentForTransition(transitionEntry);
-    }
-    return undefined;
   }
 
   protected override async getEntryAt(
@@ -144,6 +145,9 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     this.trace.forEachEntry((entry) => {
       transitionEntries.push(
         (async () => {
+          if (this.shouldNotRenderEntry(entry)) {
+            return undefined;
+          }
           const transitionSegment = await this.getSegmentForTransition(entry);
           const rowToUse = this.getRowToUseFor(entry);
           const {x, y, w, h} = this.getSegmentRect(
@@ -213,6 +217,9 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
   override async drawTimeline() {
     await Promise.all(
       (this.trace as Trace<Transition>).mapEntry(async (entry) => {
+        if (this.shouldNotRenderEntry(entry)) {
+          return;
+        }
         const transitionSegment = await this.getSegmentForTransition(entry);
         const rowToUse = this.getRowToUseFor(entry);
         const aborted = (await entry.getValue()).aborted;
@@ -247,7 +254,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
   }
 
   private async drawSelectedTransitionEntry() {
-    if (this.selectedEntry === undefined) {
+    if (this.selectedEntry === undefined || this.shouldNotRenderEntry(this.selectedEntry)) {
       return;
     }
 
@@ -263,5 +270,9 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     const alpha = transition.aborted ? 0.25 : 1.0;
     this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha});
     this.canvasDrawer.drawRectBorder(x, y, w, h);
+  }
+
+  private shouldNotRenderEntry(entry: TraceEntry<Transition>): boolean {
+    return this.shouldNotRenderEntries.includes(entry.getIndex());
   }
 }
