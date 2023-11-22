@@ -23,6 +23,8 @@
 #     run: python3 winscope_proxy.py
 #
 
+import argparse
+import base64
 import json
 import logging
 import os
@@ -37,14 +39,26 @@ from abc import abstractmethod
 from enum import Enum
 from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from logging import DEBUG, INFO, WARNING
 from tempfile import NamedTemporaryFile
-import base64
+
+# GLOBALS #
+
+log = None
+secret_token = None
 
 # CONFIG #
 
-LOG_LEVEL = logging.DEBUG
+def create_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description='Proxy for go/winscope', prog='winscope_proxy')
 
-PORT = 5544
+    parser.add_argument('--verbose', '-v', dest='loglevel', action='store_const', const=INFO)
+    parser.add_argument('--debug', '-d', dest='loglevel', action='store_const', const=DEBUG)
+    parser.add_argument('--port', '-p', default=5544, action='store')
+
+    parser.set_defaults(loglevel=WARNING)
+
+    return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
 VERSION = '1.2'
@@ -90,11 +104,6 @@ WINSCOPE_DIR = "/data/misc/wmtrace/"
 
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
-
-logging.basicConfig(stream=sys.stderr, level=LOG_LEVEL,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-log = logging.getLogger("ADBProxy")
-
 
 class File:
     def __init__(self, file, filetype) -> None:
@@ -510,9 +519,6 @@ def get_token() -> str:
             log.error("Unable to save persistent token {} to {}".format(
                 token, WINSCOPE_TOKEN_LOCATION))
         return token
-
-
-secret_token = get_token()
 
 
 class RequestType(Enum):
@@ -1087,9 +1093,18 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
 
 
 if __name__ == '__main__':
+    args = create_argument_parser().parse_args()
+
+    logging.basicConfig(stream=sys.stderr, level=args.loglevel,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    log = logging.getLogger("ADBProxy")
+    secret_token = get_token()
+
     print("Winscope ADB Connect proxy version: " + VERSION)
     print('Winscope token: ' + secret_token)
-    httpd = HTTPServer(('localhost', PORT), ADBWinscopeProxy)
+
+    httpd = HTTPServer(('localhost', args.port), ADBWinscopeProxy)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
