@@ -1,0 +1,21 @@
+{
+  "apex_available": [
+    "//apex_available:platform",
+    "com.android.runtime",
+    "com.android.art.debug",
+    "com.android.art"
+  ],
+  "min_sdk_version": "S",
+  "native_bridge_supported": true,
+  "package": {
+    "rustc-demangle-capi": {
+      "exported_c_header_dir": [
+        "include"
+      ]
+    }
+  },
+  "ramdisk_available": true,
+  "recovery_available": true,
+  "tests": true,
+  "vendor_ramdisk_available": true
+}
