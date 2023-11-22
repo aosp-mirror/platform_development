@@ -17,15 +17,15 @@
 import {TraceType, ViewNode} from 'trace/trace_type';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {Rectangle} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   readonly dependencies: TraceType[] = [TraceType.VIEW_CAPTURE];
   readonly displayPropertyGroups = false;
 
   constructor(
-    readonly rects: Rectangle[],
-    public sfRects: Rectangle[] | undefined,
+    readonly rects: UiRect[],
+    public sfRects: UiRect[] | undefined,
     public tree: HierarchyTreeNode | null,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,

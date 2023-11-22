@@ -24,7 +24,7 @@ describe('CanvasDrawer', () => {
 
     const canvasDrawer = new CanvasDrawer();
     canvasDrawer.setCanvas(actualCanvas);
-    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10, color: '#333333', alpha: 1.0});
+    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10}, '#333333', 1.0);
 
     expect(pixelsAllMatch(actualCanvas, expectedCanvas)).toBeFalse();
 
@@ -39,7 +39,7 @@ describe('CanvasDrawer', () => {
 
     const canvasDrawer = new CanvasDrawer();
     canvasDrawer.setCanvas(actualCanvas);
-    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10, color: '#333333', alpha: 1.0});
+    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10}, '#333333', 1.0);
 
     const expectedCtx = assertDefined(expectedCanvas.getContext('2d'));
     expectedCtx.fillStyle = '#333333';
@@ -55,7 +55,7 @@ describe('CanvasDrawer', () => {
 
     const canvasDrawer = new CanvasDrawer();
     canvasDrawer.setCanvas(actualCanvas);
-    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10, color: '#333333', alpha: 0.5});
+    canvasDrawer.drawRect({x: 10, y: 10, w: 10, h: 10}, '#333333', 0.5);
 
     const expectedCtx = assertDefined(expectedCanvas.getContext('2d'));
     expectedCtx.fillStyle = 'rgba(51,51,51,0.5)';
@@ -71,7 +71,7 @@ describe('CanvasDrawer', () => {
 
     const canvasDrawer = new CanvasDrawer();
     canvasDrawer.setCanvas(actualCanvas);
-    canvasDrawer.drawRectBorder(10, 10, 10, 10);
+    canvasDrawer.drawRectBorder({x: 10, y: 10, w: 10, h: 10});
 
     const expectedCtx = assertDefined(expectedCanvas.getContext('2d'));
 
@@ -93,8 +93,8 @@ describe('CanvasDrawer', () => {
 
     const canvasDrawer = new CanvasDrawer();
     canvasDrawer.setCanvas(actualCanvas);
-    canvasDrawer.drawRect({x: 200, y: 200, w: 10, h: 10, color: '#333333', alpha: 1.0});
-    canvasDrawer.drawRect({x: 95, y: 95, w: 50, h: 50, color: '#333333', alpha: 1.0});
+    canvasDrawer.drawRect({x: 200, y: 200, w: 10, h: 10}, '#333333', 1.0);
+    canvasDrawer.drawRect({x: 95, y: 95, w: 50, h: 50}, '#333333', 1.0);
 
     const expectedCtx = assertDefined(expectedCanvas.getContext('2d'));
     expectedCtx.fillStyle = '#333333';

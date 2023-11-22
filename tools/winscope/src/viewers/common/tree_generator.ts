@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FilterType, TreeNode} from 'common/tree_utils';
+import {FilterType, TreeUtilsNode} from 'common/tree_utils';
 import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {
@@ -155,7 +155,7 @@ export class TreeGenerator {
     }
   }
 
-  private filterMatches(item?: TreeNode | null): boolean {
+  private filterMatches(item?: TreeUtilsNode | null): boolean {
     return this.filter(item) ?? false;
   }
 

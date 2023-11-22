@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'viewers/components/rects/types2d';
-
-export {TransformMatrix};
+import {TransformMatrix} from 'common/geometry_utils';
 
 export enum ColorType {
   VISIBLE,

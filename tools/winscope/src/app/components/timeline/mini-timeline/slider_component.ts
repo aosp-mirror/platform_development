@@ -28,6 +28,7 @@ import {
 } from '@angular/core';
 import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
+import {Point} from 'common/geometry_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
@@ -126,7 +127,7 @@ export class SliderComponent {
 
   dragging = false;
   sliderWidth = 0;
-  dragPosition = {x: 0, y: 0};
+  dragPosition: Point = {x: 0, y: 0};
   viewInitialized = false;
   cursorOffset = 0;
 

@@ -15,7 +15,7 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {isPointInRect} from 'common/geometry_utils';
+import {isPointInRect, Point, Rect} from 'common/geometry_utils';
 import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -101,8 +101,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     return rowToUse;
   }
 
-  override onHover(mouseX: number, mouseY: number) {
-    this.drawSegmentHover(mouseX, mouseY);
+  override onHover(mousePoint: Point) {
+    this.drawSegmentHover(mousePoint);
   }
 
   override handleMouseOut(e: MouseEvent) {
@@ -113,8 +113,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     this.hoveringEntry = undefined;
   }
 
-  private async drawSegmentHover(mouseX: number, mouseY: number) {
-    const currentHoverEntry = await this.getEntryAt(mouseX, mouseY);
+  private async drawSegmentHover(mousePoint: Point) {
+    const currentHoverEntry = await this.getEntryAt(mousePoint);
 
     if (this.hoveringEntry) {
       this.canvasDrawer.clear();
@@ -129,13 +129,12 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
 
     const hoveringSegment = await this.getSegmentForTransition(this.hoveringEntry);
     const rowToUse = this.getRowToUseFor(this.hoveringEntry);
-    const {x, y, w, h} = this.getSegmentRect(hoveringSegment.from, hoveringSegment.to, rowToUse);
-    this.canvasDrawer.drawRectBorder(x, y, w, h);
+    const rect = this.getSegmentRect(hoveringSegment.from, hoveringSegment.to, rowToUse);
+    this.canvasDrawer.drawRectBorder(rect);
   }
 
   protected override async getEntryAt(
-    mouseX: number,
-    mouseY: number
+    mousePoint: Point
   ): Promise<TraceEntry<Transition> | undefined> {
     if (this.trace.type !== TraceType.TRANSITION) {
       return undefined;
@@ -150,12 +149,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
           }
           const transitionSegment = await this.getSegmentForTransition(entry);
           const rowToUse = this.getRowToUseFor(entry);
-          const {x, y, w, h} = this.getSegmentRect(
-            transitionSegment.from,
-            transitionSegment.to,
-            rowToUse
-          );
-          if (isPointInRect({x: mouseX, y: mouseY}, {x, y, w, h})) {
+          const rect = this.getSegmentRect(transitionSegment.from, transitionSegment.to, rowToUse);
+          if (isPointInRect(mousePoint, rect)) {
             return entry;
           }
           return undefined;
@@ -188,7 +183,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     return Number((BigInt(this.availableWidth) * (entry.getValueNs() - start)) / (end - start));
   }
 
-  private getSegmentRect(start: Timestamp, end: Timestamp, rowToUse: number) {
+  private getSegmentRect(start: Timestamp, end: Timestamp, rowToUse: number): Rect {
     const xPosStart = this.getXPosOf(start);
     const selectionStart = this.selectionRange.from.getValueNs();
     const selectionEnd = this.selectionRange.to.getValueNs();
@@ -248,9 +243,9 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
   }
 
   private drawSegment(start: Timestamp, end: Timestamp, rowToUse: number, aborted: boolean) {
-    const {x, y, w, h} = this.getSegmentRect(start, end, rowToUse);
+    const rect = this.getSegmentRect(start, end, rowToUse);
     const alpha = aborted ? 0.25 : 1.0;
-    this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha});
+    this.canvasDrawer.drawRect(rect, this.color, alpha);
   }
 
   private async drawSelectedTransitionEntry() {
@@ -262,14 +257,10 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
 
     const transition = await this.selectedEntry.getValue();
     const rowIndex = this.getRowToUseFor(this.selectedEntry);
-    const {x, y, w, h} = this.getSegmentRect(
-      transitionSegment.from,
-      transitionSegment.to,
-      rowIndex
-    );
+    const rect = this.getSegmentRect(transitionSegment.from, transitionSegment.to, rowIndex);
     const alpha = transition.aborted ? 0.25 : 1.0;
-    this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha});
-    this.canvasDrawer.drawRectBorder(x, y, w, h);
+    this.canvasDrawer.drawRect(rect, this.color, alpha);
+    this.canvasDrawer.drawRectBorder(rect);
   }
 
   private shouldNotRenderEntry(entry: TraceEntry<Transition>): boolean {

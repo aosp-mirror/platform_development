@@ -91,8 +91,10 @@ describe('PresenterViewCapture', () => {
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 0});
-    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 249});
+    expect(uiData.rects[0].x).toEqual(0);
+    expect(uiData.rects[0].y).toEqual(0);
+    expect(uiData.rects[0].w).toEqual(1080);
+    expect(uiData.rects[0].h).toEqual(249);
   });
 
   it('updates pinned items', async () => {
