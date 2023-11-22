@@ -600,7 +600,7 @@ fn crate_to_bp_modules(
             CrateType::Bin => ("rust_binary".to_string() + host, crate_.name.clone()),
             CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + rlib + host, stem)
+                ("rust_library".to_string() + host + rlib, stem)
             }
             CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
@@ -669,6 +669,9 @@ fn crate_to_bp_modules(
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }
+        if crate_type.is_c_library() {
+            m.props.set_if_nonempty("include_dirs", package_cfg.exported_c_header_dir.clone());
+        }
 
         m.props.set("crate_name", crate_.name.clone());
         m.props.set("cargo_env_compat", true);
@@ -705,7 +708,7 @@ fn crate_to_bp_modules(
         if !crate_.cap_lints.is_empty() {
             flags.push(crate_.cap_lints.clone());
         }
-        flags.extend(crate_.codegens.clone());
+        flags.extend(crate_.codegens.iter().map(|codegen| format!("-C {}", codegen)));
         m.props.set_if_nonempty("flags", flags);
 
         let mut rust_libs = Vec::new();
@@ -735,16 +738,32 @@ fn crate_to_bp_modules(
         };
         m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
         m.props.set_if_nonempty("proc_macros", process_lib_deps(proc_macro_libs));
-        m.props.set_if_nonempty("static_libs", process_lib_deps(crate_.static_libs.clone()));
+        let (whole_static_libs, static_libs) = process_lib_deps(crate_.static_libs.clone())
+            .into_iter()
+            .partition(|static_lib| package_cfg.whole_static_libs.contains(static_lib));
+        m.props.set_if_nonempty("static_libs", static_libs);
+        m.props.set_if_nonempty("whole_static_libs", whole_static_libs);
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
+                if cfg.native_bridge_supported {
+                    m.props.set("native_bridge_supported", true);
+                }
                 if cfg.product_available {
                     m.props.set("product_available", true);
                 }
+                if cfg.ramdisk_available {
+                    m.props.set("ramdisk_available", true);
+                }
+                if cfg.recovery_available {
+                    m.props.set("recovery_available", true);
+                }
                 if cfg.vendor_available {
                     m.props.set("vendor_available", true);
+                }
+                if cfg.vendor_ramdisk_available {
+                    m.props.set("vendor_ramdisk_available", true);
                 }
             }
             if crate_type.is_library() {
