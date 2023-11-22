@@ -15,13 +15,24 @@
 //! Types for parsing cargo.metadata JSON files.
 
 use super::{Crate, CrateType, Extern, ExternType};
-use crate::config::Config;
+use crate::config::VariantConfig;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
+
+/// `cfg` strings for dependencies which should be considered enabled. It would be better to parse
+/// them properly, but this is good enough in practice so far.
+const ENABLED_CFGS: [&str; 6] = [
+    r#"cfg(unix)"#,
+    r#"cfg(not(windows))"#,
+    r#"cfg(any(unix, target_os = "wasi"))"#,
+    r#"cfg(not(all(target_family = "wasm", target_os = "unknown")))"#,
+    r#"cfg(not(target_family = "wasm"))"#,
+    r#"cfg(any(target_os = "linux", target_os = "android"))"#,
+];
 
 /// `cargo metadata` output.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
@@ -53,9 +64,12 @@ pub struct DependencyMetadata {
 impl DependencyMetadata {
     /// Returns whether the dependency should be included when the given features are enabled.
     fn enabled(&self, features: &[String]) -> bool {
-        // TODO: Parse target properly.
-        self.target.is_none()
-            && (!self.optional || features.contains(&format!("dep:{}", self.name)))
+        if let Some(target) = &self.target {
+            if !ENABLED_CFGS.contains(&target.as_str()) {
+                return false;
+            }
+        }
+        !self.optional || features.contains(&format!("dep:{}", self.name))
     }
 }
 
@@ -88,7 +102,7 @@ pub enum TargetKind {
 
 pub fn parse_cargo_metadata_file(
     cargo_metadata_path: impl AsRef<Path>,
-    cfg: &Config,
+    cfg: &VariantConfig,
 ) -> Result<Vec<Crate>> {
     let metadata: WorkspaceMetadata = serde_json::from_reader(
         File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
@@ -108,24 +122,7 @@ fn parse_cargo_metadata(
             continue;
         }
 
-        let features = resolve_features(features, &package.features);
-        let externs: Vec<Extern> = package
-            .dependencies
-            .iter()
-            .filter_map(|dependency| {
-                // Kind is None for normal dependencies, as opposed to dev dependencies.
-                if dependency.enabled(&features) && dependency.kind.is_none() {
-                    let dependency_name = dependency.name.replace('-', "_");
-                    Some(Extern {
-                        name: dependency_name.to_owned(),
-                        lib_name: dependency_name.to_owned(),
-                        extern_type: extern_type(&metadata.packages, &dependency.name),
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let features = resolve_features(features, &package.features, &package.dependencies);
         let features_without_deps: Vec<String> =
             features.clone().into_iter().filter(|feature| !feature.starts_with("dep:")).collect();
         let package_dir = package_dir_from_id(&package.id)?;
@@ -134,9 +131,15 @@ fn parse_cargo_metadata(
             let [target_kind] = target.kind.deref() else {
                 bail!("Target kind had unexpected length: {:?}", target.kind);
             };
-            // TODO: Consider whether to support Staticlib and Cdylib.
-            if ![TargetKind::Bin, TargetKind::Lib, TargetKind::ProcMacro, TargetKind::Test]
-                .contains(target_kind)
+            if ![
+                TargetKind::Bin,
+                TargetKind::Cdylib,
+                TargetKind::Lib,
+                TargetKind::ProcMacro,
+                TargetKind::Staticlib,
+                TargetKind::Test,
+            ]
+            .contains(target_kind)
             {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
@@ -164,39 +167,18 @@ fn parse_cargo_metadata(
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
-                    externs: externs.clone(),
+                    externs: get_externs(
+                        package,
+                        &metadata.packages,
+                        &features,
+                        *target_kind,
+                        false,
+                    ),
                     ..Default::default()
                 });
             }
             // This includes both unit tests and integration tests.
             if target.test && include_tests {
-                let mut externs: Vec<Extern> = package
-                    .dependencies
-                    .iter()
-                    .filter_map(|dependency| {
-                        if dependency.enabled(&features)
-                            && dependency.kind.as_deref() != Some("build")
-                        {
-                            let dependency_name = dependency.name.replace('-', "_");
-                            Some(Extern {
-                                name: dependency_name.to_owned(),
-                                lib_name: dependency_name.to_owned(),
-                                extern_type: extern_type(&metadata.packages, &dependency.name),
-                            })
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                // Add the library itself as a dependency for integration tests.
-                if *target_kind == TargetKind::Test {
-                    let package_name = package.name.replace('-', "_");
-                    externs.push(Extern {
-                        name: package_name.to_owned(),
-                        lib_name: package_name.to_owned(),
-                        extern_type: ExternType::Rust,
-                    });
-                }
                 crates.push(Crate {
                     name: target_name,
                     package_name: package.name.to_owned(),
@@ -207,13 +189,59 @@ fn parse_cargo_metadata(
                     package_dir: package_dir.clone(),
                     main_src: main_src.to_owned(),
                     target: target_triple.clone(),
-                    externs,
+                    externs: get_externs(
+                        package,
+                        &metadata.packages,
+                        &features,
+                        *target_kind,
+                        true,
+                    ),
                     ..Default::default()
                 });
             }
         }
     }
     Ok(crates)
+}
+
+fn get_externs(
+    package: &PackageMetadata,
+    packages: &[PackageMetadata],
+    features: &[String],
+    target_kind: TargetKind,
+    test: bool,
+) -> Vec<Extern> {
+    let mut externs: Vec<Extern> = package
+        .dependencies
+        .iter()
+        .filter_map(|dependency| {
+            // Kind is None for normal dependencies, as opposed to dev dependencies.
+            if dependency.enabled(features)
+                && dependency.kind.as_deref() != Some("build")
+                && (dependency.kind.is_none() || test)
+            {
+                let dependency_name = dependency.name.replace('-', "_");
+                Some(Extern {
+                    name: dependency_name.to_owned(),
+                    lib_name: dependency_name.to_owned(),
+                    extern_type: extern_type(packages, &dependency.name),
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
+    // If there is a library target and this is a binary or integration test, add the library as an
+    // extern.
+    if matches!(target_kind, TargetKind::Bin | TargetKind::Test)
+        && package.targets.iter().any(|t| t.kind.contains(&TargetKind::Lib))
+    {
+        let lib_name = package.name.replace('-', "_");
+        externs.push(Extern { name: lib_name.clone(), lib_name, extern_type: ExternType::Rust });
+    }
+    externs.sort();
+    externs.dedup();
+    externs
 }
 
 /// Checks whether the given package is a proc macro.
@@ -251,15 +279,25 @@ fn split_src_path<'a>(src_path: &'a Path, package_dir: &Path) -> &'a Path {
 fn resolve_features(
     chosen_features: &Option<Vec<String>>,
     package_features: &BTreeMap<String, Vec<String>>,
+    dependencies: &[DependencyMetadata],
 ) -> Vec<String> {
+    let mut package_features = package_features.to_owned();
+    // Add implicit features for optional dependencies.
+    for dependency in dependencies {
+        if dependency.optional && !package_features.contains_key(&dependency.name) {
+            package_features
+                .insert(dependency.name.to_owned(), vec![format!("dep:{}", dependency.name)]);
+        }
+    }
+
     let mut features = Vec::new();
     if let Some(chosen_features) = chosen_features {
         for feature in chosen_features {
-            add_feature_and_dependencies(&mut features, feature, package_features);
+            add_feature_and_dependencies(&mut features, feature, &package_features);
         }
-    } else if package_features.contains_key("default") {
-        // If there is a default feature and no chosen features, then enable it.
-        add_feature_and_dependencies(&mut features, "default", package_features);
+    } else {
+        // If there are no chosen features, then enable the default feature.
+        add_feature_and_dependencies(&mut features, "default", &package_features);
     }
     features.sort();
     features.dedup();
@@ -268,16 +306,21 @@ fn resolve_features(
 
 /// Adds the given feature and all features it depends on to the given list of features.
 ///
-/// Ignores features of other packages, i.e. those containing slashes.
+/// Ignores features of other packages, and features which don't exist.
 fn add_feature_and_dependencies(
     features: &mut Vec<String>,
     feature: &str,
     package_features: &BTreeMap<String, Vec<String>>,
 ) {
-    features.push(feature.to_owned());
+    if package_features.contains_key(feature) || feature.starts_with("dep:") {
+        features.push(feature.to_owned());
+    }
+
     if let Some(dependencies) = package_features.get(feature) {
         for dependency in dependencies {
-            if !dependency.contains('/') {
+            if let Some((dependency_package, _)) = dependency.split_once('/') {
+                add_feature_and_dependencies(features, dependency_package, package_features);
+            } else {
                 add_feature_and_dependencies(features, dependency, package_features);
             }
         }
@@ -287,8 +330,9 @@ fn add_feature_and_dependencies(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
     use crate::tests::testdata_directories;
-    use std::fs::File;
+    use std::fs::{read_to_string, File};
 
     #[test]
     fn resolve_multi_level_feature_dependencies() {
@@ -300,11 +344,15 @@ mod tests {
             ),
             ("std".to_string(), vec!["alloc".to_string()]),
             ("not_enabled".to_string(), vec![]),
+            ("on_by_default".to_string(), vec![]),
+            ("other".to_string(), vec![]),
+            ("extra".to_string(), vec![]),
+            ("alloc".to_string(), vec![]),
         ]
         .into_iter()
         .collect();
         assert_eq!(
-            resolve_features(&Some(chosen), &package_features),
+            resolve_features(&Some(chosen), &package_features, &[]),
             vec![
                 "alloc".to_string(),
                 "default".to_string(),
@@ -317,10 +365,48 @@ mod tests {
     }
 
     #[test]
+    fn resolve_dep_features() {
+        let package_features = [(
+            "default".to_string(),
+            vec![
+                "optionaldep/feature".to_string(),
+                "requireddep/feature".to_string(),
+                "optionaldep2?/feature".to_string(),
+            ],
+        )]
+        .into_iter()
+        .collect();
+        let dependencies = vec![
+            DependencyMetadata {
+                name: "optionaldep".to_string(),
+                kind: None,
+                optional: true,
+                target: None,
+            },
+            DependencyMetadata {
+                name: "optionaldep2".to_string(),
+                kind: None,
+                optional: true,
+                target: None,
+            },
+            DependencyMetadata {
+                name: "requireddep".to_string(),
+                kind: None,
+                optional: false,
+                target: None,
+            },
+        ];
+        assert_eq!(
+            resolve_features(&None, &package_features, &dependencies),
+            vec!["default".to_string(), "dep:optionaldep".to_string(), "optionaldep".to_string()]
+        );
+    }
+
+    #[test]
     fn parse_metadata() {
         for testdata_directory_path in testdata_directories() {
-            let cfg: Config = serde_json::from_reader(
-                File::open(testdata_directory_path.join("cargo_embargo.json"))
+            let cfg = Config::from_json_str(
+                &read_to_string(testdata_directory_path.join("cargo_embargo.json"))
                     .with_context(|| {
                         format!(
                             "Failed to open {:?}",
@@ -331,12 +417,18 @@ mod tests {
             )
             .unwrap();
             let cargo_metadata_path = testdata_directory_path.join("cargo.metadata");
-            let expected_crates: Vec<Crate> = serde_json::from_reader(
+            let expected_crates: Vec<Vec<Crate>> = serde_json::from_reader(
                 File::open(testdata_directory_path.join("crates.json")).unwrap(),
             )
             .unwrap();
 
-            let crates = parse_cargo_metadata_file(cargo_metadata_path, &cfg).unwrap();
+            let crates = cfg
+                .variants
+                .iter()
+                .map(|variant_cfg| {
+                    parse_cargo_metadata_file(&cargo_metadata_path, variant_cfg).unwrap()
+                })
+                .collect::<Vec<_>>();
             assert_eq!(crates, expected_crates);
         }
     }

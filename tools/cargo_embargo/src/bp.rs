@@ -14,6 +14,7 @@
 
 use anyhow::Result;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 /// Build module.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -116,14 +117,16 @@ impl BpProperties {
             "test_options",
             "edition",
             "features",
+            "cfgs",
+            "flags",
             "rustlibs",
             "proc_macros",
             "static_libs",
+            "whole_static_libs",
             "shared_libs",
             "arch",
             "target",
             "ld_flags",
-            "cfgs",
             "compile_multilib",
             "include_dirs",
             "apex_available",
@@ -196,6 +199,12 @@ impl From<&str> for BpValue {
 impl From<String> for BpValue {
     fn from(x: String) -> Self {
         BpValue::String(x)
+    }
+}
+
+impl From<PathBuf> for BpValue {
+    fn from(x: PathBuf) -> Self {
+        BpValue::String(x.to_string_lossy().into_owned())
     }
 }
 
