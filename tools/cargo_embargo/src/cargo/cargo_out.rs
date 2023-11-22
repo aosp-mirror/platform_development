@@ -371,6 +371,7 @@ impl Crate {
         }
         out.cfgs.sort();
         out.cfgs.dedup();
+        out.codegens.sort();
         out.features.sort();
 
         if out.name.is_empty() {

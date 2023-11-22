@@ -64,6 +64,11 @@ impl CrateType {
     pub fn is_test(self) -> bool {
         matches!(self, Self::Test | Self::TestNoHarness)
     }
+
+    /// Returns whether the crate type is a kind of C ABI library.
+    pub fn is_c_library(self) -> bool {
+        matches!(self, Self::CDyLib | Self::StaticLib)
+    }
 }
 
 /// Info extracted from `CargoOut` for a crate.
