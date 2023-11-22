@@ -304,6 +304,9 @@ pub struct VariantConfig {
     /// `cfg` flags in this list will not be included.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cfg_blocklist: Vec<String>,
+    /// Extra `cfg` flags to enable in output modules.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extra_cfg: Vec<String>,
     /// Modules in this list will not be generated.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub module_blocklist: Vec<String>,
@@ -335,6 +338,7 @@ impl Default for VariantConfig {
             module_name_overrides: Default::default(),
             package: Default::default(),
             cfg_blocklist: Default::default(),
+            extra_cfg: Default::default(),
             module_blocklist: Default::default(),
             module_visibility: Default::default(),
             run_cargo: true,
