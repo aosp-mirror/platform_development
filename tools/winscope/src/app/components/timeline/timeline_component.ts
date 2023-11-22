@@ -512,7 +512,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
   }
 
   hasPrevEntry(): boolean {
-    if (!this.internalActiveTrace) {
+    if (this.internalActiveTrace === undefined) {
       return false;
     }
     if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
@@ -522,7 +522,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
   }
 
   hasNextEntry(): boolean {
-    if (!this.internalActiveTrace) {
+    if (this.internalActiveTrace === undefined) {
       return false;
     }
     if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
@@ -532,7 +532,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
   }
 
   async moveToPreviousEntry() {
-    if (!this.internalActiveTrace) {
+    if (this.internalActiveTrace === undefined) {
       return;
     }
     this.timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
@@ -540,7 +540,7 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
   }
 
   async moveToNextEntry() {
-    if (!this.internalActiveTrace) {
+    if (this.internalActiveTrace === undefined) {
       return;
     }
     this.timelineData.moveToNextEntryFor(this.internalActiveTrace);
