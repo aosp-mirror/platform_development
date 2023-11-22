@@ -25,8 +25,15 @@ android_test {
     aaptflags: [
         "--rename-manifest-package com.example.android.pm.shortcutlauncherdemo",
     ],
-    srcs: ["launcher/src/**/*.java"] + ["common/src/**/*.java"],
-    resource_dirs: ["launcher/res"] + ["common/res"] + ["launcher/res1"],
+    srcs: [
+	"common/src/**/*.java",
+	"launcher/src/**/*.java",
+    ],
+    resource_dirs: [
+    	"common/res",
+	"launcher/res",
+	"launcher/res1",
+    ],
     static_libs: [
         "androidx.legacy_legacy-support-v4",
         "androidx.legacy_legacy-support-v13",
@@ -41,8 +48,15 @@ android_test {
     aaptflags: [
         "--rename-manifest-package com.example.android.pm.shortcutlauncherdemo2",
     ],
-    srcs: ["launcher/src/**/*.java"] + ["common/src/**/*.java"],
-    resource_dirs: ["launcher/res"] + ["common/res"] + ["launcher/res2"],
+    srcs: [
+    	"common/src/**/*.java",
+	"launcher/src/**/*.java",
+    ],
+    resource_dirs: [
+    	"common/res",
+        "launcher/res",
+	"launcher/res2",
+    ],
     static_libs: [
         "androidx.legacy_legacy-support-v4",
         "androidx.legacy_legacy-support-v13",
@@ -58,8 +72,15 @@ android_test {
     aaptflags: [
         "--rename-manifest-package com.example.android.pm.shortcutdemo",
     ],
-    srcs: ["publisher/src/**/*.java"] + ["common/src/**/*.java"],
-    resource_dirs: ["publisher/res"] + ["common/res"] + ["publisher/res1"],
+    srcs: [
+    	"common/src/**/*.java",
+	"publisher/src/**/*.java",
+    ],
+    resource_dirs: [
+    	"common/res",
+	"publisher/res",
+	"publisher/res1",
+    ],
     manifest: "publisher/AndroidManifest.xml",
     sdk_version: "current",
 }
@@ -71,8 +92,15 @@ android_test {
     aaptflags: [
         "--rename-manifest-package com.example.android.pm.shortcutdemo2",
     ],
-    srcs: ["publisher/src/**/*.java"] + ["common/src/**/*.java"],
-    resource_dirs: ["publisher/res"] + ["common/res"] + ["publisher/res2"],
+    srcs: [
+    	"common/src/**/*.java",
+	"publisher/src/**/*.java",
+    ],
+    resource_dirs: [
+    	"common/res",
+	"publisher/res",
+	"publisher/res2",
+    ],
     manifest: "publisher/AndroidManifest.xml",
     sdk_version: "current",
 }
