@@ -701,6 +701,7 @@ fn crate_to_bp_modules(
                 .clone()
                 .into_iter()
                 .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+                .chain(cfg.extra_cfg.clone().into_iter())
                 .collect(),
         );
 
