@@ -66,7 +66,8 @@ function is_perfetto_data_source_available {
 
 function is_any_perfetto_data_source_available {
     if is_perfetto_data_source_available android.surfaceflinger.layers || \
-       is_perfetto_data_source_available android.surfaceflinger.transactions; then
+       is_perfetto_data_source_available android.surfaceflinger.transactions || \
+       is_perfetto_data_source_available com.android.wm.shell.transition; then
         return 0
     else
         return 1
@@ -260,8 +261,27 @@ fi
     "transition_traces": TraceTarget(
         [WinscopeFileMatcher(WINSCOPE_DIR, "wm_transition_trace", "wm_transition_trace"),
          WinscopeFileMatcher(WINSCOPE_DIR, "shell_transition_trace", "shell_transition_trace")],
-        'su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start\necho "Transition traces started."',
-        'su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1'
+         f"""
+if is_perfetto_data_source_available com.android.wm.shell.transition; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "com.android.wm.shell.transition"
+    }}
+}}
+EOF
+    echo 'Transition trace (perfetto) configured to start along the other perfetto traces'
+else
+    su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start
+    echo "Transition traces (legacy) started."
+fi
+        """,
+        """
+if ! is_perfetto_data_source_available com.android.wm.shell.transition; then
+    su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1
+    echo 'Transition traces (legacy) stopped.'
+fi
+"""
     ),
     "perfetto_trace": TraceTarget(
         File(PERFETTO_TRACE_FILE, "trace.perfetto-trace"),
