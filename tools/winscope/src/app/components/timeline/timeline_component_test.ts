@@ -341,6 +341,20 @@ describe('TimelineComponent', () => {
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
   });
 
+  it('next button enabled for different active viewers', () => {
+    loadTraces();
+
+    const nextEntryButton = fixture.debugElement.query(By.css('#next_entry_button'));
+    expect(nextEntryButton).toBeTruthy();
+    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+
+    component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
+    component.internalActiveTrace = TraceType.WINDOW_MANAGER;
+    fixture.detectChanges();
+
+    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+  });
+
   it('changes timestamp on next entry button press', () => {
     loadTraces();
 

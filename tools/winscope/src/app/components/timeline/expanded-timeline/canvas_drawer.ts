@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {Rect} from 'common/geometry_utils';
+
 export class CanvasDrawer {
   private canvas!: HTMLCanvasElement;
   private ctx!: CanvasRenderingContext2D;
@@ -27,23 +29,22 @@ export class CanvasDrawer {
     this.ctx = ctx;
   }
 
-  drawRect(drawParams: {x: number; y: number; w: number; h: number; color: string; alpha: number}) {
-    const {x, y, w, h, color, alpha} = drawParams;
+  drawRect(rect: Rect, color: string, alpha: number) {
     const rgbColor = this.hexToRgb(color);
     if (rgbColor === undefined) {
       throw new Error('Failed to parse provided hex color');
     }
     const {r, g, b} = rgbColor;
 
-    this.defineRectPath(x, y, w, h);
+    this.defineRectPath(rect);
     this.ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     this.ctx.fill();
 
     this.ctx.restore();
   }
 
-  drawRectBorder(x: number, y: number, w: number, h: number) {
-    this.defineRectPath(x, y, w, h);
+  drawRectBorder(rect: Rect) {
+    this.defineRectPath(rect);
     this.highlightPath();
     this.ctx.restore();
   }
@@ -79,13 +80,13 @@ export class CanvasDrawer {
     this.ctx.stroke();
   }
 
-  private defineRectPath(x: number, y: number, w: number, h: number) {
+  private defineRectPath(rect: Rect) {
     this.ctx.beginPath();
-    this.ctx.moveTo(x, y);
-    this.ctx.lineTo(x + w, y);
-    this.ctx.lineTo(x + w, y + h);
-    this.ctx.lineTo(x, y + h);
-    this.ctx.lineTo(x, y);
+    this.ctx.moveTo(rect.x, rect.y);
+    this.ctx.lineTo(rect.x + rect.w, rect.y);
+    this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+    this.ctx.lineTo(rect.x, rect.y + rect.h);
+    this.ctx.lineTo(rect.x, rect.y);
     this.ctx.closePath();
   }
 

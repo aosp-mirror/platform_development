@@ -21,7 +21,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatSliderModule} from '@angular/material/slider';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
-import {Rectangle} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
 
 describe('RectsComponent', () => {
@@ -64,9 +64,11 @@ describe('RectsComponent', () => {
   it('draws scene when input data changes', async () => {
     spyOn(Canvas.prototype, 'draw').and.callThrough();
 
-    const inputRect: Rectangle = {
-      topLeft: {x: 0, y: 0},
-      bottomRight: {x: 1, y: -1},
+    const inputRect: UiRect = {
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
       label: 'rectangle1',
       transform: {
         dsdx: 1,

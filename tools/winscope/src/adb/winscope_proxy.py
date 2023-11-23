@@ -645,7 +645,7 @@ class CheckWaylandServiceEndpoint(RequestEndpoint):
 
 
 class ListDevicesEndpoint(RequestEndpoint):
-    ADB_INFO_RE = re.compile("^([A-Za-z0-9.:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
+    ADB_INFO_RE = re.compile("^([A-Za-z0-9._:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
     _foundDevices = None
 
     def process(self, server, path):
