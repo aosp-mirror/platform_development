@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Point} from 'common/geometry_utils';
 import {CanvasMouseHandler, DragListener, DropListener} from './canvas_mouse_handler';
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
@@ -30,7 +31,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   constructor(
     private drawer: MiniTimelineDrawer,
     private defaultCursor: string = 'auto',
-    private onUnhandledMouseDown: (x: number, y: number) => void = (x, y) => {}
+    private onUnhandledMouseDown: (point: Point) => void = (point) => {}
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {
       this.handleMouseMove(event);
@@ -66,49 +67,49 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   private handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const {mouseX, mouseY} = this.getPos(e);
+    const mousePoint = this.getPos(e);
 
-    const clickedObject = this.objectAt(mouseX, mouseY);
+    const clickedObject = this.objectAt(mousePoint);
     if (clickedObject !== undefined) {
       this.draggingObject = clickedObject;
     } else {
-      this.onUnhandledMouseDown(mouseX, mouseY);
+      this.onUnhandledMouseDown(mousePoint);
     }
-    this.updateCursor(mouseX, mouseY);
+    this.updateCursor(mousePoint);
   }
 
   private handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const {mouseX, mouseY} = this.getPos(e);
+    const mousePoint = this.getPos(e);
 
     if (this.draggingObject !== undefined) {
       const onDragCallback = this.onDrag.get(this.draggingObject);
       if (onDragCallback !== undefined) {
-        onDragCallback(mouseX, mouseY);
+        onDragCallback(mousePoint.x, mousePoint.y);
       }
     }
 
-    this.updateCursor(mouseX, mouseY);
+    this.updateCursor(mousePoint);
   }
 
   private handleMouseUp(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const {mouseX, mouseY} = this.getPos(e);
+    const mousePoint = this.getPos(e);
 
     if (this.draggingObject !== undefined) {
       const onDropCallback = this.onDrop.get(this.draggingObject);
       if (onDropCallback !== undefined) {
-        onDropCallback(mouseX, mouseY);
+        onDropCallback(mousePoint.x, mousePoint.y);
       }
     }
 
     this.draggingObject = undefined;
-    this.updateCursor(mouseX, mouseY);
+    this.updateCursor(mousePoint);
   }
 
-  private getPos(e: MouseEvent) {
+  private getPos(e: MouseEvent): Point {
     let mouseX = e.offsetX;
     const mouseY = e.offsetY;
 
@@ -120,11 +121,11 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
       mouseX = this.drawer.getWidth() - this.drawer.padding.right;
     }
 
-    return {mouseX, mouseY};
+    return {x: mouseX, y: mouseY};
   }
 
-  private updateCursor(mouseX: number, mouseY: number) {
-    const hoverObject = this.objectAt(mouseX, mouseY);
+  private updateCursor(mousePoint: Point) {
+    const hoverObject = this.objectAt(mousePoint);
     if (hoverObject !== undefined) {
       if (hoverObject === this.draggingObject) {
         this.drawer.canvas.style.cursor = 'grabbing';
@@ -136,11 +137,11 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     }
   }
 
-  private objectAt(mouseX: number, mouseY: number): DraggableCanvasObject | undefined {
+  private objectAt(mousePoint: Point): DraggableCanvasObject | undefined {
     for (const object of this.draggableObjects) {
       const ctx = assertDefined(this.drawer.canvas.getContext('2d'));
       object.definePath(ctx);
-      if (ctx.isPointInPath(mouseX, mouseY)) {
+      if (ctx.isPointInPath(mousePoint.x, mousePoint.y)) {
         return object;
       }
     }

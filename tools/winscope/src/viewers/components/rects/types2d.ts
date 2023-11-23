@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-export interface Rectangle {
-  topLeft: Point;
-  bottomRight: Point;
+import {Rect, TransformMatrix} from 'common/geometry_utils';
+
+export interface UiRect extends Rect {
   label: string;
   transform?: TransformMatrix;
   isVisible: boolean;
@@ -30,21 +30,7 @@ export interface Rectangle {
   hasContent?: boolean;
 }
 
-export interface Point {
-  x: number;
-  y: number;
-}
-
 export interface Size {
   width: number;
   height: number;
-}
-
-export interface TransformMatrix {
-  dsdx: number;
-  dsdy: number;
-  dtdx: number;
-  dtdy: number;
-  tx: number;
-  ty: number;
 }

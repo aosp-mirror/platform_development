@@ -95,22 +95,26 @@ describe('TransitionTimelineComponent', () => {
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: 0,
-      y: padding,
-      w: Math.floor(width / 5),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor(width / 2),
-      y: padding,
-      w: Math.floor(width / 2),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: 0,
+        y: padding,
+        w: Math.floor(width / 5),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor(width / 2),
+        y: padding,
+        w: Math.floor(width / 2),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
   });
 
   it('can draw transitions zoomed in', async () => {
@@ -142,22 +146,26 @@ describe('TransitionTimelineComponent', () => {
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: -Math.floor(width / 10),
-      y: padding,
-      w: Math.floor(width / 5),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor(width / 2),
-      y: padding,
-      w: Math.floor(width),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: -Math.floor(width / 10),
+        y: padding,
+        w: Math.floor(width / 5),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor(width / 2),
+        y: padding,
+        w: Math.floor(width),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
   });
 
   it('can draw selected entry', async () => {
@@ -189,23 +197,17 @@ describe('TransitionTimelineComponent', () => {
     const oneRowHeight = oneRowTotalHeight - padding;
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
-    expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
-    expect(drawRectSpy).toHaveBeenCalledWith({
+    const expectedRect = {
       x: Math.floor((width * 1) / 4),
       y: padding,
       w: Math.floor(width / 2),
       h: oneRowHeight,
-      color: component.color,
-      alpha: 0.25,
-    });
+    };
+    expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(
-      Math.floor((width * 1) / 4),
-      padding,
-      Math.floor(width / 2),
-      oneRowHeight
-    );
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   });
 
   it('can draw hovering entry', async () => {
@@ -242,23 +244,17 @@ describe('TransitionTimelineComponent', () => {
     await waitToBeCalled(drawRectSpy, 1);
     await waitToBeCalled(drawRectBorderSpy, 1);
 
-    expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith({
+    const expectedRect = {
       x: Math.floor((width * 1) / 4),
       y: padding,
       w: Math.floor(width / 2),
       h: oneRowHeight,
-      color: component.color,
-      alpha: 0.25,
-    });
+    };
+    expect(drawRectSpy).toHaveBeenCalledTimes(1);
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(
-      Math.floor((width * 1) / 4),
-      padding,
-      Math.floor(width / 2),
-      oneRowHeight
-    );
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   });
 
   it('can draw overlapping transitions (default)', async () => {
@@ -291,22 +287,26 @@ describe('TransitionTimelineComponent', () => {
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: 0,
-      y: padding,
-      w: Math.floor((width * 3) / 4),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor(width / 2),
-      y: padding + oneRowTotalHeight,
-      w: Math.floor(width / 2),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: 0,
+        y: padding,
+        w: Math.floor((width * 3) / 4),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor(width / 2),
+        y: padding + oneRowTotalHeight,
+        w: Math.floor(width / 2),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
   });
 
   it('can draw overlapping transitions (contained)', async () => {
@@ -339,22 +339,26 @@ describe('TransitionTimelineComponent', () => {
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: 0,
-      y: padding,
-      w: Math.floor((width * 3) / 4),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor(width / 4),
-      y: padding + oneRowTotalHeight,
-      w: Math.floor(width / 4),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 1,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: 0,
+        y: padding,
+        w: Math.floor((width * 3) / 4),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor(width / 4),
+        y: padding + oneRowTotalHeight,
+        w: Math.floor(width / 4),
+        h: oneRowHeight,
+      },
+      component.color,
+      1
+    );
   });
 
   it('can draw aborted transitions', async () => {
@@ -383,13 +387,37 @@ describe('TransitionTimelineComponent', () => {
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor((width * 1) / 4),
-      y: padding,
-      w: Math.floor(width / 2),
-      h: oneRowHeight,
-      color: component.color,
-      alpha: 0.25,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor((width * 1) / 4),
+        y: padding,
+        w: Math.floor(width / 2),
+        h: oneRowHeight,
+      },
+      component.color,
+      0.25
+    );
+  });
+
+  it('does not render transition with min creation time', async () => {
+    component.trace = new TraceBuilder()
+      .setType(TraceType.TRANSITION)
+      .setEntries([
+        {
+          createTime: {unixNanos: 10n, isMin: true},
+          finishTime: {unixNanos: 30n},
+        } as Transition,
+      ])
+      .setTimestamps([new RealTimestamp(10n)])
+      .build();
+    component.shouldNotRenderEntries.push(0);
+    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+
+    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    expect(drawRectSpy).not.toHaveBeenCalled();
   });
 });

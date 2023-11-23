@@ -16,6 +16,7 @@
 
 import {Color} from 'app/colors';
 import {TRACE_INFO} from 'app/trace_info';
+import {Point} from 'common/geometry_utils';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
@@ -78,8 +79,8 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
     this.ctx = ctx;
 
-    const onUnhandledClickInternal = async (x: number, y: number) => {
-      this.onUnhandledClick(this.input.transformer.untransform(x));
+    const onUnhandledClickInternal = async (mousePoint: Point) => {
+      this.onUnhandledClick(this.input.transformer.untransform(mousePoint.x));
     };
     this.handler = new CanvasMouseHandlerImpl(this, 'pointer', onUnhandledClickInternal);
 

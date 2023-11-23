@@ -16,6 +16,7 @@
 
 import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
+import {TransformMatrix} from 'common/geometry_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {DisplayContent} from 'flickerlib/windows/DisplayContent';
@@ -29,7 +30,7 @@ import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {Rectangle, TransformMatrix} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
@@ -194,7 +195,7 @@ export class Presenter {
     });
   }
 
-  private generateRects(entry: TraceTreeNode): Rectangle[] {
+  private generateRects(entry: TraceTreeNode): UiRect[] {
     const identityMatrix: TransformMatrix = {
       dsdx: 1,
       dsdy: 0,
@@ -203,11 +204,13 @@ export class Presenter {
       dtdy: 1,
       ty: 0,
     };
-    const displayRects: Rectangle[] =
+    const displayRects: UiRect[] =
       entry.displays?.map((display: DisplayContent) => {
-        const rect: Rectangle = {
-          topLeft: {x: display.displayRect.left, y: display.displayRect.top},
-          bottomRight: {x: display.displayRect.right, y: display.displayRect.bottom},
+        const rect: UiRect = {
+          x: display.displayRect.left,
+          y: display.displayRect.top,
+          w: display.displayRect.right - display.displayRect.left,
+          h: display.displayRect.bottom - display.displayRect.top,
           label: `Display - ${display.title}`,
           transform: identityMatrix,
           isVisible: false, //TODO: check if displayRect.ref.isVisible exists
@@ -221,13 +224,15 @@ export class Presenter {
         return rect;
       }) ?? [];
 
-    const windowRects: Rectangle[] =
+    const windowRects: UiRect[] =
       entry.windowStates
         ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
         .map((it: any) => {
-          const rect: Rectangle = {
-            topLeft: {x: it.rect.left, y: it.rect.top},
-            bottomRight: {x: it.rect.right, y: it.rect.bottom},
+          const rect: UiRect = {
+            x: it.rect.left,
+            y: it.rect.top,
+            w: it.rect.right - it.rect.left,
+            h: it.rect.bottom - it.rect.top,
             label: it.rect.label,
             transform: identityMatrix,
             isVisible: it.isVisible,

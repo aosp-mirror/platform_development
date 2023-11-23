@@ -15,7 +15,7 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {isPointInRect} from 'common/geometry_utils';
+import {isPointInRect, Point, Rect} from 'common/geometry_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
@@ -57,8 +57,8 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     }
   }
 
-  override onHover(mouseX: number, mouseY: number) {
-    this.drawEntryHover(mouseX, mouseY);
+  override onHover(mousePoint: Point) {
+    this.drawEntryHover(mousePoint);
   }
 
   override handleMouseOut(e: MouseEvent) {
@@ -70,8 +70,8 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     this.hoveringSegment = undefined;
   }
 
-  private async drawEntryHover(mouseX: number, mouseY: number) {
-    const currentHoverEntry = (await this.getEntryAt(mouseX, mouseY))?.getTimestamp();
+  private async drawEntryHover(mousePoint: Point) {
+    const currentHoverEntry = (await this.getEntryAt(mousePoint))?.getTimestamp();
 
     if (this.hoveringEntry === currentHoverEntry) {
       return;
@@ -89,23 +89,20 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
       return;
     }
 
-    const {x, y, w, h} = this.entryRect(this.hoveringEntry);
+    const rect = this.entryRect(this.hoveringEntry);
 
-    this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha: 1.0});
-    this.canvasDrawer.drawRectBorder(x, y, w, h);
+    this.canvasDrawer.drawRect(rect, this.color, 1.0);
+    this.canvasDrawer.drawRectBorder(rect);
   }
 
-  protected override async getEntryAt(
-    mouseX: number,
-    mouseY: number
-  ): Promise<TraceEntry<{}> | undefined> {
-    const timestampOfClick = this.getTimestampOf(mouseX);
+  protected override async getEntryAt(mousePoint: Point): Promise<TraceEntry<{}> | undefined> {
+    const timestampOfClick = this.getTimestampOf(mousePoint.x);
     const candidateEntry = this.trace.findLastLowerOrEqualEntry(timestampOfClick);
 
     if (candidateEntry !== undefined) {
       const timestamp = candidateEntry.getTimestamp();
-      const {x, y, w, h} = this.entryRect(timestamp);
-      if (isPointInRect({x: mouseX, y: mouseY}, {x, y, w, h})) {
+      const rect = this.entryRect(timestamp);
+      if (isPointInRect(mousePoint, rect)) {
         return candidateEntry;
       }
     }
@@ -121,7 +118,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     return Math.floor(this.canvasDrawer.getScaledCanvasWidth() - this.entryWidth);
   }
 
-  private entryRect(entry: Timestamp, padding = 0) {
+  private entryRect(entry: Timestamp, padding = 0): Rect {
     const xPos = this.getXPosOf(entry);
 
     return {
@@ -156,9 +153,9 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   }
 
   private drawEntry(entry: Timestamp) {
-    const {x, y, w, h} = this.entryRect(entry);
+    const rect = this.entryRect(entry);
 
-    this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha: 0.2});
+    this.canvasDrawer.drawRect(rect, this.color, 0.2);
   }
 
   private drawSelectedEntry() {
@@ -166,8 +163,8 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
       return;
     }
 
-    const {x, y, w, h} = this.entryRect(this.selectedEntry.getTimestamp(), 1);
-    this.canvasDrawer.drawRect({x, y, w, h, color: this.color, alpha: 1.0});
-    this.canvasDrawer.drawRectBorder(x, y, w, h);
+    const rect = this.entryRect(this.selectedEntry.getTimestamp(), 1);
+    this.canvasDrawer.drawRect(rect, this.color, 1.0);
+    this.canvasDrawer.drawRectBorder(rect);
   }
 }

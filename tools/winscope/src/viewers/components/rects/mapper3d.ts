@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-import {Rectangle, Size} from 'viewers/components/rects/types2d';
-import {
-  Box3D,
-  ColorType,
-  Distance2D,
-  Label3D,
-  Point3D,
-  Rect3D,
-  Scene3D,
-  TransformMatrix,
-} from './types3d';
+import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_utils';
+import {Size, UiRect} from 'viewers/components/rects/types2d';
+import {Box3D, ColorType, Distance2D, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
@@ -38,16 +30,8 @@ class Mapper3D {
   private static readonly ZOOM_FACTOR_MIN = 0.1;
   private static readonly ZOOM_FACTOR_MAX = 8.5;
   private static readonly ZOOM_FACTOR_STEP = 0.2;
-  private static readonly IDENTITY_TRANSFORM: TransformMatrix = {
-    dsdx: 1,
-    dsdy: 0,
-    tx: 0,
-    dtdx: 0,
-    dtdy: 1,
-    ty: 0,
-  };
 
-  private rects: Rectangle[] = [];
+  private rects: UiRect[] = [];
   private highlightedRectId: string = '';
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
@@ -57,7 +41,7 @@ class Mapper3D {
   private showVirtualMode = false; // by default don't show virtual displays
   private currentDisplayId = 0; // default stack id is usually 0
 
-  setRects(rects: Rectangle[]) {
+  setRects(rects: UiRect[]) {
     this.rects = rects;
   }
 
@@ -148,7 +132,7 @@ class Mapper3D {
     return scene;
   }
 
-  private selectRectsToDraw(rects: Rectangle[]): Rectangle[] {
+  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
     rects = rects.filter((rect) => rect.displayId === this.currentDisplayId);
 
     if (this.showOnlyVisibleMode) {
@@ -162,7 +146,7 @@ class Mapper3D {
     return rects;
   }
 
-  private computeRects(rects2d: Rectangle[]): Rect3D[] {
+  private computeRects(rects2d: UiRect[]): Rect3D[] {
     let visibleRectsSoFar = 0;
     let visibleRectsTotal = 0;
     let nonVisibleRectsSoFar = 0;
@@ -206,13 +190,13 @@ class Mapper3D {
       const rect = {
         id: rect2d.id,
         topLeft: {
-          x: rect2d.topLeft.x,
-          y: rect2d.topLeft.y,
+          x: rect2d.x,
+          y: rect2d.y,
           z,
         },
         bottomRight: {
-          x: rect2d.bottomRight.x,
-          y: rect2d.bottomRight.y,
+          x: rect2d.x + rect2d.w,
+          y: rect2d.y + rect2d.h,
           z,
         },
         isOversized: false,
@@ -220,7 +204,7 @@ class Mapper3D {
         darkFactor,
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
-        transform: rect2d.transform ?? Mapper3D.IDENTITY_TRANSFORM,
+        transform: rect2d.transform ?? IDENTITY_MATRIX,
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });
@@ -228,7 +212,7 @@ class Mapper3D {
     return rects3d;
   }
 
-  private getColorType(rect2d: Rectangle): ColorType {
+  private getColorType(rect2d: UiRect): ColorType {
     let colorType: ColorType;
     if (this.highlightedRectId === rect2d.id) {
       colorType = ColorType.HIGHLIGHTED;
@@ -242,19 +226,15 @@ class Mapper3D {
     return colorType;
   }
 
-  private getMaxDisplaySize(rects2d: Rectangle[]): Size {
+  private getMaxDisplaySize(rects2d: UiRect[]): Size {
     const displays = rects2d.filter((rect2d) => rect2d.isDisplay);
 
     let maxWidth = 0;
     let maxHeight = 0;
     if (displays.length > 0) {
-      maxWidth = Math.max(
-        ...displays.map((rect2d): number => Math.abs(rect2d.topLeft.x - rect2d.bottomRight.x))
-      );
+      maxWidth = Math.max(...displays.map((rect2d): number => Math.abs(rect2d.w)));
 
-      maxHeight = Math.max(
-        ...displays.map((rect2d): number => Math.abs(rect2d.topLeft.y - rect2d.bottomRight.y))
-      );
+      maxHeight = Math.max(...displays.map((rect2d): number => Math.abs(rect2d.h)));
     }
     return {
       width: maxWidth,
@@ -286,7 +266,7 @@ class Mapper3D {
     return rect3d;
   }
 
-  private computeLabels(rects2d: Rectangle[], rects3d: Rect3D[]): Label3D[] {
+  private computeLabels(rects2d: UiRect[], rects3d: Rect3D[]): Label3D[] {
     const labels3d: Label3D[] = [];
 
     let labelY =
@@ -305,12 +285,12 @@ class Mapper3D {
 
       const bottomLeft: Point3D = {
         x: rect3d.topLeft.x,
-        y: rect3d.bottomRight.y,
+        y: rect3d.topLeft.y,
         z: rect3d.topLeft.z,
       };
       const topRight: Point3D = {
         x: rect3d.bottomRight.x,
-        y: rect3d.topLeft.y,
+        y: rect3d.bottomRight.y,
         z: rect3d.bottomRight.z,
       };
       const lineStarts = [
