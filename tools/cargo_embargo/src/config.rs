@@ -32,7 +32,7 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn default_apex_available() -> Vec<String> {
     vec!["//apex_available:platform".to_string(), "//apex_available:anyapex".to_string()]
@@ -82,11 +82,21 @@ impl Config {
     /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
     const FIELD_NAMES: [&str; 1] = ["package"];
 
+    /// Parses an instance of this config from the given JSON file.
+    pub fn from_file(filename: &Path) -> Result<Self> {
+        let json_string = std::fs::read_to_string(filename)
+            .with_context(|| format!("failed to read file: {:?}", filename))?;
+        Self::from_json_str(&json_string)
+    }
+
     /// Parses an instance of this config from a string of JSON.
     pub fn from_json_str(json_str: &str) -> Result<Self> {
+        // Ignore comments.
+        let json_str: String =
+            json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
         // First parse into untyped map.
         let mut config: Map<String, Value> =
-            serde_json::from_str(json_str).context("failed to parse config")?;
+            serde_json::from_str(&json_str).context("failed to parse config")?;
 
         // Flatten variants. First, get the variants from the config file.
         let mut variants = match config.remove("variants") {
