@@ -94,51 +94,60 @@ struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
-    /// Config file.
-    #[clap(long)]
-    cfg: PathBuf,
     /// Skip the `cargo build` commands and reuse the "cargo.out" file from a previous run if
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
     #[command(subcommand)]
-    mode: Option<Mode>,
+    mode: Mode,
 }
 
 #[derive(Clone, Debug, Subcommand)]
 enum Mode {
+    /// Generates `Android.bp` files for the crates under the current directory using the given
+    /// config file.
+    Generate {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
+    },
     /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
     /// config.
     Convert {
+        /// Legacy `cargo2android.json` config file to read.
+        legacy_config: PathBuf,
+        /// The name of the package for which the config is being generated.
         package_name: String,
+        /// Set `run_cargo: false` in the output config.
         #[arg(long)]
         no_build: bool,
     },
     /// Dumps information about the crates to the given JSON file.
-    DumpCrates { crates: PathBuf },
+    DumpCrates {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
+        /// Path to `crates.json` to output.
+        crates: PathBuf,
+    },
 }
 
 fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
 
-    let json_str = std::fs::read_to_string(&args.cfg)
-        .with_context(|| format!("failed to read file: {:?}", args.cfg))?;
-    // Add some basic support for comments to JSON.
-    let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
-
     match &args.mode {
-        Some(Mode::Convert { package_name, no_build }) => {
+        Mode::Convert { legacy_config, package_name, no_build } => {
+            let json_str = std::fs::read_to_string(legacy_config)
+                .with_context(|| format!("failed to read file: {:?}", legacy_config))?;
             let legacy_config = legacy::Config::from_json_str(&json_str)?;
             let new_config = legacy_config.to_embargo(package_name, !no_build)?;
             let new_config_str = new_config.to_json_string()?;
             println!("{}", new_config_str);
         }
-        Some(Mode::DumpCrates { crates }) => {
-            dump_crates(&args, &json_str, crates)?;
+        Mode::DumpCrates { config, crates } => {
+            dump_crates(&args, config, crates)?;
         }
-        None => {
-            run_embargo(&args, &json_str)?;
+        Mode::Generate { config } => {
+            run_embargo(&args, config)?;
         }
     }
 
@@ -147,8 +156,8 @@ fn main() -> Result<()> {
 
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
-fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
     serde_json::to_writer(
         File::create(crates_filename)
@@ -227,8 +236,8 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
 }
 
 /// Runs cargo_embargo with the given JSON configuration string.
-fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
 
     // TODO: Use different directories for different variants.
