@@ -23,6 +23,7 @@ import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_fa
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {TraceBuilder} from './trace_builder';
@@ -70,7 +71,7 @@ class UnitTestUtils {
 
   static async getParsers(filename: string): Promise<Array<Parser<object>>> {
     const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
-    const [fileAndParsers, errors] = await new ParserFactory().createParsers([file]);
+    const fileAndParsers = await new ParserFactory().createParsers([file]);
     return fileAndParsers.map((fileAndParser) => {
       return fileAndParser.parser;
     });
@@ -95,13 +96,18 @@ class UnitTestUtils {
     const parsersArray = await Promise.all(
       filenames.map((filename) => UnitTestUtils.getParser(filename))
     );
-    const parsers = new Map<TraceType, Parser<object>>();
-    parsersArray.forEach((p) => parsers.set(p.getTraceType(), p));
-    const tracesParsers = await new TracesParserFactory().createParsers(parsers);
-    expect(tracesParsers.size)
+
+    const traces = new Traces();
+    parsersArray.forEach((parser) => {
+      const trace = Trace.fromParser(parser, TimestampType.REAL);
+      traces.setTrace(parser.getTraceType(), trace);
+    });
+
+    const tracesParsers = await new TracesParserFactory().createParsers(traces);
+    expect(tracesParsers.length)
       .withContext(`Should have been able to create a traces parser for [${filenames.join()}]`)
       .toEqual(1);
-    return tracesParsers.values().next().value;
+    return tracesParsers[0];
   }
 
   static async getWindowManagerState(): Promise<WindowManagerState> {

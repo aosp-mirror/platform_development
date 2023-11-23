@@ -118,42 +118,28 @@ export class Trace<T> {
   private readonly parser: Parser<T>;
   private readonly descriptors: string[];
   private readonly fullTrace: Trace<T>;
-  private timestampType: TimestampType | undefined;
+  private timestampType: TimestampType;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
 
-  static newUninitializedTrace<T>(parser: Parser<T>): Trace<T> {
+  static fromParser<T>(parser: Parser<T>, timestampType: TimestampType): Trace<T> {
     return new Trace(
       parser.getTraceType(),
       parser,
       parser.getDescriptors(),
       undefined,
-      undefined,
+      timestampType,
       undefined
     );
   }
 
-  static newInitializedTrace<T>(
-    type: TraceType,
-    entryProvider: Parser<T>,
-    descriptors: string[],
-    timestampType: TimestampType,
-    entriesRange: EntriesRange
-  ): Trace<T> {
-    return new Trace(type, entryProvider, descriptors, undefined, timestampType, entriesRange);
-  }
-
-  init(timestampType: TimestampType) {
-    this.timestampType = timestampType;
-  }
-
-  private constructor(
+  constructor(
     type: TraceType,
     parser: Parser<T>,
     descriptors: string[],
     fullTrace: Trace<T> | undefined,
-    timestampType: TimestampType | undefined,
+    timestampType: TimestampType,
     entriesRange: EntriesRange | undefined
   ) {
     this.type = type;

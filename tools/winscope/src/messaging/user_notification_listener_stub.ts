@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {ParserError} from 'parsers/parser_factory';
 import {UserNotificationListener} from './user_notification_listener';
+import {WinscopeError} from './winscope_error';
 
 export class UserNotificationListenerStub implements UserNotificationListener {
-  onParserErrors(errors: ParserError[]) {
+  onErrors(errors: WinscopeError[]) {
     // do nothing
   }
 }

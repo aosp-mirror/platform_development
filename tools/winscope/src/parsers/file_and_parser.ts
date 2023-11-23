@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {WinscopeError} from 'messaging/winscope_error';
+import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 
-export interface UserNotificationListener {
-  onErrors(errors: WinscopeError[]): void;
+export class FileAndParser {
+  constructor(readonly file: TraceFile, readonly parser: Parser<object>) {}
 }

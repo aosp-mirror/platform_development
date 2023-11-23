@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {ParserError, ParserErrorType} from 'parsers/parser_factory';
+import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceFileFilter} from './trace_file_filter';
@@ -24,6 +25,18 @@ describe('TraceFileFilter', () => {
 
   // Could be any file, we just need an instance of File to be used as a fake bugreport archive
   const bugreportArchive = new File([new ArrayBuffer(0)], 'test_bugreport.zip') as unknown as File;
+
+  let errors: WinscopeError[];
+  let errorListener: WinscopeErrorListener;
+
+  beforeEach(() => {
+    errors = [];
+    errorListener = {
+      onError(error: WinscopeError) {
+        errors.push(error);
+      },
+    };
+  });
 
   describe('bugreport (detects it is a bugreport)', () => {
     it('ignores non-trace dirs', async () => {
@@ -56,7 +69,7 @@ describe('TraceFileFilter', () => {
         'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb'
       );
 
-      const result = await filter.filter([...bugreportFiles, plainTraceFile]);
+      const result = await filter.filter([...bugreportFiles, plainTraceFile], errorListener);
       expect(result.perfetto).toBeUndefined();
 
       const expectedLegacy = new Set([...pickedBugreportFiles, plainTraceFile]);
@@ -76,10 +89,10 @@ describe('TraceFileFilter', () => {
         makeTraceFile('FS/data/misc/perfetto-traces/other.perfetto-trace', bugreportArchive),
         makeTraceFile('FS/data/misc/perfetto-traces/other.pftrace', bugreportArchive),
       ];
-      const result = await filter.filter(bugreportFiles);
+      const result = await filter.filter(bugreportFiles, errorListener);
       expect(result.perfetto).toEqual(perfettoSystemTrace);
       expect(result.legacy).toEqual([]);
-      expect(result.errors).toEqual([]);
+      expect(errors).toEqual([]);
     });
 
     it('ignores perfetto traces other than systrace.pftrace', async () => {
@@ -89,40 +102,40 @@ describe('TraceFileFilter', () => {
         makeTraceFile('FS/data/misc/perfetto-traces/other.perfetto-trace', bugreportArchive),
         makeTraceFile('FS/data/misc/perfetto-traces/other.pftrace', bugreportArchive),
       ];
-      const result = await filter.filter(bugreportFiles);
+      const result = await filter.filter(bugreportFiles, errorListener);
       expect(result.perfetto).toBeUndefined();
       expect(result.legacy).toEqual([]);
-      expect(result.errors).toEqual([]);
+      expect(errors).toEqual([]);
     });
   });
 
   describe('plain input (no bugreport)', () => {
     it('picks perfetto trace with .perfetto-trace extension', async () => {
       const perfettoTrace = makeTraceFile('file.perfetto-trace');
-      const result = await filter.filter([perfettoTrace]);
+      const result = await filter.filter([perfettoTrace], errorListener);
       expect(result.perfetto).toEqual(perfettoTrace);
       expect(result.legacy).toEqual([]);
-      expect(result.errors).toEqual([]);
+      expect(errors).toEqual([]);
     });
 
     it('picks perfetto trace with .pftrace extension', async () => {
       const pftrace = makeTraceFile('file.pftrace');
-      const result = await filter.filter([pftrace]);
+      const result = await filter.filter([pftrace], errorListener);
       expect(result.perfetto).toEqual(pftrace);
       expect(result.legacy).toEqual([]);
-      expect(result.errors).toEqual([]);
+      expect(errors).toEqual([]);
     });
 
     it('picks largest perfetto trace', async () => {
       const small = makeTraceFile('small.perfetto-trace', undefined, 10);
       const medium = makeTraceFile('medium.perfetto-trace', undefined, 20);
       const large = makeTraceFile('large.perfetto-trace', undefined, 30);
-      const result = await filter.filter([small, large, medium]);
+      const result = await filter.filter([small, large, medium], errorListener);
       expect(result.perfetto).toEqual(large);
       expect(result.legacy).toEqual([]);
-      expect(result.errors).toEqual([
-        new ParserError(ParserErrorType.OVERRIDE, small.getDescriptor()),
-        new ParserError(ParserErrorType.OVERRIDE, medium.getDescriptor()),
+      expect(errors).toEqual([
+        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, small.getDescriptor()),
+        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, medium.getDescriptor()),
       ]);
     });
   });

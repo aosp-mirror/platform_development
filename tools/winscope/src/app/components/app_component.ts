@@ -316,7 +316,7 @@ export class AppComponent implements WinscopeEventListener {
 
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
-    this.tracePipeline = new TracePipeline(this.snackbarOpener);
+    this.tracePipeline = new TracePipeline();
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,

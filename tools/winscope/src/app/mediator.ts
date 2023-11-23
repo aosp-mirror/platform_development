@@ -17,6 +17,8 @@
 import {Timestamp} from 'common/time';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
+import {WinscopeError} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {
   TracePositionUpdate,
   ViewersLoaded,
@@ -107,21 +109,13 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_FILES_UPLOADED, async (event) => {
       this.currentProgressListener = this.uploadTracesComponent;
-      await this.tracePipeline.loadFiles(
-        event.files,
-        this.currentProgressListener,
-        FilesSource.UPLOADED
-      );
+      await this.loadFiles(event.files, FilesSource.UPLOADED);
     });
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
       this.currentProgressListener = this.collectTracesComponent;
-      await this.tracePipeline.loadFiles(
-        event.files,
-        this.currentProgressListener,
-        FilesSource.COLLECTED
-      );
-      await this.processLoadedTraceFiles();
+      await this.loadFiles(event.files, FilesSource.COLLECTED);
+      await this.loadViewers();
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
@@ -129,7 +123,7 @@ export class Mediator {
     });
 
     await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
-      await this.processLoadedTraceFiles();
+      await this.loadViewers();
     });
 
     await event.visit(WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START, async () => {
@@ -139,7 +133,6 @@ export class Mediator {
     });
 
     await event.visit(WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED, async (event) => {
-      this.currentProgressListener = this.uploadTracesComponent;
       await this.processRemoteFilesReceived(event.files, FilesSource.BUGANIZER);
     });
 
@@ -158,16 +151,29 @@ export class Mediator {
     });
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED, async (event) => {
-      this.currentProgressListener = this.uploadTracesComponent;
       await this.processRemoteFilesReceived([event.bugreport], FilesSource.BUGREPORT);
       if (event.timestamp !== undefined) {
-        await this.onRemoteToolTimestampReceived(event.timestamp);
+        await this.processRemoteToolTimestampReceived(event.timestamp);
       }
     });
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED, async (event) => {
-      await this.onRemoteToolTimestampReceived(event.timestamp);
+      await this.processRemoteToolTimestampReceived(event.timestamp);
     });
+  }
+
+  private async loadFiles(files: File[], source: FilesSource) {
+    const errors: WinscopeError[] = [];
+    const errorListener: WinscopeErrorListener = {
+      onError(error: WinscopeError) {
+        errors.push(error);
+      },
+    };
+    await this.tracePipeline.loadFiles(files, source, errorListener, this.currentProgressListener);
+
+    if (errors.length > 0) {
+      this.userNotificationListener.onErrors(errors);
+    }
   }
 
   private async propagateTracePosition(
@@ -194,7 +200,7 @@ export class Mediator {
     await Promise.all(promises);
   }
 
-  private async onRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private async processRemoteToolTimestampReceived(timestamp: Timestamp) {
     this.lastRemoteToolTimestampReceived = timestamp;
 
     if (!this.areViewersLoaded) {
@@ -216,12 +222,13 @@ export class Mediator {
     await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
   }
 
-  private async processRemoteFilesReceived(files: File[], defaultFileName = FilesSource.REMOTE) {
+  private async processRemoteFilesReceived(files: File[], source: FilesSource) {
     await this.resetAppToInitialState();
-    await this.tracePipeline.loadFiles(files, this.currentProgressListener, defaultFileName);
+    this.currentProgressListener = this.uploadTracesComponent;
+    await this.loadFiles(files, source);
   }
 
-  private async processLoadedTraceFiles() {
+  private async loadViewers() {
     this.currentProgressListener?.onProgressUpdate('Computing frame mapping...', undefined);
 
     // TODO: move this into the ProgressListener

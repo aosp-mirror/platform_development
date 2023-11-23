@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-import {UserNotificationListener} from 'messaging/user_notification_listener';
-import {ParserError} from 'parsers/parser_factory';
+import {TraceType} from 'trace/trace_type';
 
-export class SnackBarOpenerStub implements UserNotificationListener {
-  onParserErrors(errors: ParserError[]) {
-    // do nothing
-  }
+export enum WinscopeErrorType {
+  CORRUPTED_ARCHIVE,
+  NO_INPUT_FILES,
+  FILE_OVERRIDDEN,
+  UNSUPPORTED_FILE_FORMAT,
+}
+
+export class WinscopeError {
+  constructor(
+    public type: WinscopeErrorType,
+    public trace: string | undefined = undefined,
+    public traceType: TraceType | undefined = undefined
+  ) {}
 }

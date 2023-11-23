@@ -15,9 +15,11 @@
  */
 
 import {ProgressListener} from 'messaging/progress_listener';
+import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
+import {FileAndParser} from './file_and_parser';
 import {ParserEventLog} from './parser_eventlog';
 import {ParserInputMethodClients} from './parser_input_method_clients';
 import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
@@ -53,9 +55,9 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
-    progressListener?: ProgressListener
-  ): Promise<[Array<{file: TraceFile; parser: Parser<object>}>, ParserError[]]> {
-    const errors: ParserError[] = [];
+    progressListener?: ProgressListener,
+    errorListener?: WinscopeErrorListener
+  ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
     for (const [index, traceFile] of traceFiles.entries()) {
@@ -69,7 +71,9 @@ export class ParserFactory {
           await p.parse();
           hasFoundParser = true;
           if (p instanceof ParserViewCapture) {
-            p.getWindowParsers().forEach((it) => parsers.push({file: traceFile, parser: it}));
+            p.getWindowParsers().forEach((subParser) =>
+              parsers.push(new FileAndParser(traceFile, subParser))
+            );
           } else {
             parsers.push({file: traceFile, parser: p});
           }
@@ -80,25 +84,11 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        console.error(`Failed to find parser for trace ${traceFile.file.name}`);
-        errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.getDescriptor()));
+        errorListener?.onError(
+          new WinscopeError(WinscopeErrorType.UNSUPPORTED_FILE_FORMAT, traceFile.getDescriptor())
+        );
       }
     }
-    return [parsers, errors];
+    return parsers;
   }
-}
-
-export enum ParserErrorType {
-  CORRUPTED_ARCHIVE,
-  NO_INPUT_FILES,
-  UNSUPPORTED_FORMAT,
-  OVERRIDE,
-}
-
-export class ParserError {
-  constructor(
-    public type: ParserErrorType,
-    public trace: string | undefined = undefined,
-    public traceType: TraceType | undefined = undefined
-  ) {}
 }

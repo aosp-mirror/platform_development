@@ -17,6 +17,7 @@
 import {FunctionUtils} from 'common/function_utils';
 import {RealTimestamp} from 'common/time';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
+import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {UserNotificationListenerStub} from 'messaging/user_notification_listener_stub';
 import {
   AppFilesCollected,
@@ -43,16 +44,14 @@ import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {ViewerStub} from 'viewers/viewer_stub';
-import {SnackBarOpenerStub} from './components/snack_bar_opener_stub';
 import {Mediator} from './mediator';
 import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
-import ObjectContaining = jasmine.ObjectContaining;
 
 describe('Mediator', () => {
   const viewerStub = new ViewerStub('Title');
   let inputFiles: File[];
-  let userNotificationListener: UserNotificationListenerStub;
+  let userNotificationListener: UserNotificationListener;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -62,7 +61,6 @@ describe('Mediator', () => {
   let uploadTracesComponent: ProgressListenerStub;
   let collectTracesComponent: ProgressListenerStub;
   let traceViewComponent: WinscopeEventEmitter & WinscopeEventListener;
-  let snackBarOpener: SnackBarOpenerStub;
   let mediator: Mediator;
   let spies: Array<jasmine.Spy<any>>;
 
@@ -84,7 +82,7 @@ describe('Mediator', () => {
 
   beforeEach(async () => {
     userNotificationListener = new UserNotificationListenerStub();
-    tracePipeline = new TracePipeline(userNotificationListener);
+    tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),
@@ -105,14 +103,13 @@ describe('Mediator', () => {
       new WinscopeEventEmitterStub(),
       new WinscopeEventListenerStub()
     );
-    snackBarOpener = new SnackBarOpenerStub();
     mediator = new Mediator(
       tracePipeline,
       timelineData,
       abtChromeExtensionProtocol,
       crossToolProtocol,
       appComponent,
-      snackBarOpener,
+      userNotificationListener,
       new MockStorage()
     );
     mediator.setTimelineComponent(timelineComponent);
@@ -133,7 +130,7 @@ describe('Mediator', () => {
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
       spyOn(uploadTracesComponent, 'onOperationFinished'),
-      spyOn(userNotificationListener, 'onParserErrors'),
+      spyOn(userNotificationListener, 'onErrors'),
       spyOn(viewerStub, 'onWinscopeEvent'),
     ];
   });
@@ -335,8 +332,8 @@ describe('Mediator', () => {
   });
 
   async function loadFiles() {
-    await tracePipeline.loadFiles(inputFiles);
-    expect(userNotificationListener.onParserErrors).not.toHaveBeenCalled();
+    await mediator.onWinscopeEvent(new AppFilesUploaded(inputFiles));
+    expect(userNotificationListener.onErrors).not.toHaveBeenCalled();
   }
 
   function resetSpyCalls() {
@@ -345,7 +342,7 @@ describe('Mediator', () => {
     });
   }
 
-  function makeExpectedEvent(type: WinscopeEventType): ObjectContaining<any> {
+  function makeExpectedEvent(type: WinscopeEventType): jasmine.ObjectContaining<any> {
     return jasmine.objectContaining({
       type,
     } as WinscopeEvent);
