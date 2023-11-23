@@ -363,8 +363,8 @@ impl Crate {
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
                 _ if arg.starts_with("-Wclippy") => {}
-                "-W" => {}
-                "-D" => {}
+                _ if arg.starts_with("-D") => {}
+                _ if arg.starts_with("-W") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
