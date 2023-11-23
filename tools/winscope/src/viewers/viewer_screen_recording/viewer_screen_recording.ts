@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -34,15 +34,15 @@ class ViewerScreenRecording implements Viewer {
     this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
         await entry?.getValue();
     });
   }
 
-  setEmitAppEvent() {
+  setEmitEvent() {
     // do nothing
   }
 

@@ -16,7 +16,7 @@
 
 import {globalConfig} from 'common/global_config';
 import {UrlUtils} from 'common/url_utils';
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {initWasm, resetEngineWorker, WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';

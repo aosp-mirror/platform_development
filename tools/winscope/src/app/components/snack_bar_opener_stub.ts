@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {ParserError} from 'parsers/parser_factory';
 
 export class SnackBarOpenerStub implements UserNotificationListener {

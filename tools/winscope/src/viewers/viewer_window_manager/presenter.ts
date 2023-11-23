@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {TransformMatrix} from 'common/geometry_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {DisplayContent} from 'flickerlib/windows/DisplayContent';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -164,8 +164,8 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       const prevEntry =
         entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;

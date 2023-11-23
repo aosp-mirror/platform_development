@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import {Viewer} from 'viewers/viewer';
+import {ProgressListener} from 'messaging/progress_listener';
 
-export interface TraceDataListener {
-  onTraceDataUnloaded(): void;
-  onTraceDataLoaded(viewers: Viewer[]): void;
+export class ProgressListenerStub implements ProgressListener {
+  onProgressUpdate() {
+    // do nothing
+  }
+
+  onOperationFinished() {
+    // do nothing
+  }
 }

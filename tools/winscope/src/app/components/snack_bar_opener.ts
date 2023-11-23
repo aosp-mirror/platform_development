@@ -17,7 +17,7 @@
 import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TRACE_INFO} from 'app/trace_info';
-import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 import {SnackBarComponent} from './snack_bar_component';
 

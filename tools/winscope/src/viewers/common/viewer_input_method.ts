@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
@@ -32,11 +32,11 @@ abstract class ViewerInputMethod implements Viewer {
     this.addViewerEventListeners();
   }
 
-  async onAppEvent(event: AppEvent) {
+  async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent() {
+  setEmitEvent() {
     // do nothing
   }
 

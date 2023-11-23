@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';

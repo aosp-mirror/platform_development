@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AppEvent} from 'app/app_event';
+import {WinscopeEvent} from './winscope_event';
 
-export type EmitAppEvent = (event: AppEvent) => Promise<void>;
+export type EmitEvent = (event: WinscopeEvent) => Promise<void>;
 
-export interface AppEventEmitter {
-  setEmitAppEvent(callback: EmitAppEvent): void;
+export interface WinscopeEventEmitter {
+  setEmitEvent(callback: EmitEvent): void;
 }

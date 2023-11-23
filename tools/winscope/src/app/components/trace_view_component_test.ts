@@ -18,7 +18,7 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
-import {AppEvent, AppEventType, TabbedViewSwitchRequest} from 'app/app_event';
+import {TabbedViewSwitchRequest, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {TraceType} from 'trace/trace_type';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
@@ -67,14 +67,14 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    tabButtons[1].dispatchEvent(new Event('click'));
+    (tabButtons[1] as HTMLButtonElement).click();
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    tabButtons[0].dispatchEvent(new Event('click'));
+    (tabButtons[0] as HTMLButtonElement).click();
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
@@ -85,24 +85,24 @@ describe('TraceViewComponent', () => {
     const tabButtons = htmlElement.querySelectorAll('.tab');
 
     const emitAppEvent = jasmine.createSpy();
-    component.setEmitAppEvent(emitAppEvent);
+    component.setEmitEvent(emitAppEvent);
 
     expect(emitAppEvent).not.toHaveBeenCalled();
 
-    tabButtons[1].dispatchEvent(new Event('click'));
+    (tabButtons[1] as HTMLButtonElement).click();
     expect(emitAppEvent).toHaveBeenCalledTimes(1);
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
-        type: AppEventType.TABBED_VIEW_SWITCHED,
-      } as AppEvent)
+        type: WinscopeEventType.TABBED_VIEW_SWITCHED,
+      } as WinscopeEvent)
     );
 
-    tabButtons[0].dispatchEvent(new Event('click'));
+    (tabButtons[0] as HTMLButtonElement).click();
     expect(emitAppEvent).toHaveBeenCalledTimes(2);
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
-        type: AppEventType.TABBED_VIEW_SWITCHED,
-      } as AppEvent)
+        type: WinscopeEventType.TABBED_VIEW_SWITCHED,
+      } as WinscopeEvent)
     );
   });
 
@@ -115,14 +115,14 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER));
+    await component.onWinscopeEvent(new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    await component.onAppEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
+    await component.onWinscopeEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
@@ -131,7 +131,7 @@ describe('TraceViewComponent', () => {
 
   it('emits tab set onChanges', () => {
     const emitAppEvent = jasmine.createSpy();
-    component.setEmitAppEvent(emitAppEvent);
+    component.setEmitEvent(emitAppEvent);
 
     expect(emitAppEvent).not.toHaveBeenCalled();
 
@@ -140,8 +140,8 @@ describe('TraceViewComponent', () => {
     expect(emitAppEvent).toHaveBeenCalledTimes(1);
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
-        type: AppEventType.TABBED_VIEW_SWITCHED,
-      } as AppEvent)
+        type: WinscopeEventType.TABBED_VIEW_SWITCHED,
+      } as WinscopeEvent)
     );
   });
 

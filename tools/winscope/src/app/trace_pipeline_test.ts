@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {ProgressListenerStub} from 'interfaces/progress_listener_stub';
-import {UserNotificationListenerStub} from 'interfaces/user_notification_listener_stub';
+import {ProgressListenerStub} from 'messaging/progress_listener_stub';
+import {UserNotificationListenerStub} from 'messaging/user_notification_listener_stub';
 import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';

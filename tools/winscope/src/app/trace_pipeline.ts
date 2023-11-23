@@ -17,8 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils, OnFile} from 'common/file_utils';
 import {TimestampType} from 'common/time';
-import {ProgressListener} from 'interfaces/progress_listener';
-import {UserNotificationListener} from 'interfaces/user_notification_listener';
+import {ProgressListener} from 'messaging/progress_listener';
+import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {ParserError, ParserErrorType, ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';

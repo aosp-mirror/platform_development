@@ -18,7 +18,6 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
-import {TracePositionUpdate} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {
@@ -29,6 +28,7 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {ParserTransitionsShell} from 'parsers/parser_transitions_shell';
 import {ParserTransitionsWm} from 'parsers/parser_transitions_wm';
 import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
