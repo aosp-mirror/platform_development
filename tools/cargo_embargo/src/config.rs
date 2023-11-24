@@ -262,22 +262,22 @@ impl Config {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct VariantConfig {
-    /// Whether to output "rust_test" modules.
+    /// Whether to output `rust_test` modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tests: bool,
     /// Set of features to enable. If not set, uses the default crate features.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<Vec<String>>,
-    /// Whether to build with --workspace.
+    /// Whether to build with `--workspace`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub workspace: bool,
-    /// When workspace is enabled, list of --exclude crates.
+    /// When workspace is enabled, list of `--exclude` crates.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub workspace_excludes: Vec<String>,
-    /// Value to use for every generated module's "defaults" field.
+    /// Value to use for every generated module's `defaults` field.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_defaults: Option<String>,
-    /// Value to use for every generated library module's "apex_available" field.
+    /// Value to use for every generated library module's `apex_available` field.
     #[serde(default = "default_apex_available", skip_serializing_if = "is_default_apex_available")]
     pub apex_available: Vec<String>,
     /// Value to use for every generated library module's `native_bridge_supported` field.
@@ -324,7 +324,7 @@ pub struct VariantConfig {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub module_visibility: BTreeMap<String, Vec<String>>,
     /// Whether to run the cargo build and parse its output, rather than just figuring things out
-    /// from the `cargo.metadata`.
+    /// from the cargo metadata.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub run_cargo: bool,
 }
