@@ -103,6 +103,7 @@ const Rect = require('flickerlib/flicker').android.tools.common.datatypes.Rect;
 const RectF = require('flickerlib/flicker').android.tools.common.datatypes.RectF;
 const WindowingMode = require('flickerlib/flicker').android.tools.common.traces.wm.WindowingMode;
 const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
+const Timestamp = require('flickerlib/flicker').android.tools.common.Timestamp;
 const TimestampFactory = require('flickerlib/flicker').android.tools.common.TimestampFactory;
 
 const NoCache = require('flickerlib/flicker').android.tools.common.NoCache;
@@ -341,6 +342,7 @@ export {
   Rotation,
   WindowingMode,
   CrossPlatform,
+  Timestamp,
   TimestampFactory,
   NoCache,
   // Service
