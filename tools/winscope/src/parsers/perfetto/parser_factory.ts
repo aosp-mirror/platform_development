@@ -20,11 +20,16 @@ import {ProgressListener} from 'interfaces/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {initWasm, resetEngineWorker, WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {ParserTransitions} from './parser_transitions';
 import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
 
 export class ParserFactory {
-  private static readonly PARSERS = [ParserSurfaceFlinger, ParserTransactions];
+  private static readonly PARSERS = [
+    ParserSurfaceFlinger,
+    ParserTransactions,
+    ParserTransitions,
+  ];
   private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
   private static traceProcessor?: WasmEngineProxy;
 
