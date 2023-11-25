@@ -77,8 +77,12 @@ fn parse_cargo_out_str(
         {
             c.empty_test = !test_contents.tests && !test_contents.benchmarks;
         }
+        // Unset output_filename as it shouldn't be used beyond here, and adds an inconsistency to
+        // metadata-based mode.
+        c.output_filename = None;
         crates.push(c);
     }
+    crates.dedup();
     Ok(crates)
 }
 
