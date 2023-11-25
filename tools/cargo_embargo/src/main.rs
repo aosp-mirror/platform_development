@@ -49,7 +49,7 @@ use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
-use std::fs::File;
+use std::fs::{write, File};
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -128,6 +128,12 @@ enum Mode {
         /// Path to `crates.json` to output.
         crates: PathBuf,
     },
+    /// Tries to automatically generate a suitable `cargo_embargo.json` config file for the package
+    /// in the current directory.
+    Autoconfig {
+        /// `cargo_embargo.json` config file to create.
+        config: PathBuf,
+    },
 }
 
 fn main() -> Result<()> {
@@ -149,6 +155,9 @@ fn main() -> Result<()> {
         Mode::Generate { config } => {
             run_embargo(&args, config)?;
         }
+        Mode::Autoconfig { config } => {
+            autoconfig(&args, config)?;
+        }
     }
 
     Ok(())
@@ -164,6 +173,50 @@ fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> R
             .with_context(|| format!("Failed to create {:?}", crates_filename))?,
         &crates,
     )?;
+    Ok(())
+}
+
+/// Tries to automatically generate a suitable `cargo_embargo.json` for the package in the current
+/// directory.
+fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
+    println!("Trying default config with tests...");
+    let mut config_with_build = Config {
+        variants: vec![VariantConfig { tests: true, ..Default::default() }],
+        package: Default::default(),
+    };
+    let mut crates_with_build = make_all_crates(args, &config_with_build)?;
+
+    let has_tests =
+        crates_with_build[0].iter().any(|c| c.types.contains(&CrateType::Test) && !c.empty_test);
+    if !has_tests {
+        println!("No tests, removing from config.");
+        config_with_build =
+            Config { variants: vec![Default::default()], package: Default::default() };
+        crates_with_build = make_all_crates(args, &config_with_build)?;
+    }
+
+    println!("Trying without cargo build...");
+    let config_no_build = Config {
+        variants: vec![VariantConfig { run_cargo: false, tests: has_tests, ..Default::default() }],
+        package: Default::default(),
+    };
+    let crates_without_build = make_all_crates(args, &config_no_build)?;
+
+    let config = if crates_with_build == crates_without_build {
+        println!("Output without build was the same, using that.");
+        config_no_build
+    } else {
+        println!("Output without build was different. Need to run cargo build.");
+        println!("With build: {}", serde_json::to_string_pretty(&crates_with_build)?);
+        println!("Without build: {}", serde_json::to_string_pretty(&crates_without_build)?);
+        config_with_build
+    };
+    write(config_filename, format!("{}\n", config.to_json_string()?))?;
+    println!(
+        "Wrote config to {0}. Run `cargo_embargo generate {0}` to use it.",
+        config_filename.to_string_lossy()
+    );
+
     Ok(())
 }
 
