@@ -49,7 +49,7 @@ use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
-use std::fs::File;
+use std::fs::{write, File};
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
@@ -94,51 +94,69 @@ struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
-    /// Config file.
-    #[clap(long)]
-    cfg: PathBuf,
     /// Skip the `cargo build` commands and reuse the "cargo.out" file from a previous run if
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
     #[command(subcommand)]
-    mode: Option<Mode>,
+    mode: Mode,
 }
 
 #[derive(Clone, Debug, Subcommand)]
 enum Mode {
+    /// Generates `Android.bp` files for the crates under the current directory using the given
+    /// config file.
+    Generate {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
+    },
     /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
     /// config.
     Convert {
+        /// Legacy `cargo2android.json` config file to read.
+        legacy_config: PathBuf,
+        /// The name of the package for which the config is being generated.
         package_name: String,
+        /// Set `run_cargo: false` in the output config.
         #[arg(long)]
         no_build: bool,
     },
     /// Dumps information about the crates to the given JSON file.
-    DumpCrates { crates: PathBuf },
+    DumpCrates {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
+        /// Path to `crates.json` to output.
+        crates: PathBuf,
+    },
+    /// Tries to automatically generate a suitable `cargo_embargo.json` config file for the package
+    /// in the current directory.
+    Autoconfig {
+        /// `cargo_embargo.json` config file to create.
+        config: PathBuf,
+    },
 }
 
 fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
 
-    let json_str = std::fs::read_to_string(&args.cfg)
-        .with_context(|| format!("failed to read file: {:?}", args.cfg))?;
-    // Add some basic support for comments to JSON.
-    let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
-
     match &args.mode {
-        Some(Mode::Convert { package_name, no_build }) => {
+        Mode::Convert { legacy_config, package_name, no_build } => {
+            let json_str = std::fs::read_to_string(legacy_config)
+                .with_context(|| format!("failed to read file: {:?}", legacy_config))?;
             let legacy_config = legacy::Config::from_json_str(&json_str)?;
             let new_config = legacy_config.to_embargo(package_name, !no_build)?;
             let new_config_str = new_config.to_json_string()?;
             println!("{}", new_config_str);
         }
-        Some(Mode::DumpCrates { crates }) => {
-            dump_crates(&args, &json_str, crates)?;
+        Mode::DumpCrates { config, crates } => {
+            dump_crates(&args, config, crates)?;
         }
-        None => {
-            run_embargo(&args, &json_str)?;
+        Mode::Generate { config } => {
+            run_embargo(&args, config)?;
+        }
+        Mode::Autoconfig { config } => {
+            autoconfig(&args, config)?;
         }
     }
 
@@ -147,14 +165,58 @@ fn main() -> Result<()> {
 
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
-fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
     serde_json::to_writer(
         File::create(crates_filename)
             .with_context(|| format!("Failed to create {:?}", crates_filename))?,
         &crates,
     )?;
+    Ok(())
+}
+
+/// Tries to automatically generate a suitable `cargo_embargo.json` for the package in the current
+/// directory.
+fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
+    println!("Trying default config with tests...");
+    let mut config_with_build = Config {
+        variants: vec![VariantConfig { tests: true, ..Default::default() }],
+        package: Default::default(),
+    };
+    let mut crates_with_build = make_all_crates(args, &config_with_build)?;
+
+    let has_tests =
+        crates_with_build[0].iter().any(|c| c.types.contains(&CrateType::Test) && !c.empty_test);
+    if !has_tests {
+        println!("No tests, removing from config.");
+        config_with_build =
+            Config { variants: vec![Default::default()], package: Default::default() };
+        crates_with_build = make_all_crates(args, &config_with_build)?;
+    }
+
+    println!("Trying without cargo build...");
+    let config_no_build = Config {
+        variants: vec![VariantConfig { run_cargo: false, tests: has_tests, ..Default::default() }],
+        package: Default::default(),
+    };
+    let crates_without_build = make_all_crates(args, &config_no_build)?;
+
+    let config = if crates_with_build == crates_without_build {
+        println!("Output without build was the same, using that.");
+        config_no_build
+    } else {
+        println!("Output without build was different. Need to run cargo build.");
+        println!("With build: {}", serde_json::to_string_pretty(&crates_with_build)?);
+        println!("Without build: {}", serde_json::to_string_pretty(&crates_without_build)?);
+        config_with_build
+    };
+    write(config_filename, format!("{}\n", config.to_json_string()?))?;
+    println!(
+        "Wrote config to {0}. Run `cargo_embargo generate {0}` to use it.",
+        config_filename.to_string_lossy()
+    );
+
     Ok(())
 }
 
@@ -227,8 +289,8 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
 }
 
 /// Runs cargo_embargo with the given JSON configuration string.
-fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
 
     // TODO: Use different directories for different variants.
@@ -600,7 +662,7 @@ fn crate_to_bp_modules(
             CrateType::Bin => ("rust_binary".to_string() + host, crate_.name.clone()),
             CrateType::Lib | CrateType::RLib => {
                 let stem = "lib".to_string() + &crate_.name;
-                ("rust_library".to_string() + rlib + host, stem)
+                ("rust_library".to_string() + host + rlib, stem)
             }
             CrateType::DyLib => {
                 let stem = "lib".to_string() + &crate_.name;
@@ -669,6 +731,9 @@ fn crate_to_bp_modules(
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }
+        if crate_type.is_c_library() {
+            m.props.set_if_nonempty("include_dirs", package_cfg.exported_c_header_dir.clone());
+        }
 
         m.props.set("crate_name", crate_.name.clone());
         m.props.set("cargo_env_compat", true);
@@ -698,6 +763,7 @@ fn crate_to_bp_modules(
                 .clone()
                 .into_iter()
                 .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+                .chain(cfg.extra_cfg.clone().into_iter())
                 .collect(),
         );
 
@@ -705,7 +771,7 @@ fn crate_to_bp_modules(
         if !crate_.cap_lints.is_empty() {
             flags.push(crate_.cap_lints.clone());
         }
-        flags.extend(crate_.codegens.clone());
+        flags.extend(crate_.codegens.iter().map(|codegen| format!("-C {}", codegen)));
         m.props.set_if_nonempty("flags", flags);
 
         let mut rust_libs = Vec::new();
@@ -735,16 +801,32 @@ fn crate_to_bp_modules(
         };
         m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
         m.props.set_if_nonempty("proc_macros", process_lib_deps(proc_macro_libs));
-        m.props.set_if_nonempty("static_libs", process_lib_deps(crate_.static_libs.clone()));
+        let (whole_static_libs, static_libs) = process_lib_deps(crate_.static_libs.clone())
+            .into_iter()
+            .partition(|static_lib| package_cfg.whole_static_libs.contains(static_lib));
+        m.props.set_if_nonempty("static_libs", static_libs);
+        m.props.set_if_nonempty("whole_static_libs", whole_static_libs);
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
+                if cfg.native_bridge_supported {
+                    m.props.set("native_bridge_supported", true);
+                }
                 if cfg.product_available {
                     m.props.set("product_available", true);
                 }
+                if cfg.ramdisk_available {
+                    m.props.set("ramdisk_available", true);
+                }
+                if cfg.recovery_available {
+                    m.props.set("recovery_available", true);
+                }
                 if cfg.vendor_available {
                     m.props.set("vendor_available", true);
+                }
+                if cfg.vendor_ramdisk_available {
+                    m.props.set("vendor_ramdisk_available", true);
                 }
             }
             if crate_type.is_library() {

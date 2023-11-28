@@ -1,0 +1,192 @@
+{
+  "packages": [
+    {
+      "name": "rustc-demangle",
+      "version": "0.1.23",
+      "id": "rustc-demangle 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
+      "license": "MIT/Apache-2.0",
+      "license_file": null,
+      "description": "Rust compiler symbol demangling.\n",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "dependencies": [
+        {
+          "name": "compiler_builtins",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "req": "^0.1.2",
+          "kind": null,
+          "rename": null,
+          "optional": true,
+          "uses_default_features": true,
+          "features": [],
+          "target": null,
+          "registry": null
+        },
+        {
+          "name": "rustc-std-workspace-core",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "req": "^1.0.0",
+          "kind": null,
+          "rename": "core",
+          "optional": true,
+          "uses_default_features": true,
+          "features": [],
+          "target": null,
+          "registry": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "crate_types": [
+            "lib"
+          ],
+          "name": "rustc-demangle",
+          "src_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustc-demangle-0.1.23/src/lib.rs",
+          "edition": "2015",
+          "doc": true,
+          "doctest": true,
+          "test": true
+        }
+      ],
+      "features": {
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "rustc-dep-of-std": [
+          "core",
+          "compiler_builtins"
+        ],
+        "std": []
+      },
+      "manifest_path": "/usr/local/google/home/qwandor/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustc-demangle-0.1.23/Cargo.toml",
+      "metadata": {
+        "docs": {
+          "rs": {
+            "features": [
+              "std"
+            ],
+            "rustdoc-args": [
+              "--cfg",
+              "docsrs"
+            ]
+          }
+        }
+      },
+      "publish": null,
+      "authors": [
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "categories": [],
+      "keywords": [],
+      "readme": "README.md",
+      "repository": "https://github.com/alexcrichton/rustc-demangle",
+      "homepage": "https://github.com/alexcrichton/rustc-demangle",
+      "documentation": "https://docs.rs/rustc-demangle",
+      "edition": "2015",
+      "links": null,
+      "default_run": null,
+      "rust_version": null
+    },
+    {
+      "name": "rustc-demangle-capi",
+      "version": "0.1.0",
+      "id": "rustc-demangle-capi 0.1.0 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi)",
+      "license": "MIT/Apache-2.0",
+      "license_file": null,
+      "description": "C API for the `rustc-demangle` crate\n",
+      "source": null,
+      "dependencies": [
+        {
+          "name": "rustc-demangle",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "req": "^0.1.16",
+          "kind": null,
+          "rename": null,
+          "optional": false,
+          "uses_default_features": true,
+          "features": [],
+          "target": null,
+          "registry": null
+        }
+      ],
+      "targets": [
+        {
+          "kind": [
+            "staticlib"
+          ],
+          "crate_types": [
+            "staticlib"
+          ],
+          "name": "rustc_demangle",
+          "src_path": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi/src/lib.rs",
+          "edition": "2015",
+          "doc": true,
+          "doctest": false,
+          "test": true
+        }
+      ],
+      "features": {},
+      "manifest_path": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi/Cargo.toml",
+      "metadata": null,
+      "publish": null,
+      "authors": [
+        "Torste Aikio <zokier@gmail.com>"
+      ],
+      "categories": [],
+      "keywords": [],
+      "readme": null,
+      "repository": "https://github.com/alexcrichton/rustc-demangle",
+      "homepage": null,
+      "documentation": null,
+      "edition": "2015",
+      "links": null,
+      "default_run": null,
+      "rust_version": null
+    }
+  ],
+  "workspace_members": [
+    "rustc-demangle-capi 0.1.0 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi)"
+  ],
+  "workspace_default_members": [
+    "rustc-demangle-capi 0.1.0 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi)"
+  ],
+  "resolve": {
+    "nodes": [
+      {
+        "id": "rustc-demangle 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
+        "dependencies": [],
+        "deps": [],
+        "features": []
+      },
+      {
+        "id": "rustc-demangle-capi 0.1.0 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi)",
+        "dependencies": [
+          "rustc-demangle 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)"
+        ],
+        "deps": [
+          {
+            "name": "rustc_demangle",
+            "pkg": "rustc-demangle 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
+            "dep_kinds": [
+              {
+                "kind": null,
+                "target": null
+              }
+            ]
+          }
+        ],
+        "features": []
+      }
+    ],
+    "root": "rustc-demangle-capi 0.1.0 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi)"
+  },
+  "target_directory": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi/target",
+  "version": 1,
+  "workspace_root": "/usr/local/google/home/qwandor/aosp/external/rust/crates/rustc-demangle-capi",
+  "metadata": null
+}
