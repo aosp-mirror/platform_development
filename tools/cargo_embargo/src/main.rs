@@ -699,11 +699,11 @@ fn crate_to_bp_modules(
         };
 
         let mut m = BpModule::new(module_type.clone());
-        let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-        let module_name = renamed_module(module_name);
-        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
+        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == &module_name) {
             continue;
         }
+        let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
+        let module_name = renamed_module(module_name);
         if matches!(
             crate_type,
             CrateType::Lib
