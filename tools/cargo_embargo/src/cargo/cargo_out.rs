@@ -60,7 +60,7 @@ fn parse_cargo_out_str(
 
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let mut c = Crate::from_rustc_invocation(rustc, metadata)
+        let c = Crate::from_rustc_invocation(rustc, metadata, &cargo_out.tests)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
@@ -70,15 +70,9 @@ fn parse_cargo_out_str(
         if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
-        if let Some(test_contents) = c
-            .output_filename
-            .as_ref()
-            .and_then(|f| cargo_out.tests.get(f).and_then(|m| m.get(&c.main_src)))
-        {
-            c.empty_test = !test_contents.tests && !test_contents.benchmarks;
-        }
         crates.push(c);
     }
+    crates.dedup();
     Ok(crates)
 }
 
@@ -237,7 +231,11 @@ impl CargoOut {
 }
 
 impl Crate {
-    fn from_rustc_invocation(rustc: &str, metadata: &WorkspaceMetadata) -> Result<Crate> {
+    fn from_rustc_invocation(
+        rustc: &str,
+        metadata: &WorkspaceMetadata,
+        tests: &BTreeMap<String, BTreeMap<PathBuf, TestContents>>,
+    ) -> Result<Crate> {
         let mut out = Crate::default();
         let mut extra_filename = String::new();
 
@@ -363,14 +361,15 @@ impl Crate {
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
                 _ if arg.starts_with("-Wclippy") => {}
-                "-W" => {}
-                "-D" => {}
+                _ if arg.starts_with("-D") => {}
+                _ if arg.starts_with("-W") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
         }
         out.cfgs.sort();
         out.cfgs.dedup();
+        out.codegens.sort();
         out.features.sort();
 
         if out.name.is_empty() {
@@ -408,9 +407,14 @@ impl Crate {
                 )
             })?;
         out.package_name = package_metadata.name.clone();
-        out.output_filename = Some(out.name.clone() + &extra_filename);
         out.version = Some(package_metadata.version.clone());
         out.edition = package_metadata.edition.clone();
+
+        let output_filename = out.name.clone() + &extra_filename;
+        if let Some(test_contents) = tests.get(&output_filename).and_then(|m| m.get(&out.main_src))
+        {
+            out.empty_test = !test_contents.tests && !test_contents.benchmarks;
+        }
 
         Ok(out)
     }

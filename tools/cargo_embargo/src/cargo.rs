@@ -64,6 +64,11 @@ impl CrateType {
     pub fn is_test(self) -> bool {
         matches!(self, Self::Test | Self::TestNoHarness)
     }
+
+    /// Returns whether the crate type is a kind of C ABI library.
+    pub fn is_c_library(self) -> bool {
+        matches!(self, Self::CDyLib | Self::StaticLib)
+    }
 }
 
 /// Info extracted from `CargoOut` for a crate.
@@ -75,9 +80,6 @@ impl CrateType {
 pub struct Crate {
     pub name: String,
     pub package_name: String,
-    // usually crate name + hash, e.g. hypervisor-659eaf3d33eb0c3f
-    // None when generated from metadata.
-    pub output_filename: Option<String>,
     pub version: Option<String>,
     pub types: Vec<CrateType>,
     pub target: Option<String>, // --target
@@ -96,14 +98,14 @@ pub struct Crate {
 }
 
 /// A dependency of a Rust crate.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Extern {
     pub name: String,
     pub lib_name: String,
     pub extern_type: ExternType,
 }
 
-#[derive(Copy, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 pub enum ExternType {
     Rust,
     ProcMacro,
