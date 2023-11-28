@@ -29,6 +29,7 @@
 # 3. Flush coverage
 # from select daemons and system processes on the device
 #   $ acov-llvm.py flush [list of process names]
+#   $ acov-llvm.py flush -p [list of process pids]
 # or from all processes on the device:
 #   $ acov-llvm.py flush
 #
@@ -156,6 +157,9 @@ def do_flush(args):
     if args.procnames:
         pids = adb_shell(['pidof'] + args.procnames, text=True).split()
         logging.info(f'flushing coverage for pids: {pids}')
+    elif args.pids:
+        pids = args.pids
+        logging.info(f'flushing coverage for pids: {pids}')
     else:
         pids = None
         logging.info('flushing coverage for all processes on device')
@@ -222,6 +226,13 @@ def parse_args():
         nargs='*',
         metavar='PROCNAME',
         help='flush coverage for one or more processes with name PROCNAME')
+    flush.add_argument(
+        '-p',
+        '--pids',
+        nargs='+',
+        metavar='PROCID',
+        required=False,
+        help='flush coverage for one or more processes with name PROCID')
     flush.set_defaults(func=do_flush)
 
     report = subparsers.add_parser(
