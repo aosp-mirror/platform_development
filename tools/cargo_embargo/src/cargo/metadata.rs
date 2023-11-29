@@ -231,14 +231,22 @@ fn get_externs(
             }
         })
         .collect();
+
     // If there is a library target and this is a binary or integration test, add the library as an
     // extern.
-    if matches!(target_kind, TargetKind::Bin | TargetKind::Test)
-        && package.targets.iter().any(|t| t.kind.contains(&TargetKind::Lib))
-    {
-        let lib_name = package.name.replace('-', "_");
-        externs.push(Extern { name: lib_name.clone(), lib_name, extern_type: ExternType::Rust });
+    if matches!(target_kind, TargetKind::Bin | TargetKind::Test) {
+        for target in &package.targets {
+            if target.kind.contains(&TargetKind::Lib) {
+                let lib_name = target.name.replace('-', "_");
+                externs.push(Extern {
+                    name: lib_name.clone(),
+                    lib_name,
+                    extern_type: ExternType::Rust,
+                });
+            }
+        }
     }
+
     externs.sort();
     externs.dedup();
     externs
