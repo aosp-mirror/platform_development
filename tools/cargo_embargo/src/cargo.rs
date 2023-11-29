@@ -80,9 +80,6 @@ impl CrateType {
 pub struct Crate {
     pub name: String,
     pub package_name: String,
-    // usually crate name + hash, e.g. hypervisor-659eaf3d33eb0c3f
-    // None when generated from metadata.
-    pub output_filename: Option<String>,
     pub version: Option<String>,
     pub types: Vec<CrateType>,
     pub target: Option<String>, // --target

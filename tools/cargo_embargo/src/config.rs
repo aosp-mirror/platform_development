@@ -32,7 +32,7 @@ use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn default_apex_available() -> Vec<String> {
     vec!["//apex_available:platform".to_string(), "//apex_available:anyapex".to_string()]
@@ -82,11 +82,21 @@ impl Config {
     /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
     const FIELD_NAMES: [&str; 1] = ["package"];
 
+    /// Parses an instance of this config from the given JSON file.
+    pub fn from_file(filename: &Path) -> Result<Self> {
+        let json_string = std::fs::read_to_string(filename)
+            .with_context(|| format!("failed to read file: {:?}", filename))?;
+        Self::from_json_str(&json_string)
+    }
+
     /// Parses an instance of this config from a string of JSON.
     pub fn from_json_str(json_str: &str) -> Result<Self> {
+        // Ignore comments.
+        let json_str: String =
+            json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
         // First parse into untyped map.
         let mut config: Map<String, Value> =
-            serde_json::from_str(json_str).context("failed to parse config")?;
+            serde_json::from_str(&json_str).context("failed to parse config")?;
 
         // Flatten variants. First, get the variants from the config file.
         let mut variants = match config.remove("variants") {
@@ -252,22 +262,22 @@ impl Config {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct VariantConfig {
-    /// Whether to output "rust_test" modules.
+    /// Whether to output `rust_test` modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub tests: bool,
     /// Set of features to enable. If not set, uses the default crate features.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub features: Option<Vec<String>>,
-    /// Whether to build with --workspace.
+    /// Whether to build with `--workspace`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub workspace: bool,
-    /// When workspace is enabled, list of --exclude crates.
+    /// When workspace is enabled, list of `--exclude` crates.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub workspace_excludes: Vec<String>,
-    /// Value to use for every generated module's "defaults" field.
+    /// Value to use for every generated module's `defaults` field.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub global_defaults: Option<String>,
-    /// Value to use for every generated library module's "apex_available" field.
+    /// Value to use for every generated library module's `apex_available` field.
     #[serde(default = "default_apex_available", skip_serializing_if = "is_default_apex_available")]
     pub apex_available: Vec<String>,
     /// Value to use for every generated library module's `native_bridge_supported` field.
@@ -314,7 +324,7 @@ pub struct VariantConfig {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub module_visibility: BTreeMap<String, Vec<String>>,
     /// Whether to run the cargo build and parse its output, rather than just figuring things out
-    /// from the `cargo.metadata`.
+    /// from the cargo metadata.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub run_cargo: bool,
 }
