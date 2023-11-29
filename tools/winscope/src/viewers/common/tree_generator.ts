@@ -184,11 +184,16 @@ export class TreeGenerator {
   }
 
   private addChips(tree: HierarchyTreeNode): HierarchyTreeNode {
-    if (tree.hwcCompositionType === HwcCompositionType.CLIENT) {
+    if (
+      tree.hwcCompositionType === HwcCompositionType.CLIENT ||
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_CLIENT'
+    ) {
       tree.chips.push(GPU_CHIP);
     } else if (
       tree.hwcCompositionType === HwcCompositionType.DEVICE ||
-      tree.hwcCompositionType === HwcCompositionType.SOLID_COLOR
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_DEVICE' ||
+      tree.hwcCompositionType === HwcCompositionType.SOLID_COLOR ||
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_SOLID_COLOR'
     ) {
       tree.chips.push(HWC_CHIP);
     }
