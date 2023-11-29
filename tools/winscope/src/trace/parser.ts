@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from '../common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
+import {Timestamp, TimestampType} from 'common/time';
+import {
+  CustomQueryParamTypeMap,
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {TraceType} from './trace_type';
 
@@ -26,7 +30,8 @@ export interface Parser<T> {
   getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
   customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
+    param?: CustomQueryParamTypeMap[Q]
   ): Promise<CustomQueryParserResultTypeMap[Q]>;
   getDescriptors(): string[];
 }

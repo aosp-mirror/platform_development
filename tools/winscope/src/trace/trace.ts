@@ -17,6 +17,7 @@
 import {ArrayUtils} from 'common/array_utils';
 import {Timestamp, TimestampType} from '../common/time';
 import {
+  CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
   CustomQueryResultTypeMap,
   CustomQueryType,
@@ -193,7 +194,10 @@ export class Trace<T> {
     });
   }
 
-  async customQuery<Q extends CustomQueryType>(type: Q): Promise<CustomQueryResultTypeMap<T>[Q]> {
+  async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    param?: CustomQueryParamTypeMap[Q]
+  ): Promise<CustomQueryResultTypeMap<T>[Q]> {
     const makeTraceEntry = <U>(index: RelativeEntryIndex, value: U): TraceEntryEager<T, U> => {
       return this.getEntryInternal(index, (index, timestamp, frames) => {
         return new TraceEntryEager<T, U>(
@@ -214,7 +218,8 @@ export class Trace<T> {
 
     const parserResult = (await this.parser.customQuery(
       type,
-      this.entriesRange
+      this.entriesRange,
+      param
     )) as CustomQueryParserResultTypeMap[Q];
     const finalResult = processParserResult(parserResult, makeTraceEntry);
     return Promise.resolve(finalResult);
