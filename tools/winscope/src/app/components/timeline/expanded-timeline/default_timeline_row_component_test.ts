@@ -26,6 +26,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/rect';
 import {RealTimestamp} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
@@ -81,43 +82,19 @@ describe('DefaultTimelineRowComponent', () => {
     const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(4);
+    expect(drawRectSpy).toHaveBeenCalledWith(new Rect(0, 0, width, height), component.color, alpha);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: 0,
-        y: 0,
-        w: width,
-        h: height,
-      },
+      new Rect(Math.floor((canvasWidth * 2) / 100), 0, width, height),
       component.color,
       alpha
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor((canvasWidth * 2) / 100),
-        y: 0,
-        w: width,
-        h: height,
-      },
+      new Rect(Math.floor((canvasWidth * 5) / 100), 0, width, height),
       component.color,
       alpha
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor((canvasWidth * 5) / 100),
-        y: 0,
-        w: width,
-        h: height,
-      },
-      component.color,
-      alpha
-    );
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor((canvasWidth * 60) / 100),
-        y: 0,
-        w: width,
-        h: height,
-      },
+      new Rect(Math.floor((canvasWidth * 60) / 100), 0, width, height),
       component.color,
       alpha
     );
@@ -141,12 +118,7 @@ describe('DefaultTimelineRowComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor((canvasWidth * 10) / 25),
-        y: 0,
-        w: width,
-        h: height,
-      },
+      new Rect(Math.floor((canvasWidth * 10) / 25), 0, width, height),
       component.color,
       alpha
     );
@@ -177,24 +149,10 @@ describe('DefaultTimelineRowComponent', () => {
 
     expect(assertDefined(component.hoveringEntry).getValueNs()).toBe(10n);
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: 0,
-        y: 0,
-        w: 32,
-        h: 32,
-      },
-      component.color,
-      1.0
-    );
+    expect(drawRectSpy).toHaveBeenCalledWith(new Rect(0, 0, 32, 32), component.color, 1.0);
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith({
-      x: 0,
-      y: 0,
-      w: 32,
-      h: 32,
-    });
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(new Rect(0, 0, 32, 32));
   });
 
   it('can draw correct entry on click of first entry', async () => {
@@ -289,12 +247,7 @@ describe('DefaultTimelineRowComponent', () => {
       expectedTimestampNs
     );
 
-    const expectedRect = {
-      x: xPos + 1,
-      y: 1,
-      w: 30,
-      h: 30,
-    };
+    const expectedRect = new Rect(xPos + 1, 1, 30, 30);
 
     expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
     expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1.0);

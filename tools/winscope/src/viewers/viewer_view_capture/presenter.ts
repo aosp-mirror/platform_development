@@ -29,6 +29,7 @@ import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_util
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UiData} from './ui_data';
 
 export class Presenter {
@@ -171,23 +172,23 @@ export class Presenter {
     const rectangles: UiRect[] = [];
 
     function inner(node: any /* ViewNode */) {
-      const aUiRect: UiRect = {
-        x: node.boxPos.left,
-        y: node.boxPos.top,
-        w: node.boxPos.width,
-        h: node.boxPos.height,
-        label: '',
-        transform: undefined,
-        isVisible: node.isVisible,
-        isDisplay: false,
-        id: node.id,
-        displayId: 0,
-        isVirtual: false,
-        isClickable: true,
-        cornerRadius: 0,
-        depth: node.depth,
-        hasContent: node.isVisible,
-      };
+      const aUiRect = new UiRectBuilder()
+        .setX(node.boxPos.left)
+        .setY(node.boxPos.top)
+        .setWidth(node.boxPos.width)
+        .setHeight(node.boxPos.height)
+        .setLabel('')
+        .setIsVisible(node.isVisible)
+        .setIsDisplay(false)
+        .setId(node.id)
+        .setDisplayId(0)
+        .setIsVirtual(false)
+        .setIsClickable(true)
+        .setCornerRadius(0)
+        .setHasContent(node.isVisible)
+        .setDepth(node.depth)
+        .build();
+
       rectangles.push(aUiRect);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
     }

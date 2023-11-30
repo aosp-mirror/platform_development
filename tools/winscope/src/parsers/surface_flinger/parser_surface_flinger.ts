@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {
@@ -27,7 +28,6 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
 
 class ParserSurfaceFlinger extends AbstractParser {
   private static readonly LayersTraceFileProto = root.lookupType(

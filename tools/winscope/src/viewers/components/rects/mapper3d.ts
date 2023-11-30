@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_utils';
+import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {Box3D, ColorType, Distance2D, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
 

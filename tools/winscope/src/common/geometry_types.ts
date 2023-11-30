@@ -19,13 +19,6 @@ export interface Point {
   y: number;
 }
 
-export interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
 export interface TransformMatrix {
   dsdx: number;
   dtdx: number;
@@ -36,14 +29,3 @@ export interface TransformMatrix {
 }
 
 export const IDENTITY_MATRIX = {dsdx: 1, dtdx: 0, tx: 0, dsdy: 0, dtdy: 1, ty: 0};
-
-export class GeometryUtils {
-  static isPointInRect(point: Point, rect: Rect): boolean {
-    return (
-      rect.x <= point.x &&
-      point.x <= rect.x + rect.w &&
-      rect.y <= point.y &&
-      point.y <= rect.y + rect.h
-    );
-  }
-}
