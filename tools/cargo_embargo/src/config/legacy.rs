@@ -42,7 +42,7 @@ pub struct Config {
 
 impl Config {
     /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
-    const FIELD_NAMES: [&str; 4] = ["add-toplevel-block", "dependencies", "patch", "run"];
+    const FIELD_NAMES: [&'static str; 4] = ["add-toplevel-block", "dependencies", "patch", "run"];
 
     /// Parses an instance of this config from a string of JSON.
     pub fn from_json_str(json_str: &str) -> Result<Self> {

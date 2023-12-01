@@ -80,7 +80,7 @@ fn add_defaults_to_variant(
 
 impl Config {
     /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
-    const FIELD_NAMES: [&str; 1] = ["package"];
+    const FIELD_NAMES: [&'static str; 1] = ["package"];
 
     /// Parses an instance of this config from the given JSON file.
     pub fn from_file(filename: &Path) -> Result<Self> {
@@ -371,7 +371,7 @@ pub struct PackageConfig {
 
 impl PackageConfig {
     /// Names of all the fields on `PackageConfig`.
-    const FIELD_NAMES: [&str; 2] = ["add_toplevel_block", "patch"];
+    const FIELD_NAMES: [&'static str; 2] = ["add_toplevel_block", "patch"];
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
