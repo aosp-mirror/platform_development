@@ -15,7 +15,11 @@
  */
 
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {OperationChain} from 'trace/tree_node/operations/operation_chain';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
 
 export class TreeNodeUtils {
   static makeRectNode(
@@ -120,5 +124,32 @@ export class TreeNodeUtils {
       pos.addChild(new PropertyTreeNode('test node.pos.y', 'y', PropertySource.PROTO, y));
     }
     return pos;
+  }
+
+  static makeHierarchyNode(proto: any): HierarchyTreeNode {
+    const id = `${proto.id}`;
+    const name = proto.name;
+    const rootId = `${id} ${name}`;
+    const propertiesTree = new PropertyTreeNode(rootId, name, PropertySource.PROTO, null);
+
+    const factory = new PropertyTreeNodeFactory();
+    for (const [key, value] of Object.entries(proto)) {
+      const prop = factory.makeProtoProperty(rootId, key, value);
+      propertiesTree.addChild(prop);
+    }
+
+    const provider = new PropertiesProvider(
+      propertiesTree,
+      async () => propertiesTree,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>()
+    );
+
+    return new HierarchyTreeNode(rootId, name, provider);
+  }
+
+  static makePropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
+    return new PropertyTreeNodeFactory().makeProtoProperty(rootId, name, value);
   }
 }
