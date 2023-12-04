@@ -21,6 +21,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {AdbProxyComponent} from './adb_proxy_component';
 
@@ -112,6 +113,23 @@ describe('AdbProxyComponent', () => {
     fixture.detectChanges();
     button = htmlElement.querySelector('.retry');
     button?.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('retries proxy connection on enter key', async () => {
+    const spy = spyOn(component.proxyChange, 'emit');
+    component.proxy.setState(ProxyState.UNAUTH);
+    fixture.detectChanges();
+    const proxyKeyInputField = assertDefined(
+      htmlElement.querySelector('.proxy-key-input-field')
+    ) as HTMLInputElement;
+    const proxyKeyInput = assertDefined(
+      proxyKeyInputField.querySelector('input')
+    ) as HTMLInputElement;
+
+    proxyKeyInput.value = '12345';
+    proxyKeyInputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });

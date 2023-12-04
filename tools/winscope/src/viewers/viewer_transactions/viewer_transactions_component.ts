@@ -83,7 +83,7 @@ import {UiData} from './ui_data';
             </mat-form-field>
           </div>
           <div class="what">
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
               <mat-label>Search text</mat-label>
               <input matInput [(ngModel)]="whatSearchString" (input)="onWhatSearchStringChange()" />
             </mat-form-field>
