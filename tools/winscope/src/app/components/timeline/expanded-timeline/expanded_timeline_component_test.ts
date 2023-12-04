@@ -125,7 +125,7 @@ describe('ExpandedTimelineComponent', () => {
     });
 
     const transitionTimeline = assertDefined(component.transitionTimelines).first;
-    expect(transitionTimeline.selectedEntry).toBeUndefined();
+    assertDefined(transitionTimeline.selectedEntry);
   });
 
   it('passes selectedEntry of correct type into each timeline on position change', () => {
