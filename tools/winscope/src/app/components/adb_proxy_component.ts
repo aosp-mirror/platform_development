@@ -97,7 +97,9 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
             <span class="adb-info">Proxy authorisation required.</span>
           </p>
           <p class="mat-body-1">Enter Winscope proxy token:</p>
-          <mat-form-field>
+          <mat-form-field
+            class="proxy-key-input-field"
+            (keydown.enter)="onKeydownEnterProxyKeyInput($event)">
             <input matInput [(ngModel)]="proxyKeyItem" name="proxy-key" />
           </mat-form-field>
           <p class="mat-body-1">
@@ -172,6 +174,11 @@ export class AdbProxyComponent {
     }
     this.proxy.setState(this.states.CONNECTING);
     this.proxyChange.emit(this.proxy);
+  }
+
+  onKeydownEnterProxyKeyInput(event: MouseEvent) {
+    (event.target as HTMLInputElement).blur();
+    this.onRetryButtonClick();
   }
 
   onDownloadProxyClick() {
