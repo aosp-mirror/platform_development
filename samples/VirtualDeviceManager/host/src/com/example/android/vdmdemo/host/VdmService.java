@@ -250,7 +250,8 @@ public final class VdmService extends Hilt_VdmService {
       if (!rm.isRoleHeld(deviceProfile)) {
         cdm.disassociate(associationInfo.getId());
       } else if (Objects.equals(associationInfo.getPackageName(), getPackageName())
-          && Objects.equals(associationInfo.getDisplayName(), deviceCapabilities.getDeviceName())) {
+          && Objects.equals(associationInfo.getDisplayName().toString(),
+              deviceCapabilities.getDeviceName().toString())) {
         createVirtualDevice(associationInfo);
         return;
       }
