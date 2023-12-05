@@ -77,8 +77,9 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
           </button>
           <form [formGroup]="timestampForm" class="time-selector-form">
             <mat-form-field
-              class="time-input"
+              class="time-input elapsed"
               appearance="fill"
+              (keydown.enter)="onKeydownEnterElapsedTimeInputField($event)"
               (change)="onHumanElapsedTimeInputChange($event)"
               *ngIf="!usingRealtime()">
               <input
@@ -87,8 +88,9 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
                 [formControl]="selectedElapsedTimeFormControl" />
             </mat-form-field>
             <mat-form-field
-              class="time-input"
+              class="time-input real"
               appearance="fill"
+              (keydown.enter)="onKeydownEnterRealTimeInputField($event)"
               (change)="onHumanRealTimeInputChange($event)"
               *ngIf="usingRealtime()">
               <input
@@ -97,8 +99,9 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
                 [formControl]="selectedRealTimeFormControl" />
             </mat-form-field>
             <mat-form-field
-              class="time-input"
+              class="time-input nano"
               appearance="fill"
+              (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
               (change)="onNanosecondsInputTimeChange($event)">
               <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
             </mat-form-field>
@@ -580,5 +583,23 @@ export class TimelineComponent implements TracePositionUpdateEmitter, TracePosit
     );
     await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
+  }
+
+  onKeydownEnterElapsedTimeInputField(event: KeyboardEvent) {
+    if (this.selectedElapsedTimeFormControl.valid) {
+      (event.target as HTMLInputElement).blur();
+    }
+  }
+
+  onKeydownEnterRealTimeInputField(event: KeyboardEvent) {
+    if (this.selectedRealTimeFormControl.valid) {
+      (event.target as HTMLInputElement).blur();
+    }
+  }
+
+  onKeydownEnterNanosecondsTimeInputField(event: KeyboardEvent) {
+    if (this.selectedNsFormControl.valid) {
+      (event.target as HTMLInputElement).blur();
+    }
   }
 }
