@@ -111,8 +111,7 @@ describe('TimelineComponent', () => {
     component.timelineData.initialize(traces, undefined);
     fixture.detectChanges();
 
-    const button = htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`);
-    expect(button).toBeTruthy();
+    const button = assertDefined(htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`));
 
     // initially not expanded
     let expandedTimelineElement = fixture.debugElement.query(
@@ -120,11 +119,11 @@ describe('TimelineComponent', () => {
     );
     expect(expandedTimelineElement).toBeFalsy();
 
-    assertDefined(button).dispatchEvent(new Event('click'));
+    button.dispatchEvent(new Event('click'));
     expandedTimelineElement = fixture.debugElement.query(By.directive(ExpandedTimelineComponent));
     expect(expandedTimelineElement).toBeTruthy();
 
-    assertDefined(button).dispatchEvent(new Event('click'));
+    button.dispatchEvent(new Event('click'));
     expandedTimelineElement = fixture.debugElement.query(By.directive(ExpandedTimelineComponent));
     expect(expandedTimelineElement).toBeFalsy();
   });
@@ -143,8 +142,8 @@ describe('TimelineComponent', () => {
     expect(miniTimelineElement).toBeFalsy();
 
     // error message shown
-    const errorMessageContainer = htmlElement.querySelector('.no-timestamps-msg');
-    expect(assertDefined(errorMessageContainer).textContent).toContain('No timeline to show!');
+    const errorMessageContainer = assertDefined(htmlElement.querySelector('.no-timestamps-msg'));
+    expect(errorMessageContainer.textContent).toContain('No timeline to show!');
   });
 
   it('handles some empty traces', () => {
@@ -303,8 +302,7 @@ describe('TimelineComponent', () => {
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
 
-    const nextEntryButton = fixture.debugElement.query(By.css('#next_entry_button'));
-    expect(nextEntryButton).toBeTruthy();
+    const nextEntryButton = assertDefined(fixture.debugElement.query(By.css('#next_entry_button')));
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
     component.timelineData.setPosition(position90);
@@ -324,8 +322,7 @@ describe('TimelineComponent', () => {
     loadTraces();
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
-    const prevEntryButton = fixture.debugElement.query(By.css('#prev_entry_button'));
-    expect(prevEntryButton).toBeTruthy();
+    const prevEntryButton = assertDefined(fixture.debugElement.query(By.css('#prev_entry_button')));
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
 
     component.timelineData.setPosition(position90);
@@ -344,8 +341,7 @@ describe('TimelineComponent', () => {
   it('next button enabled for different active viewers', () => {
     loadTraces();
 
-    const nextEntryButton = fixture.debugElement.query(By.css('#next_entry_button'));
-    expect(nextEntryButton).toBeTruthy();
+    const nextEntryButton = assertDefined(fixture.debugElement.query(By.css('#next_entry_button')));
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
     component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
@@ -359,8 +355,7 @@ describe('TimelineComponent', () => {
     loadTraces();
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
-    const nextEntryButton = fixture.debugElement.query(By.css('#next_entry_button'));
-    expect(nextEntryButton).toBeTruthy();
+    const nextEntryButton = assertDefined(fixture.debugElement.query(By.css('#next_entry_button')));
 
     testCurrentTimestampOnButtonClick(nextEntryButton, position105, 110n);
 
@@ -379,8 +374,7 @@ describe('TimelineComponent', () => {
     loadTraces();
 
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
-    const prevEntryButton = fixture.debugElement.query(By.css('#prev_entry_button'));
-    expect(prevEntryButton).toBeTruthy();
+    const prevEntryButton = assertDefined(fixture.debugElement.query(By.css('#prev_entry_button')));
 
     // In this state we are already on the first entry at timestamp 100, so
     // there is no entry to move to before and we just don't update the timestamp
@@ -428,6 +422,69 @@ describe('TimelineComponent', () => {
     expect(spyPrevEntry).toHaveBeenCalled();
   });
 
+  it('updates position based on ns input field', () => {
+    loadTraces();
+
+    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    const timeInputField = assertDefined(fixture.debugElement.query(By.css('.time-input.nano')));
+
+    testCurrentTimestampOnTimeInput(timeInputField, position105, '110 ns', 110n);
+
+    testCurrentTimestampOnTimeInput(timeInputField, position100, '110 ns', 110n);
+
+    testCurrentTimestampOnTimeInput(timeInputField, position90, '100 ns', 100n);
+
+    // No change when we are already on the last timestamp of the active trace
+    testCurrentTimestampOnTimeInput(timeInputField, position110, '110 ns', 110n);
+
+    // No change when we are after the last entry of the active trace
+    testCurrentTimestampOnTimeInput(timeInputField, position112, '112 ns', 112n);
+  });
+
+  it('updates position based on real time input field', () => {
+    loadTraces();
+
+    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    const timeInputField = assertDefined(fixture.debugElement.query(By.css('.time-input.real')));
+
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position105,
+      '1970-01-01T00:00:00.000000110',
+      110n
+    );
+
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position100,
+      '1970-01-01T00:00:00.000000110',
+      110n
+    );
+
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position90,
+      '1970-01-01T00:00:00.000000100',
+      100n
+    );
+
+    // No change when we are already on the last timestamp of the active trace
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position110,
+      '1970-01-01T00:00:00.000000110',
+      110n
+    );
+
+    // No change when we are after the last entry of the active trace
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position112,
+      '1970-01-01T00:00:00.000000112',
+      112n
+    );
+  });
+
   function loadTraces() {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
@@ -465,6 +522,22 @@ describe('TimelineComponent', () => {
     component.timelineData.setPosition(pos);
     fixture.detectChanges();
     button.nativeElement.click();
+    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
+  }
+
+  function testCurrentTimestampOnTimeInput(
+    inputField: DebugElement,
+    pos: TracePosition,
+    textInput: string,
+    expectedNs: bigint
+  ) {
+    component.timelineData.setPosition(pos);
+    fixture.detectChanges();
+
+    inputField.nativeElement.value = textInput;
+    inputField.nativeElement.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
     expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
   }
 });

@@ -71,6 +71,7 @@ import {UploadTracesComponent} from './upload_traces_component';
             class="file-name-input-field"
             *ngIf="isEditingFilename"
             floatLabel="always"
+            (keydown.enter)="onCheckIconClick()"
             (focusout)="onCheckIconClick()"
             matTooltip="Allowed: A-Z a-z 0-9 . _ - #">
             <mat-label>Edit file name</mat-label>
