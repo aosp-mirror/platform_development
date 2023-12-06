@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 
@@ -46,34 +47,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
     private static final String TAG = "VdmClient";
 
-    private static final AtomicInteger nextDisplayIndex = new AtomicInteger(1);
+    private static final AtomicInteger sNextDisplayIndex = new AtomicInteger(1);
 
     // Simple list of all active displays.
-    private final List<RemoteDisplay> displayRepository =
+    private final List<RemoteDisplay> mDisplayRepository =
             Collections.synchronizedList(new ArrayList<>());
 
-    private final RemoteIo remoteIo;
-    private final ClientView recyclerView;
-    private final InputManager inputManager;
+    private final RemoteIo mRemoteIo;
+    private final ClientView mRecyclerView;
+    private final InputManager mInputManager;
 
     DisplayAdapter(ClientView recyclerView, RemoteIo remoteIo, InputManager inputManager) {
-        this.recyclerView = recyclerView;
-        this.remoteIo = remoteIo;
-        this.inputManager = inputManager;
+        mRecyclerView = recyclerView;
+        mRemoteIo = remoteIo;
+        mInputManager = inputManager;
         setHasStableIds(true);
     }
 
     void addDisplay(boolean homeSupported) {
-        Log.i(TAG, "Adding display " + nextDisplayIndex);
-        displayRepository.add(new RemoteDisplay(nextDisplayIndex.getAndIncrement(), homeSupported));
-        notifyItemInserted(displayRepository.size() - 1);
+        Log.i(TAG, "Adding display " + sNextDisplayIndex);
+        mDisplayRepository.add(
+                new RemoteDisplay(sNextDisplayIndex.getAndIncrement(), homeSupported));
+        notifyItemInserted(mDisplayRepository.size() - 1);
     }
 
     void removeDisplay(int displayId) {
         Log.i(TAG, "Removing display " + displayId);
-        for (int i = 0; i < displayRepository.size(); ++i) {
-            if (displayId == displayRepository.get(i).getDisplayId()) {
-                displayRepository.remove(i);
+        for (int i = 0; i < mDisplayRepository.size(); ++i) {
+            if (displayId == mDisplayRepository.get(i).getDisplayId()) {
+                mDisplayRepository.remove(i);
                 notifyItemRemoved(i);
                 break;
             }
@@ -97,24 +99,25 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
     void clearDisplays() {
         Log.i(TAG, "Clearing all displays");
-        int size = displayRepository.size();
-        displayRepository.clear();
+        int size = mDisplayRepository.size();
+        mDisplayRepository.clear();
         notifyItemRangeRemoved(0, size);
     }
 
     private DisplayHolder getDisplayHolder(int displayId) {
-        for (int i = 0; i < displayRepository.size(); ++i) {
-            if (displayId == displayRepository.get(i).getDisplayId()) {
-                return (DisplayHolder) recyclerView.findViewHolderForAdapterPosition(i);
+        for (int i = 0; i < mDisplayRepository.size(); ++i) {
+            if (displayId == mDisplayRepository.get(i).getDisplayId()) {
+                return (DisplayHolder) mRecyclerView.findViewHolderForAdapterPosition(i);
             }
         }
         return null;
     }
 
+    @NonNull
     @Override
     public DisplayHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // Disable recycling so layout changes are not present in new displays.
-        recyclerView.getRecycledViewPool().setMaxRecycledViews(viewType, 0);
+        mRecyclerView.getRecycledViewPool().setMaxRecycledViews(viewType, 0);
         View view =
                 LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.display_fragment, parent, false);
@@ -133,12 +136,12 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
     @Override
     public long getItemId(int position) {
-        return displayRepository.get(position).getDisplayId();
+        return mDisplayRepository.get(position).getDisplayId();
     }
 
     @Override
     public int getItemCount() {
-        return displayRepository.size();
+        return mDisplayRepository.size();
     }
 
     public class DisplayHolder extends ViewHolder {
@@ -216,8 +219,8 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         void close() {
             if (displayController != null) {
                 Log.i(TAG, "Closing DisplayHolder for display " + displayId);
-                inputManager.removeFocusListener(focusListener);
-                inputManager.removeFocusableDisplay(displayId);
+                mInputManager.removeFocusListener(focusListener);
+                mInputManager.removeFocusableDisplay(displayId);
                 displayController.close();
                 displayController = null;
             }
@@ -225,7 +228,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
         @SuppressLint("ClickableViewAccessibility")
         void onBind(int position) {
-            RemoteDisplay remoteDisplay = displayRepository.get(position);
+            RemoteDisplay remoteDisplay = mDisplayRepository.get(position);
             displayId = remoteDisplay.getDisplayId();
             Log.v(
                     TAG,
@@ -244,9 +247,9 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                             displayFocusIndicator.setBackground(null);
                         }
                     };
-            inputManager.addFocusListener(focusListener);
+            mInputManager.addFocusListener(focusListener);
 
-            displayController = new DisplayController(displayId, remoteIo);
+            displayController = new DisplayController(displayId, mRemoteIo);
             Log.v(TAG, "Creating new DisplayController for display " + displayId);
 
             setDisplayTitle("");
@@ -256,12 +259,12 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                     v -> ((DisplayAdapter) getBindingAdapter()).removeDisplay(displayId));
 
             View backButton = itemView.findViewById(R.id.display_back);
-            backButton.setOnClickListener(v -> inputManager.sendBack(displayId));
+            backButton.setOnClickListener(v -> mInputManager.sendBack(displayId));
 
             View homeButton = itemView.findViewById(R.id.display_home);
             if (remoteDisplay.isHomeSupported()) {
                 homeButton.setVisibility(View.VISIBLE);
-                homeButton.setOnClickListener(v -> inputManager.sendHome(displayId));
+                homeButton.setOnClickListener(v -> mInputManager.sendHome(displayId));
             } else {
                 homeButton.setVisibility(View.GONE);
             }
@@ -283,7 +286,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             resizeButton.setOnTouchListener(
                     (v, event) -> {
                         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                            recyclerView.startResizing(
+                            mRecyclerView.startResizing(
                                     textureView, event, DisplayHolder.this::resizeDisplay);
                             return true;
                         }
@@ -294,7 +297,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                     (v, event) -> {
                         if (event.getDevice().supportsSource(InputDevice.SOURCE_TOUCHSCREEN)) {
                             textureView.getParent().requestDisallowInterceptTouchEvent(true);
-                            inputManager.sendInputEvent(
+                            mInputManager.sendInputEvent(
                                     InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, displayId);
                         }
                         return true;
@@ -302,19 +305,19 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             textureView.setSurfaceTextureListener(
                     new TextureView.SurfaceTextureListener() {
                         @Override
-                        public void onSurfaceTextureUpdated(SurfaceTexture texture) {}
+                        public void onSurfaceTextureUpdated(@NonNull SurfaceTexture texture) {}
 
                         @Override
                         public void onSurfaceTextureAvailable(
-                                SurfaceTexture texture, int width, int height) {
+                                @NonNull SurfaceTexture texture, int width, int height) {
                             Log.v(TAG, "Setting surface for display " + displayId);
-                            inputManager.addFocusableDisplay(displayId);
+                            mInputManager.addFocusableDisplay(displayId);
                             surface = new Surface(texture);
                             displayController.setSurface(surface, width, height);
                         }
 
                         @Override
-                        public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
+                        public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture texture) {
                             Log.v(TAG, "onSurfaceTextureDestroyed for display " + displayId);
                             if (displayController != null) {
                                 displayController.pause();
@@ -324,7 +327,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
                         @Override
                         public void onSurfaceTextureSizeChanged(
-                                SurfaceTexture texture, int width, int height) {
+                                @NonNull SurfaceTexture texture, int width, int height) {
                             Log.v(TAG, "onSurfaceTextureSizeChanged for display " + displayId);
                             textureView.setRotation(0);
                             rotateButton.setEnabled(true);
@@ -336,7 +339,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                                 || !event.getDevice().supportsSource(InputDevice.SOURCE_MOUSE)) {
                             return false;
                         }
-                        inputManager.sendInputEventToFocusedDisplay(
+                        mInputManager.sendInputEventToFocusedDisplay(
                                 InputDeviceType.DEVICE_TYPE_MOUSE, event);
                         return true;
                     });
@@ -345,20 +348,20 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
     private static class RemoteDisplay {
         // Local ID, not corresponding to the displayId of the relevant Display on the host device.
-        private final int displayId;
-        private final boolean homeSupported;
+        private final int mDisplayId;
+        private final boolean mHomeSupported;
 
         RemoteDisplay(int displayId, boolean homeSupported) {
-            this.displayId = displayId;
-            this.homeSupported = homeSupported;
+            mDisplayId = displayId;
+            mHomeSupported = homeSupported;
         }
 
         int getDisplayId() {
-            return displayId;
+            return mDisplayId;
         }
 
         boolean isHomeSupported() {
-            return homeSupported;
+            return mHomeSupported;
         }
     }
 }

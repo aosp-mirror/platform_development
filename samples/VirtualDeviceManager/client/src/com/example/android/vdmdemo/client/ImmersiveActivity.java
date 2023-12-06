@@ -27,6 +27,7 @@ import android.view.Surface;
 import android.view.TextureView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -48,25 +49,22 @@ import javax.inject.Inject;
  */
 @AndroidEntryPoint(AppCompatActivity.class)
 public class ImmersiveActivity extends Hilt_ImmersiveActivity {
-    private static final String TAG = "VdmImmersiveActivity";
 
     // Approximately, see
     // https://developer.android.com/reference/android/util/DisplayMetrics#density
     private static final float DIP_TO_DPI = 160f;
 
-    @Inject ConnectionManager connectionManager;
-    @Inject RemoteIo remoteIo;
-    @Inject VirtualSensorController sensorController;
-    @Inject AudioPlayer audioPlayer;
-    @Inject InputManager inputManager;
+    @Inject ConnectionManager mConnectionManager;
+    @Inject RemoteIo mRemoteIo;
+    @Inject VirtualSensorController mSensorController;
+    @Inject AudioPlayer mAudioPlayer;
+    @Inject InputManager mInputManager;
 
-    private DisplayController displayController;
-    private final Consumer<RemoteEvent> remoteEventConsumer = this::processRemoteEvent;
+    private DisplayController mDisplayController;
+    private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
 
-    private final ConnectionManager.ConnectionCallback connectionCallback =
+    private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onConnected(String remoteDeviceName) {}
 
                 @Override
                 public void onDisconnected() {
@@ -91,20 +89,20 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
-                        inputManager.sendBack(DEFAULT_DISPLAY);
+                        mInputManager.sendBack(DEFAULT_DISPLAY);
                     }
                 };
         getOnBackPressedDispatcher().addCallback(this, callback);
 
-        displayController = new DisplayController(DEFAULT_DISPLAY, remoteIo);
-        displayController.setDpi((int) (getResources().getDisplayMetrics().density * DIP_TO_DPI));
+        mDisplayController = new DisplayController(DEFAULT_DISPLAY, mRemoteIo);
+        mDisplayController.setDpi((int) (getResources().getDisplayMetrics().density * DIP_TO_DPI));
 
         TextureView textureView = findViewById(R.id.immersive_surface_view);
         textureView.setOnTouchListener(
                 (v, event) -> {
                     if (event.getDevice().supportsSource(InputDevice.SOURCE_TOUCHSCREEN)) {
                         textureView.getParent().requestDisallowInterceptTouchEvent(true);
-                        inputManager.sendInputEvent(
+                        mInputManager.sendInputEvent(
                                 InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, DEFAULT_DISPLAY);
                     }
                     return true;
@@ -112,53 +110,53 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
         textureView.setSurfaceTextureListener(
                 new TextureView.SurfaceTextureListener() {
                     @Override
-                    public void onSurfaceTextureUpdated(SurfaceTexture texture) {}
+                    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture texture) {}
 
                     @Override
                     public void onSurfaceTextureAvailable(
-                            SurfaceTexture texture, int width, int height) {
-                        displayController.setSurface(new Surface(texture), width, height);
+                            @NonNull SurfaceTexture texture, int width, int height) {
+                        mDisplayController.setSurface(new Surface(texture), width, height);
                     }
 
                     @Override
-                    public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
+                    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture texture) {
                         return true;
                     }
 
                     @Override
                     public void onSurfaceTextureSizeChanged(
-                            SurfaceTexture texture, int width, int height) {}
+                            @NonNull SurfaceTexture texture, int width, int height) {}
                 });
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        connectionManager.addConnectionCallback(connectionCallback);
-        remoteIo.addMessageConsumer(audioPlayer);
-        remoteIo.addMessageConsumer(remoteEventConsumer);
+        mConnectionManager.addConnectionCallback(mConnectionCallback);
+        mRemoteIo.addMessageConsumer(mAudioPlayer);
+        mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        connectionManager.removeConnectionCallback(connectionCallback);
-        remoteIo.removeMessageConsumer(audioPlayer);
-        remoteIo.removeMessageConsumer(remoteEventConsumer);
+        mConnectionManager.removeConnectionCallback(mConnectionCallback);
+        mRemoteIo.removeMessageConsumer(mAudioPlayer);
+        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        displayController.close();
-        sensorController.close();
+        mDisplayController.close();
+        mSensorController.close();
     }
 
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasStopStreaming() && !event.getStopStreaming().getPause()) {
             finish();
         } else if (event.hasStartStreaming()) {
-            displayController.sendDisplayCapabilities();
+            mDisplayController.sendDisplayCapabilities();
         }
     }
 
@@ -166,14 +164,17 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
     public boolean dispatchKeyEvent(KeyEvent event) {
         int keyCode = event.getKeyCode();
         switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-                inputManager.sendHome(DEFAULT_DISPLAY);
+            case KeyEvent.KEYCODE_VOLUME_UP -> {
+                mInputManager.sendHome(DEFAULT_DISPLAY);
                 return true;
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            }
+            case KeyEvent.KEYCODE_VOLUME_DOWN -> {
                 finish();
                 return true;
-            default:
+            }
+            default -> {
                 return super.dispatchKeyEvent(event);
+            }
         }
     }
 }

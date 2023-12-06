@@ -43,7 +43,7 @@ public final class DpadFragment extends Hilt_DpadFragment {
         R.id.dpad_center, R.id.dpad_down, R.id.dpad_left, R.id.dpad_up, R.id.dpad_right
     };
 
-    @Inject InputManager inputManager;
+    @Inject InputManager mInputManager;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -87,7 +87,7 @@ public final class DpadFragment extends Hilt_DpadFragment {
             Log.w(TAG, "onDpadButtonClick: Method called from a non Dpad button");
             return false;
         }
-        inputManager.sendInputEventToFocusedDisplay(
+        mInputManager.sendInputEventToFocusedDisplay(
                 InputDeviceType.DEVICE_TYPE_DPAD,
                 new KeyEvent(
                         /* downTime= */ System.currentTimeMillis(),

@@ -43,17 +43,17 @@ import javax.inject.Inject;
 @ActivityScoped
 final class VirtualSensorController implements AutoCloseable {
 
-    private final RemoteIo remoteIo;
-    private final Consumer<RemoteEvent> remoteEventConsumer = this::processRemoteEvent;
-    private final SensorManager sensorManager;
-    private final HandlerThread listenerThread;
-    private final Handler handler;
+    private final RemoteIo mRemoteIo;
+    private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
+    private final SensorManager mSensorManager;
+    private final HandlerThread mListenerThread;
+    private final Handler mHandler;
 
     private final SensorEventListener sensorEventListener =
             new SensorEventListener() {
                 @Override
                 public void onSensorChanged(SensorEvent event) {
-                    remoteIo.sendMessage(
+                    mRemoteIo.sendMessage(
                             RemoteEvent.newBuilder()
                                     .setSensorEvent(
                                             RemoteSensorEvent.newBuilder()
@@ -68,25 +68,25 @@ final class VirtualSensorController implements AutoCloseable {
 
     @Inject
     VirtualSensorController(@ApplicationContext Context context, RemoteIo remoteIo) {
-        this.sensorManager = context.getSystemService(SensorManager.class);
-        this.remoteIo = remoteIo;
+        mSensorManager = context.getSystemService(SensorManager.class);
+        mRemoteIo = remoteIo;
 
-        listenerThread = new HandlerThread("VirtualSensorListener");
-        listenerThread.start();
-        handler = new Handler(listenerThread.getLooper());
+        mListenerThread = new HandlerThread("VirtualSensorListener");
+        mListenerThread.start();
+        mHandler = new Handler(mListenerThread.getLooper());
 
-        remoteIo.addMessageConsumer(remoteEventConsumer);
+        remoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
     public void close() {
-        sensorManager.unregisterListener(sensorEventListener);
-        listenerThread.quitSafely();
-        remoteIo.removeMessageConsumer(remoteEventConsumer);
+        mSensorManager.unregisterListener(sensorEventListener);
+        mListenerThread.quitSafely();
+        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
     }
 
     public List<SensorCapabilities> getSensorCapabilities() {
-        return sensorManager.getSensorList(Sensor.TYPE_ALL).stream()
+        return mSensorManager.getSensorList(Sensor.TYPE_ALL).stream()
                 .map(
                         sensor ->
                                 SensorCapabilities.newBuilder()
@@ -107,19 +107,19 @@ final class VirtualSensorController implements AutoCloseable {
             return;
         }
         SensorConfiguration config = remoteEvent.getSensorConfiguration();
-        Sensor sensor = sensorManager.getDefaultSensor(config.getSensorType());
+        Sensor sensor = mSensorManager.getDefaultSensor(config.getSensorType());
         if (sensor == null) {
             return;
         }
         if (config.getEnabled()) {
-            sensorManager.registerListener(
+            mSensorManager.registerListener(
                     sensorEventListener,
                     sensor,
                     config.getSamplingPeriodUs(),
                     config.getBatchReportingLatencyUs(),
-                    handler);
+                    mHandler);
         } else {
-            sensorManager.unregisterListener(sensorEventListener, sensor);
+            mSensorManager.unregisterListener(sensorEventListener, sensor);
         }
     }
 }

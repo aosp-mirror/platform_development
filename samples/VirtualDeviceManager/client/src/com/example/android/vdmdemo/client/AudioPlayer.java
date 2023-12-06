@@ -47,25 +47,25 @@ final class AudioPlayer implements Consumer<RemoteEvent> {
                     SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
     private static final int AUDIOTRACK_BUFFER_SIZE = 4 * MIN_AUDIOTRACK_BUFFER_SIZE;
 
-    private final Object lock = new Object();
-    private AudioTrack audioTrack;
+    private final Object mLock = new Object();
+    private AudioTrack mAudioTrack;
 
     @Inject
     AudioPlayer() {}
 
     private void startPlayback() {
-        synchronized (lock) {
-            if (audioTrack != null) {
+        synchronized (mLock) {
+            if (mAudioTrack != null) {
                 Log.w(TAG, "Received startPlayback command without stopping the playback first");
                 stopPlayback();
             }
-            audioTrack =
+            mAudioTrack =
                     new AudioTrack.Builder()
                             .setAudioFormat(AUDIO_FORMAT)
                             .setAudioAttributes(AUDIO_ATTRIBUTES)
                             .setBufferSizeInBytes(AUDIOTRACK_BUFFER_SIZE)
                             .build();
-            audioTrack.play();
+            mAudioTrack.play();
         }
     }
 
@@ -76,14 +76,14 @@ final class AudioPlayer implements Consumer<RemoteEvent> {
             return;
         }
         int bytesWritten = 0;
-        synchronized (lock) {
-            if (audioTrack == null) {
+        synchronized (mLock) {
+            if (mAudioTrack == null) {
                 Log.e(TAG, "Received audio frame, but audio track was not initialized yet");
                 return;
             }
 
             while (bytesToWrite > 0) {
-                int ret = audioTrack.write(data, bytesWritten, bytesToWrite);
+                int ret = mAudioTrack.write(data, bytesWritten, bytesToWrite);
                 if (ret <= 0) {
                     Log.e(TAG, "AudioTrack.write returned error code " + ret);
                 }
@@ -94,13 +94,13 @@ final class AudioPlayer implements Consumer<RemoteEvent> {
     }
 
     private void stopPlayback() {
-        synchronized (lock) {
-            if (audioTrack == null) {
+        synchronized (mLock) {
+            if (mAudioTrack == null) {
                 Log.w(TAG, "Received stopPlayback command for already stopped playback");
             } else {
-                audioTrack.stop();
-                audioTrack.release();
-                audioTrack = null;
+                mAudioTrack.stop();
+                mAudioTrack.release();
+                mAudioTrack = null;
             }
         }
     }

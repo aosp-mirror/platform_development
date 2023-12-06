@@ -47,57 +47,57 @@ import javax.inject.Singleton;
 final class InputManager {
     private static final String TAG = "InputManager";
 
-    private final RemoteIo remoteIo;
-    private final Settings settings;
+    private final RemoteIo mRemoteIo;
+    private final Settings mSettings;
 
-    private final Object lock = new Object();
+    private final Object mLock = new Object();
 
-    @GuardedBy("lock")
-    private int focusedDisplayId = Display.INVALID_DISPLAY;
+    @GuardedBy("mLock")
+    private int mFocusedDisplayId = Display.INVALID_DISPLAY;
 
-    @GuardedBy("lock")
-    private boolean isTrackingFocus = false;
+    @GuardedBy("mLock")
+    private boolean mIsTrackingFocus = false;
 
     interface FocusListener {
         void onFocusChange(int focusedDisplayId);
     }
 
-    @GuardedBy("lock")
-    private final List<FocusListener> focusListeners = new ArrayList<>();
+    @GuardedBy("mLock")
+    private final List<FocusListener> mFocusListeners = new ArrayList<>();
 
-    @GuardedBy("lock")
-    private final Set<Integer> focusableDisplays = new HashSet<>();
+    @GuardedBy("mLock")
+    private final Set<Integer> mFocusableDisplays = new HashSet<>();
 
     @Inject
     InputManager(RemoteIo remoteIo, Settings settings) {
-        this.remoteIo = remoteIo;
-        this.settings = settings;
+        mRemoteIo = remoteIo;
+        mSettings = settings;
     }
 
     void addFocusListener(FocusListener focusListener) {
-        synchronized (lock) {
-            focusListeners.add(focusListener);
+        synchronized (mLock) {
+            mFocusListeners.add(focusListener);
         }
     }
 
     void removeFocusListener(FocusListener focusListener) {
-        synchronized (lock) {
-            focusListeners.remove(focusListener);
+        synchronized (mLock) {
+            mFocusListeners.remove(focusListener);
         }
     }
 
     void addFocusableDisplay(int displayId) {
-        synchronized (lock) {
-            if (focusableDisplays.add(displayId)) {
+        synchronized (mLock) {
+            if (mFocusableDisplays.add(displayId)) {
                 setFocusedDisplayId(displayId);
             }
         }
     }
 
     void removeFocusableDisplay(int displayId) {
-        synchronized (lock) {
-            focusableDisplays.remove(Integer.valueOf(displayId));
-            if (displayId == focusedDisplayId) {
+        synchronized (mLock) {
+            mFocusableDisplays.remove(displayId);
+            if (displayId == mFocusedDisplayId) {
                 setFocusedDisplayId(updateFocusedDisplayId());
             }
         }
@@ -105,21 +105,21 @@ final class InputManager {
 
     void updateFocusTracking() {
         boolean shouldTrackFocus =
-                settings.dpadEnabled
-                        || settings.navTouchpadEnabled
-                        || settings.externalKeyboardEnabled
-                        || settings.externalMouseEnabled;
+                mSettings.dpadEnabled
+                        || mSettings.navTouchpadEnabled
+                        || mSettings.externalKeyboardEnabled
+                        || mSettings.externalMouseEnabled;
 
-        List<FocusListener> listenersToNotify = Collections.emptyList();
+        final List<FocusListener> listenersToNotify;
         int focusedDisplayIdToNotify = Display.INVALID_DISPLAY;
-        synchronized (lock) {
-            if (shouldTrackFocus != isTrackingFocus) {
-                isTrackingFocus = shouldTrackFocus;
+        synchronized (mLock) {
+            if (shouldTrackFocus != mIsTrackingFocus) {
+                mIsTrackingFocus = shouldTrackFocus;
             }
-            if (isTrackingFocus) {
-                focusedDisplayIdToNotify = focusedDisplayId;
+            if (mIsTrackingFocus) {
+                focusedDisplayIdToNotify = mFocusedDisplayId;
             }
-            listenersToNotify = new ArrayList<>(focusListeners);
+            listenersToNotify = new ArrayList<>(mFocusListeners);
         }
         for (FocusListener focusListener : listenersToNotify) {
             focusListener.onFocusChange(focusedDisplayIdToNotify);
@@ -152,30 +152,30 @@ final class InputManager {
      */
     public void sendInputEventToFocusedDisplay(InputDeviceType deviceType, InputEvent inputEvent) {
         int targetDisplay;
-        synchronized (lock) {
-            if (!isTrackingFocus || focusedDisplayId == Display.INVALID_DISPLAY) {
+        synchronized (mLock) {
+            if (!mIsTrackingFocus || mFocusedDisplayId == Display.INVALID_DISPLAY) {
                 return;
             }
-            targetDisplay = focusedDisplayId;
+            targetDisplay = mFocusedDisplayId;
         }
         switch (deviceType) {
             case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
-                if (!settings.navTouchpadEnabled) {
+                if (!mSettings.navTouchpadEnabled) {
                     return;
                 }
                 break;
             case DEVICE_TYPE_DPAD:
-                if (!settings.dpadEnabled) {
+                if (!mSettings.dpadEnabled) {
                     return;
                 }
                 break;
             case DEVICE_TYPE_MOUSE:
-                if (!settings.externalMouseEnabled) {
+                if (!mSettings.externalMouseEnabled) {
                     return;
                 }
                 break;
             case DEVICE_TYPE_KEYBOARD:
-                if (!settings.externalKeyboardEnabled) {
+                if (!mSettings.externalKeyboardEnabled) {
                     return;
                 }
                 break;
@@ -206,7 +206,7 @@ final class InputManager {
 
     void sendHome(int displayId) {
         setFocusedDisplayId(displayId);
-        remoteIo.sendMessage(
+        mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
                         .setDisplayId(displayId)
                         .setHomeEvent(RemoteHomeEvent.newBuilder())
@@ -296,7 +296,7 @@ final class InputManager {
     }
 
     private void sendInputEvent(RemoteInputEvent inputEvent, int displayId) {
-        remoteIo.sendMessage(
+        mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder().setDisplayId(displayId).setInputEvent(inputEvent).build());
     }
 
@@ -305,21 +305,21 @@ final class InputManager {
     }
 
     private int updateFocusedDisplayId() {
-        synchronized (lock) {
-            if (focusableDisplays.contains(focusedDisplayId)) {
-                return focusedDisplayId;
+        synchronized (mLock) {
+            if (mFocusableDisplays.contains(mFocusedDisplayId)) {
+                return mFocusedDisplayId;
             }
-            return Iterables.getFirst(focusableDisplays, Display.INVALID_DISPLAY);
+            return Iterables.getFirst(mFocusableDisplays, Display.INVALID_DISPLAY);
         }
     }
 
     private void setFocusedDisplayId(int displayId) {
         List<FocusListener> listenersToNotify = Collections.emptyList();
-        synchronized (lock) {
-            if (displayId != focusedDisplayId) {
-                focusedDisplayId = displayId;
-                if (isTrackingFocus) {
-                    listenersToNotify = new ArrayList<>(focusListeners);
+        synchronized (mLock) {
+            if (displayId != mFocusedDisplayId) {
+                mFocusedDisplayId = displayId;
+                if (mIsTrackingFocus) {
+                    listenersToNotify = new ArrayList<>(mFocusListeners);
                 }
             }
         }
