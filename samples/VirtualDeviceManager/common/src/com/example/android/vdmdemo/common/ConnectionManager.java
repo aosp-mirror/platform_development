@@ -55,9 +55,9 @@ public class ConnectionManager {
 
     private static final String CONNECTION_SERVICE_ID = "com.example.android.vdmdemo";
 
-    private final RemoteIo remoteIo;
+    private final RemoteIo mRemoteIo;
 
-    private final ConnectionsClient client;
+    private final ConnectionsClient mClient;
 
     /** Simple data structure to allow clients to query the current status. */
     public static final class ConnectionStatus {
@@ -70,65 +70,78 @@ public class ConnectionManager {
 
     /** Simple callback to notify connection and disconnection events. */
     public interface ConnectionCallback {
+        /** A connection has been initiated. */
         default void onConnecting(String remoteDeviceName) {}
 
+        /** A connection has been established. */
         default void onConnected(String remoteDeviceName) {}
 
+        /** The bandwidth of the established connection has changed. */
         default void onBandwidthChanged(String remoteDeviceName, BandwidthInfo quality) {}
 
+        /** The connection has been lost. */
         default void onDisconnected() {}
     }
 
-    private final List<ConnectionCallback> callbacks =
+    private final List<ConnectionCallback> mConnectionCallbacks =
             Collections.synchronizedList(new ArrayList<>());
+
+    private final RemoteIo.StreamClosedCallback mStreamClosedCallback = this::disconnect;
 
     @Inject
     ConnectionManager(@ApplicationContext Context context, RemoteIo remoteIo) {
-        this.remoteIo = remoteIo;
-        client = Nearby.getConnectionsClient(context);
+        mRemoteIo = remoteIo;
+        mClient = Nearby.getConnectionsClient(context);
     }
 
     static String getLocalEndpointId() {
         return Build.MODEL;
     }
 
+    /** Registers a listener for connection events. */
     public void addConnectionCallback(ConnectionCallback callback) {
-        callbacks.add(callback);
+        mConnectionCallbacks.add(callback);
     }
 
+    /** Registers a listener for connection events. */
     public void removeConnectionCallback(ConnectionCallback callback) {
-        callbacks.remove(callback);
+        mConnectionCallbacks.remove(callback);
     }
 
+    /** Returns the current connection status. */
     public ConnectionStatus getConnectionStatus() {
         return connectionStatus;
     }
 
+    /** Starts advertising so remote devices can discover this device. */
     public void startAdvertising() {
         if (connectionStatus.connected) {
             return;
         }
-        client.startAdvertising(
+        mClient.startAdvertising(
                         getLocalEndpointId(),
                         CONNECTION_SERVICE_ID,
-                        connectionLifecycleCallback,
+                        mConnectionLifecycleCallback,
                         new AdvertisingOptions.Builder()
                                 .setStrategy(Strategy.P2P_POINT_TO_POINT)
                                 .build())
                 .addOnFailureListener(
                         (Exception e) ->
-                                connectionLifecycleCallback.onDisconnected(/* endpointId= */ null));
+                                mConnectionLifecycleCallback.onDisconnected(
+                                        /* endpointId= */ null));
     }
 
+    /** Stops advertising making this device not discoverable. */
     public void stopAdvertising() {
-        client.stopAdvertising();
+        mClient.stopAdvertising();
     }
 
+    /* Starts discovering remote devices that are advertising. */
     public void startDiscovery() {
         if (connectionStatus.connected) {
             return;
         }
-        client.startDiscovery(
+        mClient.startDiscovery(
                         CONNECTION_SERVICE_ID,
                         endpointDiscoveryCallback,
                         new DiscoveryOptions.Builder()
@@ -136,15 +149,18 @@ public class ConnectionManager {
                                 .build())
                 .addOnFailureListener(
                         (Exception e) ->
-                                connectionLifecycleCallback.onDisconnected(/* endpointId= */ null));
+                                mConnectionLifecycleCallback.onDisconnected(
+                                        /* endpointId= */ null));
     }
 
+    /* Stops discovering remote devices. */
     public void stopDiscovery() {
-        client.stopDiscovery();
+        mClient.stopDiscovery();
     }
 
+    /* Explicitly terminate any existing connection. */
     public void disconnect() {
-        connectionLifecycleCallback.onDisconnected(connectionStatus.remoteDeviceName);
+        mConnectionLifecycleCallback.onDisconnected(connectionStatus.remoteDeviceName);
     }
 
     private final EndpointDiscoveryCallback endpointDiscoveryCallback =
@@ -155,14 +171,15 @@ public class ConnectionManager {
                         return;
                     }
                     connectionStatus.remoteDeviceName = info.getEndpointName();
-                    for (ConnectionCallback callback : callbacks) {
+                    for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onConnecting(connectionStatus.remoteDeviceName);
                     }
-                    client.requestConnection(
-                                    getLocalEndpointId(), endpointId, connectionLifecycleCallback)
+                    mClient.requestConnection(
+                                    getLocalEndpointId(), endpointId, mConnectionLifecycleCallback)
                             .addOnFailureListener(
                                     (Exception e) ->
-                                            connectionLifecycleCallback.onDisconnected(endpointId));
+                                            mConnectionLifecycleCallback.onDisconnected(
+                                                    endpointId));
                 }
 
                 @Override
@@ -170,31 +187,29 @@ public class ConnectionManager {
                     if (connectionStatus.connected) {
                         return;
                     }
-                    connectionLifecycleCallback.onDisconnected(endpointId);
+                    mConnectionLifecycleCallback.onDisconnected(endpointId);
                 }
             };
 
-    private final RemoteIo.StreamClosedCallback streamClosedCallback = this::disconnect;
-
-    private final ConnectionLifecycleCallback connectionLifecycleCallback =
+    private final ConnectionLifecycleCallback mConnectionLifecycleCallback =
             new ConnectionLifecycleCallback() {
 
                 @Override
                 public void onConnectionInitiated(
                         String endpointId, ConnectionInfo connectionInfo) {
                     connectionStatus.remoteDeviceName = connectionInfo.getEndpointName();
-                    for (ConnectionCallback callback : callbacks) {
+                    for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onConnecting(connectionStatus.remoteDeviceName);
                     }
-                    client.acceptConnection(
+                    mClient.acceptConnection(
                             endpointId,
                             new PayloadCallback() {
                                 @Override
                                 public void onPayloadReceived(String endpointId, Payload payload) {
-                                    remoteIo.initialize(
+                                    mRemoteIo.initialize(
                                             Objects.requireNonNull(payload.asStream())
                                                     .asInputStream(),
-                                            streamClosedCallback);
+                                            mStreamClosedCallback);
                                 }
 
                                 @Override
@@ -212,9 +227,9 @@ public class ConnectionManager {
                     PipedOutputStream outputStream = new PipedOutputStream();
                     try {
                         PipedInputStream inputStream = new PipedInputStream(outputStream);
-                        client.sendPayload(endpointId, Payload.fromStream(inputStream));
-                        remoteIo.initialize(outputStream, streamClosedCallback);
-                        for (ConnectionCallback callback : callbacks) {
+                        mClient.sendPayload(endpointId, Payload.fromStream(inputStream));
+                        mRemoteIo.initialize(outputStream, mStreamClosedCallback);
+                        for (ConnectionCallback callback : mConnectionCallbacks) {
                             callback.onConnected(connectionStatus.remoteDeviceName);
                         }
                         connectionStatus.connected = true;
@@ -227,7 +242,7 @@ public class ConnectionManager {
                 public void onBandwidthChanged(
                         String endpointId, @NonNull BandwidthInfo bandwidthInfo) {
                     connectionStatus.bandwidthInfo = bandwidthInfo;
-                    for (ConnectionCallback callback : callbacks) {
+                    for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onBandwidthChanged(
                                 connectionStatus.remoteDeviceName, connectionStatus.bandwidthInfo);
                     }
@@ -235,11 +250,11 @@ public class ConnectionManager {
 
                 @Override
                 public void onDisconnected(String endpointId) {
-                    client.stopAllEndpoints();
+                    mClient.stopAllEndpoints();
                     connectionStatus.remoteDeviceName = null;
                     connectionStatus.bandwidthInfo = null;
                     connectionStatus.connected = false;
-                    for (ConnectionCallback callback : callbacks) {
+                    for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onDisconnected();
                     }
                 }

@@ -42,10 +42,10 @@ public class RemoteIo {
         void onStreamClosed();
     }
 
-    private OutputStream outputStream = null;
-    private StreamClosedCallback outputStreamClosedCallback = null;
+    private OutputStream mOutputStream = null;
+    private StreamClosedCallback mOutputStreamClosedCallback = null;
 
-    private final Map<Object, MessageConsumer> messageConsumers =
+    private final Map<Object, MessageConsumer> mMessageConsumers =
             Collections.synchronizedMap(new ArrayMap<>());
 
     @Inject
@@ -62,7 +62,7 @@ public class RemoteIo {
                                     if (event == null) {
                                         break;
                                     }
-                                    messageConsumers
+                                    mMessageConsumers
                                             .values()
                                             .forEach(
                                                     consumer -> {
@@ -82,28 +82,28 @@ public class RemoteIo {
 
     synchronized void initialize(
             OutputStream outputStream, StreamClosedCallback outputStreamClosedCallback) {
-        this.outputStream = outputStream;
-        this.outputStreamClosedCallback = outputStreamClosedCallback;
+        mOutputStream = outputStream;
+        mOutputStreamClosedCallback = outputStreamClosedCallback;
     }
 
     public void addMessageConsumer(Consumer<RemoteEvent> consumer) {
-        messageConsumers.put(consumer, new MessageConsumer(consumer));
+        mMessageConsumers.put(consumer, new MessageConsumer(consumer));
     }
 
     public void removeMessageConsumer(Consumer<RemoteEvent> consumer) {
-        if (messageConsumers.remove(consumer) == null) {
+        if (mMessageConsumers.remove(consumer) == null) {
             Log.w(TAG, "Failed to remove message consumer.");
         }
     }
 
     public synchronized void sendMessage(RemoteEvent event) {
-        if (outputStream != null) {
+        if (mOutputStream != null) {
             try {
-                event.writeDelimitedTo(outputStream);
-                outputStream.flush();
+                event.writeDelimitedTo(mOutputStream);
+                mOutputStream.flush();
             } catch (IOException e) {
-                outputStream = null;
-                outputStreamClosedCallback.onStreamClosed();
+                mOutputStream = null;
+                mOutputStreamClosedCallback.onStreamClosed();
             }
         } else {
             Log.e(TAG, "Failed to send event, RemoteIO not initialized.");
@@ -111,16 +111,16 @@ public class RemoteIo {
     }
 
     private static class MessageConsumer {
-        private final Executor executor;
-        private final Consumer<RemoteEvent> consumer;
+        private final Executor mExecutor;
+        private final Consumer<RemoteEvent> mConsumer;
 
-        public MessageConsumer(Consumer<RemoteEvent> consumer) {
-            executor = Executors.newSingleThreadExecutor();
-            this.consumer = consumer;
+        MessageConsumer(Consumer<RemoteEvent> consumer) {
+            mExecutor = Executors.newSingleThreadExecutor();
+            mConsumer = consumer;
         }
 
         public void accept(RemoteEvent event) {
-            executor.execute(() -> consumer.accept(event));
+            mExecutor.execute(() -> mConsumer.accept(event));
         }
     }
 }

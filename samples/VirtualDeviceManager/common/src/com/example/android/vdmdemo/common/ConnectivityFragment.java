@@ -53,35 +53,35 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
                     permission.CHANGE_WIFI_STATE,
                     permission.NEARBY_WIFI_DEVICES);
 
-    @Inject ConnectionManager connectionManager;
+    @Inject ConnectionManager mConnectionManager;
 
-    private TextView status = null;
-    private int defaultBackgroundColor;
+    private TextView mStatus = null;
+    private int mDefaultBackgroundColor;
 
-    private final ConnectionManager.ConnectionCallback connectionCallback =
+    private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
                 @Override
                 public void onConnecting(String remoteDeviceName) {
-                    status.setText(getContext().getString(R.string.connecting, remoteDeviceName));
+                    mStatus.setText(getContext().getString(R.string.connecting, remoteDeviceName));
                 }
 
                 @Override
                 public void onConnected(String remoteDeviceName) {
-                    status.setBackgroundColor(Color.GREEN);
+                    mStatus.setBackgroundColor(Color.GREEN);
                 }
 
                 @Override
                 public void onBandwidthChanged(
                         String remoteDeviceName, BandwidthInfo bandwidthInfo) {
                     String quality = bandwidthQualityToString(bandwidthInfo.getQuality());
-                    status.setText(
+                    mStatus.setText(
                             getContext().getString(R.string.connected, remoteDeviceName, quality));
                 }
 
                 @Override
                 public void onDisconnected() {
-                    status.setBackgroundColor(defaultBackgroundColor);
-                    status.setText(getContext().getString(R.string.disconnected));
+                    mStatus.setBackgroundColor(mDefaultBackgroundColor);
+                    mStatus.setText(getContext().getString(R.string.disconnected));
                 }
             };
 
@@ -93,13 +93,13 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     public void onViewCreated(View view, Bundle bundle) {
         super.onViewCreated(view, bundle);
 
-        status = getActivity().findViewById(R.id.connection_status);
+        mStatus = getActivity().findViewById(R.id.connection_status);
 
         TypedValue background = new TypedValue();
         getActivity()
                 .getTheme()
                 .resolveAttribute(android.R.attr.windowBackground, background, true);
-        defaultBackgroundColor = background.isColorType() ? background.data : Color.WHITE;
+        mDefaultBackgroundColor = background.isColorType() ? background.data : Color.WHITE;
 
         CharSequence currentTitle = getActivity().getTitle();
         String localEndpointId = ConnectionManager.getLocalEndpointId();
@@ -107,25 +107,25 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
         getActivity().setTitle(title);
 
         ConnectionManager.ConnectionStatus connectionStatus =
-                connectionManager.getConnectionStatus();
+                mConnectionManager.getConnectionStatus();
         if (connectionStatus.bandwidthInfo != null) {
-            connectionCallback.onConnected(connectionStatus.remoteDeviceName);
-            connectionCallback.onBandwidthChanged(
+            mConnectionCallback.onConnected(connectionStatus.remoteDeviceName);
+            mConnectionCallback.onBandwidthChanged(
                     connectionStatus.remoteDeviceName, connectionStatus.bandwidthInfo);
         } else if (connectionStatus.remoteDeviceName != null) {
-            connectionCallback.onConnecting(connectionStatus.remoteDeviceName);
+            mConnectionCallback.onConnecting(connectionStatus.remoteDeviceName);
         } else {
-            connectionCallback.onDisconnected();
+            mConnectionCallback.onDisconnected();
         }
 
-        connectionManager.addConnectionCallback(connectionCallback);
+        mConnectionManager.addConnectionCallback(mConnectionCallback);
         requestPermissionsIfNeeded();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        connectionManager.removeConnectionCallback(connectionCallback);
+        mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
     private void requestPermissionsIfNeeded() {

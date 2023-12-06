@@ -51,41 +51,42 @@ public class VideoManager {
     private static final String TAG = "VideoManager";
     private static final String MIME_TYPE = MediaFormat.MIMETYPE_VIDEO_AVC;
 
-    @GuardedBy("codecLock")
-    private MediaCodec mediaCodec;
+    @GuardedBy("mCodecLock")
+    private MediaCodec mMediaCodec;
 
-    private final Object codecLock = new Object();
-    private final HandlerThread callbackThread;
-    private final boolean recordEncoderOutput;
-    private final BlockingQueue<RemoteEvent> eventQueue = new LinkedBlockingQueue<>(100);
-    private final BlockingQueue<Integer> freeInputBuffers = new LinkedBlockingQueue<>(100);
-    private final RemoteIo remoteIo;
-    private final Consumer<RemoteEvent> remoteFrameConsumer = this::processFrameProto;
-    private final int displayId;
-    private int frameIndex = 0;
-    private StorageFile storageFile;
-    private DecoderThread decoderThread;
+    private final Object mCodecLock = new Object();
+    private final HandlerThread mCallbackThread;
+    private final boolean mRecordEncoderOutput;
+    private final BlockingQueue<RemoteEvent> mEventQueue = new LinkedBlockingQueue<>(100);
+    private final BlockingQueue<Integer> mFreeInputBuffers = new LinkedBlockingQueue<>(100);
+    private final RemoteIo mRemoteIo;
+    private final Consumer<RemoteEvent> mRemoteFrameConsumer = this::processFrameProto;
+    private final int mDisplayId;
+    private int mFrameIndex = 0;
+    private StorageFile mStorageFile;
+    private DecoderThread mDecoderThread;
 
     private VideoManager(
             int displayId, RemoteIo remoteIo, MediaCodec mediaCodec, boolean recordEncoderOutput) {
-        this.displayId = displayId;
-        this.remoteIo = remoteIo;
-        this.mediaCodec = mediaCodec;
-        this.recordEncoderOutput = recordEncoderOutput;
+        mDisplayId = displayId;
+        mRemoteIo = remoteIo;
+        mMediaCodec = mediaCodec;
+        mRecordEncoderOutput = recordEncoderOutput;
 
-        callbackThread = new HandlerThread("VideoManager-" + displayId);
-        callbackThread.start();
-        mediaCodec.setCallback(mediaCodecCallback, new Handler(callbackThread.getLooper()));
+        mCallbackThread = new HandlerThread("VideoManager-" + displayId);
+        mCallbackThread.start();
+        mediaCodec.setCallback(new MediaCodecCallback(), new Handler(mCallbackThread.getLooper()));
 
         if (!mediaCodec.getCodecInfo().isEncoder()) {
-            remoteIo.addMessageConsumer(remoteFrameConsumer);
+            remoteIo.addMessageConsumer(mRemoteFrameConsumer);
         }
 
         if (recordEncoderOutput) {
-            storageFile = new StorageFile(displayId);
+            mStorageFile = new StorageFile(displayId);
         }
     }
 
+    /** Creates a VideoManager instance for encoding. */
     public static VideoManager createEncoder(
             int displayId, RemoteIo remoteIo, boolean recordEncoderOutput) {
         try {
@@ -96,6 +97,7 @@ public class VideoManager {
         }
     }
 
+    /** Creates a VideoManager instance for decoding. */
     public static VideoManager createDecoder(int displayId, RemoteIo remoteIo) {
         try {
             MediaCodec mediaCodec = MediaCodec.createDecoderByType(MIME_TYPE);
@@ -105,29 +107,31 @@ public class VideoManager {
         }
     }
 
+    /** Stops processing and resets the internal state. */
     public void stop() {
-        synchronized (codecLock) {
-            if (mediaCodec == null) {
+        synchronized (mCodecLock) {
+            if (mMediaCodec == null) {
                 return;
             }
-            if (mediaCodec.getCodecInfo().isEncoder()) {
-                mediaCodec.signalEndOfInputStream();
+            if (mMediaCodec.getCodecInfo().isEncoder()) {
+                mMediaCodec.signalEndOfInputStream();
             } else {
-                remoteIo.removeMessageConsumer(remoteFrameConsumer);
-                eventQueue.clear();
-                decoderThread.exit();
+                mRemoteIo.removeMessageConsumer(mRemoteFrameConsumer);
+                mEventQueue.clear();
+                mDecoderThread.exit();
             }
-            callbackThread.quitSafely();
-            mediaCodec.flush();
-            mediaCodec.stop();
-            mediaCodec.release();
-            mediaCodec = null;
+            mCallbackThread.quitSafely();
+            mMediaCodec.flush();
+            mMediaCodec.stop();
+            mMediaCodec.release();
+            mMediaCodec = null;
         }
-        if (recordEncoderOutput) {
-            storageFile.closeOutputFile();
+        if (mRecordEncoderOutput) {
+            mStorageFile.closeOutputFile();
         }
     }
 
+    /** Creates a surface for encoding. */
     public Surface createInputSurface(int width, int height, int frameRate) {
         MediaFormat mediaFormat = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
         mediaFormat.setInteger(
@@ -136,116 +140,116 @@ public class VideoManager {
         mediaFormat.setInteger(MediaFormat.KEY_MAX_B_FRAMES, 0);
         mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
         mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-        synchronized (codecLock) {
-            mediaCodec.configure(
+        synchronized (mCodecLock) {
+            mMediaCodec.configure(
                     mediaFormat, /* surface= */ null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            return mediaCodec.createInputSurface();
+            return mMediaCodec.createInputSurface();
         }
     }
 
+    /** Starts encoding. {@link #createInputSurface} must have been called already. */
     public void startEncoding() {
-        synchronized (codecLock) {
-            mediaCodec.start();
+        synchronized (mCodecLock) {
+            mMediaCodec.start();
         }
     }
 
+    /** Starts decoding from the given surface. */
     public void startDecoding(Surface surface, int width, int height) {
         MediaFormat mediaFormat = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
         mediaFormat.setInteger(MediaFormat.KEY_LOW_LATENCY, 1);
         mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 100);
-        synchronized (codecLock) {
-            mediaCodec.configure(mediaFormat, surface, null, 0);
-            mediaCodec.start();
+        synchronized (mCodecLock) {
+            mMediaCodec.configure(mediaFormat, surface, null, 0);
+            mMediaCodec.start();
         }
-        decoderThread = new DecoderThread();
-        decoderThread.start();
+        mDecoderThread = new DecoderThread();
+        mDecoderThread.start();
     }
 
     private RemoteEvent createFrameProto(byte[] data, int flags, long presentationTimeUs) {
         return RemoteEvent.newBuilder()
-                .setDisplayId(displayId)
+                .setDisplayId(mDisplayId)
                 .setDisplayFrame(
                         DisplayFrame.newBuilder()
                                 .setFrameData(ByteString.copyFrom(data))
-                                .setFrameIndex(frameIndex++)
+                                .setFrameIndex(mFrameIndex++)
                                 .setPresentationTimeUs(presentationTimeUs)
                                 .setFlags(flags))
                 .build();
     }
 
     private void processFrameProto(RemoteEvent event) {
-        if (event.hasDisplayFrame() && event.getDisplayId() == displayId) {
-            Uninterruptibles.putUninterruptibly(eventQueue, event);
+        if (event.hasDisplayFrame() && event.getDisplayId() == mDisplayId) {
+            Uninterruptibles.putUninterruptibly(mEventQueue, event);
         }
     }
 
-    private final MediaCodec.Callback mediaCodecCallback =
-            new MediaCodec.Callback() {
-                @Override
-                public void onInputBufferAvailable(MediaCodec codec, int i) {
-                    freeInputBuffers.add(i);
+    private final class MediaCodecCallback extends MediaCodec.Callback {
+        @Override
+        public void onInputBufferAvailable(MediaCodec codec, int i) {
+            mFreeInputBuffers.add(i);
+        }
+
+        @Override
+        public void onOutputBufferAvailable(MediaCodec codec, int i, BufferInfo bufferInfo) {
+            synchronized (mCodecLock) {
+                if (mMediaCodec == null) {
+                    return;
                 }
-
-                @Override
-                public void onOutputBufferAvailable(
-                        MediaCodec codec, int i, BufferInfo bufferInfo) {
-                    synchronized (codecLock) {
-                        if (mediaCodec == null) {
-                            return;
-                        }
-                        if (mediaCodec.getCodecInfo().isEncoder()) {
-                            ByteBuffer buffer = mediaCodec.getOutputBuffer(i);
-                            byte[] data = new byte[bufferInfo.size];
-                            buffer.get(data, bufferInfo.offset, bufferInfo.size);
-                            mediaCodec.releaseOutputBuffer(i, false);
-                            if (recordEncoderOutput) {
-                                storageFile.writeOutputFile(data);
-                            }
-
-                            remoteIo.sendMessage(
-                                    createFrameProto(
-                                            data, bufferInfo.flags, bufferInfo.presentationTimeUs));
-                        } else {
-                            mediaCodec.releaseOutputBuffer(i, true);
-                        }
+                if (mMediaCodec.getCodecInfo().isEncoder()) {
+                    ByteBuffer buffer = mMediaCodec.getOutputBuffer(i);
+                    byte[] data = new byte[bufferInfo.size];
+                    buffer.get(data, bufferInfo.offset, bufferInfo.size);
+                    mMediaCodec.releaseOutputBuffer(i, false);
+                    if (mRecordEncoderOutput) {
+                        mStorageFile.writeOutputFile(data);
                     }
+
+                    mRemoteIo.sendMessage(
+                            createFrameProto(
+                                    data, bufferInfo.flags, bufferInfo.presentationTimeUs));
+                } else {
+                    mMediaCodec.releaseOutputBuffer(i, true);
                 }
+            }
+        }
 
-                @Override
-                public void onError(MediaCodec mediaCodec, CodecException e) {}
+        @Override
+        public void onError(MediaCodec mediaCodec, CodecException e) {}
 
-                @Override
-                public void onOutputFormatChanged(MediaCodec mediaCodec, MediaFormat mediaFormat) {}
-            };
+        @Override
+        public void onOutputFormatChanged(MediaCodec mediaCodec, MediaFormat mediaFormat) {}
+    }
 
     private class DecoderThread extends Thread {
 
-        private final AtomicBoolean exit = new AtomicBoolean(false);
+        private final AtomicBoolean mExit = new AtomicBoolean(false);
 
         @SuppressWarnings("Interruption")
         void exit() {
-            exit.set(true);
+            mExit.set(true);
             interrupt();
         }
 
         @Override
         public void run() {
-            while (!(Thread.interrupted() && exit.get())) {
+            while (!(Thread.interrupted() && mExit.get())) {
                 try {
-                    RemoteEvent event = eventQueue.take();
-                    int inputBuffer = freeInputBuffers.take();
+                    RemoteEvent event = mEventQueue.take();
+                    int inputBuffer = mFreeInputBuffers.take();
 
-                    synchronized (codecLock) {
-                        if (mediaCodec == null) {
+                    synchronized (mCodecLock) {
+                        if (mMediaCodec == null) {
                             continue;
                         }
-                        ByteBuffer inBuffer = mediaCodec.getInputBuffer(inputBuffer);
+                        ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
                         byte[] data = event.getDisplayFrame().getFrameData().toByteArray();
                         inBuffer.put(data);
-                        if (recordEncoderOutput) {
-                            storageFile.writeOutputFile(data);
+                        if (mRecordEncoderOutput) {
+                            mStorageFile.writeOutputFile(data);
                         }
-                        mediaCodec.queueInputBuffer(
+                        mMediaCodec.queueInputBuffer(
                                 inputBuffer,
                                 0,
                                 event.getDisplayFrame().getFrameData().size(),
@@ -253,7 +257,7 @@ public class VideoManager {
                                 event.getDisplayFrame().getFlags());
                     }
                 } catch (InterruptedException e) {
-                    if (exit.get()) {
+                    if (mExit.get()) {
                         break;
                     }
                 }
@@ -265,36 +269,36 @@ public class VideoManager {
         private static final String DIR = "Download";
         private static final String FILENAME = "vdmdemo_encoder_output";
 
-        private OutputStream outputStream;
+        private OutputStream mOutputStream;
 
         private StorageFile(int displayId) {
             String filePath = DIR + "/" + FILENAME + "_" + displayId + ".h264";
             File f = new File(Environment.getExternalStorageDirectory(), filePath);
             try {
-                outputStream = new BufferedOutputStream(new FileOutputStream(f));
+                mOutputStream = new BufferedOutputStream(new FileOutputStream(f));
             } catch (FileNotFoundException e) {
                 Log.e(TAG, "Error creating or opening storage file", e);
             }
         }
 
         private void writeOutputFile(byte[] data) {
-            if (outputStream == null) {
+            if (mOutputStream == null) {
                 return;
             }
             try {
-                outputStream.write(data);
+                mOutputStream.write(data);
             } catch (IOException e) {
                 Log.e(TAG, "Error writing to output file", e);
             }
         }
 
         private void closeOutputFile() {
-            if (outputStream == null) {
+            if (mOutputStream == null) {
                 return;
             }
             try {
-                outputStream.flush();
-                outputStream.close();
+                mOutputStream.flush();
+                mOutputStream.close();
             } catch (IOException e) {
                 Log.e(TAG, "Error closing output file", e);
             }
