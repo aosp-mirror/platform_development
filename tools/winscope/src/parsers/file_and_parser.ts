@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {UserNotificationListener} from 'interfaces/user_notification_listener';
-import {ParserError} from 'parsers/parser_factory';
+import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 
-export class SnackBarOpenerStub implements UserNotificationListener {
-  onParserErrors(errors: ParserError[]) {
-    // do nothing
-  }
+export class FileAndParser {
+  constructor(readonly file: TraceFile, readonly parser: Parser<object>) {}
 }

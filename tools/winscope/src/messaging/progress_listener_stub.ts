@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from 'common/time';
+import {ProgressListener} from 'messaging/progress_listener';
 
-export interface RemoteTimestampSender {
-  sendTimestamp(timestamp: RealTimestamp): void;
+export class ProgressListenerStub implements ProgressListener {
+  onProgressUpdate() {
+    // do nothing
+  }
+
+  onOperationFinished() {
+    // do nothing
+  }
 }

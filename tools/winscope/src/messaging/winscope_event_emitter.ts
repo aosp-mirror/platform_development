@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {WinscopeEvent} from './winscope_event';
 
-import {ParserError} from 'parsers/parser_factory';
+export type EmitEvent = (event: WinscopeEvent) => Promise<void>;
 
-export interface UserNotificationListener {
-  onParserErrors(errors: ParserError[]): void;
+export interface WinscopeEventEmitter {
+  setEmitEvent(callback: EmitEvent): void;
 }

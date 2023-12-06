@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {WinscopeEvent} from './winscope_event';
 
-import {TracePosition} from 'trace/trace_position';
-
-export type OnTracePositionUpdate = (position: TracePosition) => Promise<void>;
-
-export interface TracePositionUpdateEmitter {
-  setOnTracePositionUpdate(callback: OnTracePositionUpdate): void;
+export interface WinscopeEventListener {
+  onWinscopeEvent(event: WinscopeEvent): Promise<void>;
 }

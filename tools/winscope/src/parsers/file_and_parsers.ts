@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AppEvent} from 'app/app_event';
 
-export type EmitAppEvent = (event: AppEvent) => Promise<void>;
+import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 
-export interface AppEventEmitter {
-  setEmitAppEvent(callback: EmitAppEvent): void;
+export class FileAndParsers {
+  constructor(readonly file: TraceFile, readonly parsers: Array<Parser<object>>) {}
 }

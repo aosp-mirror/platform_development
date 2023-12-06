@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-import {Viewer} from 'viewers/viewer';
+import {TraceType} from 'trace/trace_type';
 
-export interface TraceDataListener {
-  onTraceDataUnloaded(): void;
-  onTraceDataLoaded(viewers: Viewer[]): void;
+export enum WinscopeErrorType {
+  CORRUPTED_ARCHIVE,
+  NO_INPUT_FILES,
+  FILE_OVERRIDDEN,
+  UNSUPPORTED_FILE_FORMAT,
+}
+
+export class WinscopeError {
+  constructor(
+    public type: WinscopeErrorType,
+    public trace: string | undefined = undefined,
+    public traceType: TraceType | undefined = undefined
+  ) {}
 }

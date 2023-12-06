@@ -14,16 +14,32 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
-import {AppEventEmitter, EmitAppEvent} from './app_event_emitter';
-import {AppEventListener} from './app_event_listener';
+import {FunctionUtils} from './function_utils';
 
-export class AppEventListenerEmitterStub implements AppEventListener, AppEventEmitter {
-  async onAppEvent(event: AppEvent) {
-    // do nothing
+describe('FunctionUtils', () => {
+  class A {
+    a = 'a';
+    foo(): string {
+      return 'a';
+    }
   }
 
-  setEmitAppEvent(callback: EmitAppEvent) {
-    // do nothing
+  class B {
+    b = 'b';
+    bar(): string {
+      return 'b';
+    }
   }
-}
+
+  it('mixin()', () => {
+    const a = new A();
+    const b = new B();
+
+    const mixin = FunctionUtils.mixin(a, b);
+
+    expect(mixin.a).toEqual('a');
+    expect(mixin.b).toEqual('b');
+    expect(mixin.foo()).toEqual('a');
+    expect(mixin.bar()).toEqual('b');
+  });
+});

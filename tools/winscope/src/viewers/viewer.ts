@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AppEvent} from 'app/app_event';
-import {AppEventEmitter, EmitAppEvent} from 'interfaces/app_event_emitter';
-import {AppEventListener} from 'interfaces/app_event_listener';
+import {WinscopeEvent} from 'messaging/winscope_event';
+import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceType} from 'trace/trace_type';
 
 enum ViewType {
@@ -33,9 +33,9 @@ class View {
   ) {}
 }
 
-interface Viewer extends AppEventListener, AppEventEmitter {
-  onAppEvent(event: AppEvent): Promise<void>;
-  setEmitAppEvent(callback: EmitAppEvent): void;
+interface Viewer extends WinscopeEventListener, WinscopeEventEmitter {
+  onWinscopeEvent(event: WinscopeEvent): Promise<void>;
+  setEmitEvent(callback: EmitEvent): void;
   getViews(): View[];
   getDependencies(): TraceType[];
 }

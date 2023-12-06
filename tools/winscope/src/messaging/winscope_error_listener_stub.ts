@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import {TracePosition} from 'trace/trace_position';
+import {WinscopeError} from './winscope_error';
+import {WinscopeErrorListener} from './winscope_error_listener';
 
-export interface TracePositionUpdateListener {
-  onTracePositionUpdate(position: TracePosition): void;
+export class WinscopeErrorListenerStub implements WinscopeErrorListener {
+  onError(error: WinscopeError) {
+    // do nothing
+  }
 }

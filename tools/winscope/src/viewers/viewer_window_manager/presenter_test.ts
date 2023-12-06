@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TracePositionUpdate} from 'app/app_event';
 import {RealTimestamp} from 'common/time';
 import {WindowManagerState} from 'flickerlib/common';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';

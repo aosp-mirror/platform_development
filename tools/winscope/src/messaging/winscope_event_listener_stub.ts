@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AppEvent} from 'app/app_event';
 
-export interface AppEventListener {
-  onAppEvent(event: AppEvent): Promise<void>;
+import {WinscopeEvent} from './winscope_event';
+import {WinscopeEventListener} from './winscope_event_listener';
+
+export class WinscopeEventListenerStub implements WinscopeEventListener {
+  async onWinscopeEvent(event: WinscopeEvent) {
+    // do nothing
+  }
 }
