@@ -39,20 +39,20 @@ import java.util.stream.Collectors;
 final class RunningVdmUidsTracker implements ActivityListener {
     private static final String TAG = RunningVdmUidsTracker.class.getSimpleName();
 
-    private final PackageManager packageManager;
-    private final AudioStreamer audioStreamer;
+    private final PackageManager mPackageManager;
+    private final AudioStreamer mAudioStreamer;
 
-    private final Object lock = new Object();
+    private final Object mLock = new Object();
 
-    @GuardedBy("lock")
-    private HashMap<Integer, HashSet<Integer>> displayIdsToRunningUids = new HashMap<>();
+    @GuardedBy("mLock")
+    private final HashMap<Integer, HashSet<Integer>> mDisplayIdToRunningUids = new HashMap<>();
 
-    @GuardedBy("lock")
-    private ImmutableSet<Integer> runningVdmUids = ImmutableSet.of();
+    @GuardedBy("mLock")
+    private ImmutableSet<Integer> mRunningVdmUids = ImmutableSet.of();
 
     public RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
-        packageManager = Objects.requireNonNull(context).getPackageManager();
-        this.audioStreamer = Objects.requireNonNull(audioStreamer);
+        mPackageManager = Objects.requireNonNull(context).getPackageManager();
+        mAudioStreamer = Objects.requireNonNull(audioStreamer);
     }
 
     @Override
@@ -65,46 +65,43 @@ final class RunningVdmUidsTracker implements ActivityListener {
         }
 
         ImmutableSet<Integer> updatedUids;
-        synchronized (lock) {
-            HashSet<Integer> displayUidSet = displayIdsToRunningUids.get(displayId);
-            if (displayUidSet == null) {
-                displayUidSet = new HashSet<>();
-                displayIdsToRunningUids.put(displayId, displayUidSet);
-            }
+        synchronized (mLock) {
+            HashSet<Integer> displayUidSet =
+                    mDisplayIdToRunningUids.computeIfAbsent(displayId, k -> new HashSet<>());
             displayUidSet.add(topActivityUid.get());
-            runningVdmUids =
-                    displayIdsToRunningUids.values().stream()
+            mRunningVdmUids =
+                    mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
                             .collect(toImmutableSet());
-            updatedUids = runningVdmUids;
+            updatedUids = mRunningVdmUids;
         }
 
-        audioStreamer.updateVdmUids(updatedUids);
+        mAudioStreamer.updateVdmUids(updatedUids);
     }
 
     @Override
     public void onDisplayEmpty(int displayId) {
         ImmutableSet<Integer> uidsBefore;
         ImmutableSet<Integer> uidsAfter;
-        synchronized (lock) {
-            uidsBefore = runningVdmUids;
-            displayIdsToRunningUids.remove(displayId);
-            runningVdmUids =
-                    displayIdsToRunningUids.values().stream()
+        synchronized (mLock) {
+            uidsBefore = mRunningVdmUids;
+            mDisplayIdToRunningUids.remove(displayId);
+            mRunningVdmUids =
+                    mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
                             .collect(toImmutableSet());
-            uidsAfter = runningVdmUids;
+            uidsAfter = mRunningVdmUids;
         }
 
         if (!uidsAfter.equals(uidsBefore)) {
-            audioStreamer.updateVdmUids(uidsAfter);
+            mAudioStreamer.updateVdmUids(uidsAfter);
         }
     }
 
     private Optional<Integer> getUidForComponent(@NonNull ComponentName topActivity) {
         try {
             return Optional.of(
-                    packageManager.getPackageUid(topActivity.getPackageName(), /* flags= */ 0));
+                    mPackageManager.getPackageUid(topActivity.getPackageName(), /* flags= */ 0));
         } catch (NameNotFoundException e) {
             return Optional.empty();
         }

@@ -22,6 +22,8 @@ import android.companion.virtual.sensor.VirtualSensorEvent;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
+import androidx.annotation.NonNull;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteSensorEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.SensorConfiguration;
@@ -35,61 +37,56 @@ import java.util.function.Consumer;
 
 final class RemoteSensorManager implements AutoCloseable {
 
-    private final RemoteIo remoteIo;
-    private final SparseArray<VirtualSensor> virtualSensors = new SparseArray<>(); // Keyed by type.
-    private final Consumer<RemoteEvent> remoteEventConsumer = this::processRemoteEvent;
+    private final RemoteIo mRemoteIo;
+    private final SparseArray<VirtualSensor> mVirtualSensors = new SparseArray<>(); // Keyed by type
+    private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
 
-    private final VirtualSensorCallback virtualSensorCallback =
-            new VirtualSensorCallback() {
-                @Override
-                public void onConfigurationChanged(
-                        VirtualSensor sensor,
-                        boolean enabled,
-                        Duration samplingPeriod,
-                        Duration batchReportLatency) {
-                    remoteIo.sendMessage(
-                            RemoteEvent.newBuilder()
-                                    .setSensorConfiguration(
-                                            SensorConfiguration.newBuilder()
-                                                    .setSensorType(sensor.getType())
-                                                    .setEnabled(enabled)
-                                                    .setSamplingPeriodUs(
-                                                            (int)
-                                                                    TimeUnit.MICROSECONDS.convert(
-                                                                            samplingPeriod))
-                                                    .setBatchReportingLatencyUs(
-                                                            (int)
-                                                                    TimeUnit.MICROSECONDS.convert(
-                                                                            batchReportLatency)))
-                                    .build());
-                }
-            };
+    private final VirtualSensorCallback mVirtualSensorCallback = new SensorCallback();
+
+    private class SensorCallback implements VirtualSensorCallback {
+        @Override
+        public void onConfigurationChanged(
+                VirtualSensor sensor,
+                boolean enabled,
+                @NonNull Duration samplingPeriod,
+                @NonNull Duration batchReportLatency) {
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setSensorConfiguration(SensorConfiguration.newBuilder()
+                            .setSensorType(sensor.getType())
+                            .setEnabled(enabled)
+                            .setSamplingPeriodUs(
+                                    (int) TimeUnit.MICROSECONDS.convert(samplingPeriod))
+                            .setBatchReportingLatencyUs(
+                                    (int) TimeUnit.MICROSECONDS.convert(batchReportLatency)))
+                    .build());
+        }
+    }
 
     public RemoteSensorManager(RemoteIo remoteIo) {
-        this.remoteIo = remoteIo;
-        remoteIo.addMessageConsumer(remoteEventConsumer);
+        this.mRemoteIo = remoteIo;
+        remoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
     public void close() {
-        virtualSensors.clear();
-        remoteIo.removeMessageConsumer(remoteEventConsumer);
+        mVirtualSensors.clear();
+        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
     }
 
     public VirtualSensorCallback getVirtualSensorCallback() {
-        return virtualSensorCallback;
+        return mVirtualSensorCallback;
     }
 
     public void setVirtualSensors(List<VirtualSensor> virtualSensorList) {
         for (VirtualSensor virtualSensor : virtualSensorList) {
-            virtualSensors.put(virtualSensor.getType(), virtualSensor);
+            mVirtualSensors.put(virtualSensor.getType(), virtualSensor);
         }
     }
 
     private void processRemoteEvent(RemoteEvent remoteEvent) {
         if (remoteEvent.hasSensorEvent()) {
             RemoteSensorEvent sensorEvent = remoteEvent.getSensorEvent();
-            VirtualSensor sensor = virtualSensors.get(sensorEvent.getSensorType());
+            VirtualSensor sensor = mVirtualSensors.get(sensorEvent.getSensorType());
             if (sensor != null) {
                 sensor.sendEvent(
                         new VirtualSensorEvent.Builder(Floats.toArray(sensorEvent.getValuesList()))

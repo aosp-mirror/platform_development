@@ -39,26 +39,26 @@ import java.util.List;
 
 final class LauncherAdapter extends BaseAdapter {
 
-    private final List<ResolveInfo> availableApps = new ArrayList<>();
-    private final PackageManager packageManager;
-    private int textColor = Color.BLACK;
+    private final List<ResolveInfo> mAvailableApps = new ArrayList<>();
+    private final PackageManager mPackageManager;
+    private int mTextColor = Color.BLACK;
 
     LauncherAdapter(PackageManager packageManager) {
         this(packageManager, null);
     }
 
     LauncherAdapter(PackageManager packageManager, WallpaperManager wallpaperManager) {
-        this.packageManager = packageManager;
+        mPackageManager = packageManager;
 
         if (wallpaperManager != null) {
             WallpaperColors wallpaperColors =
                     wallpaperManager.getWallpaperColors(WallpaperManager.FLAG_SYSTEM);
             if ((wallpaperColors.getColorHints() & WallpaperColors.HINT_SUPPORTS_DARK_TEXT) == 0) {
-                textColor = Color.WHITE;
+                mTextColor = Color.WHITE;
             }
         }
 
-        availableApps.addAll(
+        mAvailableApps.addAll(
                 packageManager.queryIntentActivities(
                         new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER),
                         ResolveInfoFlags.of(PackageManager.MATCH_ALL)));
@@ -66,12 +66,12 @@ final class LauncherAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return availableApps.size();
+        return mAvailableApps.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return availableApps.get(position);
+        return mAvailableApps.get(position);
     }
 
     @Override
@@ -81,8 +81,8 @@ final class LauncherAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        final ResolveInfo ri = availableApps.get(position);
-        final Drawable img = ri.loadIcon(packageManager);
+        final ResolveInfo ri = mAvailableApps.get(position);
+        final Drawable img = ri.loadIcon(mPackageManager);
         if (convertView == null) {
             convertView =
                     LayoutInflater.from(parent.getContext())
@@ -94,16 +94,16 @@ final class LauncherAdapter extends BaseAdapter {
         imageView.setImageDrawable(img);
 
         TextView textView = convertView.findViewById(R.id.app_title);
-        textView.setText(ri.loadLabel(packageManager));
-        textView.setTextColor(textColor);
+        textView.setText(ri.loadLabel(mPackageManager));
+        textView.setTextColor(mTextColor);
         return convertView;
     }
 
     public Intent createPendingRemoteIntent(int position) {
-        if (position >= availableApps.size()) {
+        if (position >= mAvailableApps.size()) {
             return null;
         }
-        ResolveInfo ri = availableApps.get(position);
+        ResolveInfo ri = mAvailableApps.get(position);
         if (ri == null) {
             return null;
         }
