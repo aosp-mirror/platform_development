@@ -16,20 +16,9 @@
 
 import {Trace, TraceEntry} from './trace';
 import {TracePosition} from './trace_position';
-import {TraceType, TraceTypeUtils} from './trace_type';
+import {TraceTypeUtils} from './trace_type';
 
 export class TraceEntryFinder {
-  static readonly UI_PIPELINE_ORDER = [
-    TraceType.INPUT_METHOD_CLIENTS,
-    TraceType.INPUT_METHOD_SERVICE,
-    TraceType.INPUT_METHOD_MANAGER_SERVICE,
-    TraceType.PROTO_LOG,
-    TraceType.WINDOW_MANAGER,
-    TraceType.TRANSACTIONS,
-    TraceType.SURFACE_FLINGER,
-    TraceType.SCREEN_RECORDING,
-  ];
-
   static findCorrespondingEntry<T>(
     trace: Trace<T>,
     position: TracePosition
@@ -47,11 +36,13 @@ export class TraceEntryFinder {
 
     if (position.entry) {
       const entryTraceType = position.entry.getFullTrace().type;
-
+      const timestamp = position.entry.getTimestamp();
       if (TraceTypeUtils.compareByUiPipelineOrder(entryTraceType, trace.type)) {
-        return trace.findFirstGreaterEntry(position.entry.getTimestamp());
+        return (
+          trace.findFirstGreaterEntry(timestamp) ?? trace.findFirstGreaterOrEqualEntry(timestamp)
+        );
       } else {
-        return trace.findLastLowerEntry(position.entry.getTimestamp());
+        return trace.findLastLowerEntry(timestamp) ?? trace.findLastLowerOrEqualEntry(timestamp);
       }
     }
 
