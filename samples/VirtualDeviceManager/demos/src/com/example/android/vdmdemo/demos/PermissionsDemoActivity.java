@@ -41,7 +41,6 @@ public final class PermissionsDemoActivity extends AppCompatActivity {
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.CAMERA,
         Manifest.permission.BODY_SENSORS,
-        Manifest.permission.POST_NOTIFICATIONS
     };
 
     @Override

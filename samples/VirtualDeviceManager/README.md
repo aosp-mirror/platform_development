@@ -40,6 +40,9 @@ The VDM Demo contains 3 apps:
 *   A rooted Android device running Android 14 or newer (e.g. a `userdebug` or
     `eng` build) to act as a host device.
 
+*   Both devices need to support
+    [Wi-Fi Aware](https://developer.android.com/develop/connectivity/wifi/wifi-aware)
+
 <!-- TODO(b/314429442): Make the host app work on older Android versions. -->
 
 Note: This example app uses an Android device as a client, but there's no such
@@ -244,9 +247,9 @@ interaction.
 -   **Secure Window**: A simple activity that declares the Window as secure.
     This showcases the FLAG_SECURE streaming policies in VDM.
 
--   **Permissions**: A simple activity with a button to request runtime
-    permissions. This can help test the permission streaming, device-aware
-    permission features.
+-   **Permissions**: A simple activity with buttons to request and revoke
+    runtime permissions. This can help test the permission streaming and
+    device-aware permission features.
 
 -   **Latency**: Renders a simple counter view that renders a new frame with an
     incremented counter every second. Can be useful for debugging latency,

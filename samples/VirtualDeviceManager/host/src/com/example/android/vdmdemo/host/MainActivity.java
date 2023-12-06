@@ -35,7 +35,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
-import com.google.android.gms.nearby.connection.BandwidthInfo;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -60,7 +59,7 @@ public class MainActivity extends Hilt_MainActivity {
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
                     mVdmService = ((VdmService.LocalBinder) binder).getService();
-                    mConnectionManager.startDiscovery();
+                    mConnectionManager.startHostSession();
                 }
 
                 @Override
@@ -73,20 +72,14 @@ public class MainActivity extends Hilt_MainActivity {
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
                 @Override
-                public void onBandwidthChanged(
-                        String remoteDeviceName, BandwidthInfo bandwidthInfo) {
-                    updateLauncherVisibility(bandwidthInfo.getQuality());
-                }
-
-                @Override
-                public void onConnecting(String remoteDeviceName) {
-                    mConnectionManager.stopDiscovery();
+                public void onConnected(String remoteDeviceName) {
+                    updateLauncherVisibility(View.VISIBLE);
                 }
 
                 @Override
                 public void onDisconnected() {
-                    updateLauncherVisibility(BandwidthInfo.Quality.UNKNOWN);
-                    mConnectionManager.startDiscovery();
+                    updateLauncherVisibility(View.GONE);
+                    mConnectionManager.startHostSession();
                 }
             };
 
@@ -164,26 +157,20 @@ public class MainActivity extends Hilt_MainActivity {
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         ConnectionManager.ConnectionStatus connectionStatus =
                 mConnectionManager.getConnectionStatus();
-        updateLauncherVisibility(
-                connectionStatus.bandwidthInfo != null
-                        ? connectionStatus.bandwidthInfo.getQuality()
-                        : BandwidthInfo.Quality.UNKNOWN);
+        updateLauncherVisibility(connectionStatus.connected ? View.VISIBLE : View.GONE);
         mConnectionManager.addConnectionCallback(mConnectionCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        mConnectionManager.stopDiscovery();
         unbindService(mServiceConnection);
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
-    private void updateLauncherVisibility(@BandwidthInfo.Quality int quality) {
+    private void updateLauncherVisibility(int visibility) {
         runOnUiThread(
                 () -> {
-                    int visibility =
-                            quality == BandwidthInfo.Quality.HIGH ? View.VISIBLE : View.GONE;
                     if (mLauncher != null) {
                         mLauncher.setVisibility(visibility);
                     }
