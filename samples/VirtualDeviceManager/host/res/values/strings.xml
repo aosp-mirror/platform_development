@@ -1,19 +1,19 @@
 <resources>
-  <string name="app_name" translatable="false">VDM Host</string>
-  <string name="launcher_name" translatable="false">VDM Launcher</string>
-  <string name="create_home_display" translatable="false">Create Home Display</string>
-  <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
-  <string name="app_icon_description" translatable="false">Application Icon</string>
+    <string name="app_name" translatable="false">VDM Host</string>
+    <string name="launcher_name" translatable="false">VDM Launcher</string>
+    <string name="create_home_display" translatable="false">Create Home Display</string>
+    <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
+    <string name="app_icon_description" translatable="false">Application Icon</string>
 
-  <string name="enable_audio" translatable="false">Client audio</string>
-  <string name="enable_sensors" translatable="false">Client sensors</string>
-  <string name="enable_recents" translatable="false">Include streamed apps in recents</string>
-  <string name="enable_clipboard" translatable="false">Cross-device clipboard</string>
-  <string name="enable_rotation" translatable="false">Display rotation</string>
-  <string name="always_unlocked" translatable="false">Always unlocked</string>
-  <string name="use_device_streaming" translatable="false">Device streaming profile</string>
-  <string name="record_encoder_output" translatable="false">Record encoder output</string>
-  <string name="show_pointer_icon" translatable="false">Show pointer icon</string>
-  <string name="immersive_mode" translatable="false">Immersive mode</string>
-  <string name="custom_home" translatable="false">Custom home</string>
+    <string name="enable_audio" translatable="false">Client audio</string>
+    <string name="enable_sensors" translatable="false">Client sensors</string>
+    <string name="enable_recents" translatable="false">Include streamed apps in recents</string>
+    <string name="enable_clipboard" translatable="false">Cross-device clipboard</string>
+    <string name="enable_rotation" translatable="false">Display rotation</string>
+    <string name="always_unlocked" translatable="false">Always unlocked</string>
+    <string name="use_device_streaming" translatable="false">Device streaming profile</string>
+    <string name="record_encoder_output" translatable="false">Record encoder output</string>
+    <string name="show_pointer_icon" translatable="false">Show pointer icon</string>
+    <string name="immersive_mode" translatable="false">Immersive mode</string>
+    <string name="custom_home" translatable="false">Custom home</string>
 </resources>

@@ -1,22 +1,21 @@
 <resources>
+    <string name="app_name" translatable="false">VDM Demos</string>
 
-  <string name="app_name" translatable="false">VDM Demos</string>
+    <string name="current_device" translatable="false">Device: %s</string>
+    <string name="change_device" translatable="false">Change</string>
 
-  <string name="current_device" translatable="false">Device: %s</string>
-  <string name="change_device" translatable="false">Change</string>
+    <string name="current_orientation" translatable="false">Orientation: %s</string>
+    <string name="portrait" translatable="false">Portrait</string>
+    <string name="landscape" translatable="false">Landscape</string>
 
-  <string name="current_orientation" translatable="false">Orientation: %s</string>
-  <string name="portrait" translatable="false">Portrait</string>
-  <string name="landscape" translatable="false">Landscape</string>
+    <string name="send_home" translatable="false">Send HOME intent</string>
+    <string name="send_secondary_home" translatable="false">Send SECONDARY_HOME intent</string>
 
-  <string name="send_home" translatable="false">Send HOME intent</string>
-  <string name="send_secondary_home" translatable="false">Send SECONDARY_HOME intent</string>
+    <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
 
-  <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
+    <string name="permissions_text" translatable="false">Request permissions</string>
 
-  <string name="permissions_text" translatable="false">Request permissions</string>
-
-  <string name="vibrate" translatable="false">Vibrate</string>
-  <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>
-  <string name="ringtone_vibration" translatable="false">Ringtone vibration</string>
+    <string name="vibrate" translatable="false">Vibrate</string>
+    <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>
+    <string name="ringtone_vibration" translatable="false">Ringtone vibration</string>
 </resources>

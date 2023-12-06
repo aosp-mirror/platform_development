@@ -1,8 +1,8 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/NavTouchpadStyle"
     android:id="@+id/nav_touchpad"
+    style="@style/NavTouchpadStyle"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="5dp"
     android:gravity="center"
+    android:padding="5dp"
     android:text="@string/nav_touchpad_move" />

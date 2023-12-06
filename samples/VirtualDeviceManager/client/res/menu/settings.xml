@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- LINT.IfChange -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <group android:checkableBehavior="all">
-    <item
-        android:id="@+id/enable_dpad"
-        android:title="@string/enable_dpad"/>
-    <item
-        android:id="@+id/enable_nav_touchpad"
-        android:title="@string/enable_nav_touchpad"/>
-    <item
-        android:id="@+id/enable_external_keyboard"
-        android:title="@string/enable_external_keyboard"/>
-    <item
-        android:id="@+id/enable_external_mouse"
-        android:title="@string/enable_external_mouse"/>
-  </group>
+    <group android:checkableBehavior="all">
+        <item
+            android:id="@+id/enable_dpad"
+            android:title="@string/enable_dpad" />
+        <item
+            android:id="@+id/enable_nav_touchpad"
+            android:title="@string/enable_nav_touchpad" />
+        <item
+            android:id="@+id/enable_external_keyboard"
+            android:title="@string/enable_external_keyboard" />
+        <item
+            android:id="@+id/enable_external_mouse"
+            android:title="@string/enable_external_mouse" />
+    </group>
 </menu>
 <!-- LINT.ThenChange(development/samples/VirtualDeviceManager/README.md:client_settings) -->
