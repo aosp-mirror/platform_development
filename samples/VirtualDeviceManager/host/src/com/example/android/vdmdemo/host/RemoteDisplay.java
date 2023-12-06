@@ -95,7 +95,7 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualKeyboard mKeyboard;
 
     @SuppressLint("WrongConstant")
-    public RemoteDisplay(
+    RemoteDisplay(
             Context context,
             RemoteEvent event,
             VirtualDevice virtualDevice,
@@ -183,7 +183,7 @@ class RemoteDisplay implements AutoCloseable {
         mWidth -= mWidth % 10;
     }
 
-    public void launchIntent(PendingIntent intent) {
+    void launchIntent(PendingIntent intent) {
         mVirtualDevice.launchPendingIntent(
                 mVirtualDisplay.getDisplay().getDisplayId(),
                 intent,
@@ -206,15 +206,15 @@ class RemoteDisplay implements AutoCloseable {
                 });
     }
 
-    public int getRemoteDisplayId() {
+    int getRemoteDisplayId() {
         return mRemoteDisplayId;
     }
 
-    public int getDisplayId() {
+    int getDisplayId() {
         return mVirtualDisplay.getDisplay().getDisplayId();
     }
 
-    public void onDisplayChanged() {
+    void onDisplayChanged() {
         if (mRotation != mVirtualDisplay.getDisplay().getRotation()) {
             mRotation = mVirtualDisplay.getDisplay().getRotation();
             int rotationDegrees = displayRotationToDegrees(mRotation);
@@ -230,7 +230,7 @@ class RemoteDisplay implements AutoCloseable {
     }
 
     @SuppressWarnings("PendingIntentMutability")
-    private void processRemoteEvent(RemoteEvent event) {
+    void processRemoteEvent(RemoteEvent event) {
         if (event.getDisplayId() != mRemoteDisplayId) {
             return;
         }

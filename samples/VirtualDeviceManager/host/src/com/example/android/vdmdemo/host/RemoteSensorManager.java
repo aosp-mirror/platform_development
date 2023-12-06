@@ -62,7 +62,7 @@ final class RemoteSensorManager implements AutoCloseable {
         }
     }
 
-    public RemoteSensorManager(RemoteIo remoteIo) {
+    RemoteSensorManager(RemoteIo remoteIo) {
         this.mRemoteIo = remoteIo;
         remoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
@@ -73,17 +73,17 @@ final class RemoteSensorManager implements AutoCloseable {
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
     }
 
-    public VirtualSensorCallback getVirtualSensorCallback() {
+    VirtualSensorCallback getVirtualSensorCallback() {
         return mVirtualSensorCallback;
     }
 
-    public void setVirtualSensors(List<VirtualSensor> virtualSensorList) {
+    void setVirtualSensors(List<VirtualSensor> virtualSensorList) {
         for (VirtualSensor virtualSensor : virtualSensorList) {
             mVirtualSensors.put(virtualSensor.getType(), virtualSensor);
         }
     }
 
-    private void processRemoteEvent(RemoteEvent remoteEvent) {
+    void processRemoteEvent(RemoteEvent remoteEvent) {
         if (remoteEvent.hasSensorEvent()) {
             RemoteSensorEvent sensorEvent = remoteEvent.getSensorEvent();
             VirtualSensor sensor = mVirtualSensors.get(sensorEvent.getSensorType());

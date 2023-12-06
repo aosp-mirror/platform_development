@@ -50,7 +50,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
     @GuardedBy("mLock")
     private ImmutableSet<Integer> mRunningVdmUids = ImmutableSet.of();
 
-    public RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
+    RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
         mPackageManager = Objects.requireNonNull(context).getPackageManager();
         mAudioStreamer = Objects.requireNonNull(audioStreamer);
     }

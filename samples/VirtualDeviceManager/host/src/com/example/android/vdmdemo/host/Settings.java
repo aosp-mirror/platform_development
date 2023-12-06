@@ -40,7 +40,7 @@ final class Settings {
      * <p>After pulling this file to your machine this can be played back with:
      * {@code ffplay -f h264 vdmdemo_encoder_output_[displayId].h264}
      */
-    boolean recordEncoderOutput = false;
+    public boolean recordEncoderOutput = false;
 
     @Inject
     Settings() {}

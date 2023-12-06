@@ -413,11 +413,11 @@ public final class VdmService extends Hilt_VdmService {
         }
     }
 
-    public int[] getRemoteDisplayIds() {
+    int[] getRemoteDisplayIds() {
         return mDisplayRepository.getRemoteDisplayIds();
     }
 
-    public void startStreamingHome() {
+    void startStreamingHome() {
         mPendingRemoteIntent = null;
         mPendingHome = true;
         if (mSettings.immersiveMode) {
@@ -432,14 +432,14 @@ public final class VdmService extends Hilt_VdmService {
                         .build());
     }
 
-    public void startMirroring() {
+    void startMirroring() {
         mPendingRemoteIntent = null;
         mPendingMirroring = true;
         mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder().setStartStreaming(StartStreaming.newBuilder()).build());
     }
 
-    public void startStreaming(Intent intent) {
+    void startStreaming(Intent intent) {
         mPendingRemoteIntent = intent;
         mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
@@ -448,7 +448,7 @@ public final class VdmService extends Hilt_VdmService {
                         .build());
     }
 
-    public void startIntentOnDisplayIndex(Intent intent, int displayIndex) {
+    void startIntentOnDisplayIndex(Intent intent, int displayIndex) {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         mDisplayRepository
@@ -456,15 +456,15 @@ public final class VdmService extends Hilt_VdmService {
                 .ifPresent(d -> d.launchIntent(pendingIntent));
     }
 
-    public void setDisplayRotationEnabled(boolean enabled) {
+    void setDisplayRotationEnabled(boolean enabled) {
         mSettings.displayRotationEnabled = enabled;
     }
 
-    public void setSensorsEnabled(boolean enabled) {
+    void setSensorsEnabled(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.sensorsEnabled = enabled);
     }
 
-    public void setIncludeInRecents(boolean include) {
+    void setIncludeInRecents(boolean include) {
         mSettings.includeInRecents = include;
         if (mVirtualDevice != null) {
             mVirtualDevice.setDevicePolicy(
@@ -472,7 +472,7 @@ public final class VdmService extends Hilt_VdmService {
         }
     }
 
-    public void setCrossDeviceClipboardEnabled(boolean enabled) {
+    void setCrossDeviceClipboardEnabled(boolean enabled) {
         mSettings.crossDeviceClipboardEnabled = enabled;
         if (mVirtualDevice != null) {
             mVirtualDevice.setDevicePolicy(
@@ -480,26 +480,26 @@ public final class VdmService extends Hilt_VdmService {
         }
     }
 
-    public void setAlwaysUnlocked(boolean enabled) {
+    void setAlwaysUnlocked(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.alwaysUnlocked = enabled);
     }
 
-    public void setDeviceStreaming(boolean enabled) {
+    void setDeviceStreaming(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.deviceStreaming = enabled);
     }
 
-    public void setRecordEncoderOutput(boolean enabled) {
+    void setRecordEncoderOutput(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.recordEncoderOutput = enabled);
     }
 
-    public void setShowPointerIcon(boolean enabled) {
+    void setShowPointerIcon(boolean enabled) {
         mSettings.showPointerIcon = enabled;
         if (mVirtualDevice != null) {
             mVirtualDevice.setShowPointerIcon(enabled);
         }
     }
 
-    public void setAudioEnabled(boolean enabled) {
+    void setAudioEnabled(boolean enabled) {
         mSettings.audioEnabled = enabled;
         if (enabled) {
             mAudioStreamer.start();
@@ -508,11 +508,11 @@ public final class VdmService extends Hilt_VdmService {
         }
     }
 
-    public void setImmersiveMode(boolean enabled) {
+    void setImmersiveMode(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.immersiveMode = enabled);
     }
 
-    public void setCustomHome(boolean enabled) {
+    void setCustomHome(boolean enabled) {
         recreateVirtualDevice(() -> mSettings.customHome = enabled);
     }
 

@@ -145,30 +145,30 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
     }
 
     public class DisplayHolder extends ViewHolder {
-        private DisplayController displayController = null;
-        private InputManager.FocusListener focusListener = null;
-        private Surface surface = null;
-        private TextureView textureView = null;
-        private FrameLayout textureFrame = null;
-        private TextView displayTitle = null;
-        private View rotateButton = null;
-        private int displayId = 0;
+        private DisplayController mDisplayController = null;
+        private InputManager.FocusListener mFocusListener = null;
+        private Surface mSurface = null;
+        private TextureView mTextureView = null;
+        private FrameLayout mTextureFrame = null;
+        private TextView mDisplayTitle = null;
+        private View mRotateButton = null;
+        private int mDisplayId = 0;
 
         DisplayHolder(View view) {
             super(view);
         }
 
         void rotateDisplay(int rotationDegrees, boolean resize) {
-            Log.i(TAG, "Rotating display " + displayId + " to " + rotationDegrees);
-            rotateButton.setEnabled(rotationDegrees == 0 || resize);
+            Log.i(TAG, "Rotating display " + mDisplayId + " to " + rotationDegrees);
+            mRotateButton.setEnabled(rotationDegrees == 0 || resize);
 
             // Make sure the rotation is visible.
-            ViewGroup.LayoutParams frameLayoutParams = textureFrame.getLayoutParams();
-            frameLayoutParams.width = Math.max(textureView.getWidth(), textureView.getHeight());
+            ViewGroup.LayoutParams frameLayoutParams = mTextureFrame.getLayoutParams();
+            frameLayoutParams.width = Math.max(mTextureView.getWidth(), mTextureView.getHeight());
             frameLayoutParams.height = frameLayoutParams.width;
-            textureFrame.setLayoutParams(frameLayoutParams);
+            mTextureFrame.setLayoutParams(frameLayoutParams);
 
-            textureView
+            mTextureView
                     .animate()
                     .rotation(rotationDegrees)
                     .setDuration(420)
@@ -179,107 +179,107 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                                             new Rect(
                                                     0,
                                                     0,
-                                                    textureView.getHeight(),
-                                                    textureView.getWidth()));
+                                                    mTextureView.getHeight(),
+                                                    mTextureView.getWidth()));
                                 } else {
                                     frameLayoutParams.width =
                                             (rotationDegrees % 180 == 0)
-                                                    ? textureView.getWidth()
-                                                    : textureView.getHeight();
+                                                    ? mTextureView.getWidth()
+                                                    : mTextureView.getHeight();
                                     frameLayoutParams.height =
                                             (rotationDegrees % 180 == 0)
-                                                    ? textureView.getHeight()
-                                                    : textureView.getWidth();
-                                    textureFrame.setLayoutParams(frameLayoutParams);
+                                                    ? mTextureView.getHeight()
+                                                    : mTextureView.getWidth();
+                                    mTextureFrame.setLayoutParams(frameLayoutParams);
                                 }
                             })
                     .start();
         }
 
         private void resizeDisplay(Rect newBounds) {
-            Log.i(TAG, "Resizing display " + displayId + " to " + newBounds);
-            displayController.setSurface(surface, newBounds.width(), newBounds.height());
+            Log.i(TAG, "Resizing display " + mDisplayId + " to " + newBounds);
+            mDisplayController.setSurface(mSurface, newBounds.width(), newBounds.height());
 
-            ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
+            ViewGroup.LayoutParams layoutParams = mTextureView.getLayoutParams();
             layoutParams.width = newBounds.width();
             layoutParams.height = newBounds.height();
-            textureView.setLayoutParams(layoutParams);
+            mTextureView.setLayoutParams(layoutParams);
 
-            ViewGroup.LayoutParams frameLayoutParams = textureFrame.getLayoutParams();
+            ViewGroup.LayoutParams frameLayoutParams = mTextureFrame.getLayoutParams();
             frameLayoutParams.width = newBounds.width();
             frameLayoutParams.height = newBounds.height();
-            textureFrame.setLayoutParams(frameLayoutParams);
+            mTextureFrame.setLayoutParams(frameLayoutParams);
         }
 
         private void setDisplayTitle(String title) {
-            displayTitle.setText(
-                    itemView.getContext().getString(R.string.display_title, displayId, title));
+            mDisplayTitle.setText(
+                    itemView.getContext().getString(R.string.display_title, mDisplayId, title));
         }
 
         void close() {
-            if (displayController != null) {
-                Log.i(TAG, "Closing DisplayHolder for display " + displayId);
-                mInputManager.removeFocusListener(focusListener);
-                mInputManager.removeFocusableDisplay(displayId);
-                displayController.close();
-                displayController = null;
+            if (mDisplayController != null) {
+                Log.i(TAG, "Closing DisplayHolder for display " + mDisplayId);
+                mInputManager.removeFocusListener(mFocusListener);
+                mInputManager.removeFocusableDisplay(mDisplayId);
+                mDisplayController.close();
+                mDisplayController = null;
             }
         }
 
         @SuppressLint("ClickableViewAccessibility")
         void onBind(int position) {
             RemoteDisplay remoteDisplay = mDisplayRepository.get(position);
-            displayId = remoteDisplay.getDisplayId();
-            Log.v(
-                    TAG,
-                    "Binding DisplayHolder for display " + displayId + " to position " + position);
+            mDisplayId = remoteDisplay.getDisplayId();
+            Log.v(TAG, "Binding DisplayHolder for display " + mDisplayId + " to position "
+                    + position);
 
-            displayTitle = itemView.findViewById(R.id.display_title);
-            textureView = itemView.findViewById(R.id.remote_display_view);
-            textureFrame = itemView.findViewById(R.id.frame);
+            mDisplayTitle = itemView.findViewById(R.id.display_title);
+            mTextureView = itemView.findViewById(R.id.remote_display_view);
+            mTextureFrame = itemView.findViewById(R.id.frame);
 
-            focusListener =
+            mFocusListener =
                     focusedDisplayId -> {
                         View displayFocusIndicator = itemView.findViewById(R.id.display_focus);
-                        if (focusedDisplayId == displayId) {
+                        if (focusedDisplayId == mDisplayId) {
                             displayFocusIndicator.setBackgroundResource(R.drawable.focus_frame);
                         } else {
                             displayFocusIndicator.setBackground(null);
                         }
                     };
-            mInputManager.addFocusListener(focusListener);
+            mInputManager.addFocusListener(mFocusListener);
 
-            displayController = new DisplayController(displayId, mRemoteIo);
-            Log.v(TAG, "Creating new DisplayController for display " + displayId);
+            mDisplayController = new DisplayController(mDisplayId, mRemoteIo);
+            Log.v(TAG, "Creating new DisplayController for display " + mDisplayId);
 
             setDisplayTitle("");
 
             View closeButton = itemView.findViewById(R.id.display_close);
             closeButton.setOnClickListener(
-                    v -> ((DisplayAdapter) getBindingAdapter()).removeDisplay(displayId));
+                    v -> ((DisplayAdapter) getBindingAdapter()).removeDisplay(mDisplayId));
 
             View backButton = itemView.findViewById(R.id.display_back);
-            backButton.setOnClickListener(v -> mInputManager.sendBack(displayId));
+            backButton.setOnClickListener(v -> mInputManager.sendBack(mDisplayId));
 
             View homeButton = itemView.findViewById(R.id.display_home);
             if (remoteDisplay.isHomeSupported()) {
                 homeButton.setVisibility(View.VISIBLE);
-                homeButton.setOnClickListener(v -> mInputManager.sendHome(displayId));
+                homeButton.setOnClickListener(v -> mInputManager.sendHome(mDisplayId));
             } else {
                 homeButton.setVisibility(View.GONE);
             }
 
-            rotateButton = itemView.findViewById(R.id.display_rotate);
-            rotateButton.setOnClickListener(
+            mRotateButton = itemView.findViewById(R.id.display_rotate);
+            mRotateButton.setOnClickListener(
                     v -> {
                         // This rotation is simply resizing the display with width with height
                         // swapped.
-                        displayController.setSurface(
-                                surface,
-                                /* width= */ textureView.getHeight(),
-                                /* height= */ textureView.getWidth());
+                        mDisplayController.setSurface(
+                                mSurface,
+                                /* width= */ mTextureView.getHeight(),
+                                /* height= */ mTextureView.getWidth());
                         rotateDisplay(
-                                textureView.getWidth() > textureView.getHeight() ? 90 : -90, true);
+                                mTextureView.getWidth() > mTextureView.getHeight() ? 90 : -90,
+                                true);
                     });
 
             View resizeButton = itemView.findViewById(R.id.display_resize);
@@ -287,22 +287,22 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                     (v, event) -> {
                         if (event.getAction() == MotionEvent.ACTION_DOWN) {
                             mRecyclerView.startResizing(
-                                    textureView, event, DisplayHolder.this::resizeDisplay);
+                                    mTextureView, event, DisplayHolder.this::resizeDisplay);
                             return true;
                         }
                         return false;
                     });
 
-            textureView.setOnTouchListener(
+            mTextureView.setOnTouchListener(
                     (v, event) -> {
                         if (event.getDevice().supportsSource(InputDevice.SOURCE_TOUCHSCREEN)) {
-                            textureView.getParent().requestDisallowInterceptTouchEvent(true);
+                            mTextureView.getParent().requestDisallowInterceptTouchEvent(true);
                             mInputManager.sendInputEvent(
-                                    InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, displayId);
+                                    InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, mDisplayId);
                         }
                         return true;
                     });
-            textureView.setSurfaceTextureListener(
+            mTextureView.setSurfaceTextureListener(
                     new TextureView.SurfaceTextureListener() {
                         @Override
                         public void onSurfaceTextureUpdated(@NonNull SurfaceTexture texture) {}
@@ -310,17 +310,17 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                         @Override
                         public void onSurfaceTextureAvailable(
                                 @NonNull SurfaceTexture texture, int width, int height) {
-                            Log.v(TAG, "Setting surface for display " + displayId);
-                            mInputManager.addFocusableDisplay(displayId);
-                            surface = new Surface(texture);
-                            displayController.setSurface(surface, width, height);
+                            Log.v(TAG, "Setting surface for display " + mDisplayId);
+                            mInputManager.addFocusableDisplay(mDisplayId);
+                            mSurface = new Surface(texture);
+                            mDisplayController.setSurface(mSurface, width, height);
                         }
 
                         @Override
                         public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture texture) {
-                            Log.v(TAG, "onSurfaceTextureDestroyed for display " + displayId);
-                            if (displayController != null) {
-                                displayController.pause();
+                            Log.v(TAG, "onSurfaceTextureDestroyed for display " + mDisplayId);
+                            if (mDisplayController != null) {
+                                mDisplayController.pause();
                             }
                             return true;
                         }
@@ -328,12 +328,12 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                         @Override
                         public void onSurfaceTextureSizeChanged(
                                 @NonNull SurfaceTexture texture, int width, int height) {
-                            Log.v(TAG, "onSurfaceTextureSizeChanged for display " + displayId);
-                            textureView.setRotation(0);
-                            rotateButton.setEnabled(true);
+                            Log.v(TAG, "onSurfaceTextureSizeChanged for display " + mDisplayId);
+                            mTextureView.setRotation(0);
+                            mRotateButton.setEnabled(true);
                         }
                     });
-            textureView.setOnGenericMotionListener(
+            mTextureView.setOnGenericMotionListener(
                     (v, event) -> {
                         if (event.getDevice() == null
                                 || !event.getDevice().supportsSource(InputDevice.SOURCE_MOUSE)) {

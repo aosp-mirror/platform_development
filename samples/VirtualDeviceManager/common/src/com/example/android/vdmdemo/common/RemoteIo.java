@@ -86,16 +86,19 @@ public class RemoteIo {
         mOutputStreamClosedCallback = outputStreamClosedCallback;
     }
 
+    /** Registers a consumer for processing events coming from the remote device. */
     public void addMessageConsumer(Consumer<RemoteEvent> consumer) {
         mMessageConsumers.put(consumer, new MessageConsumer(consumer));
     }
 
+    /** Unregisters a previously registered message consumer. */
     public void removeMessageConsumer(Consumer<RemoteEvent> consumer) {
         if (mMessageConsumers.remove(consumer) == null) {
             Log.w(TAG, "Failed to remove message consumer.");
         }
     }
 
+    /** Sends an event to the remote device. */
     public synchronized void sendMessage(RemoteEvent event) {
         if (mOutputStream != null) {
             try {

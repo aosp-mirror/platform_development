@@ -49,7 +49,7 @@ final class VirtualSensorController implements AutoCloseable {
     private final HandlerThread mListenerThread;
     private final Handler mHandler;
 
-    private final SensorEventListener sensorEventListener =
+    private final SensorEventListener mSensorEventListener =
             new SensorEventListener() {
                 @Override
                 public void onSensorChanged(SensorEvent event) {
@@ -80,7 +80,7 @@ final class VirtualSensorController implements AutoCloseable {
 
     @Override
     public void close() {
-        mSensorManager.unregisterListener(sensorEventListener);
+        mSensorManager.unregisterListener(mSensorEventListener);
         mListenerThread.quitSafely();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
     }
@@ -113,13 +113,13 @@ final class VirtualSensorController implements AutoCloseable {
         }
         if (config.getEnabled()) {
             mSensorManager.registerListener(
-                    sensorEventListener,
+                    mSensorEventListener,
                     sensor,
                     config.getSamplingPeriodUs(),
                     config.getBatchReportingLatencyUs(),
                     mHandler);
         } else {
-            mSensorManager.unregisterListener(sensorEventListener, sensor);
+            mSensorManager.unregisterListener(mSensorEventListener, sensor);
         }
     }
 }

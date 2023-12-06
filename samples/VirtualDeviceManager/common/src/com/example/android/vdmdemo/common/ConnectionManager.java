@@ -66,7 +66,7 @@ public class ConnectionManager {
         public BandwidthInfo bandwidthInfo = null;
     }
 
-    private final ConnectionStatus connectionStatus = new ConnectionStatus();
+    private final ConnectionStatus mConnectionStatus = new ConnectionStatus();
 
     /** Simple callback to notify connection and disconnection events. */
     public interface ConnectionCallback {
@@ -110,12 +110,12 @@ public class ConnectionManager {
 
     /** Returns the current connection status. */
     public ConnectionStatus getConnectionStatus() {
-        return connectionStatus;
+        return mConnectionStatus;
     }
 
     /** Starts advertising so remote devices can discover this device. */
     public void startAdvertising() {
-        if (connectionStatus.connected) {
+        if (mConnectionStatus.connected) {
             return;
         }
         mClient.startAdvertising(
@@ -136,14 +136,14 @@ public class ConnectionManager {
         mClient.stopAdvertising();
     }
 
-    /* Starts discovering remote devices that are advertising. */
+    /** Starts discovering remote devices that are advertising. */
     public void startDiscovery() {
-        if (connectionStatus.connected) {
+        if (mConnectionStatus.connected) {
             return;
         }
         mClient.startDiscovery(
                         CONNECTION_SERVICE_ID,
-                        endpointDiscoveryCallback,
+                        mEndpointDiscoveryCallback,
                         new DiscoveryOptions.Builder()
                                 .setStrategy(Strategy.P2P_POINT_TO_POINT)
                                 .build())
@@ -153,26 +153,26 @@ public class ConnectionManager {
                                         /* endpointId= */ null));
     }
 
-    /* Stops discovering remote devices. */
+    /** Stops discovering remote devices. */
     public void stopDiscovery() {
         mClient.stopDiscovery();
     }
 
-    /* Explicitly terminate any existing connection. */
+    /** Explicitly terminate any existing connection. */
     public void disconnect() {
-        mConnectionLifecycleCallback.onDisconnected(connectionStatus.remoteDeviceName);
+        mConnectionLifecycleCallback.onDisconnected(mConnectionStatus.remoteDeviceName);
     }
 
-    private final EndpointDiscoveryCallback endpointDiscoveryCallback =
+    private final EndpointDiscoveryCallback mEndpointDiscoveryCallback =
             new EndpointDiscoveryCallback() {
                 @Override
                 public void onEndpointFound(String endpointId, DiscoveredEndpointInfo info) {
-                    if (connectionStatus.connected) {
+                    if (mConnectionStatus.connected) {
                         return;
                     }
-                    connectionStatus.remoteDeviceName = info.getEndpointName();
+                    mConnectionStatus.remoteDeviceName = info.getEndpointName();
                     for (ConnectionCallback callback : mConnectionCallbacks) {
-                        callback.onConnecting(connectionStatus.remoteDeviceName);
+                        callback.onConnecting(mConnectionStatus.remoteDeviceName);
                     }
                     mClient.requestConnection(
                                     getLocalEndpointId(), endpointId, mConnectionLifecycleCallback)
@@ -184,7 +184,7 @@ public class ConnectionManager {
 
                 @Override
                 public void onEndpointLost(String endpointId) {
-                    if (connectionStatus.connected) {
+                    if (mConnectionStatus.connected) {
                         return;
                     }
                     mConnectionLifecycleCallback.onDisconnected(endpointId);
@@ -197,9 +197,9 @@ public class ConnectionManager {
                 @Override
                 public void onConnectionInitiated(
                         String endpointId, ConnectionInfo connectionInfo) {
-                    connectionStatus.remoteDeviceName = connectionInfo.getEndpointName();
+                    mConnectionStatus.remoteDeviceName = connectionInfo.getEndpointName();
                     for (ConnectionCallback callback : mConnectionCallbacks) {
-                        callback.onConnecting(connectionStatus.remoteDeviceName);
+                        callback.onConnecting(mConnectionStatus.remoteDeviceName);
                     }
                     mClient.acceptConnection(
                             endpointId,
@@ -230,9 +230,9 @@ public class ConnectionManager {
                         mClient.sendPayload(endpointId, Payload.fromStream(inputStream));
                         mRemoteIo.initialize(outputStream, mStreamClosedCallback);
                         for (ConnectionCallback callback : mConnectionCallbacks) {
-                            callback.onConnected(connectionStatus.remoteDeviceName);
+                            callback.onConnected(mConnectionStatus.remoteDeviceName);
                         }
-                        connectionStatus.connected = true;
+                        mConnectionStatus.connected = true;
                     } catch (IOException e) {
                         throw new AssertionError("Unhandled exception", e);
                     }
@@ -241,19 +241,20 @@ public class ConnectionManager {
                 @Override
                 public void onBandwidthChanged(
                         String endpointId, @NonNull BandwidthInfo bandwidthInfo) {
-                    connectionStatus.bandwidthInfo = bandwidthInfo;
+                    mConnectionStatus.bandwidthInfo = bandwidthInfo;
                     for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onBandwidthChanged(
-                                connectionStatus.remoteDeviceName, connectionStatus.bandwidthInfo);
+                                mConnectionStatus.remoteDeviceName,
+                                mConnectionStatus.bandwidthInfo);
                     }
                 }
 
                 @Override
                 public void onDisconnected(String endpointId) {
                     mClient.stopAllEndpoints();
-                    connectionStatus.remoteDeviceName = null;
-                    connectionStatus.bandwidthInfo = null;
-                    connectionStatus.connected = false;
+                    mConnectionStatus.remoteDeviceName = null;
+                    mConnectionStatus.bandwidthInfo = null;
+                    mConnectionStatus.connected = false;
                     for (ConnectionCallback callback : mConnectionCallbacks) {
                         callback.onDisconnected();
                     }
