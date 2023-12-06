@@ -35,7 +35,7 @@ import javax.inject.Inject;
 @AndroidEntryPoint(Fragment.class)
 public final class NavTouchpadFragment extends Hilt_NavTouchpadFragment {
 
-    @Inject InputManager inputManager;
+    @Inject InputManager mInputManager;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -46,7 +46,7 @@ public final class NavTouchpadFragment extends Hilt_NavTouchpadFragment {
         TextView navTouchpad = view.findViewById(R.id.nav_touchpad);
         navTouchpad.setOnTouchListener(
                 (v, event) -> {
-                    inputManager.sendInputEventToFocusedDisplay(
+                    mInputManager.sendInputEventToFocusedDisplay(
                             InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event);
                     return true;
                 });

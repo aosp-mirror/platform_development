@@ -49,45 +49,45 @@ import javax.inject.Inject;
 @AndroidEntryPoint(AppCompatActivity.class)
 public class MainActivity extends Hilt_MainActivity {
 
-    @Inject RemoteIo remoteIo;
-    @Inject ConnectionManager connectionManager;
-    @Inject InputManager inputManager;
-    @Inject VirtualSensorController sensorController;
-    @Inject AudioPlayer audioPlayer;
-    @Inject Settings settings;
+    @Inject RemoteIo mRemoteIo;
+    @Inject ConnectionManager mConnectionManager;
+    @Inject InputManager mInputManager;
+    @Inject VirtualSensorController mSensorController;
+    @Inject AudioPlayer mAudioPlayer;
+    @Inject Settings mSettings;
 
-    private final Consumer<RemoteEvent> remoteEventConsumer = this::processRemoteEvent;
-    private DisplayAdapter displayAdapter;
-    private final InputManager.FocusListener focusListener = this::onDisplayFocusChange;
+    private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
+    private DisplayAdapter mDisplayAdapter;
+    private final InputManager.FocusListener mFocusListener = this::onDisplayFocusChange;
 
-    private final ConnectionManager.ConnectionCallback connectionCallback =
+    private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
 
                 @Override
                 public void onConnecting(String remoteDeviceName) {
-                    connectionManager.stopAdvertising();
+                    mConnectionManager.stopAdvertising();
                 }
 
                 @Override
                 public void onConnected(String remoteDeviceName) {
-                    remoteIo.sendMessage(
+                    mRemoteIo.sendMessage(
                             RemoteEvent.newBuilder()
                                     .setDeviceCapabilities(
                                             DeviceCapabilities.newBuilder()
                                                     .setDeviceName(Build.MODEL)
                                                     .addAllSensorCapabilities(
-                                                            (sensorController
+                                                            (mSensorController
                                                                     .getSensorCapabilities())))
                                     .build());
                 }
 
                 @Override
                 public void onDisconnected() {
-                    if (displayAdapter != null) {
-                        runOnUiThread(displayAdapter::clearDisplays);
+                    if (mDisplayAdapter != null) {
+                        runOnUiThread(mDisplayAdapter::clearDisplays);
                     }
 
-                    connectionManager.startAdvertising();
+                    mConnectionManager.startAdvertising();
                 }
             };
 
@@ -104,36 +104,36 @@ public class MainActivity extends Hilt_MainActivity {
         displaysView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         displaysView.setItemAnimator(null);
-        displayAdapter = new DisplayAdapter(displaysView, remoteIo, inputManager);
-        displaysView.setAdapter(displayAdapter);
+        mDisplayAdapter = new DisplayAdapter(displaysView, mRemoteIo, mInputManager);
+        displaysView.setAdapter(mDisplayAdapter);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        connectionManager.addConnectionCallback(connectionCallback);
-        connectionManager.startAdvertising();
-        inputManager.addFocusListener(focusListener);
-        remoteIo.addMessageConsumer(audioPlayer);
-        remoteIo.addMessageConsumer(remoteEventConsumer);
+        mConnectionManager.addConnectionCallback(mConnectionCallback);
+        mConnectionManager.startAdvertising();
+        mInputManager.addFocusListener(mFocusListener);
+        mRemoteIo.addMessageConsumer(mAudioPlayer);
+        mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        inputManager.removeFocusListener(focusListener);
-        connectionManager.removeConnectionCallback(connectionCallback);
-        connectionManager.stopAdvertising();
-        remoteIo.removeMessageConsumer(remoteEventConsumer);
-        remoteIo.removeMessageConsumer(audioPlayer);
+        mInputManager.removeFocusListener(mFocusListener);
+        mConnectionManager.removeConnectionCallback(mConnectionCallback);
+        mConnectionManager.stopAdvertising();
+        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
+        mRemoteIo.removeMessageConsumer(mAudioPlayer);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        displayAdapter.clearDisplays();
-        connectionManager.disconnect();
-        sensorController.close();
+        mDisplayAdapter.clearDisplays();
+        mConnectionManager.disconnect();
+        mSensorController.close();
     }
 
     @Override
@@ -142,7 +142,7 @@ public class MainActivity extends Hilt_MainActivity {
                 || !event.getDevice().supportsSource(InputDevice.SOURCE_KEYBOARD)) {
             return false;
         }
-        inputManager.sendInputEventToFocusedDisplay(InputDeviceType.DEVICE_TYPE_KEYBOARD, event);
+        mInputManager.sendInputEventToFocusedDisplay(InputDeviceType.DEVICE_TYPE_KEYBOARD, event);
         return true;
     }
 
@@ -153,18 +153,11 @@ public class MainActivity extends Hilt_MainActivity {
         for (int i = 0; i < menu.size(); ++i) {
             MenuItem item = menu.getItem(i);
             switch (item.getItemId()) {
-                case R.id.enable_dpad:
-                    item.setChecked(settings.dpadEnabled);
-                    break;
-                case R.id.enable_nav_touchpad:
-                    item.setChecked(settings.navTouchpadEnabled);
-                    break;
-                case R.id.enable_external_keyboard:
-                    item.setChecked(settings.externalKeyboardEnabled);
-                    break;
-                case R.id.enable_external_mouse:
-                    item.setChecked(settings.externalMouseEnabled);
-                    break;
+                case R.id.enable_dpad -> item.setChecked(mSettings.dpadEnabled);
+                case R.id.enable_nav_touchpad -> item.setChecked(mSettings.navTouchpadEnabled);
+                case R.id.enable_external_keyboard -> item.setChecked(
+                        mSettings.externalKeyboardEnabled);
+                case R.id.enable_external_mouse -> item.setChecked(mSettings.externalMouseEnabled);
             }
         }
         return true;
@@ -175,23 +168,17 @@ public class MainActivity extends Hilt_MainActivity {
         item.setChecked(!item.isChecked());
 
         switch (item.getItemId()) {
-            case R.id.enable_dpad:
-                settings.dpadEnabled = item.isChecked();
-                break;
-            case R.id.enable_nav_touchpad:
-                settings.navTouchpadEnabled = item.isChecked();
-                break;
-            case R.id.enable_external_keyboard:
-                settings.externalKeyboardEnabled = item.isChecked();
-                break;
-            case R.id.enable_external_mouse:
-                settings.externalMouseEnabled = item.isChecked();
-                break;
-            default:
+            case R.id.enable_dpad -> mSettings.dpadEnabled = item.isChecked();
+            case R.id.enable_nav_touchpad -> mSettings.navTouchpadEnabled = item.isChecked();
+            case R.id.enable_external_keyboard ->
+                    mSettings.externalKeyboardEnabled = item.isChecked();
+            case R.id.enable_external_mouse -> mSettings.externalMouseEnabled = item.isChecked();
+            default -> {
                 return super.onOptionsItemSelected(item);
+            }
         }
 
-        inputManager.updateFocusTracking();
+        mInputManager.updateFocusTracking();
         return true;
     }
 
@@ -202,27 +189,27 @@ public class MainActivity extends Hilt_MainActivity {
             } else {
                 runOnUiThread(
                         () ->
-                                displayAdapter.addDisplay(
+                                mDisplayAdapter.addDisplay(
                                         event.getStartStreaming().getHomeEnabled()));
             }
         } else if (event.hasStopStreaming()) {
-            runOnUiThread(() -> displayAdapter.removeDisplay(event.getDisplayId()));
+            runOnUiThread(() -> mDisplayAdapter.removeDisplay(event.getDisplayId()));
         } else if (event.hasDisplayRotation()) {
-            runOnUiThread(() -> displayAdapter.rotateDisplay(event));
+            runOnUiThread(() -> mDisplayAdapter.rotateDisplay(event));
         } else if (event.hasDisplayChangeEvent()) {
-            runOnUiThread(() -> displayAdapter.processDisplayChange(event));
+            runOnUiThread(() -> mDisplayAdapter.processDisplayChange(event));
         }
     }
 
     private void onDisplayFocusChange(int displayId) {
         findViewById(R.id.dpad_fragment_container)
                 .setVisibility(
-                        settings.dpadEnabled && displayId != Display.INVALID_DISPLAY
+                        mSettings.dpadEnabled && displayId != Display.INVALID_DISPLAY
                                 ? View.VISIBLE
                                 : View.GONE);
         findViewById(R.id.nav_touchpad_fragment_container)
                 .setVisibility(
-                        settings.navTouchpadEnabled && displayId != Display.INVALID_DISPLAY
+                        mSettings.navTouchpadEnabled && displayId != Display.INVALID_DISPLAY
                                 ? View.VISIBLE
                                 : View.GONE);
     }

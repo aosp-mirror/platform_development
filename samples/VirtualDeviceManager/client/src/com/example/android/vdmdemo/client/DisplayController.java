@@ -27,71 +27,71 @@ import com.example.android.vdmdemo.common.VideoManager;
 final class DisplayController {
     private static final int DPI = 300;
 
-    private final int displayId;
-    private final RemoteIo remoteIo;
+    private final int mDisplayId;
+    private final RemoteIo mRemoteIo;
 
-    private VideoManager videoManager = null;
+    private VideoManager mVideoManager = null;
 
-    private int dpi = DPI;
-    private RemoteEvent displayCapabilities;
+    private int mDpi = DPI;
+    private RemoteEvent mDisplayCapabilities;
 
     DisplayController(int displayId, RemoteIo remoteIo) {
-        this.displayId = displayId;
-        this.remoteIo = remoteIo;
+        mDisplayId = displayId;
+        mRemoteIo = remoteIo;
     }
 
     void setDpi(int dpi) {
-        this.dpi = dpi;
+        mDpi = dpi;
     }
 
     int getDpi() {
-        return dpi;
+        return mDpi;
     }
 
     void close() {
-        remoteIo.sendMessage(
+        mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
-                        .setDisplayId(displayId)
+                        .setDisplayId(mDisplayId)
                         .setStopStreaming(StopStreaming.newBuilder())
                         .build());
 
-        if (videoManager != null) {
-            videoManager.stop();
+        if (mVideoManager != null) {
+            mVideoManager.stop();
         }
     }
 
     void pause() {
-        if (videoManager == null) {
+        if (mVideoManager == null) {
             return;
         }
-        videoManager.stop();
-        videoManager = null;
+        mVideoManager.stop();
+        mVideoManager = null;
 
-        remoteIo.sendMessage(
+        mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
-                        .setDisplayId(displayId)
+                        .setDisplayId(mDisplayId)
                         .setStopStreaming(StopStreaming.newBuilder().setPause(true))
                         .build());
     }
 
     void sendDisplayCapabilities() {
-        remoteIo.sendMessage(displayCapabilities);
+        mRemoteIo.sendMessage(mDisplayCapabilities);
     }
 
     void setSurface(Surface surface, int width, int height) {
-        if (videoManager != null) {
-            videoManager.stop();
+        if (mVideoManager != null) {
+            mVideoManager.stop();
         }
-        videoManager = VideoManager.createDecoder(displayId, remoteIo);
-        videoManager.startDecoding(surface, width, height);
-        displayCapabilities =
+        mVideoManager = VideoManager.createDecoder(mDisplayId, mRemoteIo);
+        mVideoManager.startDecoding(surface, width, height);
+        mDisplayCapabilities =
                 RemoteEvent.newBuilder()
-                        .setDisplayId(displayId)
+                        .setDisplayId(mDisplayId)
                         .setDisplayCapabilities(
                                 DisplayCapabilities.newBuilder()
                                         .setViewportWidth(width)
                                         .setViewportHeight(height)
-                                        .setDensityDpi(dpi))
+                                        .setDensityDpi(mDpi))
                         .build();
         sendDisplayCapabilities();
     }
