@@ -48,29 +48,29 @@ import javax.inject.Inject;
 public class MainActivity extends Hilt_MainActivity {
     public static final String TAG = "VdmHost";
 
-    private VdmService vdmService = null;
-    private GridView launcher = null;
-    private Button homeDisplayButton = null;
-    private Button mirrorDisplayButton = null;
+    private VdmService mVdmService = null;
+    private GridView mLauncher = null;
+    private Button mHomeDisplayButton = null;
+    private Button mMirrorDisplayButton = null;
 
-    private final ServiceConnection connection =
+    private final ServiceConnection mServiceConnection =
             new ServiceConnection() {
 
                 @Override
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
-                    vdmService = ((VdmService.LocalBinder) binder).getService();
-                    connectionManager.startDiscovery();
+                    mVdmService = ((VdmService.LocalBinder) binder).getService();
+                    mConnectionManager.startDiscovery();
                 }
 
                 @Override
                 public void onServiceDisconnected(ComponentName className) {
                     Log.i(TAG, "Disconnected from VDM Service");
-                    vdmService = null;
+                    mVdmService = null;
                 }
             };
 
-    private final ConnectionManager.ConnectionCallback connectionCallback =
+    private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
                 @Override
                 public void onBandwidthChanged(
@@ -80,18 +80,18 @@ public class MainActivity extends Hilt_MainActivity {
 
                 @Override
                 public void onConnecting(String remoteDeviceName) {
-                    connectionManager.stopDiscovery();
+                    mConnectionManager.stopDiscovery();
                 }
 
                 @Override
                 public void onDisconnected() {
                     updateLauncherVisibility(BandwidthInfo.Quality.UNKNOWN);
-                    connectionManager.startDiscovery();
+                    mConnectionManager.startDiscovery();
                 }
             };
 
-    @Inject ConnectionManager connectionManager;
-    @Inject Settings settings;
+    @Inject ConnectionManager mConnectionManager;
+    @Inject Settings mSettings;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,36 +102,36 @@ public class MainActivity extends Hilt_MainActivity {
         toolbar.setOverflowIcon(getDrawable(R.drawable.settings));
         setSupportActionBar(toolbar);
 
-        homeDisplayButton = requireViewById(R.id.create_home_display);
-        mirrorDisplayButton = requireViewById(R.id.create_mirror_display);
-        launcher = requireViewById(R.id.app_grid);
-        launcher.setVisibility(View.GONE);
+        mHomeDisplayButton = requireViewById(R.id.create_home_display);
+        mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
+        mLauncher = requireViewById(R.id.app_grid);
+        mLauncher.setVisibility(View.GONE);
         LauncherAdapter launcherAdapter = new LauncherAdapter(getPackageManager());
-        launcher.setAdapter(launcherAdapter);
-        launcher.setOnItemClickListener(
+        mLauncher.setAdapter(launcherAdapter);
+        mLauncher.setOnItemClickListener(
                 (parent, v, position, id) -> {
                     Intent intent = launcherAdapter.createPendingRemoteIntent(position);
-                    if (intent == null || vdmService == null) {
+                    if (intent == null || mVdmService == null) {
                         return;
                     }
-                    int[] remoteDisplayIds = vdmService.getRemoteDisplayIds();
-                    if (settings.immersiveMode && remoteDisplayIds.length > 0) {
-                        vdmService.startIntentOnDisplayIndex(intent, 0);
+                    int[] remoteDisplayIds = mVdmService.getRemoteDisplayIds();
+                    if (mSettings.immersiveMode && remoteDisplayIds.length > 0) {
+                        mVdmService.startIntentOnDisplayIndex(intent, 0);
                     } else {
-                        vdmService.startStreaming(intent);
+                        mVdmService.startStreaming(intent);
                     }
                 });
-        launcher.setOnItemLongClickListener(
+        mLauncher.setOnItemLongClickListener(
                 (parent, v, position, id) -> {
                     Intent intent = launcherAdapter.createPendingRemoteIntent(position);
-                    if (intent == null || vdmService == null) {
+                    if (intent == null || mVdmService == null) {
                         return true;
                     }
-                    int[] remoteDisplayIds = vdmService.getRemoteDisplayIds();
+                    int[] remoteDisplayIds = mVdmService.getRemoteDisplayIds();
                     if (remoteDisplayIds.length == 0) {
-                        vdmService.startStreaming(intent);
-                    } else if (settings.immersiveMode) {
-                        vdmService.startIntentOnDisplayIndex(intent, 0);
+                        mVdmService.startStreaming(intent);
+                    } else if (mSettings.immersiveMode) {
+                        mVdmService.startIntentOnDisplayIndex(intent, 0);
                     } else {
                         String[] displays = new String[remoteDisplayIds.length + 1];
                         for (int i = 0; i < remoteDisplayIds.length; ++i) {
@@ -145,9 +145,9 @@ public class MainActivity extends Hilt_MainActivity {
                                 displays,
                                 (dialog, which) -> {
                                     if (which == remoteDisplayIds.length) {
-                                        vdmService.startStreaming(intent);
+                                        mVdmService.startStreaming(intent);
                                     } else {
-                                        vdmService.startIntentOnDisplayIndex(intent, which);
+                                        mVdmService.startIntentOnDisplayIndex(intent, which);
                                     }
                                 });
                         alertDialogBuilder.show();
@@ -161,22 +161,22 @@ public class MainActivity extends Hilt_MainActivity {
         super.onStart();
         Intent intent = new Intent(this, VdmService.class);
         startForegroundService(intent);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         ConnectionManager.ConnectionStatus connectionStatus =
-                connectionManager.getConnectionStatus();
+                mConnectionManager.getConnectionStatus();
         updateLauncherVisibility(
                 connectionStatus.bandwidthInfo != null
                         ? connectionStatus.bandwidthInfo.getQuality()
                         : BandwidthInfo.Quality.UNKNOWN);
-        connectionManager.addConnectionCallback(connectionCallback);
+        mConnectionManager.addConnectionCallback(mConnectionCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        connectionManager.stopDiscovery();
-        unbindService(connection);
-        connectionManager.removeConnectionCallback(connectionCallback);
+        mConnectionManager.stopDiscovery();
+        unbindService(mServiceConnection);
+        mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
     private void updateLauncherVisibility(@BandwidthInfo.Quality int quality) {
@@ -184,24 +184,26 @@ public class MainActivity extends Hilt_MainActivity {
                 () -> {
                     int visibility =
                             quality == BandwidthInfo.Quality.HIGH ? View.VISIBLE : View.GONE;
-                    if (launcher != null) {
-                        launcher.setVisibility(visibility);
+                    if (mLauncher != null) {
+                        mLauncher.setVisibility(visibility);
                     }
-                    if (homeDisplayButton != null) {
-                        homeDisplayButton.setVisibility(visibility);
+                    if (mHomeDisplayButton != null) {
+                        mHomeDisplayButton.setVisibility(visibility);
                     }
-                    if (mirrorDisplayButton != null) {
-                        mirrorDisplayButton.setVisibility(visibility);
+                    if (mMirrorDisplayButton != null) {
+                        mMirrorDisplayButton.setVisibility(visibility);
                     }
                 });
     }
 
+    /** Process a home display request. */
     public void onCreateHomeDisplay(View view) {
-        vdmService.startStreamingHome();
+        mVdmService.startStreamingHome();
     }
 
+    /** Process a mirror display request. */
     public void onCreateMirrorDisplay(View view) {
-        vdmService.startMirroring();
+        mVdmService.startMirroring();
     }
 
     @Override
@@ -212,37 +214,37 @@ public class MainActivity extends Hilt_MainActivity {
             MenuItem item = menu.getItem(i);
             switch (item.getItemId()) {
                 case R.id.enable_sensors:
-                    item.setChecked(settings.sensorsEnabled);
+                    item.setChecked(mSettings.sensorsEnabled);
                     break;
                 case R.id.enable_audio:
-                    item.setChecked(settings.audioEnabled);
+                    item.setChecked(mSettings.audioEnabled);
                     break;
                 case R.id.enable_recents:
-                    item.setChecked(settings.includeInRecents);
+                    item.setChecked(mSettings.includeInRecents);
                     break;
                 case R.id.enable_clipboard:
-                    item.setChecked(settings.crossDeviceClipboardEnabled);
+                    item.setChecked(mSettings.crossDeviceClipboardEnabled);
                     break;
                 case R.id.enable_rotation:
-                    item.setChecked(settings.displayRotationEnabled);
+                    item.setChecked(mSettings.displayRotationEnabled);
                     break;
                 case R.id.always_unlocked:
-                    item.setChecked(settings.alwaysUnlocked);
+                    item.setChecked(mSettings.alwaysUnlocked);
                     break;
                 case R.id.use_device_streaming:
-                    item.setChecked(settings.deviceStreaming);
+                    item.setChecked(mSettings.deviceStreaming);
                     break;
                 case R.id.show_pointer_icon:
-                    item.setChecked(settings.showPointerIcon);
+                    item.setChecked(mSettings.showPointerIcon);
                     break;
                 case R.id.immersive_mode:
-                    item.setChecked(settings.immersiveMode);
+                    item.setChecked(mSettings.immersiveMode);
                     break;
                 case R.id.record_encoder_output:
-                    item.setChecked(settings.recordEncoderOutput);
+                    item.setChecked(mSettings.recordEncoderOutput);
                     break;
                 case R.id.custom_home:
-                    item.setChecked(settings.customHome);
+                    item.setChecked(mSettings.customHome);
                     break;
             }
         }
@@ -255,37 +257,37 @@ public class MainActivity extends Hilt_MainActivity {
 
         switch (item.getItemId()) {
             case R.id.enable_sensors:
-                vdmService.setSensorsEnabled(item.isChecked());
+                mVdmService.setSensorsEnabled(item.isChecked());
                 return true;
             case R.id.enable_audio:
-                vdmService.setAudioEnabled(item.isChecked());
+                mVdmService.setAudioEnabled(item.isChecked());
                 return true;
             case R.id.enable_recents:
-                vdmService.setIncludeInRecents(item.isChecked());
+                mVdmService.setIncludeInRecents(item.isChecked());
                 return true;
             case R.id.enable_clipboard:
-                vdmService.setCrossDeviceClipboardEnabled(item.isChecked());
+                mVdmService.setCrossDeviceClipboardEnabled(item.isChecked());
                 return true;
             case R.id.enable_rotation:
-                vdmService.setDisplayRotationEnabled(item.isChecked());
+                mVdmService.setDisplayRotationEnabled(item.isChecked());
                 return true;
             case R.id.always_unlocked:
-                vdmService.setAlwaysUnlocked(item.isChecked());
+                mVdmService.setAlwaysUnlocked(item.isChecked());
                 return true;
             case R.id.use_device_streaming:
-                vdmService.setDeviceStreaming(item.isChecked());
+                mVdmService.setDeviceStreaming(item.isChecked());
                 return true;
             case R.id.record_encoder_output:
-                vdmService.setRecordEncoderOutput(item.isChecked());
+                mVdmService.setRecordEncoderOutput(item.isChecked());
                 return true;
             case R.id.show_pointer_icon:
-                vdmService.setShowPointerIcon(item.isChecked());
+                mVdmService.setShowPointerIcon(item.isChecked());
                 return true;
             case R.id.immersive_mode:
-                vdmService.setImmersiveMode(item.isChecked());
+                mVdmService.setImmersiveMode(item.isChecked());
                 return true;
             case R.id.custom_home:
-                vdmService.setCustomHome(item.isChecked());
+                mVdmService.setCustomHome(item.isChecked());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

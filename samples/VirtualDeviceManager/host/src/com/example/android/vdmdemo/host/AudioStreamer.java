@@ -75,51 +75,51 @@ final class AudioStreamer implements AutoCloseable {
                     AudioPlaybackConfiguration.PLAYER_STATE_IDLE,
                     AudioPlaybackConfiguration.PLAYER_STATE_STARTED);
 
-    private final Context context;
-    private final RemoteIo remoteIo;
-    private final AudioManager audioManager;
-    private final int playbackSessionId;
+    private final Context mContext;
+    private final RemoteIo mRemoteIo;
+    private final AudioManager mAudioManager;
+    private final int mPlaybackSessionId;
 
-    private final Object lock = new Object();
+    private final Object mLock = new Object();
 
-    private final HandlerThread handlerThread = new HandlerThread("PolicyUpdater");
-    private final Handler handler;
+    private final HandlerThread mHandlerThread = new HandlerThread("PolicyUpdater");
+    private final Handler mHandler;
 
-    @GuardedBy("lock")
-    private AudioPolicy audioPolicy;
+    @GuardedBy("mLock")
+    private AudioPolicy mAudioPolicy;
 
-    @GuardedBy("lock")
-    private AudioMix sessionIdAudioMix;
+    @GuardedBy("mLock")
+    private AudioMix mSessionIdAudioMix;
 
-    @GuardedBy("lock")
-    private AudioPolicy uidAudioPolicy;
+    @GuardedBy("mLock")
+    private AudioPolicy mUidAudioPolicy;
 
-    @GuardedBy("lock")
-    private AudioMix uidAudioMix;
+    @GuardedBy("mLock")
+    private AudioMix mUidAudioMix;
 
-    @GuardedBy("lock")
-    private StreamingThread streamingThread;
+    @GuardedBy("mLock")
+    private StreamingThread mStreamingThread;
 
-    @GuardedBy("lock")
-    private AudioDeviceInfo remoteSubmixDevice;
+    @GuardedBy("mLock")
+    private AudioDeviceInfo mRemoteSubmixDevice;
 
-    @GuardedBy("lock")
-    private AudioRecord ghostRecord;
+    @GuardedBy("mLock")
+    private AudioRecord mGhostRecord;
 
-    private ImmutableSet<Integer> reroutedUids = ImmutableSet.of();
+    private ImmutableSet<Integer> mReroutedUids = ImmutableSet.of();
 
-    private final AudioPlaybackCallback audioPlaybackCallback =
+    private final AudioPlaybackCallback mAudioPlaybackCallback =
             new AudioPlaybackCallback() {
                 @Override
                 public void onPlaybackConfigChanged(List<AudioPlaybackConfiguration> configs) {
                     super.onPlaybackConfigChanged(configs);
 
-                    synchronized (lock) {
+                    synchronized (mLock) {
                         boolean shouldStream = configs.stream().anyMatch(
                                 c -> STREAMING_PLAYER_STATES.contains(c.getPlayerState())
-                                        && (reroutedUids.contains(c.getClientUid())
-                                        || c.getSessionId() == playbackSessionId));
-                        if (audioPolicy == null) {
+                                        && (mReroutedUids.contains(c.getClientUid())
+                                        || c.getSessionId() == mPlaybackSessionId));
+                        if (mAudioPolicy == null) {
                             Log.d(
                                     TAG,
                                     "There's no active audio policy, ignoring playback "
@@ -127,24 +127,25 @@ final class AudioStreamer implements AutoCloseable {
                             return;
                         }
 
-                        if (sessionIdAudioMix != null && shouldStream && streamingThread == null) {
-                            remoteIo.sendMessage(
+                        if (mSessionIdAudioMix != null && shouldStream
+                                && mStreamingThread == null) {
+                            mRemoteIo.sendMessage(
                                     RemoteEvent.newBuilder()
                                             .setStartAudio(StartAudio.newBuilder())
                                             .build());
-                            streamingThread =
+                            mStreamingThread =
                                     new StreamingThread(
-                                            audioPolicy.createAudioRecordSink(sessionIdAudioMix),
-                                            remoteIo);
-                            streamingThread.start();
-                        } else if (!shouldStream && streamingThread != null) {
-                            remoteIo.sendMessage(
+                                            mAudioPolicy.createAudioRecordSink(mSessionIdAudioMix),
+                                            mRemoteIo);
+                            mStreamingThread.start();
+                        } else if (!shouldStream && mStreamingThread != null) {
+                            mRemoteIo.sendMessage(
                                     RemoteEvent.newBuilder()
                                             .setStopAudio(StopAudio.newBuilder())
                                             .build());
-                            streamingThread.stopStreaming();
-                            joinUninterruptibly(streamingThread);
-                            streamingThread = null;
+                            mStreamingThread.stopStreaming();
+                            joinUninterruptibly(mStreamingThread);
+                            mStreamingThread = null;
                         }
                     }
                 }
@@ -152,27 +153,27 @@ final class AudioStreamer implements AutoCloseable {
 
     @Inject
     AudioStreamer(@ApplicationContext Context context, RemoteIo remoteIo) {
-        this.context = context;
-        this.remoteIo = remoteIo;
-        audioManager = context.getSystemService(AudioManager.class);
-        playbackSessionId = audioManager.generateAudioSessionId();
-        handlerThread.start();
-        handler = new Handler(handlerThread.getLooper());
-        audioManager.registerAudioPlaybackCallback(audioPlaybackCallback, handler);
+        mContext = context;
+        mRemoteIo = remoteIo;
+        mAudioManager = context.getSystemService(AudioManager.class);
+        mPlaybackSessionId = mAudioManager.generateAudioSessionId();
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
+        mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, mHandler);
     }
 
     public void start() {
-        handler.post(() -> registerAudioPolicy());
+        mHandler.post(this::registerAudioPolicy);
     }
 
     public int getPlaybackSessionId() {
-        return playbackSessionId;
+        return mPlaybackSessionId;
     }
 
     private void registerAudioPolicy() {
         AudioMixingRule mixingRule =
                 new AudioMixingRule.Builder()
-                        .addMixRule(AudioMixingRule.RULE_MATCH_AUDIO_SESSION_ID, playbackSessionId)
+                        .addMixRule(AudioMixingRule.RULE_MATCH_AUDIO_SESSION_ID, mPlaybackSessionId)
                         .build();
         AudioMix audioMix =
                 new AudioMix.Builder(mixingRule)
@@ -180,16 +181,16 @@ final class AudioStreamer implements AutoCloseable {
                         .setFormat(AUDIO_FORMAT)
                         .build();
 
-        synchronized (lock) {
-            if (audioPolicy != null) {
+        synchronized (mLock) {
+            if (mAudioPolicy != null) {
                 Log.w(TAG, "AudioPolicy is already registered");
                 return;
             }
-            audioPolicy = new AudioPolicy.Builder(context).addMix(audioMix).build();
-            int ret = audioManager.registerAudioPolicy(audioPolicy);
+            mAudioPolicy = new AudioPolicy.Builder(mContext).addMix(audioMix).build();
+            int ret = mAudioManager.registerAudioPolicy(mAudioPolicy);
             if (ret != AudioManager.SUCCESS) {
                 Log.e(TAG, "Failed to register audio policy, error code " + ret);
-                audioPolicy = null;
+                mAudioPolicy = null;
                 return;
             }
 
@@ -202,12 +203,12 @@ final class AudioStreamer implements AutoCloseable {
             // UID-based render policy pointing to the remote submix device.
             ImmutableList<AudioDeviceInfo> preexistingRemoteSubmixDevices =
                     getRemoteSubmixDevices();
-            ghostRecord = audioPolicy.createAudioRecordSink(audioMix);
-            ghostRecord.startRecording();
-            remoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
-            sessionIdAudioMix = audioMix;
-            if (!reroutedUids.isEmpty()) {
-                registerUidPolicy(reroutedUids);
+            mGhostRecord = mAudioPolicy.createAudioRecordSink(audioMix);
+            mGhostRecord.startRecording();
+            mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
+            mSessionIdAudioMix = audioMix;
+            if (!mReroutedUids.isEmpty()) {
+                registerUidPolicy(mReroutedUids);
             }
         }
     }
@@ -237,17 +238,17 @@ final class AudioStreamer implements AutoCloseable {
 
     public void updateVdmUids(ImmutableSet<Integer> uids) {
         Log.w(TAG, "Updating mixing rule to reroute uids " + uids);
-        handler.post(
+        mHandler.post(
                 () -> {
-                    synchronized (lock) {
-                        if (remoteSubmixDevice == null) {
+                    synchronized (mLock) {
+                        if (mRemoteSubmixDevice == null) {
                             Log.e(
                                     TAG,
                                     "Cannot update audio policy - remote submix device not known");
                             return;
                         }
 
-                        if (reroutedUids.equals(uids)) {
+                        if (mReroutedUids.equals(uids)) {
                             Log.d(TAG, "Not updating UID audio policy for same set of UIDs");
                             return;
                         }
@@ -261,9 +262,9 @@ final class AudioStreamer implements AutoCloseable {
     // This shouldn't unregister all audio policies just to re-register them again.
     // That's inefficient and leads to audio leaks. But this is the most correct way to do this at
     // this time.
-    @GuardedBy("lock")
+    @GuardedBy("mLock")
     private void updateAudioPolicies(ImmutableSet<Integer> uids) {
-        // TODO(b/293279299) Use Flagged API when available in google3
+        // TODO(b/293279299) Use Flagged API
         // if (com.android.media.audio.flags.Flags.FLAG_AUDIO_POLICY_UPDATE_MIXING_RULES_API &&
         // uidAudioMix != null && (!reroutedUids.isEmpty() && !uids.isEmpty())) {
         //   Pair<AudioMix, AudioMixingRule> update = Pair.create(uidAudioMix,
@@ -272,66 +273,66 @@ final class AudioStreamer implements AutoCloseable {
         //   return;
         // }
 
-        if (audioPolicy != null) {
-            audioManager.unregisterAudioPolicy(audioPolicy);
-            audioPolicy = null;
+        if (mAudioPolicy != null) {
+            mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+            mAudioPolicy = null;
         }
-        if (uidAudioPolicy != null) {
-            audioManager.unregisterAudioPolicy(uidAudioPolicy);
-            uidAudioPolicy = null;
+        if (mUidAudioPolicy != null) {
+            mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
+            mUidAudioPolicy = null;
         }
 
-        reroutedUids = ImmutableSet.copyOf(uids);
+        mReroutedUids = ImmutableSet.copyOf(uids);
         registerAudioPolicy();
     }
 
-    @GuardedBy("lock")
+    @GuardedBy("mLock")
     private void registerUidPolicy(ImmutableSet<Integer> uids) {
-        uidAudioMix =
+        mUidAudioMix =
                 new AudioMix.Builder(createUidMixingRule(uids))
                         .setRouteFlags(AudioMix.ROUTE_FLAG_RENDER)
-                        .setDevice(remoteSubmixDevice)
+                        .setDevice(mRemoteSubmixDevice)
                         .setFormat(AUDIO_FORMAT)
                         .build();
-        AudioPolicy uidPolicy = new AudioPolicy.Builder(context).addMix(uidAudioMix).build();
-        int ret = audioManager.registerAudioPolicy(uidPolicy);
+        AudioPolicy uidPolicy = new AudioPolicy.Builder(mContext).addMix(mUidAudioMix).build();
+        int ret = mAudioManager.registerAudioPolicy(uidPolicy);
         if (ret != AudioManager.SUCCESS) {
-            Log.e(TAG, "Error " + ret + "while trying to register UID policy");
+            Log.e(TAG, "Error " + ret + " while trying to register UID policy");
             return;
         }
 
-        uidAudioPolicy = uidPolicy;
-        reroutedUids = ImmutableSet.copyOf(uids);
+        mUidAudioPolicy = uidPolicy;
+        mReroutedUids = ImmutableSet.copyOf(uids);
     }
 
     public void stop() {
-        synchronized (lock) {
-            if (streamingThread != null) {
-                streamingThread.stopStreaming();
-                joinUninterruptibly(streamingThread);
-                streamingThread = null;
+        synchronized (mLock) {
+            if (mStreamingThread != null) {
+                mStreamingThread.stopStreaming();
+                joinUninterruptibly(mStreamingThread);
+                mStreamingThread = null;
             }
-            if (uidAudioPolicy != null) {
-                audioManager.unregisterAudioPolicy(uidAudioPolicy);
-                uidAudioPolicy = null;
+            if (mUidAudioPolicy != null) {
+                mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
+                mUidAudioPolicy = null;
             }
-            if (audioPolicy != null) {
-                audioManager.unregisterAudioPolicy(audioPolicy);
-                audioPolicy = null;
+            if (mAudioPolicy != null) {
+                mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+                mAudioPolicy = null;
             }
-            if (ghostRecord != null) {
-                ghostRecord.stop();
-                ghostRecord.release();
-                ghostRecord = null;
+            if (mGhostRecord != null) {
+                mGhostRecord.stop();
+                mGhostRecord.release();
+                mGhostRecord = null;
             }
         }
     }
 
     @Override
     public void close() {
-        audioManager.unregisterAudioPlaybackCallback(audioPlaybackCallback);
+        mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
         stop();
-        handlerThread.quitSafely();
+        mHandlerThread.quitSafely();
     }
 
     private AudioMixingRule createUidMixingRule(Collection<Integer> uids) {
@@ -341,7 +342,7 @@ final class AudioStreamer implements AutoCloseable {
     }
 
     private ImmutableList<AudioDeviceInfo> getRemoteSubmixDevices() {
-        return Arrays.stream(audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
+        return Arrays.stream(mAudioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
                 .filter(AudioStreamer::deviceIsRemoteSubmixOut)
                 .collect(toImmutableList());
     }
@@ -358,14 +359,14 @@ final class AudioStreamer implements AutoCloseable {
                         SAMPLE_RATE,
                         AudioFormat.CHANNEL_OUT_STEREO,
                         AudioFormat.ENCODING_PCM_16BIT);
-        private final RemoteIo remoteIo;
-        private final AudioRecord audioRecord;
-        private final AtomicBoolean isRunning = new AtomicBoolean(true);
+        private final RemoteIo mRemoteIo;
+        private final AudioRecord mAudioRecord;
+        private final AtomicBoolean mIsRunning = new AtomicBoolean(true);
 
-        public StreamingThread(AudioRecord audioRecord, RemoteIo remoteIo) {
+        StreamingThread(AudioRecord audioRecord, RemoteIo remoteIo) {
             super();
-            this.remoteIo = Objects.requireNonNull(remoteIo);
-            this.audioRecord = Objects.requireNonNull(audioRecord);
+            mRemoteIo = Objects.requireNonNull(remoteIo);
+            mAudioRecord = Objects.requireNonNull(audioRecord);
         }
 
         @Override
@@ -373,21 +374,21 @@ final class AudioStreamer implements AutoCloseable {
             super.run();
             Log.d(TAG, "Starting audio streaming");
 
-            if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            if (mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                 Log.e(TAG, "Audio record is not initialized");
                 return;
             }
 
-            audioRecord.startRecording();
+            mAudioRecord.startRecording();
             byte[] buffer = new byte[BUFFER_SIZE];
-            while (isRunning.get()) {
-                int ret = audioRecord.read(buffer, 0, buffer.length, AudioRecord.READ_BLOCKING);
+            while (mIsRunning.get()) {
+                int ret = mAudioRecord.read(buffer, 0, buffer.length, AudioRecord.READ_BLOCKING);
                 if (ret <= 0) {
                     Log.e(TAG, "AudioRecord.read returned error code " + ret);
                     continue;
                 }
 
-                remoteIo.sendMessage(
+                mRemoteIo.sendMessage(
                         RemoteEvent.newBuilder()
                                 .setAudioFrame(
                                         AudioFrame.newBuilder()
@@ -395,12 +396,12 @@ final class AudioStreamer implements AutoCloseable {
                                 .build());
             }
             Log.d(TAG, "Stopping audio streaming");
-            audioRecord.stop();
-            audioRecord.release();
+            mAudioRecord.stop();
+            mAudioRecord.release();
         }
 
-        public void stopStreaming() {
-            isRunning.set(false);
+        void stopStreaming() {
+            mIsRunning.set(false);
         }
     }
 

@@ -72,27 +72,27 @@ class RemoteDisplay implements AutoCloseable {
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
 
-    private final Context context;
-    private final RemoteIo remoteIo;
-    private final Settings settings;
-    private final Consumer<RemoteEvent> remoteEventConsumer = this::processRemoteEvent;
-    private final VirtualDisplay virtualDisplay;
-    private final VirtualDpad dpad;
-    private final int remoteDisplayId;
-    private final Executor pendingIntentExecutor;
-    private final VirtualDevice virtualDevice;
-    private final boolean supportsHome;
-    private final AtomicBoolean closed = new AtomicBoolean(false);
-    private int rotation;
-    private int width;
-    private int height;
-    private int dpi;
+    private final Context mContext;
+    private final RemoteIo mRemoteIo;
+    private final Settings mSettings;
+    private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
+    private final VirtualDisplay mVirtualDisplay;
+    private final VirtualDpad mDpad;
+    private final int mRemoteDisplayId;
+    private final Executor mPendingIntentExecutor;
+    private final VirtualDevice mVirtualDevice;
+    private final boolean mSupportsHome;
+    private final AtomicBoolean mClosed = new AtomicBoolean(false);
+    private int mRotation;
+    private int mWidth;
+    private int mHeight;
+    private int mDpi;
 
-    private VideoManager videoManager;
-    private VirtualTouchscreen touchscreen;
-    private VirtualMouse mouse;
-    private VirtualNavigationTouchpad navigationTouchpad;
-    private VirtualKeyboard keyboard;
+    private VideoManager mVideoManager;
+    private VirtualTouchscreen mTouchscreen;
+    private VirtualMouse mMouse;
+    private VirtualNavigationTouchpad mNavigationTouchpad;
+    private VirtualKeyboard mKeyboard;
 
     @SuppressLint("WrongConstant")
     public RemoteDisplay(
@@ -103,13 +103,13 @@ class RemoteDisplay implements AutoCloseable {
             boolean supportsHome,
             boolean supportsMirroring,
             Settings settings) {
-        this.context = context;
-        this.remoteIo = remoteIo;
-        this.remoteDisplayId = event.getDisplayId();
-        this.virtualDevice = virtualDevice;
-        this.pendingIntentExecutor = context.getMainExecutor();
-        this.supportsHome = supportsHome;
-        this.settings = settings;
+        mContext = context;
+        mRemoteIo = remoteIo;
+        mRemoteDisplayId = event.getDisplayId();
+        mVirtualDevice = virtualDevice;
+        mPendingIntentExecutor = context.getMainExecutor();
+        mSupportsHome = supportsHome;
+        mSettings = settings;
 
         setCapabilities(event.getDisplayCapabilities());
 
@@ -120,111 +120,106 @@ class RemoteDisplay implements AutoCloseable {
         if (supportsMirroring) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
-        virtualDisplay =
+        mVirtualDisplay =
                 virtualDevice.createVirtualDisplay(
                         new VirtualDisplayConfig.Builder(
-                                        "VirtualDisplay" + remoteDisplayId, width, height, dpi)
+                                        "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
                                 .setFlags(flags)
                                 .setHomeSupported(supportsHome)
                                 .build(),
                         /* executor= */ Runnable::run,
                         /* callback= */ null);
 
-        dpad =
+        mDpad =
                 virtualDevice.createVirtualDpad(
                         new VirtualDpadConfig.Builder()
-                                .setAssociatedDisplayId(virtualDisplay.getDisplay().getDisplayId())
-                                .setInputDeviceName("vdmdemo-dpad" + remoteDisplayId)
+                                .setAssociatedDisplayId(mVirtualDisplay.getDisplay().getDisplayId())
+                                .setInputDeviceName("vdmdemo-dpad" + mRemoteDisplayId)
                                 .build());
 
-        remoteIo.addMessageConsumer(remoteEventConsumer);
+        remoteIo.addMessageConsumer(mRemoteEventConsumer);
 
         reset();
     }
 
     void reset(DisplayCapabilities capabilities) {
         setCapabilities(capabilities);
-        virtualDisplay.resize(width, height, dpi);
+        mVirtualDisplay.resize(mWidth, mHeight, mDpi);
         reset();
     }
 
     private void reset() {
-        if (videoManager != null) {
-            videoManager.stop();
+        if (mVideoManager != null) {
+            mVideoManager.stop();
         }
-        videoManager =
-                VideoManager.createEncoder(remoteDisplayId, remoteIo, settings.recordEncoderOutput);
-        Surface surface = videoManager.createInputSurface(width, height, DISPLAY_FPS);
-        virtualDisplay.setSurface(surface);
+        mVideoManager =
+                VideoManager.createEncoder(
+                        mRemoteDisplayId, mRemoteIo, mSettings.recordEncoderOutput);
+        Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
+        mVirtualDisplay.setSurface(surface);
 
-        rotation = virtualDisplay.getDisplay().getRotation();
+        mRotation = mVirtualDisplay.getDisplay().getRotation();
 
-        if (touchscreen != null) {
-            touchscreen.close();
+        if (mTouchscreen != null) {
+            mTouchscreen.close();
         }
-        touchscreen =
-                virtualDevice.createVirtualTouchscreen(
-                        new VirtualTouchscreenConfig.Builder(width, height)
-                                .setAssociatedDisplayId(virtualDisplay.getDisplay().getDisplayId())
-                                .setInputDeviceName("vdmdemo-touchscreen" + remoteDisplayId)
+        mTouchscreen =
+                mVirtualDevice.createVirtualTouchscreen(
+                        new VirtualTouchscreenConfig.Builder(mWidth, mHeight)
+                                .setAssociatedDisplayId(mVirtualDisplay.getDisplay().getDisplayId())
+                                .setInputDeviceName("vdmdemo-touchscreen" + mRemoteDisplayId)
                                 .build());
 
-        videoManager.startEncoding();
+        mVideoManager.startEncoding();
     }
 
     private void setCapabilities(DisplayCapabilities capabilities) {
-        width = capabilities.getViewportWidth();
-        height = capabilities.getViewportHeight();
-        dpi = capabilities.getDensityDpi();
+        mWidth = capabilities.getViewportWidth();
+        mHeight = capabilities.getViewportHeight();
+        mDpi = capabilities.getDensityDpi();
 
         // Video encoder needs round dimensions...
-        height -= height % 10;
-        width -= width % 10;
+        mHeight -= mHeight % 10;
+        mWidth -= mWidth % 10;
     }
 
     public void launchIntent(PendingIntent intent) {
-        virtualDevice.launchPendingIntent(
-                virtualDisplay.getDisplay().getDisplayId(),
+        mVirtualDevice.launchPendingIntent(
+                mVirtualDisplay.getDisplay().getDisplayId(),
                 intent,
-                pendingIntentExecutor,
+                mPendingIntentExecutor,
                 (result) -> {
                     switch (result) {
                         case VirtualDeviceManager.LAUNCH_SUCCESS:
-                            Log.i(
-                                    TAG,
-                                    "launchAppOnDisplay: Launched app successfully on display "
-                                            + virtualDisplay.getDisplay().getDisplayId());
+                            Log.i(TAG, "launchIntent: Launched app successfully on display "
+                                            + mVirtualDisplay.getDisplay().getDisplayId());
                             break;
                         case VirtualDeviceManager.LAUNCH_FAILURE_NO_ACTIVITY:
                         case VirtualDeviceManager.LAUNCH_FAILURE_PENDING_INTENT_CANCELED:
-                            Log.w(
-                                    TAG,
-                                    "launchAppOnDisplay: Launching app failed with reason: "
-                                            + result);
+                            Log.w(TAG, "launchIntent: Launching app failed with reason: "
+                                    + result);
                             break;
                         default:
-                            Log.w(
-                                    TAG,
-                                    "launchAppOnDisplay: Unexpected result when launching app: "
-                                            + result);
+                            Log.w(TAG, "launchIntent: Unexpected result when launching app: "
+                                    + result);
                     }
                 });
     }
 
     public int getRemoteDisplayId() {
-        return remoteDisplayId;
+        return mRemoteDisplayId;
     }
 
     public int getDisplayId() {
-        return virtualDisplay.getDisplay().getDisplayId();
+        return mVirtualDisplay.getDisplay().getDisplayId();
     }
 
     public void onDisplayChanged() {
-        if (rotation != virtualDisplay.getDisplay().getRotation()) {
-            rotation = virtualDisplay.getDisplay().getRotation();
-            int rotationDegrees = displayRotationToDegrees(rotation);
+        if (mRotation != mVirtualDisplay.getDisplay().getRotation()) {
+            mRotation = mVirtualDisplay.getDisplay().getRotation();
+            int rotationDegrees = displayRotationToDegrees(mRotation);
             Log.v(TAG, "Notify client for rotation event: " + rotationDegrees);
-            remoteIo.sendMessage(
+            mRemoteIo.sendMessage(
                     RemoteEvent.newBuilder()
                             .setDisplayId(getRemoteDisplayId())
                             .setDisplayRotation(
@@ -236,22 +231,22 @@ class RemoteDisplay implements AutoCloseable {
 
     @SuppressWarnings("PendingIntentMutability")
     private void processRemoteEvent(RemoteEvent event) {
-        if (event.getDisplayId() != remoteDisplayId) {
+        if (event.getDisplayId() != mRemoteDisplayId) {
             return;
         }
-        if (event.hasHomeEvent() && supportsHome) {
+        if (event.hasHomeEvent() && mSupportsHome) {
             Intent homeIntent = new Intent(Intent.ACTION_MAIN);
             homeIntent.addCategory(Intent.CATEGORY_HOME);
             homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(
+            mContext.startActivity(
                     homeIntent,
                     ActivityOptions.makeBasic().setLaunchDisplayId(getDisplayId()).toBundle());
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
-            if (videoManager != null) {
-                videoManager.stop();
-                videoManager = null;
+            if (mVideoManager != null) {
+                mVideoManager.stop();
+                mVideoManager = null;
             }
         }
     }
@@ -262,40 +257,40 @@ class RemoteDisplay implements AutoCloseable {
                 Log.e(TAG, "Received no input device type");
                 break;
             case DEVICE_TYPE_DPAD:
-                dpad.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
+                mDpad.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
                 break;
             case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
-                if (navigationTouchpad == null) {
+                if (mNavigationTouchpad == null) {
                     // Any arbitrarily big enough nav touchpad would work.
                     Point displaySize = new Point(5000, 5000);
-                    navigationTouchpad =
-                            virtualDevice.createVirtualNavigationTouchpad(
+                    mNavigationTouchpad =
+                            mVirtualDevice.createVirtualNavigationTouchpad(
                                     new VirtualNavigationTouchpadConfig.Builder(
                                                     displaySize.x, displaySize.y)
                                             .setAssociatedDisplayId(getDisplayId())
                                             .setInputDeviceName(
-                                                    "vdmdemo-navtouchpad" + remoteDisplayId)
+                                                    "vdmdemo-navtouchpad" + mRemoteDisplayId)
                                             .build());
                 }
-                navigationTouchpad.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
+                mNavigationTouchpad.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
                 break;
             case DEVICE_TYPE_MOUSE:
                 processMouseEvent(inputEvent);
                 break;
             case DEVICE_TYPE_TOUCHSCREEN:
-                touchscreen.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
+                mTouchscreen.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
                 break;
             case DEVICE_TYPE_KEYBOARD:
-                if (keyboard == null) {
-                    keyboard =
-                            virtualDevice.createVirtualKeyboard(
+                if (mKeyboard == null) {
+                    mKeyboard =
+                            mVirtualDevice.createVirtualKeyboard(
                                     new VirtualKeyboardConfig.Builder()
                                             .setInputDeviceName(
-                                                    "vdmdemo-keyboard" + remoteDisplayId)
+                                                    "vdmdemo-keyboard" + mRemoteDisplayId)
                                             .setAssociatedDisplayId(getDisplayId())
                                             .build());
                 }
-                keyboard.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
+                mKeyboard.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
                 break;
             default:
                 Log.e(
@@ -307,29 +302,29 @@ class RemoteDisplay implements AutoCloseable {
     }
 
     private void processMouseEvent(RemoteInputEvent inputEvent) {
-        if (mouse == null) {
-            mouse =
-                    virtualDevice.createVirtualMouse(
+        if (mMouse == null) {
+            mMouse =
+                    mVirtualDevice.createVirtualMouse(
                             new VirtualMouseConfig.Builder()
                                     .setAssociatedDisplayId(getDisplayId())
-                                    .setInputDeviceName("vdmdemo-mouse" + remoteDisplayId)
+                                    .setInputDeviceName("vdmdemo-mouse" + mRemoteDisplayId)
                                     .build());
         }
         if (inputEvent.hasMouseButtonEvent()) {
-            mouse.sendButtonEvent(
+            mMouse.sendButtonEvent(
                     new VirtualMouseButtonEvent.Builder()
                             .setButtonCode(inputEvent.getMouseButtonEvent().getKeyCode())
                             .setAction(inputEvent.getMouseButtonEvent().getAction())
                             .build());
         } else if (inputEvent.hasMouseScrollEvent()) {
-            mouse.sendScrollEvent(
+            mMouse.sendScrollEvent(
                     new VirtualMouseScrollEvent.Builder()
                             .setXAxisMovement(inputEvent.getMouseScrollEvent().getX())
                             .setYAxisMovement(inputEvent.getMouseScrollEvent().getY())
                             .build());
         } else if (inputEvent.hasMouseRelativeEvent()) {
-            PointF cursorPosition = mouse.getCursorPosition();
-            mouse.sendRelativeEvent(
+            PointF cursorPosition = mMouse.getCursorPosition();
+            mMouse.sendRelativeEvent(
                     new VirtualMouseRelativeEvent.Builder()
                             .setRelativeX(
                                     inputEvent.getMouseRelativeEvent().getX() - cursorPosition.x)
@@ -342,39 +337,29 @@ class RemoteDisplay implements AutoCloseable {
     }
 
     private static int getVirtualTouchEventAction(int action) {
-        switch (action) {
-            case MotionEvent.ACTION_POINTER_DOWN:
-                return VirtualTouchEvent.ACTION_DOWN;
-            case MotionEvent.ACTION_POINTER_UP:
-                return VirtualTouchEvent.ACTION_UP;
-            default:
-                return action;
-        }
+        return switch (action) {
+            case MotionEvent.ACTION_POINTER_DOWN -> VirtualTouchEvent.ACTION_DOWN;
+            case MotionEvent.ACTION_POINTER_UP -> VirtualTouchEvent.ACTION_UP;
+            default -> action;
+        };
     }
 
     private static int getVirtualTouchEventToolType(int action) {
-        switch (action) {
-            case MotionEvent.ACTION_CANCEL:
-                return VirtualTouchEvent.TOOL_TYPE_PALM;
-            default:
-                return VirtualTouchEvent.TOOL_TYPE_FINGER;
-        }
+        return switch (action) {
+            case MotionEvent.ACTION_CANCEL -> VirtualTouchEvent.TOOL_TYPE_PALM;
+            default -> VirtualTouchEvent.TOOL_TYPE_FINGER;
+        };
     }
 
     // Surface rotation is in opposite direction to display rotation.
     // See https://developer.android.com/reference/android/view/Display?hl=en#getRotation()
     private static int displayRotationToDegrees(int displayRotation) {
-        switch (displayRotation) {
-            case Surface.ROTATION_90:
-                return -90;
-            case Surface.ROTATION_180:
-                return 180;
-            case Surface.ROTATION_270:
-                return 90;
-            case Surface.ROTATION_0:
-            default:
-                return 0;
-        }
+        return switch (displayRotation) {
+            case Surface.ROTATION_90 -> -90;
+            case Surface.ROTATION_180 -> 180;
+            case Surface.ROTATION_270 -> 90;
+            default -> 0;
+        };
     }
 
     private static VirtualKeyEvent remoteEventToVirtualKeyEvent(RemoteInputEvent event) {
@@ -401,34 +386,30 @@ class RemoteDisplay implements AutoCloseable {
 
     @Override
     public void close() {
-        close(false);
-    }
-
-    void close(boolean pause) {
-        if (closed.getAndSet(true)) { // Prevent double closure.
+        if (mClosed.getAndSet(true)) { // Prevent double closure.
             return;
         }
-        remoteIo.sendMessage(
+        mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
                         .setDisplayId(getRemoteDisplayId())
-                        .setStopStreaming(StopStreaming.newBuilder().setPause(pause))
+                        .setStopStreaming(StopStreaming.newBuilder().setPause(false))
                         .build());
-        remoteIo.removeMessageConsumer(remoteEventConsumer);
-        dpad.close();
-        touchscreen.close();
-        if (mouse != null) {
-            mouse.close();
+        mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
+        mDpad.close();
+        mTouchscreen.close();
+        if (mMouse != null) {
+            mMouse.close();
         }
-        if (navigationTouchpad != null) {
-            navigationTouchpad.close();
+        if (mNavigationTouchpad != null) {
+            mNavigationTouchpad.close();
         }
-        if (keyboard != null) {
-            keyboard.close();
+        if (mKeyboard != null) {
+            mKeyboard.close();
         }
-        virtualDisplay.release();
-        if (videoManager != null) {
-            videoManager.stop();
-            videoManager = null;
+        mVirtualDisplay.release();
+        if (mVideoManager != null) {
+            mVideoManager.stop();
+            mVideoManager = null;
         }
     }
 }

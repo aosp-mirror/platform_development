@@ -32,15 +32,15 @@ import javax.inject.Singleton;
 @Singleton
 final class DisplayRepository {
 
-    @GuardedBy("displayRepository")
-    private final List<RemoteDisplay> displayRepository = new ArrayList<>();
+    @GuardedBy("mDisplayRepository")
+    private final List<RemoteDisplay> mDisplayRepository = new ArrayList<>();
 
     @Inject
     DisplayRepository() {}
 
     void addDisplay(RemoteDisplay display) {
-        synchronized (displayRepository) {
-            displayRepository.add(display);
+        synchronized (mDisplayRepository) {
+            mDisplayRepository.add(display);
         }
     }
 
@@ -63,15 +63,17 @@ final class DisplayRepository {
     }
 
     void clear() {
-        synchronized (displayRepository) {
-            displayRepository.forEach(RemoteDisplay::close);
-            displayRepository.clear();
+        synchronized (mDisplayRepository) {
+            mDisplayRepository.forEach(RemoteDisplay::close);
+            mDisplayRepository.clear();
         }
     }
 
     int[] getRemoteDisplayIds() {
-        synchronized (displayRepository) {
-            return displayRepository.stream().mapToInt(RemoteDisplay::getRemoteDisplayId).toArray();
+        synchronized (mDisplayRepository) {
+            return mDisplayRepository.stream()
+                    .mapToInt(RemoteDisplay::getRemoteDisplayId)
+                    .toArray();
         }
     }
 
@@ -82,33 +84,33 @@ final class DisplayRepository {
     }
 
     Optional<RemoteDisplay> getDisplayByIndex(int index) {
-        synchronized (displayRepository) {
-            if (index < 0 || index >= displayRepository.size()) {
+        synchronized (mDisplayRepository) {
+            if (index < 0 || index >= mDisplayRepository.size()) {
                 return Optional.empty();
             }
-            return Optional.of(displayRepository.get(index));
+            return Optional.of(mDisplayRepository.get(index));
         }
     }
 
     private Optional<RemoteDisplay> getDisplay(int displayId) {
-        synchronized (displayRepository) {
-            return displayRepository.stream()
+        synchronized (mDisplayRepository) {
+            return mDisplayRepository.stream()
                     .filter(display -> display.getDisplayId() == displayId)
                     .findFirst();
         }
     }
 
     private Optional<RemoteDisplay> getDisplayByRemoteId(int remoteDisplayId) {
-        synchronized (displayRepository) {
-            return displayRepository.stream()
+        synchronized (mDisplayRepository) {
+            return mDisplayRepository.stream()
                     .filter(display -> display.getRemoteDisplayId() == remoteDisplayId)
                     .findFirst();
         }
     }
 
     private void closeDisplay(RemoteDisplay display) {
-        synchronized (displayRepository) {
-            displayRepository.remove(display);
+        synchronized (mDisplayRepository) {
+            mDisplayRepository.remove(display);
         }
         display.close();
     }
