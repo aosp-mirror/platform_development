@@ -34,9 +34,9 @@ public class CounterView extends View {
 
     private static final String TAG = "CounterView";
     private static final int TEXT_SIZE_SP = 100;
-    private long counter = 0;
-    private final Paint textPaint = new Paint();
-    private final Paint backgroundPaint = new Paint();
+    private long mCounter = 0;
+    private final Paint mTextPaint = new Paint();
+    private final Paint mBackgroundPaint = new Paint();
 
     public CounterView(Context context) {
         super(context);
@@ -60,26 +60,26 @@ public class CounterView extends View {
     }
 
     private void init() {
-        textPaint.setColor(Color.RED);
-        textPaint.setStyle(Style.FILL);
-        float scaledSizeInPixels = spToPx(TEXT_SIZE_SP, getContext());
-        textPaint.setTextSize(scaledSizeInPixels);
+        mTextPaint.setColor(Color.RED);
+        mTextPaint.setStyle(Style.FILL);
+        mTextPaint.setTextSize(computeScaledTextSizeInPixels());
 
-        backgroundPaint.setColor(Color.WHITE);
-        backgroundPaint.setStyle(Style.FILL);
+        mBackgroundPaint.setColor(Color.WHITE);
+        mBackgroundPaint.setStyle(Style.FILL);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), backgroundPaint);
-        canvas.drawText(String.valueOf(counter), 0, 200, textPaint);
-        Log.e(TAG, "Rendered counter: " + counter);
-        counter++;
+        canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), mBackgroundPaint);
+        canvas.drawText(String.valueOf(mCounter), 0, 200, mTextPaint);
+        Log.e(TAG, "Rendered counter: " + mCounter);
+        mCounter++;
     }
 
-    private static int spToPx(float sp, Context context) {
-        return (int)
-                TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
+    private float computeScaledTextSizeInPixels() {
+        return TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                TEXT_SIZE_SP,
+                getContext().getResources().getDisplayMetrics());
     }
 }

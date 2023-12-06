@@ -39,6 +39,7 @@ public final class RotationDemoActivity extends AppCompatActivity {
                 .setText(getString(R.string.current_orientation, getOrientationString()));
     }
 
+    /** Handle orientation change request. */
     public void onChangeOrientation(View view) {
         int orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
         if (view.getId() == R.id.portrait) {
@@ -50,15 +51,11 @@ public final class RotationDemoActivity extends AppCompatActivity {
     }
 
     private String getOrientationString() {
-        switch (getRequestedOrientation()) {
-            case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED:
-                return "unspecified";
-            case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
-                return "portrait";
-            case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
-                return "landscape";
-            default:
-                return "unknown";
-        }
+        return switch (getRequestedOrientation()) {
+            case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED -> "unspecified";
+            case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT -> "portrait";
+            case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> "landscape";
+            default -> "unknown";
+        };
     }
 }

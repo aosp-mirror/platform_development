@@ -13,7 +13,8 @@
 
     <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
 
-    <string name="permissions_text" translatable="false">Request permissions</string>
+    <string name="request_permissions" translatable="false">Request permissions</string>
+    <string name="revoke_permissions" translatable="false">Revoke permissions</string>
 
     <string name="vibrate" translatable="false">Vibrate</string>
     <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>

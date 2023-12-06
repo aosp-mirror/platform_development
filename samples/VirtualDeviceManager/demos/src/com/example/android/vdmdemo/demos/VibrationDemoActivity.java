@@ -42,11 +42,11 @@ public final class VibrationDemoActivity extends AppCompatActivity {
     private static final String DEVICE_NAME_UNKNOWN = "Unknown";
     private static final String DEVICE_NAME_DEFAULT = "Default - " + Build.MODEL;
 
-    private VirtualDeviceManager vdm;
-    private Vibrator vibrator;
-    private Context deviceContext;
+    private VirtualDeviceManager mVirtualDeviceManager;
+    private Vibrator mVibrator;
+    private Context mDeviceContext;
 
-    private Ringtone ringtone;
+    private Ringtone mRingtone;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,25 +54,27 @@ public final class VibrationDemoActivity extends AppCompatActivity {
 
         setContentView(R.layout.vibration_demo_activity);
 
-        vdm = getSystemService(VirtualDeviceManager.class);
-        vibrator = getSystemService(Vibrator.class);
-        deviceContext = this;
+        mVirtualDeviceManager = getSystemService(VirtualDeviceManager.class);
+        mVibrator = getSystemService(Vibrator.class);
+        mDeviceContext = this;
 
-        changeVibratorDevice(deviceContext.getDeviceId());
+        changeVibratorDevice(mDeviceContext.getDeviceId());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        deviceContext.unregisterDeviceIdChangeListener(this::changeVibratorDevice);
+        mDeviceContext.unregisterDeviceIdChangeListener(this::changeVibratorDevice);
     }
 
     private void updateCurrentDeviceTextView(Context context) {
         String deviceName = DEVICE_NAME_UNKNOWN;
         if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
             deviceName = DEVICE_NAME_DEFAULT;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            deviceName = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId()).getName();
         } else {
-            for (VirtualDevice virtualDevice : vdm.getVirtualDevices()) {
+            for (VirtualDevice virtualDevice : mVirtualDeviceManager.getVirtualDevices()) {
                 if (virtualDevice.getDeviceId() == context.getDeviceId()) {
                     deviceName = virtualDevice.getName();
                     break;
@@ -83,8 +85,9 @@ public final class VibrationDemoActivity extends AppCompatActivity {
         currentDevice.setText(context.getString(R.string.current_device, deviceName));
     }
 
+    /** Handle device change request. */
     public void onChangeDevice(View view) {
-        List<VirtualDevice> virtualDevices = vdm.getVirtualDevices();
+        List<VirtualDevice> virtualDevices = mVirtualDeviceManager.getVirtualDevices();
         String[] devices = new String[virtualDevices.size() + 1];
         devices[0] = DEVICE_NAME_DEFAULT;
         for (int i = 0; i < virtualDevices.size(); ++i) {
@@ -105,38 +108,42 @@ public final class VibrationDemoActivity extends AppCompatActivity {
     }
 
     private void changeVibratorDevice(int deviceId) {
-        deviceContext.unregisterDeviceIdChangeListener(this::changeVibratorDevice);
-        deviceContext = createDeviceContext(deviceId);
-        deviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeVibratorDevice);
+        mDeviceContext.unregisterDeviceIdChangeListener(this::changeVibratorDevice);
+        mDeviceContext = createDeviceContext(deviceId);
+        mDeviceContext.registerDeviceIdChangeListener(
+                getMainExecutor(), this::changeVibratorDevice);
 
-        updateCurrentDeviceTextView(deviceContext);
+        updateCurrentDeviceTextView(mDeviceContext);
 
-        vibrator = deviceContext.getSystemService(Vibrator.class);
+        mVibrator = mDeviceContext.getSystemService(Vibrator.class);
 
         Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-        ringtone = RingtoneManager.getRingtone(deviceContext, uri);
-        ringtone.setAudioAttributes(
+        mRingtone = RingtoneManager.getRingtone(mDeviceContext, uri);
+        mRingtone.setAudioAttributes(
                 new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                         .setHapticChannelsMuted(false)
                         .build());
-        ringtone.setHapticGeneratorEnabled(true);
+        mRingtone.setHapticGeneratorEnabled(true);
     }
 
+    /** Handle vibration request. */
     public void onVibrate(View view) {
-        vibrator.vibrate(VibrationEffect.EFFECT_HEAVY_CLICK);
+        mVibrator.vibrate(VibrationEffect.EFFECT_HEAVY_CLICK);
     }
 
+    /** Handle haptic feedback request. */
     public void onPerformHapticFeedback(View view) {
         view.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
     }
 
+    /** Handle request for ringtone with haptics enabled. */
     public void onRingtoneVibration(View view) {
-        if (ringtone.isPlaying()) {
-            ringtone.stop();
+        if (mRingtone.isPlaying()) {
+            mRingtone.stop();
         } else {
-            ringtone.play();
+            mRingtone.play();
         }
     }
 }

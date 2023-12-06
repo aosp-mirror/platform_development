@@ -29,26 +29,28 @@ import androidx.appcompat.app.AppCompatActivity;
 /** Demo activity for showcasing Virtual Devices with home experience. */
 public final class HomeDemoActivity extends AppCompatActivity {
 
-    private DisplayManager displayManager;
+    private DisplayManager mDisplayManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_demo_activity);
 
-        displayManager = getSystemService(DisplayManager.class);
+        mDisplayManager = getSystemService(DisplayManager.class);
     }
 
+    /** Handle home intent request. */
     public void onSendHomeIntent(View view) {
         sendIntentToDisplay(Intent.CATEGORY_HOME);
     }
 
+    /** Handle secondary home intent request. */
     public void onSendSecondaryHomeIntent(View view) {
         sendIntentToDisplay(Intent.CATEGORY_SECONDARY_HOME);
     }
 
     private void sendIntentToDisplay(String category) {
-        Display[] displays = displayManager.getDisplays();
+        Display[] displays = mDisplayManager.getDisplays();
 
         String[] displayNames = new String[displays.length + 1];
         displayNames[0] = "No display";

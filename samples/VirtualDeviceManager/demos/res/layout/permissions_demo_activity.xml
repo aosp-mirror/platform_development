@@ -7,10 +7,17 @@
     android:padding="10dp">
 
     <Button
-        android:id="@+id/button_permissions"
+        android:id="@+id/request_permissions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp"
-        android:text="@string/permissions_text"
-        android:textStyle="bold" />
+        android:onClick="onRequestPermissions"
+        android:text="@string/request_permissions" />
+
+    <Button
+        android:id="@+id/revoke_permissions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onRevokePermissions"
+        android:text="@string/revoke_permissions" />
+
 </LinearLayout>
