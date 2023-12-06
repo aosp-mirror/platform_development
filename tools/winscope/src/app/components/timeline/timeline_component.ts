@@ -168,7 +168,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
       </ng-template>
       <div *ngIf="!timelineData.hasTimestamps()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
-        <p class="mat-body-1">All loaded traces contain no timestamps!</p>
+        <p class="mat-body-1">All loaded traces contain no timestamps.</p>
       </div>
       <div
         *ngIf="timelineData.hasTimestamps() && !timelineData.hasMoreThanOneDistinctTimestamp()"
