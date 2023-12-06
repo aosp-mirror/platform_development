@@ -43,6 +43,7 @@ class Updater:
             ["dump-ndk-abi"],
             env={
                 "TARGET_PRODUCT": "ndk",
+                "TARGET_RELEASE": "trunk_staging",
                 # TODO: remove ALLOW_MISSING_DEPENDENCIES=true when all the
                 # riscv64 dependencies exist (currently blocked by
                 # http://b/273792258).
