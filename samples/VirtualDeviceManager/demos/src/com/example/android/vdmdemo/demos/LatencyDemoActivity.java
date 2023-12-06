@@ -34,8 +34,8 @@ public final class LatencyDemoActivity extends AppCompatActivity {
 
     private static final int DELAY_MS = 1000;
 
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> scheduledFuture;
+    private final ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> mScheduledFuture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,15 +44,15 @@ public final class LatencyDemoActivity extends AppCompatActivity {
         setContentView(R.layout.latency_demo_activity);
         View counter = findViewById(R.id.counter);
 
-        scheduledFuture =
-                executor.scheduleAtFixedRate(
+        mScheduledFuture =
+                mExecutor.scheduleAtFixedRate(
                         counter::invalidate, 0, DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
     protected void onDestroy() {
-        scheduledFuture.cancel(true);
-        executor.shutdown();
+        mScheduledFuture.cancel(true);
+        mExecutor.shutdown();
         super.onDestroy();
     }
 }

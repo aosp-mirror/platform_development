@@ -41,10 +41,10 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
     private static final String DEVICE_NAME_UNKNOWN = "Unknown";
     private static final String DEVICE_NAME_DEFAULT = "Default - " + Build.MODEL;
 
-    private VirtualDeviceManager vdm;
-    private SensorManager sensorManager;
-    private View beam;
-    private Context deviceContext;
+    private VirtualDeviceManager mVirtualDeviceManager;
+    private SensorManager mSensorManager;
+    private View mBeam;
+    private Context mDeviceContext;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,28 +52,30 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
 
         setContentView(R.layout.sensor_demo_activity);
 
-        beam = findViewById(R.id.beam);
+        mBeam = findViewById(R.id.beam);
 
-        vdm = getSystemService(VirtualDeviceManager.class);
-        sensorManager = getSystemService(SensorManager.class);
-        deviceContext = this;
+        mVirtualDeviceManager = getSystemService(VirtualDeviceManager.class);
+        mSensorManager = getSystemService(SensorManager.class);
+        mDeviceContext = this;
 
-        changeSensorDevice(deviceContext.getDeviceId());
+        changeSensorDevice(mDeviceContext.getDeviceId());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
-        sensorManager.unregisterListener(this);
+        mDeviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
+        mSensorManager.unregisterListener(this);
     }
 
     private void updateCurrentDeviceTextView(Context context) {
         String deviceName = DEVICE_NAME_UNKNOWN;
         if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
             deviceName = DEVICE_NAME_DEFAULT;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            deviceName = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId()).getName();
         } else {
-            for (VirtualDevice virtualDevice : vdm.getVirtualDevices()) {
+            for (VirtualDevice virtualDevice : mVirtualDeviceManager.getVirtualDevices()) {
                 if (virtualDevice.getDeviceId() == context.getDeviceId()) {
                     deviceName = virtualDevice.getName();
                     break;
@@ -84,8 +86,9 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         currentDevice.setText(context.getString(R.string.current_device, deviceName));
     }
 
+    /** Handle device change request. */
     public void onChangeDevice(View view) {
-        List<VirtualDevice> virtualDevices = vdm.getVirtualDevices();
+        List<VirtualDevice> virtualDevices = mVirtualDeviceManager.getVirtualDevices();
         String[] devices = new String[virtualDevices.size() + 1];
         devices[0] = DEVICE_NAME_DEFAULT;
         for (int i = 0; i < virtualDevices.size(); ++i) {
@@ -106,18 +109,18 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
     }
 
     private void changeSensorDevice(int deviceId) {
-        deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
-        sensorManager.unregisterListener(this);
+        mDeviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
+        mSensorManager.unregisterListener(this);
 
-        deviceContext = createDeviceContext(deviceId);
-        deviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
+        mDeviceContext = createDeviceContext(deviceId);
+        mDeviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
 
-        updateCurrentDeviceTextView(deviceContext);
+        updateCurrentDeviceTextView(mDeviceContext);
 
-        sensorManager = deviceContext.getSystemService(SensorManager.class);
-        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensorManager = mDeviceContext.getSystemService(SensorManager.class);
+        Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (sensor != null) {
-            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
+            mSensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
         }
     }
 
@@ -126,10 +129,9 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         float x = event.values[0];
         float z = event.values[2];
         float magnitude = (float) Math.sqrt(x * x + z * z);
-        float dot = z;
-        float angle = (float) (Math.signum(x) * Math.acos(dot / magnitude));
+        float angle = (float) (Math.signum(x) * Math.acos(z / magnitude));
         float angleDegrees = (float) Math.toDegrees(angle);
-        beam.setRotation(angleDegrees);
+        mBeam.setRotation(angleDegrees);
     }
 
     @Override
