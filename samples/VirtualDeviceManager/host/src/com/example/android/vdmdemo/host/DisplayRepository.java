@@ -17,95 +17,99 @@
 package com.example.android.vdmdemo.host;
 
 import android.view.Display;
+
 import androidx.annotation.GuardedBy;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 final class DisplayRepository {
 
-  @GuardedBy("displayRepository")
-  private final List<RemoteDisplay> displayRepository = new ArrayList<>();
+    @GuardedBy("displayRepository")
+    private final List<RemoteDisplay> displayRepository = new ArrayList<>();
 
-  @Inject
-  DisplayRepository() {}
+    @Inject
+    DisplayRepository() {}
 
-  void addDisplay(RemoteDisplay display) {
-    synchronized (displayRepository) {
-      displayRepository.add(display);
+    void addDisplay(RemoteDisplay display) {
+        synchronized (displayRepository) {
+            displayRepository.add(display);
+        }
     }
-  }
 
-  void removeDisplay(int displayId) {
-    getDisplay(displayId).ifPresent(this::closeDisplay);
-  }
-
-  void removeDisplayByRemoteId(int remoteDisplayId) {
-    getDisplayByRemoteId(remoteDisplayId).ifPresent(this::closeDisplay);
-  }
-
-  void onDisplayChanged(int displayId) {
-    getDisplay(displayId).ifPresent(RemoteDisplay::onDisplayChanged);
-  }
-
-  boolean resetDisplay(RemoteEvent event) {
-    Optional<RemoteDisplay> display = getDisplayByRemoteId(event.getDisplayId());
-    display.ifPresent(d -> d.reset(event.getDisplayCapabilities()));
-    return display.isPresent();
-  }
-
-  void clear() {
-    synchronized (displayRepository) {
-      displayRepository.forEach(RemoteDisplay::close);
-      displayRepository.clear();
+    void removeDisplay(int displayId) {
+        getDisplay(displayId).ifPresent(this::closeDisplay);
     }
-  }
 
-  int[] getRemoteDisplayIds() {
-    synchronized (displayRepository) {
-      return displayRepository.stream().mapToInt(RemoteDisplay::getRemoteDisplayId).toArray();
+    void removeDisplayByRemoteId(int remoteDisplayId) {
+        getDisplayByRemoteId(remoteDisplayId).ifPresent(this::closeDisplay);
     }
-  }
 
-  int getRemoteDisplayId(int displayId) {
-    return getDisplay(displayId)
-        .map(RemoteDisplay::getRemoteDisplayId)
-        .orElse(Display.INVALID_DISPLAY);
-  }
-
-  Optional<RemoteDisplay> getDisplayByIndex(int index) {
-    synchronized (displayRepository) {
-      if (index < 0 || index >= displayRepository.size()) {
-        return Optional.empty();
-      }
-      return Optional.of(displayRepository.get(index));
+    void onDisplayChanged(int displayId) {
+        getDisplay(displayId).ifPresent(RemoteDisplay::onDisplayChanged);
     }
-  }
 
-  private Optional<RemoteDisplay> getDisplay(int displayId) {
-    synchronized (displayRepository) {
-      return displayRepository.stream()
-          .filter(display -> display.getDisplayId() == displayId)
-          .findFirst();
+    boolean resetDisplay(RemoteEvent event) {
+        Optional<RemoteDisplay> display = getDisplayByRemoteId(event.getDisplayId());
+        display.ifPresent(d -> d.reset(event.getDisplayCapabilities()));
+        return display.isPresent();
     }
-  }
 
-  private Optional<RemoteDisplay> getDisplayByRemoteId(int remoteDisplayId) {
-    synchronized (displayRepository) {
-      return displayRepository.stream()
-          .filter(display -> display.getRemoteDisplayId() == remoteDisplayId)
-          .findFirst();
+    void clear() {
+        synchronized (displayRepository) {
+            displayRepository.forEach(RemoteDisplay::close);
+            displayRepository.clear();
+        }
     }
-  }
 
-  private void closeDisplay(RemoteDisplay display) {
-    synchronized (displayRepository) {
-      displayRepository.remove(display);
+    int[] getRemoteDisplayIds() {
+        synchronized (displayRepository) {
+            return displayRepository.stream().mapToInt(RemoteDisplay::getRemoteDisplayId).toArray();
+        }
     }
-    display.close();
-  }
+
+    int getRemoteDisplayId(int displayId) {
+        return getDisplay(displayId)
+                .map(RemoteDisplay::getRemoteDisplayId)
+                .orElse(Display.INVALID_DISPLAY);
+    }
+
+    Optional<RemoteDisplay> getDisplayByIndex(int index) {
+        synchronized (displayRepository) {
+            if (index < 0 || index >= displayRepository.size()) {
+                return Optional.empty();
+            }
+            return Optional.of(displayRepository.get(index));
+        }
+    }
+
+    private Optional<RemoteDisplay> getDisplay(int displayId) {
+        synchronized (displayRepository) {
+            return displayRepository.stream()
+                    .filter(display -> display.getDisplayId() == displayId)
+                    .findFirst();
+        }
+    }
+
+    private Optional<RemoteDisplay> getDisplayByRemoteId(int remoteDisplayId) {
+        synchronized (displayRepository) {
+            return displayRepository.stream()
+                    .filter(display -> display.getRemoteDisplayId() == remoteDisplayId)
+                    .findFirst();
+        }
+    }
+
+    private void closeDisplay(RemoteDisplay display) {
+        synchronized (displayRepository) {
+            displayRepository.remove(display);
+        }
+        display.close();
+    }
 }

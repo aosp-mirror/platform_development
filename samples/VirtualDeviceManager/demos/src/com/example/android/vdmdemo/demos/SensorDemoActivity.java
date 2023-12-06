@@ -28,7 +28,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.List;
 
 /**
@@ -36,98 +38,100 @@ import java.util.List;
  */
 public final class SensorDemoActivity extends AppCompatActivity implements SensorEventListener {
 
-  private static final String DEVICE_NAME_UNKNOWN = "Unknown";
-  private static final String DEVICE_NAME_DEFAULT = "Default - " + Build.MODEL;
+    private static final String DEVICE_NAME_UNKNOWN = "Unknown";
+    private static final String DEVICE_NAME_DEFAULT = "Default - " + Build.MODEL;
 
-  private VirtualDeviceManager vdm;
-  private SensorManager sensorManager;
-  private View beam;
-  private Context deviceContext;
+    private VirtualDeviceManager vdm;
+    private SensorManager sensorManager;
+    private View beam;
+    private Context deviceContext;
 
-  @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    setContentView(R.layout.sensor_demo_activity);
+        setContentView(R.layout.sensor_demo_activity);
 
-    beam = findViewById(R.id.beam);
+        beam = findViewById(R.id.beam);
 
-    vdm = getSystemService(VirtualDeviceManager.class);
-    sensorManager = getSystemService(SensorManager.class);
-    deviceContext = this;
+        vdm = getSystemService(VirtualDeviceManager.class);
+        sensorManager = getSystemService(SensorManager.class);
+        deviceContext = this;
 
-    changeSensorDevice(deviceContext.getDeviceId());
-  }
+        changeSensorDevice(deviceContext.getDeviceId());
+    }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
-    sensorManager.unregisterListener(this);
-  }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
+        sensorManager.unregisterListener(this);
+    }
 
-  private void updateCurrentDeviceTextView(Context context) {
-    String deviceName = DEVICE_NAME_UNKNOWN;
-    if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
-      deviceName = DEVICE_NAME_DEFAULT;
-    } else {
-      for (VirtualDevice virtualDevice : vdm.getVirtualDevices()) {
-        if (virtualDevice.getDeviceId() == context.getDeviceId()) {
-          deviceName = virtualDevice.getName();
-          break;
+    private void updateCurrentDeviceTextView(Context context) {
+        String deviceName = DEVICE_NAME_UNKNOWN;
+        if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
+            deviceName = DEVICE_NAME_DEFAULT;
+        } else {
+            for (VirtualDevice virtualDevice : vdm.getVirtualDevices()) {
+                if (virtualDevice.getDeviceId() == context.getDeviceId()) {
+                    deviceName = virtualDevice.getName();
+                    break;
+                }
+            }
         }
-      }
+        TextView currentDevice = findViewById(R.id.current_device);
+        currentDevice.setText(context.getString(R.string.current_device, deviceName));
     }
-    TextView currentDevice = findViewById(R.id.current_device);
-    currentDevice.setText(context.getString(R.string.current_device, deviceName));
-  }
 
-  public void onChangeDevice(View view) {
-    List<VirtualDevice> virtualDevices = vdm.getVirtualDevices();
-    String[] devices = new String[virtualDevices.size() + 1];
-    devices[0] = DEVICE_NAME_DEFAULT;
-    for (int i = 0; i < virtualDevices.size(); ++i) {
-      devices[i + 1] = virtualDevices.get(i).getName();
+    public void onChangeDevice(View view) {
+        List<VirtualDevice> virtualDevices = vdm.getVirtualDevices();
+        String[] devices = new String[virtualDevices.size() + 1];
+        devices[0] = DEVICE_NAME_DEFAULT;
+        for (int i = 0; i < virtualDevices.size(); ++i) {
+            devices[i + 1] = virtualDevices.get(i).getName();
+        }
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setTitle("Available devices");
+        alertDialogBuilder.setItems(
+                devices,
+                (dialog, which) -> {
+                    int deviceId =
+                            which > 0
+                                    ? virtualDevices.get(which - 1).getDeviceId()
+                                    : Context.DEVICE_ID_DEFAULT;
+                    changeSensorDevice(deviceId);
+                });
+        alertDialogBuilder.show();
     }
-    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-    alertDialogBuilder.setTitle("Available devices");
-    alertDialogBuilder.setItems(
-        devices,
-        (dialog, which) -> {
-          int deviceId =
-              which > 0 ? virtualDevices.get(which - 1).getDeviceId() : Context.DEVICE_ID_DEFAULT;
-          changeSensorDevice(deviceId);
-        });
-    alertDialogBuilder.show();
-  }
 
-  private void changeSensorDevice(int deviceId) {
-    deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
-    sensorManager.unregisterListener(this);
+    private void changeSensorDevice(int deviceId) {
+        deviceContext.unregisterDeviceIdChangeListener(this::changeSensorDevice);
+        sensorManager.unregisterListener(this);
 
-    deviceContext = createDeviceContext(deviceId);
-    deviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
+        deviceContext = createDeviceContext(deviceId);
+        deviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
 
-    updateCurrentDeviceTextView(deviceContext);
+        updateCurrentDeviceTextView(deviceContext);
 
-    sensorManager = deviceContext.getSystemService(SensorManager.class);
-    Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    if (sensor != null) {
-      sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
+        sensorManager = deviceContext.getSystemService(SensorManager.class);
+        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        if (sensor != null) {
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
+        }
     }
-  }
 
-  @Override
-  public void onSensorChanged(SensorEvent event) {
-    float x = event.values[0];
-    float z = event.values[2];
-    float magnitude = (float) Math.sqrt(x * x + z * z);
-    float dot = z;
-    float angle = (float) (Math.signum(x) * Math.acos(dot / magnitude));
-    float angleDegrees = (float) Math.toDegrees(angle);
-    beam.setRotation(angleDegrees);
-  }
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        float x = event.values[0];
+        float z = event.values[2];
+        float magnitude = (float) Math.sqrt(x * x + z * z);
+        float dot = z;
+        float angle = (float) (Math.signum(x) * Math.acos(dot / magnitude));
+        float angleDegrees = (float) Math.toDegrees(angle);
+        beam.setRotation(angleDegrees);
+    }
 
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 }

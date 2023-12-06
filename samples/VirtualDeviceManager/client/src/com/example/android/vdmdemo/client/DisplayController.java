@@ -17,6 +17,7 @@
 package com.example.android.vdmdemo.client;
 
 import android.view.Surface;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.StopStreaming;
@@ -24,74 +25,74 @@ import com.example.android.vdmdemo.common.RemoteIo;
 import com.example.android.vdmdemo.common.VideoManager;
 
 final class DisplayController {
-  private static final int DPI = 300;
+    private static final int DPI = 300;
 
-  private final int displayId;
-  private final RemoteIo remoteIo;
+    private final int displayId;
+    private final RemoteIo remoteIo;
 
-  private VideoManager videoManager = null;
+    private VideoManager videoManager = null;
 
-  private int dpi = DPI;
-  private RemoteEvent displayCapabilities;
+    private int dpi = DPI;
+    private RemoteEvent displayCapabilities;
 
-  DisplayController(int displayId, RemoteIo remoteIo) {
-    this.displayId = displayId;
-    this.remoteIo = remoteIo;
-  }
-
-  void setDpi(int dpi) {
-    this.dpi = dpi;
-  }
-
-  int getDpi() {
-    return dpi;
-  }
-
-  void close() {
-    remoteIo.sendMessage(
-        RemoteEvent.newBuilder()
-            .setDisplayId(displayId)
-            .setStopStreaming(StopStreaming.newBuilder())
-            .build());
-
-    if (videoManager != null) {
-      videoManager.stop();
+    DisplayController(int displayId, RemoteIo remoteIo) {
+        this.displayId = displayId;
+        this.remoteIo = remoteIo;
     }
-  }
 
-  void pause() {
-    if (videoManager == null) {
-      return;
+    void setDpi(int dpi) {
+        this.dpi = dpi;
     }
-    videoManager.stop();
-    videoManager = null;
 
-    remoteIo.sendMessage(
-        RemoteEvent.newBuilder()
-            .setDisplayId(displayId)
-            .setStopStreaming(StopStreaming.newBuilder().setPause(true))
-            .build());
-  }
-
-  void sendDisplayCapabilities() {
-    remoteIo.sendMessage(displayCapabilities);
-  }
-
-  void setSurface(Surface surface, int width, int height) {
-    if (videoManager != null) {
-      videoManager.stop();
+    int getDpi() {
+        return dpi;
     }
-    videoManager = VideoManager.createDecoder(displayId, remoteIo);
-    videoManager.startDecoding(surface, width, height);
-    displayCapabilities =
-        RemoteEvent.newBuilder()
-            .setDisplayId(displayId)
-            .setDisplayCapabilities(
-                DisplayCapabilities.newBuilder()
-                    .setViewportWidth(width)
-                    .setViewportHeight(height)
-                    .setDensityDpi(dpi))
-            .build();
-    sendDisplayCapabilities();
-  }
+
+    void close() {
+        remoteIo.sendMessage(
+                RemoteEvent.newBuilder()
+                        .setDisplayId(displayId)
+                        .setStopStreaming(StopStreaming.newBuilder())
+                        .build());
+
+        if (videoManager != null) {
+            videoManager.stop();
+        }
+    }
+
+    void pause() {
+        if (videoManager == null) {
+            return;
+        }
+        videoManager.stop();
+        videoManager = null;
+
+        remoteIo.sendMessage(
+                RemoteEvent.newBuilder()
+                        .setDisplayId(displayId)
+                        .setStopStreaming(StopStreaming.newBuilder().setPause(true))
+                        .build());
+    }
+
+    void sendDisplayCapabilities() {
+        remoteIo.sendMessage(displayCapabilities);
+    }
+
+    void setSurface(Surface surface, int width, int height) {
+        if (videoManager != null) {
+            videoManager.stop();
+        }
+        videoManager = VideoManager.createDecoder(displayId, remoteIo);
+        videoManager.startDecoding(surface, width, height);
+        displayCapabilities =
+                RemoteEvent.newBuilder()
+                        .setDisplayId(displayId)
+                        .setDisplayCapabilities(
+                                DisplayCapabilities.newBuilder()
+                                        .setViewportWidth(width)
+                                        .setViewportHeight(height)
+                                        .setDensityDpi(dpi))
+                        .build();
+        sendDisplayCapabilities();
+    }
 }

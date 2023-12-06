@@ -18,16 +18,19 @@ package com.example.android.vdmdemo.demos;
 
 import android.os.Bundle;
 import android.view.WindowManager;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 /** Demo activity for testing secure content with VDM. */
 public final class SecureWindowDemoActivity extends AppCompatActivity {
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.secure_window_demo_activity);
-    getWindow()
-        .setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
-  }
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.secure_window_demo_activity);
+        getWindow()
+                .setFlags(
+                        WindowManager.LayoutParams.FLAG_SECURE,
+                        WindowManager.LayoutParams.FLAG_SECURE);
+    }
 }

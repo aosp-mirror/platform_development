@@ -20,97 +20,101 @@ import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.util.Log;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.AudioFrame;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
+
 import java.util.function.Consumer;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 final class AudioPlayer implements Consumer<RemoteEvent> {
-  private static final String TAG = AudioPlayer.class.getSimpleName();
+    private static final String TAG = AudioPlayer.class.getSimpleName();
 
-  private static final int SAMPLE_RATE = 44000;
-  private static final AudioFormat AUDIO_FORMAT =
-      new AudioFormat.Builder()
-          .setSampleRate(SAMPLE_RATE)
-          .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-          .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
-          .build();
-  private static final AudioAttributes AUDIO_ATTRIBUTES =
-      new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build();
-  private static final int MIN_AUDIOTRACK_BUFFER_SIZE =  AudioTrack.getMinBufferSize(
-      SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
-  private static final int AUDIOTRACK_BUFFER_SIZE = 4 * MIN_AUDIOTRACK_BUFFER_SIZE;
+    private static final int SAMPLE_RATE = 44000;
+    private static final AudioFormat AUDIO_FORMAT =
+            new AudioFormat.Builder()
+                    .setSampleRate(SAMPLE_RATE)
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                    .build();
+    private static final AudioAttributes AUDIO_ATTRIBUTES =
+            new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build();
+    private static final int MIN_AUDIOTRACK_BUFFER_SIZE =
+            AudioTrack.getMinBufferSize(
+                    SAMPLE_RATE, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+    private static final int AUDIOTRACK_BUFFER_SIZE = 4 * MIN_AUDIOTRACK_BUFFER_SIZE;
 
-  private final Object lock = new Object();
-  private AudioTrack audioTrack;
+    private final Object lock = new Object();
+    private AudioTrack audioTrack;
 
-  @Inject
-  AudioPlayer() {}
+    @Inject
+    AudioPlayer() {}
 
-  private void startPlayback() {
-    synchronized (lock) {
-      if (audioTrack != null) {
-        Log.w(TAG, "Received startPlayback command without stopping the playback first");
-        stopPlayback();
-      }
-      audioTrack =
-          new AudioTrack.Builder()
-              .setAudioFormat(AUDIO_FORMAT)
-              .setAudioAttributes(AUDIO_ATTRIBUTES)
-              .setBufferSizeInBytes(AUDIOTRACK_BUFFER_SIZE)
-              .build();
-      audioTrack.play();
-    }
-  }
-
-  private void playAudioFrame(AudioFrame audioFrame) {
-    byte[] data = audioFrame.getData().toByteArray();
-    int bytesToWrite = data.length;
-    if (bytesToWrite == 0) {
-      return;
-    }
-    int bytesWritten = 0;
-    synchronized (lock) {
-      if (audioTrack == null) {
-        Log.e(TAG, "Received audio frame, but audio track was not initialized yet");
-        return;
-      }
-
-      while (bytesToWrite > 0) {
-        int ret = audioTrack.write(data, bytesWritten, bytesToWrite);
-        if (ret <= 0) {
-          Log.e(TAG, "AudioTrack.write returned error code " + ret);
+    private void startPlayback() {
+        synchronized (lock) {
+            if (audioTrack != null) {
+                Log.w(TAG, "Received startPlayback command without stopping the playback first");
+                stopPlayback();
+            }
+            audioTrack =
+                    new AudioTrack.Builder()
+                            .setAudioFormat(AUDIO_FORMAT)
+                            .setAudioAttributes(AUDIO_ATTRIBUTES)
+                            .setBufferSizeInBytes(AUDIOTRACK_BUFFER_SIZE)
+                            .build();
+            audioTrack.play();
         }
-        bytesToWrite -= ret;
-        bytesWritten += ret;
-      }
     }
-  }
 
-  private void stopPlayback() {
-    synchronized (lock) {
-      if (audioTrack == null) {
-        Log.w(TAG, "Received stopPlayback command for already stopped playback");
-      } else {
-        audioTrack.stop();
-        audioTrack.release();
-        audioTrack = null;
-      }
-    }
-  }
+    private void playAudioFrame(AudioFrame audioFrame) {
+        byte[] data = audioFrame.getData().toByteArray();
+        int bytesToWrite = data.length;
+        if (bytesToWrite == 0) {
+            return;
+        }
+        int bytesWritten = 0;
+        synchronized (lock) {
+            if (audioTrack == null) {
+                Log.e(TAG, "Received audio frame, but audio track was not initialized yet");
+                return;
+            }
 
-  @Override
-  public void accept(RemoteEvent remoteEvent) {
-    if (remoteEvent.hasStartAudio()) {
-      startPlayback();
+            while (bytesToWrite > 0) {
+                int ret = audioTrack.write(data, bytesWritten, bytesToWrite);
+                if (ret <= 0) {
+                    Log.e(TAG, "AudioTrack.write returned error code " + ret);
+                }
+                bytesToWrite -= ret;
+                bytesWritten += ret;
+            }
+        }
     }
-    if (remoteEvent.hasAudioFrame()) {
-      playAudioFrame(remoteEvent.getAudioFrame());
+
+    private void stopPlayback() {
+        synchronized (lock) {
+            if (audioTrack == null) {
+                Log.w(TAG, "Received stopPlayback command for already stopped playback");
+            } else {
+                audioTrack.stop();
+                audioTrack.release();
+                audioTrack = null;
+            }
+        }
     }
-    if (remoteEvent.hasStopAudio()) {
-      stopPlayback();
+
+    @Override
+    public void accept(RemoteEvent remoteEvent) {
+        if (remoteEvent.hasStartAudio()) {
+            startPlayback();
+        }
+        if (remoteEvent.hasAudioFrame()) {
+            playAudioFrame(remoteEvent.getAudioFrame());
+        }
+        if (remoteEvent.hasStopAudio()) {
+            stopPlayback();
+        }
     }
-  }
 }

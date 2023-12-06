@@ -22,26 +22,26 @@ import javax.inject.Singleton;
 /** Settings known to the VDM Demo Host application */
 @Singleton
 final class Settings {
-  boolean displayRotationEnabled = true;
-  boolean sensorsEnabled = true;
-  boolean audioEnabled = true;
-  boolean includeInRecents = false;
-  boolean crossDeviceClipboardEnabled = false;
-  boolean alwaysUnlocked = true;
-  boolean deviceStreaming = false;
-  boolean showPointerIcon = true;
-  boolean immersiveMode = false;
-  boolean customHome = false;
+    boolean displayRotationEnabled = true;
+    boolean sensorsEnabled = true;
+    boolean audioEnabled = true;
+    boolean includeInRecents = false;
+    boolean crossDeviceClipboardEnabled = false;
+    boolean alwaysUnlocked = true;
+    boolean deviceStreaming = false;
+    boolean showPointerIcon = true;
+    boolean immersiveMode = false;
+    boolean customHome = false;
 
-  /**
-   * When enabled, the encoder output of the host will be stored in:
-   * /sdcard/Download/vdmdemo_encoder_output_<displayId>.h264
-   *
-   * <p>After pulling this file to your machine this can be played back with: ffplay -f h264
-   * vdmdemo_encoder_output_<displayId>.h264
-   */
-  boolean recordEncoderOutput = false;
+    /**
+     * When enabled, the encoder output of the host will be stored in:
+     * /sdcard/Download/vdmdemo_encoder_output_<displayId>.h264
+     *
+     * <p>After pulling this file to your machine this can be played back with: ffplay -f h264
+     * vdmdemo_encoder_output_<displayId>.h264
+     */
+    boolean recordEncoderOutput = false;
 
-  @Inject
-  Settings() {}
+    @Inject
+    Settings() {}
 }

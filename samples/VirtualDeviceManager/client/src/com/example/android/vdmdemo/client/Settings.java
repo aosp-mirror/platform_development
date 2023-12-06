@@ -22,11 +22,11 @@ import javax.inject.Singleton;
 /** Settings known to the VDM Demo Client application */
 @Singleton
 final class Settings {
-  boolean dpadEnabled = false;
-  boolean navTouchpadEnabled = false;
-  boolean externalKeyboardEnabled = false;
-  boolean externalMouseEnabled = false;
+    boolean dpadEnabled = false;
+    boolean navTouchpadEnabled = false;
+    boolean externalKeyboardEnabled = false;
+    boolean externalMouseEnabled = false;
 
-  @Inject
-  Settings() {}
+    @Inject
+    Settings() {}
 }

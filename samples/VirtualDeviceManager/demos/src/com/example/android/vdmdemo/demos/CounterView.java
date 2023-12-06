@@ -26,59 +26,60 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+
 import androidx.annotation.Nullable;
 
 /** A view rendering a simple counter that is incremented every time onDraw() is called. */
 public class CounterView extends View {
 
-  private static final String TAG = "CounterView";
-  private static final int TEXT_SIZE_SP = 100;
-  private long counter = 0;
-  private final Paint textPaint = new Paint();
-  private final Paint backgroundPaint = new Paint();
+    private static final String TAG = "CounterView";
+    private static final int TEXT_SIZE_SP = 100;
+    private long counter = 0;
+    private final Paint textPaint = new Paint();
+    private final Paint backgroundPaint = new Paint();
 
-  public CounterView(Context context) {
-    super(context);
-    init();
-  }
+    public CounterView(Context context) {
+        super(context);
+        init();
+    }
 
-  public CounterView(Context context, @Nullable AttributeSet attrs) {
-    super(context, attrs);
-    init();
-  }
+    public CounterView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
 
-  public CounterView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-    super(context, attrs, defStyleAttr);
-    init();
-  }
+    public CounterView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
 
-  public CounterView(
-      Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-    super(context, attrs, defStyleAttr, defStyleRes);
-    init();
-  }
+    public CounterView(
+            Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init();
+    }
 
-  private void init() {
-    textPaint.setColor(Color.RED);
-    textPaint.setStyle(Style.FILL);
-    float scaledSizeInPixels = spToPx(TEXT_SIZE_SP, getContext());
-    textPaint.setTextSize(scaledSizeInPixels);
+    private void init() {
+        textPaint.setColor(Color.RED);
+        textPaint.setStyle(Style.FILL);
+        float scaledSizeInPixels = spToPx(TEXT_SIZE_SP, getContext());
+        textPaint.setTextSize(scaledSizeInPixels);
 
-    backgroundPaint.setColor(Color.WHITE);
-    backgroundPaint.setStyle(Style.FILL);
-  }
+        backgroundPaint.setColor(Color.WHITE);
+        backgroundPaint.setStyle(Style.FILL);
+    }
 
-  @Override
-  protected void onDraw(Canvas canvas) {
-    canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), backgroundPaint);
-    canvas.drawText(String.valueOf(counter), 0, 200, textPaint);
-    Log.e(TAG, "Rendered counter: " + counter);
-    counter++;
-  }
+    @Override
+    protected void onDraw(Canvas canvas) {
+        canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), backgroundPaint);
+        canvas.drawText(String.valueOf(counter), 0, 200, textPaint);
+        Log.e(TAG, "Rendered counter: " + counter);
+        counter++;
+    }
 
-  private static int spToPx(float sp, Context context) {
-    return (int)
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
-  }
+    private static int spToPx(float sp, Context context) {
+        return (int)
+                TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_SP, sp, context.getResources().getDisplayMetrics());
+    }
 }

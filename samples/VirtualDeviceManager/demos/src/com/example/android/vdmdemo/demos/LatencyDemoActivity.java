@@ -18,7 +18,9 @@ package com.example.android.vdmdemo.demos;
 
 import android.os.Bundle;
 import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -30,26 +32,27 @@ import java.util.concurrent.TimeUnit;
  */
 public final class LatencyDemoActivity extends AppCompatActivity {
 
-  private static final int DELAY_MS = 1000;
+    private static final int DELAY_MS = 1000;
 
-  private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-  private ScheduledFuture<?> scheduledFuture;
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private ScheduledFuture<?> scheduledFuture;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    setContentView(R.layout.latency_demo_activity);
-    View counter = findViewById(R.id.counter);
+        setContentView(R.layout.latency_demo_activity);
+        View counter = findViewById(R.id.counter);
 
-    scheduledFuture =
-        executor.scheduleAtFixedRate(counter::invalidate, 0, DELAY_MS, TimeUnit.MILLISECONDS);
-  }
+        scheduledFuture =
+                executor.scheduleAtFixedRate(
+                        counter::invalidate, 0, DELAY_MS, TimeUnit.MILLISECONDS);
+    }
 
-  @Override
-  protected void onDestroy() {
-    scheduledFuture.cancel(true);
-    executor.shutdown();
-    super.onDestroy();
-  }
+    @Override
+    protected void onDestroy() {
+        scheduledFuture.cancel(true);
+        executor.shutdown();
+        super.onDestroy();
+    }
 }

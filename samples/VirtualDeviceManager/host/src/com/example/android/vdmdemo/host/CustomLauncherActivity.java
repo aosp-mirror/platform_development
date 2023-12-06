@@ -20,43 +20,45 @@ import android.app.WallpaperManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.GridView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+
 import dagger.hilt.android.AndroidEntryPoint;
 
 /** Simple activity that can act as a home/launcher on a virtual device. */
 @AndroidEntryPoint(AppCompatActivity.class)
 public class CustomLauncherActivity extends Hilt_CustomLauncherActivity {
 
-  @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.custom_launcher);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.custom_launcher);
 
-    WindowInsetsControllerCompat windowInsetsController =
-        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-    windowInsetsController.setSystemBarsBehavior(
-        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-    windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+        WindowInsetsControllerCompat windowInsetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        windowInsetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
 
-    GridView launcher = requireViewById(R.id.app_grid);
-    LauncherAdapter launcherAdapter =
-        new LauncherAdapter(getPackageManager(), WallpaperManager.getInstance(this));
-    launcher.setAdapter(launcherAdapter);
-    launcher.setOnItemClickListener(
-        (parent, v, position, id) -> {
-          Intent intent = launcherAdapter.createPendingRemoteIntent(position);
-          if (intent != null) {
-            startActivity(intent);
-          }
-        });
-  }
+        GridView launcher = requireViewById(R.id.app_grid);
+        LauncherAdapter launcherAdapter =
+                new LauncherAdapter(getPackageManager(), WallpaperManager.getInstance(this));
+        launcher.setAdapter(launcherAdapter);
+        launcher.setOnItemClickListener(
+                (parent, v, position, id) -> {
+                    Intent intent = launcherAdapter.createPendingRemoteIntent(position);
+                    if (intent != null) {
+                        startActivity(intent);
+                    }
+                });
+    }
 
-  @Override
-  @SuppressWarnings("MissingSuperCall")
-  public void onBackPressed() {
-    // Do nothing
-  }
+    @Override
+    @SuppressWarnings("MissingSuperCall")
+    public void onBackPressed() {
+        // Do nothing
+    }
 }

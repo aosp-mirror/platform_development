@@ -22,30 +22,34 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.fragment.app.Fragment;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
+
 import dagger.hilt.android.AndroidEntryPoint;
+
 import javax.inject.Inject;
 
 /** Fragment to show UI for a navigation touchpad. */
 @AndroidEntryPoint(Fragment.class)
 public final class NavTouchpadFragment extends Hilt_NavTouchpadFragment {
 
-  @Inject InputManager inputManager;
+    @Inject InputManager inputManager;
 
-  @SuppressLint("ClickableViewAccessibility")
-  @Override
-  public View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.fragment_nav_touchpad, container, false);
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_nav_touchpad, container, false);
 
-    TextView navTouchpad = view.findViewById(R.id.nav_touchpad);
-    navTouchpad.setOnTouchListener(
-        (v, event) -> {
-          inputManager.sendInputEventToFocusedDisplay(
-              InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event);
-          return true;
-        });
-    return view;
-  }
+        TextView navTouchpad = view.findViewById(R.id.nav_touchpad);
+        navTouchpad.setOnTouchListener(
+                (v, event) -> {
+                    inputManager.sendInputEventToFocusedDisplay(
+                            InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event);
+                    return true;
+                });
+        return view;
+    }
 }

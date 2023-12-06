@@ -20,44 +20,45 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 /** Demo activity for display rotation with VDM. */
 public final class RotationDemoActivity extends AppCompatActivity {
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.rotation_demo_activity);
-  }
-
-  @Override
-  public void onResume() {
-    super.onResume();
-    ((TextView) findViewById(R.id.current_orientation))
-        .setText(getString(R.string.current_orientation, getOrientationString()));
-  }
-
-  public void onChangeOrientation(View view) {
-    int orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
-    if (view.getId() == R.id.portrait) {
-      orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-    } else if (view.getId() == R.id.landscape) {
-      orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.rotation_demo_activity);
     }
-    setRequestedOrientation(orientation);
-  }
 
-  private String getOrientationString() {
-    switch (getRequestedOrientation()) {
-      case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED:
-        return "unspecified";
-      case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
-        return "portrait";
-      case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
-        return "landscape";
-      default:
-        return "unknown";
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((TextView) findViewById(R.id.current_orientation))
+                .setText(getString(R.string.current_orientation, getOrientationString()));
     }
-  }
+
+    public void onChangeOrientation(View view) {
+        int orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        if (view.getId() == R.id.portrait) {
+            orientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        } else if (view.getId() == R.id.landscape) {
+            orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        }
+        setRequestedOrientation(orientation);
+    }
+
+    private String getOrientationString() {
+        switch (getRequestedOrientation()) {
+            case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED:
+                return "unspecified";
+            case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+                return "portrait";
+            case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+                return "landscape";
+            default:
+                return "unknown";
+        }
+    }
 }

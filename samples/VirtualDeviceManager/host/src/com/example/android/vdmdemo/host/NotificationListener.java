@@ -25,26 +25,29 @@ import android.util.Log;
 /** NotificationListenerService to forward notifications shown on the host to the client. */
 public final class NotificationListener extends NotificationListenerService {
 
-  private static final String TAG = "VdmHost";
+    private static final String TAG = "VdmHost";
 
-  @Override
-  public void onNotificationRemoved(
-      StatusBarNotification notification,
-      NotificationListenerService.RankingMap rankingMap,
-      int reason) {
+    @Override
+    public void onNotificationRemoved(
+            StatusBarNotification notification,
+            NotificationListenerService.RankingMap rankingMap,
+            int reason) {
 
-    if (reason == NotificationListenerService.REASON_LOCKDOWN) {
-      Intent lockdownIntent = new Intent(this, VdmService.class);
-      lockdownIntent.setAction(VdmService.ACTION_LOCKDOWN);
-      PendingIntent pendingIntentLockdown =
-          PendingIntent.getService(this, 0, lockdownIntent, PendingIntent.FLAG_IMMUTABLE);
+        if (reason == NotificationListenerService.REASON_LOCKDOWN) {
+            Intent lockdownIntent = new Intent(this, VdmService.class);
+            lockdownIntent.setAction(VdmService.ACTION_LOCKDOWN);
+            PendingIntent pendingIntentLockdown =
+                    PendingIntent.getService(this, 0, lockdownIntent, PendingIntent.FLAG_IMMUTABLE);
 
-      try {
-        Log.i(TAG, "Notification removed due to lockdown. Sending lockdown Intent to VdmService");
-        pendingIntentLockdown.send();
-      } catch (PendingIntent.CanceledException e) {
-        Log.e(TAG, "Error sending lockdown Intent", e);
-      }
+            try {
+                Log.i(
+                        TAG,
+                        "Notification removed due to lockdown. Sending lockdown "
+                        + "Intent to VdmService");
+                pendingIntentLockdown.send();
+            } catch (PendingIntent.CanceledException e) {
+                Log.e(TAG, "Error sending lockdown Intent", e);
+            }
+        }
     }
-  }
 }

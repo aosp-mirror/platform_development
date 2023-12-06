@@ -17,6 +17,7 @@
 package com.example.android.vdmdemo.client;
 
 import android.app.Application;
+
 import dagger.hilt.android.HiltAndroidApp;
 
 /** VDM Client application class. */

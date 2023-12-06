@@ -22,9 +22,12 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.util.Log;
+
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
+
 import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,81 +35,82 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
 final class RunningVdmUidsTracker implements ActivityListener {
-  private static final String TAG = RunningVdmUidsTracker.class.getSimpleName();
+    private static final String TAG = RunningVdmUidsTracker.class.getSimpleName();
 
-  private final PackageManager packageManager;
-  private final AudioStreamer audioStreamer;
+    private final PackageManager packageManager;
+    private final AudioStreamer audioStreamer;
 
-  private final Object lock = new Object();
+    private final Object lock = new Object();
 
-  @GuardedBy("lock")
-  private HashMap<Integer, HashSet<Integer>> displayIdsToRunningUids = new HashMap<>();
+    @GuardedBy("lock")
+    private HashMap<Integer, HashSet<Integer>> displayIdsToRunningUids = new HashMap<>();
 
-  @GuardedBy("lock")
-  private ImmutableSet<Integer> runningVdmUids = ImmutableSet.of();
+    @GuardedBy("lock")
+    private ImmutableSet<Integer> runningVdmUids = ImmutableSet.of();
 
-  public RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
-    packageManager = Objects.requireNonNull(context).getPackageManager();
-    this.audioStreamer = Objects.requireNonNull(audioStreamer);
-  }
-
-  @Override
-  public void onTopActivityChanged(int displayId, @NonNull ComponentName componentName) {
-
-    Optional<Integer> topActivityUid = getUidForComponent(componentName);
-    if (topActivityUid.isEmpty()) {
-      Log.w(TAG, "Cannot determine UID for top activity component " + componentName);
-      return;
+    public RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
+        packageManager = Objects.requireNonNull(context).getPackageManager();
+        this.audioStreamer = Objects.requireNonNull(audioStreamer);
     }
 
-    ImmutableSet<Integer> updatedUids;
-    synchronized (lock) {
-      HashSet<Integer> displayUidSet = displayIdsToRunningUids.get(displayId);
-      if (displayUidSet == null) {
-        displayUidSet = new HashSet<>();
-        displayIdsToRunningUids.put(displayId, displayUidSet);
-      }
-      displayUidSet.add(topActivityUid.get());
-      runningVdmUids =
-          displayIdsToRunningUids.values().stream()
-              .flatMap(Collection::stream)
-              .collect(toImmutableSet());
-      updatedUids = runningVdmUids;
+    @Override
+    public void onTopActivityChanged(int displayId, @NonNull ComponentName componentName) {
+
+        Optional<Integer> topActivityUid = getUidForComponent(componentName);
+        if (topActivityUid.isEmpty()) {
+            Log.w(TAG, "Cannot determine UID for top activity component " + componentName);
+            return;
+        }
+
+        ImmutableSet<Integer> updatedUids;
+        synchronized (lock) {
+            HashSet<Integer> displayUidSet = displayIdsToRunningUids.get(displayId);
+            if (displayUidSet == null) {
+                displayUidSet = new HashSet<>();
+                displayIdsToRunningUids.put(displayId, displayUidSet);
+            }
+            displayUidSet.add(topActivityUid.get());
+            runningVdmUids =
+                    displayIdsToRunningUids.values().stream()
+                            .flatMap(Collection::stream)
+                            .collect(toImmutableSet());
+            updatedUids = runningVdmUids;
+        }
+
+        audioStreamer.updateVdmUids(updatedUids);
     }
 
-    audioStreamer.updateVdmUids(updatedUids);
-  }
+    @Override
+    public void onDisplayEmpty(int displayId) {
+        ImmutableSet<Integer> uidsBefore;
+        ImmutableSet<Integer> uidsAfter;
+        synchronized (lock) {
+            uidsBefore = runningVdmUids;
+            displayIdsToRunningUids.remove(displayId);
+            runningVdmUids =
+                    displayIdsToRunningUids.values().stream()
+                            .flatMap(Collection::stream)
+                            .collect(toImmutableSet());
+            uidsAfter = runningVdmUids;
+        }
 
-  @Override
-  public void onDisplayEmpty(int displayId) {
-    ImmutableSet<Integer> uidsBefore;
-    ImmutableSet<Integer> uidsAfter;
-    synchronized (lock) {
-      uidsBefore = runningVdmUids;
-      displayIdsToRunningUids.remove(displayId);
-      runningVdmUids =
-          displayIdsToRunningUids.values().stream()
-              .flatMap(Collection::stream)
-              .collect(toImmutableSet());
-      uidsAfter = runningVdmUids;
+        if (!uidsAfter.equals(uidsBefore)) {
+            audioStreamer.updateVdmUids(uidsAfter);
+        }
     }
 
-    if (!uidsAfter.equals(uidsBefore)) {
-      audioStreamer.updateVdmUids(uidsAfter);
+    private Optional<Integer> getUidForComponent(@NonNull ComponentName topActivity) {
+        try {
+            return Optional.of(
+                    packageManager.getPackageUid(topActivity.getPackageName(), /* flags= */ 0));
+        } catch (NameNotFoundException e) {
+            return Optional.empty();
+        }
     }
-  }
 
-  private Optional<Integer> getUidForComponent(@NonNull ComponentName topActivity) {
-    try {
-      return Optional.of(
-          packageManager.getPackageUid(topActivity.getPackageName(), /* flags= */ 0));
-    } catch (NameNotFoundException e) {
-      return Optional.empty();
+    private static <E> Collector<E, ?, ImmutableSet<E>> toImmutableSet() {
+        return Collectors.collectingAndThen(Collectors.toList(), ImmutableSet::copyOf);
     }
-  }
-
-  private static <E> Collector<E, ?, ImmutableSet<E>> toImmutableSet() {
-    return Collectors.collectingAndThen(Collectors.toList(), ImmutableSet::copyOf);
-  }
 }

@@ -22,78 +22,80 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
 import androidx.annotation.StyleRes;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.function.Consumer;
 
 /** Recycler view that can resize a child dynamically. */
 public final class ClientView extends RecyclerView {
-  private boolean isResizing = false;
-  private Consumer<Rect> resizeDoneCallback = null;
-  private Drawable resizingRect = null;
-  private Rect resizingBounds = new Rect();
-  private float resizeOffsetX = 0;
-  private float resizeOffsetY = 0;
+    private boolean isResizing = false;
+    private Consumer<Rect> resizeDoneCallback = null;
+    private Drawable resizingRect = null;
+    private Rect resizingBounds = new Rect();
+    private float resizeOffsetX = 0;
+    private float resizeOffsetY = 0;
 
-  public ClientView(Context context) {
-    super(context);
-    init();
-  }
-
-  public ClientView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-    init();
-  }
-
-  public ClientView(Context context, AttributeSet attrs, @StyleRes int defStyle) {
-    super(context, attrs, defStyle);
-    init();
-  }
-
-  private void init() {
-    resizingRect = getContext().getResources().getDrawable(R.drawable.resize_rect);
-  }
-
-  void startResizing(View viewToResize, MotionEvent origin, Consumer<Rect> callback) {
-    isResizing = true;
-    resizeDoneCallback = callback;
-    viewToResize.getGlobalVisibleRect(resizingBounds);
-    resizingRect.setBounds(resizingBounds);
-    getRootView().getOverlay().add(resizingRect);
-    resizeOffsetX = origin.getRawX() - resizingBounds.right;
-    resizeOffsetY = origin.getRawY() - resizingBounds.top;
-  }
-
-  private void stopResizing() {
-    if (!isResizing) {
-      return;
+    public ClientView(Context context) {
+        super(context);
+        init();
     }
-    isResizing = false;
-    resizeOffsetX = resizeOffsetY = 0;
-    getRootView().getOverlay().clear();
-    if (resizeDoneCallback != null) {
-      resizeDoneCallback.accept(resizingBounds);
-      resizeDoneCallback = null;
-    }
-  }
 
-  @Override
-  public boolean dispatchTouchEvent(MotionEvent ev) {
-    if (!isResizing) {
-      return super.dispatchTouchEvent(ev);
+    public ClientView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
     }
-    switch (ev.getAction()) {
-      case MotionEvent.ACTION_UP:
-        stopResizing();
-        break;
-      case MotionEvent.ACTION_MOVE:
-        resizingBounds.right = (int) (ev.getRawX() - resizeOffsetX);
-        resizingBounds.top = (int) (ev.getRawY() - resizeOffsetY);
+
+    public ClientView(Context context, AttributeSet attrs, @StyleRes int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init() {
+        resizingRect = getContext().getResources().getDrawable(R.drawable.resize_rect);
+    }
+
+    void startResizing(View viewToResize, MotionEvent origin, Consumer<Rect> callback) {
+        isResizing = true;
+        resizeDoneCallback = callback;
+        viewToResize.getGlobalVisibleRect(resizingBounds);
         resizingRect.setBounds(resizingBounds);
-        break;
-      default:
-        break;
+        getRootView().getOverlay().add(resizingRect);
+        resizeOffsetX = origin.getRawX() - resizingBounds.right;
+        resizeOffsetY = origin.getRawY() - resizingBounds.top;
     }
-    return true;
-  }
+
+    private void stopResizing() {
+        if (!isResizing) {
+            return;
+        }
+        isResizing = false;
+        resizeOffsetX = resizeOffsetY = 0;
+        getRootView().getOverlay().clear();
+        if (resizeDoneCallback != null) {
+            resizeDoneCallback.accept(resizingBounds);
+            resizeDoneCallback = null;
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (!isResizing) {
+            return super.dispatchTouchEvent(ev);
+        }
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_UP:
+                stopResizing();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                resizingBounds.right = (int) (ev.getRawX() - resizeOffsetX);
+                resizingBounds.top = (int) (ev.getRawY() - resizeOffsetY);
+                resizingRect.setBounds(resizingBounds);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
 }
