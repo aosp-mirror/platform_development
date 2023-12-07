@@ -24,7 +24,7 @@ import {
 } from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Trace} from 'trace/trace';
 import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';

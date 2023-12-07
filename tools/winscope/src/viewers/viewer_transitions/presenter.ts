@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -43,8 +43,8 @@ export class Presenter {
     this.notifyUiDataCallback = notifyUiDataCallback;
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       await this.initializeIfNeeded();
 
       if (this.uiData === UiData.EMPTY) {

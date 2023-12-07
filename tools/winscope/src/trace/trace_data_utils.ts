@@ -78,13 +78,6 @@ interface Constructor<T = {}> {
   new (...args: any[]): T;
 }
 
-function mixin<T, U>(a: T, b: U): T & U {
-  const ret = {};
-  Object.assign(ret, a);
-  Object.assign(ret, b);
-  return ret as T & U;
-}
-
 type PropertyTreeNode = TreeNode<AssociatedProperty> & AssociatedProperty;
 type HierarchyTreeNode = TreeNode<PropertiesGetter> & PropertiesGetter;
 
@@ -103,7 +96,6 @@ export {
   PropertyDetails,
   AssociatedProperty,
   Constructor,
-  mixin,
   PropertyTreeNode,
   HierarchyTreeNode,
   EMPTY_OBJ_STRING,

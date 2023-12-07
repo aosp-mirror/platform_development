@@ -15,12 +15,12 @@
  */
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {AppEvent, AppEventType, TabbedViewSwitched} from 'app/app_event';
 import {TRACE_INFO} from 'app/trace_info';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {AppEventEmitter, EmitAppEvent} from 'interfaces/app_event_emitter';
-import {AppEventListener} from 'interfaces/app_event_listener';
+import {TabbedViewSwitched, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab extends View {
@@ -99,7 +99,7 @@ interface Tab extends View {
     `,
   ],
 })
-export class TraceViewComponent implements AppEventEmitter, AppEventListener {
+export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventListener {
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
 
@@ -108,7 +108,7 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
 
   private elementRef: ElementRef;
   private currentActiveTab: undefined | Tab;
-  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
     this.elementRef = elementRef;
@@ -123,8 +123,8 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     await this.showTab(tab);
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
       const tab = this.tabs.find((tab) => tab.traceType === event.newFocusedViewId);
       if (tab) {
         await this.showTab(tab);
@@ -132,7 +132,7 @@ export class TraceViewComponent implements AppEventEmitter, AppEventListener {
     });
   }
 
-  setEmitAppEvent(callback: EmitAppEvent) {
+  setEmitEvent(callback: EmitEvent) {
     this.emitAppEvent = callback;
   }
 

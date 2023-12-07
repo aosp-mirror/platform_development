@@ -24,7 +24,7 @@ import {ParserFactory} from './parser_factory';
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
     const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
-    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
+    const parsers = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
   });
 

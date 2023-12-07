@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
 import {FunctionUtils} from 'common/function_utils';
-import {EmitAppEvent} from 'interfaces/app_event_emitter';
+import {WinscopeEvent} from 'messaging/winscope_event';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from './viewer';
 
@@ -25,7 +25,7 @@ class ViewerStub implements Viewer {
   private title: string;
   private view: View;
   private dependencies: TraceType[];
-  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(title: string, viewContent?: string, dependencies?: TraceType[]) {
     this.title = title;
@@ -48,15 +48,15 @@ class ViewerStub implements Viewer {
     );
   }
 
-  onAppEvent(event: AppEvent): Promise<void> {
+  onWinscopeEvent(event: WinscopeEvent): Promise<void> {
     return Promise.resolve();
   }
 
-  setEmitAppEvent(callback: EmitAppEvent) {
+  setEmitEvent(callback: EmitEvent) {
     this.emitAppEvent = callback;
   }
 
-  async emitAppEventForTesting(event: AppEvent) {
+  async emitAppEventForTesting(event: WinscopeEvent) {
     await this.emitAppEvent(event);
   }
 

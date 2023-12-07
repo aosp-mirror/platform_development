@@ -14,8 +14,8 @@
  * limitations under the License.d
  */
 
-import {TracePositionUpdate} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
