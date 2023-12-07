@@ -56,8 +56,10 @@ public final class VibrationDemoActivity extends AppCompatActivity {
 
         mVirtualDeviceManager = getSystemService(VirtualDeviceManager.class);
         mVibrator = getSystemService(Vibrator.class);
-        mDeviceContext = this;
 
+        registerDeviceIdChangeListener(getMainExecutor(), this::changeVibratorDevice);
+
+        mDeviceContext = this;
         changeVibratorDevice(mDeviceContext.getDeviceId());
     }
 
@@ -110,8 +112,6 @@ public final class VibrationDemoActivity extends AppCompatActivity {
     private void changeVibratorDevice(int deviceId) {
         mDeviceContext.unregisterDeviceIdChangeListener(this::changeVibratorDevice);
         mDeviceContext = createDeviceContext(deviceId);
-        mDeviceContext.registerDeviceIdChangeListener(
-                getMainExecutor(), this::changeVibratorDevice);
 
         updateCurrentDeviceTextView(mDeviceContext);
 
