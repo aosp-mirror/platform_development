@@ -37,7 +37,7 @@ The VDM Demo contains 3 apps:
 
 *   An Android device running Android 13 or newer to act as a client device.
 
-*   A rooted Android device running Android 14 or newer (e.g. a `userdebug` or
+*   A *rooted* Android device running Android 14 or newer (e.g. a `userdebug` or
     `eng` build) to act as a host device.
 
 *   Both devices need to support
@@ -50,6 +50,24 @@ general requirement. The client device, its capabilities, the connectivity layer
 and the communication protocol are entirely up to the virtual device owner.
 
 ## Build and Install
+
+### Using the script
+
+Simply connect your devices, navigate to the root of your Android checkout and
+run
+
+```
+./development/samples/VirtualDeviceManager/setup.sh
+```
+
+The interactive script will prompt you which apps to install to which of the
+available devices, build the APKs and install them.
+
+### Manually
+
+1.  Source `build/envsetup.sh` and run `lunch` or set
+    `UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true` if there's no local build because
+    the APKs need to be built against a locally built SDK.
 
 1.  Build the Host app.
 
