@@ -20,8 +20,10 @@ import {MatListModule} from '@angular/material/list';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
+import {WinscopeErrorListenerStub} from 'messaging/winscope_error_listener_stub';
 import {UnitTestUtils} from 'test/unit/utils';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -85,14 +87,14 @@ describe('UploadTracesComponent', () => {
   });
 
   it('can display uploaded traces', async () => {
-    await component.tracePipeline.loadFiles([validSfFile]);
+    await loadFiles([validSfFile]);
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.uploaded-files'));
     assertDefined(htmlElement.querySelector('.trace-actions-container'));
   });
 
   it('can remove one of two uploaded traces', async () => {
-    await component.tracePipeline.loadFiles([validSfFile, validWmFile]);
+    await loadFiles([validSfFile, validWmFile]);
     fixture.detectChanges();
     expect(component.tracePipeline.getTraces().getSize()).toBe(2);
 
@@ -106,7 +108,7 @@ describe('UploadTracesComponent', () => {
   });
 
   it('handles removal of the only uploaded trace', async () => {
-    await component.tracePipeline.loadFiles([validSfFile]);
+    await loadFiles([validSfFile]);
     fixture.detectChanges();
 
     const spy = spyOn(component, 'onOperationFinished');
@@ -119,7 +121,7 @@ describe('UploadTracesComponent', () => {
   });
 
   it('can remove all uploaded traces', async () => {
-    await component.tracePipeline.loadFiles([validSfFile, validWmFile]);
+    await loadFiles([validSfFile, validWmFile]);
     fixture.detectChanges();
     expect(component.tracePipeline.getTraces().getSize()).toBe(2);
 
@@ -133,7 +135,7 @@ describe('UploadTracesComponent', () => {
   });
 
   it('can triggers view traces event', async () => {
-    await component.tracePipeline.loadFiles([validSfFile]);
+    await loadFiles([validSfFile]);
     fixture.detectChanges();
 
     const spy = spyOn(component.viewTracesButtonClick, 'emit');
@@ -145,14 +147,23 @@ describe('UploadTracesComponent', () => {
 
   it('disables view traces button unless files with viewers uploaded', async () => {
     const validEventlogFile = await UnitTestUtils.getFixtureFile('traces/eventlog.winscope');
-    await component.tracePipeline.loadFiles([validEventlogFile]);
+    await loadFiles([validEventlogFile]);
     fixture.detectChanges();
 
     const viewTracesButton = assertDefined(htmlElement.querySelector('.load-btn'));
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
 
-    await component.tracePipeline.loadFiles([validSfFile]);
+    await loadFiles([validSfFile]);
     fixture.detectChanges();
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeFalse();
   });
+
+  async function loadFiles(files: File[]) {
+    await component.tracePipeline.loadFiles(
+      files,
+      FilesSource.TEST,
+      new WinscopeErrorListenerStub(),
+      undefined
+    );
+  }
 });

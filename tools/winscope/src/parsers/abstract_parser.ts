@@ -15,7 +15,11 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParamTypeMap,
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -83,7 +87,8 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
+    param?: CustomQueryParamTypeMap[Q]
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
   }

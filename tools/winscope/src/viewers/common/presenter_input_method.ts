@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -102,8 +102,8 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       this.uiData = new ImeUiData(this.dependencies);
       this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
       this.uiData.propertiesUserOptions = this.propertiesUserOptions;

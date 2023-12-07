@@ -17,20 +17,21 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {Transition, TransitionsTrace} from 'flickerlib/common';
-import {Parser} from 'trace/parser';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {AbstractTracesParser} from './abstract_traces_parser';
 
 export class TracesParserTransitions extends AbstractTracesParser<Transition> {
-  private readonly wmTransitionTrace: Parser<object> | undefined;
-  private readonly shellTransitionTrace: Parser<object> | undefined;
+  private readonly wmTransitionTrace: Trace<object> | undefined;
+  private readonly shellTransitionTrace: Trace<object> | undefined;
   private readonly descriptors: string[];
   private decodedEntries: Transition[] | undefined;
 
-  constructor(parsers: Map<TraceType, Parser<object>>) {
+  constructor(traces: Traces) {
     super();
-    const wmTransitionTrace = parsers.get(TraceType.WM_TRANSITION);
-    const shellTransitionTrace = parsers.get(TraceType.SHELL_TRANSITION);
+    const wmTransitionTrace = traces.getTrace(TraceType.WM_TRANSITION);
+    const shellTransitionTrace = traces.getTrace(TraceType.SHELL_TRANSITION);
     if (wmTransitionTrace && shellTransitionTrace) {
       this.wmTransitionTrace = wmTransitionTrace;
       this.shellTransitionTrace = shellTransitionTrace;
@@ -51,17 +52,13 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
       throw new Error('Missing Shell Transition trace');
     }
 
-    const wmTransitionEntries: Transition[] = [];
-    for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
-      wmTransitionEntries.push(await this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
-    }
+    const wmTransitionEntries: Transition[] = await Promise.all(
+      this.wmTransitionTrace.mapEntry((entry) => entry.getValue())
+    );
 
-    const shellTransitionEntries: Transition[] = [];
-    for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
-      shellTransitionEntries.push(
-        await this.shellTransitionTrace.getEntry(index, TimestampType.REAL)
-      );
-    }
+    const shellTransitionEntries: Transition[] = await Promise.all(
+      this.shellTransitionTrace.mapEntry((entry) => entry.getValue())
+    );
 
     const transitionsTrace = new TransitionsTrace(
       wmTransitionEntries.concat(shellTransitionEntries)

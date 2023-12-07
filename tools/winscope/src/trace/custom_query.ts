@@ -51,6 +51,13 @@ export class ProcessParserResult {
   }
 }
 
+export interface CustomQueryParamTypeMap {
+  [CustomQueryType.SF_LAYERS_ID_AND_NAME]: never;
+  [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: never;
+  [CustomQueryType.VSYNCID]: never;
+  [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: never;
+}
+
 export interface CustomQueryParserResultTypeMap {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
   [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;

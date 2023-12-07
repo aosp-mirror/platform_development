@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AppEvent} from 'app/app_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -34,11 +34,11 @@ export class ViewerTransitions implements Viewer {
     });
   }
 
-  async onAppEvent(event: AppEvent) {
+  async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent() {
+  setEmitEvent() {
     // do nothing
   }
 

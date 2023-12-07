@@ -15,7 +15,7 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {isPointInRect, Point, Rect} from 'common/geometry_utils';
+import {GeometryUtils, Point, Rect} from 'common/geometry_utils';
 import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -150,7 +150,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
           const transitionSegment = await this.getSegmentForTransition(entry);
           const rowToUse = this.getRowToUseFor(entry);
           const rect = this.getSegmentRect(transitionSegment.from, transitionSegment.to, rowToUse);
-          if (isPointInRect(mousePoint, rect)) {
+          if (GeometryUtils.isPointInRect(mousePoint, rect)) {
             return entry;
           }
           return undefined;

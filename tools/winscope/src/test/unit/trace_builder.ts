@@ -93,10 +93,11 @@ export class TraceBuilder<T> {
       start: 0,
       end: this.parser.getLengthEntries(),
     };
-    const trace = Trace.newInitializedTrace<T>(
+    const trace = new Trace<T>(
       this.type,
       this.parser,
       this.descriptors,
+      undefined,
       this.timestampType,
       entriesRange
     );

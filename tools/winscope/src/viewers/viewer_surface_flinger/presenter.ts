@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {Layer} from 'flickerlib/layers/Layer';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -107,8 +107,8 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       await this.initializeIfNeeded();
 
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AppEvent} from 'app/app_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -54,11 +54,11 @@ class ViewerWindowManager implements Viewer {
     );
   }
 
-  async onAppEvent(event: AppEvent) {
+  async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent() {
+  setEmitEvent() {
     // do nothing
   }
 

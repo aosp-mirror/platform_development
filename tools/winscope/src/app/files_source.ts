@@ -15,10 +15,9 @@
  */
 
 export enum FilesSource {
-  UNKNOWN = 'winscope',
+  TEST = 'test',
   COLLECTED = 'collected_traces',
   UPLOADED = 'uploaded_traces',
-  REMOTE = 'remote_traces',
   BUGREPORT = 'bugreport',
   BUGANIZER = 'buganizer',
 }
