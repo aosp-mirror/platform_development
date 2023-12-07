@@ -56,8 +56,10 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
 
         mVirtualDeviceManager = getSystemService(VirtualDeviceManager.class);
         mSensorManager = getSystemService(SensorManager.class);
-        mDeviceContext = this;
 
+        mDeviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
+
+        mDeviceContext = this;
         changeSensorDevice(mDeviceContext.getDeviceId());
     }
 
@@ -113,7 +115,6 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         mSensorManager.unregisterListener(this);
 
         mDeviceContext = createDeviceContext(deviceId);
-        mDeviceContext.registerDeviceIdChangeListener(getMainExecutor(), this::changeSensorDevice);
 
         updateCurrentDeviceTextView(mDeviceContext);
 
