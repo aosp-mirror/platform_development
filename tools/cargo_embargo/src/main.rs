@@ -60,7 +60,7 @@ use std::process::Command;
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
 /// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
-static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     [
         ("libash", "libash_rust"),
         ("libatomic", "libatomic_rust"),
@@ -80,11 +80,21 @@ static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     .collect()
 });
 
-fn renamed_module(name: &str) -> &str {
-    if let Some(renamed) = RENAME_MAP.get(name) {
-        renamed
+/// Given a proposed module name, returns `None` if it is blocked by the given config, or
+/// else apply any name overrides and returns the name to use.
+fn override_module_name(
+    module_name: &str,
+    blocklist: &[String],
+    module_name_overrides: &BTreeMap<String, String>,
+) -> Option<String> {
+    if blocklist.iter().any(|blocked_name| blocked_name == module_name) {
+        None
+    } else if let Some(overridden_name) = module_name_overrides.get(module_name) {
+        Some(overridden_name.to_string())
+    } else if let Some(renamed) = RENAME_MAP.get(module_name) {
+        Some(renamed.to_string())
     } else {
-        name
+        Some(module_name.to_string())
     }
 }
 
@@ -561,14 +571,21 @@ fn generate_android_bp(
             .collect();
 
         let mut m = BpModule::new("genrule".to_string());
-        let module_name = format!("copy_{}_build_out", package_name);
-        m.props.set("name", module_name.clone());
-        m.props.set("srcs", vec!["out/*"]);
-        m.props.set("cmd", "cp $(in) $(genDir)");
-        m.props.set("out", outs);
-        modules.push(m);
+        if let Some(module_name) = override_module_name(
+            &format!("copy_{}_build_out", package_name),
+            &cfg.module_blocklist,
+            &cfg.module_name_overrides,
+        ) {
+            m.props.set("name", module_name.clone());
+            m.props.set("srcs", vec!["out/*"]);
+            m.props.set("cmd", "cp $(in) $(genDir)");
+            m.props.set("out", outs);
+            modules.push(m);
 
-        vec![":".to_string() + &module_name]
+            vec![":".to_string() + &module_name]
+        } else {
+            vec![]
+        }
     } else {
         vec![]
     };
@@ -699,11 +716,11 @@ fn crate_to_bp_modules(
         };
 
         let mut m = BpModule::new(module_type.clone());
-        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == &module_name) {
+        let Some(module_name) =
+            override_module_name(&module_name, &cfg.module_blocklist, &cfg.module_name_overrides)
+        else {
             continue;
-        }
-        let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-        let module_name = renamed_module(module_name);
+        };
         if matches!(
             crate_type,
             CrateType::Lib
@@ -715,7 +732,7 @@ fn crate_to_bp_modules(
         {
             bail!("Module name must start with lib{} but was {}", crate_.name, module_name);
         }
-        m.props.set("name", module_name);
+        m.props.set("name", module_name.clone());
 
         if let Some(defaults) = &cfg.global_defaults {
             m.props.set("defaults", vec![defaults.clone()]);
@@ -788,13 +805,13 @@ fn crate_to_bp_modules(
             let mut result = Vec::new();
             for x in libs {
                 let module_name = "lib".to_string() + x.as_str();
-                let module_name =
-                    cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-                let module_name = renamed_module(module_name);
-                if package_cfg.dep_blocklist.iter().any(|blocked| blocked == module_name) {
-                    continue;
+                if let Some(module_name) = override_module_name(
+                    &module_name,
+                    &package_cfg.dep_blocklist,
+                    &cfg.module_name_overrides,
+                ) {
+                    result.push(module_name);
                 }
-                result.push(module_name.to_string());
             }
             result.sort();
             result
@@ -853,7 +870,7 @@ fn crate_to_bp_modules(
             m.props.set("stdlibs", stdlibs);
         }
 
-        if let Some(visibility) = cfg.module_visibility.get(module_name) {
+        if let Some(visibility) = cfg.module_visibility.get(&module_name) {
             m.props.set("visibility", visibility.clone());
         }
 
