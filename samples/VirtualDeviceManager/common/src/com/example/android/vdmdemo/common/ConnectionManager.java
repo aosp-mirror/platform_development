@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -67,7 +68,6 @@ public class ConnectionManager {
     @ApplicationContext private final Context mContext;
     private final ConnectivityManager mConnectivityManager;
     private final Handler mBackgroundHandler;
-    private WifiAwareSession mWifiAwareSession;
     private DiscoverySession mDiscoverySession;
 
     /** Simple data structure to allow clients to query the current status. */
@@ -133,18 +133,10 @@ public class ConnectionManager {
         if (mConnectionStatus.connected) {
             return;
         }
-
-        Runnable publishRunnable = () ->
-                mWifiAwareSession.publish(
-                        new PublishConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
-                        new HostDiscoverySessionCallback(),
-                        mBackgroundHandler);
-
-        if (mWifiAwareSession == null) {
-            createSession(publishRunnable);
-        } else {
-            publishRunnable.run();
-        }
+        var unused = createSession().thenAccept(wifiAwareSession -> wifiAwareSession.publish(
+                new PublishConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
+                new HostDiscoverySessionCallback(),
+                mBackgroundHandler));
     }
 
     /** Looks for published services from remote devices and subscribes to them. */
@@ -152,43 +144,42 @@ public class ConnectionManager {
         if (mConnectionStatus.connected) {
             return;
         }
-
-        Runnable subscribeRunnable = () ->
-                mWifiAwareSession.subscribe(
-                        new SubscribeConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
-                        new ClientDiscoverySessionCallback(),
-                        mBackgroundHandler);
-
-        if (mWifiAwareSession == null) {
-            createSession(subscribeRunnable);
-        } else {
-            subscribeRunnable.run();
-        }
+        var unused = createSession().thenAccept(wifiAwareSession -> wifiAwareSession.subscribe(
+                new SubscribeConfig.Builder().setServiceName(CONNECTION_SERVICE_ID).build(),
+                new ClientDiscoverySessionCallback(),
+                mBackgroundHandler));
     }
 
-    private void createSession(Runnable runnable) {
+    private CompletableFuture<WifiAwareSession> createSession() {
+        CompletableFuture<WifiAwareSession> wifiAwareSessionFuture = new CompletableFuture<>();
         WifiAwareManager wifiAwareManager = mContext.getSystemService(WifiAwareManager.class);
         if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_AWARE)
                 || wifiAwareManager == null
                 || !wifiAwareManager.isAvailable()) {
-            onError("Wifi Aware is not available.");
+            wifiAwareSessionFuture.completeExceptionally(
+                    new Exception("Wifi Aware is not available."));
         } else {
             wifiAwareManager.attach(
                     new AttachCallback() {
                         @Override
                         public void onAttached(WifiAwareSession session) {
-                            mWifiAwareSession = session;
-                            Log.e("vladokom", "Created wifi session");
-                            runnable.run();
+                            wifiAwareSessionFuture.complete(session);
                         }
 
                         @Override
                         public void onAttachFailed() {
-                            onError("Failed to attach Wifi Aware session.");
+                            wifiAwareSessionFuture.completeExceptionally(
+                                    new Exception("Failed to attach Wifi Aware session."));
                         }
                     },
                     mBackgroundHandler);
         }
+        return wifiAwareSessionFuture
+                .exceptionally(e -> {
+                    Log.e(TAG, "Failed to create Wifi Aware session", e);
+                    onError("Failed to create Wifi Aware session");
+                    return null;
+                });
     }
 
     /** Explicitly terminate any existing connection. */
@@ -264,7 +255,6 @@ public class ConnectionManager {
 
         @Override
         public void onPublishStarted(@NonNull PublishDiscoverySession session) {
-            Log.e("vladokom", "Created publish");
             mDiscoverySession = session;
         }
 
@@ -294,14 +284,12 @@ public class ConnectionManager {
 
         @Override
         public void onSubscribeStarted(@NonNull SubscribeDiscoverySession session) {
-            Log.e("vladokom", "Created subscribe");
             mDiscoverySession = session;
         }
 
         @Override
         public void onServiceDiscovered(
                 PeerHandle peerHandle, byte[] serviceSpecificInfo, List<byte[]> matchFilter) {
-            Log.e("vladokom", "service discovered");
             sendLocalEndpointId(peerHandle);
         }
 
