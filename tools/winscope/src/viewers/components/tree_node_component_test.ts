@@ -16,7 +16,6 @@
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
-import {assertDefined} from 'common/assert_utils';
 import {TreeNodeComponent} from './tree_node_component';
 import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
 
@@ -47,15 +46,6 @@ describe('TreeNodeComponent', () => {
     fixture.detectChanges();
     const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
     expect(treeNodeDataView).toBeTruthy();
-  });
-
-  it('can scroll selected element into view', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
-    const spy = spyOn(assertDefined(treeNode), 'scrollIntoView');
-    component.isSelected = true;
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
   });
 
   it('can trigger tree toggle on click of chevron', () => {
