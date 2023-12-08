@@ -62,23 +62,14 @@ public class MainActivity extends Hilt_MainActivity {
 
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
-
-                @Override
-                public void onConnecting(String remoteDeviceName) {
-                    mConnectionManager.stopAdvertising();
-                }
-
                 @Override
                 public void onConnected(String remoteDeviceName) {
-                    mRemoteIo.sendMessage(
-                            RemoteEvent.newBuilder()
-                                    .setDeviceCapabilities(
-                                            DeviceCapabilities.newBuilder()
-                                                    .setDeviceName(Build.MODEL)
-                                                    .addAllSensorCapabilities(
-                                                            (mSensorController
-                                                                    .getSensorCapabilities())))
-                                    .build());
+                    mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                            .setDeviceCapabilities(DeviceCapabilities.newBuilder()
+                                    .setDeviceName(Build.MODEL)
+                                    .addAllSensorCapabilities(
+                                            mSensorController.getSensorCapabilities()))
+                            .build());
                 }
 
                 @Override
@@ -86,8 +77,7 @@ public class MainActivity extends Hilt_MainActivity {
                     if (mDisplayAdapter != null) {
                         runOnUiThread(mDisplayAdapter::clearDisplays);
                     }
-
-                    mConnectionManager.startAdvertising();
+                    mConnectionManager.startClientSession();
                 }
             };
 
@@ -112,7 +102,7 @@ public class MainActivity extends Hilt_MainActivity {
     public void onStart() {
         super.onStart();
         mConnectionManager.addConnectionCallback(mConnectionCallback);
-        mConnectionManager.startAdvertising();
+        mConnectionManager.startClientSession();
         mInputManager.addFocusListener(mFocusListener);
         mRemoteIo.addMessageConsumer(mAudioPlayer);
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
@@ -123,7 +113,6 @@ public class MainActivity extends Hilt_MainActivity {
         super.onStop();
         mInputManager.removeFocusListener(mFocusListener);
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
-        mConnectionManager.stopAdvertising();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mRemoteIo.removeMessageConsumer(mAudioPlayer);
     }

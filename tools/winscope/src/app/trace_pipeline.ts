@@ -73,9 +73,9 @@ export class TracePipeline {
 
       const tracesParsers = await this.tracesParserFactory.createParsers(this.traces);
 
-      tracesParsers.forEach((tracesParser, traceType) => {
+      tracesParsers.forEach((tracesParser) => {
         const trace = Trace.fromParser(tracesParser, commonTimestampType);
-        this.traces.setTrace(traceType, trace);
+        this.traces.setTrace(trace.type, trace);
       });
 
       const hasTransitionTrace = this.traces

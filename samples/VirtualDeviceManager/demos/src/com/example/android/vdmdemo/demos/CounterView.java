@@ -21,7 +21,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -36,7 +35,6 @@ public class CounterView extends View {
     private static final int TEXT_SIZE_SP = 100;
     private long mCounter = 0;
     private final Paint mTextPaint = new Paint();
-    private final Paint mBackgroundPaint = new Paint();
 
     public CounterView(Context context) {
         super(context);
@@ -63,14 +61,10 @@ public class CounterView extends View {
         mTextPaint.setColor(Color.RED);
         mTextPaint.setStyle(Style.FILL);
         mTextPaint.setTextSize(computeScaledTextSizeInPixels());
-
-        mBackgroundPaint.setColor(Color.WHITE);
-        mBackgroundPaint.setStyle(Style.FILL);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawRect(new Rect(0, 0, getWidth(), getHeight()), mBackgroundPaint);
         canvas.drawText(String.valueOf(mCounter), 0, 200, mTextPaint);
         Log.e(TAG, "Rendered counter: " + mCounter);
         mCounter++;

@@ -326,6 +326,33 @@ describe('TracePipeline', () => {
     expect(video?.size).toBeGreaterThan(0);
   });
 
+  it('sets traces with correct type', async () => {
+    const validTransactionsFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/Transactions.pb',
+      'FS/data/misc/wmtrace/transactions.bp'
+    );
+    const validWmTransitionsFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
+    );
+    const validShellTransitionsFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
+    );
+    await loadFiles([
+      validSfFile,
+      validWmFile,
+      validTransactionsFile,
+      validWmTransitionsFile,
+      validShellTransitionsFile,
+    ]);
+
+    await expectLoadResult(4, []);
+    const traces = tracePipeline.getTraces();
+    const loadedTypes = traces.mapTrace((trace) => trace.type);
+    for (const loadedType of loadedTypes) {
+      expect(assertDefined(traces.getTrace(loadedType)).type).toEqual(loadedType);
+    }
+  });
+
   it('creates zip archive with loaded trace files', async () => {
     const files = [
       await UnitTestUtils.getFixtureFile(
