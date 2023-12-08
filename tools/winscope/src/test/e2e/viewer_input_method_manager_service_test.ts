@@ -19,16 +19,18 @@ import {E2eTestUtils} from './utils';
 describe('Viewer InputMethodManagerService', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('processes trace and renders view', async () => {
-      await E2eTestUtils.uploadFixture(
-        'traces/elapsed_and_real_timestamp/InputMethodManagerService.pb'
-      );
-      await E2eTestUtils.closeSnackBarIfNeeded();
-      await E2eTestUtils.clickViewTracesButton();
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
+  });
 
-      const viewerPresent = await element(by.css('viewer-input-method')).isPresent();
-      expect(viewerPresent).toBeTruthy();
-    });
+  it('processes trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/InputMethodManagerService.pb'
+    );
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
+
+    const viewerPresent = await element(by.css('viewer-input-method')).isPresent();
+    expect(viewerPresent).toBeTruthy();
+  });
 });

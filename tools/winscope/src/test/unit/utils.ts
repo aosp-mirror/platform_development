@@ -15,6 +15,7 @@
  */
 
 import {ParserFactory} from 'parsers/parser_factory';
+import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {CommonTestUtils} from 'test/common/utils';
 import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
@@ -41,6 +42,15 @@ class UnitTestUtils extends CommonTestUtils {
     const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length).toEqual(1);
     return parsers[0].parser;
+  }
+
+  static async getTracesParser(filenames: string[]): Promise<Parser<object>> {
+    const parsers = await Promise.all(
+      filenames.map((filename) => UnitTestUtils.getParser(filename))
+    );
+    const tracesParsers = await new TracesParserFactory().createParsers(parsers);
+    expect(tracesParsers.length).toEqual(1);
+    return tracesParsers[0];
   }
 
   static async getWindowManagerState(): Promise<WindowManagerState> {

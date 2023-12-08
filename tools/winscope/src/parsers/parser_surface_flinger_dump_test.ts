@@ -44,8 +44,8 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
     });
 
-    it('retrieves trace entry', () => {
-      const entry = parser.getEntry(0, TimestampType.ELAPSED);
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(LayerTraceEntry);
       expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(0n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(DUMP_REAL_TIME);

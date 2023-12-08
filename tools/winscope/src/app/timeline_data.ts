@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
+import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Timestamp, TimestampType} from 'trace/timestamp';
@@ -23,13 +23,12 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {assertDefined} from '../common/assert_utils';
 
-export type TracePositionCallbackType = (position: TracePosition) => void;
 export interface TimeRange {
   from: Timestamp;
   to: Timestamp;
 }
+const INVALID_TIMESTAMP = 0n
 
 export class TimelineData {
   private traces = new Traces();
@@ -40,25 +39,29 @@ export class TimelineData {
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
-  private onTracePositionUpdate: TracePositionCallbackType = FunctionUtils.DO_NOTHING;
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
     this.clear();
 
-    this.traces = traces;
+    this.traces = new Traces();
+    traces.forEachTrace((trace, type) => {
+      if (type === TraceType.WINDOW_MANAGER) {
+        // Filter out WindowManager dumps with no timestamp from timeline
+        if (
+          trace.lengthEntries === 1 &&
+          trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
+        ) {
+          return;
+        }
+      }
+
+      this.traces.setTrace(type, trace);
+    });
+
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
     this.timestampType = this.firstEntry?.getTimestamp().getType();
-
-    const position = this.getCurrentPosition();
-    if (position) {
-      this.onTracePositionUpdate(position);
-    }
-  }
-
-  setOnTracePositionUpdate(callback: TracePositionCallbackType) {
-    this.onTracePositionUpdate = callback;
   }
 
   getCurrentPosition(): TracePosition | undefined {
@@ -90,15 +93,11 @@ export class TimelineData {
       }
     }
 
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.explicitlySetPosition = position;
-    });
+    this.explicitlySetPosition = position;
   }
 
   setActiveViewTraceTypes(types: TraceType[]) {
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.activeViewTraceTypes = types;
-    });
+    this.activeViewTraceTypes = types;
   }
 
   getTimestampType(): TimestampType | undefined {
@@ -219,16 +218,14 @@ export class TimelineData {
   }
 
   clear() {
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.traces = new Traces();
-      this.firstEntry = undefined;
-      this.lastEntry = undefined;
-      this.explicitlySetPosition = undefined;
-      this.timestampType = undefined;
-      this.explicitlySetSelection = undefined;
-      this.screenRecordingVideo = undefined;
-      this.activeViewTraceTypes = [];
-    });
+    this.traces = new Traces();
+    this.firstEntry = undefined;
+    this.lastEntry = undefined;
+    this.explicitlySetPosition = undefined;
+    this.timestampType = undefined;
+    this.explicitlySetSelection = undefined;
+    this.screenRecordingVideo = undefined;
+    this.activeViewTraceTypes = [];
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
@@ -265,6 +262,7 @@ export class TimelineData {
 
   private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
     const activeEntries = this.activeViewTraceTypes
+      .filter((it) => this.traces.getTrace(it) !== undefined)
       .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
       .filter((trace) => trace.lengthEntries > 0)
       .map((trace) => trace.getEntry(0))
@@ -275,14 +273,5 @@ export class TimelineData {
       return undefined;
     }
     return activeEntries[0];
-  }
-
-  private applyOperationAndNotifyIfCurrentPositionChanged(op: () => void) {
-    const prevPosition = this.getCurrentPosition();
-    op();
-    const currentPosition = this.getCurrentPosition();
-    if (currentPosition && (!prevPosition || !currentPosition.isEqual(prevPosition))) {
-      this.onTracePositionUpdate(currentPosition);
-    }
   }
 }

@@ -180,7 +180,11 @@ class Mapper3D {
     const maxDisplaySize = this.getMaxDisplaySize(rects2d);
 
     const rects3d = rects2d.map((rect2d): Rect3D => {
-      z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
+      if (rect2d.depth !== undefined) {
+        z = Mapper3D.Z_SPACING_MAX * this.zSpacingFactor * rect2d.depth;
+      } else {
+        z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
+      }
 
       const darkFactor = rect2d.isVisible
         ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
