@@ -339,8 +339,8 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                                 || !event.getDevice().supportsSource(InputDevice.SOURCE_MOUSE)) {
                             return false;
                         }
-                        mInputManager.sendInputEventToFocusedDisplay(
-                                InputDeviceType.DEVICE_TYPE_MOUSE, event);
+                        mInputManager.sendInputEvent(
+                                InputDeviceType.DEVICE_TYPE_MOUSE, event, mDisplayId);
                         return true;
                     });
         }
