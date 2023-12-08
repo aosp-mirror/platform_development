@@ -107,8 +107,7 @@ final class InputManager {
         boolean shouldTrackFocus =
                 mSettings.dpadEnabled
                         || mSettings.navTouchpadEnabled
-                        || mSettings.externalKeyboardEnabled
-                        || mSettings.externalMouseEnabled;
+                        || mSettings.externalKeyboardEnabled;
 
         final List<FocusListener> listenersToNotify;
         int focusedDisplayIdToNotify = Display.INVALID_DISPLAY;
@@ -166,11 +165,6 @@ final class InputManager {
                 break;
             case DEVICE_TYPE_DPAD:
                 if (!mSettings.dpadEnabled) {
-                    return;
-                }
-                break;
-            case DEVICE_TYPE_MOUSE:
-                if (!mSettings.externalMouseEnabled) {
                     return;
                 }
                 break;
@@ -265,6 +259,7 @@ final class InputManager {
             case MotionEvent.ACTION_HOVER_ENTER:
             case MotionEvent.ACTION_HOVER_EXIT:
             case MotionEvent.ACTION_HOVER_MOVE:
+                setFocusedDisplayId(displayId);
                 RemoteInputEvent relativeEvent =
                         RemoteInputEvent.newBuilder()
                                 .setTimestampMs(System.currentTimeMillis())
