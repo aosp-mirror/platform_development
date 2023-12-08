@@ -1,5 +1,12 @@
 <resources>
     <string name="app_name" translatable="false">VDM Demos</string>
+    <string name="sensor_demo" translatable="false">VDM Sensor Demo</string>
+    <string name="vibration_demo" translatable="false">VDM Vibration Demo</string>
+    <string name="rotation_demo" translatable="false">VDM Rotation Demo</string>
+    <string name="home_demo" translatable="false">VDM Home Demo</string>
+    <string name="secure_window_demo" translatable="false">VDM Secure Window Demo</string>
+    <string name="permissions_demo" translatable="false">VDM Permissions Demo</string>
+    <string name="latency_demo" translatable="false">VDM Latency Demo</string>
 
     <string name="current_device" translatable="false">Device: %s</string>
     <string name="change_device" translatable="false">Change</string>

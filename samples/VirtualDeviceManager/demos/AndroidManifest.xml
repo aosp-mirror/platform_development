@@ -27,82 +27,49 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity
-            android:name=".SensorDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.SensorDemoActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:label="VDM Sensor Demo">
+            android:label="VDM Demos">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".SensorDemoActivity"
+            android:exported="false"
+            android:label="@string/sensor_demo" />
 
         <activity
             android:name=".RotationDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.RotationDemoActivity"
             android:exported="true"
-            android:label="VDM Rotation Demo"
-            android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/rotation_demo" />
 
         <activity
             android:name=".HomeDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.HomeDemoActivity"
             android:exported="true"
-            android:label="VDM Home Demo">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/home_demo" />
 
         <activity
             android:name=".PermissionsDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.PermissionsDemoActivity"
             android:exported="true"
-            android:label="VDM Permissions Demo">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/permissions_demo" />
 
         <activity
             android:name=".SecureWindowDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.SecureWindowDemoActivity"
             android:exported="true"
-            android:label="VDM Secure Window Demo">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/secure_window_demo" />
 
         <activity
             android:name=".LatencyDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.LatencyDemoActivity"
             android:exported="true"
-            android:label="VDM Latency Demo">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/latency_demo" />
 
         <activity
             android:name=".VibrationDemoActivity"
-            android:taskAffinity="com.example.android.vdmdemo.demos.VibrationDemoActivity"
             android:exported="true"
-            android:label="VDM Vibration Demo">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:label="@string/vibration_demo" />
 
     </application>
     <!-- LINT.ThenChange(development/samples/VirtualDeviceManager/README.md:demos) -->

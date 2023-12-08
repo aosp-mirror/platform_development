@@ -16,6 +16,8 @@
 
 package com.example.android.vdmdemo.common;
 
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -44,38 +46,38 @@ public class RemoteIo {
 
     private OutputStream mOutputStream = null;
     private StreamClosedCallback mOutputStreamClosedCallback = null;
+    private final Handler mSendMessageHandler;
 
     private final Map<Object, MessageConsumer> mMessageConsumers =
             Collections.synchronizedMap(new ArrayMap<>());
 
     @Inject
-    RemoteIo() {}
+    RemoteIo() {
+        final HandlerThread sendMessageThread = new HandlerThread("SendMessageThread");
+        sendMessageThread.start();
+        mSendMessageHandler = new Handler(sendMessageThread.getLooper());
+    }
 
     @SuppressWarnings("ThreadPriorityCheck")
     void initialize(InputStream inputStream, StreamClosedCallback inputStreamClosedCallback) {
-        Thread t =
-                new Thread(
-                        () -> {
-                            try {
-                                while (true) {
-                                    RemoteEvent event = RemoteEvent.parseDelimitedFrom(inputStream);
-                                    if (event == null) {
-                                        break;
-                                    }
-                                    mMessageConsumers
-                                            .values()
-                                            .forEach(
-                                                    consumer -> {
-                                                        if (consumer != null) {
-                                                            consumer.accept(event);
-                                                        }
-                                                    });
-                                }
-                            } catch (IOException e) {
-                                Log.e(TAG, "Failed to obtain event: " + e);
-                            }
-                            inputStreamClosedCallback.onStreamClosed();
-                        });
+        Thread t = new Thread(() -> {
+            try {
+                while (true) {
+                    RemoteEvent event = RemoteEvent.parseDelimitedFrom(inputStream);
+                    if (event == null) {
+                        break;
+                    }
+                    mMessageConsumers.values().forEach(consumer -> {
+                        if (consumer != null) {
+                            consumer.accept(event);
+                        }
+                    });
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to obtain event: " + e);
+            }
+            inputStreamClosedCallback.onStreamClosed();
+        });
         t.setPriority(Thread.MAX_PRIORITY);
         t.start();
     }
@@ -101,13 +103,15 @@ public class RemoteIo {
     /** Sends an event to the remote device. */
     public synchronized void sendMessage(RemoteEvent event) {
         if (mOutputStream != null) {
-            try {
-                event.writeDelimitedTo(mOutputStream);
-                mOutputStream.flush();
-            } catch (IOException e) {
-                mOutputStream = null;
-                mOutputStreamClosedCallback.onStreamClosed();
-            }
+            mSendMessageHandler.post(() -> {
+                try {
+                    event.writeDelimitedTo(mOutputStream);
+                    mOutputStream.flush();
+                } catch (IOException e) {
+                    mOutputStream = null;
+                    mOutputStreamClosedCallback.onStreamClosed();
+                }
+            });
         } else {
             Log.e(TAG, "Failed to send event, RemoteIO not initialized.");
         }
