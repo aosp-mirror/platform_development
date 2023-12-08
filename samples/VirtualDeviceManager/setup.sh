@@ -20,7 +20,7 @@ function die() {
 }
 
 function run_cmd_or_die() {
-  "${@}" > /dev/null 2>&1 || die "Command failed: ${*}"
+  "${@}" > /dev/null || die "Command failed: ${*}"
 }
 
 function select_device() {
@@ -28,6 +28,13 @@ function select_device() {
     read -r -p "Select a device to install the ${1} app (0-${DEVICE_COUNT}): " INDEX
     [[ "${INDEX}" =~ ^[0-9]+$ ]] && ((INDEX >= 0 && INDEX <= DEVICE_COUNT)) && return "${INDEX}"
   done
+}
+
+function install_app() {
+  if ! adb -s "${1}" install -r -d -g "${2}" > /dev/null 2>&1; then
+    adb -s "${1}" uninstall "com.example.android.vdmdemo.${3}" > /dev/null 2>&1
+    run_cmd_or_die adb -s "${1}" install -r -d -g "${2}"
+  fi
 }
 
 [[ -f build/make/envsetup.sh ]] || die "Run this script from the root of the tree."
@@ -41,36 +48,16 @@ HOST_SERIAL=""
 CLIENT_SERIAL=""
 
 echo
-if ((DEVICE_COUNT > 1)); then
-  echo "Multiple devices found:"
-  for i in "${!DEVICE_SERIALS[@]}"; do
-    echo -e "${i}: ${DEVICE_SERIALS[${i}]}\t${DEVICE_NAMES[${i}]}"
-  done
-  echo "${DEVICE_COUNT}: Do not install this app"
-  echo
-  select_device "VDM Host"
-  HOST_INDEX=$?
-  select_device "VDM Client"
-  CLIENT_INDEX=$?
-else
-  DEVICE_SERIAL=${DEVICE_SERIALS[0]}
-  DEVICE_NAME="${DEVICE_SERIAL} ${DEVICE_NAMES[0]}"
-  cat << EOF
-0: VDM Host app
-1: VDM Client app
-2: All
-3: None
-
-EOF
-  while :; do
-    read -r -p "Select apps to install to ${DEVICE_NAME} (0-3): " INDEX
-    ( [[ "${INDEX}" =~ ^[0-9]+$ ]] && ((INDEX >= 0 && INDEX <= 3)) ) || continue;
-    ((INDEX == 3)) && exit 0
-    ((INDEX != 0 && INDEX != 2)) && HOST_INDEX=DEVICE_COUNT
-    ((INDEX != 1 && INDEX != 2)) && CLIENT_INDEX=DEVICE_COUNT
-    break
-  done
-fi
+echo "Available devices:"
+for i in "${!DEVICE_SERIALS[@]}"; do
+  echo -e "${i}: ${DEVICE_SERIALS[${i}]}\t${DEVICE_NAMES[${i}]}"
+done
+echo "${DEVICE_COUNT}: Do not install this app"
+echo
+select_device "VDM Host"
+HOST_INDEX=$?
+select_device "VDM Client"
+CLIENT_INDEX=$?
 echo
 
 if ((HOST_INDEX == DEVICE_COUNT)); then
@@ -103,15 +90,13 @@ UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true m -j "${APKS_TO_BUILD}" || die "Build fail
 if [[ -n "${CLIENT_SERIAL}" ]]; then
   echo
   echo "Installing VdmClient.apk to ${CLIENT_NAME}..."
-  adb -s "${CLIENT_SERIAL}" uninstall com.example.android.vdmdemo.client > /dev/null 2>&1
-  run_cmd_or_die adb -s "${CLIENT_SERIAL}" install -r -d -g "${OUT}/system/app/VdmClient/VdmClient.apk"
+  install_app "${CLIENT_SERIAL}" "${OUT}/system/app/VdmClient/VdmClient.apk" client
 fi
 
 if [[ -n "${HOST_SERIAL}" ]]; then
   echo
   echo "Installing VdmDemos.apk to ${HOST_NAME}..."
-  adb -s "${HOST_SERIAL}" uninstall com.example.android.vdmdemo.demos > /dev/null 2>&1
-  run_cmd_or_die adb -s "${HOST_SERIAL}" install -r -d -g "${OUT}/system/app/VdmDemos/VdmDemos.apk"
+  install_app "${CLIENT_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
   readonly PERM_BASENAME=com.example.android.vdmdemo.host.xml
