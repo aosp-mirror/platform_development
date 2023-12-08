@@ -21,12 +21,13 @@ import android.os.HandlerThread;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import androidx.annotation.GuardedBy;
+
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -44,12 +45,16 @@ public class RemoteIo {
         void onStreamClosed();
     }
 
+    private final Object mLock = new Object();
+
+    @GuardedBy("mLock")
     private OutputStream mOutputStream = null;
+
     private StreamClosedCallback mOutputStreamClosedCallback = null;
     private final Handler mSendMessageHandler;
 
-    private final Map<Object, MessageConsumer> mMessageConsumers =
-            Collections.synchronizedMap(new ArrayMap<>());
+    @GuardedBy("mMessageConsumers")
+    private final Map<Object, MessageConsumer> mMessageConsumers = new ArrayMap<>();
 
     @Inject
     RemoteIo() {
@@ -60,50 +65,45 @@ public class RemoteIo {
 
     @SuppressWarnings("ThreadPriorityCheck")
     void initialize(InputStream inputStream, StreamClosedCallback inputStreamClosedCallback) {
-        Thread t = new Thread(() -> {
-            try {
-                while (true) {
-                    RemoteEvent event = RemoteEvent.parseDelimitedFrom(inputStream);
-                    if (event == null) {
-                        break;
-                    }
-                    mMessageConsumers.values().forEach(consumer -> {
-                        if (consumer != null) {
-                            consumer.accept(event);
-                        }
-                    });
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to obtain event: " + e);
-            }
-            inputStreamClosedCallback.onStreamClosed();
-        });
+        Thread t = new Thread(new ReceiverRunnable(inputStream, inputStreamClosedCallback));
         t.setPriority(Thread.MAX_PRIORITY);
         t.start();
     }
 
-    synchronized void initialize(
+    void initialize(
             OutputStream outputStream, StreamClosedCallback outputStreamClosedCallback) {
-        mOutputStream = outputStream;
-        mOutputStreamClosedCallback = outputStreamClosedCallback;
+        synchronized (mLock) {
+            mOutputStream = outputStream;
+            mOutputStreamClosedCallback = outputStreamClosedCallback;
+        }
     }
 
     /** Registers a consumer for processing events coming from the remote device. */
     public void addMessageConsumer(Consumer<RemoteEvent> consumer) {
-        mMessageConsumers.put(consumer, new MessageConsumer(consumer));
+        synchronized (mMessageConsumers) {
+            mMessageConsumers.put(consumer, new MessageConsumer(consumer));
+        }
     }
 
     /** Unregisters a previously registered message consumer. */
     public void removeMessageConsumer(Consumer<RemoteEvent> consumer) {
-        if (mMessageConsumers.remove(consumer) == null) {
-            Log.w(TAG, "Failed to remove message consumer.");
+        synchronized (mMessageConsumers) {
+            if (mMessageConsumers.remove(consumer) == null) {
+                Log.w(TAG, "Failed to remove message consumer.");
+            }
         }
     }
 
     /** Sends an event to the remote device. */
-    public synchronized void sendMessage(RemoteEvent event) {
-        if (mOutputStream != null) {
-            mSendMessageHandler.post(() -> {
+    public void sendMessage(RemoteEvent event) {
+        synchronized (mLock) {
+            if (mOutputStream == null) {
+                Log.e(TAG, "Failed to send event, RemoteIO not initialized.");
+                return;
+            }
+        }
+        mSendMessageHandler.post(() -> {
+            synchronized (mLock) {
                 try {
                     event.writeDelimitedTo(mOutputStream);
                     mOutputStream.flush();
@@ -111,9 +111,36 @@ public class RemoteIo {
                     mOutputStream = null;
                     mOutputStreamClosedCallback.onStreamClosed();
                 }
-            });
-        } else {
-            Log.e(TAG, "Failed to send event, RemoteIO not initialized.");
+            }
+        });
+    }
+
+    private class ReceiverRunnable implements Runnable {
+
+        private final InputStream mInputStream;
+        private final StreamClosedCallback mInputStreamClosedCallback;
+
+        ReceiverRunnable(InputStream inputStream, StreamClosedCallback inputStreamClosedCallback) {
+            mInputStream = inputStream;
+            mInputStreamClosedCallback = inputStreamClosedCallback;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    RemoteEvent event = RemoteEvent.parseDelimitedFrom(mInputStream);
+                    if (event == null) {
+                        break;
+                    }
+                    synchronized (mMessageConsumers) {
+                        mMessageConsumers.values().forEach(consumer -> consumer.accept(event));
+                    }
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Failed to obtain event: " + e);
+            }
+            mInputStreamClosedCallback.onStreamClosed();
         }
     }
 
