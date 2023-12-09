@@ -78,15 +78,15 @@ describe('ParserProtoLog', () => {
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
-  it('reconstructs human-readable log message (ELAPSED time)', () => {
-    const message = parser.getEntry(0, TimestampType.ELAPSED);
+  it('reconstructs human-readable log message (ELAPSED time)', async () => {
+    const message = await parser.getEntry(0, TimestampType.ELAPSED);
 
     expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageElapsed);
     expect(message).toBeInstanceOf(LogMessage);
   });
 
-  it('reconstructs human-readable log message (REAL time)', () => {
-    const message = parser.getEntry(0, TimestampType.REAL)!;
+  it('reconstructs human-readable log message (REAL time)', async () => {
+    const message = await parser.getEntry(0, TimestampType.REAL);
 
     expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageReal);
   });

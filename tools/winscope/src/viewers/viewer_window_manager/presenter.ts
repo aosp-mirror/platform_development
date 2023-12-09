@@ -152,7 +152,7 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  async onTracePositionUpdate(position: TracePosition) {
     this.uiData = new UiData();
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
@@ -161,8 +161,8 @@ export class Presenter {
     const prevEntry =
       entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
 
-    this.entry = entry?.getValue() ?? null;
-    this.previousEntry = prevEntry?.getValue() ?? null;
+    this.entry = (await entry?.getValue()) ?? null;
+    this.previousEntry = (await prevEntry?.getValue()) ?? null;
     if (this.entry) {
       this.uiData.highlightedItems = this.highlightedItems;
       this.uiData.rects = this.generateRects();

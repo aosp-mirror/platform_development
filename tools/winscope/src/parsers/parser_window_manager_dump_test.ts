@@ -40,8 +40,8 @@ describe('ParserWindowManagerDump', () => {
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
   });
 
-  it('retrieves trace entry', () => {
-    const entry = parser.getEntry(0, TimestampType.ELAPSED);
+  it('retrieves trace entry', async () => {
+    const entry = await parser.getEntry(0, TimestampType.ELAPSED);
     expect(entry).toBeInstanceOf(WindowManagerState);
     expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(0n);
   });
