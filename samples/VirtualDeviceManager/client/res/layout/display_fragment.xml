@@ -1,16 +1,21 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/display_focus"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:gravity="center"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="5dp">
 
     <LinearLayout
+        android:id="@+id/display_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/remote_display_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
 
         <TextView
             android:id="@+id/display_title"
@@ -64,17 +69,23 @@
         </LinearLayout>
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/frame"
-        android:layout_width="250dp"
-        android:layout_height="440dp"
-        android:layout_gravity="center">
+    <View
+        android:id="@+id/strut"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/remote_display_view"
+        app:layout_constraintEnd_toEndOf="@id/display_header"
+        app:layout_constraintStart_toStartOf="@id/display_header"
+        app:layout_constraintTop_toBottomOf="@id/display_header" />
 
-        <TextureView
-            android:id="@+id/remote_display_view"
-            android:layout_width="250dp"
-            android:layout_height="440dp"
-            android:layout_gravity="center" />
-    </FrameLayout>
+    <TextureView
+        android:id="@+id/remote_display_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="9:16"
+        app:layout_constraintEnd_toEndOf="@id/display_header"
+        app:layout_constraintStart_toStartOf="@id/display_header"
+        app:layout_constraintTop_toBottomOf="@id/display_header" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
