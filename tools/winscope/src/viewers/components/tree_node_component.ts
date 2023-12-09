@@ -77,9 +77,19 @@ export class TreeNodeComponent {
 
   ngOnChanges() {
     this.collapseDiffClass = this.updateCollapseDiffClass();
-    if (!this.isPinned && this.isSelected) {
+    if (!this.isPinned && this.isSelected && !this.isNodeInView()) {
       this.el.scrollIntoView({block: 'center', inline: 'nearest'});
     }
+  }
+
+  isNodeInView() {
+    const rect = this.el.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
   }
 
   isPropertiesTreeNode() {

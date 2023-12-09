@@ -34,6 +34,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
     <tree-node
       *ngIf="item && showNode(item)"
       class="node"
+      [id]="'node' + item.stableId"
       [class.leaf]="isLeaf(this.item)"
       [class.selected]="isHighlighted(item, highlightedItem)"
       [class.clickable]="isClickable()"

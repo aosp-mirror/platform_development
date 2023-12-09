@@ -161,7 +161,10 @@ public class MainActivity extends Hilt_MainActivity {
             case R.id.enable_nav_touchpad -> mSettings.navTouchpadEnabled = item.isChecked();
             case R.id.enable_external_keyboard ->
                     mSettings.externalKeyboardEnabled = item.isChecked();
-            case R.id.enable_external_mouse -> mSettings.externalMouseEnabled = item.isChecked();
+            case R.id.enable_external_mouse -> {
+                mSettings.externalMouseEnabled = item.isChecked();
+                return true;
+            }
             default -> {
                 return super.onOptionsItemSelected(item);
             }
