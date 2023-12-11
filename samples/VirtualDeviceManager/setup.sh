@@ -115,6 +115,7 @@ if [[ -n "${HOST_SERIAL}" ]]; then
     run_cmd_or_die adb -s "${HOST_SERIAL}" root
     run_cmd_or_die adb -s "${HOST_SERIAL}" remount -R
     run_cmd_or_die adb -s "${HOST_SERIAL}" wait-for-device
+    sleep 3  # Even after wait-for-device returns, the device may not be ready so give it some time.
     run_cmd_or_die adb -s "${HOST_SERIAL}" root
     run_cmd_or_die adb -s "${HOST_SERIAL}" remount
     echo "Installing VdmHost.apk as a privileged app to ${HOST_NAME}..."

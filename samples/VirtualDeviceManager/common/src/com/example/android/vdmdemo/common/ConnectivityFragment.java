@@ -42,6 +42,11 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
                 @Override
+                public void onInitialized() {
+                    updateStatus(mDefaultBackgroundColor, R.string.initialized);
+                }
+
+                @Override
                 public void onConnecting(String remoteDeviceName) {
                     updateStatus(mDefaultBackgroundColor, R.string.connecting, remoteDeviceName);
                 }
