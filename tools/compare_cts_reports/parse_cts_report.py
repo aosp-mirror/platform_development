@@ -134,7 +134,7 @@ class CtsReport:
 
     for module in root.iter('Module'):
       module_name = module.attrib['name']
-      abi = 'ignored' if ignore_abi else module.attrib['abi']
+      abi = constant.ABI_IGNORED if ignore_abi else module.attrib['abi']
 
       for testcase in module.iter('TestCase'):
         class_name = testcase.attrib['name']
