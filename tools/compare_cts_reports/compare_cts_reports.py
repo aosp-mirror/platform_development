@@ -270,6 +270,8 @@ def main():
   parser.add_argument('--csv', default='diff.csv', help='Path to csv output.')
   parser.add_argument('--output-files', '-o', action='store_true',
                       help='Output parsed csv files.')
+  parser.add_argument('--ignore-abi', action='store_true',
+                      help='Ignore the tests ABI while comparing.')
 
   args = parser.parse_args()
 
@@ -287,10 +289,11 @@ def main():
   diff_csv = os.path.join(output_dir, args.csv)
 
   ctsreports = []
+  ignore_abi = args.ignore_abi
   for i, report_path in enumerate(reports):
     is_report_files = isinstance(report_path, list)
     report = (
-        aggregate_cts_reports.aggregate_cts_reports(report_path)
+        aggregate_cts_reports.aggregate_cts_reports(report_path, ignore_abi)
         if is_report_files  # path(s) come from --report flag
         else load_parsed_report(report_path)
     )
