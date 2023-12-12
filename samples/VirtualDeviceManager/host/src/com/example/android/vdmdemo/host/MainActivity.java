@@ -107,12 +107,7 @@ public class MainActivity extends Hilt_MainActivity {
                     if (intent == null || mVdmService == null) {
                         return;
                     }
-                    int[] remoteDisplayIds = mVdmService.getRemoteDisplayIds();
-                    if (mSettings.immersiveMode && remoteDisplayIds.length > 0) {
-                        mVdmService.startIntentOnDisplayIndex(intent, 0);
-                    } else {
-                        mVdmService.startStreaming(intent);
-                    }
+                    mVdmService.startStreaming(intent);
                 });
         mLauncher.setOnItemLongClickListener(
                 (parent, v, position, id) -> {
@@ -123,8 +118,6 @@ public class MainActivity extends Hilt_MainActivity {
                     int[] remoteDisplayIds = mVdmService.getRemoteDisplayIds();
                     if (remoteDisplayIds.length == 0) {
                         mVdmService.startStreaming(intent);
-                    } else if (mSettings.immersiveMode) {
-                        mVdmService.startIntentOnDisplayIndex(intent, 0);
                     } else {
                         String[] displays = new String[remoteDisplayIds.length + 1];
                         for (int i = 0; i < remoteDisplayIds.length; ++i) {
@@ -224,9 +217,6 @@ public class MainActivity extends Hilt_MainActivity {
                 case R.id.show_pointer_icon:
                     item.setChecked(mSettings.showPointerIcon);
                     break;
-                case R.id.immersive_mode:
-                    item.setChecked(mSettings.immersiveMode);
-                    break;
                 case R.id.record_encoder_output:
                     item.setChecked(mSettings.recordEncoderOutput);
                     break;
@@ -269,9 +259,6 @@ public class MainActivity extends Hilt_MainActivity {
                 return true;
             case R.id.show_pointer_icon:
                 mVdmService.setShowPointerIcon(item.isChecked());
-                return true;
-            case R.id.immersive_mode:
-                mVdmService.setImmersiveMode(item.isChecked());
                 return true;
             case R.id.custom_home:
                 mVdmService.setCustomHome(item.isChecked());

@@ -61,6 +61,13 @@
                 android:src="@drawable/resize" />
 
             <ImageButton
+                android:id="@+id/display_fullscreen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/display_fullscreen"
+                android:src="@drawable/fullscreen" />
+
+            <ImageButton
                 android:id="@+id/display_close"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

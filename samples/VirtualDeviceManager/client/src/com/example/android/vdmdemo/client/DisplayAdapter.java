@@ -17,9 +17,11 @@
 package com.example.android.vdmdemo.client;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
+import android.view.Display;
 import android.view.InputDevice;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -29,6 +31,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
@@ -43,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
     private static final String TAG = "VdmClient";
@@ -56,12 +61,33 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
     private final RemoteIo mRemoteIo;
     private final ClientView mRecyclerView;
     private final InputManager mInputManager;
+    private ActivityResultLauncher<Intent> mFullscreenLauncher;
 
     DisplayAdapter(ClientView recyclerView, RemoteIo remoteIo, InputManager inputManager) {
         mRecyclerView = recyclerView;
         mRemoteIo = remoteIo;
         mInputManager = inputManager;
         setHasStableIds(true);
+    }
+
+    void setFullscreenLauncher(ActivityResultLauncher<Intent> launcher) {
+        mFullscreenLauncher = launcher;
+    }
+
+    void onFullscreenActivityResult(ActivityResult result) {
+        Intent data = result.getData();
+        if (data == null) {
+            return;
+        }
+        int displayId =
+                data.getIntExtra(ImmersiveActivity.EXTRA_DISPLAY_ID, Display.INVALID_DISPLAY);
+        if (result.getResultCode() == ImmersiveActivity.RESULT_CLOSE) {
+            removeDisplay(displayId);
+        } else if (result.getResultCode() == ImmersiveActivity.RESULT_MINIMIZE) {
+            int requestedRotation =
+                    data.getIntExtra(ImmersiveActivity.EXTRA_REQUESTED_ROTATION, 0);
+            rotateDisplay(displayId, requestedRotation);
+        }
     }
 
     void addDisplay(boolean homeSupported) {
@@ -82,11 +108,10 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         }
     }
 
-    void rotateDisplay(RemoteEvent event) {
-        DisplayHolder holder = getDisplayHolder(event.getDisplayId());
+    void rotateDisplay(int displayId, int rotationDegrees) {
+        DisplayHolder holder = getDisplayHolder(displayId);
         if (holder != null) {
-            holder.rotateDisplay(
-                    event.getDisplayRotation().getRotationDegrees(), /* resize= */ false);
+            holder.rotateDisplay(rotationDegrees, /* resize= */ false);
         }
     }
 
@@ -102,6 +127,26 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         int size = mDisplayRepository.size();
         mDisplayRepository.clear();
         notifyItemRangeRemoved(0, size);
+    }
+
+    void pauseAllDisplays() {
+        Log.i(TAG, "Pausing all displays");
+        forAllDisplays(DisplayHolder::pause);
+    }
+
+    void resumeAllDisplays() {
+        Log.i(TAG, "Resuming all displays");
+        forAllDisplays(DisplayHolder::resume);
+    }
+
+    private void forAllDisplays(Consumer<DisplayHolder> consumer) {
+        for (int i = 0; i < mDisplayRepository.size(); ++i) {
+            DisplayHolder holder =
+                    (DisplayHolder) mRecyclerView.findViewHolderForAdapterPosition(i);
+            if (holder != null) {
+                consumer.accept(holder);
+            }
+        }
     }
 
     private DisplayHolder getDisplayHolder(int displayId) {
@@ -158,6 +203,9 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         }
 
         void rotateDisplay(int rotationDegrees, boolean resize) {
+            if (mTextureView.getRotation() == rotationDegrees) {
+                return;
+            }
             Log.i(TAG, "Rotating display " + mDisplayId + " to " + rotationDegrees);
             mRotateButton.setEnabled(rotationDegrees == 0 || resize);
 
@@ -212,6 +260,15 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                 mDisplayController.close();
                 mDisplayController = null;
             }
+        }
+
+        void pause() {
+            mDisplayController.pause();
+        }
+
+        void resume() {
+            mDisplayController.setSurface(
+                    mSurface, mTextureView.getWidth(), mTextureView.getHeight());
         }
 
         @SuppressLint("ClickableViewAccessibility")
@@ -276,6 +333,13 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                 mRecyclerView.startResizing(
                         mTextureView, event, maxSize, DisplayHolder.this::resizeDisplay);
                 return true;
+            });
+
+            View fullscreenButton = itemView.requireViewById(R.id.display_fullscreen);
+            fullscreenButton.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), ImmersiveActivity.class);
+                intent.putExtra(ImmersiveActivity.EXTRA_DISPLAY_ID, mDisplayId);
+                mFullscreenLauncher.launch(intent);
             });
 
             mTextureView.setOnTouchListener(

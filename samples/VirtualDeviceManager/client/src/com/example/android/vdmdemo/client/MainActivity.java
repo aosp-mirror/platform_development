@@ -20,13 +20,14 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -96,6 +97,11 @@ public class MainActivity extends Hilt_MainActivity {
         displaysView.setItemAnimator(null);
         mDisplayAdapter = new DisplayAdapter(displaysView, mRemoteIo, mInputManager);
         displaysView.setAdapter(mDisplayAdapter);
+
+        ActivityResultLauncher<Intent> fullscreenLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                mDisplayAdapter::onFullscreenActivityResult);
+        mDisplayAdapter.setFullscreenLauncher(fullscreenLauncher);
     }
 
     @Override
@@ -106,6 +112,18 @@ public class MainActivity extends Hilt_MainActivity {
         mInputManager.addFocusListener(mFocusListener);
         mRemoteIo.addMessageConsumer(mAudioPlayer);
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mDisplayAdapter.resumeAllDisplays();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mDisplayAdapter.pauseAllDisplays();
     }
 
     @Override
@@ -127,12 +145,9 @@ public class MainActivity extends Hilt_MainActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getDevice() == null
-                || !event.getDevice().supportsSource(InputDevice.SOURCE_KEYBOARD)) {
-            return false;
-        }
-        mInputManager.sendInputEventToFocusedDisplay(InputDeviceType.DEVICE_TYPE_KEYBOARD, event);
-        return true;
+        return mInputManager.sendInputEventToFocusedDisplay(
+                        InputDeviceType.DEVICE_TYPE_KEYBOARD, event)
+                || super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -176,18 +191,13 @@ public class MainActivity extends Hilt_MainActivity {
 
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasStartStreaming()) {
-            if (event.getStartStreaming().getImmersive()) {
-                startActivity(new Intent(this, ImmersiveActivity.class));
-            } else {
-                runOnUiThread(
-                        () ->
-                                mDisplayAdapter.addDisplay(
-                                        event.getStartStreaming().getHomeEnabled()));
-            }
+            runOnUiThread(
+                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled()));
         } else if (event.hasStopStreaming()) {
             runOnUiThread(() -> mDisplayAdapter.removeDisplay(event.getDisplayId()));
         } else if (event.hasDisplayRotation()) {
-            runOnUiThread(() -> mDisplayAdapter.rotateDisplay(event));
+            runOnUiThread(() -> mDisplayAdapter.rotateDisplay(
+                    event.getDisplayId(), event.getDisplayRotation().getRotationDegrees()));
         } else if (event.hasDisplayChangeEvent()) {
             runOnUiThread(() -> mDisplayAdapter.processDisplayChange(event));
         }

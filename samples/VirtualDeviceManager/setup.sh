@@ -96,7 +96,7 @@ fi
 if [[ -n "${HOST_SERIAL}" ]]; then
   echo
   echo "Installing VdmDemos.apk to ${HOST_NAME}..."
-  install_app "${CLIENT_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
+  install_app "${HOST_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
   readonly PERM_BASENAME=com.example.android.vdmdemo.host.xml

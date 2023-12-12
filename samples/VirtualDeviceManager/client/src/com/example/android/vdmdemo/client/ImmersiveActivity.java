@@ -16,11 +16,13 @@
 
 package com.example.android.vdmdemo.client;
 
-import static android.view.Display.DEFAULT_DISPLAY;
-
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Display;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Surface;
@@ -50,6 +52,14 @@ import javax.inject.Inject;
 @AndroidEntryPoint(AppCompatActivity.class)
 public class ImmersiveActivity extends Hilt_ImmersiveActivity {
 
+    private static final String TAG = "VdmClientImmersiveActivity";
+
+    static final String EXTRA_DISPLAY_ID = "displayId";
+    static final String EXTRA_REQUESTED_ROTATION = "requestedRotation";
+
+    static final int RESULT_MINIMIZE = 1;
+    static final int RESULT_CLOSE = 2;
+
     // Approximately, see
     // https://developer.android.com/reference/android/util/DisplayMetrics#density
     private static final float DIP_TO_DPI = 160f;
@@ -60,7 +70,14 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
     @Inject AudioPlayer mAudioPlayer;
     @Inject InputManager mInputManager;
 
+    private int mDisplayId = Display.INVALID_DISPLAY;
     private DisplayController mDisplayController;
+    private Surface mSurface;
+
+    private int mPortraitWidth;
+    private int mPortraitHeight;
+    private int mRequestedRotation = 0;
+
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
 
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
@@ -68,7 +85,7 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
 
                 @Override
                 public void onDisconnected() {
-                    finish();
+                    finish(/* minimize= */ false);
                 }
             };
 
@@ -85,16 +102,18 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
 
+        mDisplayId = getIntent().getIntExtra(EXTRA_DISPLAY_ID, Display.INVALID_DISPLAY);
+
         OnBackPressedCallback callback =
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
-                        mInputManager.sendBack(DEFAULT_DISPLAY);
+                        mInputManager.sendBack(mDisplayId);
                     }
                 };
         getOnBackPressedDispatcher().addCallback(this, callback);
 
-        mDisplayController = new DisplayController(DEFAULT_DISPLAY, mRemoteIo);
+        mDisplayController = new DisplayController(mDisplayId, mRemoteIo);
         mDisplayController.setDpi((int) (getResources().getDisplayMetrics().density * DIP_TO_DPI));
 
         TextureView textureView = requireViewById(R.id.immersive_surface_view);
@@ -103,7 +122,7 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
                     if (event.getDevice().supportsSource(InputDevice.SOURCE_TOUCHSCREEN)) {
                         textureView.getParent().requestDisallowInterceptTouchEvent(true);
                         mInputManager.sendInputEvent(
-                                InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, DEFAULT_DISPLAY);
+                                InputDeviceType.DEVICE_TYPE_TOUCHSCREEN, event, mDisplayId);
                     }
                     return true;
                 });
@@ -115,17 +134,32 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
                     @Override
                     public void onSurfaceTextureAvailable(
                             @NonNull SurfaceTexture texture, int width, int height) {
-                        mDisplayController.setSurface(new Surface(texture), width, height);
+                        Log.v(TAG, "Setting surface for immersive display " + mDisplayId);
+                        mSurface = new Surface(texture);
+                        mPortraitWidth = Math.min(width, height);
+                        mPortraitHeight = Math.max(width, height);
+                        mDisplayController.setSurface(mSurface, width, height);
                     }
 
                     @Override
                     public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture texture) {
+                        Log.v(TAG, "onSurfaceTextureDestroyed for immersive display " + mDisplayId);
                         return true;
                     }
 
                     @Override
                     public void onSurfaceTextureSizeChanged(
                             @NonNull SurfaceTexture texture, int width, int height) {}
+                });
+        textureView.setOnGenericMotionListener(
+                (v, event) -> {
+                    if (event.getDevice() == null
+                            || !event.getDevice().supportsSource(InputDevice.SOURCE_MOUSE)) {
+                        return false;
+                    }
+                    mInputManager.sendInputEvent(
+                            InputDeviceType.DEVICE_TYPE_MOUSE, event, mDisplayId);
+                    return true;
                 });
     }
 
@@ -148,33 +182,54 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mDisplayController.close();
         mSensorController.close();
     }
 
     private void processRemoteEvent(RemoteEvent event) {
-        if (event.hasStopStreaming() && !event.getStopStreaming().getPause()) {
-            finish();
-        } else if (event.hasStartStreaming()) {
-            mDisplayController.sendDisplayCapabilities();
+        if (event.hasStopStreaming()) {
+            finish(/* minimize= */ false);
+        } else if (event.hasDisplayRotation()) {
+            mRequestedRotation = event.getDisplayRotation().getRotationDegrees();
         }
     }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        int keyCode = event.getKeyCode();
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP -> {
-                mInputManager.sendHome(DEFAULT_DISPLAY);
-                return true;
-            }
-            case KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                finish();
-                return true;
-            }
-            default -> {
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_VOLUME_UP -> mInputManager.sendHome(mDisplayId);
+            case KeyEvent.KEYCODE_VOLUME_DOWN -> finish(/* minimize= */ true);
+            case KeyEvent.KEYCODE_BACK -> {
                 return super.dispatchKeyEvent(event);
             }
+            default -> mInputManager.sendInputEvent(
+                    InputDeviceType.DEVICE_TYPE_KEYBOARD, event, mDisplayId);
         }
+        return true;
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration config) {
+        super.onConfigurationChanged(config);
+        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.d(TAG, "Switching landscape");
+            mDisplayController.setSurface(
+                    mSurface, /* width= */ mPortraitHeight, /* height= */ mPortraitWidth);
+        } else if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            Log.d(TAG, "Switching to portrait");
+            mDisplayController.setSurface(mSurface, mPortraitWidth, mPortraitHeight);
+        }
+    }
+
+    private void finish(boolean minimize) {
+        if (minimize) {
+            mDisplayController.close();
+        } else {
+            mDisplayController.pause();
+        }
+        Intent result = new Intent();
+        result.putExtra(EXTRA_DISPLAY_ID, mDisplayId);
+        result.putExtra(EXTRA_REQUESTED_ROTATION, mRequestedRotation);
+        setResult(minimize ? RESULT_MINIMIZE : RESULT_CLOSE, result);
+        finish();
     }
 }

@@ -423,16 +423,8 @@ public final class VdmService extends Hilt_VdmService {
     void startStreamingHome() {
         mPendingRemoteIntent = null;
         mPendingHome = true;
-        if (mSettings.immersiveMode) {
-            mDisplayRepository.clear();
-        }
-        mRemoteIo.sendMessage(
-                RemoteEvent.newBuilder()
-                        .setStartStreaming(
-                                StartStreaming.newBuilder()
-                                        .setHomeEnabled(true)
-                                        .setImmersive(mSettings.immersiveMode))
-                        .build());
+        mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                .setStartStreaming(StartStreaming.newBuilder().setHomeEnabled(true)).build());
     }
 
     void startMirroring() {
@@ -445,10 +437,7 @@ public final class VdmService extends Hilt_VdmService {
     void startStreaming(Intent intent) {
         mPendingRemoteIntent = intent;
         mRemoteIo.sendMessage(
-                RemoteEvent.newBuilder()
-                        .setStartStreaming(
-                                StartStreaming.newBuilder().setImmersive(mSettings.immersiveMode))
-                        .build());
+                RemoteEvent.newBuilder().setStartStreaming(StartStreaming.newBuilder()).build());
     }
 
     void startIntentOnDisplayIndex(Intent intent, int displayIndex) {
@@ -509,10 +498,6 @@ public final class VdmService extends Hilt_VdmService {
         } else {
             mAudioStreamer.stop();
         }
-    }
-
-    void setImmersiveMode(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.immersiveMode = enabled);
     }
 
     void setCustomHome(boolean enabled) {
