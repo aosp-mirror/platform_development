@@ -269,15 +269,16 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                     });
 
             View resizeButton = itemView.findViewById(R.id.display_resize);
-            resizeButton.setOnTouchListener(
-                    (v, event) -> {
-                        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                            mRecyclerView.startResizing(
-                                    mTextureView, event, DisplayHolder.this::resizeDisplay);
-                            return true;
-                        }
-                        return false;
-                    });
+            resizeButton.setOnTouchListener((v, event) -> {
+                if (event.getAction() != MotionEvent.ACTION_DOWN) {
+                    return false;
+                }
+                int maxSize = itemView.getHeight()
+                        - itemView.findViewById(R.id.display_header).getHeight();
+                mRecyclerView.startResizing(
+                        mTextureView, event, maxSize, DisplayHolder.this::resizeDisplay);
+                return true;
+            });
 
             mTextureView.setOnTouchListener(
                     (v, event) -> {
