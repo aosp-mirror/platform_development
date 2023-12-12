@@ -17,6 +17,7 @@
 import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TRACE_INFO} from 'app/trace_info';
+import {assertUnreachable} from 'common/assert_utils';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
 import {SnackBarComponent} from './snack_bar_component';
@@ -74,15 +75,18 @@ export class SnackBarOpener implements UserNotificationListener {
     switch (error.type) {
       case WinscopeErrorType.CORRUPTED_ARCHIVE:
         return `${fileName}: corrupted archive`;
+      case WinscopeErrorType.FILE_OVERRIDDEN:
+        return `${fileName}: overridden by another trace${traceTypeInfo}`;
+      case WinscopeErrorType.NO_COMMON_TIMESTAMP_TYPE:
+        return `Failed to load traces because no common timestamp type could be found`;
       case WinscopeErrorType.NO_INPUT_FILES:
         return `Input doesn't contain trace files`;
+      case WinscopeErrorType.FILE_OUTDATED:
+        return `${fileName}: discarded because outdated`;
       case WinscopeErrorType.UNSUPPORTED_FILE_FORMAT:
         return `${fileName}: unsupported file format`;
-      case WinscopeErrorType.FILE_OVERRIDDEN: {
-        return `${fileName}: overridden by another trace${traceTypeInfo}`;
-      }
       default:
-        return `${fileName}: unknown error occurred`;
+        return assertUnreachable(error.type);
     }
   }
 

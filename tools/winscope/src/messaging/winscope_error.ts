@@ -18,8 +18,10 @@ import {TraceType} from 'trace/trace_type';
 
 export enum WinscopeErrorType {
   CORRUPTED_ARCHIVE,
-  NO_INPUT_FILES,
+  FILE_OUTDATED,
   FILE_OVERRIDDEN,
+  NO_COMMON_TIMESTAMP_TYPE,
+  NO_INPUT_FILES,
   UNSUPPORTED_FILE_FORMAT,
 }
 
