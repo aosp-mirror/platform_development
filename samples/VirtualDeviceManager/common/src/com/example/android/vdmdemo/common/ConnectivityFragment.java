@@ -41,26 +41,27 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
             new ConnectionManager.ConnectionCallback() {
                 @Override
                 public void onConnecting(String remoteDeviceName) {
-                    mStatus.setText(getContext().getString(R.string.connecting, remoteDeviceName));
-                    mStatus.setBackgroundColor(mDefaultBackgroundColor);
+                    updateStatus(
+                            getContext().getString(R.string.connecting, remoteDeviceName),
+                            mDefaultBackgroundColor);
                 }
 
                 @Override
                 public void onConnected(String remoteDeviceName) {
-                    mStatus.setText(getContext().getString(R.string.connected, remoteDeviceName));
-                    mStatus.setBackgroundColor(Color.GREEN);
+                    updateStatus(
+                            getContext().getString(R.string.connected, remoteDeviceName),
+                            Color.GREEN);
                 }
 
                 @Override
                 public void onDisconnected() {
-                    mStatus.setText(getContext().getString(R.string.disconnected));
-                    mStatus.setBackgroundColor(mDefaultBackgroundColor);
+                    updateStatus(
+                            getContext().getString(R.string.disconnected), mDefaultBackgroundColor);
                 }
 
                 @Override
                 public void onError(String message) {
-                    mStatus.setText(message);
-                    mStatus.setBackgroundColor(Color.RED);
+                    updateStatus(message, Color.RED);
                 }
             };
 
@@ -102,5 +103,12 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
+    }
+
+    private void updateStatus(String message, int backgroundColor) {
+        getActivity().runOnUiThread(() -> {
+            mStatus.setText(message);
+            mStatus.setBackgroundColor(backgroundColor);
+        });
     }
 }
