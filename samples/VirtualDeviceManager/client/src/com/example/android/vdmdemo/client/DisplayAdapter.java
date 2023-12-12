@@ -27,7 +27,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -149,7 +148,6 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         private InputManager.FocusListener mFocusListener = null;
         private Surface mSurface = null;
         private TextureView mTextureView = null;
-        private FrameLayout mTextureFrame = null;
         private TextView mDisplayTitle = null;
         private View mRotateButton = null;
         private int mDisplayId = 0;
@@ -163,10 +161,12 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             mRotateButton.setEnabled(rotationDegrees == 0 || resize);
 
             // Make sure the rotation is visible.
-            ViewGroup.LayoutParams frameLayoutParams = mTextureFrame.getLayoutParams();
-            frameLayoutParams.width = Math.max(mTextureView.getWidth(), mTextureView.getHeight());
-            frameLayoutParams.height = frameLayoutParams.width;
-            mTextureFrame.setLayoutParams(frameLayoutParams);
+            View strut = itemView.findViewById(R.id.strut);
+            ViewGroup.LayoutParams layoutParams = strut.getLayoutParams();
+            layoutParams.width = Math.max(mTextureView.getWidth(), mTextureView.getHeight());
+            strut.setLayoutParams(layoutParams);
+            final int postRotationWidth = (resize || rotationDegrees % 180 != 0)
+                    ? mTextureView.getHeight() : mTextureView.getWidth();
 
             mTextureView
                     .animate()
@@ -181,17 +181,9 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                                                     0,
                                                     mTextureView.getHeight(),
                                                     mTextureView.getWidth()));
-                                } else {
-                                    frameLayoutParams.width =
-                                            (rotationDegrees % 180 == 0)
-                                                    ? mTextureView.getWidth()
-                                                    : mTextureView.getHeight();
-                                    frameLayoutParams.height =
-                                            (rotationDegrees % 180 == 0)
-                                                    ? mTextureView.getHeight()
-                                                    : mTextureView.getWidth();
-                                    mTextureFrame.setLayoutParams(frameLayoutParams);
                                 }
+                                layoutParams.width = postRotationWidth;
+                                strut.setLayoutParams(layoutParams);
                             })
                     .start();
         }
@@ -204,11 +196,6 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             layoutParams.width = newBounds.width();
             layoutParams.height = newBounds.height();
             mTextureView.setLayoutParams(layoutParams);
-
-            ViewGroup.LayoutParams frameLayoutParams = mTextureFrame.getLayoutParams();
-            frameLayoutParams.width = newBounds.width();
-            frameLayoutParams.height = newBounds.height();
-            mTextureFrame.setLayoutParams(frameLayoutParams);
         }
 
         private void setDisplayTitle(String title) {
@@ -235,11 +222,10 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
             mDisplayTitle = itemView.findViewById(R.id.display_title);
             mTextureView = itemView.findViewById(R.id.remote_display_view);
-            mTextureFrame = itemView.findViewById(R.id.frame);
 
             mFocusListener =
                     focusedDisplayId -> {
-                        View displayFocusIndicator = itemView.findViewById(R.id.display_focus);
+                        View displayFocusIndicator = itemView.findViewById(R.id.display_header);
                         if (focusedDisplayId == mDisplayId) {
                             displayFocusIndicator.setBackgroundResource(R.drawable.focus_frame);
                         } else {
