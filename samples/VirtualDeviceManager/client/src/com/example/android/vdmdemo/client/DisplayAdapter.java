@@ -41,6 +41,7 @@ import com.example.android.vdmdemo.common.RemoteIo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
@@ -161,7 +162,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             mRotateButton.setEnabled(rotationDegrees == 0 || resize);
 
             // Make sure the rotation is visible.
-            View strut = itemView.findViewById(R.id.strut);
+            View strut = itemView.requireViewById(R.id.strut);
             ViewGroup.LayoutParams layoutParams = strut.getLayoutParams();
             layoutParams.width = Math.max(mTextureView.getWidth(), mTextureView.getHeight());
             strut.setLayoutParams(layoutParams);
@@ -220,16 +221,16 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             Log.v(TAG, "Binding DisplayHolder for display " + mDisplayId + " to position "
                     + position);
 
-            mDisplayTitle = itemView.findViewById(R.id.display_title);
-            mTextureView = itemView.findViewById(R.id.remote_display_view);
+            mDisplayTitle = itemView.requireViewById(R.id.display_title);
+            mTextureView = itemView.requireViewById(R.id.remote_display_view);
+            final View displayHeader = itemView.requireViewById(R.id.display_header);
 
             mFocusListener =
                     focusedDisplayId -> {
-                        View displayFocusIndicator = itemView.findViewById(R.id.display_header);
                         if (focusedDisplayId == mDisplayId) {
-                            displayFocusIndicator.setBackgroundResource(R.drawable.focus_frame);
+                            displayHeader.setBackgroundResource(R.drawable.focus_frame);
                         } else {
-                            displayFocusIndicator.setBackground(null);
+                            displayHeader.setBackground(null);
                         }
                     };
             mInputManager.addFocusListener(mFocusListener);
@@ -239,14 +240,15 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
             setDisplayTitle("");
 
-            View closeButton = itemView.findViewById(R.id.display_close);
+            View closeButton = itemView.requireViewById(R.id.display_close);
             closeButton.setOnClickListener(
-                    v -> ((DisplayAdapter) getBindingAdapter()).removeDisplay(mDisplayId));
+                    v -> ((DisplayAdapter) Objects.requireNonNull(getBindingAdapter()))
+                            .removeDisplay(mDisplayId));
 
-            View backButton = itemView.findViewById(R.id.display_back);
+            View backButton = itemView.requireViewById(R.id.display_back);
             backButton.setOnClickListener(v -> mInputManager.sendBack(mDisplayId));
 
-            View homeButton = itemView.findViewById(R.id.display_home);
+            View homeButton = itemView.requireViewById(R.id.display_home);
             if (remoteDisplay.isHomeSupported()) {
                 homeButton.setVisibility(View.VISIBLE);
                 homeButton.setOnClickListener(v -> mInputManager.sendHome(mDisplayId));
@@ -254,27 +256,23 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                 homeButton.setVisibility(View.GONE);
             }
 
-            mRotateButton = itemView.findViewById(R.id.display_rotate);
-            mRotateButton.setOnClickListener(
-                    v -> {
-                        // This rotation is simply resizing the display with width with height
-                        // swapped.
-                        mDisplayController.setSurface(
-                                mSurface,
-                                /* width= */ mTextureView.getHeight(),
-                                /* height= */ mTextureView.getWidth());
-                        rotateDisplay(
-                                mTextureView.getWidth() > mTextureView.getHeight() ? 90 : -90,
-                                true);
-                    });
+            mRotateButton = itemView.requireViewById(R.id.display_rotate);
+            mRotateButton.setOnClickListener(v -> {
+                // This rotation is simply resizing the display with width with height swapped.
+                mDisplayController.setSurface(
+                        mSurface,
+                        /* width= */ mTextureView.getHeight(),
+                        /* height= */ mTextureView.getWidth());
+                rotateDisplay(mTextureView.getWidth() > mTextureView.getHeight() ? 90 : -90, true);
+            });
 
-            View resizeButton = itemView.findViewById(R.id.display_resize);
+            View resizeButton = itemView.requireViewById(R.id.display_resize);
             resizeButton.setOnTouchListener((v, event) -> {
                 if (event.getAction() != MotionEvent.ACTION_DOWN) {
                     return false;
                 }
-                int maxSize = itemView.getHeight()
-                        - itemView.findViewById(R.id.display_header).getHeight();
+                int maxSize = itemView.getHeight() - displayHeader.getHeight()
+                        - itemView.getPaddingTop() - itemView.getPaddingBottom();
                 mRecyclerView.startResizing(
                         mTextureView, event, maxSize, DisplayHolder.this::resizeDisplay);
                 return true;

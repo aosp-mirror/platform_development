@@ -35,6 +35,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
+import java.util.Objects;
 
 /** A minimal activity switching between vibration on the default device and the virtual devices. */
 public final class VibrationDemoActivity extends AppCompatActivity {
@@ -74,7 +75,8 @@ public final class VibrationDemoActivity extends AppCompatActivity {
         if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
             deviceName = DEVICE_NAME_DEFAULT;
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            deviceName = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId()).getName();
+            VirtualDevice device = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId());
+            deviceName = Objects.requireNonNull(device).getName();
         } else {
             for (VirtualDevice virtualDevice : mVirtualDeviceManager.getVirtualDevices()) {
                 if (virtualDevice.getDeviceId() == context.getDeviceId()) {
@@ -83,7 +85,7 @@ public final class VibrationDemoActivity extends AppCompatActivity {
                 }
             }
         }
-        TextView currentDevice = findViewById(R.id.current_device);
+        TextView currentDevice = requireViewById(R.id.current_device);
         currentDevice.setText(context.getString(R.string.current_device, deviceName));
     }
 

@@ -97,7 +97,7 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
         mDisplayController = new DisplayController(DEFAULT_DISPLAY, mRemoteIo);
         mDisplayController.setDpi((int) (getResources().getDisplayMetrics().density * DIP_TO_DPI));
 
-        TextureView textureView = findViewById(R.id.immersive_surface_view);
+        TextureView textureView = requireViewById(R.id.immersive_surface_view);
         textureView.setOnTouchListener(
                 (v, event) -> {
                     if (event.getDevice().supportsSource(InputDevice.SOURCE_TOUCHSCREEN)) {

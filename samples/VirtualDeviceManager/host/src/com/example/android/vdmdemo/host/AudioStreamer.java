@@ -41,7 +41,6 @@ import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.StartAudio;
 import com.example.android.vdmdemo.common.RemoteEventProto.StopAudio;
 import com.example.android.vdmdemo.common.RemoteIo;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 
@@ -51,8 +50,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -201,8 +200,7 @@ final class AudioStreamer implements AutoCloseable {
             // The ghost audio record needs to be kept alive, releasing it would cause
             // destruction of remote submix instances and potential problems when updating the
             // UID-based render policy pointing to the remote submix device.
-            ImmutableList<AudioDeviceInfo> preexistingRemoteSubmixDevices =
-                    getRemoteSubmixDevices();
+            List<AudioDeviceInfo> preexistingRemoteSubmixDevices = getRemoteSubmixDevices();
             mGhostRecord = mAudioPolicy.createAudioRecordSink(audioMix);
             mGhostRecord.startRecording();
             mRemoteSubmixDevice = getNewRemoteSubmixAudioDevice(preexistingRemoteSubmixDevices);
@@ -215,15 +213,15 @@ final class AudioStreamer implements AutoCloseable {
 
     private @Nullable AudioDeviceInfo getNewRemoteSubmixAudioDevice(
             Collection<AudioDeviceInfo> preexistingDevices) {
-        ImmutableSet<String> preexistingAddresses =
+        Set<String> preexistingAddresses =
                 preexistingDevices.stream()
                         .map(AudioDeviceInfo::getAddress)
-                        .collect(toImmutableSet());
+                        .collect(Collectors.toSet());
 
-        ImmutableList<AudioDeviceInfo> newDevices =
+        List<AudioDeviceInfo> newDevices =
                 getRemoteSubmixDevices().stream()
                         .filter(dev -> !preexistingAddresses.contains(dev.getAddress()))
-                        .collect(toImmutableList());
+                        .collect(Collectors.toList());
 
         if (newDevices.size() > 1) {
             Log.e(TAG, "There's more than 1 new remote submix device");
@@ -236,7 +234,7 @@ final class AudioStreamer implements AutoCloseable {
         return getOnlyElement(newDevices);
     }
 
-    public void updateVdmUids(ImmutableSet<Integer> uids) {
+    public void updateVdmUids(Set<Integer> uids) {
         Log.w(TAG, "Updating mixing rule to reroute uids " + uids);
         mHandler.post(
                 () -> {
@@ -263,7 +261,7 @@ final class AudioStreamer implements AutoCloseable {
     // That's inefficient and leads to audio leaks. But this is the most correct way to do this at
     // this time.
     @GuardedBy("mLock")
-    private void updateAudioPolicies(ImmutableSet<Integer> uids) {
+    private void updateAudioPolicies(Set<Integer> uids) {
         // TODO(b/293279299) Use Flagged API
         // if (com.android.media.audio.flags.Flags.FLAG_AUDIO_POLICY_UPDATE_MIXING_RULES_API &&
         // uidAudioMix != null && (!reroutedUids.isEmpty() && !uids.isEmpty())) {
@@ -341,10 +339,10 @@ final class AudioStreamer implements AutoCloseable {
         return builder.build();
     }
 
-    private ImmutableList<AudioDeviceInfo> getRemoteSubmixDevices() {
+    private List<AudioDeviceInfo> getRemoteSubmixDevices() {
         return Arrays.stream(mAudioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS))
                 .filter(AudioStreamer::deviceIsRemoteSubmixOut)
-                .collect(toImmutableList());
+                .collect(Collectors.toList());
     }
 
     private static boolean deviceIsRemoteSubmixOut(AudioDeviceInfo info) {
@@ -403,13 +401,5 @@ final class AudioStreamer implements AutoCloseable {
         void stopStreaming() {
             mIsRunning.set(false);
         }
-    }
-
-    private static <E> Collector<E, ?, ImmutableList<E>> toImmutableList() {
-        return Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf);
-    }
-
-    private static <E> Collector<E, ?, ImmutableSet<E>> toImmutableSet() {
-        return Collectors.collectingAndThen(Collectors.toList(), ImmutableSet::copyOf);
     }
 }

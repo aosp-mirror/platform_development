@@ -54,7 +54,7 @@ public final class DpadFragment extends Hilt_DpadFragment {
         // Set the callback for all the buttons
         // Note: the onClick XML attribute cannot be used with fragments, only activities.
         for (int buttonId : BUTTONS) {
-            ImageButton button = view.findViewById(buttonId);
+            ImageButton button = view.requireViewById(buttonId);
             button.setOnTouchListener(this::onDpadButtonClick);
         }
 

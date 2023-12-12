@@ -159,7 +159,7 @@ public final class VdmService extends Hilt_VdmService {
                         CHANNEL_ID, "VDM Service Channel", NotificationManager.IMPORTANCE_LOW);
         notificationChannel.enableVibration(false);
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(notificationChannel);
+        Objects.requireNonNull(notificationManager).createNotificationChannel(notificationChannel);
 
         Intent openIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntentOpen =
@@ -193,7 +193,7 @@ public final class VdmService extends Hilt_VdmService {
         mConnectionManager.addConnectionCallback(mConnectionCallback);
 
         mDisplayManager = getSystemService(DisplayManager.class);
-        mDisplayManager.registerDisplayListener(mDisplayListener, null);
+        Objects.requireNonNull(mDisplayManager).registerDisplayListener(mDisplayListener, null);
 
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
 
@@ -241,8 +241,9 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void associateAndCreateVirtualDevice() {
-        CompanionDeviceManager cdm = getSystemService(CompanionDeviceManager.class);
-        RoleManager rm = getSystemService(RoleManager.class);
+        CompanionDeviceManager cdm =
+                Objects.requireNonNull(getSystemService(CompanionDeviceManager.class));
+        RoleManager rm = Objects.requireNonNull(getSystemService(RoleManager.class));
         final String deviceProfile =
                 mSettings.deviceStreaming
                         ? AssociationRequest.DEVICE_PROFILE_NEARBY_DEVICE_STREAMING
@@ -255,6 +256,7 @@ public final class VdmService extends Hilt_VdmService {
             if (!rm.isRoleHeld(deviceProfile)) {
                 cdm.disassociate(associationInfo.getId());
             } else if (Objects.equals(associationInfo.getPackageName(), getPackageName())
+                    && associationInfo.getDisplayName() != null
                     && Objects.equals(
                             associationInfo.getDisplayName().toString(),
                             mDeviceCapabilities.getDeviceName())) {
@@ -346,7 +348,8 @@ public final class VdmService extends Hilt_VdmService {
             }
         }
 
-        VirtualDeviceManager vdm = getSystemService(VirtualDeviceManager.class);
+        VirtualDeviceManager vdm =
+                Objects.requireNonNull(getSystemService(VirtualDeviceManager.class));
         mVirtualDevice =
                 vdm.createVirtualDevice(associationInfo.getId(), virtualDeviceBuilder.build());
         if (mRemoteSensorManager != null) {

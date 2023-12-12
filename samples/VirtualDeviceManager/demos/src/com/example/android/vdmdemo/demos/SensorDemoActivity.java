@@ -32,6 +32,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A minimal activity switching between sensor data from the default device and the virtual devices.
@@ -52,7 +53,7 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
 
         setContentView(R.layout.sensor_demo_activity);
 
-        mBeam = findViewById(R.id.beam);
+        mBeam = requireViewById(R.id.beam);
 
         mVirtualDeviceManager = getSystemService(VirtualDeviceManager.class);
         mSensorManager = getSystemService(SensorManager.class);
@@ -75,7 +76,8 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
             deviceName = DEVICE_NAME_DEFAULT;
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            deviceName = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId()).getName();
+            VirtualDevice device = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId());
+            deviceName = Objects.requireNonNull(device).getName();
         } else {
             for (VirtualDevice virtualDevice : mVirtualDeviceManager.getVirtualDevices()) {
                 if (virtualDevice.getDeviceId() == context.getDeviceId()) {
@@ -84,7 +86,7 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
                 }
             }
         }
-        TextView currentDevice = findViewById(R.id.current_device);
+        TextView currentDevice = requireViewById(R.id.current_device);
         currentDevice.setText(context.getString(R.string.current_device, deviceName));
     }
 
@@ -119,6 +121,7 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         updateCurrentDeviceTextView(mDeviceContext);
 
         mSensorManager = mDeviceContext.getSystemService(SensorManager.class);
+        Objects.requireNonNull(mSensorManager);
         Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (sensor != null) {
             mSensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI);
