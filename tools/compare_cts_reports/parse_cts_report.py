@@ -144,11 +144,12 @@ class CtsReport:
           result = test.attrib['result']
           self.set_test_status(module_name, abi, class_name, test_name, result)
 
-  def load_from_csv(self, result_csvfile):
+  def load_from_csv(self, result_csvfile, ignore_abi=False):
     """Read the information of the report from the csv files.
 
     Args:
       result_csvfile: path to result.csv
+      ignore_abi: if specified, load the test ABI name as constant.ABI_IGNORED
     """
 
     result_reader = csv.reader(result_csvfile)
@@ -161,6 +162,8 @@ class CtsReport:
 
     for row in result_reader:
       module_name, abi, class_name, test_name, result = row
+      if ignore_abi:
+        abi = constant.ABI_IGNORED
       self.set_test_status(module_name, abi, class_name, test_name, result)
 
   def write_to_csv(self, result_csvfile, summary_csvfile):

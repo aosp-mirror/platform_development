@@ -227,7 +227,7 @@ def n_way_compare(reports, diff_csv):
         diff_writer.writerow([module_with_abi, item] + row)
 
 
-def load_parsed_report(report_dir):
+def load_parsed_report(report_dir, ignore_abi=False):
   """Load CtsReport() from a directory that stores a parsed report."""
 
   if not os.path.isdir(report_dir):
@@ -246,7 +246,7 @@ def load_parsed_report(report_dir):
   report = parse_cts_report.CtsReport(info)
 
   with open(result_path, 'r') as result_csvfile:
-    report.load_from_csv(result_csvfile)
+    report.load_from_csv(result_csvfile, ignore_abi)
 
   return report
 
@@ -295,7 +295,7 @@ def main():
     report = (
         aggregate_cts_reports.aggregate_cts_reports(report_path, ignore_abi)
         if is_report_files  # path(s) come from --report flag
-        else load_parsed_report(report_path)
+        else load_parsed_report(report_path, ignore_abi)
     )
 
     if is_report_files and args.output_files:
