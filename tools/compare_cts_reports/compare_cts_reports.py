@@ -291,12 +291,14 @@ def main():
   ctsreports = []
   ignore_abi = args.ignore_abi
   for i, report_path in enumerate(reports):
+    # path(s) from the `--report` flag is a list
     is_report_files = isinstance(report_path, list)
-    report = (
-        aggregate_cts_reports.aggregate_cts_reports(report_path, ignore_abi)
-        if is_report_files  # path(s) come from --report flag
-        else load_parsed_report(report_path, ignore_abi)
-    )
+
+    if is_report_files:
+      report = aggregate_cts_reports.aggregate_cts_reports(
+          report_path, constant.ALL_TEST_ABIS, ignore_abi)
+    else:
+      report = load_parsed_report(report_path, ignore_abi)
 
     if is_report_files and args.output_files:
       device_name = report.info['build_device']
