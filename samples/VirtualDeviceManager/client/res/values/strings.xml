@@ -8,10 +8,7 @@
     <string name="display_fullscreen" translatable="false">Fullscreen</string>
     <string name="display_close" translatable="false">Close</string>
 
-    <string name="enable_dpad" translatable="false">Show dpad</string>
-    <string name="enable_nav_touchpad" translatable="false">Show navigation touchpad</string>
-    <string name="enable_external_keyboard" translatable="false">Enable external keyboard</string>
-    <string name="enable_external_mouse" translatable="false">Enable external mouse</string>
+    <string name="input" translatable="false">Input</string>
 
     <string name="dpad_up" translatable="false">Up</string>
     <string name="dpad_down" translatable="false">Down</string>

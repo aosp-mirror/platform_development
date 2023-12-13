@@ -48,15 +48,11 @@ final class InputManager {
     private static final String TAG = "InputManager";
 
     private final RemoteIo mRemoteIo;
-    private final Settings mSettings;
 
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
     private int mFocusedDisplayId = Display.INVALID_DISPLAY;
-
-    @GuardedBy("mLock")
-    private boolean mIsTrackingFocus = false;
 
     interface FocusListener {
         void onFocusChange(int focusedDisplayId);
@@ -69,9 +65,8 @@ final class InputManager {
     private final Set<Integer> mFocusableDisplays = new HashSet<>();
 
     @Inject
-    InputManager(RemoteIo remoteIo, Settings settings) {
+    InputManager(RemoteIo remoteIo) {
         mRemoteIo = remoteIo;
-        mSettings = settings;
     }
 
     void addFocusListener(FocusListener focusListener) {
@@ -100,28 +95,6 @@ final class InputManager {
             if (displayId == mFocusedDisplayId) {
                 setFocusedDisplayId(updateFocusedDisplayId());
             }
-        }
-    }
-
-    void updateFocusTracking() {
-        boolean shouldTrackFocus =
-                mSettings.dpadEnabled
-                        || mSettings.navTouchpadEnabled
-                        || mSettings.externalKeyboardEnabled;
-
-        final List<FocusListener> listenersToNotify;
-        int focusedDisplayIdToNotify = Display.INVALID_DISPLAY;
-        synchronized (mLock) {
-            if (shouldTrackFocus != mIsTrackingFocus) {
-                mIsTrackingFocus = shouldTrackFocus;
-            }
-            if (mIsTrackingFocus) {
-                focusedDisplayIdToNotify = mFocusedDisplayId;
-            }
-            listenersToNotify = new ArrayList<>(mFocusListeners);
-        }
-        for (FocusListener focusListener : listenersToNotify) {
-            focusListener.onFocusChange(focusedDisplayIdToNotify);
         }
     }
 
@@ -155,31 +128,10 @@ final class InputManager {
             InputDeviceType deviceType, InputEvent inputEvent) {
         int targetDisplayId;
         synchronized (mLock) {
-            if (!mIsTrackingFocus || mFocusedDisplayId == Display.INVALID_DISPLAY) {
+            if (mFocusedDisplayId == Display.INVALID_DISPLAY) {
                 return false;
             }
             targetDisplayId = mFocusedDisplayId;
-        }
-        switch (deviceType) {
-            case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
-                if (!mSettings.navTouchpadEnabled) {
-                    return false;
-                }
-                break;
-            case DEVICE_TYPE_DPAD:
-                if (!mSettings.dpadEnabled) {
-                    return false;
-                }
-                break;
-            case DEVICE_TYPE_KEYBOARD:
-                if (!mSettings.externalKeyboardEnabled) {
-                    return false;
-                }
-                break;
-            default:
-                Log.e(TAG, "sendInputEventToFocusedDisplay got invalid device type "
-                        + deviceType.getNumber());
-                return false;
         }
         sendInputEvent(deviceType, inputEvent, targetDisplayId);
         return true;
@@ -315,9 +267,7 @@ final class InputManager {
         synchronized (mLock) {
             if (displayId != mFocusedDisplayId) {
                 mFocusedDisplayId = displayId;
-                if (mIsTrackingFocus) {
-                    listenersToNotify = new ArrayList<>(mFocusListeners);
-                }
+                listenersToNotify = new ArrayList<>(mFocusListeners);
             }
         }
         for (FocusListener focusListener : listenersToNotify) {
