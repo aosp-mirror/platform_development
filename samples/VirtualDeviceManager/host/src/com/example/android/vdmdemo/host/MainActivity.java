@@ -84,7 +84,7 @@ public class MainActivity extends Hilt_MainActivity {
             };
 
     @Inject ConnectionManager mConnectionManager;
-    @Inject Settings mSettings;
+    @Inject PreferenceController mPreferenceController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,11 +92,15 @@ public class MainActivity extends Hilt_MainActivity {
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = requireViewById(R.id.main_tool_bar);
-        toolbar.setOverflowIcon(getDrawable(R.drawable.settings));
         setSupportActionBar(toolbar);
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
+        mHomeDisplayButton.setEnabled(
+                mPreferenceController.getBoolean(R.string.internal_pref_enable_home_displays));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
+        mMirrorDisplayButton.setEnabled(
+                mPreferenceController.getBoolean(R.string.internal_pref_enable_mirror_displays));
+
         mLauncher = requireViewById(R.id.app_grid);
         mLauncher.setVisibility(View.GONE);
         LauncherAdapter launcherAdapter = new LauncherAdapter(getPackageManager());
@@ -189,79 +193,15 @@ public class MainActivity extends Hilt_MainActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.settings, menu);
-        for (int i = 0; i < menu.size(); ++i) {
-            MenuItem item = menu.getItem(i);
-            switch (item.getItemId()) {
-                case R.id.enable_sensors:
-                    item.setChecked(mSettings.sensorsEnabled);
-                    break;
-                case R.id.enable_audio:
-                    item.setChecked(mSettings.audioEnabled);
-                    break;
-                case R.id.enable_recents:
-                    item.setChecked(mSettings.includeInRecents);
-                    break;
-                case R.id.enable_clipboard:
-                    item.setChecked(mSettings.crossDeviceClipboardEnabled);
-                    break;
-                case R.id.enable_rotation:
-                    item.setChecked(mSettings.displayRotationEnabled);
-                    break;
-                case R.id.always_unlocked:
-                    item.setChecked(mSettings.alwaysUnlocked);
-                    break;
-                case R.id.use_device_streaming:
-                    item.setChecked(mSettings.deviceStreaming);
-                    break;
-                case R.id.show_pointer_icon:
-                    item.setChecked(mSettings.showPointerIcon);
-                    break;
-                case R.id.record_encoder_output:
-                    item.setChecked(mSettings.recordEncoderOutput);
-                    break;
-                case R.id.custom_home:
-                    item.setChecked(mSettings.customHome);
-                    break;
-            }
-        }
+        inflater.inflate(R.menu.options, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        item.setChecked(!item.isChecked());
-
         switch (item.getItemId()) {
-            case R.id.enable_sensors:
-                mVdmService.setSensorsEnabled(item.isChecked());
-                return true;
-            case R.id.enable_audio:
-                mVdmService.setAudioEnabled(item.isChecked());
-                return true;
-            case R.id.enable_recents:
-                mVdmService.setIncludeInRecents(item.isChecked());
-                return true;
-            case R.id.enable_clipboard:
-                mVdmService.setCrossDeviceClipboardEnabled(item.isChecked());
-                return true;
-            case R.id.enable_rotation:
-                mVdmService.setDisplayRotationEnabled(item.isChecked());
-                return true;
-            case R.id.always_unlocked:
-                mVdmService.setAlwaysUnlocked(item.isChecked());
-                return true;
-            case R.id.use_device_streaming:
-                mVdmService.setDeviceStreaming(item.isChecked());
-                return true;
-            case R.id.record_encoder_output:
-                mVdmService.setRecordEncoderOutput(item.isChecked());
-                return true;
-            case R.id.show_pointer_icon:
-                mVdmService.setShowPointerIcon(item.isChecked());
-                return true;
-            case R.id.custom_home:
-                mVdmService.setCustomHome(item.isChecked());
+            case R.id.settings:
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

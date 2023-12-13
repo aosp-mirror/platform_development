@@ -6,8 +6,8 @@
 [Prerequisites](#prerequisites) \
 [Build & Install](#build-and-install) \
 [Run](#run) \
-[Host Settings](#host-settings) \
-[Client Settings](#client-settings) \
+[Host Options](#host-options) \
+[Client Options](#client-options) \
 [Demos](#demos)
 
 ## Overview
@@ -71,14 +71,14 @@ available devices, build the APKs and install them.
 
 1.  Build the Host app.
 
-    ```
+    ```shell
     m -j VdmHost
     ```
 
 1.  Install the application as a system app on the host device.
     <!-- TODO(b/314436863): Add a bash script for easy host app install. -->
 
-    ```
+    ```shell
     adb root && adb disable-verity && adb reboot  # one time
     adb root && adb remount
     adb push $ANDROID_BUILD_TOP/development/samples/VirtualDeviceManager/host/com.example.android.vdmdemo.host.xml /system/etc/permissions/com.example.android.vdmdemo.host.xml
@@ -88,18 +88,19 @@ available devices, build the APKs and install them.
     ```
 
     **Tip:** Subsequent installs without changes to permissions, etc. do not
-    need all the commands above - you can just do \
+    need all the commands above - you can just run \
+    \
     `adb install -r -d -g $OUT/system/priv-app/VdmHost/VdmHost.apk`
 
 1.  Build and install the Demo app on the host device.
 
-    ```
+    ```shell
     m -j VdmDemos && adb install -r -d -g $OUT/system/app/VdmDemos/VdmDemos.apk
     ```
 
 1.  Build and install the Client app on the client device.
 
-    ```
+    ```shell
     m -j VdmClient && adb install -r -d -g $OUT/system/app/VdmClient/VdmClient.apk
     ```
 
@@ -113,96 +114,136 @@ available devices, build the APKs and install them.
     WARNING: If there are other devices in the vicinity with one of these apps
     running, they might interfere.
 
-1.  Once the connection switches to high bandwidth medium, the Host app will
-    show a launcher-like list of installed apps on the host device.
-
-1.  Clicking an app icon will create a new virtual display, launch the app there
-    and start streaming the display contents to the client. The client will show
-    the surface of that display and render its contents.
-
-1.  Long pressing on an app icon will open a dialog to select an existing
-    display to launch the app on instead of creating a new one.
-
-1.  Each display on the Client app has a "Back" and "Close" buttons. When a
-    display becomes empty, it's automatically removed.
-
-1.  Each display on the Client app has a "Rotate" button to switch between
-    portrait and landscape orientation. This simulates the physical rotation of
-    the display of the streamed activity. The "Resize" button can be used to
-    change the display dimensions.
-
-1.  Each display on the Client app has a "Fullscreen" button which will move
-    the contents of that display to an immersive fullscreen activity. The
-    client's back button/gestures are sent back to the streamed app. Use
-    Volume Down on the client device to exit fullscreen. Volume Up acts as a
-    home key, if the streamed display is a home display.
-
-1.  The Host app has a "CREATE HOME DISPLAY" button, clicking it will create a
-    new virtual display, launch the secondary home activity there and start
-    streaming the display contents to the client. The display on the Client app
-    will have a home button, clicking it will navigate the streaming experience
-    back to the home activity.
-
-1.  The Host app has a "CREATE MIRROR DISPLAY" button, clicking it will create a
-    new virtual display, mirror the default host display there and start
-    streaming the display contents to the client.
-
-1.  Check out the different [Host Settings](#host-settings) and
-    [Client Settings](#client-settings) that allow for changing the behavior of
+1.  Check out the different [Host Options](#host-options) and
+    [Client Options](#client-options) that allow for changing the behavior of
     the streamed apps and the virtual device in general.
 
 1.  Check out the [Demo apps](#demos) that are specifically meant to showcase
     the VDM features.
 
-<!-- LINT.IfChange(host_settings) -->
+<!-- LINT.IfChange(host_options) -->
 
-## Host Settings
+## Host Options
 
--   **Client Sensors**: Enables sensor injection from the client device into the
-    host device. Any context that is associated with the virtual device will
-    access the virtual sensors by default. \
+NOTE: Any flag changes require device reboot or "Force stop" of the host app
+because the flag values are cached and evaluated only when the host app is
+starting. Alternatively, run: \
+\
+`adb shell am force-stop com.example.android.vdmdemo.host`
+
+### Launcher
+
+Once the connection with the client device is established, the Host app will
+show a launcher-like list of installed apps on the host device.
+
+-   Clicking an app icon will create a new virtual display, launch the app there
+    and start streaming the display contents to the client. The client will show
+    the surface of that display and render its contents.
+
+-   Long pressing on an app icon will open a dialog to select an existing
+    display to launch the app on instead of creating a new one.
+
+-   The Host app has a **CREATE HOME DISPLAY** button, clicking it will create a
+    new virtual display, launch the secondary home activity there and start
+    streaming the display contents to the client. The display on the Client app
+    will have a home button, clicking it will navigate the streaming experience
+    back to the home activity. Run the commands below to enable this
+    functionality.
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+-   The Host app has a **CREATE MIRROR DISPLAY** button, clicking it will create
+    a new virtual display, mirror the default host display there and start
+    streaming the display contents to the client. Run the commands below to
+    enable this functionality.
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
+    adb shell device_config put virtual_devices android.companion.virtual.flags.interactive_screen_mirror true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+### Settings
+
+#### General
+
+-   **Device profile**: Enables device streaming CDM role as opposed to app
+    streaming role, with all differences in policies that this entails. \
     *Changing this will recreate the virtual device.*
 
--   **Client Audio**: Enables audio output on the client device. Any context
-    that is associated with the virtual device will play audio on the client by
-    default. \
-    *This can be changed dynamically.*
-
 -   **Include streamed apps in recents**: Whether streamed apps should show up
-    in the host device's recent apps. Run the command below to enable this
+    in the host device's recent apps. Run the commands below to enable this
     functionality. \
     *This can be changed dynamically.*
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
+    adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
--   **Cross-device clipboard**: Whether to share the clipboard between the host
-    and the virtual device. If disabled, both devices will have their own
-    isolated clipboards. Run the command below to enable this functionality. \
+-   **Enable cross-device clipboard**: Whether to share the clipboard between
+    the host and the virtual device. If disabled, both devices will have their
+    own isolated clipboards. Run the commands below to enable this
+    functionality. \
     *This can be changed dynamically.*
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.cross_device_clipboard true
+    adb shell am force-stop com.example.android.vdmdemo.host
     ```
+
+#### Client capabilities
+
+-   **Enable client Sensors**: Enables sensor injection from the client device
+    into the host device. Any context that is associated with the virtual device
+    will access the virtual sensors by default. \
+    *Changing this will recreate the virtual device.*
+
+-   **Enable client Audio**: Enables audio output on the client device. Any
+    context that is associated with the virtual device will play audio on the
+    client by default. \
+    *This can be changed dynamically.*
+
+#### Displays
 
 -   **Display rotation**: Whether orientation change requests from streamed apps
     should trigger orientation change of the relevant display. The client will
     automatically rotate the relevant display upon such request. Disabling this
     simulates a fixed orientation display that cannot physically rotate. Then
     any streamed apps on that display will be letterboxed/pillarboxed if they
-    request orientation change. \
+    request orientation change. Run the commands below to enable this
+    functionality. \
     *This can be changed dynamically but only applies to newly created
     displays.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.consistent_display_flags true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
 
 -   **Always unlocked**: Whether the virtual displays should remain unlocked and
     interactive when the host device is locked. Disabling this will result in a
     simple lock screen shown on these displays when the host device is locked. \
     *Changing this will recreate the virtual device.*
 
--   **Device streaming profile**: Enables device streaming CDM role as opposed
-    to app streaming role, with all differences in policies that this entails. \
+-   **Show pointer icon**: Whether pointer icon should be shown for virtual
+    input pointer devices. \
+    *This can be changed dynamically.*
+
+-   **Custom home**: Whether to use a custom activity as home on home displays,
+    or use the device-default secondary home activity. Run the commands below to
+    enable this functionality. \
     *Changing this will recreate the virtual device.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+#### Debug
 
 -   **Record encoder output**: Enables recording the output of the encoder on
     the host device to a local file on the device. This can be helpful with
@@ -213,23 +254,26 @@ available devices, build the APKs and install them.
     ffplay -f h264 vdmdemo_encoder_output_<displayId>.h264
     ```
 
--   **Show pointer icon**: Whether pointer icon should be shown for virtual
-    input pointer devices. \
-    *This can be changed dynamically.*
-
--   **Custom home**: Whether to use a custom activity as home on home displays,
-    or use the device-default secondary home activity. Run the command below to
-    enable this functionality. \
-    *Changing this will recreate the virtual device.*
-
-    ```shell
-    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
-    ```
-
-<!-- LINT.ThenChange(/samples/VirtualDeviceManager/host/res/menu/settings.xml) -->
+<!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(client_options) -->
 
 ## Client Options
+
+### Streamed displays
+
+-   Each display on the Client app has a "Back" and "Close" buttons. When a
+    display becomes empty, it's automatically removed.
+
+-   Each display on the Client app has a "Rotate" button to switch between
+    portrait and landscape orientation. This simulates the physical rotation of
+    the display of the streamed activity. The "Resize" button can be used to
+    change the display dimensions.
+
+-   Each display on the Client app has a "Fullscreen" button which will move the
+    contents of that display to an immersive fullscreen activity. The client's
+    back button/gestures are sent back to the streamed app. Use Volume Down on
+    the client device to exit fullscreen. Volume Up acts as a home key, if the
+    streamed display is a home display.
 
 ### Input
 
@@ -244,7 +288,7 @@ keyboard** are forwarded to the activity streamed on the focused display.
 **Externally connected mouse** events are also forwarded to the relevant
 display, if the mouse pointer is currently positioned on a streamed display.
 
-<!-- LINT.ThenChange(/samples/VirtualDeviceManager/client/res/menu/options.xml) -->
+<!-- LINT.ThenChange(README.md) -->
 <!-- LINT.IfChange(demos) -->
 
 ## Demos
@@ -277,4 +321,4 @@ display, if the mouse pointer is currently positioned on a streamed display.
     is no vibration support on virtual devices, so vibration requests from
     streamed activities are ignored.
 
-<!-- LINT.ThenChange(/samples/VirtualDeviceManager/demos/AndroidManifest.xml) -->
+<!-- LINT.ThenChange(README.md) -->

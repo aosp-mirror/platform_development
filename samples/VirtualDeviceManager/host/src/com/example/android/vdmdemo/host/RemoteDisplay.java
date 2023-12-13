@@ -86,7 +86,7 @@ class RemoteDisplay implements AutoCloseable {
 
     private final Context mContext;
     private final RemoteIo mRemoteIo;
-    private final Settings mSettings;
+    private final PreferenceController mPreferenceController;
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private final VirtualDisplay mVirtualDisplay;
     private final VirtualDpad mDpad;
@@ -113,19 +113,19 @@ class RemoteDisplay implements AutoCloseable {
             VirtualDevice virtualDevice,
             RemoteIo remoteIo,
             @DisplayType int displayType,
-            Settings settings) {
+            PreferenceController preferenceController) {
         mContext = context;
         mRemoteIo = remoteIo;
         mRemoteDisplayId = event.getDisplayId();
         mVirtualDevice = virtualDevice;
         mPendingIntentExecutor = context.getMainExecutor();
         mDisplayType = displayType;
-        mSettings = settings;
+        mPreferenceController = preferenceController;
 
         setCapabilities(event.getDisplayCapabilities());
 
         int flags = DEFAULT_VIRTUAL_DISPLAY_FLAGS;
-        if (settings.displayRotationEnabled) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_display_rotation)) {
             flags |= DisplayManager.VIRTUAL_DISPLAY_FLAG_ROTATES_WITH_CONTENT;
         }
         if (mDisplayType == DISPLAY_TYPE_MIRROR) {
@@ -164,9 +164,8 @@ class RemoteDisplay implements AutoCloseable {
         if (mVideoManager != null) {
             mVideoManager.stop();
         }
-        mVideoManager =
-                VideoManager.createEncoder(
-                        mRemoteDisplayId, mRemoteIo, mSettings.recordEncoderOutput);
+        mVideoManager = VideoManager.createEncoder(mRemoteDisplayId, mRemoteIo,
+                mPreferenceController.getBoolean(R.string.pref_record_encoder_output));
         Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
         mVirtualDisplay.setSurface(surface);
 

@@ -63,6 +63,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -96,7 +97,7 @@ public final class VdmService extends Hilt_VdmService {
     @Inject ConnectionManager mConnectionManager;
     @Inject RemoteIo mRemoteIo;
     @Inject AudioStreamer mAudioStreamer;
-    @Inject Settings mSettings;
+    @Inject PreferenceController mPreferenceController;
     @Inject DisplayRepository mDisplayRepository;
 
     private RemoteSensorManager mRemoteSensorManager = null;
@@ -196,14 +197,38 @@ public final class VdmService extends Hilt_VdmService {
 
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
 
-        if (mSettings.audioEnabled) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
             mAudioStreamer.start();
         }
+
+        mPreferenceController.addPreferenceObserver(this, Map.of(
+                R.string.pref_enable_recents,
+                b -> updateDevicePolicy(POLICY_TYPE_RECENTS, !(Boolean) b),
+
+                R.string.pref_enable_cross_device_clipboard,
+                b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b),
+
+                R.string.pref_show_pointer_icon,
+                b -> {
+                    if (mVirtualDevice != null) mVirtualDevice.setShowPointerIcon((Boolean) b);
+                },
+
+                R.string.pref_enable_client_audio,
+                b -> {
+                    if ((Boolean) b) mAudioStreamer.start(); else mAudioStreamer.stop();
+                },
+
+                R.string.pref_enable_client_sensors, v -> recreateVirtualDevice(),
+                R.string.pref_device_profile, v -> recreateVirtualDevice(),
+                R.string.pref_always_unlocked_device, v -> recreateVirtualDevice(),
+                R.string.pref_enable_custom_home, v -> recreateVirtualDevice()
+        ));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mPreferenceController.removePreferenceObserver(this);
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
         closeVirtualDevice();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
@@ -224,7 +249,7 @@ public final class VdmService extends Hilt_VdmService {
                             mVirtualDevice,
                             mRemoteIo,
                             mPendingDisplayType,
-                            mSettings);
+                            mPreferenceController);
             mDisplayRepository.addDisplay(remoteDisplay);
             mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_APP;
             if (mPendingRemoteIntent != null) {
@@ -241,10 +266,7 @@ public final class VdmService extends Hilt_VdmService {
         CompanionDeviceManager cdm =
                 Objects.requireNonNull(getSystemService(CompanionDeviceManager.class));
         RoleManager rm = Objects.requireNonNull(getSystemService(RoleManager.class));
-        final String deviceProfile =
-                mSettings.deviceStreaming
-                        ? AssociationRequest.DEVICE_PROFILE_NEARBY_DEVICE_STREAMING
-                        : AssociationRequest.DEVICE_PROFILE_APP_STREAMING;
+        final String deviceProfile = mPreferenceController.getString(R.string.pref_device_profile);
         for (AssociationInfo associationInfo : cdm.getMyAssociations()) {
             // Flashing the device clears the role and the permissions, but not the CDM
             // associations.
@@ -305,24 +327,24 @@ public final class VdmService extends Hilt_VdmService {
                         .setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
                         .setAudioPlaybackSessionId(mAudioStreamer.getPlaybackSessionId());
 
-        if (mSettings.alwaysUnlocked) {
+        if (mPreferenceController.getBoolean(R.string.pref_always_unlocked_device)) {
             virtualDeviceBuilder.setLockState(LOCK_STATE_ALWAYS_UNLOCKED);
         }
 
-        if (mSettings.customHome) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_home)) {
             virtualDeviceBuilder.setHomeComponent(
                     new ComponentName(this, CustomLauncherActivity.class));
         }
 
-        if (!mSettings.includeInRecents) {
+        if (!mPreferenceController.getBoolean(R.string.pref_enable_recents)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_RECENTS, DEVICE_POLICY_CUSTOM);
         }
 
-        if (mSettings.crossDeviceClipboardEnabled) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_cross_device_clipboard)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CLIPBOARD, DEVICE_POLICY_CUSTOM);
         }
 
-        if (mSettings.sensorsEnabled) {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_sensors)) {
             for (SensorCapabilities sensor : mDeviceCapabilities.getSensorCapabilitiesList()) {
                 virtualDeviceBuilder.addVirtualSensorConfig(
                         new VirtualSensorConfig.Builder(
@@ -353,7 +375,8 @@ public final class VdmService extends Hilt_VdmService {
             mRemoteSensorManager.setVirtualSensors(mVirtualDevice.getVirtualSensorList());
         }
 
-        mVirtualDevice.setShowPointerIcon(mSettings.showPointerIcon);
+        mVirtualDevice.setShowPointerIcon(
+                mPreferenceController.getBoolean(R.string.pref_show_pointer_icon));
 
         mVirtualDevice.addActivityListener(
                 MoreExecutors.directExecutor(),
@@ -447,73 +470,19 @@ public final class VdmService extends Hilt_VdmService {
                 .ifPresent(d -> d.launchIntent(pendingIntent));
     }
 
-    void setDisplayRotationEnabled(boolean enabled) {
-        mSettings.displayRotationEnabled = enabled;
-    }
-
-    void setSensorsEnabled(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.sensorsEnabled = enabled);
-    }
-
-    void setIncludeInRecents(boolean include) {
-        mSettings.includeInRecents = include;
-        if (mVirtualDevice != null) {
-            mVirtualDevice.setDevicePolicy(
-                    POLICY_TYPE_RECENTS, include ? DEVICE_POLICY_DEFAULT : DEVICE_POLICY_CUSTOM);
-        }
-    }
-
-    void setCrossDeviceClipboardEnabled(boolean enabled) {
-        mSettings.crossDeviceClipboardEnabled = enabled;
-        if (mVirtualDevice != null) {
-            mVirtualDevice.setDevicePolicy(
-                    POLICY_TYPE_CLIPBOARD, enabled ? DEVICE_POLICY_CUSTOM : DEVICE_POLICY_DEFAULT);
-        }
-    }
-
-    void setAlwaysUnlocked(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.alwaysUnlocked = enabled);
-    }
-
-    void setDeviceStreaming(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.deviceStreaming = enabled);
-    }
-
-    void setRecordEncoderOutput(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.recordEncoderOutput = enabled);
-    }
-
-    void setShowPointerIcon(boolean enabled) {
-        mSettings.showPointerIcon = enabled;
-        if (mVirtualDevice != null) {
-            mVirtualDevice.setShowPointerIcon(enabled);
-        }
-    }
-
-    void setAudioEnabled(boolean enabled) {
-        mSettings.audioEnabled = enabled;
-        if (enabled) {
-            mAudioStreamer.start();
-        } else {
-            mAudioStreamer.stop();
-        }
-    }
-
-    void setCustomHome(boolean enabled) {
-        recreateVirtualDevice(() -> mSettings.customHome = enabled);
-    }
-
-    private interface DeviceSettingsChange {
-        void apply();
-    }
-
-    private void recreateVirtualDevice(DeviceSettingsChange settingsChange) {
+    private void recreateVirtualDevice() {
         if (mVirtualDevice != null) {
             closeVirtualDevice();
+            if (mDeviceCapabilities != null) {
+                associateAndCreateVirtualDevice();
+            }
         }
-        settingsChange.apply();
-        if (mDeviceCapabilities != null) {
-            associateAndCreateVirtualDevice();
+    }
+
+    private void updateDevicePolicy(int policyType, boolean custom) {
+        if (mVirtualDevice != null) {
+            mVirtualDevice.setDevicePolicy(
+                    policyType, custom ? DEVICE_POLICY_CUSTOM : DEVICE_POLICY_DEFAULT);
         }
     }
 }

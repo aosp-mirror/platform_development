@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array translatable="false" name="device_profile_labels">
+        <item>App streaming</item>
+        <item>Nearby device streaming</item>
+    </string-array>
+    <string-array translatable="false" name="device_profiles">
+        <item>@string/app_streaming</item>
+        <item>@string/nearby_device_streaming</item>
+    </string-array>
+</resources>
