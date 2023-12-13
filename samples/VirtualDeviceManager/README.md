@@ -227,26 +227,24 @@ available devices, build the APKs and install them.
     ```
 
 <!-- LINT.ThenChange(/samples/VirtualDeviceManager/host/res/menu/settings.xml) -->
-<!-- LINT.IfChange(client_settings) -->
+<!-- LINT.IfChange(client_options) -->
 
-## Client Settings
+## Client Options
 
 ### Input
 
-The client has settings that enable more ways of interacting with the streamed
-apps. Each of the following are able to inject input events into the focused
-display. The focused display is indicated by the frame around it whenever at
-least one of these settings is enabled. The display focus is based on
-interaction.
+The input menu button enables **on-screen D-Pad and touchpad** for navigating
+the activity on the focused display. The focused display is indicated by the
+frame around its header whenever there are more than one displays. The display
+focus is based on user interaction.
 
--   **Show dpad**, **Show navigation touchpad**: Render a dpad / touchpad for
-    navigating the activity on the focused display.
+In addition, any input events generated from an **externally connected
+keyboard** are forwarded to the activity streamed on the focused display.
 
--   **Enable external keyboard**, **Enable external mouse**: Forward any events
-    from a keyboard or mouse, which is externally connected to the client device
-    to the activity on the focused display.
+**Externally connected mouse** events are also forwarded to the relevant
+display, if the mouse pointer is currently positioned on a streamed display.
 
-<!-- LINT.ThenChange(/samples/VirtualDeviceManager/client/res/menu/settings.xml) -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/client/res/menu/options.xml) -->
 <!-- LINT.IfChange(demos) -->
 
 ## Demos

@@ -284,7 +284,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
             mFocusListener =
                     focusedDisplayId -> {
-                        if (focusedDisplayId == mDisplayId) {
+                        if (focusedDisplayId == mDisplayId && mDisplayRepository.size() > 1) {
                             displayHeader.setBackgroundResource(R.drawable.focus_frame);
                         } else {
                             displayHeader.setBackground(null);
