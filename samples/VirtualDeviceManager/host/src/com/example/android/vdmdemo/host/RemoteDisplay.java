@@ -44,8 +44,11 @@ import android.hardware.input.VirtualTouchEvent;
 import android.hardware.input.VirtualTouchscreen;
 import android.hardware.input.VirtualTouchscreenConfig;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
+
+import androidx.annotation.IntDef;
 
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
@@ -57,6 +60,8 @@ import com.example.android.vdmdemo.common.RemoteEventProto.StopStreaming;
 import com.example.android.vdmdemo.common.RemoteIo;
 import com.example.android.vdmdemo.common.VideoManager;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -72,6 +77,13 @@ class RemoteDisplay implements AutoCloseable {
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC
                     | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
 
+    static final int DISPLAY_TYPE_APP = 0;
+    static final int DISPLAY_TYPE_HOME = 1;
+    static final int DISPLAY_TYPE_MIRROR = 2;
+    @IntDef(value = {DISPLAY_TYPE_APP, DISPLAY_TYPE_HOME, DISPLAY_TYPE_MIRROR})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface DisplayType {}
+
     private final Context mContext;
     private final RemoteIo mRemoteIo;
     private final Settings mSettings;
@@ -81,7 +93,7 @@ class RemoteDisplay implements AutoCloseable {
     private final int mRemoteDisplayId;
     private final Executor mPendingIntentExecutor;
     private final VirtualDevice mVirtualDevice;
-    private final boolean mSupportsHome;
+    private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
     private int mRotation;
     private int mWidth;
@@ -100,15 +112,14 @@ class RemoteDisplay implements AutoCloseable {
             RemoteEvent event,
             VirtualDevice virtualDevice,
             RemoteIo remoteIo,
-            boolean supportsHome,
-            boolean supportsMirroring,
+            @DisplayType int displayType,
             Settings settings) {
         mContext = context;
         mRemoteIo = remoteIo;
         mRemoteDisplayId = event.getDisplayId();
         mVirtualDevice = virtualDevice;
         mPendingIntentExecutor = context.getMainExecutor();
-        mSupportsHome = supportsHome;
+        mDisplayType = displayType;
         mSettings = settings;
 
         setCapabilities(event.getDisplayCapabilities());
@@ -117,7 +128,7 @@ class RemoteDisplay implements AutoCloseable {
         if (settings.displayRotationEnabled) {
             flags |= DisplayManager.VIRTUAL_DISPLAY_FLAG_ROTATES_WITH_CONTENT;
         }
-        if (supportsMirroring) {
+        if (mDisplayType == DISPLAY_TYPE_MIRROR) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
         mVirtualDisplay =
@@ -125,7 +136,8 @@ class RemoteDisplay implements AutoCloseable {
                         new VirtualDisplayConfig.Builder(
                                         "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
                                 .setFlags(flags)
-                                .setHomeSupported(supportsHome)
+                                .setHomeSupported(mDisplayType == DISPLAY_TYPE_HOME
+                                        || mDisplayType == DISPLAY_TYPE_MIRROR)
                                 .build(),
                         /* executor= */ Runnable::run,
                         /* callback= */ null);
@@ -234,13 +246,15 @@ class RemoteDisplay implements AutoCloseable {
         if (event.getDisplayId() != mRemoteDisplayId) {
             return;
         }
-        if (event.hasHomeEvent() && mSupportsHome) {
+        if (event.hasHomeEvent()) {
             Intent homeIntent = new Intent(Intent.ACTION_MAIN);
             homeIntent.addCategory(Intent.CATEGORY_HOME);
             homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            int targetDisplayId =
+                    mDisplayType == DISPLAY_TYPE_MIRROR ? Display.DEFAULT_DISPLAY : getDisplayId();
             mContext.startActivity(
                     homeIntent,
-                    ActivityOptions.makeBasic().setLaunchDisplayId(getDisplayId()).toBundle());
+                    ActivityOptions.makeBasic().setLaunchDisplayId(targetDisplayId).toBundle());
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
