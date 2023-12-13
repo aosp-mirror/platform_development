@@ -10,17 +10,19 @@ A report can be either a standard CTS result zip file, or a test_result.xml file
 ## parse_cts_report.py
 ### usage
 ```
-./parse_cts_report.py -r REPORT -d OUTPUT_DIR
+./parse_cts_report.py -r REPORT -d OUTPUT_DIR [--abi [{armeabi-v7a,arm64-v8a,x86,x86_64} ...]]
 ```
 
 The `-r` flag must be followed by exactly one report.
 
 The `-d` flag specifies the directory in which the information files will be stored.
 
+The `--abi` flag can be used to select one or more test ABIs to be parsed.
+
 ## aggregate_cts_reports.py
 ### usage
 ```
-./aggregate_cts_reports.py -r REPORT [REPORT ...] -d OUTPUT_DIR [--ignore-abi]
+./aggregate_cts_reports.py -r REPORT [REPORT ...] -d OUTPUT_DIR [--ignore-abi] [--abi [{armeabi-v7a,arm64-v8a,x86,x86_64} ...]]
 ```
 
 The `-r` flag can be followed by one or more reports.
@@ -28,6 +30,8 @@ The `-r` flag can be followed by one or more reports.
 The `-d` flag has the same behavior as `parse_cts_report.py`.
 
 `--ignore-abi` is a boolean flag. If users specify this flag, tests ABI would be ignored while doing the aggregation. It means that two tests would be considered as the same one as long as they have the same module_name#class_name.test_name.
+
+The `--abi` flag can be used to select one or more test ABIs to be aggregated.
 
 ## compare_cts_reports.py
 ### usage
