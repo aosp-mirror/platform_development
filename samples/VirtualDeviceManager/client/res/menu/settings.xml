@@ -16,4 +16,4 @@
             android:title="@string/enable_external_mouse" />
     </group>
 </menu>
-<!-- LINT.ThenChange(development/samples/VirtualDeviceManager/README.md:client_settings) -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:client_settings) -->

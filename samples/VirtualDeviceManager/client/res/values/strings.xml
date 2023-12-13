@@ -5,6 +5,7 @@
     <string name="display_home" translatable="false">Home</string>
     <string name="display_rotate" translatable="false">Rotate</string>
     <string name="display_resize" translatable="false">Resize</string>
+    <string name="display_fullscreen" translatable="false">Fullscreen</string>
     <string name="display_close" translatable="false">Close</string>
 
     <string name="enable_dpad" translatable="false">Show dpad</string>

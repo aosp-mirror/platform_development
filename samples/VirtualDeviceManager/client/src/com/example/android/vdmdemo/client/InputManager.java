@@ -148,39 +148,41 @@ final class InputManager {
 
     /**
      * Injects {@link InputEvent} for the given {@link InputDeviceType} into the focused display.
+     *
+     * @return whether the event was sent.
      */
-    public void sendInputEventToFocusedDisplay(InputDeviceType deviceType, InputEvent inputEvent) {
-        int targetDisplay;
+    public boolean sendInputEventToFocusedDisplay(
+            InputDeviceType deviceType, InputEvent inputEvent) {
+        int targetDisplayId;
         synchronized (mLock) {
             if (!mIsTrackingFocus || mFocusedDisplayId == Display.INVALID_DISPLAY) {
-                return;
+                return false;
             }
-            targetDisplay = mFocusedDisplayId;
+            targetDisplayId = mFocusedDisplayId;
         }
         switch (deviceType) {
             case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
                 if (!mSettings.navTouchpadEnabled) {
-                    return;
+                    return false;
                 }
                 break;
             case DEVICE_TYPE_DPAD:
                 if (!mSettings.dpadEnabled) {
-                    return;
+                    return false;
                 }
                 break;
             case DEVICE_TYPE_KEYBOARD:
                 if (!mSettings.externalKeyboardEnabled) {
-                    return;
+                    return false;
                 }
                 break;
             default:
-                Log.e(
-                        TAG,
-                        "sendInputEventToFocusedDisplay got invalid device type "
-                                + deviceType.getNumber());
-                return;
+                Log.e(TAG, "sendInputEventToFocusedDisplay got invalid device type "
+                        + deviceType.getNumber());
+                return false;
         }
-        sendInputEvent(deviceType, inputEvent, targetDisplay);
+        sendInputEvent(deviceType, inputEvent, targetDisplayId);
+        return true;
     }
 
     void sendBack(int displayId) {
