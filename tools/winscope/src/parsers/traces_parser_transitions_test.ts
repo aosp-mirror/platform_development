@@ -19,20 +19,15 @@ import {Transition} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {TracesParserTransitions} from './traces_parser_transitions';
 
 describe('ParserTransitions', () => {
   let parser: Parser<Transition>;
 
   beforeAll(async () => {
-    const wmSideParser = await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
-    );
-    const shellSideParser = await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
-    );
-
-    parser = new TracesParserTransitions([wmSideParser, shellSideParser]);
+    parser = await UnitTestUtils.getTracesParser([
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    ]);
   });
 
   it('has expected trace type', () => {

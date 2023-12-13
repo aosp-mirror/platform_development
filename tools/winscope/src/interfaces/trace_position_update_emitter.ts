@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import {TraceType} from './trace_type';
+import {TracePosition} from 'trace/trace_position';
 
-export class LoadedTrace {
-  constructor(public descriptors: string[], public type: TraceType) {}
+export type OnTracePositionUpdate = (position: TracePosition) => Promise<void>;
+
+export interface TracePositionUpdateEmitter {
+  setOnTracePositionUpdate(callback: OnTracePositionUpdate): void;
 }

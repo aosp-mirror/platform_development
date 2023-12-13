@@ -24,7 +24,7 @@ export class CrossToolProtocolStub
   implements RemoteBugreportReceiver, RemoteTimestampReceiver, RemoteTimestampSender
 {
   onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
-  onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
+  onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING_ASYNC;
 
   setOnBugreportReceived(callback: OnBugreportReceived) {
     this.onBugreportReceived = callback;

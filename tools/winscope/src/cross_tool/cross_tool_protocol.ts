@@ -31,7 +31,7 @@ export class CrossToolProtocol
 {
   private remoteTool?: RemoteTool;
   private onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
-  private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
+  private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor() {
     window.addEventListener('message', async (event) => {
@@ -89,10 +89,12 @@ export class CrossToolProtocol
       case MessageType.BUGREPORT:
         console.log('Cross-tool protocol received bugreport message:', message);
         await this.onMessageBugreportReceived(message as MessageBugReport);
+        console.log('Cross-tool protocol processes bugreport message:', message);
         break;
       case MessageType.TIMESTAMP:
         console.log('Cross-tool protocol received timestamp message:', message);
-        this.onMessageTimestampReceived(message as MessageTimestamp);
+        await this.onMessageTimestampReceived(message as MessageTimestamp);
+        console.log('Cross-tool protocol processed timestamp message:', message);
         break;
       case MessageType.FILES:
         console.log('Cross-tool protocol received unexpected files message', message);
@@ -106,11 +108,11 @@ export class CrossToolProtocol
   private async onMessageBugreportReceived(message: MessageBugReport) {
     const timestamp =
       message.timestampNs !== undefined ? new RealTimestamp(message.timestampNs) : undefined;
-    this.onBugreportReceived(message.file, timestamp);
+    await this.onBugreportReceived(message.file, timestamp);
   }
 
-  private onMessageTimestampReceived(message: MessageTimestamp) {
+  private async onMessageTimestampReceived(message: MessageTimestamp) {
     const timestamp = new RealTimestamp(message.timestampNs);
-    this.onTimestampReceived(timestamp);
+    await this.onTimestampReceived(timestamp);
   }
 }

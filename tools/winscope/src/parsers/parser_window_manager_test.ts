@@ -49,15 +49,15 @@ describe('ParserWindowManager', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry', () => {
-      const entry = parser.getEntry(1, TimestampType.REAL);
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(entry).toBeInstanceOf(WindowManagerState);
       expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
     });
 
-    it('formats entry timestamps', () => {
-      const entry = parser.getEntry(1, TimestampType.REAL);
+    it('formats entry timestamps', async () => {
+      const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(entry.name).toEqual('2022-07-29T15:04:49.999048960');
     });
   });
@@ -82,14 +82,14 @@ describe('ParserWindowManager', () => {
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
-    it('retrieves trace entry', () => {
-      const entry = parser.getEntry(0, TimestampType.ELAPSED);
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(WindowManagerState);
       expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850254319343n);
     });
 
-    it('formats entry timestamps', () => {
-      const entry = parser.getEntry(0, TimestampType.ELAPSED);
+    it('formats entry timestamps', async () => {
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry.name).toEqual('14m10s254ms319343ns');
     });
   });

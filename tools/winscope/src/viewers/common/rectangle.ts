@@ -27,6 +27,7 @@ export interface Rectangle {
   isVirtual: boolean;
   isClickable: boolean;
   cornerRadius: number;
+  depth?: number;
 }
 
 export interface Point {

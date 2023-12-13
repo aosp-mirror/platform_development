@@ -30,6 +30,7 @@ import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
 import {ParserTransitionsShell} from './parser_transitions_shell';
 import {ParserTransitionsWm} from './parser_transitions_wm';
+import {ParserViewCapture} from './parser_view_capture';
 import {ParserWindowManager} from './parser_window_manager';
 import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
@@ -49,6 +50,7 @@ export class ParserFactory {
     ParserEventLog,
     ParserTransitionsWm,
     ParserTransitionsShell,
+    ParserViewCapture,
   ];
 
   private parsers = new Map<TraceType, Parser<object>>();

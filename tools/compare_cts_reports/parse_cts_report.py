@@ -126,7 +126,7 @@ class CtsReport:
       summary.counter[previous] -= 1
       summary.counter[test_status] += 1
 
-  def read_test_result_xml(self, test_result_path):
+  def read_test_result_xml(self, test_result_path, ignore_abi=False):
     """Read the result from test_result.xml into a CtsReport object."""
 
     tree = ET.parse(test_result_path)
@@ -134,7 +134,7 @@ class CtsReport:
 
     for module in root.iter('Module'):
       module_name = module.attrib['name']
-      abi = module.attrib['abi']
+      abi = constant.ABI_IGNORED if ignore_abi else module.attrib['abi']
 
       for testcase in module.iter('TestCase'):
         class_name = testcase.attrib['name']
@@ -341,7 +341,7 @@ def extract_test_result_from_zip(zip_file_path, dest_dir):
   return extracted
 
 
-def parse_report_file(report_file):
+def parse_report_file(report_file, ignore_abi=False):
   """Turn one cts report into a CtsReport object."""
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -355,7 +355,7 @@ def parse_report_file(report_file):
     print_test_info(test_info)
 
     report = CtsReport(test_info)
-    report.read_test_result_xml(xml_path)
+    report.read_test_result_xml(xml_path, ignore_abi)
 
   return report
 
