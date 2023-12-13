@@ -26,14 +26,13 @@ import android.util.Log;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collector;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 final class RunningVdmUidsTracker implements ActivityListener {
@@ -48,7 +47,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
     private final HashMap<Integer, HashSet<Integer>> mDisplayIdToRunningUids = new HashMap<>();
 
     @GuardedBy("mLock")
-    private ImmutableSet<Integer> mRunningVdmUids = ImmutableSet.of();
+    private Set<Integer> mRunningVdmUids = Collections.emptySet();
 
     RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
         mPackageManager = Objects.requireNonNull(context).getPackageManager();
@@ -64,7 +63,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
             return;
         }
 
-        ImmutableSet<Integer> updatedUids;
+        final Set<Integer> updatedUids;
         synchronized (mLock) {
             HashSet<Integer> displayUidSet =
                     mDisplayIdToRunningUids.computeIfAbsent(displayId, k -> new HashSet<>());
@@ -72,7 +71,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
             mRunningVdmUids =
                     mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
-                            .collect(toImmutableSet());
+                            .collect(Collectors.toSet());
             updatedUids = mRunningVdmUids;
         }
 
@@ -81,15 +80,15 @@ final class RunningVdmUidsTracker implements ActivityListener {
 
     @Override
     public void onDisplayEmpty(int displayId) {
-        ImmutableSet<Integer> uidsBefore;
-        ImmutableSet<Integer> uidsAfter;
+        Set<Integer> uidsBefore;
+        Set<Integer> uidsAfter;
         synchronized (mLock) {
             uidsBefore = mRunningVdmUids;
             mDisplayIdToRunningUids.remove(displayId);
             mRunningVdmUids =
                     mDisplayIdToRunningUids.values().stream()
                             .flatMap(Collection::stream)
-                            .collect(toImmutableSet());
+                            .collect(Collectors.toSet());
             uidsAfter = mRunningVdmUids;
         }
 
@@ -105,9 +104,5 @@ final class RunningVdmUidsTracker implements ActivityListener {
         } catch (NameNotFoundException e) {
             return Optional.empty();
         }
-    }
-
-    private static <E> Collector<E, ?, ImmutableSet<E>> toImmutableSet() {
-        return Collectors.collectingAndThen(Collectors.toList(), ImmutableSet::copyOf);
     }
 }

@@ -42,7 +42,7 @@ public final class LatencyDemoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.latency_demo_activity);
-        View counter = findViewById(R.id.counter);
+        View counter = requireViewById(R.id.counter);
 
         mScheduledFuture =
                 mExecutor.scheduleAtFixedRate(

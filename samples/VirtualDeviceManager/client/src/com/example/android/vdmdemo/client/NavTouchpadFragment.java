@@ -43,7 +43,7 @@ public final class NavTouchpadFragment extends Hilt_NavTouchpadFragment {
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_nav_touchpad, container, false);
 
-        TextView navTouchpad = view.findViewById(R.id.nav_touchpad);
+        TextView navTouchpad = view.requireViewById(R.id.nav_touchpad);
         navTouchpad.setOnTouchListener(
                 (v, event) -> {
                     mInputManager.sendInputEventToFocusedDisplay(

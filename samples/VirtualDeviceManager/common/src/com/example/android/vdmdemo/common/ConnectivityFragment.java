@@ -16,15 +16,19 @@
 
 package com.example.android.vdmdemo.common;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import dagger.hilt.android.AndroidEntryPoint;
+
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -41,27 +45,22 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
             new ConnectionManager.ConnectionCallback() {
                 @Override
                 public void onConnecting(String remoteDeviceName) {
-                    updateStatus(
-                            getContext().getString(R.string.connecting, remoteDeviceName),
-                            mDefaultBackgroundColor);
+                    updateStatus(mDefaultBackgroundColor, R.string.connecting, remoteDeviceName);
                 }
 
                 @Override
                 public void onConnected(String remoteDeviceName) {
-                    updateStatus(
-                            getContext().getString(R.string.connected, remoteDeviceName),
-                            Color.GREEN);
+                    updateStatus(Color.GREEN, R.string.connected, remoteDeviceName);
                 }
 
                 @Override
                 public void onDisconnected() {
-                    updateStatus(
-                            getContext().getString(R.string.disconnected), mDefaultBackgroundColor);
+                    updateStatus(mDefaultBackgroundColor, R.string.disconnected);
                 }
 
                 @Override
                 public void onError(String message) {
-                    updateStatus(message, Color.RED);
+                    updateStatus(Color.RED, R.string.error, message);
                 }
             };
 
@@ -70,10 +69,10 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     }
 
     @Override
-    public void onViewCreated(View view, Bundle bundle) {
+    public void onViewCreated(@NonNull View view, Bundle bundle) {
         super.onViewCreated(view, bundle);
 
-        mStatus = getActivity().findViewById(R.id.connection_status);
+        mStatus = Objects.requireNonNull(getActivity()).requireViewById(R.id.connection_status);
 
         TypedValue background = new TypedValue();
         getActivity()
@@ -105,9 +104,10 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
-    private void updateStatus(String message, int backgroundColor) {
-        getActivity().runOnUiThread(() -> {
-            mStatus.setText(message);
+    private void updateStatus(int backgroundColor, int resId, Object... formatArgs) {
+        Activity activity = Objects.requireNonNull(getActivity());
+        activity.runOnUiThread(() -> {
+            mStatus.setText(activity.getString(resId, formatArgs));
             mStatus.setBackgroundColor(backgroundColor);
         });
     }

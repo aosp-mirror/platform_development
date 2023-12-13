@@ -44,10 +44,6 @@ final class DisplayController {
         mDpi = dpi;
     }
 
-    int getDpi() {
-        return mDpi;
-    }
-
     void close() {
         mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()

@@ -30,6 +30,10 @@ import java.util.function.Consumer;
 
 /** Recycler view that can resize a child dynamically. */
 public final class ClientView extends RecyclerView {
+
+    private static final int MIN_SIZE = 100;
+    private int mMaxSize = 0;
+
     private boolean mIsResizing = false;
     private Consumer<Rect> mResizeDoneCallback = null;
     private Drawable mResizingRect = null;
@@ -56,8 +60,10 @@ public final class ClientView extends RecyclerView {
         mResizingRect = getContext().getResources().getDrawable(R.drawable.resize_rect, null);
     }
 
-    void startResizing(View viewToResize, MotionEvent origin, Consumer<Rect> callback) {
+    void startResizing(View viewToResize, MotionEvent origin, int maxSize,
+            Consumer<Rect> callback) {
         mIsResizing = true;
+        mMaxSize = maxSize;
         mResizeDoneCallback = callback;
         viewToResize.getGlobalVisibleRect(mResizingBounds);
         mResizingRect.setBounds(mResizingBounds);
@@ -88,7 +94,19 @@ public final class ClientView extends RecyclerView {
             case MotionEvent.ACTION_UP -> stopResizing();
             case MotionEvent.ACTION_MOVE -> {
                 mResizingBounds.right = (int) (ev.getRawX() - mResizeOffsetX);
+                if (mResizingBounds.width() > mMaxSize) {
+                    mResizingBounds.right = mResizingBounds.left + mMaxSize;
+                }
+                if (mResizingBounds.width() < MIN_SIZE) {
+                    mResizingBounds.right = mResizingBounds.left + MIN_SIZE;
+                }
                 mResizingBounds.top = (int) (ev.getRawY() - mResizeOffsetY);
+                if (mResizingBounds.height() > mMaxSize) {
+                    mResizingBounds.top = mResizingBounds.bottom - mMaxSize;
+                }
+                if (mResizingBounds.height() < MIN_SIZE) {
+                    mResizingBounds.top = mResizingBounds.bottom - MIN_SIZE;
+                }
                 mResizingRect.setBounds(mResizingBounds);
             }
         }
