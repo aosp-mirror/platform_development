@@ -56,21 +56,21 @@ describe('ParserTransactions', () => {
       expect(timestamps.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entry from real timestamp', () => {
-      const entry = parser.getEntry(1, TimestampType.REAL);
+    it('retrieves trace entry from real timestamp', async () => {
+      const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(BigInt((entry as any).elapsedRealtimeNanos)).toEqual(2517952515n);
     });
 
-    it("decodes 'what' field in proto", () => {
+    it("decodes 'what' field in proto", async () => {
       {
-        const entry = parser.getEntry(0, TimestampType.REAL) as any;
+        const entry = (await parser.getEntry(0, TimestampType.REAL)) as any;
         expect(entry.transactions[0].layerChanges[0].what).toEqual('eLayerChanged');
         expect(entry.transactions[1].layerChanges[0].what).toEqual(
           'eFlagsChanged | eDestinationFrameChanged'
         );
       }
       {
-        const entry = parser.getEntry(222, TimestampType.REAL) as any;
+        const entry = (await parser.getEntry(222, TimestampType.REAL)) as any;
         expect(entry.transactions[1].displayChanges[0].what).toEqual(
           'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged'
         );

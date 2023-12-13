@@ -31,21 +31,21 @@ class ViewerProtoLog implements Viewer {
     });
 
     this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-      return this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
+      this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
-      return this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
+      this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-      return this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
+      this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-      return this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
+      this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
     });
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.presenter.onTracePositionUpdate(position);
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.presenter.onTracePositionUpdate(position);
   }
 
   getViews(): View[] {

@@ -53,17 +53,12 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entries', () => {
-      expect(
-        BigInt(parser.getEntry(0, TimestampType.REAL)!.timestamp.unixNanos.toString())
-      ).toEqual(1659107089075566202n);
-      expect(
-        BigInt(
-          parser
-            .getEntry(parser.getLengthEntries() - 1, TimestampType.REAL)!
-            .timestamp.unixNanos.toString()
-        )
-      ).toEqual(1659107091700249187n);
+    it('retrieves trace entries', async () => {
+      let entry = await parser.getEntry(0, TimestampType.REAL);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089075566202n);
+
+      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107091700249187n);
     });
   });
 
@@ -83,17 +78,12 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
-    it('retrieves trace entries', () => {
-      expect(
-        BigInt(parser.getEntry(0, TimestampType.ELAPSED)!.timestamp.elapsedNanos.toString())
-      ).toEqual(850254319343n);
-      expect(
-        BigInt(
-          parser
-            .getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED)!
-            .timestamp.elapsedNanos.toString()
-        )
-      ).toEqual(850782750048n);
+    it('retrieves trace entries', async () => {
+      let entry = await parser.getEntry(0, TimestampType.ELAPSED);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850254319343n);
+
+      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850782750048n);
     });
   });
 });

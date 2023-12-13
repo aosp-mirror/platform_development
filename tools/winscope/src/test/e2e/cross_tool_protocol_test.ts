@@ -18,9 +18,6 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
-  const WINSCOPE_URL = 'http://localhost:8080';
-  const REMOTE_TOOL_MOCK_URL = 'http://localhost:8081';
-
   const TIMESTAMP_IN_BUGREPORT_MESSAGE = '1670509911000000000';
   const TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE = '1670509912000000000';
   const TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL = '1670509913000000000';
@@ -28,12 +25,12 @@ describe('Cross-Tool Protocol', () => {
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
     await browser.manage().timeouts().implicitlyWait(15000);
-    await checkServerIsUp('Remote tool mock', REMOTE_TOOL_MOCK_URL);
-    await checkServerIsUp('Winscope', WINSCOPE_URL);
+    await E2eTestUtils.checkServerIsUp('Remote tool mock', E2eTestUtils.REMOTE_TOOL_MOCK_URL);
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });
 
   beforeEach(async () => {
-    await browser.get(REMOTE_TOOL_MOCK_URL);
+    await browser.get(E2eTestUtils.REMOTE_TOOL_MOCK_URL);
   });
 
   it('allows communication between remote tool and Winscope', async () => {
@@ -55,14 +52,6 @@ describe('Cross-Tool Protocol', () => {
     await changeTimestampInWinscope();
     await checkRemoteToolReceivedTimestamp();
   });
-
-  const checkServerIsUp = async (name: string, url: string) => {
-    try {
-      await browser.get(url);
-    } catch (error) {
-      fail(`${name} server (${url}) looks down. Did you start it?`);
-    }
-  };
 
   const openWinscopeTabFromRemoteTool = async () => {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());

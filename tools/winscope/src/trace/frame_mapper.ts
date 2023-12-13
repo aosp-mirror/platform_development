@@ -26,9 +26,9 @@ export class FrameMapper {
 
   constructor(private traces: Traces) {}
 
-  computeMapping() {
+  async computeMapping() {
     this.pickMostReliableTraceAndSetInitialFrameInfo();
-    this.propagateFrameInfoToOtherTraces();
+    await this.propagateFrameInfoToOtherTraces();
   }
 
   private pickMostReliableTraceAndSetInitialFrameInfo() {
@@ -56,9 +56,9 @@ export class FrameMapper {
     trace.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private propagateFrameInfoToOtherTraces() {
+  private async propagateFrameInfoToOtherTraces() {
     this.tryPropagateFromScreenRecordingToSurfaceFlinger();
-    this.tryPropagateFromSurfaceFlingerToTransactions();
+    await this.tryPropagateFromSurfaceFlingerToTransactions();
     this.tryPropagateFromTransactionsToWindowManager();
     this.tryPropagateFromWindowManagerToProtoLog();
     this.tryPropagateFromWindowManagerToIme();
@@ -90,7 +90,7 @@ export class FrameMapper {
     surfaceFlinger.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private tryPropagateFromSurfaceFlingerToTransactions() {
+  private async tryPropagateFromSurfaceFlingerToTransactions() {
     const frameMapBuilder = this.tryStartFrameMapping(
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS
@@ -103,14 +103,16 @@ export class FrameMapper {
     const surfaceFlinger = assertDefined(this.traces.getTrace(TraceType.SURFACE_FLINGER));
 
     const vsyncIdToFrames = new Map<bigint, FramesRange>();
-    surfaceFlinger.forEachEntry((srcEntry) => {
-      const vsyncId = this.getVsyncIdProperty(srcEntry, 'vSyncId');
+
+    for (let srcEntryIndex = 0; srcEntryIndex < surfaceFlinger.lengthEntries; ++srcEntryIndex) {
+      const srcEntry = surfaceFlinger.getEntry(srcEntryIndex);
+      const vsyncId = await this.getVsyncIdProperty(srcEntry, 'vSyncId');
       if (vsyncId === undefined) {
-        return;
+        continue;
       }
       const srcFrames = srcEntry.getFramesRange();
       if (!srcFrames) {
-        return;
+        continue;
       }
       let frames = vsyncIdToFrames.get(vsyncId);
       if (!frames) {
@@ -119,19 +121,20 @@ export class FrameMapper {
       frames.start = Math.min(frames.start, srcFrames.start);
       frames.end = Math.max(frames.end, srcFrames.end);
       vsyncIdToFrames.set(vsyncId, frames);
-    });
+    }
 
-    transactions.forEachEntry((dstEntry) => {
-      const vsyncId = this.getVsyncIdProperty(dstEntry, 'vsyncId');
+    for (let dstEntryIndex = 0; dstEntryIndex < transactions.lengthEntries; ++dstEntryIndex) {
+      const dstEntry = transactions.getEntry(dstEntryIndex);
+      const vsyncId = await this.getVsyncIdProperty(dstEntry, 'vsyncId');
       if (vsyncId === undefined) {
-        return;
+        continue;
       }
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {
-        return;
+        continue;
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), frames);
-    });
+    }
 
     const frameMap = frameMapBuilder.build();
     transactions.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
@@ -276,8 +279,11 @@ export class FrameMapper {
     return new FrameMapBuilder(dstTrace.lengthEntries, lengthFrames);
   }
 
-  private getVsyncIdProperty(entry: TraceEntry<object>, propertyKey: string): bigint | undefined {
-    const entryValue = entry.getValue();
+  private async getVsyncIdProperty(
+    entry: TraceEntry<object>,
+    propertyKey: string
+  ): Promise<bigint | undefined> {
+    const entryValue = await entry.getValue();
     const vsyncId = (entryValue as any)[propertyKey];
     if (vsyncId === undefined) {
       console.error(`Failed to get trace entry's '${propertyKey}' property:`, entryValue);

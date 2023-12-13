@@ -46,7 +46,7 @@ describe('PresenterWindowManager', () => {
 
     selectedTree = new HierarchyTreeBuilder()
       .setName('ScreenDecorOverlayBottom')
-      .setStableId('WindowState 2088ac1 ScreenDecorOverlayBottom')
+      .setStableId('WindowContainer 2088ac1 ScreenDecorOverlayBottom')
       .setKind('WindowState')
       .setSimplifyNames(true)
       .setShortName('ScreenDecorOverlayBottom')
@@ -57,24 +57,24 @@ describe('PresenterWindowManager', () => {
       .build();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 
-  it('is robust to empty trace', () => {
+  it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<WindowManagerState>().setEntries([]).build();
     const presenter = createPresenter(emptyTrace);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
 
     const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
-  it('processes trace position update', () => {
-    presenter.onTracePositionUpdate(position);
+  it('processes trace position update', async () => {
+    await presenter.onTracePositionUpdate(position);
     const filteredUiDataRectLabels = uiData.rects
       ?.filter((rect) => rect.isVisible !== undefined)
       .map((rect) => rect.label);
@@ -94,15 +94,15 @@ describe('PresenterWindowManager', () => {
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
-  it('creates input data for rects view', () => {
-    presenter.onTracePositionUpdate(position);
+  it('creates input data for rects view', async () => {
+    await presenter.onTracePositionUpdate(position);
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 2326});
     expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 2400});
   });
 
-  it('updates pinned items', () => {
-    presenter.onTracePositionUpdate(position);
+  it('updates pinned items', async () => {
+    await presenter.onTracePositionUpdate(position);
     expect(uiData.pinnedItems).toEqual([]);
 
     const pinnedItem = new HierarchyTreeBuilder()
@@ -122,7 +122,7 @@ describe('PresenterWindowManager', () => {
     expect(uiData.highlightedItems).toContain(id);
   });
 
-  it('updates hierarchy tree', () => {
+  it('updates hierarchy tree', async () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -143,7 +143,7 @@ describe('PresenterWindowManager', () => {
       },
     };
 
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     expect(uiData.tree?.children.length).toEqual(1);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
@@ -151,7 +151,7 @@ describe('PresenterWindowManager', () => {
     expect(uiData.tree?.children.length).toEqual(72);
   });
 
-  it('filters hierarchy tree', () => {
+  it('filters hierarchy tree', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -170,7 +170,7 @@ describe('PresenterWindowManager', () => {
         enabled: true,
       },
     };
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.tree?.children.length).toEqual(72);
     presenter.filterHierarchyTree('ScreenDecor');
@@ -178,14 +178,14 @@ describe('PresenterWindowManager', () => {
     expect(uiData.tree?.children.length).toEqual(2);
   });
 
-  it('sets properties tree and associated ui data', () => {
-    presenter.onTracePositionUpdate(position);
+  it('sets properties tree and associated ui data', async () => {
+    await presenter.onTracePositionUpdate(position);
     presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
   });
 
-  it('updates properties tree', () => {
+  it('updates properties tree', async () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -203,7 +203,7 @@ describe('PresenterWindowManager', () => {
       },
     };
 
-    presenter.onTracePositionUpdate(position);
+    await presenter.onTracePositionUpdate(position);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
     presenter.updatePropertiesTree(userOptions);
@@ -212,8 +212,8 @@ describe('PresenterWindowManager', () => {
     expect(uiData.propertiesTree?.diffType).toBeTruthy();
   });
 
-  it('filters properties tree', () => {
-    presenter.onTracePositionUpdate(position);
+  it('filters properties tree', async () => {
+    await presenter.onTracePositionUpdate(position);
     presenter.newPropertiesTree(selectedTree);
 
     let nonTerminalChildren =

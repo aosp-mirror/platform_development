@@ -51,8 +51,8 @@ describe('ParserEventLog', () => {
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(undefined);
   });
 
-  it('contains parsed jank CUJ events', () => {
-    const entry = parser.getEntry(18, TimestampType.REAL);
-    expect(entry instanceof CujEvent).toBeTrue();
+  it('contains parsed jank CUJ events', async () => {
+    const entry = await parser.getEntry(18, TimestampType.REAL);
+    expect(entry).toBeInstanceOf(CujEvent);
   });
 });

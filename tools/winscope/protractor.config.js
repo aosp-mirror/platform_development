@@ -30,7 +30,7 @@ exports.config = {
       args: ['--headless', '--disable-gpu', '--window-size=1280x1024'],
     },
   },
-  chromeDriver: './node_modules/webdriver-manager/selenium/chromedriver_113.0.5672.63',
+  chromeDriver: './node_modules/webdriver-manager/selenium/chromedriver_114.0.5735.90',
 
   allScriptsTimeout: 10000,
   getPageTimeout: 10000,

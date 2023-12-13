@@ -23,10 +23,11 @@ describe('Upload traces', () => {
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;
     await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });
 
   beforeEach(async () => {
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
   it('can process bugreport', async () => {
