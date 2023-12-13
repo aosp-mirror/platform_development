@@ -48,8 +48,9 @@ class CtsReport:
 
   FAIL_INDEX = STATUS_ORDER.index('fail')
 
-  def __init__(self, info):
+  def __init__(self, info, selected_abis=constant.ALL_TEST_ABIS):
     self.info = info
+    self.selected_abis = selected_abis
     self.result_tree = {}
     self.module_summaries = {}
 
@@ -134,7 +135,11 @@ class CtsReport:
 
     for module in root.iter('Module'):
       module_name = module.attrib['name']
-      abi = constant.ABI_IGNORED if ignore_abi else module.attrib['abi']
+      abi = module.attrib['abi']
+      if abi not in self.selected_abis:
+        continue
+      if ignore_abi:
+        abi = constant.ABI_IGNORED
 
       for testcase in module.iter('TestCase'):
         class_name = testcase.attrib['name']
@@ -144,11 +149,12 @@ class CtsReport:
           result = test.attrib['result']
           self.set_test_status(module_name, abi, class_name, test_name, result)
 
-  def load_from_csv(self, result_csvfile):
+  def load_from_csv(self, result_csvfile, ignore_abi=False):
     """Read the information of the report from the csv files.
 
     Args:
       result_csvfile: path to result.csv
+      ignore_abi: if specified, load the test ABI name as constant.ABI_IGNORED
     """
 
     result_reader = csv.reader(result_csvfile)
@@ -161,6 +167,10 @@ class CtsReport:
 
     for row in result_reader:
       module_name, abi, class_name, test_name, result = row
+      if abi not in self.selected_abis:
+        continue
+      if ignore_abi:
+        abi = constant.ABI_IGNORED
       self.set_test_status(module_name, abi, class_name, test_name, result)
 
   def write_to_csv(self, result_csvfile, summary_csvfile):
@@ -341,7 +351,9 @@ def extract_test_result_from_zip(zip_file_path, dest_dir):
   return extracted
 
 
-def parse_report_file(report_file, ignore_abi=False):
+def parse_report_file(report_file,
+                      selected_abis=constant.ALL_TEST_ABIS,
+                      ignore_abi=False):
   """Turn one cts report into a CtsReport object."""
 
   with tempfile.TemporaryDirectory() as temp_dir:
@@ -352,9 +364,10 @@ def parse_report_file(report_file, ignore_abi=False):
     )
 
     test_info = get_test_info_xml(xml_path)
+    print(f'Parsing {selected_abis} test results from: ')
     print_test_info(test_info)
 
-    report = CtsReport(test_info)
+    report = CtsReport(test_info, selected_abis)
     report.read_test_result_xml(xml_path, ignore_abi)
 
   return report
@@ -378,6 +391,13 @@ def main():
       required=True,
       help='Path to the directory to store output files.',
   )
+  parser.add_argument(
+      '--abi',
+      choices=constant.ALL_TEST_ABIS,
+      nargs='*',
+      default=constant.ALL_TEST_ABIS,
+      help='Selected test ABIs to be parsed.',
+  )
 
   args = parser.parse_args()
 
@@ -387,7 +407,7 @@ def main():
   if not os.path.exists(output_dir):
     raise FileNotFoundError(f'Output directory {output_dir} does not exist.')
 
-  report = parse_report_file(report_file)
+  report = parse_report_file(report_file, args.abi)
 
   report.output_files(output_dir)
 

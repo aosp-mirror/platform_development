@@ -14,10 +14,13 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 #
+
 import filecmp
 import os
 import tempfile
 import unittest
+
+import constant
 import parse_cts_report
 
 
@@ -36,6 +39,20 @@ class TestParse(unittest.TestCase):
     report.set_test_status(*test_item, 'pass')
 
     self.assertEqual(report.get_test_status(*test_item), 'pass')
+
+  def test_select_abi(self):
+    report_file = 'testdata/test_result_multiple_abis.xml'
+    report_all_abi = parse_cts_report.parse_report_file(report_file)
+    report_selected_abi = parse_cts_report.parse_report_file(report_file,
+                                                             ['arm64-v8a'])
+    test_item_arm = ('module', 'armeabi-v7a', 'class', 'test')
+    test_item_arm64 = ('module', 'arm64-v8a', 'class', 'test')
+    self.assertEqual(report_all_abi.get_test_status(*test_item_arm), 'pass')
+    self.assertEqual(report_all_abi.get_test_status(*test_item_arm64), 'pass')
+    self.assertEqual(report_selected_abi.get_test_status(*test_item_arm),
+                     constant.NO_DATA)
+    self.assertEqual(report_selected_abi.get_test_status(*test_item_arm64),
+                     'pass')
 
   def test_parse_xml(self):
     report_file = 'testdata/test_result_1.xml'
