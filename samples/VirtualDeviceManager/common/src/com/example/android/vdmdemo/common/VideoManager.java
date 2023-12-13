@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.Surface;
 
 import androidx.annotation.GuardedBy;
+import androidx.annotation.NonNull;
 
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayFrame;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -41,6 +42,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -187,12 +189,13 @@ public class VideoManager {
 
     private final class MediaCodecCallback extends MediaCodec.Callback {
         @Override
-        public void onInputBufferAvailable(MediaCodec codec, int i) {
+        public void onInputBufferAvailable(@NonNull MediaCodec codec, int i) {
             mFreeInputBuffers.add(i);
         }
 
         @Override
-        public void onOutputBufferAvailable(MediaCodec codec, int i, BufferInfo bufferInfo) {
+        public void onOutputBufferAvailable(
+                @NonNull MediaCodec codec, int i, @NonNull BufferInfo bufferInfo) {
             synchronized (mCodecLock) {
                 if (mMediaCodec == null) {
                     return;
@@ -200,7 +203,7 @@ public class VideoManager {
                 if (mMediaCodec.getCodecInfo().isEncoder()) {
                     ByteBuffer buffer = mMediaCodec.getOutputBuffer(i);
                     byte[] data = new byte[bufferInfo.size];
-                    buffer.get(data, bufferInfo.offset, bufferInfo.size);
+                    Objects.requireNonNull(buffer).get(data, bufferInfo.offset, bufferInfo.size);
                     mMediaCodec.releaseOutputBuffer(i, false);
                     if (mRecordEncoderOutput) {
                         mStorageFile.writeOutputFile(data);
@@ -216,10 +219,11 @@ public class VideoManager {
         }
 
         @Override
-        public void onError(MediaCodec mediaCodec, CodecException e) {}
+        public void onError(@NonNull MediaCodec mediaCodec, @NonNull CodecException e) {}
 
         @Override
-        public void onOutputFormatChanged(MediaCodec mediaCodec, MediaFormat mediaFormat) {}
+        public void onOutputFormatChanged(
+                @NonNull MediaCodec mediaCodec, @NonNull MediaFormat mediaFormat) {}
     }
 
     private class DecoderThread extends Thread {
@@ -245,7 +249,7 @@ public class VideoManager {
                         }
                         ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
                         byte[] data = event.getDisplayFrame().getFrameData().toByteArray();
-                        inBuffer.put(data);
+                        Objects.requireNonNull(inBuffer).put(data);
                         if (mRecordEncoderOutput) {
                             mStorageFile.writeOutputFile(data);
                         }

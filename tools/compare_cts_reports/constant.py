@@ -22,3 +22,5 @@ VERSION = '1.0'
 NO_DATA = 'null'
 TESTED_ITEMS = 'tested_items'
 PASS_RATE = 'pass_rate'
+
+ABI_IGNORED = 'abi-ignored'

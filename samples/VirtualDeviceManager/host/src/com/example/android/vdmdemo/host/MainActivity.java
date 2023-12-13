@@ -91,7 +91,7 @@ public class MainActivity extends Hilt_MainActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.main_tool_bar);
+        Toolbar toolbar = requireViewById(R.id.main_tool_bar);
         toolbar.setOverflowIcon(getDrawable(R.drawable.settings));
         setSupportActionBar(toolbar);
 

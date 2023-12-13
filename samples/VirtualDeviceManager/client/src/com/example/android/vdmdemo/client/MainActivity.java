@@ -86,11 +86,11 @@ public class MainActivity extends Hilt_MainActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.main_tool_bar);
+        Toolbar toolbar = requireViewById(R.id.main_tool_bar);
         toolbar.setOverflowIcon(getDrawable(R.drawable.settings));
         setSupportActionBar(toolbar);
 
-        ClientView displaysView = findViewById(R.id.displays);
+        ClientView displaysView = requireViewById(R.id.displays);
         displaysView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         displaysView.setItemAnimator(null);
@@ -194,12 +194,12 @@ public class MainActivity extends Hilt_MainActivity {
     }
 
     private void onDisplayFocusChange(int displayId) {
-        findViewById(R.id.dpad_fragment_container)
+        requireViewById(R.id.dpad_fragment_container)
                 .setVisibility(
                         mSettings.dpadEnabled && displayId != Display.INVALID_DISPLAY
                                 ? View.VISIBLE
                                 : View.GONE);
-        findViewById(R.id.nav_touchpad_fragment_container)
+        requireViewById(R.id.nav_touchpad_fragment_container)
                 .setVisibility(
                         mSettings.navTouchpadEnabled && displayId != Display.INVALID_DISPLAY
                                 ? View.VISIBLE

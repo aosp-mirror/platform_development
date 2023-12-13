@@ -88,12 +88,12 @@ final class LauncherAdapter extends BaseAdapter {
                     LayoutInflater.from(parent.getContext())
                             .inflate(R.layout.launcher_grid_item, parent, false);
         }
-        ImageView imageView = convertView.findViewById(R.id.app_icon);
+        ImageView imageView = convertView.requireViewById(R.id.app_icon);
         final Drawable background = new ShapeDrawable(new OvalShape());
         imageView.setBackground(background);
         imageView.setImageDrawable(img);
 
-        TextView textView = convertView.findViewById(R.id.app_title);
+        TextView textView = convertView.requireViewById(R.id.app_title);
         textView.setText(ri.loadLabel(mPackageManager));
         textView.setTextColor(mTextColor);
         return convertView;

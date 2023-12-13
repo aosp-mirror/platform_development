@@ -35,7 +35,7 @@ public final class RotationDemoActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        ((TextView) findViewById(R.id.current_orientation))
+        ((TextView) requireViewById(R.id.current_orientation))
                 .setText(getString(R.string.current_orientation, getOrientationString()));
     }
 
