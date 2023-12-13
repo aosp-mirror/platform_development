@@ -183,7 +183,8 @@ public class ConnectionManager {
     }
 
     private CompletableFuture<WifiAwareSession> createSession() {
-        if (!mWifiAwareSessionFuture.isCompletedExceptionally()) {
+        if (mWifiAwareSessionFuture.isDone()
+                && !mWifiAwareSessionFuture.isCompletedExceptionally()) {
             return mWifiAwareSessionFuture;
         }
 
