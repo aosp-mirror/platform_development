@@ -131,6 +131,12 @@ available devices, build the APKs and install them.
     the display of the streamed activity. The "Resize" button can be used to
     change the display dimensions.
 
+1.  Each display on the Client app has a "Fullscreen" button which will move
+    the contents of that display to an immersive fullscreen activity. The
+    client's back button/gestures are sent back to the streamed app. Use
+    Volume Down on the client device to exit fullscreen. Volume Up acts as a
+    home key, if the streamed display is a home display.
+
 1.  The Host app has a "CREATE HOME DISPLAY" button, clicking it will create a
     new virtual display, launch the secondary home activity there and start
     streaming the display contents to the client. The display on the Client app
@@ -211,12 +217,6 @@ available devices, build the APKs and install them.
     input pointer devices. \
     *This can be changed dynamically.*
 
--   **Immersive mode**: Makes the streamed activities fullscreen on the client
-    device. The client's back button/gesture results in sending back to the
-    streamed app and Volume Up acts as a home key, if the streamed display is a
-    home display. Use Volume Down on the client device to exit the activity. \
-    *Changing this will recreate the virtual device.*
-
 -   **Custom home**: Whether to use a custom activity as home on home displays,
     or use the device-default secondary home activity. Run the command below to
     enable this functionality. \
@@ -226,27 +226,25 @@ available devices, build the APKs and install them.
     adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_home true
     ```
 
-<!-- LINT.ThenChange() -->
-<!-- LINT.IfChange(client_settings) -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/host/res/menu/settings.xml) -->
+<!-- LINT.IfChange(client_options) -->
 
-## Client Settings
+## Client Options
 
 ### Input
 
-The client has settings that enable more ways of interacting with the streamed
-apps. Each of the following are able to inject input events into the focused
-display. The focused display is indicated by the frame around it whenever at
-least one of these settings is enabled. The display focus is based on
-interaction.
+The input menu button enables **on-screen D-Pad and touchpad** for navigating
+the activity on the focused display. The focused display is indicated by the
+frame around its header whenever there are more than one displays. The display
+focus is based on user interaction.
 
--   **Show dpad**, **Show navigation touchpad**: Render a dpad / touchpad for
-    navigating the activity on the focused display.
+In addition, any input events generated from an **externally connected
+keyboard** are forwarded to the activity streamed on the focused display.
 
--   **Enable external keyboard**, **Enable external mouse**: Forward any events
-    from a keyboard or mouse, which is externally connected to the client device
-    to the activity on the focused display.
+**Externally connected mouse** events are also forwarded to the relevant
+display, if the mouse pointer is currently positioned on a streamed display.
 
-<!-- LINT.ThenChange() -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/client/res/menu/options.xml) -->
 <!-- LINT.IfChange(demos) -->
 
 ## Demos
@@ -279,4 +277,4 @@ interaction.
     is no vibration support on virtual devices, so vibration requests from
     streamed activities are ignored.
 
-<!-- LINT.ThenChange() -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/demos/AndroidManifest.xml) -->

@@ -30,7 +30,6 @@ final class Settings {
     public boolean alwaysUnlocked = true;
     public boolean deviceStreaming = false;
     public boolean showPointerIcon = true;
-    public boolean immersiveMode = false;
     public boolean customHome = false;
 
     /**

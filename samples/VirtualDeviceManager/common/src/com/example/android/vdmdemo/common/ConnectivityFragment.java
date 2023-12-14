@@ -28,8 +28,6 @@ import androidx.fragment.app.Fragment;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
-import java.util.Objects;
-
 import javax.inject.Inject;
 
 /** Fragment that holds the connectivity status UI. */
@@ -43,6 +41,11 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
 
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
+                @Override
+                public void onInitialized() {
+                    updateStatus(mDefaultBackgroundColor, R.string.initialized);
+                }
+
                 @Override
                 public void onConnecting(String remoteDeviceName) {
                     updateStatus(mDefaultBackgroundColor, R.string.connecting, remoteDeviceName);
@@ -72,7 +75,7 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     public void onViewCreated(@NonNull View view, Bundle bundle) {
         super.onViewCreated(view, bundle);
 
-        mStatus = Objects.requireNonNull(getActivity()).requireViewById(R.id.connection_status);
+        mStatus = requireActivity().requireViewById(R.id.connection_status);
 
         TypedValue background = new TypedValue();
         getActivity()
@@ -105,7 +108,7 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     }
 
     private void updateStatus(int backgroundColor, int resId, Object... formatArgs) {
-        Activity activity = Objects.requireNonNull(getActivity());
+        Activity activity = requireActivity();
         activity.runOnUiThread(() -> {
             mStatus.setText(activity.getString(resId, formatArgs));
             mStatus.setBackgroundColor(backgroundColor);

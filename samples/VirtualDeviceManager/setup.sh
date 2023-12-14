@@ -96,7 +96,7 @@ fi
 if [[ -n "${HOST_SERIAL}" ]]; then
   echo
   echo "Installing VdmDemos.apk to ${HOST_NAME}..."
-  install_app "${CLIENT_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
+  install_app "${HOST_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
   readonly PERM_BASENAME=com.example.android.vdmdemo.host.xml
@@ -115,6 +115,7 @@ if [[ -n "${HOST_SERIAL}" ]]; then
     run_cmd_or_die adb -s "${HOST_SERIAL}" root
     run_cmd_or_die adb -s "${HOST_SERIAL}" remount -R
     run_cmd_or_die adb -s "${HOST_SERIAL}" wait-for-device
+    sleep 3  # Even after wait-for-device returns, the device may not be ready so give it some time.
     run_cmd_or_die adb -s "${HOST_SERIAL}" root
     run_cmd_or_die adb -s "${HOST_SERIAL}" remount
     echo "Installing VdmHost.apk as a privileged app to ${HOST_NAME}..."
