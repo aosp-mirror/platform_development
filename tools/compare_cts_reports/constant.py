@@ -24,3 +24,8 @@ TESTED_ITEMS = 'tested_items'
 PASS_RATE = 'pass_rate'
 
 ABI_IGNORED = 'abi-ignored'
+ABI_ARM_V7A = 'armeabi-v7a'
+ABI_ARM_V8A = 'arm64-v8a'
+ABI_X86 = 'x86'
+ABI_X86_64 = 'x86_64'
+ALL_TEST_ABIS = [ABI_ARM_V7A, ABI_ARM_V8A, ABI_X86, ABI_X86_64]

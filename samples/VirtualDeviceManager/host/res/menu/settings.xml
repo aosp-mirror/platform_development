@@ -30,11 +30,8 @@
             android:id="@+id/show_pointer_icon"
             android:title="@string/show_pointer_icon" />
         <item
-            android:id="@+id/immersive_mode"
-            android:title="@string/immersive_mode" />
-        <item
             android:id="@+id/custom_home"
             android:title="@string/custom_home" />
     </group>
 </menu>
-<!-- LINT.ThenChange(development/samples/VirtualDeviceManager/README.md:host_settings) -->
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_settings) -->

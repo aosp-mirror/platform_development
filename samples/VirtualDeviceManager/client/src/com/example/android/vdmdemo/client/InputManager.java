@@ -48,15 +48,11 @@ final class InputManager {
     private static final String TAG = "InputManager";
 
     private final RemoteIo mRemoteIo;
-    private final Settings mSettings;
 
     private final Object mLock = new Object();
 
     @GuardedBy("mLock")
     private int mFocusedDisplayId = Display.INVALID_DISPLAY;
-
-    @GuardedBy("mLock")
-    private boolean mIsTrackingFocus = false;
 
     interface FocusListener {
         void onFocusChange(int focusedDisplayId);
@@ -69,9 +65,8 @@ final class InputManager {
     private final Set<Integer> mFocusableDisplays = new HashSet<>();
 
     @Inject
-    InputManager(RemoteIo remoteIo, Settings settings) {
+    InputManager(RemoteIo remoteIo) {
         mRemoteIo = remoteIo;
-        mSettings = settings;
     }
 
     void addFocusListener(FocusListener focusListener) {
@@ -103,28 +98,6 @@ final class InputManager {
         }
     }
 
-    void updateFocusTracking() {
-        boolean shouldTrackFocus =
-                mSettings.dpadEnabled
-                        || mSettings.navTouchpadEnabled
-                        || mSettings.externalKeyboardEnabled;
-
-        final List<FocusListener> listenersToNotify;
-        int focusedDisplayIdToNotify = Display.INVALID_DISPLAY;
-        synchronized (mLock) {
-            if (shouldTrackFocus != mIsTrackingFocus) {
-                mIsTrackingFocus = shouldTrackFocus;
-            }
-            if (mIsTrackingFocus) {
-                focusedDisplayIdToNotify = mFocusedDisplayId;
-            }
-            listenersToNotify = new ArrayList<>(mFocusListeners);
-        }
-        for (FocusListener focusListener : listenersToNotify) {
-            focusListener.onFocusChange(focusedDisplayIdToNotify);
-        }
-    }
-
     /** Injects {@link InputEvent} for the given {@link InputDeviceType} into the given display. */
     void sendInputEvent(InputDeviceType deviceType, InputEvent inputEvent, int displayId) {
         if (inputEvent instanceof MotionEvent) {
@@ -148,39 +121,20 @@ final class InputManager {
 
     /**
      * Injects {@link InputEvent} for the given {@link InputDeviceType} into the focused display.
+     *
+     * @return whether the event was sent.
      */
-    public void sendInputEventToFocusedDisplay(InputDeviceType deviceType, InputEvent inputEvent) {
-        int targetDisplay;
+    public boolean sendInputEventToFocusedDisplay(
+            InputDeviceType deviceType, InputEvent inputEvent) {
+        int targetDisplayId;
         synchronized (mLock) {
-            if (!mIsTrackingFocus || mFocusedDisplayId == Display.INVALID_DISPLAY) {
-                return;
+            if (mFocusedDisplayId == Display.INVALID_DISPLAY) {
+                return false;
             }
-            targetDisplay = mFocusedDisplayId;
+            targetDisplayId = mFocusedDisplayId;
         }
-        switch (deviceType) {
-            case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
-                if (!mSettings.navTouchpadEnabled) {
-                    return;
-                }
-                break;
-            case DEVICE_TYPE_DPAD:
-                if (!mSettings.dpadEnabled) {
-                    return;
-                }
-                break;
-            case DEVICE_TYPE_KEYBOARD:
-                if (!mSettings.externalKeyboardEnabled) {
-                    return;
-                }
-                break;
-            default:
-                Log.e(
-                        TAG,
-                        "sendInputEventToFocusedDisplay got invalid device type "
-                                + deviceType.getNumber());
-                return;
-        }
-        sendInputEvent(deviceType, inputEvent, targetDisplay);
+        sendInputEvent(deviceType, inputEvent, targetDisplayId);
+        return true;
     }
 
     void sendBack(int displayId) {
@@ -313,9 +267,7 @@ final class InputManager {
         synchronized (mLock) {
             if (displayId != mFocusedDisplayId) {
                 mFocusedDisplayId = displayId;
-                if (mIsTrackingFocus) {
-                    listenersToNotify = new ArrayList<>(mFocusListeners);
-                }
+                listenersToNotify = new ArrayList<>(mFocusListeners);
             }
         }
         for (FocusListener focusListener : listenersToNotify) {

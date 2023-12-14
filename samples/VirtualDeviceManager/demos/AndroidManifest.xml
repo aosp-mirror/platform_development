@@ -72,5 +72,5 @@
             android:label="@string/vibration_demo" />
 
     </application>
-    <!-- LINT.ThenChange(development/samples/VirtualDeviceManager/README.md:demos) -->
+    <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
 </manifest>

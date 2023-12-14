@@ -19,14 +19,14 @@ package com.example.android.vdmdemo.client;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Display;
-import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -54,11 +54,9 @@ public class MainActivity extends Hilt_MainActivity {
     @Inject InputManager mInputManager;
     @Inject VirtualSensorController mSensorController;
     @Inject AudioPlayer mAudioPlayer;
-    @Inject Settings mSettings;
 
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private DisplayAdapter mDisplayAdapter;
-    private final InputManager.FocusListener mFocusListener = this::onDisplayFocusChange;
 
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
@@ -87,7 +85,6 @@ public class MainActivity extends Hilt_MainActivity {
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = requireViewById(R.id.main_tool_bar);
-        toolbar.setOverflowIcon(getDrawable(R.drawable.settings));
         setSupportActionBar(toolbar);
 
         ClientView displaysView = requireViewById(R.id.displays);
@@ -96,6 +93,11 @@ public class MainActivity extends Hilt_MainActivity {
         displaysView.setItemAnimator(null);
         mDisplayAdapter = new DisplayAdapter(displaysView, mRemoteIo, mInputManager);
         displaysView.setAdapter(mDisplayAdapter);
+
+        ActivityResultLauncher<Intent> fullscreenLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                mDisplayAdapter::onFullscreenActivityResult);
+        mDisplayAdapter.setFullscreenLauncher(fullscreenLauncher);
     }
 
     @Override
@@ -103,15 +105,25 @@ public class MainActivity extends Hilt_MainActivity {
         super.onStart();
         mConnectionManager.addConnectionCallback(mConnectionCallback);
         mConnectionManager.startClientSession();
-        mInputManager.addFocusListener(mFocusListener);
         mRemoteIo.addMessageConsumer(mAudioPlayer);
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mDisplayAdapter.resumeAllDisplays();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mDisplayAdapter.pauseAllDisplays();
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
-        mInputManager.removeFocusListener(mFocusListener);
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mRemoteIo.removeMessageConsumer(mAudioPlayer);
@@ -127,82 +139,47 @@ public class MainActivity extends Hilt_MainActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getDevice() == null
-                || !event.getDevice().supportsSource(InputDevice.SOURCE_KEYBOARD)) {
-            return false;
-        }
-        mInputManager.sendInputEventToFocusedDisplay(InputDeviceType.DEVICE_TYPE_KEYBOARD, event);
-        return true;
+        return mInputManager.sendInputEventToFocusedDisplay(
+                        InputDeviceType.DEVICE_TYPE_KEYBOARD, event)
+                || super.dispatchKeyEvent(event);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.settings, menu);
-        for (int i = 0; i < menu.size(); ++i) {
-            MenuItem item = menu.getItem(i);
-            switch (item.getItemId()) {
-                case R.id.enable_dpad -> item.setChecked(mSettings.dpadEnabled);
-                case R.id.enable_nav_touchpad -> item.setChecked(mSettings.navTouchpadEnabled);
-                case R.id.enable_external_keyboard -> item.setChecked(
-                        mSettings.externalKeyboardEnabled);
-                case R.id.enable_external_mouse -> item.setChecked(mSettings.externalMouseEnabled);
-            }
-        }
+        inflater.inflate(R.menu.options, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        item.setChecked(!item.isChecked());
-
         switch (item.getItemId()) {
-            case R.id.enable_dpad -> mSettings.dpadEnabled = item.isChecked();
-            case R.id.enable_nav_touchpad -> mSettings.navTouchpadEnabled = item.isChecked();
-            case R.id.enable_external_keyboard ->
-                    mSettings.externalKeyboardEnabled = item.isChecked();
-            case R.id.enable_external_mouse -> {
-                mSettings.externalMouseEnabled = item.isChecked();
-                return true;
-            }
+            case R.id.input -> toggleInputVisibility();
             default -> {
                 return super.onOptionsItemSelected(item);
             }
         }
-
-        mInputManager.updateFocusTracking();
         return true;
     }
 
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasStartStreaming()) {
-            if (event.getStartStreaming().getImmersive()) {
-                startActivity(new Intent(this, ImmersiveActivity.class));
-            } else {
-                runOnUiThread(
-                        () ->
-                                mDisplayAdapter.addDisplay(
-                                        event.getStartStreaming().getHomeEnabled()));
-            }
+            runOnUiThread(
+                    () -> mDisplayAdapter.addDisplay(event.getStartStreaming().getHomeEnabled()));
         } else if (event.hasStopStreaming()) {
             runOnUiThread(() -> mDisplayAdapter.removeDisplay(event.getDisplayId()));
         } else if (event.hasDisplayRotation()) {
-            runOnUiThread(() -> mDisplayAdapter.rotateDisplay(event));
+            runOnUiThread(() -> mDisplayAdapter.rotateDisplay(
+                    event.getDisplayId(), event.getDisplayRotation().getRotationDegrees()));
         } else if (event.hasDisplayChangeEvent()) {
             runOnUiThread(() -> mDisplayAdapter.processDisplayChange(event));
         }
     }
 
-    private void onDisplayFocusChange(int displayId) {
-        requireViewById(R.id.dpad_fragment_container)
-                .setVisibility(
-                        mSettings.dpadEnabled && displayId != Display.INVALID_DISPLAY
-                                ? View.VISIBLE
-                                : View.GONE);
-        requireViewById(R.id.nav_touchpad_fragment_container)
-                .setVisibility(
-                        mSettings.navTouchpadEnabled && displayId != Display.INVALID_DISPLAY
-                                ? View.VISIBLE
-                                : View.GONE);
+    private void toggleInputVisibility() {
+        View dpad = requireViewById(R.id.dpad_fragment_container);
+        int visibility = dpad.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE;
+        dpad.setVisibility(visibility);
+        requireViewById(R.id.nav_touchpad_fragment_container).setVisibility(visibility);
     }
 }
