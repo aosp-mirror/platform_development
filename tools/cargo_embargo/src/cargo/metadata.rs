@@ -19,7 +19,6 @@ use crate::config::VariantConfig;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::fs::File;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
@@ -100,14 +99,9 @@ pub enum TargetKind {
     Test,
 }
 
-pub fn parse_cargo_metadata_file(
-    cargo_metadata_path: impl AsRef<Path>,
-    cfg: &VariantConfig,
-) -> Result<Vec<Crate>> {
-    let metadata: WorkspaceMetadata = serde_json::from_reader(
-        File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
-    )
-    .context("failed to parse cargo.metadata")?;
+pub fn parse_cargo_metadata_str(cargo_metadata: &str, cfg: &VariantConfig) -> Result<Vec<Crate>> {
+    let metadata =
+        serde_json::from_str(cargo_metadata).context("failed to parse cargo metadata")?;
     parse_cargo_metadata(&metadata, &cfg.features, cfg.tests)
 }
 
@@ -439,7 +433,13 @@ mod tests {
                 .variants
                 .iter()
                 .map(|variant_cfg| {
-                    parse_cargo_metadata_file(&cargo_metadata_path, variant_cfg).unwrap()
+                    parse_cargo_metadata_str(
+                        &read_to_string(&cargo_metadata_path)
+                            .with_context(|| format!("Failed to open {:?}", cargo_metadata_path))
+                            .unwrap(),
+                        variant_cfg,
+                    )
+                    .unwrap()
                 })
                 .collect::<Vec<_>>();
             assert_eq!(crates, expected_crates);
