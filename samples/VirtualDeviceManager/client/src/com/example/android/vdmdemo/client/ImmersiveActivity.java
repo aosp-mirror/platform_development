@@ -27,6 +27,7 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -73,6 +74,7 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
     private int mDisplayId = Display.INVALID_DISPLAY;
     private DisplayController mDisplayController;
     private Surface mSurface;
+    private InputMethodManager mInputMethodManager;
 
     private int mPortraitWidth;
     private int mPortraitHeight;
@@ -101,6 +103,8 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
         windowInsetsController.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+
+        mInputMethodManager = getSystemService(InputMethodManager.class);
 
         mDisplayId = getIntent().getIntExtra(EXTRA_DISPLAY_ID, Display.INVALID_DISPLAY);
 
@@ -190,6 +194,13 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
             finish(/* minimize= */ false);
         } else if (event.hasDisplayRotation()) {
             mRequestedRotation = event.getDisplayRotation().getRotationDegrees();
+        } else if (event.hasKeyboardVisibilityEvent()) {
+            if (event.getKeyboardVisibilityEvent().getVisible()) {
+                mInputMethodManager.showSoftInput(getWindow().getDecorView(), 0);
+            } else {
+                mInputMethodManager.hideSoftInputFromWindow(
+                        getWindow().getDecorView().getWindowToken(), 0);
+            }
         }
     }
 
