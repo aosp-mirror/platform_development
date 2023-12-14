@@ -67,6 +67,9 @@ final class PreferenceController {
 
             new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome),
 
+            new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
+                    .withDefaultValue(String.valueOf(0)),
+
             // TODO(b/316098039): Evaluate the minSdk of the prefs below.
             new StringRule(R.string.pref_device_profile, VANILLA_ICE_CREAM)
                     .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),
@@ -148,6 +151,10 @@ final class PreferenceController {
     String getString(@StringRes int resId) {
         return Objects.requireNonNull(
                 mSharedPreferences.getString(mContext.getString(resId), null));
+    }
+
+    int getInt(@StringRes int resId) {
+        return Integer.valueOf(getString(resId));
     }
 
     private void onPreferencesChanged(SharedPreferences sharedPreferences, String key) {

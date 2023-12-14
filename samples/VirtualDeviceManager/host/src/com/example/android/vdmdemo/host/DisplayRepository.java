@@ -69,6 +69,14 @@ final class DisplayRepository {
         }
     }
 
+    int[] getDisplayIds() {
+        synchronized (mDisplayRepository) {
+            return mDisplayRepository.stream()
+                    .mapToInt(RemoteDisplay::getDisplayId)
+                    .toArray();
+        }
+    }
+
     int[] getRemoteDisplayIds() {
         synchronized (mDisplayRepository) {
             return mDisplayRepository.stream()

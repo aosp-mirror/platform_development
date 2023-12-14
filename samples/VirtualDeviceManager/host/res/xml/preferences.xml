@@ -74,6 +74,20 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="ime"
+        android:title="Input Method"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            android:key="@string/pref_display_ime_policy"
+            android:title="Display IME policy"
+            android:entries="@array/display_ime_policy_labels"
+            android:entryValues="@array/display_ime_policies"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="debug"
         android:title="Debug"
         app:iconSpaceReserved="false">

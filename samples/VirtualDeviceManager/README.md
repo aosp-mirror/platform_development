@@ -243,6 +243,17 @@ show a launcher-like list of installed apps on the host device.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+#### Input method
+
+-   **Display IME policy**: Choose the IME behavior on remote displays. Run the
+    commands below to enable this functionality. \
+    *This can be changed dynamically.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 #### Debug
 
 -   **Record encoder output**: Enables recording the output of the encoder on

@@ -63,6 +63,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -216,6 +217,15 @@ public final class VdmService extends Hilt_VdmService {
                 R.string.pref_enable_client_audio,
                 b -> {
                     if ((Boolean) b) mAudioStreamer.start(); else mAudioStreamer.stop();
+                },
+
+                R.string.pref_display_ime_policy,
+                s -> {
+                    if (mVirtualDevice != null) {
+                        int policy = Integer.valueOf((String) s);
+                        Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
+                                displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
+                    }
                 },
 
                 R.string.pref_enable_client_sensors, v -> recreateVirtualDevice(),

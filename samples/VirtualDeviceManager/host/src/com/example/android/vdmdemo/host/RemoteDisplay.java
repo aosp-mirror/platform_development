@@ -142,6 +142,9 @@ class RemoteDisplay implements AutoCloseable {
                         /* executor= */ Runnable::run,
                         /* callback= */ null);
 
+        mVirtualDevice.setDisplayImePolicy(
+                getDisplayId(), mPreferenceController.getInt(R.string.pref_display_ime_policy));
+
         mDpad =
                 virtualDevice.createVirtualDpad(
                         new VirtualDpadConfig.Builder()
