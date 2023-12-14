@@ -17,6 +17,7 @@
 package com.example.android.vdmdemo.host;
 
 import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES.TIRAMISU;
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
 import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
 
@@ -73,21 +74,21 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_client_native_ime,
                     VANILLA_ICE_CREAM, Flags::vdmCustomIme),
 
+            new BoolRule(R.string.pref_record_encoder_output, TIRAMISU),
+
             // TODO(b/316098039): Evaluate the minSdk of the prefs below.
-            new StringRule(R.string.pref_device_profile, VANILLA_ICE_CREAM)
+            new StringRule(R.string.pref_device_profile, TIRAMISU)  // works on UDC
                     .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),
-            new BoolRule(R.string.pref_enable_recents, VANILLA_ICE_CREAM),
-            new BoolRule(R.string.pref_enable_client_audio, VANILLA_ICE_CREAM),
-            new BoolRule(R.string.pref_always_unlocked_device, VANILLA_ICE_CREAM),
-            new BoolRule(R.string.pref_show_pointer_icon, VANILLA_ICE_CREAM),
-            new BoolRule(R.string.pref_record_encoder_output, VANILLA_ICE_CREAM),
+            new BoolRule(R.string.pref_enable_recents, TIRAMISU),  // works on UDC
+            new BoolRule(R.string.pref_enable_client_audio, TIRAMISU),  // works on UDC
+            new BoolRule(R.string.pref_always_unlocked_device, TIRAMISU), // works on UDC
+            new BoolRule(R.string.pref_show_pointer_icon, TIRAMISU), // works on UDC
 
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
 
-            // TODO(b/316098039): Use the SysDecor flag on <= VIC
             new InternalBoolRule(R.string.internal_pref_enable_home_displays,
-                    VANILLA_ICE_CREAM, Flags::vdmCustomHome),
+                    TIRAMISU),  // works on UDC
 
             new InternalBoolRule(R.string.internal_pref_enable_mirror_displays,
                     VANILLA_ICE_CREAM,
@@ -108,7 +109,7 @@ final class PreferenceController {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
         SharedPreferences.Editor editor = mSharedPreferences.edit();
-        RULES.forEach(r -> r.evaluate(mContext, editor));
+        RULES.forEach(r -> r.evaluate(mContext, mSharedPreferences, editor));
         editor.commit();
 
         mSharedPreferences.registerOnSharedPreferenceChangeListener(mPreferenceChangeListener);
@@ -184,8 +185,8 @@ final class PreferenceController {
             mDefaultValue = defaultValue;
         }
 
-        void evaluate(Context context, SharedPreferences.Editor editor) {
-            if (!isSatisfied()) {
+        void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
+            if (!prefs.contains(context.getString(mKey)) || !isSatisfied()) {
                 reset(context, editor);
             }
         }
@@ -203,7 +204,7 @@ final class PreferenceController {
         protected abstract void reset(Context context, SharedPreferences.Editor editor);
 
         protected boolean isSatisfied() {
-            return mMinSdk >= SDK_INT
+            return mMinSdk <= SDK_INT
                     && Arrays.stream(mRequiredFlags).allMatch(BooleanSupplier::getAsBoolean);
         }
 
@@ -230,7 +231,7 @@ final class PreferenceController {
         }
 
         @Override
-        void evaluate(Context context, SharedPreferences.Editor editor) {
+        void evaluate(Context context, SharedPreferences prefs, SharedPreferences.Editor editor) {
             editor.putBoolean(context.getString(mKey), isSatisfied());
         }
     }

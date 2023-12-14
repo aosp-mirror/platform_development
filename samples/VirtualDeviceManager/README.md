@@ -177,7 +177,7 @@ show a launcher-like list of installed apps on the host device.
 -   **Include streamed apps in recents**: Whether streamed apps should show up
     in the host device's recent apps. Run the commands below to enable this
     functionality. \
-    *This can be changed dynamically.*
+    *This can be changed dynamically starting with Android V.*
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
@@ -191,6 +191,7 @@ show a launcher-like list of installed apps on the host device.
     *This can be changed dynamically.*
 
     ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
     adb shell device_config put virtual_devices android.companion.virtual.flags.cross_device_clipboard true
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
@@ -344,3 +345,42 @@ display, if the mouse pointer is currently positioned on a streamed display.
     streamed activities are ignored.
 
 <!-- LINT.ThenChange(README.md) -->
+
+## SDK Version
+
+### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for cross-device clipboard.
+
+-   Added support for custom home activities.
+
+-   Added support for custom IME component.
+
+-   Added support for per-display IME policy.
+
+-   Added support for fixed orientation displays (disable display rotation).
+
+-   Added support for mirroring the default display on the virtual device.
+
+-   Added support for dynamic policy changes, so the device does not need to be
+    recreated.
+
+-   Improved support for displays that support home activities. These displays
+    do not have navigation bar anymore and home intents that target them are
+    resolved correctly, instead of being sent to the default display.
+
+-   Improved handling of vibrating requests originating from virtual devices.
+
+-   Fixed bugs with custom recents policy.
+
+### Android 14 / Upside Down Cake / SDK level 34
+
+-   Added support for virtual sensors.
+
+-   Added device awareness to contexts.
+
+-   Added support for clipboard on the virtual device.
+
+### Android 13 / Tiramisu / SDK level 33
+
+TODO(b/316098039): Fill me in.

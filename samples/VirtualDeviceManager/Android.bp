@@ -6,6 +6,7 @@ android_app {
     name: "VdmHost",
     manifest: "host/AndroidManifest.xml",
     sdk_version: "system_current",
+    min_sdk_version: "34",
     privileged: true,
     srcs: [
         "host/src/**/*.java"
@@ -29,6 +30,7 @@ android_app {
     name: "VdmClient",
     manifest: "client/AndroidManifest.xml",
     sdk_version: "current",
+    min_sdk_version: "34",
     srcs: [
         "client/src/**/*.java"
     ],
@@ -50,6 +52,7 @@ android_app {
     name: "VdmDemos",
     manifest: "demos/AndroidManifest.xml",
     sdk_version: "current",
+    min_sdk_version: "34",
     srcs: [
         "demos/src/**/*.java"
     ],
@@ -66,6 +69,7 @@ android_library {
     name: "VdmCommonLib",
     manifest: "common/AndroidManifest.xml",
     sdk_version: "current",
+    min_sdk_version: "34",
     srcs: [
         "common/src/**/*.java",
         "common/proto/*.proto",

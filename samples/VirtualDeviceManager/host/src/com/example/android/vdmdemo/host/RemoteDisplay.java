@@ -131,19 +131,26 @@ class RemoteDisplay implements AutoCloseable {
         if (mDisplayType == DISPLAY_TYPE_MIRROR) {
             flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
         }
+
+        VirtualDisplayConfig.Builder virtualDisplayBuilder =
+                new VirtualDisplayConfig.Builder(
+                                "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
+                        .setFlags(flags);
+
+        if (mDisplayType == DISPLAY_TYPE_HOME || mDisplayType == DISPLAY_TYPE_MIRROR) {
+            virtualDisplayBuilder = VdmCompat.setHomeSupported(virtualDisplayBuilder, flags);
+        }
+
         mVirtualDisplay =
                 virtualDevice.createVirtualDisplay(
-                        new VirtualDisplayConfig.Builder(
-                                        "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
-                                .setFlags(flags)
-                                .setHomeSupported(mDisplayType == DISPLAY_TYPE_HOME
-                                        || mDisplayType == DISPLAY_TYPE_MIRROR)
-                                .build(),
+                        virtualDisplayBuilder.build(),
                         /* executor= */ Runnable::run,
                         /* callback= */ null);
 
-        mVirtualDevice.setDisplayImePolicy(
-                getDisplayId(), mPreferenceController.getInt(R.string.pref_display_ime_policy));
+        VdmCompat.setDisplayImePolicy(
+                mVirtualDevice,
+                getDisplayId(),
+                mPreferenceController.getInt(R.string.pref_display_ime_policy));
 
         mDpad =
                 virtualDevice.createVirtualDpad(
