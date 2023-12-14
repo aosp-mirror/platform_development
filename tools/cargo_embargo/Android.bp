@@ -27,6 +27,7 @@ rust_defaults {
         "libenv_logger",
         "libglob",
         "liblog_rust",
+        "libnix",
         "libonce_cell",
         "libregex",
         "libserde",
