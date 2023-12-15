@@ -231,6 +231,7 @@ public final class VdmService extends Hilt_VdmService {
                 R.string.pref_enable_client_sensors, v -> recreateVirtualDevice(),
                 R.string.pref_device_profile, v -> recreateVirtualDevice(),
                 R.string.pref_always_unlocked_device, v -> recreateVirtualDevice(),
+                R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice(),
                 R.string.pref_enable_custom_home, v -> recreateVirtualDevice()
         ));
     }
@@ -352,6 +353,11 @@ public final class VdmService extends Hilt_VdmService {
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_cross_device_clipboard)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CLIPBOARD, DEVICE_POLICY_CUSTOM);
+        }
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_native_ime)) {
+            virtualDeviceBuilder.setInputMethodComponent(
+                    new ComponentName(this, VdmProxyIme.class));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_sensors)) {

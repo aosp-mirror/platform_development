@@ -70,6 +70,9 @@ final class PreferenceController {
             new StringRule(R.string.pref_display_ime_policy, VANILLA_ICE_CREAM, Flags::vdmCustomIme)
                     .withDefaultValue(String.valueOf(0)),
 
+            new BoolRule(R.string.pref_enable_client_native_ime,
+                    VANILLA_ICE_CREAM, Flags::vdmCustomIme),
+
             // TODO(b/316098039): Evaluate the minSdk of the prefs below.
             new StringRule(R.string.pref_device_profile, VANILLA_ICE_CREAM)
                     .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),

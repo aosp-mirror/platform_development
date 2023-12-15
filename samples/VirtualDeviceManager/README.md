@@ -254,6 +254,17 @@ show a launcher-like list of installed apps on the host device.
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
 
+-   **Use the native client IME**: Enables the native client IME instead of
+    streaming the host's IME on the virtual displays. Requires the *Display IME
+    Policy* to be set to *Show IME on the remote display*. Run the commands
+    below to enable this functionality. \
+    *Changing this will recreate the virtual device.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 #### Debug
 
 -   **Record encoder output**: Enables recording the output of the encoder on
