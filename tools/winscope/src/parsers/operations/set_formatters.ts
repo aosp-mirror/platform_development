@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 
 import {RawDataUtils} from 'parsers/raw_data_utils';
-import {TamperedProtoField} from 'parsers/tampered_message_type';
+import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
+import * as protobuf from 'protobufjs';
 import {
   BUFFER_FORMATTER,
   COLOR_FORMATTER,
@@ -40,7 +41,28 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
   ) {}
 
   apply(value: PropertyTreeNode, parentField = this.rootField): PropertyTreeNode {
-    //TODO: implement operation
+    let field: TamperedProtoField | undefined;
+    let enumType: protobuf.Enum | undefined;
+
+    if (parentField) {
+      const protoType: TamperedMessageType | undefined = parentField.tamperedMessageType;
+
+      field = parentField;
+      if (protoType && field.name !== value.name) {
+        field = protoType.fields[value.name] ?? parentField;
+      }
+
+      enumType = field.tamperedEnumType;
+    }
+
+    const formatter = this.getFormatter(value, enumType?.valuesById);
+
+    if (formatter) value.setFormatter(formatter);
+
+    value.getAllChildren().forEach((value) => {
+      this.apply(value, field);
+    });
+
     return value;
   }
 

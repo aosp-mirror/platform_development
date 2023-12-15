@@ -152,4 +152,8 @@ export class TreeNodeUtils {
   static makePropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
     return new PropertyTreeNodeFactory().makeProtoProperty(rootId, name, value);
   }
+
+  static makeCalculatedPropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
+    return new PropertyTreeNodeFactory().makeCalculatedProperty(rootId, name, value);
+  }
 }
