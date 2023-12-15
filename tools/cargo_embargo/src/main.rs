@@ -843,6 +843,7 @@ fn crate_to_bp_modules(
                 }
             }
             result.sort();
+            result.dedup();
             result
         };
         m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
