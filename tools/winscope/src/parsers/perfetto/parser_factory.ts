@@ -20,9 +20,9 @@ import {ProgressListener} from 'messaging/progress_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {initWasm, resetEngineWorker, WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
-import {ParserSurfaceFlinger} from './parser_surface_flinger';
 import {ParserTransactions} from './parser_transactions';
 import {ParserTransitions} from './parser_transitions';
+import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
 
 export class ParserFactory {
   private static readonly PARSERS = [ParserSurfaceFlinger, ParserTransactions, ParserTransitions];

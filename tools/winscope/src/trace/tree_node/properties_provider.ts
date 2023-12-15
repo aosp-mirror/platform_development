@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {SetFormatters} from 'parsers/operations/set_formatters';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from './property_tree_node_factory';
@@ -40,9 +41,7 @@ export class PropertiesProvider {
   }
 
   addEagerProperty(property: PropertyTreeNode) {
-    this.eagerPropertiesRoot.addChild(
-      this.commonOperations.apply(this.eagerOperations.apply(property))
-    );
+    this.eagerPropertiesRoot.addChild(new SetFormatters().apply(property));
   }
 
   async getAll(): Promise<PropertyTreeNode> {

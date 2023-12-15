@@ -16,6 +16,10 @@
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {AbstractParser} from 'parsers/perfetto/abstract_parser';
+import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
+import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
+import {Utils} from 'parsers/perfetto/utils';
 import root from 'protos/surfaceflinger/latest/json';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {
@@ -27,10 +31,6 @@ import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
-import {AbstractParser} from './abstract_parser';
-import {FakeProtoBuilder} from './fake_proto_builder';
-import {FakeProtoTransformer} from './fake_proto_transformer';
-import {Utils} from './utils';
 
 export class ParserSurfaceFlinger extends AbstractParser<LayerTraceEntry> {
   private layersSnapshotProtoTransformer = new FakeProtoTransformer(
