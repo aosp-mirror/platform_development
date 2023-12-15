@@ -26,3 +26,9 @@ export function assertTrue(value: boolean, lazyErrorMessage: () => string) {
     throw new Error(lazyErrorMessage());
   }
 }
+
+// Ensure at compile-time that a certain line is not reachable.
+// E.g. make sure that a switch/case handles all possible input values.
+export function assertUnreachable(x: never): never {
+  throw new Error('This line should never execute');
+}

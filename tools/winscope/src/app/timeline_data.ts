@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, Timestamp, TimestampType} from 'common/time';
+import {INVALID_TIME_NS, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -23,8 +23,6 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-
-const INVALID_TIMESTAMP = 0n;
 
 export class TimelineData {
   private traces = new Traces();
@@ -43,10 +41,10 @@ export class TimelineData {
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
       // Filter out dumps with invalid timestamp (would mess up the timeline)
-      if (
+      const isDump =
         trace.lengthEntries === 1 &&
-        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
-      ) {
+        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
+      if (isDump) {
         return;
       }
 

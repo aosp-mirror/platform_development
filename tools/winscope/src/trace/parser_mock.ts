@@ -22,9 +22,11 @@ import {TraceType} from './trace_type';
 
 export class ParserMock<T> implements Parser<T> {
   constructor(
+    private readonly type: TraceType,
     private readonly timestamps: RealTimestamp[],
     private readonly entries: T[],
-    private readonly customQueryResult: Map<CustomQueryType, object>
+    private readonly customQueryResult: Map<CustomQueryType, object>,
+    private readonly descriptors: string[]
   ) {
     if (timestamps.length !== entries.length) {
       throw new Error(`Timestamps and entries must have the same length`);
@@ -32,7 +34,7 @@ export class ParserMock<T> implements Parser<T> {
   }
 
   getTraceType(): TraceType {
-    return TraceType.SURFACE_FLINGER;
+    return this.type;
   }
 
   getLengthEntries(): number {
@@ -67,6 +69,6 @@ export class ParserMock<T> implements Parser<T> {
   }
 
   getDescriptors(): string[] {
-    return ['MockTrace'];
+    return this.descriptors;
   }
 }

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-export interface TimeRange {
-  from: Timestamp;
-  to: Timestamp;
+export const INVALID_TIME_NS = 0n;
+
+export class TimeRange {
+  constructor(readonly from: Timestamp, readonly to: Timestamp) {}
 }
 
 export enum TimestampType {

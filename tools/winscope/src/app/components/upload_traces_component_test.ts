@@ -159,6 +159,7 @@ describe('UploadTracesComponent', () => {
   });
 
   async function loadFiles(files: File[]) {
+    component.tracePipeline.clear();
     await component.tracePipeline.loadFiles(
       files,
       FilesSource.TEST,
