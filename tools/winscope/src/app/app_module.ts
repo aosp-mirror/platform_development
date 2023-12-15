@@ -55,9 +55,11 @@ import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_
 import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
+import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
+import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
@@ -124,6 +126,8 @@ import {WebAdbComponent} from './components/web_adb_component';
     LoadProgressComponent,
     SliderComponent,
     ViewCapturePropertyGroupsComponent,
+    ProtologScrollDirective,
+    TransactionsScrollDirective,
   ],
   imports: [
     BrowserModule,

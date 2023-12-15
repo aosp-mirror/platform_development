@@ -90,10 +90,14 @@ import {UiData} from './ui_data';
           </div>
         </div>
 
-        <cdk-virtual-scroll-viewport itemSize="24" class="scroll">
+        <cdk-virtual-scroll-viewport
+          transactionsVirtualScroll
+          class="scroll"
+          [scrollItems]="uiData.entries">
           <div
             *cdkVirtualFor="let entry of uiData.entries; let i = index"
             class="entry"
+            [attr.item-id]="i"
             [class.current-entry]="isCurrentEntry(i)"
             [class.selected-entry]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
@@ -234,7 +238,7 @@ class ViewerTransactionsComponent {
   idString = '';
   whatSearchString = '';
 
-  @ViewChild(CdkVirtualScrollViewport) private scrollComponent?: CdkVirtualScrollViewport;
+  @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
   private elementRef: ElementRef;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
