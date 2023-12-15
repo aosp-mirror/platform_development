@@ -14,6 +14,7 @@
 
 use super::metadata::WorkspaceMetadata;
 use super::{Crate, CrateType, Extern, ExternType};
+use crate::CargoOutput;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
@@ -23,7 +24,6 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::env;
-use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -31,16 +31,14 @@ use std::path::PathBuf;
 /// the rustc invocations.
 ///
 /// Ignores crates outside the current directory and build script crates.
-pub fn parse_cargo_out(
-    cargo_out_path: impl AsRef<Path>,
-    cargo_metadata_path: impl AsRef<Path>,
-) -> Result<Vec<Crate>> {
-    let cargo_out = read_to_string(cargo_out_path).context("failed to read cargo.out")?;
-    let metadata = serde_json::from_reader(
-        File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
+pub fn parse_cargo_out(cargo_output: &CargoOutput) -> Result<Vec<Crate>> {
+    let metadata = serde_json::from_str(&cargo_output.cargo_metadata)
+        .context("failed to parse cargo metadata")?;
+    parse_cargo_out_str(
+        &cargo_output.cargo_out,
+        &metadata,
+        env::current_dir().unwrap().canonicalize().unwrap(),
     )
-    .context("failed to parse cargo.metadata")?;
-    parse_cargo_out_str(&cargo_out, &metadata, env::current_dir().unwrap().canonicalize().unwrap())
 }
 
 /// Parses the given `cargo.out` and `cargo.metadata` file contents and generates a list of crates
