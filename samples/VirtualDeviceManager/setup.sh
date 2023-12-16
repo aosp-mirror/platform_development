@@ -129,6 +129,8 @@ if [[ -n "${HOST_SERIAL}" ]]; then
   fi
 fi
 
+# TODO: the script doesn't work on U - the permissions aren't there. pat's script works though.
+
 echo
 echo 'Success!'
 echo

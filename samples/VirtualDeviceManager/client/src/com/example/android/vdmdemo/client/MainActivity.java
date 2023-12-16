@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -57,6 +58,7 @@ public class MainActivity extends Hilt_MainActivity {
 
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private DisplayAdapter mDisplayAdapter;
+    private InputMethodManager mInputMethodManager;
 
     private final ConnectionManager.ConnectionCallback mConnectionCallback =
             new ConnectionManager.ConnectionCallback() {
@@ -98,6 +100,8 @@ public class MainActivity extends Hilt_MainActivity {
                 new ActivityResultContracts.StartActivityForResult(),
                 mDisplayAdapter::onFullscreenActivityResult);
         mDisplayAdapter.setFullscreenLauncher(fullscreenLauncher);
+
+        mInputMethodManager = getSystemService(InputMethodManager.class);
     }
 
     @Override
@@ -173,6 +177,13 @@ public class MainActivity extends Hilt_MainActivity {
                     event.getDisplayId(), event.getDisplayRotation().getRotationDegrees()));
         } else if (event.hasDisplayChangeEvent()) {
             runOnUiThread(() -> mDisplayAdapter.processDisplayChange(event));
+        } else if (event.hasKeyboardVisibilityEvent()) {
+            if (event.getKeyboardVisibilityEvent().getVisible()) {
+                mInputMethodManager.showSoftInput(getWindow().getDecorView(), 0);
+            } else {
+                mInputMethodManager.hideSoftInputFromWindow(
+                        getWindow().getDecorView().getWindowToken(), 0);
+            }
         }
     }
 

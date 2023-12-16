@@ -85,6 +85,12 @@
             android:defaultValue="0"
             app:useSimpleSummaryProvider="true"
             app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_native_ime"
+            android:title="Use the native client IME"
+            android:summary="Use client's native IME instead of streaming one"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
     <PreferenceCategory

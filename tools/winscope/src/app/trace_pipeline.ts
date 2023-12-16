@@ -15,7 +15,6 @@
  */
 
 import {FileUtils} from 'common/file_utils';
-import {TimestampType} from 'common/time';
 import {ProgressListener} from 'messaging/progress_listener';
 import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
@@ -39,7 +38,6 @@ export class TracePipeline {
   private traceFileFilter = new TraceFileFilter();
   private tracesParserFactory = new TracesParserFactory();
   private traces = new Traces();
-  private commonTimestampType?: TimestampType;
   private downloadArchiveFilename?: string;
 
   async loadFiles(
@@ -62,9 +60,13 @@ export class TracePipeline {
         await this.loadUnzippedArchive(unzippedArchive, errorListener, progressListener);
       }
 
-      const commonTimestampType = this.getCommonTimestampType();
-
       this.traces = new Traces();
+
+      const commonTimestampType = this.loadedParsers.findCommonTimestampType();
+      if (commonTimestampType === undefined) {
+        errorListener.onError(new WinscopeError(WinscopeErrorType.NO_COMMON_TIMESTAMP_TYPE));
+        return;
+      }
 
       this.loadedParsers.getParsers().forEach((parser) => {
         const trace = Trace.fromParser(parser, commonTimestampType);
@@ -122,7 +124,6 @@ export class TracePipeline {
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
-    this.commonTimestampType = undefined;
     this.downloadArchiveFilename = undefined;
   }
 
@@ -220,22 +221,5 @@ export class TracePipeline {
     progressListener?.onProgressUpdate(progressMessage, 100);
 
     return unzippedArchives;
-  }
-
-  private getCommonTimestampType(): TimestampType {
-    if (this.commonTimestampType !== undefined) {
-      return this.commonTimestampType;
-    }
-
-    const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
-    for (const type of priorityOrder) {
-      const parsers = Array.from(this.loadedParsers.getParsers().values());
-      if (parsers.every((it) => it.getTimestamps(type) !== undefined)) {
-        this.commonTimestampType = type;
-        return this.commonTimestampType;
-      }
-    }
-
-    throw Error('Failed to find common timestamp type across all traces');
   }
 }

@@ -21,7 +21,7 @@ package com.example.android.vdmdemo.common;
 option java_outer_classname = "RemoteEventProto";
 option java_package = "com.example.android.vdmdemo.common";
 
-// Next ID: 16
+// Next ID: 17
 message RemoteEvent {
   int32 display_id = 1;
 
@@ -40,6 +40,7 @@ message RemoteEvent {
     StopAudio stop_audio = 13;
     RemoteHomeEvent home_event = 14;
     DisplayChangeEvent display_change_event = 15;
+    KeyboardVisibilityEvent keyboard_visibility_event = 16;
   }
 }
 
@@ -147,4 +148,8 @@ message RemoteHomeEvent {}
 
 message DisplayChangeEvent {
   string title = 1;
+}
+
+message KeyboardVisibilityEvent {
+  bool visible = 1;
 }

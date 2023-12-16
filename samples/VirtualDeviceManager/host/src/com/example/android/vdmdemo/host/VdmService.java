@@ -23,6 +23,8 @@ import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CLIPBOARD;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_RECENTS;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_SENSORS;
+import static android.os.Build.VERSION.SDK_INT;
+import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -231,6 +233,7 @@ public final class VdmService extends Hilt_VdmService {
                 R.string.pref_enable_client_sensors, v -> recreateVirtualDevice(),
                 R.string.pref_device_profile, v -> recreateVirtualDevice(),
                 R.string.pref_always_unlocked_device, v -> recreateVirtualDevice(),
+                R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice(),
                 R.string.pref_enable_custom_home, v -> recreateVirtualDevice()
         ));
     }
@@ -352,6 +355,11 @@ public final class VdmService extends Hilt_VdmService {
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_cross_device_clipboard)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CLIPBOARD, DEVICE_POLICY_CUSTOM);
+        }
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_native_ime)) {
+            virtualDeviceBuilder.setInputMethodComponent(
+                    new ComponentName(this, VdmProxyIme.class));
         }
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_sensors)) {
@@ -490,7 +498,9 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void updateDevicePolicy(int policyType, boolean custom) {
-        if (mVirtualDevice != null) {
+        if (SDK_INT < VANILLA_ICE_CREAM) {
+            recreateVirtualDevice();
+        } else if (mVirtualDevice != null) {
             mVirtualDevice.setDevicePolicy(
                     policyType, custom ? DEVICE_POLICY_CUSTOM : DEVICE_POLICY_DEFAULT);
         }

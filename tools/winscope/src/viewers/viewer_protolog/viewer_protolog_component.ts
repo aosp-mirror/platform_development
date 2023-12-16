@@ -61,10 +61,14 @@ import {UiData} from './ui_data';
           </mat-form-field>
         </div>
       </div>
-      <cdk-virtual-scroll-viewport itemSize="16" class="scroll-messages">
+      <cdk-virtual-scroll-viewport
+        protologVirtualScroll
+        class="scroll-messages"
+        [scrollItems]="uiData.messages">
         <div
           *cdkVirtualFor="let message of uiData.messages; let i = index"
           class="message"
+          [attr.item-id]="i"
           [class.current-message]="isCurrentMessage(i)">
           <div class="time">
             <span class="mat-body-1">{{ message.time }}</span>
