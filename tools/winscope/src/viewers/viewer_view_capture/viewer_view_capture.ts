@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {AppEvent, TabbedViewSwitchRequest} from 'app/app_event';
 import {FunctionUtils} from 'common/function_utils';
-import {EmitAppEvent} from 'interfaces/app_event_emitter';
+import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -26,7 +26,7 @@ import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
-  private emitAppEvent: EmitAppEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 
@@ -62,11 +62,11 @@ export class ViewerViewCapture implements Viewer {
     });
   }
 
-  async onAppEvent(event: AppEvent) {
+  async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
-  setEmitAppEvent(callback: EmitAppEvent) {
+  setEmitEvent(callback: EmitEvent) {
     this.emitAppEvent = callback;
   }
 

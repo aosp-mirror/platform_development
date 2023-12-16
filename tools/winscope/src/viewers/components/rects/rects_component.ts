@@ -15,7 +15,7 @@
  */
 import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
-import {Rectangle} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
 import {Distance2D} from './types3d';
@@ -185,11 +185,11 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
   @Input() enableShowVirtualButton: boolean = true;
   @Input() zoomFactor: number = 1;
-  @Input() set rects(rects: Rectangle[]) {
+  @Input() set rects(rects: UiRect[]) {
     this.internalRects = rects;
     this.drawLargeRectsAndLabels();
   }
-  @Input() set miniRects(rects: Rectangle[] | undefined) {
+  @Input() set miniRects(rects: UiRect[] | undefined) {
     this.internalMiniRects = rects;
     this.drawMiniRects();
   }
@@ -208,8 +208,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.drawLargeRectsAndLabels();
   }
 
-  private internalRects: Rectangle[] = [];
-  private internalMiniRects?: Rectangle[];
+  private internalRects: UiRect[] = [];
+  private internalMiniRects?: UiRect[];
   private internalDisplayIds: number[] = [];
   private internalHighlightedItem: string = '';
 

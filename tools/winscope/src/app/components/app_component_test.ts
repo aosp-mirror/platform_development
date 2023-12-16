@@ -33,6 +33,7 @@ import {assertDefined} from 'common/assert_utils';
 
 import {Title} from '@angular/platform-browser';
 import {FileUtils} from 'common/file_utils';
+import {ViewersLoaded, ViewersUnloaded} from 'messaging/winscope_event';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
@@ -170,15 +171,16 @@ describe('AppComponent', () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  it('changes page title based on archive name', () => {
-    component.onTraceDataUnloaded();
+  it('changes page title based on archive name', async () => {
     const pageTitle = TestBed.inject(Title);
+
+    await component.onWinscopeEvent(new ViewersUnloaded());
     expect(pageTitle.getTitle()).toBe('Winscope');
 
     component.tracePipeline.getDownloadArchiveFilename = jasmine
       .createSpy()
       .and.returnValue('test_archive');
-    component.onTraceDataLoaded([]);
+    await component.onWinscopeEvent(new ViewersLoaded([]));
     fixture.detectChanges();
     expect(pageTitle.getTitle()).toBe('Winscope | test_archive');
   });
@@ -211,7 +213,24 @@ describe('AppComponent', () => {
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  const updateFilenameInputAndDownloadTraces = (name: string, valid: boolean) => {
+  it('validates filename on enter key', () => {
+    const spy = spyOn(component, 'onCheckIconClick');
+
+    component.showDataLoadedElements = true;
+    fixture.detectChanges();
+
+    clickEditFilenameButton();
+
+    const inputField = assertDefined(htmlElement.querySelector('.file-name-input-field'));
+    const inputEl = assertDefined(htmlElement.querySelector('.file-name-input-field input'));
+    (inputEl as HTMLInputElement).value = 'valid_file_name';
+    inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
     const inputEl = assertDefined(htmlElement.querySelector('.file-name-input-field input'));
     const checkButton = assertDefined(htmlElement.querySelector('.check-button'));
     (inputEl as HTMLInputElement).value = name;
@@ -226,17 +245,17 @@ describe('AppComponent', () => {
       expect(htmlElement.querySelector('.save-button')).toBeFalsy();
       expect(htmlElement.querySelector('.download-file-info')).toBeFalsy();
     }
-  };
+  }
 
-  const clickDownloadTracesButton = () => {
+  function clickDownloadTracesButton() {
     const downloadButton = assertDefined(htmlElement.querySelector('.save-button'));
     downloadButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
-  };
+  }
 
-  const clickEditFilenameButton = () => {
+  function clickEditFilenameButton() {
     const pencilButton = assertDefined(htmlElement.querySelector('.edit-button'));
     pencilButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
-  };
+  }
 });

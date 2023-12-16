@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
-export function isPointInRect(
-  point: {x: number; y: number},
-  rect: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface TransformMatrix {
+  dsdx: number;
+  dtdx: number;
+  tx: number;
+  dsdy: number;
+  dtdy: number;
+  ty: number;
+}
+
+export const IDENTITY_MATRIX = {dsdx: 1, dtdx: 0, tx: 0, dsdy: 0, dtdy: 1, ty: 0};
+
+export class GeometryUtils {
+  static isPointInRect(point: Point, rect: Rect): boolean {
+    return (
+      rect.x <= point.x &&
+      point.x <= rect.x + rect.w &&
+      rect.y <= point.y &&
+      point.y <= rect.y + rect.h
+    );
   }
-): boolean {
-  return (
-    rect.x <= point.x &&
-    point.x <= rect.x + rect.w &&
-    rect.y <= point.y &&
-    point.y <= rect.y + rect.h
-  );
 }

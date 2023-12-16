@@ -15,6 +15,7 @@
  */
 
 import {ElementRef, EventEmitter, SimpleChanges} from '@angular/core';
+import {Point} from 'common/geometry_utils';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {CanvasDrawer} from './canvas_drawer';
@@ -100,10 +101,12 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   async handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+    const mousePoint = {
+      x: e.offsetX,
+      y: e.offsetY,
+    };
 
-    const transitionEntry = await this.getEntryAt(mouseX, mouseY);
+    const transitionEntry = await this.getEntryAt(mousePoint);
     // TODO: This can probably get made better by getting the transition and checking both the end and start timestamps match
     if (transitionEntry && transitionEntry !== this.selectedEntry) {
       this.redraw();
@@ -115,23 +118,25 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+    const mousePoint = {
+      x: e.offsetX,
+      y: e.offsetY,
+    };
 
-    this.updateCursor(mouseX, mouseY);
-    this.onHover(mouseX, mouseY);
+    this.updateCursor(mousePoint);
+    this.onHover(mousePoint);
   }
 
-  protected async updateCursor(mouseX: number, mouseY: number) {
-    if (this.getEntryAt(mouseX, mouseY) !== undefined) {
+  protected async updateCursor(mousePoint: Point) {
+    if (this.getEntryAt(mousePoint) !== undefined) {
       this.getCanvas().style.cursor = 'pointer';
     } else {
       this.getCanvas().style.cursor = 'auto';
     }
   }
 
-  protected abstract getEntryAt(mouseX: number, mouseY: number): Promise<TraceEntry<T> | undefined>;
-  protected abstract onHover(mouseX: number, mouseY: number): void;
+  protected abstract getEntryAt(mousePoint: Point): Promise<TraceEntry<T> | undefined>;
+  protected abstract onHover(mousePoint: Point): void;
   protected abstract handleMouseOut(e: MouseEvent): void;
 
   protected async redraw() {

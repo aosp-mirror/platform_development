@@ -15,6 +15,7 @@
  */
 import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {UiTreeNode} from 'viewers/common/ui_tree_utils';
 import {TreeComponent} from './tree_component';
@@ -48,7 +49,7 @@ describe('TreeComponent', () => {
 
   it('can identify if a parent node has a selected child', () => {
     expect(component.treeComponent.hasSelectedChild()).toBeFalse();
-    component.highlightedItem = '3';
+    component.highlightedItem = 'child3';
     fixture.detectChanges();
     expect(component.treeComponent.hasSelectedChild()).toBeTrue();
   });
@@ -73,6 +74,30 @@ describe('TreeComponent', () => {
     expect(!currCollapseValue).toBe(component.treeComponent.localCollapsedState);
   });
 
+  it('scrolls selected node into view if out of view', async () => {
+    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild50`));
+    const spy = spyOn(treeNode, 'scrollIntoView');
+    component.highlightedItem = 'child50';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('does not scroll selected element if already in view', () => {
+    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild2`));
+    const spy = spyOn(treeNode, 'scrollIntoView');
+    component.highlightedItem = 'child2';
+    fixture.detectChanges();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  function makeTreeNodeChildren(): UiTreeNode[] {
+    const children = [];
+    for (let i = 0; i < 60; i++) {
+      children.push({kind: `${i}`, stableId: `child${i}`, name: `Child${i}`});
+    }
+    return children;
+  }
+
   @Component({
     selector: 'host-component',
     template: `
@@ -90,8 +115,8 @@ describe('TreeComponent', () => {
       simplifyNames: false,
       kind: 'entry',
       name: 'LayerTraceEntry',
-      stableId: '2',
-      children: [{kind: '3', stableId: '3', name: 'Child1'}],
+      stableId: 'LayerTraceEntry 2',
+      children: makeTreeNodeChildren(),
     };
     store = new PersistentStore();
     highlightedItem = '';

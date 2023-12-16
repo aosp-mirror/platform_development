@@ -27,7 +27,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';

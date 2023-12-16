@@ -26,10 +26,13 @@ import os
 import tempfile
 import zipfile
 
+import constant
 import parse_cts_report
 
 
-def aggregate_cts_reports(report_files):
+def aggregate_cts_reports(report_files,
+                          selected_abis=constant.ALL_TEST_ABIS,
+                          ignore_abi=False):
   """Aggregate all report files and produce information files to output_dir.
 
   If the results of the same test are different in two reports, choose the one
@@ -38,6 +41,9 @@ def aggregate_cts_reports(report_files):
 
   Args:
     report_files: A list of paths to cts reports.
+    ignore_abi: Ignore the tests ABI when doing the aggregation, which means
+                that tests would be considered as the same one as long as they
+                have the same module_name#class_name.test_name.
 
   Raises:
     UserWarning: Report files not compatible.
@@ -48,7 +54,8 @@ def aggregate_cts_reports(report_files):
 
   first_report_file = report_files[0]
 
-  report = parse_cts_report.parse_report_file(first_report_file)
+  report = parse_cts_report.parse_report_file(
+      first_report_file, selected_abis, ignore_abi)
 
   with tempfile.TemporaryDirectory() as temp_dir:
 
@@ -64,7 +71,7 @@ def aggregate_cts_reports(report_files):
         msg = (f'{report_file} is incompatible to {first_report_file}.')
         raise UserWarning(msg)
 
-      report.read_test_result_xml(xml_path)
+      report.read_test_result_xml(xml_path, ignore_abi)
 
   return report
 
@@ -77,6 +84,11 @@ def main():
                             'be a zip archive or a xml file.'))
   parser.add_argument('-d', '--output-dir', required=True,
                       help=('Path to the directory to store output files.'))
+  parser.add_argument('--ignore-abi', action='store_true',
+                      help='Ignore the tests ABI while aggregating reports.')
+  parser.add_argument('--abi', choices=constant.ALL_TEST_ABIS, nargs='*',
+                      default=constant.ALL_TEST_ABIS,
+                      help='Selected test ABIs to be aggregated.')
 
   args = parser.parse_args()
 
@@ -86,7 +98,7 @@ def main():
   if not os.path.exists(output_dir):
     raise FileNotFoundError(f'Output directory {output_dir} does not exist.')
 
-  report = aggregate_cts_reports(report_files)
+  report = aggregate_cts_reports(report_files, args.abi, args.ignore_abi)
   report.output_files(output_dir)
 
 

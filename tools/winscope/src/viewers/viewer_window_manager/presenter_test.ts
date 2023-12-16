@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TracePositionUpdate} from 'app/app_event';
 import {RealTimestamp} from 'common/time';
 import {WindowManagerState} from 'flickerlib/common';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -113,8 +113,10 @@ describe('PresenterWindowManager', () => {
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 2326});
-    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 2400});
+    expect(uiData.rects[0].x).toEqual(0);
+    expect(uiData.rects[0].y).toEqual(2326);
+    expect(uiData.rects[0].w).toEqual(1080);
+    expect(uiData.rects[0].h).toEqual(74);
   });
 
   it('updates pinned items', async () => {

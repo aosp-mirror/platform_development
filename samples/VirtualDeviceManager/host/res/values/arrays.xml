@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array translatable="false" name="device_profile_labels">
+        <item>App streaming</item>
+        <item>Nearby device streaming</item>
+    </string-array>
+    <string-array translatable="false" name="device_profiles">
+        <item>@string/app_streaming</item>
+        <item>@string/nearby_device_streaming</item>
+    </string-array>
+
+    <string-array translatable="false" name="display_ime_policy_labels">
+        <item>Show IME on the remote display</item>
+        <item>Show IME on the default display</item>
+        <item>Do not show IME</item>
+    </string-array>
+    <!-- Values correspond to WindowManager#DisplayImePolicy enums. -->
+    <string-array translatable="false" name="display_ime_policies">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+</resources>

@@ -81,38 +81,46 @@ describe('DefaultTimelineRowComponent', () => {
     const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(4);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: 0,
-      y: 0,
-      w: width,
-      h: height,
-      color: component.color,
-      alpha,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor((canvasWidth * 2) / 100),
-      y: 0,
-      w: width,
-      h: height,
-      color: component.color,
-      alpha,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor((canvasWidth * 5) / 100),
-      y: 0,
-      w: width,
-      h: height,
-      color: component.color,
-      alpha,
-    });
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor((canvasWidth * 60) / 100),
-      y: 0,
-      w: width,
-      h: height,
-      color: component.color,
-      alpha,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: 0,
+        y: 0,
+        w: width,
+        h: height,
+      },
+      component.color,
+      alpha
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor((canvasWidth * 2) / 100),
+        y: 0,
+        w: width,
+        h: height,
+      },
+      component.color,
+      alpha
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor((canvasWidth * 5) / 100),
+        y: 0,
+        w: width,
+        h: height,
+      },
+      component.color,
+      alpha
+    );
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor((canvasWidth * 60) / 100),
+        y: 0,
+        w: width,
+        h: height,
+      },
+      component.color,
+      alpha
+    );
   });
 
   it('can draw entries zoomed in', async () => {
@@ -132,14 +140,16 @@ describe('DefaultTimelineRowComponent', () => {
     const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith({
-      x: Math.floor((canvasWidth * 10) / 25),
-      y: 0,
-      w: width,
-      h: height,
-      color: component.color,
-      alpha,
-    });
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: Math.floor((canvasWidth * 10) / 25),
+        y: 0,
+        w: width,
+        h: height,
+      },
+      component.color,
+      alpha
+    );
   });
 
   it('can draw hovering entry', async () => {
@@ -167,17 +177,24 @@ describe('DefaultTimelineRowComponent', () => {
 
     expect(assertDefined(component.hoveringEntry).getValueNs()).toBe(10n);
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith({
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      {
+        x: 0,
+        y: 0,
+        w: 32,
+        h: 32,
+      },
+      component.color,
+      1.0
+    );
+
+    expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
+    expect(drawRectBorderSpy).toHaveBeenCalledWith({
       x: 0,
       y: 0,
       w: 32,
       h: 32,
-      color: component.color,
-      alpha: 1.0,
     });
-
-    expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(0, 0, 32, 32);
   });
 
   it('can draw correct entry on click of first entry', async () => {
@@ -272,17 +289,17 @@ describe('DefaultTimelineRowComponent', () => {
       expectedTimestampNs
     );
 
-    expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
-    expect(drawRectSpy).toHaveBeenCalledWith({
+    const expectedRect = {
       x: xPos + 1,
       y: 1,
       w: 30,
       h: 30,
-      color: component.color,
-      alpha: 1.0,
-    });
+    };
+
+    expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1.0);
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(xPos + 1, 1, 30, 30);
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   }
 });

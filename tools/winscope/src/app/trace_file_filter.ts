@@ -15,13 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ParserError, ParserErrorType} from 'parsers/parser_factory';
+import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {TraceFile} from 'trace/trace_file';
 
 export interface FilterResult {
   perfetto?: TraceFile;
   legacy: TraceFile[];
-  errors: ParserError[];
 }
 
 export class TraceFileFilter {
@@ -33,18 +33,16 @@ export class TraceFileFilter {
     'proto/window_CRITICAL.proto',
   ];
 
-  async filter(files: TraceFile[]): Promise<FilterResult> {
+  async filter(files: TraceFile[], errorListener: WinscopeErrorListener): Promise<FilterResult> {
     const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
 
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
-      const errors: ParserError[] = [];
-      const perfettoFile = this.pickLargestFile(perfettoFiles, errors);
+      const perfettoFile = this.pickLargestFile(perfettoFiles, errorListener);
       return {
         perfetto: perfettoFile,
         legacy: legacyFiles,
-        errors,
       };
     }
 
@@ -92,21 +90,26 @@ export class TraceFileFilter {
     const perfettoFile = perfettoFiles.find(
       (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH
     );
-    return {perfetto: perfettoFile, legacy: legacyFiles, errors: []};
+    return {perfetto: perfettoFile, legacy: legacyFiles};
   }
 
   private isPerfettoFile(file: TraceFile): boolean {
     return file.file.name.endsWith('.pftrace') || file.file.name.endsWith('.perfetto-trace');
   }
 
-  private pickLargestFile(files: TraceFile[], errors: ParserError[]): TraceFile | undefined {
+  private pickLargestFile(
+    files: TraceFile[],
+    errorListener: WinscopeErrorListener
+  ): TraceFile | undefined {
     if (files.length === 0) {
       return undefined;
     }
     return files.reduce((largestSoFar, file) => {
       const [largest, overridden] =
         largestSoFar.file.size > file.file.size ? [largestSoFar, file] : [file, largestSoFar];
-      errors.push(new ParserError(ParserErrorType.OVERRIDE, overridden.getDescriptor()));
+      errorListener.onError(
+        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, overridden.getDescriptor())
+      );
       return largest;
     });
   }

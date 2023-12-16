@@ -27,10 +27,8 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
-
-        <mat-form-field>
+        <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
-
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>

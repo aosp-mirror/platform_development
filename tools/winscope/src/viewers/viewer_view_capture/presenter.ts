@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {AppEvent, AppEventType} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -28,7 +28,7 @@ import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
-import {Rectangle} from 'viewers/components/rects/types2d';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 export class Presenter {
@@ -101,8 +101,8 @@ export class Presenter {
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
-  async onAppEvent(event: AppEvent) {
-    await event.visit(AppEventType.TRACE_POSITION_UPDATE, async (event) => {
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       await this.initializeIfNeeded();
 
       const vcEntry = TraceEntryFinder.findCorrespondingEntry(
@@ -153,7 +153,7 @@ export class Presenter {
     }
 
     this.uiData = new UiData(
-      this.generateViewCaptureRectangles(),
+      this.generateViewCaptureUiRects(),
       this.uiData?.sfRects,
       tree,
       this.hierarchyUserOptions,
@@ -167,19 +167,15 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private generateViewCaptureRectangles(): Rectangle[] {
-    const rectangles: Rectangle[] = [];
+  private generateViewCaptureUiRects(): UiRect[] {
+    const rectangles: UiRect[] = [];
 
     function inner(node: any /* ViewNode */) {
-      const aRectangle: Rectangle = {
-        topLeft: {
-          x: node.boxPos.left,
-          y: node.boxPos.top,
-        },
-        bottomRight: {
-          x: node.boxPos.left + node.boxPos.width,
-          y: node.boxPos.top + node.boxPos.height,
-        },
+      const aUiRect: UiRect = {
+        x: node.boxPos.left,
+        y: node.boxPos.top,
+        w: node.boxPos.width,
+        h: node.boxPos.height,
         label: '',
         transform: undefined,
         isVisible: node.isVisible,
@@ -192,7 +188,7 @@ export class Presenter {
         depth: node.depth,
         hasContent: node.isVisible,
       };
-      rectangles.push(aRectangle);
+      rectangles.push(aUiRect);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
     }
     if (this.selectedFrameData?.node) {

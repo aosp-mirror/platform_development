@@ -10,27 +10,33 @@ A report can be either a standard CTS result zip file, or a test_result.xml file
 ## parse_cts_report.py
 ### usage
 ```
-./parse_cts_report.py -r REPORT -d OUTPUT_DIR
+./parse_cts_report.py -r REPORT -d OUTPUT_DIR [--abi [{armeabi-v7a,arm64-v8a,x86,x86_64} ...]]
 ```
 
 The `-r` flag must be followed by exactly one report.
 
 The `-d` flag specifies the directory in which the information files will be stored.
 
+The `--abi` flag can be used to select one or more test ABIs to be parsed.
+
 ## aggregate_cts_reports.py
 ### usage
 ```
-./aggregate_cts_reports.py -r REPORT [REPORT ...] -d OUTPUT_DIR
+./aggregate_cts_reports.py -r REPORT [REPORT ...] -d OUTPUT_DIR [--ignore-abi] [--abi [{armeabi-v7a,arm64-v8a,x86,x86_64} ...]]
 ```
 
 The `-r` flag can be followed by one or more reports.
 
 The `-d` flag has the same behavior as `parse_cts_report.py`.
 
+`--ignore-abi` is a boolean flag. If users specify this flag, tests ABI would be ignored while doing the aggregation. It means that two tests would be considered as the same one as long as they have the same module_name#class_name.test_name.
+
+The `--abi` flag can be used to select one or more test ABIs to be aggregated.
+
 ## compare_cts_reports.py
 ### usage
 ```
-./compare_cts_reports.py [-h] [-r CTS_REPORTS [CTS_REPORTS ...]] [-f CTS_REPORTS] --mode {1,2,n} --output-dir OUTPUT_DIR [--csv CSV] [--output-files]
+./compare_cts_reports.py [-h] [-r CTS_REPORTS [CTS_REPORTS ...]] [-f CTS_REPORTS] --mode {1,2,n} --output-dir OUTPUT_DIR [--csv CSV] [--output-files] [--ignore-abi]
 ```
 
 One `-r` flag is followed by a group of report files that you want to aggregate.
@@ -41,9 +47,11 @@ The `-m` flag has to be specified: `1` for one-way mode, `2` for two-way mode, a
 
 The `-d` flag has to be specified. Behavior same as `parse_cts_report.py`.
 
+`--csv` allows users to specify the file name of the comparison result. The default value is `diff.csv`.
+
 `--output-files/-o` is a boolean flag. If users specify this flag, the parsed results of reports after flags `-r` will be outputed into the information files.
 
-`--csv` allows users to specify the file name of the comparison result. The default value is `diff.csv`.
+`--ignore-abi` is a boolean flag, which has the same behavior as `aggregate_cts_reports.py`.
 
 ### modes
 #### One-way Comparison

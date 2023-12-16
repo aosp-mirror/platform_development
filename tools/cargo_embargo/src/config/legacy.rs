@@ -18,7 +18,7 @@ use super::{
     add_defaults_to_variant, default_apex_available, default_true, PackageConfig,
     PackageVariantConfig,
 };
-use crate::renamed_module;
+use crate::RENAME_MAP;
 use anyhow::{anyhow, bail, Context, Result};
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -42,7 +42,7 @@ pub struct Config {
 
 impl Config {
     /// Names of all fields in [`Config`] other than `variants` (which is treated specially).
-    const FIELD_NAMES: [&str; 4] = ["add-toplevel-block", "dependencies", "patch", "run"];
+    const FIELD_NAMES: [&'static str; 4] = ["add-toplevel-block", "dependencies", "patch", "run"];
 
     /// Parses an instance of this config from a string of JSON.
     pub fn from_json_str(json_str: &str) -> Result<Self> {
@@ -294,7 +294,11 @@ impl VariantConfig {
 
 fn package_to_library_name(package_name: &str) -> String {
     let module_name = format!("lib{}", package_name);
-    renamed_module(&module_name).to_owned()
+    if let Some(renamed) = RENAME_MAP.get(module_name.as_str()) {
+        renamed.to_string()
+    } else {
+        module_name
+    }
 }
 
 fn test_filename_to_module_name(package_name: &str, test_filename: &str) -> String {

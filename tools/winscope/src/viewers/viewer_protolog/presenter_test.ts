@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TracePositionUpdate} from 'app/app_event';
 import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {LogMessage} from 'trace/protolog';
