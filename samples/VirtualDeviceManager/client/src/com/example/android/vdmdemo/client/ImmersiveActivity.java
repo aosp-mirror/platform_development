@@ -233,9 +233,9 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
 
     private void finish(boolean minimize) {
         if (minimize) {
-            mDisplayController.close();
-        } else {
             mDisplayController.pause();
+        } else {
+            mDisplayController.close();
         }
         Intent result = new Intent();
         result.putExtra(EXTRA_DISPLAY_ID, mDisplayId);
