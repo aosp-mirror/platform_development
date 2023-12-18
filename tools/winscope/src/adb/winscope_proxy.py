@@ -200,8 +200,16 @@ fi
 ),
     "screen_recording": TraceTarget(
         File(f'/data/local/tmp/screen.mp4', "screen_recording"),
-        f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
-        'pkill -l SIGINT screenrecord >/dev/null 2>&1'
+        f'''
+        settings put system show_touches 1 && \
+        settings put system pointer_location 1 && \
+        screenrecord --bugreport --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 & \
+        echo "ScreenRecorder started."
+        ''',
+        '''settings put system pointer_location 0 && \
+        settings put system show_touches 0 && \
+        pkill -l SIGINT screenrecord >/dev/null 2>&1
+        '''.strip()
     ),
     "transactions": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
