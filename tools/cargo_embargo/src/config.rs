@@ -26,8 +26,6 @@
 //! options that apply to that variant across all packages, and then a map of
 //! `PackageVariantConfig`s for options specific to a particular package of the variant.
 
-pub mod legacy;
-
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
