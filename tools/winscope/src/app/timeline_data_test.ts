@@ -51,18 +51,24 @@ describe('TimelineData', () => {
     expect(timelineData.getCurrentPosition()).toBeDefined();
   });
 
-  it('ignores dumps with no timestamp', () => {
-    expect(timelineData.getCurrentPosition()).toBeUndefined();
-
+  describe('dumps', () => {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10, timestamp11])
       .setTimestamps(TraceType.WINDOW_MANAGER, [new Timestamp(TimestampType.REAL, 0n)])
       .build();
 
-    timelineData.initialize(traces, undefined);
-    expect(timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined();
-    expect(timelineData.getFullTimeRange().from).toBe(timestamp10);
-    expect(timelineData.getFullTimeRange().to).toBe(timestamp11);
+    it('drops trace if it is a dump (will not display in timeline UI)', () => {
+      timelineData.initialize(traces, undefined);
+      expect(timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined();
+      expect(timelineData.getFullTimeRange().from).toBe(timestamp10);
+      expect(timelineData.getFullTimeRange().to).toBe(timestamp11);
+    });
+
+    it('is robust to prev/next entry request of a dump', () => {
+      timelineData.initialize(traces, undefined);
+      expect(timelineData.getPreviousEntryFor(TraceType.WINDOW_MANAGER)).toBeUndefined();
+      expect(timelineData.getNextEntryFor(TraceType.WINDOW_MANAGER)).toBeUndefined();
+    });
   });
 
   it('uses first entry by default', () => {

@@ -205,8 +205,8 @@ public final class VdmService extends Hilt_VdmService {
         }
 
         mPreferenceController.addPreferenceObserver(this, Map.of(
-                R.string.pref_enable_recents,
-                b -> updateDevicePolicy(POLICY_TYPE_RECENTS, !(Boolean) b),
+                R.string.pref_hide_from_recents,
+                b -> updateDevicePolicy(POLICY_TYPE_RECENTS, (Boolean) b),
 
                 R.string.pref_enable_cross_device_clipboard,
                 b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b),
@@ -349,7 +349,7 @@ public final class VdmService extends Hilt_VdmService {
                     new ComponentName(this, CustomLauncherActivity.class));
         }
 
-        if (!mPreferenceController.getBoolean(R.string.pref_enable_recents)) {
+        if (mPreferenceController.getBoolean(R.string.pref_hide_from_recents)) {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_RECENTS, DEVICE_POLICY_CUSTOM);
         }
 

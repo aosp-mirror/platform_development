@@ -38,7 +38,9 @@ The VDM Demo contains 3 apps:
 *   An Android device running Android 13 or newer to act as a client device.
 
 *   A *rooted* Android device running Android 14 or newer (e.g. a `userdebug` or
-    `eng` build) to act as a host device.
+    `eng` build) to act as a host device. Even though VDM is available starting
+    Android 13, the support there is minimal and the Host app is not compatible
+    with Android 13.
 
 *   Both devices need to support
     [Wi-Fi Aware](https://developer.android.com/develop/connectivity/wifi/wifi-aware)
@@ -174,9 +176,9 @@ show a launcher-like list of installed apps on the host device.
     streaming role, with all differences in policies that this entails. \
     *Changing this will recreate the virtual device.*
 
--   **Include streamed apps in recents**: Whether streamed apps should show up
-    in the host device's recent apps. Run the commands below to enable this
-    functionality. \
+-   **Hide streamed app from recents**: Whether streamed apps should show up
+    in the host device's recent apps. Run the commands below to make this
+    functionality dynamic. \
     *This can be changed dynamically starting with Android V.*
 
     ```shell
@@ -365,13 +367,14 @@ display, if the mouse pointer is currently positioned on a streamed display.
 -   Added support for dynamic policy changes, so the device does not need to be
     recreated.
 
--   Improved support for displays that support home activities. These displays
-    do not have navigation bar anymore and home intents that target them are
-    resolved correctly, instead of being sent to the default display.
+-   Improved support for displays that support home activities. Removed
+    navigation bar and added support for normal home intents.
 
 -   Improved handling of vibrating requests originating from virtual devices.
 
--   Fixed bugs with custom recents policy.
+-   Improved multi-display mouse support.
+
+-   Fixed bugs with hiding streamed apps from the host's recent apps.
 
 ### Android 14 / Upside Down Cake / SDK level 34
 
@@ -381,6 +384,29 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 -   Added support for clipboard on the virtual device.
 
+-   Added support for hiding streamed apps from the host's recent apps.
+
+-   Added `COMPANION_DEVICE_NEARBY_DEVICE_STREAMING` device profile.
+
+-   Added support for virtual navigation input: D-Pad and navigation touchpad.
+
+-   Improved support for audio, allowing routing to be based on the origin
+    context.
+
+-   Improved support for creation of virtual displays and input devices.
+
+-   Improved handling of virtual touch events.
+
 ### Android 13 / Tiramisu / SDK level 33
 
-TODO(b/316098039): Fill me in.
+-   Added support for virtual audio device.
+
+-   Added support for hiding the mouse pointer icon.
+
+-   Added support for virtual mouse, keyboard, touchscreen.
+
+-   Added support for always unlocked displays.
+
+-   Added `COMPANION_DEVICE_APP_STREAMING` device profile.
+
+-   Added support for virtual device creation.

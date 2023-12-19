@@ -96,10 +96,10 @@ public class MainActivity extends Hilt_MainActivity {
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
         mHomeDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_enable_home_displays));
+                mPreferenceController.getBoolean(R.string.internal_pref_home_displays_supported));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
         mMirrorDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_enable_mirror_displays));
+                mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
         mLauncher = requireViewById(R.id.app_grid);
         mLauncher.setVisibility(View.GONE);

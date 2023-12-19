@@ -209,8 +209,8 @@ export class TimelineData {
   }
 
   getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
@@ -223,8 +223,8 @@ export class TimelineData {
   }
 
   getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 

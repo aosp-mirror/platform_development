@@ -57,14 +57,25 @@ final class PreferenceController {
 
             // Exposed in the settings page
 
+            new StringRule(R.string.pref_device_profile, UPSIDE_DOWN_CAKE)
+                    .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),
+
+            new BoolRule(R.string.pref_hide_from_recents, UPSIDE_DOWN_CAKE),
+
             new BoolRule(R.string.pref_enable_cross_device_clipboard,
                     VANILLA_ICE_CREAM, Flags::crossDeviceClipboard),
 
             new BoolRule(R.string.pref_enable_client_sensors, UPSIDE_DOWN_CAKE),
 
+            new BoolRule(R.string.pref_enable_client_audio, UPSIDE_DOWN_CAKE),
+
             new BoolRule(R.string.pref_enable_display_rotation,
                     VANILLA_ICE_CREAM, Flags::consistentDisplayFlags)
                     .withDefaultValue(true),
+
+            new BoolRule(R.string.pref_always_unlocked_device, TIRAMISU),
+
+            new BoolRule(R.string.pref_show_pointer_icon, TIRAMISU),
 
             new BoolRule(R.string.pref_enable_custom_home, VANILLA_ICE_CREAM, Flags::vdmCustomHome),
 
@@ -76,21 +87,13 @@ final class PreferenceController {
 
             new BoolRule(R.string.pref_record_encoder_output, TIRAMISU),
 
-            // TODO(b/316098039): Evaluate the minSdk of the prefs below.
-            new StringRule(R.string.pref_device_profile, TIRAMISU)  // works on UDC
-                    .withDefaultValue(AssociationRequest.DEVICE_PROFILE_APP_STREAMING),
-            new BoolRule(R.string.pref_enable_recents, TIRAMISU),  // works on UDC
-            new BoolRule(R.string.pref_enable_client_audio, TIRAMISU),  // works on UDC
-            new BoolRule(R.string.pref_always_unlocked_device, TIRAMISU), // works on UDC
-            new BoolRule(R.string.pref_show_pointer_icon, TIRAMISU), // works on UDC
 
             // Internal-only switches not exposed in the settings page.
             // All of these are booleans acting as switches, while the above ones may be any type.
 
-            new InternalBoolRule(R.string.internal_pref_enable_home_displays,
-                    TIRAMISU),  // works on UDC
+            new InternalBoolRule(R.string.internal_pref_home_displays_supported, TIRAMISU),
 
-            new InternalBoolRule(R.string.internal_pref_enable_mirror_displays,
+            new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
                     VANILLA_ICE_CREAM,
                     Flags::consistentDisplayFlags, Flags::interactiveScreenMirror)
     );

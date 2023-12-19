@@ -30,7 +30,7 @@ android_app {
     name: "VdmClient",
     manifest: "client/AndroidManifest.xml",
     sdk_version: "current",
-    min_sdk_version: "34",
+    min_sdk_version: "33",
     srcs: [
         "client/src/**/*.java"
     ],
@@ -69,7 +69,7 @@ android_library {
     name: "VdmCommonLib",
     manifest: "common/AndroidManifest.xml",
     sdk_version: "current",
-    min_sdk_version: "34",
+    min_sdk_version: "33",
     srcs: [
         "common/src/**/*.java",
         "common/proto/*.proto",
