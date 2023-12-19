@@ -326,6 +326,9 @@ class RemoteDisplay implements AutoCloseable {
 
     private void processMouseEvent(RemoteInputEvent inputEvent) {
         if (mMouse == null) {
+            if (!VdmCompat.canCreateVirtualMouse(mContext)) {
+                return;
+            }
             mMouse =
                     mVirtualDevice.createVirtualMouse(
                             new VirtualMouseConfig.Builder()

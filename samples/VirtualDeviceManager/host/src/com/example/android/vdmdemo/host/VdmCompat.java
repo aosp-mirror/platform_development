@@ -21,7 +21,10 @@ import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
 
 import android.companion.virtual.VirtualDeviceManager.VirtualDevice;
 import android.companion.virtual.flags.Flags;
+import android.content.Context;
 import android.hardware.display.VirtualDisplayConfig;
+import android.hardware.input.InputManager;
+import android.view.InputDevice;
 
 public class VdmCompat {
 
@@ -43,5 +46,20 @@ public class VdmCompat {
         if (SDK_INT >= VANILLA_ICE_CREAM) {
             virtualDevice.setDisplayImePolicy(displayId, policy);
         }
+    }
+
+    static boolean canCreateVirtualMouse(Context context) {
+        if (SDK_INT >= VANILLA_ICE_CREAM) {
+            return true;
+        }
+        InputManager inputManager = context.getSystemService(InputManager.class);
+        for (int inputDeviceId : inputManager.getInputDeviceIds()) {
+            InputDevice inputDevice = inputManager.getInputDevice(inputDeviceId);
+            String inputDeviceName = inputDevice.getName();
+            if (inputDeviceName != null && inputDeviceName.startsWith("vdmdemo-mouse")) {
+                return false;
+            }
+        }
+        return true;
     }
 }
