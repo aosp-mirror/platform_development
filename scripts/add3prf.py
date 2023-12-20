@@ -42,7 +42,7 @@ YMD_MATCHER = re.compile(YMD_PATTERN)
 YMD_LINE_PATTERN = r"^.* year: *([^ ]+) +month: *([^ ]+) +day: *([^ ]+).*$"
 YMD_LINE_MATCHER = re.compile(YMD_LINE_PATTERN)
 
-# patterns to match Apache/MIT licence in LICENSE*
+# patterns to match different licence types in LICENSE*
 APACHE_PATTERN = r"^.*Apache License.*$"
 APACHE_MATCHER = re.compile(APACHE_PATTERN)
 MIT_PATTERN = r"^.*MIT License.*$"
@@ -51,6 +51,8 @@ BSD_PATTERN = r"^.*BSD .*License.*$"
 BSD_MATCHER = re.compile(BSD_PATTERN)
 MPL_PATTERN = r"^.Mozilla Public License.*$"
 MPL_MATCHER = re.compile(MPL_PATTERN)
+ZERO_BSD_PATTERN = r"^.*Zero-Clause BSD.*$"
+ZERO_BSD_MATCHER = re.compile(ZERO_BSD_PATTERN)
 MULTI_LICENSE_COMMENT = ("# Dual-licensed, using the least restrictive "
         "per go/thirdpartylicenses#same.\n  ")
 
@@ -138,6 +140,8 @@ def grep_license_keyword(license_file):
         return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
       if MPL_MATCHER.match(line):
         return License(LicenseType.MPL, LicenseGroup.RECIPROCAL, license_file)
+      if ZERO_BSD_MATCHER.match(line):
+        return License(LicenseType.ZERO_BSD, LicenseGroup.PERMISSIVE, license_file)
   print("ERROR: cannot decide license type in", license_file,
         "assume BSD_LIKE")
   return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
@@ -155,6 +159,7 @@ class LicenseType(enum.IntEnum):
   BSD_LIKE = 3
   ISC = 4
   MPL = 5
+  ZERO_BSD = 6
 
 class LicenseGroup(enum.Enum):
   """A group of license as defined by go/thirdpartylicenses#types
@@ -188,6 +193,8 @@ def decide_license_type(cargo_license):
       licenses.append(License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-mit":
       licenses.append(License(LicenseType.MIT, LicenseGroup.NOTICE, license_file))
+    elif lowered_name == "license-0bsd":
+      licenses.append(License(LicenseType.ZERO_BSD, LicenseGroup.PERMISSIVE, license_file))
   if licenses:
     licenses.sort(key=lambda l: l.type)
     return licenses
@@ -199,6 +206,8 @@ def decide_license_type(cargo_license):
     return [License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file)]
   if "MIT" in cargo_license:
     return [License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)]
+  if "0BSD" in cargo_license:
+    return [License(LicenseType.ZERO_BSD, LicenseGroup.PERMISSIVE, license_file)]
   if "BSD" in cargo_license:
     return [License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)]
   if "ISC" in cargo_license:
@@ -243,7 +252,7 @@ def add_license(target):
 def add_module_license(license_type):
   """Touch MODULE_LICENSE_type file."""
   # Do not change existing MODULE_* files.
-  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE", "MPL"]:
+  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE", "MPL", "0BSD"]:
     module_file = "MODULE_LICENSE_" + suffix
     if os.path.exists(module_file):
       if license_type.name != suffix:
