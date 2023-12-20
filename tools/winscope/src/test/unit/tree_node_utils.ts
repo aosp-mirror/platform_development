@@ -20,6 +20,8 @@ import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class TreeNodeUtils {
   static makeRectNode(
@@ -155,5 +157,13 @@ export class TreeNodeUtils {
 
   static makeCalculatedPropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
     return new PropertyTreeNodeFactory().makeCalculatedProperty(rootId, name, value);
+  }
+
+  static makeUiHierarchyNode(proto: any): UiHierarchyTreeNode {
+    return UiHierarchyTreeNode.from(TreeNodeUtils.makeHierarchyNode(proto));
+  }
+
+  static makeUiPropertyNode(rootId: string, name: string, value: any): UiPropertyTreeNode {
+    return UiPropertyTreeNode.from(TreeNodeUtils.makePropertyNode(rootId, name, value));
   }
 }
