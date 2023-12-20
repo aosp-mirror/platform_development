@@ -203,6 +203,9 @@ public class MainActivity extends Hilt_MainActivity {
             case R.id.settings:
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
+            case R.id.input:
+                startActivity(new Intent(this, InputActivity.class));
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

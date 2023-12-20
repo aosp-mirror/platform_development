@@ -170,14 +170,27 @@ show a launcher-like list of installed apps on the host device.
 
 ### Settings
 
+#### Input
+
+The input menu button enables several different mechanisms for injecting input
+from the host device into the focused display on the client device. The focused
+display is indicated by the frame around its header whenever there are more than
+one displays. The display focus is based on user interaction.
+
+-   **Navigation** shows an on-screen D-Pad and touchpad for navigating the
+    activity on the focused display.
+
+-   **Keyboard** shows the host device's on-screen keyboard and sends any key
+    events to the activity on the focused display.
+
 #### General
 
 -   **Device profile**: Enables device streaming CDM role as opposed to app
     streaming role, with all differences in policies that this entails. \
     *Changing this will recreate the virtual device.*
 
--   **Hide streamed app from recents**: Whether streamed apps should show up
-    in the host device's recent apps. Run the commands below to make this
+-   **Hide streamed app from recents**: Whether streamed apps should show up in
+    the host device's recent apps. Run the commands below to make this
     functionality dynamic. \
     *This can be changed dynamically starting with Android V.*
 
