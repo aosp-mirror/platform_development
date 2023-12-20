@@ -101,6 +101,7 @@ public final class VdmService extends Hilt_VdmService {
     @Inject ConnectionManager mConnectionManager;
     @Inject RemoteIo mRemoteIo;
     @Inject AudioStreamer mAudioStreamer;
+    @Inject AudioInjector mAudioInjector;
     @Inject PreferenceController mPreferenceController;
     @Inject DisplayRepository mDisplayRepository;
     @Inject InputController mInputController;
@@ -203,10 +204,6 @@ public final class VdmService extends Hilt_VdmService {
 
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
 
-        if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
-            mAudioStreamer.start();
-        }
-
         mPreferenceController.addPreferenceObserver(this, Map.of(
                 R.string.pref_hide_from_recents,
                 b -> updateDevicePolicy(POLICY_TYPE_RECENTS, (Boolean) b),
@@ -220,9 +217,7 @@ public final class VdmService extends Hilt_VdmService {
                 },
 
                 R.string.pref_enable_client_audio,
-                b -> {
-                    if ((Boolean) b) mAudioStreamer.start(); else mAudioStreamer.stop();
-                },
+                b -> handleAudioCapabilities(),
 
                 R.string.pref_display_ime_policy,
                 s -> {
@@ -250,6 +245,7 @@ public final class VdmService extends Hilt_VdmService {
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
         mAudioStreamer.close();
+        mAudioInjector.stop();
     }
 
     void setVirtualDeviceListener(Consumer<Boolean> listener) {
@@ -258,9 +254,9 @@ public final class VdmService extends Hilt_VdmService {
 
     private void processRemoteEvent(RemoteEvent event) {
         if (event.hasDeviceCapabilities()) {
-            Log.i(TAG, "Host received device capabilities");
             mDeviceCapabilities = event.getDeviceCapabilities();
             associateAndCreateVirtualDevice();
+            handleAudioCapabilities();
         } else if (event.hasDisplayCapabilities() && !mDisplayRepository.resetDisplay(event)) {
             RemoteDisplay remoteDisplay =
                     new RemoteDisplay(
@@ -279,6 +275,20 @@ public final class VdmService extends Hilt_VdmService {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
         } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
             mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
+        }
+    }
+
+    private void handleAudioCapabilities() {
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            if (mDeviceCapabilities.getSupportsAudioOutput()) {
+                mAudioStreamer.start();
+            }
+            if (mDeviceCapabilities.getSupportsAudioInput()) {
+                mAudioInjector.start();
+            }
+        } else {
+            mAudioStreamer.stop();
+            mAudioInjector.stop();
         }
     }
 
@@ -345,7 +355,8 @@ public final class VdmService extends Hilt_VdmService {
                 new VirtualDeviceParams.Builder()
                         .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName())
                         .setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
-                        .setAudioPlaybackSessionId(mAudioStreamer.getPlaybackSessionId());
+                        .setAudioPlaybackSessionId(mAudioStreamer.getPlaybackSessionId())
+                        .setAudioRecordingSessionId(mAudioInjector.getRecordingSessionId());
 
         if (mPreferenceController.getBoolean(R.string.pref_always_unlocked_device)) {
             virtualDeviceBuilder.setLockState(LOCK_STATE_ALWAYS_UNLOCKED);
@@ -453,7 +464,7 @@ public final class VdmService extends Hilt_VdmService {
                 });
         mVirtualDevice.addActivityListener(
                 MoreExecutors.directExecutor(),
-                new RunningVdmUidsTracker(getApplicationContext(), mAudioStreamer));
+                new RunningVdmUidsTracker(getApplicationContext(), mAudioStreamer, mAudioInjector));
 
         Log.i(TAG, "Created virtual device");
         if (mVirtualDeviceListener != null) {
