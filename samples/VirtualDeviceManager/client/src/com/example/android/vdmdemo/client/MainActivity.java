@@ -33,6 +33,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
+import com.example.android.vdmdemo.common.DpadFragment;
+import com.example.android.vdmdemo.common.NavTouchpadFragment;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -102,6 +104,19 @@ public class MainActivity extends Hilt_MainActivity {
         mDisplayAdapter.setFullscreenLauncher(fullscreenLauncher);
 
         mInputMethodManager = getSystemService(InputMethodManager.class);
+
+        DpadFragment dpadFragment =
+                (DpadFragment) getSupportFragmentManager().findFragmentById(
+                        R.id.dpad_fragment_container);
+        dpadFragment.setInputEventListener((event) ->
+                mInputManager.sendInputEventToFocusedDisplay(
+                        InputDeviceType.DEVICE_TYPE_DPAD, event));
+        NavTouchpadFragment navTouchpadFragment =
+                (NavTouchpadFragment) getSupportFragmentManager().findFragmentById(
+                        R.id.nav_touchpad_fragment_container);
+        navTouchpadFragment.setInputEventListener((event) ->
+                mInputManager.sendInputEventToFocusedDisplay(
+                        InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event));
     }
 
     @Override
