@@ -14,42 +14,40 @@
  * limitations under the License.
  */
 
-package com.example.android.vdmdemo.client;
+package com.example.android.vdmdemo.common;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
-import javax.inject.Inject;
+import java.util.function.Consumer;
 
 /** Fragment to show UI for a navigation touchpad. */
 @AndroidEntryPoint(Fragment.class)
 public final class NavTouchpadFragment extends Hilt_NavTouchpadFragment {
 
-    @Inject InputManager mInputManager;
+    private Consumer<MotionEvent> mInputEventListener;
 
-    @SuppressLint("ClickableViewAccessibility")
+    public NavTouchpadFragment() {
+        super(R.layout.nav_touchpad_fragment);
+    }
+
+    public void setInputEventListener(Consumer<MotionEvent> listener) {
+        mInputEventListener = listener;
+    }
+
     @Override
-    public View onCreateView(
-            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_nav_touchpad, container, false);
-
-        TextView navTouchpad = view.requireViewById(R.id.nav_touchpad);
-        navTouchpad.setOnTouchListener(
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        view.setOnTouchListener(
                 (v, event) -> {
-                    mInputManager.sendInputEventToFocusedDisplay(
-                            InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event);
+                    if (mInputEventListener != null) {
+                        mInputEventListener.accept(event);
+                    }
                     return true;
                 });
-        return view;
     }
 }
