@@ -5,6 +5,9 @@
     <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
     <string name="app_icon_description" translatable="false">Application Icon</string>
     <string name="settings" translatable="false">Settings</string>
+    <string name="input" translatable="false">Input</string>
+    <string name="navigation" translatable="false">Navigation</string>
+    <string name="keyboard" translatable="false">Keyboard</string>
 
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>

@@ -315,6 +315,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
             mRotateButton = itemView.requireViewById(R.id.display_rotate);
             mRotateButton.setOnClickListener(v -> {
+                mInputManager.setFocusedDisplayId(mDisplayId);
                 // This rotation is simply resizing the display with width with height swapped.
                 mDisplayController.setSurface(
                         mSurface,
@@ -328,6 +329,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                 if (event.getAction() != MotionEvent.ACTION_DOWN) {
                     return false;
                 }
+                mInputManager.setFocusedDisplayId(mDisplayId);
                 int maxSize = itemView.getHeight() - displayHeader.getHeight()
                         - itemView.getPaddingTop() - itemView.getPaddingBottom();
                 mRecyclerView.startResizing(
@@ -337,6 +339,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
             View fullscreenButton = itemView.requireViewById(R.id.display_fullscreen);
             fullscreenButton.setOnClickListener(v -> {
+                mInputManager.setFocusedDisplayId(mDisplayId);
                 Intent intent = new Intent(v.getContext(), ImmersiveActivity.class);
                 intent.putExtra(ImmersiveActivity.EXTRA_DISPLAY_ID, mDisplayId);
                 mFullscreenLauncher.launch(intent);

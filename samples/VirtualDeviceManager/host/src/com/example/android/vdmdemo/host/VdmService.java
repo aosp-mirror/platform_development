@@ -102,6 +102,7 @@ public final class VdmService extends Hilt_VdmService {
     @Inject AudioStreamer mAudioStreamer;
     @Inject PreferenceController mPreferenceController;
     @Inject DisplayRepository mDisplayRepository;
+    @Inject InputController mInputController;
 
     private RemoteSensorManager mRemoteSensorManager = null;
 
@@ -272,6 +273,8 @@ public final class VdmService extends Hilt_VdmService {
             }
         } else if (event.hasStopStreaming() && !event.getStopStreaming().getPause()) {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
+        } else if (event.hasDisplayChangeEvent() && event.getDisplayChangeEvent().getFocused()) {
+            mInputController.setFocusedRemoteDisplayId(event.getDisplayId());
         }
     }
 
