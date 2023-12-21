@@ -245,6 +245,10 @@ class RemoteDisplay implements AutoCloseable {
         return mVirtualDisplay.getDisplay().getDisplayId();
     }
 
+    PointF getDisplaySize() {
+        return new PointF(mWidth, mHeight);
+    }
+
     void onDisplayChanged() {
         if (mRotation != mVirtualDisplay.getDisplay().getRotation()) {
             mRotation = mVirtualDisplay.getDisplay().getRotation();
@@ -266,14 +270,7 @@ class RemoteDisplay implements AutoCloseable {
             return;
         }
         if (event.hasHomeEvent()) {
-            Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-            homeIntent.addCategory(Intent.CATEGORY_HOME);
-            homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            int targetDisplayId =
-                    mDisplayType == DISPLAY_TYPE_MIRROR ? Display.DEFAULT_DISPLAY : getDisplayId();
-            mContext.startActivity(
-                    homeIntent,
-                    ActivityOptions.makeBasic().setLaunchDisplayId(targetDisplayId).toBundle());
+            goHome();
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
@@ -282,6 +279,20 @@ class RemoteDisplay implements AutoCloseable {
                 mVideoManager = null;
             }
         }
+    }
+
+    void goHome() {
+        if (mDisplayType != DISPLAY_TYPE_HOME && mDisplayType != DISPLAY_TYPE_MIRROR) {
+            return;
+        }
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory(Intent.CATEGORY_HOME);
+        homeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        int targetDisplayId =
+                mDisplayType == DISPLAY_TYPE_MIRROR ? Display.DEFAULT_DISPLAY : getDisplayId();
+        mContext.startActivity(
+                homeIntent,
+                ActivityOptions.makeBasic().setLaunchDisplayId(targetDisplayId).toBundle());
     }
 
     private void processInputEvent(RemoteInputEvent inputEvent) {
@@ -350,17 +361,22 @@ class RemoteDisplay implements AutoCloseable {
 
     }
 
+    void processVirtualMouseEvent(Object mouseEvent) {
+        if (!createMouseIfNeeded()) {
+            return;
+        }
+        if (mouseEvent instanceof VirtualMouseButtonEvent) {
+            mMouse.sendButtonEvent((VirtualMouseButtonEvent) mouseEvent);
+        } else if (mouseEvent instanceof VirtualMouseScrollEvent) {
+            mMouse.sendScrollEvent((VirtualMouseScrollEvent) mouseEvent);
+        } else if (mouseEvent instanceof VirtualMouseRelativeEvent) {
+            mMouse.sendRelativeEvent((VirtualMouseRelativeEvent) mouseEvent);
+        }
+    }
+
     private void processMouseEvent(RemoteInputEvent inputEvent) {
-        if (mMouse == null) {
-            if (!VdmCompat.canCreateVirtualMouse(mContext)) {
-                return;
-            }
-            mMouse =
-                    mVirtualDevice.createVirtualMouse(
-                            new VirtualMouseConfig.Builder()
-                                    .setAssociatedDisplayId(getDisplayId())
-                                    .setInputDeviceName("vdmdemo-mouse" + mRemoteDisplayId)
-                                    .build());
+        if (!createMouseIfNeeded()) {
+            return;
         }
         if (inputEvent.hasMouseButtonEvent()) {
             mMouse.sendButtonEvent(
@@ -386,6 +402,18 @@ class RemoteDisplay implements AutoCloseable {
         } else {
             Log.e(TAG, "Received an invalid mouse event");
         }
+    }
+
+    private boolean createMouseIfNeeded() {
+        if (mMouse == null && VdmCompat.canCreateVirtualMouse(mContext)) {
+            mMouse =
+                    mVirtualDevice.createVirtualMouse(
+                            new VirtualMouseConfig.Builder()
+                                    .setAssociatedDisplayId(getDisplayId())
+                                    .setInputDeviceName("vdmdemo-mouse" + mRemoteDisplayId)
+                                    .build());
+        }
+        return mMouse != null;
     }
 
     private static int getVirtualTouchEventAction(int action) {

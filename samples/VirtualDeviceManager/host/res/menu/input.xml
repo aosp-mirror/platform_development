@@ -2,6 +2,14 @@
 <!-- LINT.IfChange -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/mouse"
+        android:icon="@drawable/input_mouse"
+        android:title="@string/touchpad" />
+    <item
+        android:id="@+id/remote"
+        android:icon="@drawable/input_remote"
+        android:title="@string/remote_control" />
+    <item
         android:id="@+id/navigation"
         android:icon="@drawable/input_navigation"
         android:title="@string/navigation" />
