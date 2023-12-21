@@ -136,7 +136,7 @@ def grep_license_keyword(license_file):
         return License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)
       if BSD_MATCHER.match(line):
         return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
-      if MPL_MATCHER(LicenseType.MPL, license_file):
+      if MPL_MATCHER.match(line):
         return License(LicenseType.MPL, LicenseGroup.RECIPROCAL, license_file)
   print("ERROR: cannot decide license type in", license_file,
         "assume BSD_LIKE")

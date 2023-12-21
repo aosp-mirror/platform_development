@@ -37,7 +37,27 @@ function install_app() {
   fi
 }
 
+function display_help() {
+  echo "Setup helper for the VirtualDeviceManager host and client applications."
+  echo ""
+  echo "  -s, --host):   Setup the host application on the only device connected via ADB."
+  echo "  -c, --client): Setup the client application on the only device connected via ADB."
+  echo "  -h, --help):   Print this help."
+}
+
 [[ -f build/make/envsetup.sh ]] || die "Run this script from the root of the tree."
+
+INSTALL_HOST_ONLY=false
+INSTALL_CLIENT_ONLY=false
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -h|--help) display_help; exit ;;
+        -s|--host) INSTALL_HOST_ONLY=true; shift ;;
+        -c|--client) INSTALL_CLIENT_ONLY=true; shift ;;
+        *) echo "Unknown parameter passed: $1" ;;
+    esac
+    shift
+done
 
 DEVICE_COUNT=$(adb devices -l | tail -n +2 | head -n -1 | wc -l)
 ((DEVICE_COUNT > 0)) || die "No devices found"
@@ -47,18 +67,29 @@ DEVICE_NAMES=( $(adb devices -l | tail -n +2 | head -n -1 | awk '{ print $4 }') 
 HOST_SERIAL=""
 CLIENT_SERIAL=""
 
-echo
-echo "Available devices:"
-for i in "${!DEVICE_SERIALS[@]}"; do
-  echo -e "${i}: ${DEVICE_SERIALS[${i}]}\t${DEVICE_NAMES[${i}]}"
-done
-echo "${DEVICE_COUNT}: Do not install this app"
-echo
-select_device "VDM Host"
-HOST_INDEX=$?
-select_device "VDM Client"
-CLIENT_INDEX=$?
-echo
+if [[ ${INSTALL_HOST_ONLY} == true && ${INSTALL_CLIENT_ONLY} == false && ${DEVICE_COUNT} -eq 1 ]];
+then
+  HOST_INDEX=0
+  CLIENT_INDEX=$DEVICE_COUNT
+elif [[ ${INSTALL_HOST_ONLY} == false && ${INSTALL_CLIENT_ONLY} == true && ${DEVICE_COUNT} -eq 1 ]];
+then
+  HOST_INDEX=$DEVICE_COUNT
+  CLIENT_INDEX=0
+else
+  echo
+  echo "Available devices:"
+  for i in "${!DEVICE_SERIALS[@]}"; do
+    echo -e "${i}: ${DEVICE_SERIALS[${i}]}\t${DEVICE_NAMES[${i}]}"
+  done
+  echo "${DEVICE_COUNT}: Do not install this app"
+  echo
+
+  select_device "VDM Host"
+  HOST_INDEX=$?
+  select_device "VDM Client"
+  CLIENT_INDEX=$?
+  echo
+fi
 
 if ((HOST_INDEX == DEVICE_COUNT)); then
   echo "Not installing host app."

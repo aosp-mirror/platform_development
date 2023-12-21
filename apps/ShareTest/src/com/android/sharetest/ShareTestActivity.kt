@@ -285,7 +285,17 @@ class ShareTestActivity : Activity() {
     private fun createLongText(): CharSequence =
         SpannableStringBuilder("Here is a lot more text to share:")
             .apply {
-                for (color in arrayOf(Color.RED, Color.GREEN, Color.BLUE)) {
+                val colors =
+                    arrayOf(Color.RED,
+                        Color.GREEN,
+                        Color.BLUE,
+                        Color.CYAN,
+                        Color.MAGENTA,
+                        Color.YELLOW,
+                        Color.BLACK,
+                        Color.DKGRAY,
+                        Color.GRAY)
+                for (color in colors) {
                     append("\n")
                     append(createShortText(), BulletSpan(40, color, 20), Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
                 }
