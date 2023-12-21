@@ -597,11 +597,10 @@ class Crate(object):
                 name, f"external/rust/crates/{name}"
             )
             if dependency["optional"]:
-                if feats := [
-                    f
+                if not any(
+                    name in self.feature_dependencies.get(f, [])
                     for f in self.features
-                    if name in self.feature_dependencies.get(f, [])
-                ]:
+                ):
                     continue
             library_deps.append(path)
         if library_deps:
