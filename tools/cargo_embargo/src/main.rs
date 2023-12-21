@@ -30,7 +30,6 @@ mod bp;
 mod cargo;
 mod config;
 
-use crate::config::legacy;
 use crate::config::Config;
 use crate::config::PackageConfig;
 use crate::config::PackageVariantConfig;
@@ -123,17 +122,6 @@ enum Mode {
         /// `cargo_embargo.json` config file to use.
         config: PathBuf,
     },
-    /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
-    /// config.
-    Convert {
-        /// Legacy `cargo2android.json` config file to read.
-        legacy_config: PathBuf,
-        /// The name of the package for which the config is being generated.
-        package_name: String,
-        /// Set `run_cargo: false` in the output config.
-        #[arg(long)]
-        no_build: bool,
-    },
     /// Dumps information about the crates to the given JSON file.
     DumpCrates {
         /// `cargo_embargo.json` config file to use.
@@ -154,14 +142,6 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     match &args.mode {
-        Mode::Convert { legacy_config, package_name, no_build } => {
-            let json_str = std::fs::read_to_string(legacy_config)
-                .with_context(|| format!("failed to read file: {:?}", legacy_config))?;
-            let legacy_config = legacy::Config::from_json_str(&json_str)?;
-            let new_config = legacy_config.to_embargo(package_name, !no_build)?;
-            let new_config_str = new_config.to_json_string()?;
-            println!("{}", new_config_str);
-        }
         Mode::DumpCrates { config, crates } => {
             dump_crates(&args, config, crates)?;
         }
