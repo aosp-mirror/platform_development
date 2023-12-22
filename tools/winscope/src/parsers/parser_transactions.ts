@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import root from 'protos/transactions/udc/root';
+import {android} from 'protos/transactions/udc/types';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -24,9 +27,12 @@ import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
-import {TransactionsTraceFileProto} from './proto_types';
 
 class ParserTransactions extends AbstractParser {
+  private static readonly TransactionsTraceFileProto = root.lookupType(
+    'android.surfaceflinger.TransactionTraceFile'
+  );
+
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
@@ -40,19 +46,20 @@ class ParserTransactions extends AbstractParser {
     return ParserTransactions.MAGIC_NUMBER;
   }
 
-  override decodeTrace(buffer: Uint8Array): any[] {
-    const decodedProto = TransactionsTraceFileProto.decode(buffer) as any;
+  override decodeTrace(buffer: Uint8Array): android.surfaceflinger.proto.ITransactionTraceEntry[] {
+    const decodedProto = ParserTransactions.TransactionsTraceFileProto.decode(
+      buffer
+    ) as android.surfaceflinger.proto.ITransactionTraceFile;
+
     this.decodeWhatFields(decodedProto);
 
-    if (Object.prototype.hasOwnProperty.call(decodedProto, 'realToElapsedTimeOffsetNanos')) {
-      this.realToElapsedTimeOffsetNs = BigInt(decodedProto.realToElapsedTimeOffsetNanos);
-    } else {
-      this.realToElapsedTimeOffsetNs = undefined;
-    }
-    return decodedProto.entry;
+    const timeOffset = BigInt(decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0');
+    this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
+
+    return decodedProto.entry ?? [];
   }
 
-  private decodeWhatFields(decodedProto: any) {
+  private decodeWhatFields(decodedProto: android.surfaceflinger.proto.ITransactionTraceFile) {
     const decodeBitset32 = (bitset: number, EnumProto: any) => {
       return Object.keys(EnumProto).filter((key) => {
         const value = EnumProto[key];
@@ -67,45 +74,52 @@ class ParserTransactions extends AbstractParser {
       return tokens.join(' | ');
     };
 
-    const LayerStateChangesLsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
-      .ChangesLsb;
-    const LayerStateChangesMsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
-      .ChangesMsb;
-    const DisplayStateChangesEnum = (TransactionsTraceFileProto?.parent as any).DisplayState
-      .Changes;
+    const LayerStateChangesLsbEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
+      .LayerState.ChangesLsb;
+    const LayerStateChangesMsbEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
+      .LayerState.ChangesMsb;
+    const DisplayStateChangesEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
+      .DisplayState.Changes;
 
-    decodedProto.entry.forEach((transactionTraceEntry: any) => {
-      transactionTraceEntry.transactions.forEach((transactionState: any) => {
-        transactionState.layerChanges.forEach((layerState: any) => {
-          layerState.what = concatBitsetTokens(
-            decodeBitset32(layerState.what.low, LayerStateChangesLsbEnum).concat(
-              decodeBitset32(layerState.what.high, LayerStateChangesMsbEnum)
+    decodedProto.entry?.forEach((transactionTraceEntry) => {
+      transactionTraceEntry.transactions?.forEach((transactionState) => {
+        transactionState.layerChanges?.forEach((layerState) => {
+          //TODO(priyankaspatel): modify properties tree instead of tampering the proto
+          (layerState.what as unknown as string) = concatBitsetTokens(
+            decodeBitset32(assertDefined(layerState.what).low, LayerStateChangesLsbEnum).concat(
+              decodeBitset32(assertDefined(layerState.what).high, LayerStateChangesMsbEnum)
             )
           );
         });
 
-        transactionState.displayChanges.forEach((displayState: any) => {
-          displayState.what = concatBitsetTokens(
-            decodeBitset32(displayState.what, DisplayStateChangesEnum)
+        transactionState.displayChanges?.forEach((displayState) => {
+          //TODO(priyankaspatel): modify properties tree instead of tampering the proto
+          (displayState.what as unknown as string) = concatBitsetTokens(
+            decodeBitset32(assertDefined(displayState.what), DisplayStateChangesEnum)
           );
         });
       });
 
-      transactionTraceEntry.addedDisplays.forEach((displayState: any) => {
-        displayState.what = concatBitsetTokens(
-          decodeBitset32(displayState.what, DisplayStateChangesEnum)
+      transactionTraceEntry.addedDisplays?.forEach((displayState) => {
+        //TODO(priyankaspatel): modify properties tree instead of tampering the proto
+        (displayState.what as unknown as string) = concatBitsetTokens(
+          decodeBitset32(assertDefined(displayState.what), DisplayStateChangesEnum)
         );
       });
     });
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
+  override getTimestamp(
+    type: TimestampType,
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+  ): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
+      return new Timestamp(type, BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString()));
     } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
       return new Timestamp(
         type,
-        this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos)
+        this.realToElapsedTimeOffsetNs +
+          BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString())
       );
     }
     return undefined;
@@ -114,8 +128,8 @@ class ParserTransactions extends AbstractParser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: object
-  ): object {
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+  ): android.surfaceflinger.proto.ITransactionTraceEntry {
     return entryProto;
   }
 
