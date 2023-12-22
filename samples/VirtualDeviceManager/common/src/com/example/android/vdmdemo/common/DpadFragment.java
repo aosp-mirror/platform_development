@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-package com.example.android.vdmdemo.client;
+package com.example.android.vdmdemo.common;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
-import javax.inject.Inject;
+import java.util.function.Consumer;
 
 /** Fragment to show UI for a Dpad. */
 @AndroidEntryPoint(Fragment.class)
@@ -40,25 +35,25 @@ public final class DpadFragment extends Hilt_DpadFragment {
     private static final String TAG = "DpadFragment";
 
     private static final int[] BUTTONS = {
-        R.id.dpad_center, R.id.dpad_down, R.id.dpad_left, R.id.dpad_up, R.id.dpad_right
+            R.id.dpad_center, R.id.dpad_down, R.id.dpad_left, R.id.dpad_up, R.id.dpad_right
     };
 
-    @Inject InputManager mInputManager;
+    private Consumer<KeyEvent> mInputEventListener;
 
-    @SuppressLint("ClickableViewAccessibility")
+    public DpadFragment() {
+        super(R.layout.dpad_fragment);
+    }
+
+    public void setInputEventListener(Consumer<KeyEvent> listener) {
+        mInputEventListener = listener;
+    }
+
     @Override
-    public View onCreateView(
-            LayoutInflater layoutInflater, ViewGroup parent, Bundle savedInstanceState) {
-        View view = layoutInflater.inflate(R.layout.fragment_dpad, parent, false);
-
-        // Set the callback for all the buttons
-        // Note: the onClick XML attribute cannot be used with fragments, only activities.
+    public void onViewCreated(View view, Bundle savedInstanceState) {
         for (int buttonId : BUTTONS) {
             ImageButton button = view.requireViewById(buttonId);
             button.setOnTouchListener(this::onDpadButtonClick);
         }
-
-        return view;
     }
 
     private boolean onDpadButtonClick(View v, MotionEvent e) {
@@ -87,14 +82,16 @@ public final class DpadFragment extends Hilt_DpadFragment {
             Log.w(TAG, "onDpadButtonClick: Method called from a non Dpad button");
             return false;
         }
-        mInputManager.sendInputEventToFocusedDisplay(
-                InputDeviceType.DEVICE_TYPE_DPAD,
-                new KeyEvent(
-                        /* downTime= */ System.currentTimeMillis(),
-                        /* eventTime= */ System.currentTimeMillis(),
-                        action,
-                        keyCode,
-                        /* repeat= */ 0));
+
+        if (mInputEventListener != null) {
+            mInputEventListener.accept(
+                    new KeyEvent(
+                            /* downTime= */ System.currentTimeMillis(),
+                            /* eventTime= */ System.currentTimeMillis(),
+                            action,
+                            keyCode,
+                            /* repeat= */ 0));
+        }
         return true;
     }
 }

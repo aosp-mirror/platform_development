@@ -57,6 +57,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".InputActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
             android:name=".SettingsActivity"
             android:exported="true"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
