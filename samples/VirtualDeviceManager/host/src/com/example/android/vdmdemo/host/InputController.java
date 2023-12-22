@@ -16,13 +16,20 @@
 
 package com.example.android.vdmdemo.host;
 
+import android.graphics.PointF;
+import android.hardware.input.VirtualMouseButtonEvent;
+import android.hardware.input.VirtualMouseRelativeEvent;
+import android.hardware.input.VirtualMouseScrollEvent;
 import android.util.Log;
 import android.view.Display;
 import android.view.InputEvent;
+import android.view.MotionEvent;
 
 import androidx.annotation.GuardedBy;
 
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
+
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -55,16 +62,75 @@ final class InputController {
 
     void sendEventToFocusedDisplay(InputDeviceType deviceType, InputEvent inputEvent) {
         synchronized (mLock) {
+            getFocusedDisplayLocked().ifPresent(d -> d.processInputEvent(deviceType, inputEvent));
+        }
+    }
+
+    void sendHomeToFocusedDisplay() {
+        synchronized (mLock) {
+            getFocusedDisplayLocked().ifPresent(d -> d.goHome());
+        }
+    }
+
+    void sendMouseButtonEvent(int button) {
+        for (int action : new int[]{
+                MotionEvent.ACTION_BUTTON_PRESS, MotionEvent.ACTION_BUTTON_RELEASE}) {
+            sendMouseEventToFocusedDisplay(
+                    new VirtualMouseButtonEvent.Builder()
+                            .setButtonCode(button)
+                            .setAction(action)
+                            .build());
+        }
+    }
+
+    void sendMouseRelativeEvent(float x, float y) {
+        sendMouseEventToFocusedDisplay(
+                new VirtualMouseRelativeEvent.Builder()
+                        .setRelativeX(x)
+                        .setRelativeY(y)
+                        .build());
+    }
+
+    void sendMouseScrollEvent(float x, float y) {
+        sendMouseEventToFocusedDisplay(
+                new VirtualMouseScrollEvent.Builder()
+                        .setXAxisMovement(clampMouseScroll(x))
+                        .setYAxisMovement(clampMouseScroll(y))
+                        .build());
+    }
+
+    private void sendMouseEventToFocusedDisplay(Object mouseEvent) {
+        synchronized (mLock) {
+            getFocusedDisplayLocked().ifPresent(d -> d.processVirtualMouseEvent(mouseEvent));
+        }
+    }
+
+    Optional<PointF> getFocusedDisplaySize() {
+        synchronized (mLock) {
+            Optional<RemoteDisplay> display = getFocusedDisplayLocked();
+            return display.isPresent()
+                    ? Optional.of(display.get().getDisplaySize())
+                    : Optional.empty();
+        }
+    }
+
+    @GuardedBy("mLock")
+    private Optional<RemoteDisplay> getFocusedDisplayLocked() {
+        synchronized (mLock) {
             if (mFocusedDisplay == null) {
                 mFocusedDisplay = mDisplayRepository.getDisplayByRemoteId(mFocusedRemoteDisplayId)
                         .orElse(null);
                 if (mFocusedDisplay == null) {
                     Log.e(TAG, "Failed to inject input event, no focused display "
                             + mFocusedRemoteDisplayId);
-                    return;
+                    return Optional.empty();
                 }
             }
-            mFocusedDisplay.processInputEvent(deviceType, inputEvent);
+            return Optional.of(mFocusedDisplay);
         }
+    }
+
+    private static float clampMouseScroll(float val) {
+        return Math.max(Math.min(val, 1f), -1f);
     }
 }

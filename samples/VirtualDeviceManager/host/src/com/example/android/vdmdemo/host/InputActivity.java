@@ -18,12 +18,14 @@ package com.example.android.vdmdemo.host;
 
 import android.os.Bundle;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import com.example.android.vdmdemo.common.DpadFragment;
 import com.example.android.vdmdemo.common.NavTouchpadFragment;
@@ -43,6 +45,8 @@ public class InputActivity extends Hilt_InputActivity {
     @Inject InputController mInputController;
     @Inject PreferenceController mPreferenceController;
 
+    boolean mOriginalShowPointerIconPreference;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +57,11 @@ public class InputActivity extends Hilt_InputActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
         setTitle(getTitle() + " " + getString(R.string.input));
 
+        mOriginalShowPointerIconPreference =
+                mPreferenceController.getBoolean(R.string.pref_show_pointer_icon);
+
+        Fragment touchpadFragment = new MouseFragment.TouchpadFragment();
+        Fragment remoteFragment = new MouseFragment.RemoteFragment();
         Fragment navigationFragment = new NavigationFragment();
         Fragment keyboardFragment = new Fragment();
 
@@ -60,8 +69,20 @@ public class InputActivity extends Hilt_InputActivity {
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment fragment;
             switch (item.getItemId()) {
-                case R.id.navigation -> fragment = navigationFragment;
+                case R.id.mouse -> {
+                    setShowPointerIcon(true);
+                    fragment = touchpadFragment;
+                }
+                case R.id.remote -> {
+                    setShowPointerIcon(true);
+                    fragment = remoteFragment;
+                }
+                case R.id.navigation -> {
+                    setShowPointerIcon(mOriginalShowPointerIconPreference);
+                    fragment = navigationFragment;
+                }
                 case R.id.keyboard -> {
+                    setShowPointerIcon(mOriginalShowPointerIconPreference);
                     fragment = keyboardFragment;
                     getSystemService(InputMethodManager.class)
                             .showSoftInput(getWindow().getDecorView(), 0);
@@ -76,7 +97,27 @@ public class InputActivity extends Hilt_InputActivity {
                     .commit();
             return true;
         });
-        bottomNavigationView.setSelectedItemId(R.id.navigation);
+        bottomNavigationView.setSelectedItemId(R.id.mouse);
+
+        requireViewById(R.id.button_back).setOnClickListener(
+                v -> mInputController.sendMouseButtonEvent(MotionEvent.BUTTON_BACK));
+        requireViewById(R.id.button_forward).setOnClickListener(
+                v -> mInputController.sendMouseButtonEvent(MotionEvent.BUTTON_FORWARD));
+        requireViewById(R.id.button_home).setOnClickListener(
+                v -> mInputController.sendHomeToFocusedDisplay());
+    }
+
+    private void setShowPointerIcon(boolean show) {
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .edit()
+                .putBoolean(getString(R.string.pref_show_pointer_icon), show)
+                .commit();
+    }
+
+    @Override
+    public void onDestroy() {
+        setShowPointerIcon(mOriginalShowPointerIconPreference);
+        super.onDestroy();
     }
 
     @Override
