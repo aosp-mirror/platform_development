@@ -45,11 +45,14 @@ import android.hardware.input.VirtualTouchscreen;
 import android.hardware.input.VirtualTouchscreenConfig;
 import android.util.Log;
 import android.view.Display;
+import android.view.InputEvent;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 
 import androidx.annotation.IntDef;
 
+import com.example.android.vdmdemo.common.RemoteEventProto;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayCapabilities;
 import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
@@ -157,6 +160,13 @@ class RemoteDisplay implements AutoCloseable {
                         new VirtualDpadConfig.Builder()
                                 .setAssociatedDisplayId(mVirtualDisplay.getDisplay().getDisplayId())
                                 .setInputDeviceName("vdmdemo-dpad" + mRemoteDisplayId)
+                                .build());
+        mKeyboard =
+                mVirtualDevice.createVirtualKeyboard(
+                        new VirtualKeyboardConfig.Builder()
+                                .setInputDeviceName(
+                                        "vdmdemo-keyboard" + mRemoteDisplayId)
+                                .setAssociatedDisplayId(getDisplayId())
                                 .build());
 
         remoteIo.addMessageConsumer(mRemoteEventConsumer);
@@ -283,19 +293,7 @@ class RemoteDisplay implements AutoCloseable {
                 mDpad.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
                 break;
             case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
-                if (mNavigationTouchpad == null) {
-                    // Any arbitrarily big enough nav touchpad would work.
-                    Point displaySize = new Point(5000, 5000);
-                    mNavigationTouchpad =
-                            mVirtualDevice.createVirtualNavigationTouchpad(
-                                    new VirtualNavigationTouchpadConfig.Builder(
-                                                    displaySize.x, displaySize.y)
-                                            .setAssociatedDisplayId(getDisplayId())
-                                            .setInputDeviceName(
-                                                    "vdmdemo-navtouchpad" + mRemoteDisplayId)
-                                            .build());
-                }
-                mNavigationTouchpad.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
+                processNavigationTouchpadEvent(remoteEventToVirtualTouchEvent(inputEvent));
                 break;
             case DEVICE_TYPE_MOUSE:
                 processMouseEvent(inputEvent);
@@ -304,15 +302,6 @@ class RemoteDisplay implements AutoCloseable {
                 mTouchscreen.sendTouchEvent(remoteEventToVirtualTouchEvent(inputEvent));
                 break;
             case DEVICE_TYPE_KEYBOARD:
-                if (mKeyboard == null) {
-                    mKeyboard =
-                            mVirtualDevice.createVirtualKeyboard(
-                                    new VirtualKeyboardConfig.Builder()
-                                            .setInputDeviceName(
-                                                    "vdmdemo-keyboard" + mRemoteDisplayId)
-                                            .setAssociatedDisplayId(getDisplayId())
-                                            .build());
-                }
                 mKeyboard.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
                 break;
             default:
@@ -322,6 +311,43 @@ class RemoteDisplay implements AutoCloseable {
                                 + inputEvent.getDeviceType().getNumber());
                 break;
         }
+    }
+
+    void processInputEvent(RemoteEventProto.InputDeviceType deviceType, InputEvent event) {
+        switch (deviceType) {
+            case DEVICE_TYPE_DPAD:
+                mDpad.sendKeyEvent(keyEventToVirtualKeyEvent((KeyEvent) event));
+                break;
+            case DEVICE_TYPE_NAVIGATION_TOUCHPAD:
+                processNavigationTouchpadEvent(motionEventToVirtualTouchEvent((MotionEvent) event));
+                break;
+            case DEVICE_TYPE_KEYBOARD:
+                mKeyboard.sendKeyEvent(keyEventToVirtualKeyEvent((KeyEvent) event));
+                break;
+            default:
+                Log.e(
+                        TAG,
+                        "processInputEvent got an invalid input device type: "
+                                + deviceType.getNumber());
+                break;
+        }
+    }
+
+    private void processNavigationTouchpadEvent(VirtualTouchEvent event) {
+        if (mNavigationTouchpad == null) {
+            // Any arbitrarily big enough nav touchpad would work.
+            Point displaySize = new Point(5000, 5000);
+            mNavigationTouchpad =
+                    mVirtualDevice.createVirtualNavigationTouchpad(
+                            new VirtualNavigationTouchpadConfig.Builder(
+                                    displaySize.x, displaySize.y)
+                                    .setAssociatedDisplayId(getDisplayId())
+                                    .setInputDeviceName(
+                                            "vdmdemo-navtouchpad" + mRemoteDisplayId)
+                                    .build());
+        }
+        mNavigationTouchpad.sendTouchEvent(event);
+
     }
 
     private void processMouseEvent(RemoteInputEvent inputEvent) {
@@ -397,11 +423,31 @@ class RemoteDisplay implements AutoCloseable {
                 .build();
     }
 
+    private static VirtualKeyEvent keyEventToVirtualKeyEvent(KeyEvent keyEvent) {
+        return new VirtualKeyEvent.Builder()
+                .setEventTimeNanos((long) (keyEvent.getEventTime() * 1e6))
+                .setKeyCode(keyEvent.getKeyCode())
+                .setAction(keyEvent.getAction())
+                .build();
+    }
+
     private static VirtualTouchEvent remoteEventToVirtualTouchEvent(RemoteInputEvent event) {
         RemoteMotionEvent motionEvent = event.getTouchEvent();
         return new VirtualTouchEvent.Builder()
                 .setEventTimeNanos((long) (event.getTimestampMs() * 1e6))
                 .setPointerId(motionEvent.getPointerId())
+                .setAction(getVirtualTouchEventAction(motionEvent.getAction()))
+                .setPressure(motionEvent.getPressure() * 255f)
+                .setToolType(getVirtualTouchEventToolType(motionEvent.getAction()))
+                .setX(motionEvent.getX())
+                .setY(motionEvent.getY())
+                .build();
+    }
+
+    private static VirtualTouchEvent motionEventToVirtualTouchEvent(MotionEvent motionEvent) {
+        return new VirtualTouchEvent.Builder()
+                .setEventTimeNanos((long) (motionEvent.getEventTime() * 1e6))
+                .setPointerId(1)
                 .setAction(getVirtualTouchEventAction(motionEvent.getAction()))
                 .setPressure(motionEvent.getPressure() * 255f)
                 .setToolType(getVirtualTouchEventToolType(motionEvent.getAction()))
@@ -423,14 +469,12 @@ class RemoteDisplay implements AutoCloseable {
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDpad.close();
         mTouchscreen.close();
+        mKeyboard.close();
         if (mMouse != null) {
             mMouse.close();
         }
         if (mNavigationTouchpad != null) {
             mNavigationTouchpad.close();
-        }
-        if (mKeyboard != null) {
-            mKeyboard.close();
         }
         mVirtualDisplay.release();
         if (mVideoManager != null) {

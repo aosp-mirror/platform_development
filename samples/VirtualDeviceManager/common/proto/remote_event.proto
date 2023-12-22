@@ -148,6 +148,7 @@ message RemoteHomeEvent {}
 
 message DisplayChangeEvent {
   string title = 1;
+  bool focused = 2;
 }
 
 message KeyboardVisibilityEvent {
