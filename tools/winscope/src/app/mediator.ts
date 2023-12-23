@@ -256,14 +256,32 @@ export class Mediator {
       })
     );
 
-    await this.appComponent.onWinscopeEvent(new ViewersLoaded(this.viewers));
-
     // Set initial trace position as soon as UI is created
     const initialPosition = this.getInitialTracePosition();
     this.timelineData.setPosition(initialPosition);
+
+    // Make sure all viewers are initialized and have performed the heavy pre-processing they need
+    // at this stage, while the "initializing UI" progress message is still being displayed.
+    // The viewers initialization is triggered by sending them a "trace position update".
     await this.propagateTracePosition(initialPosition, true);
 
     this.areViewersLoaded = true;
+
+    // Notify app component (i.e. render viewers), only after all viewers have been initialized
+    // (see above).
+    //
+    // Notifying the app component first could result in this kind of interleaved execution:
+    // 1. Mediator notifies app component
+    //    1.1. App component renders UI components
+    //    1.2. Mediator receives back a "view switched" event
+    //    1.2. Mediator sends "trace position update" to viewers
+    // 2. Mediator sends "trace position update" to viewers to initialize them (see above)
+    //
+    // and because our data load operations are async and cause task suspensions, the two
+    // "trace position update" could be processed concurrently within the same viewer.
+    // Meaning the viewer could perform twice the initial heavy pre-processing,
+    // thus increasing UI initialization times.
+    await this.appComponent.onWinscopeEvent(new ViewersLoaded(this.viewers));
   }
 
   private getInitialTracePosition(): TracePosition | undefined {
