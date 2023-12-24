@@ -177,6 +177,14 @@ from the host device into the focused display on the client device. The focused
 display is indicated by the frame around its header whenever there are more than
 one displays. The display focus is based on user interaction.
 
+Each input screen has a "Back", "Home" and "Forward" buttons.
+
+-   **Touchpad** shows an on-screen touchpad for injecting mouse events into
+    the focused display.
+
+-   **Remote** allows the host device to act as a pointer that controls the
+    mouse movement on the focused display.
+
 -   **Navigation** shows an on-screen D-Pad and touchpad for navigating the
     activity on the focused display.
 

@@ -6,8 +6,25 @@
     <string name="app_icon_description" translatable="false">Application Icon</string>
     <string name="settings" translatable="false">Settings</string>
     <string name="input" translatable="false">Input</string>
+    <string name="touchpad" translatable="false">Touchpad</string>
+    <string name="remote_control" translatable="false">Remote</string>
     <string name="navigation" translatable="false">Navigation</string>
     <string name="keyboard" translatable="false">Keyboard</string>
+    <string name="touchpad_label" translatable="false">
+        Swipe to move the pointer\n\n
+        Tap to select (left click)\n\n
+        Long press for options (right click)\n\n
+        Swipe with 2 fingers to scroll
+    </string>
+    <string name="remote_control_label" translatable="false">
+        Move the device to move the pointer\n\n
+        Tap to select (left click)\n\n
+        Long press for options (right click)\n\n
+        Swipe to scroll
+    </string>
+    <string name="button_back" translatable="false">Back</string>
+    <string name="button_forward" translatable="false">Forward</string>
+    <string name="button_home" translatable="false">Home</string>
 
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
