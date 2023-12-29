@@ -140,7 +140,7 @@ class RemoteDisplay implements AutoCloseable {
                                 "VirtualDisplay" + mRemoteDisplayId, mWidth, mHeight, mDpi)
                         .setFlags(flags);
 
-        if (mDisplayType == DISPLAY_TYPE_HOME || mDisplayType == DISPLAY_TYPE_MIRROR) {
+        if (mDisplayType == DISPLAY_TYPE_HOME) {
             virtualDisplayBuilder = VdmCompat.setHomeSupported(virtualDisplayBuilder, flags);
         }
 
