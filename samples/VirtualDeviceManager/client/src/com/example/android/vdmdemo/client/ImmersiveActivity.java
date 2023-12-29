@@ -82,11 +82,9 @@ public class ImmersiveActivity extends Hilt_ImmersiveActivity {
 
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-
-                @Override
-                public void onDisconnected() {
+    private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
+            (status) -> {
+                if (status.state == ConnectionManager.ConnectionStatus.State.DISCONNECTED) {
                     finish(/* minimize= */ false);
                 }
             };

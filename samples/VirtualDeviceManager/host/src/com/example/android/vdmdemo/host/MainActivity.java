@@ -34,8 +34,6 @@ import android.widget.GridView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.example.android.vdmdemo.common.ConnectionManager;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 import javax.inject.Inject;
@@ -59,7 +57,9 @@ public class MainActivity extends Hilt_MainActivity {
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
                     mVdmService = ((VdmService.LocalBinder) binder).getService();
-                    mConnectionManager.startHostSession();
+                    mVdmService.setVirtualDeviceListener(
+                            MainActivity.this::updateLauncherVisibility);
+                    updateLauncherVisibility(mVdmService.isVirtualDeviceActive());
                 }
 
                 @Override
@@ -69,21 +69,6 @@ public class MainActivity extends Hilt_MainActivity {
                 }
             };
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onConnected(String remoteDeviceName) {
-                    updateLauncherVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onDisconnected() {
-                    updateLauncherVisibility(View.GONE);
-                    mConnectionManager.startHostSession();
-                }
-            };
-
-    @Inject ConnectionManager mConnectionManager;
     @Inject PreferenceController mPreferenceController;
 
     @Override
@@ -152,20 +137,17 @@ public class MainActivity extends Hilt_MainActivity {
         Intent intent = new Intent(this, VdmService.class);
         startForegroundService(intent);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-        ConnectionManager.ConnectionStatus connectionStatus =
-                mConnectionManager.getConnectionStatus();
-        updateLauncherVisibility(connectionStatus.connected ? View.VISIBLE : View.GONE);
-        mConnectionManager.addConnectionCallback(mConnectionCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        mVdmService.setVirtualDeviceListener(null);
         unbindService(mServiceConnection);
-        mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
-    private void updateLauncherVisibility(int visibility) {
+    private void updateLauncherVisibility(boolean virtualDeviceActive) {
+        final int visibility = virtualDeviceActive ? View.VISIBLE : View.GONE;
         runOnUiThread(
                 () -> {
                     if (mLauncher != null) {
