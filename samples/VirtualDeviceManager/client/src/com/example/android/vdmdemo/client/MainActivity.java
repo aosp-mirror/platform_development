@@ -62,24 +62,20 @@ public class MainActivity extends Hilt_MainActivity {
     private DisplayAdapter mDisplayAdapter;
     private InputMethodManager mInputMethodManager;
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onConnected(String remoteDeviceName) {
+    private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
+            (status) -> {
+                if (status.state == ConnectionManager.ConnectionStatus.State.DISCONNECTED) {
+                    if (mDisplayAdapter != null) {
+                        runOnUiThread(mDisplayAdapter::clearDisplays);
+                    }
+                    mConnectionManager.startClientSession();
+                } else if (status.state == ConnectionManager.ConnectionStatus.State.CONNECTED) {
                     mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                             .setDeviceCapabilities(DeviceCapabilities.newBuilder()
                                     .setDeviceName(Build.MODEL)
                                     .addAllSensorCapabilities(
                                             mSensorController.getSensorCapabilities()))
                             .build());
-                }
-
-                @Override
-                public void onDisconnected() {
-                    if (mDisplayAdapter != null) {
-                        runOnUiThread(mDisplayAdapter::clearDisplays);
-                    }
-                    mConnectionManager.startClientSession();
                 }
             };
 
