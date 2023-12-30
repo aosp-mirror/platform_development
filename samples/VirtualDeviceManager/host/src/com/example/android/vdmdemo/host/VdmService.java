@@ -130,10 +130,9 @@ public final class VdmService extends Hilt_VdmService {
 
     private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
             (status) -> {
-                if (status.state == ConnectionManager.ConnectionStatus.State.DISCONNECTED) {
+                if (status.state != ConnectionManager.ConnectionStatus.State.CONNECTED) {
                     mDeviceCapabilities = null;
                     closeVirtualDevice();
-                    mConnectionManager.startHostSession();
                 }
             };
 
