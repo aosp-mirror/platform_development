@@ -112,6 +112,7 @@ public final class VdmService extends Hilt_VdmService {
     private Intent mPendingRemoteIntent = null;
     private @RemoteDisplay.DisplayType int mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_APP;
     private DisplayManager mDisplayManager;
+    private Consumer<Boolean> mVirtualDeviceListener;
 
     private final DisplayManager.DisplayListener mDisplayListener =
             new DisplayManager.DisplayListener() {
@@ -127,12 +128,12 @@ public final class VdmService extends Hilt_VdmService {
                 }
             };
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onDisconnected() {
+    private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
+            (status) -> {
+                if (status.state == ConnectionManager.ConnectionStatus.State.DISCONNECTED) {
                     mDeviceCapabilities = null;
                     closeVirtualDevice();
+                    mConnectionManager.startHostSession();
                 }
             };
 
@@ -195,6 +196,7 @@ public final class VdmService extends Hilt_VdmService {
         super.onCreate();
 
         mConnectionManager.addConnectionCallback(mConnectionCallback);
+        mConnectionManager.startHostSession();
 
         mDisplayManager = getSystemService(DisplayManager.class);
         Objects.requireNonNull(mDisplayManager).registerDisplayListener(mDisplayListener, null);
@@ -248,6 +250,10 @@ public final class VdmService extends Hilt_VdmService {
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
         mAudioStreamer.close();
+    }
+
+    void setVirtualDeviceListener(Consumer<Boolean> listener) {
+        mVirtualDeviceListener = listener;
     }
 
     private void processRemoteEvent(RemoteEvent event) {
@@ -437,6 +443,9 @@ public final class VdmService extends Hilt_VdmService {
                 new RunningVdmUidsTracker(getApplicationContext(), mAudioStreamer));
 
         Log.i(TAG, "Created virtual device");
+        if (mVirtualDeviceListener != null) {
+            mVirtualDeviceListener.accept(true);
+        }
     }
 
     private void lockdown() {
@@ -445,6 +454,9 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private synchronized void closeVirtualDevice() {
+        if (mVirtualDeviceListener != null) {
+            mVirtualDeviceListener.accept(false);
+        }
         if (mRemoteSensorManager != null) {
             mRemoteSensorManager.close();
             mRemoteSensorManager = null;
@@ -455,6 +467,10 @@ public final class VdmService extends Hilt_VdmService {
             mVirtualDevice.close();
             mVirtualDevice = null;
         }
+    }
+
+    boolean isVirtualDeviceActive() {
+        return mVirtualDevice != null;
     }
 
     int[] getRemoteDisplayIds() {

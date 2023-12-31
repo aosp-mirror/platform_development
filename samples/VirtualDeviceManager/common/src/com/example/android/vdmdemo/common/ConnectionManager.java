@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -62,6 +63,7 @@ public class ConnectionManager {
 
     private static final String TAG = "VdmConnectionManager";
     private static final String CONNECTION_SERVICE_ID = "com.example.android.vdmdemo";
+    private static final int NETWORK_TIMEOUT_MS = 2000;
 
     private final RemoteIo mRemoteIo;
 
@@ -81,32 +83,20 @@ public class ConnectionManager {
     /** Simple data structure to allow clients to query the current status. */
     public static final class ConnectionStatus {
         public String remoteDeviceName = null;
-        public boolean connected = false;
+        public String errorMessage = null;
+        public State state = State.DISCONNECTED;
+
+        /** Enum indicating the current connection state. */
+        public enum State {
+            DISCONNECTED, INITIALIZED, CONNECTING, CONNECTED, ERROR
+        }
     }
 
     @GuardedBy("mSessionLock")
     private final ConnectionStatus mConnectionStatus = new ConnectionStatus();
 
-    /** Simple callback to notify connection and disconnection events. */
-    public interface ConnectionCallback {
-        /** The device is ready for connecting to other devices. */
-        default void onInitialized() {}
-
-        /** A connection has been initiated. */
-        default void onConnecting(String remoteDeviceName) {}
-
-        /** A connection has been established. */
-        default void onConnected(String remoteDeviceName) {}
-
-        /** The connection has been lost. */
-        default void onDisconnected() {}
-
-        /** An unrecoverable error has occurred. */
-        default void onError(String message) {}
-    }
-
     @GuardedBy("mConnectionCallbacks")
-    private final List<ConnectionCallback> mConnectionCallbacks = new ArrayList<>();
+    private final List<Consumer<ConnectionStatus>> mConnectionCallbacks = new ArrayList<>();
 
     private final RemoteIo.StreamClosedCallback mStreamClosedCallback = this::disconnect;
 
@@ -126,14 +116,14 @@ public class ConnectionManager {
     }
 
     /** Registers a listener for connection events. */
-    public void addConnectionCallback(ConnectionCallback callback) {
+    public void addConnectionCallback(Consumer<ConnectionStatus> callback) {
         synchronized (mConnectionCallbacks) {
             mConnectionCallbacks.add(callback);
         }
     }
 
     /** Registers a listener for connection events. */
-    public void removeConnectionCallback(ConnectionCallback callback) {
+    public void removeConnectionCallback(Consumer<ConnectionStatus> callback) {
         synchronized (mConnectionCallbacks) {
             mConnectionCallbacks.remove(callback);
         }
@@ -178,7 +168,7 @@ public class ConnectionManager {
 
     private boolean isConnected() {
         synchronized (mSessionLock) {
-            return mConnectionStatus.connected;
+            return mConnectionStatus.state == ConnectionStatus.State.CONNECTED;
         }
     }
 
@@ -229,15 +219,11 @@ public class ConnectionManager {
                 Log.d(TAG, "Closing existing discovery session.");
                 mDiscoverySession.close();
                 mDiscoverySession = null;
-                mDiscoverySessionInitiated = false;
             }
+            mDiscoverySessionInitiated = false;
             mConnectionStatus.remoteDeviceName = null;
-            mConnectionStatus.connected = false;
-            synchronized (mConnectionCallbacks) {
-                for (ConnectionCallback callback : mConnectionCallbacks) {
-                    callback.onDisconnected();
-                }
-            }
+            mConnectionStatus.state = ConnectionStatus.State.DISCONNECTED;
+            notifyStateChangedLocked();
         }
     }
 
@@ -245,37 +231,53 @@ public class ConnectionManager {
         mRemoteIo.initialize(socket.getInputStream(), mStreamClosedCallback);
         mRemoteIo.initialize(socket.getOutputStream(), mStreamClosedCallback);
         synchronized (mSessionLock) {
-            mConnectionStatus.connected = true;
-            synchronized (mConnectionCallbacks) {
-                for (ConnectionCallback callback : mConnectionCallbacks) {
-                    callback.onConnected(mConnectionStatus.remoteDeviceName);
-                }
-            }
+            mConnectionStatus.state = ConnectionStatus.State.CONNECTED;
+            notifyStateChangedLocked();
         }
     }
 
     private void onInitialized() {
         Log.d(TAG, "Discovery session initialized.");
-        synchronized (mConnectionCallbacks) {
-            for (ConnectionCallback callback : mConnectionCallbacks) {
-                callback.onInitialized();
-            }
+        synchronized (mSessionLock) {
+            mConnectionStatus.state = ConnectionStatus.State.INITIALIZED;
+            notifyStateChangedLocked();
+        }
+    }
+
+    private void onConnecting(byte[] remoteDeviceName) {
+        synchronized (mSessionLock) {
+            mConnectionStatus.state = ConnectionStatus.State.CONNECTING;
+            mConnectionStatus.remoteDeviceName = new String(remoteDeviceName);
+            Log.d(TAG, "Connecting to " + mConnectionStatus.remoteDeviceName);
+            notifyStateChangedLocked();
         }
     }
 
     private void onError(String message) {
         Log.e(TAG, "Error: " + message);
+        synchronized (mSessionLock) {
+            mConnectionStatus.state = ConnectionStatus.State.ERROR;
+            mConnectionStatus.errorMessage = message;
+            notifyStateChangedLocked();
+        }
+    }
+
+    @GuardedBy("mSessionLock")
+    private void notifyStateChangedLocked() {
         synchronized (mConnectionCallbacks) {
-            for (ConnectionCallback callback : mConnectionCallbacks) {
-                callback.onError(message);
+            for (Consumer<ConnectionStatus> callback : mConnectionCallbacks) {
+                callback.accept(mConnectionStatus);
             }
         }
     }
 
     private class VdmDiscoverySessionCallback extends DiscoverySessionCallback {
 
-        @GuardedBy("mSessionLock")
-        private NetworkCallback mNetworkCallback;
+        private final NetworkCallback mNetworkCallback;
+
+        VdmDiscoverySessionCallback(NetworkCallback callback) {
+            mNetworkCallback = callback;
+        }
 
         @Override
         public void onSessionTerminated() {
@@ -293,24 +295,13 @@ public class ConnectionManager {
             }
         }
 
-        void onConnecting(byte[] remoteDeviceName) {
+        void requestNetwork(PeerHandle peerHandle, Optional<Integer> port) {
+            WifiAwareNetworkSpecifier.Builder networkSpecifierBuilder;
             synchronized (mSessionLock) {
-                mConnectionStatus.remoteDeviceName = new String(remoteDeviceName);
-                Log.d(TAG, "Connecting to " + mConnectionStatus.remoteDeviceName);
-                synchronized (mConnectionCallbacks) {
-                    for (ConnectionCallback callback : mConnectionCallbacks) {
-                        callback.onConnecting(mConnectionStatus.remoteDeviceName);
-                    }
-                }
+                networkSpecifierBuilder =
+                        new WifiAwareNetworkSpecifier.Builder(mDiscoverySession, peerHandle)
+                                .setPskPassphrase(CONNECTION_SERVICE_ID);
             }
-        }
-
-        @GuardedBy("mSessionLock")
-        void requestNetworkLocked(
-                PeerHandle peerHandle, Optional<Integer> port, NetworkCallback networkCallback) {
-            WifiAwareNetworkSpecifier.Builder networkSpecifierBuilder =
-                    new WifiAwareNetworkSpecifier.Builder(mDiscoverySession, peerHandle)
-                            .setPskPassphrase(CONNECTION_SERVICE_ID);
             port.ifPresent(networkSpecifierBuilder::setPort);
 
             NetworkRequest networkRequest =
@@ -318,13 +309,17 @@ public class ConnectionManager {
                             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI_AWARE)
                             .setNetworkSpecifier(networkSpecifierBuilder.build())
                             .build();
-            mNetworkCallback = networkCallback;
             Log.d(TAG, "Requesting network");
-            mConnectivityManager.requestNetwork(networkRequest, mNetworkCallback);
+            mConnectivityManager.requestNetwork(
+                    networkRequest, mNetworkCallback, NETWORK_TIMEOUT_MS);
         }
     }
 
     private final class HostDiscoverySessionCallback extends VdmDiscoverySessionCallback {
+
+        HostDiscoverySessionCallback() {
+            super(new NetworkCallback());
+        }
 
         @Override
         public void onPublishStarted(@NonNull PublishDiscoverySession session) {
@@ -337,29 +332,28 @@ public class ConnectionManager {
         @Override
         public void onMessageReceived(PeerHandle peerHandle, byte[] message) {
             Log.d(TAG, "Received message: " + new String(message));
-            synchronized (mSessionLock) {
-                if (isConnected()) {
-                    return;
-                }
+            if (isConnected()) {
+                return;
+            }
 
-                onConnecting(message);
+            onConnecting(message);
 
-                try {
-                    ServerSocket serverSocket = new ServerSocket(0);
-                    requestNetworkLocked(
-                            peerHandle,
-                            Optional.of(serverSocket.getLocalPort()),
-                            new NetworkCallback());
-                    sendLocalEndpointId(peerHandle);
-                    onSocketAvailable(serverSocket.accept());
-                } catch (IOException e) {
-                    onError("Failed to establish connection.");
-                }
+            try {
+                ServerSocket serverSocket = new ServerSocket(0);
+                requestNetwork(peerHandle, Optional.of(serverSocket.getLocalPort()));
+                sendLocalEndpointId(peerHandle);
+                onSocketAvailable(serverSocket.accept());
+            } catch (IOException e) {
+                onError("Failed to establish connection.");
             }
         }
     }
 
     private final class ClientDiscoverySessionCallback extends VdmDiscoverySessionCallback {
+
+        ClientDiscoverySessionCallback() {
+            super(new ClientNetworkCallback());
+        }
 
         @Override
         public void onSubscribeStarted(@NonNull SubscribeDiscoverySession session) {
@@ -379,14 +373,11 @@ public class ConnectionManager {
         @Override
         public void onMessageReceived(PeerHandle peerHandle, byte[] message) {
             Log.d(TAG, "Received message: " + new String(message));
-            synchronized (mSessionLock) {
-                if (isConnected()) {
-                    return;
-                }
-                onConnecting(message);
-                requestNetworkLocked(
-                        peerHandle, /* port= */ Optional.empty(), new ClientNetworkCallback());
+            if (isConnected()) {
+                return;
             }
+            onConnecting(message);
+            requestNetwork(peerHandle, /* port= */ Optional.empty());
         }
     }
 
