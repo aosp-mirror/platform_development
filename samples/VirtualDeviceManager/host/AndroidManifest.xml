@@ -69,6 +69,10 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
+        <activity
+            android:name=".EmptyTrampolineActivity"
+            android:exported="false"
+            android:excludeFromRecents="true" />
 
         <service
             android:name=".VdmService"
