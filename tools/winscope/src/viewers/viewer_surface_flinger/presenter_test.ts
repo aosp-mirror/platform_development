@@ -82,7 +82,7 @@ describe('PresenterSurfaceFlinger', () => {
 
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.highlightedItem?.length).toEqual(0);
-    expect(uiData.displayIds).toContain(0);
+    expect(Array.from(uiData.displays.map((display) => display.groupId))).toContain(0);
     const hierarchyOpts = uiData.hierarchyUserOptions
       ? Object.keys(uiData.hierarchyUserOptions)
       : null;
@@ -308,9 +308,15 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('handles displays with no visible layers', async () => {
     await presenter.onAppEvent(positionUpdateMultiDisplayEntry);
-    expect(uiData.displayIds.length).toEqual(5);
-    // we want the ids to be sorted
-    expect(uiData.displayIds).toEqual([0, 2, 3, 4, 5]);
+    expect(uiData.displays.length).toEqual(5);
+    // we want the displays to be sorted by name
+    expect(uiData.displays).toEqual([
+      {displayId: '11529215046312967684', groupId: 5, name: 'ClusterOsDouble-VD'},
+      {displayId: '4619827259835644672', groupId: 0, name: 'EMU_display_0'},
+      {displayId: '4619827551948147201', groupId: 2, name: 'EMU_display_1'},
+      {displayId: '4619827124781842690', groupId: 3, name: 'EMU_display_2'},
+      {displayId: '4619827540095559171', groupId: 4, name: 'EMU_display_3'},
+    ]);
   });
 
   it('updates view capture package names', async () => {

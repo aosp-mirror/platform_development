@@ -91,7 +91,7 @@ describe('PresenterWindowManager', () => {
       : null;
     expect(uiData.highlightedItem?.length).toEqual(0);
     expect(filteredUiDataRectLabels?.length).toEqual(14);
-    expect(uiData.displayIds).toContain(0);
+    expect(uiData.displays.map((display) => display.groupId)).toContain(0);
     expect(hierarchyOpts).toBeTruthy();
     expect(propertyOpts).toBeTruthy();
 

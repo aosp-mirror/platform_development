@@ -27,7 +27,7 @@ export class UiRect extends Rect {
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
     readonly id: string,
-    readonly displayId: number,
+    readonly groupId: number,
     readonly isVirtual: boolean,
     readonly isClickable: boolean,
     readonly cornerRadius: number,

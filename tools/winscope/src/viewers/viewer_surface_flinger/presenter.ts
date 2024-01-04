@@ -32,6 +32,7 @@ import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {DiffType} from 'viewers/common/diff_type';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {FlattenChildren} from 'viewers/common/operations/flatten_children';
@@ -152,11 +153,11 @@ export class Presenter {
           this.currentHierarchyTree,
           this.viewCapturePackageNames
         );
-        this.uiData.displayIds = this.getDisplayIds(this.uiData.rects);
         this.pinnedItems = [];
         this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
           this.currentHierarchyTree
         );
+        this.uiData.displays = this.getDisplays(this.uiData.rects);
       }
       this.copyUiDataAndNotifyView();
     });
@@ -233,13 +234,34 @@ export class Presenter {
     this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(this.traces);
   }
 
-  private getDisplayIds(rects: UiRect[]): number[] {
-    const ids = new Set<number>();
+  private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
+    const ids: DisplayIdentifier[] = [];
+
     rects.forEach((rect: UiRect) => {
-      ids.add(rect.displayId);
+      if (!rect.isDisplay) return;
+      const displayId = rect.id.slice(10, rect.id.length);
+      ids.push({displayId, groupId: rect.groupId, name: rect.label});
     });
-    return Array.from(ids.values()).sort((a, b) => {
-      return a - b;
+
+    let offscreenDisplayCount = 0;
+    rects.forEach((rect: UiRect) => {
+      if (rect.isDisplay) return;
+
+      if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
+        offscreenDisplayCount++;
+        const name = 'Offscreen Display' + (offscreenDisplayCount > 1 ? offscreenDisplayCount : '');
+        ids.push({displayId: -1, groupId: rect.groupId, name});
+      }
+    });
+
+    return ids.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
     });
   }
 

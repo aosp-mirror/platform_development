@@ -13,9 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  Inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {DisplayLayerStack} from 'trace/display_layer_stack';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
@@ -101,13 +112,27 @@ import {Distance2D} from './types3d';
           (dblclick)="onMiniRectDblClick($event)"
           oncontextmenu="return false"></canvas>
       </div>
-      <div *ngIf="internalDisplayIds.length > 1" class="display-button-container">
+      <div
+        *ngIf="internalDisplays.length > 0"
+        class="display-button-container display-name-buttons">
         <button
-          *ngFor="let displayId of internalDisplayIds"
-          color="primary"
+          *ngFor="let display of internalDisplays"
+          [color]="getDisplayButtonColor(display.groupId)"
           mat-raised-button
-          (click)="onDisplayIdChange(displayId)">
-          {{ displayId }}
+          (click)="onDisplayIdChange(display)">
+          {{ display.name }}
+        </button>
+      </div>
+      <div
+        *ngIf="isStackBased && internalGroupIds.size > 0"
+        class="display-button-container stack-buttons">
+        <button
+          *ngFor="let groupId of internalGroupIds"
+          [color]="getStackButtonColor(groupId)"
+          [matTooltip]="getStackButtonTooltip(groupId)"
+          mat-raised-button
+          (click)="onGroupIdChange(groupId)">
+          {{ getStackButtonLabel(groupId) }}
         </button>
       </div>
     </div>
@@ -172,6 +197,7 @@ import {Distance2D} from './types3d';
         flex-direction: row;
         flex-wrap: wrap;
         column-gap: 10px;
+        padding-bottom: 5px;
       }
       .mini-rects-canvas {
         cursor: pointer;
@@ -190,38 +216,22 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() enableShowVirtualButton: boolean = true;
   @Input() zoomFactor: number = 1;
   @Input() store?: PersistentStore;
+  @Input() isStackBased = false;
+  @Input() rects: UiRect[] = [];
+  @Input() miniRects: UiRect[] | undefined;
+  @Input() displays: DisplayIdentifier[] = [];
+  @Input() highlightedItem: string = '';
 
-  @Input() set rects(rects: UiRect[]) {
-    this.internalRects = rects;
-    this.drawLargeRectsAndLabels();
-  }
-
-  @Input() set miniRects(rects: UiRect[] | undefined) {
-    this.internalMiniRects = rects;
-    this.drawMiniRects();
-  }
-
-  @Input() set displayIds(ids: number[]) {
-    this.internalDisplayIds = ids;
-    if (!this.internalDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
-      this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0]);
-      this.drawLargeRectsAndLabels();
-    }
-  }
-
-  @Input() set highlightedItem(stableId: string) {
-    this.internalHighlightedItem = stableId;
-    this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
-    this.drawLargeRectsAndLabels();
-  }
-
+  private stackSelected = false;
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
-  private internalDisplayIds: number[] = [];
-  private internalHighlightedItem = '';
   private storeKeyShowOnlyVisibleState = '';
   private storeKeyShowVirtualState = '';
   private storeKeyZSpacingFactor = '';
+  private internalDisplays: DisplayIdentifier[] = [];
+  private internalGroupIds = new Set<number>();
+  private internalHighlightedItem: string = '';
+  private currentDisplay: DisplayIdentifier | undefined;
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
@@ -256,7 +266,8 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.updateControlsFromStore();
     }
 
-    this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
+    this.currentDisplay = this.internalDisplays[0] ?? undefined;
+    this.mapper3d.setCurrentGroupId(this.currentDisplay?.groupId ?? 0);
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
 
@@ -269,8 +280,73 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngOnChanges(simpleChanges: SimpleChanges) {
+    if (simpleChanges['highlightedItem']) {
+      this.internalHighlightedItem = simpleChanges['highlightedItem'].currentValue;
+      this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
+      if (!(simpleChanges['rects'] || simpleChanges['displays'])) {
+        this.drawLargeRectsAndLabels();
+      }
+    }
+    if (simpleChanges['rects']) {
+      this.internalRects = simpleChanges['rects'].currentValue;
+      if (!simpleChanges['displays']) {
+        this.drawLargeRectsAndLabels();
+      }
+    }
+    if (simpleChanges['displays']) {
+      this.onDisplaysChange(simpleChanges['displays'].currentValue);
+      if (this.isStackBased) {
+        this.internalGroupIds = new Set(this.internalDisplays.map((display) => display.groupId));
+      }
+    }
+    if (simpleChanges['miniRects']) {
+      this.internalMiniRects = simpleChanges['miniRects'].currentValue;
+      this.drawMiniRects();
+    }
+  }
+
   ngOnDestroy() {
     this.resizeObserver?.disconnect();
+  }
+
+  onDisplaysChange(displays: DisplayIdentifier[]) {
+    this.internalDisplays = displays;
+
+    if (displays.length === 0) {
+      return;
+    }
+
+    if (!this.stackSelected) {
+      const curr = this.internalDisplays.find(
+        (display) => display.displayId === this.currentDisplay?.displayId
+      );
+      if (curr) {
+        this.updateCurrentDisplay(curr);
+        return;
+      }
+    }
+
+    const firstDisplayWithCurrentGroupId = this.internalDisplays.find(
+      (display) => display.groupId === this.mapper3d.getCurrentGroupId()
+    );
+    if (!firstDisplayWithCurrentGroupId) {
+      this.updateCurrentDisplay(this.internalDisplays[0]);
+      return;
+    }
+
+    const displayWithCurrentDisplayId = this.internalDisplays.find(
+      (display) => display.displayId === this.currentDisplay?.displayId
+    );
+    if (!displayWithCurrentDisplayId) {
+      this.updateCurrentDisplay(firstDisplayWithCurrentGroupId);
+      return;
+    }
+
+    if (displayWithCurrentDisplayId.groupId !== this.mapper3d.getCurrentGroupId()) {
+      this.updateCurrentDisplay(displayWithCurrentDisplayId);
+      return;
+    }
   }
 
   updateControlsFromStore() {
@@ -352,9 +428,47 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.drawLargeRectsAndLabels();
   }
 
-  onDisplayIdChange(id: number) {
-    this.mapper3d.setCurrentDisplayId(id);
-    this.drawLargeRectsAndLabels();
+  onDisplayIdChange(display: DisplayIdentifier) {
+    this.stackSelected = false;
+    this.updateCurrentDisplay(display);
+  }
+
+  onGroupIdChange(groupId: number) {
+    this.stackSelected = true;
+    const displaysWithGroupId = this.getDisplaysWithGroupId(groupId);
+    if (
+      this.currentDisplay &&
+      displaysWithGroupId.length > 0 &&
+      !displaysWithGroupId.includes(this.currentDisplay)
+    ) {
+      this.updateCurrentDisplay(displaysWithGroupId[0]);
+    }
+  }
+
+  getDisplayButtonColor(groupId: number): string {
+    if (this.stackSelected) return 'secondary';
+    return this.getButtonColor(groupId);
+  }
+
+  getStackButtonColor(groupId: number): string {
+    if (!this.stackSelected) return 'secondary';
+    return this.getButtonColor(groupId);
+  }
+
+  getStackButtonTooltip(groupId: number): string {
+    if (groupId === DisplayLayerStack.INVALID_LAYER_STACK) {
+      return 'Invalid layer stack - associated displays off';
+    }
+    return 'Associated displays on';
+  }
+
+  getStackButtonLabel(groupId: number): string {
+    return (
+      `Stack ${groupId}: ` +
+      this.getDisplaysWithGroupId(groupId)
+        .map((display) => display.name)
+        .join(', ')
+    );
   }
 
   onRectClick(event: MouseEvent) {
@@ -400,6 +514,21 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   getZSpacingFactor(): number {
     return this.mapper3d.getZSpacingFactor();
+  }
+
+  private getButtonColor(groupId: number) {
+    if (!this.currentDisplay) return 'primary';
+    return this.currentDisplay.groupId === groupId ? 'primary' : 'secondary';
+  }
+
+  private updateCurrentDisplay(display: DisplayIdentifier) {
+    this.currentDisplay = display;
+    this.mapper3d.setCurrentGroupId(display.groupId);
+    this.drawLargeRectsAndLabels();
+  }
+
+  private getDisplaysWithGroupId(groupId: number): DisplayIdentifier[] {
+    return assertDefined(this.internalDisplays.filter((display) => display.groupId === groupId));
   }
 
   private findClickedRectId(event: MouseEvent): string | undefined {
