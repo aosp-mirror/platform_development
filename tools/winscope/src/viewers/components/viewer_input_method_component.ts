@@ -48,6 +48,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
 
       <properties-view
         class="properties-view"
+        [store]="store"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view>
     </div>

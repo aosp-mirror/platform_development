@@ -22,6 +22,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {PersistentStore} from 'common/persistent_store';
 import {PropertiesComponent} from './properties_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
@@ -52,6 +53,7 @@ describe('PropertiesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
+    component.store = new PersistentStore();
     component.userOptions = {
       showDiff: {
         name: 'Show diff',

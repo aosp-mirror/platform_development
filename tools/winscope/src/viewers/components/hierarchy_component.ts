@@ -70,7 +70,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         [item]="tree"
         [dependencies]="dependencies"
         [store]="store"
-        [useGlobalCollapsedState]="true"
+        [useStoredExpandedState]="true"
         [itemsClickable]="true"
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"

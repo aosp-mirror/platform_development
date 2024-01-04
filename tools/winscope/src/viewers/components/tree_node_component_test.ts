@@ -83,7 +83,7 @@ describe('TreeNodeComponent', () => {
     template: `
       <tree-node
         [item]="item"
-        [isCollapsed]="false"
+        [isExpanded]="false"
         [isPinned]="false"
         [isInPinnedSection]="false"
         [hasChildren]="true"

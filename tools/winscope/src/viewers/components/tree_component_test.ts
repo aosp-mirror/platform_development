@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
+import {Component, NO_ERRORS_SCHEMA, QueryList, ViewChildren} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
@@ -25,6 +25,7 @@ describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
+  const children = makeTreeNodeChildren();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -48,17 +49,17 @@ describe('TreeComponent', () => {
   });
 
   it('can identify if a parent node has a selected child', () => {
-    expect(component.treeComponent.hasSelectedChild()).toBeFalse();
-    component.highlightedItem = 'child3';
+    expect(component.treeComponents.first.hasSelectedChild()).toBeFalse();
+    component.highlightedItem = '1child3';
     fixture.detectChanges();
-    expect(component.treeComponent.hasSelectedChild()).toBeTrue();
+    expect(component.treeComponents.first.hasSelectedChild()).toBeTrue();
   });
 
   it('highlights item upon node click', () => {
     const treeNode = htmlElement.querySelector('tree-node');
     expect(treeNode).toBeTruthy();
 
-    const spy = spyOn(component.treeComponent.highlightedChange, 'emit');
+    const spy = spyOn(component.treeComponents.first.highlightedChange, 'emit');
     (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 1}));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
@@ -68,32 +69,68 @@ describe('TreeComponent', () => {
     const treeNode = htmlElement.querySelector('tree-node');
     expect(treeNode).toBeTruthy();
 
-    const currCollapseValue = component.treeComponent.localCollapsedState;
+    const currCollapseValue = component.treeComponents.first.localExpandedState;
     (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 2}));
     fixture.detectChanges();
-    expect(!currCollapseValue).toBe(component.treeComponent.localCollapsedState);
+    expect(!currCollapseValue).toBe(component.treeComponents.first.localExpandedState);
   });
 
   it('scrolls selected node into view if out of view', async () => {
-    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild50`));
+    const treeNode = assertDefined(htmlElement.querySelector('#node1child50'));
     const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = 'child50';
+    component.highlightedItem = '1child50';
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 
   it('does not scroll selected element if already in view', () => {
-    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild2`));
+    const treeNode = assertDefined(htmlElement.querySelector('#node1child2'));
     const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = 'child2';
+    component.highlightedItem = '1child2';
     fixture.detectChanges();
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('sets initial expanded state to true by default', () => {
+    const tree = assertDefined(component.treeComponents.get(1));
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeTrue();
+  });
+
+  it('does not initially set expanded state to true if already exists in store', () => {
+    // item1 expanded by default
+    const tree = assertDefined(component.treeComponents.get(1));
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeTrue();
+
+    // item1 collapsed
+    tree.toggleTree();
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeFalse();
+
+    // item0 expanded by default
+    component.itemWithStoredExpandedState = component.item0;
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeTrue();
+
+    // item0 collapsed state retained
+    component.itemWithStoredExpandedState = component.item1;
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeFalse();
   });
 
   function makeTreeNodeChildren(): UiTreeNode[] {
     const children = [];
     for (let i = 0; i < 60; i++) {
-      children.push({kind: `${i}`, stableId: `child${i}`, name: `Child${i}`});
+      const child: UiTreeNode = {
+        kind: `${i}`,
+        stableId: `1child${i}`,
+        name: `Child${i}`,
+        children: [
+          {kind: `${i}`, stableId: `1innerChild${i}`, name: `InnerChild${i}`, children: []},
+        ],
+      };
+      children.push(child);
     }
     return children;
   }
@@ -102,26 +139,57 @@ describe('TreeComponent', () => {
     selector: 'host-component',
     template: `
       <tree-view
-        [item]="item"
+        [item]="item0"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [itemsClickable]="true"></tree-view>
+
+      <tree-view
+        [item]="itemWithStoredExpandedState"
+        [store]="store"
+        [isFlattened]="false"
+        [isPinned]="false"
+        [highlightedItem]="highlightedItem"
+        [useStoredExpandedState]="true"
+        [itemsClickable]="true"></tree-view>
     `,
   })
   class TestHostComponent {
-    item: UiTreeNode = {
+    item0: UiTreeNode = {
+      simplifyNames: false,
+      kind: 'entry',
+      name: 'LayerTraceEntry',
+      stableId: 'LayerTraceEntry 1',
+      children,
+    };
+
+    item1: UiTreeNode = {
       simplifyNames: false,
       kind: 'entry',
       name: 'LayerTraceEntry',
       stableId: 'LayerTraceEntry 2',
-      children: makeTreeNodeChildren(),
+      children: [
+        {
+          kind: '1',
+          stableId: '2child1',
+          name: 'Child1',
+          children: [],
+        },
+      ],
     };
+
+    itemWithStoredExpandedState = this.item1;
+
     store = new PersistentStore();
     highlightedItem = '';
 
-    @ViewChild(TreeComponent)
-    treeComponent!: TreeComponent;
+    constructor() {
+      localStorage.clear();
+    }
+
+    @ViewChildren(TreeComponent)
+    treeComponents!: QueryList<TreeComponent>;
   }
 });

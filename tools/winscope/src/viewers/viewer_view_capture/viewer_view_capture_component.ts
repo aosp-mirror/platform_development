@@ -52,6 +52,7 @@ import {UiData} from './ui_data';
         [propertiesTree]="inputData?.propertiesTree ?? {}"
         [selectedItem]="inputData?.selectedViewNode ?? null"
         [traceType]="${TraceType.VIEW_CAPTURE}"
+        [store]="store"
         [isProtoDump]="false">
       </properties-view>
     </div>
