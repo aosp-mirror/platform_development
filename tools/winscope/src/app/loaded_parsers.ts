@@ -16,7 +16,7 @@
 
 import {FileUtils} from 'common/file_utils';
 import {INVALID_TIME_NS, TimeRange, TimestampType} from 'common/time';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {TraceHasOldData, TraceOverridden} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
@@ -131,13 +131,7 @@ export class LoadedParsers {
       // parsers must always override legacy ones so that dangling legacy files are ignored.
       const legacyParser = this.legacyParsers.get(parser.getTraceType());
       if (legacyParser) {
-        errorListener.onError(
-          new WinscopeError(
-            WinscopeErrorType.FILE_OVERRIDDEN,
-            legacyParser.parser.getDescriptors().join(),
-            legacyParser.parser.getTraceType()
-          )
-        );
+        errorListener.onError(new TraceOverridden(legacyParser.parser.getDescriptors().join()));
         this.legacyParsers.delete(parser.getTraceType());
       }
     });
@@ -152,13 +146,7 @@ export class LoadedParsers {
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
     if (this.perfettoParsers.get(newParser.getTraceType())) {
-      errorListener.onError(
-        new WinscopeError(
-          WinscopeErrorType.FILE_OVERRIDDEN,
-          newParser.getDescriptors().join(),
-          newParser.getTraceType()
-        )
-      );
+      errorListener.onError(new TraceOverridden(newParser.getDescriptors().join()));
       return false;
     }
 
@@ -169,34 +157,16 @@ export class LoadedParsers {
     }
 
     if (oldParser && !currParser) {
-      errorListener.onError(
-        new WinscopeError(
-          WinscopeErrorType.FILE_OVERRIDDEN,
-          oldParser.getDescriptors().join(),
-          oldParser.getTraceType()
-        )
-      );
+      errorListener.onError(new TraceOverridden(oldParser.getDescriptors().join()));
       return true;
     }
 
     if (currParser && newParser.getLengthEntries() > currParser.getLengthEntries()) {
-      errorListener.onError(
-        new WinscopeError(
-          WinscopeErrorType.FILE_OVERRIDDEN,
-          currParser.getDescriptors().join(),
-          currParser.getTraceType()
-        )
-      );
+      errorListener.onError(new TraceOverridden(currParser.getDescriptors().join()));
       return true;
     }
 
-    errorListener.onError(
-      new WinscopeError(
-        WinscopeErrorType.FILE_OVERRIDDEN,
-        newParser.getDescriptors().join(),
-        newParser.getTraceType()
-      )
-    );
+    errorListener.onError(new TraceOverridden(newParser.getDescriptors().join()));
     return false;
   }
 
@@ -246,13 +216,7 @@ export class LoadedParsers {
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
       if (isOldData) {
-        errorListener.onError(
-          new WinscopeError(
-            WinscopeErrorType.FILE_OUTDATED,
-            file.getDescriptor(),
-            parser.getTraceType()
-          )
-        );
+        errorListener.onError(new TraceHasOldData(file.getDescriptor(), timeGap));
         return false;
       }
 
