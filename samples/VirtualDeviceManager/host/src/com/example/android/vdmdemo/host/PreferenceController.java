@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 import android.util.ArrayMap;
 
 import androidx.annotation.StringRes;
+import androidx.core.os.BuildCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceManager;
 
@@ -207,8 +208,12 @@ final class PreferenceController {
         protected abstract void reset(Context context, SharedPreferences.Editor editor);
 
         protected boolean isSatisfied() {
-            return mMinSdk <= SDK_INT
+            return isSdkVersionSatisfied()
                     && Arrays.stream(mRequiredFlags).allMatch(BooleanSupplier::getAsBoolean);
+        }
+
+        private boolean isSdkVersionSatisfied() {
+            return mMinSdk <= SDK_INT || (mMinSdk == VANILLA_ICE_CREAM && BuildCompat.isAtLeastV());
         }
 
         PrefRule<T> withDefaultValue(T defaultValue) {
