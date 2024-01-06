@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import Long from 'long';
 import * as protobuf from 'protobufjs';
 
-protobuf.util.Long = Long; // otherwise 64-bit types would be decoded as javascript number (only 53-bits precision)
+protobuf.util.Long = Long; // otherwise 64-bit types would be decoded as 'number' (only 53-bits precision)
 protobuf.configure();
-
-import fakeProtoTestJson from 'src/test/protos/fake_proto_test.proto';
-
-export {fakeProtoTestJson};

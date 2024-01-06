@@ -15,6 +15,12 @@
  */
 
 // organize-imports-ignore
+import 'common/global_init';
+import {globalConfig} from './common/global_config';
+globalConfig.set({
+  MODE: 'KARMA_TEST',
+});
+
 import 'zone.js';
 import 'zone.js/testing';
 import {TestBed} from '@angular/core/testing';

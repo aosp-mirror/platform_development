@@ -16,6 +16,8 @@
 
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import root from 'protos/windowmanager/latest/root';
+import {com} from 'protos/windowmanager/latest/types';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -26,9 +28,12 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ParserWindowManagerUtils} from './parser_window_manager_utils';
-import {WindowManagerServiceDumpProto} from './proto_types';
 
 class ParserWindowManagerDump extends AbstractParser {
+  private static readonly WindowManagerServiceDumpProto = root.lookupType(
+    'com.android.server.wm.WindowManagerServiceDumpProto'
+  );
+
   constructor(trace: TraceFile) {
     super(trace);
   }
@@ -41,8 +46,10 @@ class ParserWindowManagerDump extends AbstractParser {
     return undefined;
   }
 
-  override decodeTrace(buffer: Uint8Array): any[] {
-    const entryProto = WindowManagerServiceDumpProto.decode(buffer);
+  override decodeTrace(buffer: Uint8Array): com.android.server.wm.IWindowManagerServiceDumpProto[] {
+    const entryProto = ParserWindowManagerDump.WindowManagerServiceDumpProto.decode(
+      buffer
+    ) as com.android.server.wm.IWindowManagerServiceDumpProto;
 
     // This parser is prone to accepting invalid inputs because it lacks a magic
     // number. Let's reduce the chances of accepting invalid inputs by making
@@ -66,7 +73,7 @@ class ParserWindowManagerDump extends AbstractParser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: any
+    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto
   ): WindowManagerState {
     return WindowManagerState.fromProto(entryProto);
   }

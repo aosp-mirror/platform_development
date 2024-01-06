@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import root from 'protos/protolog/latest/root';
+import {com} from 'protos/protolog/latest/types';
 import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from 'trace/protolog';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
 import {AbstractParser} from './abstract_parser';
-import {ProtoLogFileProto} from './proto_types';
 
 class ParserProtoLog extends AbstractParser {
+  private static readonly ProtoLogFileProto = root.lookupType(
+    'com.android.internal.protolog.ProtoLogFileProto'
+  );
+
   constructor(trace: TraceFile) {
     super(trace);
   }
@@ -35,8 +41,10 @@ class ParserProtoLog extends AbstractParser {
     return ParserProtoLog.MAGIC_NUMBER;
   }
 
-  override decodeTrace(buffer: Uint8Array): any[] {
-    const fileProto: any = ProtoLogFileProto.decode(buffer);
+  override decodeTrace(buffer: Uint8Array): com.android.internal.protolog.IProtoLogMessage[] {
+    const fileProto = ParserProtoLog.ProtoLogFileProto.decode(
+      buffer
+    ) as com.android.internal.protolog.IProtoLogFileProto;
 
     if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
       const message = 'Unsupported ProtoLog trace version';
@@ -50,7 +58,12 @@ class ParserProtoLog extends AbstractParser {
       throw new TypeError(message);
     }
 
-    this.realToElapsedTimeOffsetNs = BigInt(fileProto.realTimeToElapsedTimeOffsetMillis) * 1000000n;
+    this.realToElapsedTimeOffsetNs =
+      BigInt(assertDefined(fileProto.realTimeToElapsedTimeOffsetMillis).toString()) * 1000000n;
+
+    if (!fileProto.log) {
+      return [];
+    }
 
     fileProto.log.sort((a: any, b: any) => {
       return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
@@ -59,14 +72,18 @@ class ParserProtoLog extends AbstractParser {
     return fileProto.log;
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
+  override getTimestamp(
+    type: TimestampType,
+    entry: com.android.internal.protolog.IProtoLogMessage
+  ): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
+      return new Timestamp(type, BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()));
     }
     if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
       return new Timestamp(
         type,
-        BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs
+        BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()) +
+          this.realToElapsedTimeOffsetNs
       );
     }
     return undefined;
@@ -75,23 +92,23 @@ class ParserProtoLog extends AbstractParser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: object
+    entry: com.android.internal.protolog.IProtoLogMessage
   ): LogMessage {
-    const message = (configJson as any).messages[(entryProto as any).messageHash];
+    const message = (configJson as any).messages[assertDefined(entry.messageHash)];
     if (!message) {
-      return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
+      return new FormattedLogMessage(entry, timestampType, this.realToElapsedTimeOffsetNs);
     }
 
     try {
       return new UnformattedLogMessage(
-        entryProto,
+        entry,
         timestampType,
         this.realToElapsedTimeOffsetNs,
         message
       );
     } catch (error) {
       if (error instanceof FormatStringMismatchError) {
-        return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
+        return new FormattedLogMessage(entry, timestampType, this.realToElapsedTimeOffsetNs);
       }
       throw error;
     }

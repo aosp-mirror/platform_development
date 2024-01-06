@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {com} from 'protos/viewcapture/latest/types';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -22,15 +24,17 @@ import {
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {ParsingUtils} from './parsing_utils';
 
-export class ParserViewCaptureWindow implements Parser<FrameData> {
+export class ParserViewCaptureWindow
+  implements Parser<com.android.app.viewcapture.data.IFrameData>
+{
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 
   constructor(
     private readonly descriptors: string[],
-    private readonly frameData: FrameData[],
+    private readonly frameData: com.android.app.viewcapture.data.IFrameData[],
     private readonly traceType: TraceType,
     private readonly realToElapsedTimeOffsetNanos: bigint,
     private readonly packageName: string,
@@ -61,7 +65,7 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
       for (const entry of this.frameData) {
         const timestamp = Timestamp.from(
           type,
-          BigInt(entry.timestamp),
+          BigInt(assertDefined(entry.timestamp).toString()),
           this.realToElapsedTimeOffsetNanos
         );
         if (timestamp === undefined) {
@@ -90,8 +94,11 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
     return this.timestamps.get(type);
   }
 
-  getEntry(index: number, _: TimestampType): Promise<FrameData> {
-    ParserViewCaptureWindow.formatProperties(this.frameData[index].node, this.classNames);
+  getEntry(index: number, _: TimestampType): Promise<com.android.app.viewcapture.data.IFrameData> {
+    ParserViewCaptureWindow.formatProperties(
+      assertDefined(this.frameData[index].node),
+      this.classNames
+    );
     return Promise.resolve(this.frameData[index]);
   }
 
@@ -110,12 +117,15 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
     return this.descriptors;
   }
 
-  private static formatProperties(root: ViewNode, classNames: string[]): ViewNode {
+  private static formatProperties(
+    root: com.android.app.viewcapture.data.IViewNode,
+    classNames: string[]
+  ): com.android.app.viewcapture.data.IViewNode {
     const DEPTH_MAGNIFICATION = 4;
     const VISIBLE = 0;
 
     function inner(
-      node: ViewNode,
+      node: any,
       leftShift: number,
       topShift: number,
       scaleX: number,
@@ -173,19 +183,19 @@ export class ParserViewCaptureWindow implements Parser<FrameData> {
       node.skip = null;
       node.id = node.name;
       node.stableId = node.id;
-      node.equals = (other: ViewNode) => ParserViewCaptureWindow.equals(node, other);
+      node.equals = (other: any) => ParserViewCaptureWindow.equals(node, other);
     }
 
     root.scaleX = root.scaleY = 1;
     root.translationX = root.translationY = 0;
     inner(root, 0, 0, 1, 1, 0, true);
 
-    root.isRootLayer = true;
+    (root as any).isRootLayer = true;
     return root;
   }
 
   /** This method is used by the tree_generator to determine if 2 nodes have equivalent properties. */
-  private static equals(node: ViewNode, other: ViewNode): boolean {
+  private static equals(node: any, other: any): boolean {
     if (!node && !other) {
       return true;
     }

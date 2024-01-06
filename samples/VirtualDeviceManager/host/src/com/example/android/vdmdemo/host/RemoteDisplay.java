@@ -18,8 +18,6 @@ package com.example.android.vdmdemo.host;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
-import android.app.PendingIntent;
-import android.companion.virtual.VirtualDeviceManager;
 import android.companion.virtual.VirtualDeviceManager.VirtualDevice;
 import android.content.Context;
 import android.content.Intent;
@@ -65,7 +63,6 @@ import com.example.android.vdmdemo.common.VideoManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -94,7 +91,6 @@ class RemoteDisplay implements AutoCloseable {
     private final VirtualDisplay mVirtualDisplay;
     private final VirtualDpad mDpad;
     private final int mRemoteDisplayId;
-    private final Executor mPendingIntentExecutor;
     private final VirtualDevice mVirtualDevice;
     private final @DisplayType int mDisplayType;
     private final AtomicBoolean mClosed = new AtomicBoolean(false);
@@ -121,7 +117,6 @@ class RemoteDisplay implements AutoCloseable {
         mRemoteIo = remoteIo;
         mRemoteDisplayId = event.getDisplayId();
         mVirtualDevice = virtualDevice;
-        mPendingIntentExecutor = context.getMainExecutor();
         mDisplayType = displayType;
         mPreferenceController = preferenceController;
 
@@ -214,27 +209,9 @@ class RemoteDisplay implements AutoCloseable {
         mWidth -= mWidth % 10;
     }
 
-    void launchIntent(PendingIntent intent) {
-        mVirtualDevice.launchPendingIntent(
-                mVirtualDisplay.getDisplay().getDisplayId(),
-                intent,
-                mPendingIntentExecutor,
-                (result) -> {
-                    switch (result) {
-                        case VirtualDeviceManager.LAUNCH_SUCCESS:
-                            Log.i(TAG, "launchIntent: Launched app successfully on display "
-                                            + mVirtualDisplay.getDisplay().getDisplayId());
-                            break;
-                        case VirtualDeviceManager.LAUNCH_FAILURE_NO_ACTIVITY:
-                        case VirtualDeviceManager.LAUNCH_FAILURE_PENDING_INTENT_CANCELED:
-                            Log.w(TAG, "launchIntent: Launching app failed with reason: "
-                                    + result);
-                            break;
-                        default:
-                            Log.w(TAG, "launchIntent: Unexpected result when launching app: "
-                                    + result);
-                    }
-                });
+    void launchIntent(Intent intent) {
+        mContext.startActivity(
+                intent, ActivityOptions.makeBasic().setLaunchDisplayId(getDisplayId()).toBundle());
     }
 
     int getRemoteDisplayId() {
@@ -264,7 +241,6 @@ class RemoteDisplay implements AutoCloseable {
         }
     }
 
-    @SuppressWarnings("PendingIntentMutability")
     void processRemoteEvent(RemoteEvent event) {
         if (event.getDisplayId() != mRemoteDisplayId) {
             return;
