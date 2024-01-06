@@ -17,8 +17,8 @@
 syntax = "proto2";
 option optimize_for = LITE_RUNTIME;
 
-import "protos/udc/surfaceflinger/layers.proto";
-import "protos/udc/surfaceflinger/display.proto";
+import "protos/surfaceflinger/udc/layers.proto";
+import "protos/surfaceflinger/udc/display.proto";
 
 package android.surfaceflinger;
 
