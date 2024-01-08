@@ -44,18 +44,6 @@ module.exports = {
         test: /\.s[ac]ss$/i,
         use: ['style-loader', 'css-loader', 'sass-loader'],
       },
-      {
-        test: /\.proto$/,
-        loader: 'proto-loader',
-        options: {
-          paths: [
-            __dirname,
-            path.resolve(__dirname, '../../..'),
-            path.resolve(__dirname, '../../../external/perfetto'),
-            path.resolve(__dirname, '../../../external/protobuf/src'),
-          ],
-        },
-      },
     ],
   },
 
