@@ -16,8 +16,8 @@
 
 import {Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
-import root from 'protos/ime/latest/root';
-import {android} from 'protos/ime/latest/types';
+import root from 'protos/ime/latest/json';
+import {android} from 'protos/ime/latest/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';

@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import root from 'protos/protolog/latest/root';
-import {com} from 'protos/protolog/latest/types';
+import root from 'protos/protolog/latest/json';
+import {com} from 'protos/protolog/latest/static';
 import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from 'trace/protolog';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';

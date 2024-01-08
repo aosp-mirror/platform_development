@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {com} from 'protos/viewcapture/latest/types';
+import {com} from 'protos/viewcapture/latest/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,

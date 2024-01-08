@@ -17,8 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
-import root from 'protos/surfaceflinger/udc/root';
-import {android} from 'protos/surfaceflinger/udc/types';
+import root from 'protos/surfaceflinger/udc/json';
+import {android} from 'protos/surfaceflinger/udc/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,

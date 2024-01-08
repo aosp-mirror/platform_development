@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import root from 'protos/test/fake_proto/root';
+import root from 'protos/test/fake_proto/json';
 import {FakeProtoTransformer} from './fake_proto_transformer';
 
 describe('FakeProtoTransformer', () => {

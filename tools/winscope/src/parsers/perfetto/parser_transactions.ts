@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {TimestampType} from 'common/time';
-import root from 'protos/transactions/latest/root';
-import {perfetto} from 'protos/transactions/latest/types';
+import root from 'protos/transactions/latest/json';
+import {perfetto} from 'protos/transactions/latest/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
