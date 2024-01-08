@@ -17,7 +17,12 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {
+  CorruptedArchive,
+  NoInputFiles,
+  UnsupportedFileFormat,
+  WinscopeError,
+} from 'messaging/winscope_error';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
@@ -135,10 +140,7 @@ describe('TracePipeline', () => {
 
     await loadFiles([corruptedArchive]);
 
-    await expectLoadResult(0, [
-      new WinscopeError(WinscopeErrorType.CORRUPTED_ARCHIVE, 'corrupted_archive.zip'),
-      new WinscopeError(WinscopeErrorType.NO_INPUT_FILES),
-    ]);
+    await expectLoadResult(0, [new CorruptedArchive(corruptedArchive), new NoInputFiles()]);
   });
 
   it('is robust to invalid trace files', async () => {
@@ -146,9 +148,7 @@ describe('TracePipeline', () => {
 
     await loadFiles(invalidFiles);
 
-    await expectLoadResult(0, [
-      new WinscopeError(WinscopeErrorType.UNSUPPORTED_FILE_FORMAT, 'winscope_homepage.png'),
-    ]);
+    await expectLoadResult(0, [new UnsupportedFileFormat('winscope_homepage.png')]);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
@@ -160,9 +160,7 @@ describe('TracePipeline', () => {
 
     await loadFiles(files);
 
-    await expectLoadResult(1, [
-      new WinscopeError(WinscopeErrorType.UNSUPPORTED_FILE_FORMAT, 'winscope_homepage.png'),
-    ]);
+    await expectLoadResult(1, [new UnsupportedFileFormat('winscope_homepage.png')]);
   });
 
   it('can remove traces', async () => {
