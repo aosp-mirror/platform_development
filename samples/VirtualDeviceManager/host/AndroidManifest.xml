@@ -72,6 +72,7 @@
         <activity
             android:name=".EmptyTrampolineActivity"
             android:exported="false"
+            android:configChanges="density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
             android:excludeFromRecents="true" />
 
         <service

@@ -17,6 +17,7 @@
 package com.example.android.vdmdemo.host;
 
 import android.content.Intent;
+import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,15 +26,15 @@ import dagger.hilt.android.AndroidEntryPoint;
 /**
  * Empty Activity used as a trampoline for launching activities on virtual displays.
  *
- * Without this activity, the {@code moveTaskToBack} API may result in an undesired behavior, if
- * there are no other tasks on the virtual display.
+ * <p>Without this activity, the {@code moveTaskToBack} API may result in an undesired behavior, if
+ * there are no other tasks on the virtual display.</p>
  */
 @AndroidEntryPoint(AppCompatActivity.class)
 public final class EmptyTrampolineActivity extends Hilt_EmptyTrampolineActivity {
 
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         startActivity(getIntent().getParcelableExtra(Intent.EXTRA_INTENT, Intent.class));
     }
 }
