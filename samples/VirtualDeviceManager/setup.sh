@@ -40,23 +40,25 @@ function install_app() {
 function display_help() {
   echo "Setup helper for the VirtualDeviceManager host and client applications."
   echo ""
-  echo "  -s, --host):   Setup the host application on the only device connected via ADB."
-  echo "  -c, --client): Setup the client application on the only device connected via ADB."
-  echo "  -h, --help):   Print this help."
+  echo "  -s, --host):         Setup the host application on the only device connected via ADB."
+  echo "  -c, --client):       Setup the client application on the only device connected via ADB."
+  echo "  -i, --install-only): Only install the selected application. Will not perform any build."
+  echo "  -h, --help):         Print this help."
 }
 
 [[ -f build/make/envsetup.sh ]] || die "Run this script from the root of the tree."
 
 INSTALL_HOST_ONLY=false
 INSTALL_CLIENT_ONLY=false
+PERFORM_BUILD=true
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -h|--help) display_help; exit ;;
         -s|--host) INSTALL_HOST_ONLY=true; shift ;;
         -c|--client) INSTALL_CLIENT_ONLY=true; shift ;;
+        -i|--install-only) PERFORM_BUILD=false; shift ;;
         *) echo "Unknown parameter passed: $1" ;;
     esac
-    shift
 done
 
 DEVICE_COUNT=$(adb devices -l | tail -n +2 | head -n -1 | wc -l)
@@ -110,13 +112,19 @@ APKS_TO_BUILD=""
 [[ -n "${HOST_SERIAL}" ]] && APKS_TO_BUILD="${APKS_TO_BUILD} VdmHost VdmDemos"
 [[ -n "${CLIENT_SERIAL}" ]] && APKS_TO_BUILD="${APKS_TO_BUILD} VdmClient"
 [[ -n "${APKS_TO_BUILD}" ]] || exit 0
-echo
-echo "Building APKs:${APKS_TO_BUILD}..."
-echo
 
-source ./build/envsetup.sh || die "Failed to set up environment"
-[[ -n "${ANDROID_BUILD_TOP}" ]] || run_cmd_or_die tapas "${APKS_TO_BUILD}"
-UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true m -j "${APKS_TO_BUILD}" || die "Build failed"
+if [[ ${PERFORM_BUILD} == true ]];
+then
+  echo
+  echo "Building APKs:${APKS_TO_BUILD}..."
+  echo
+
+  source ./build/envsetup.sh || die "Failed to set up environment"
+  [[ -n "${ANDROID_BUILD_TOP}" ]] || run_cmd_or_die tapas "${APKS_TO_BUILD}"
+  UNBUNDLED_BUILD_SDKS_FROM_SOURCE=true m -j "${APKS_TO_BUILD}" || die "Build failed"
+else
+  echo "Skipping Build"
+fi
 
 if [[ -n "${CLIENT_SERIAL}" ]]; then
   echo
