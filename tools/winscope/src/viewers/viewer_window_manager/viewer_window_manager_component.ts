@@ -44,6 +44,7 @@ import {UiData} from './ui_data';
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
+        [store]="store"
         [isProtoDump]="true"></properties-view>
     </div>
   `,
