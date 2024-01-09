@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {TraceOverridden, WinscopeError} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
@@ -134,8 +134,8 @@ describe('TraceFileFilter', () => {
       expect(result.perfetto).toEqual(large);
       expect(result.legacy).toEqual([]);
       expect(errors).toEqual([
-        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, small.getDescriptor()),
-        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, medium.getDescriptor()),
+        new TraceOverridden(small.getDescriptor()),
+        new TraceOverridden(medium.getDescriptor()),
       ]);
     });
   });

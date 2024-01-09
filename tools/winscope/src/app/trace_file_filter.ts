@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {TraceOverridden} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {TraceFile} from 'trace/trace_file';
 
@@ -107,9 +107,7 @@ export class TraceFileFilter {
     return files.reduce((largestSoFar, file) => {
       const [largest, overridden] =
         largestSoFar.file.size > file.file.size ? [largestSoFar, file] : [file, largestSoFar];
-      errorListener.onError(
-        new WinscopeError(WinscopeErrorType.FILE_OVERRIDDEN, overridden.getDescriptor())
-      );
+      errorListener.onError(new TraceOverridden(overridden.getDescriptor()));
       return largest;
     });
   }

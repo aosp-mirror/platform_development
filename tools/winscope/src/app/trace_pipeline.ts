@@ -16,7 +16,7 @@
 
 import {FileUtils} from 'common/file_utils';
 import {ProgressListener} from 'messaging/progress_listener';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {CorruptedArchive, NoCommonTimestampType, NoInputFiles} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory} from 'parsers/parser_factory';
@@ -52,7 +52,7 @@ export class TracePipeline {
       const unzippedArchives = await this.unzipFiles(files, progressListener, errorListener);
 
       if (unzippedArchives.length === 0) {
-        errorListener.onError(new WinscopeError(WinscopeErrorType.NO_INPUT_FILES));
+        errorListener.onError(new NoInputFiles());
         return;
       }
 
@@ -64,7 +64,7 @@ export class TracePipeline {
 
       const commonTimestampType = this.loadedParsers.findCommonTimestampType();
       if (commonTimestampType === undefined) {
-        errorListener.onError(new WinscopeError(WinscopeErrorType.NO_COMMON_TIMESTAMP_TYPE));
+        errorListener.onError(new NoCommonTimestampType());
         return;
       }
 
@@ -134,7 +134,7 @@ export class TracePipeline {
   ) {
     const filterResult = await this.traceFileFilter.filter(unzippedArchive, errorListener);
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
-      errorListener.onError(new WinscopeError(WinscopeErrorType.NO_INPUT_FILES));
+      errorListener.onError(new NoInputFiles());
       return;
     }
 
@@ -210,7 +210,7 @@ export class TracePipeline {
           unzippedArchives.push([...subTraceFiles]);
           onSubProgressUpdate(100);
         } catch (e) {
-          errorListener.onError(new WinscopeError(WinscopeErrorType.CORRUPTED_ARCHIVE, file.name));
+          errorListener.onError(new CorruptedArchive(file));
         }
       } else {
         unzippedArchives.push([new TraceFile(file, undefined)]);

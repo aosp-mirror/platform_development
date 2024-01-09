@@ -16,7 +16,9 @@
 
 package com.example.android.vdmdemo.client;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -28,8 +30,10 @@ import android.view.inputmethod.InputMethodManager;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
@@ -51,26 +55,42 @@ import javax.inject.Inject;
  */
 @AndroidEntryPoint(AppCompatActivity.class)
 public class MainActivity extends Hilt_MainActivity {
+    private static final String TAG = "VdmClient";
 
     @Inject RemoteIo mRemoteIo;
     @Inject ConnectionManager mConnectionManager;
     @Inject InputManager mInputManager;
     @Inject VirtualSensorController mSensorController;
     @Inject AudioPlayer mAudioPlayer;
+    @Inject AudioRecorder mAudioRecorder;
 
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private DisplayAdapter mDisplayAdapter;
     private InputMethodManager mInputMethodManager;
+    private final ActivityResultLauncher<String> mRequestPermissionLauncher =
+            registerForActivityResult(new RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    mRemoteIo.addMessageConsumer(mAudioRecorder);
+                } else {
+                    mRemoteIo.removeMessageConsumer(mAudioRecorder);
+                }
+            });
 
     private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
             (status) -> {
                 if (status.state == ConnectionManager.ConnectionStatus.State.CONNECTED) {
+                    boolean supportsAudioOutput =
+                            MainActivity.this.getPackageManager().hasSystemFeature(
+                                    PackageManager.FEATURE_AUDIO_OUTPUT);
+                    boolean supportsAudioInput = hasRecordAudioPermission(MainActivity.this);
                     mRemoteIo.sendMessage(RemoteEvent.newBuilder()
                             .setDeviceCapabilities(DeviceCapabilities.newBuilder()
                                     .setDeviceName(Build.MODEL)
                                     .addAllSensorCapabilities(
-                                            mSensorController.getSensorCapabilities()))
-                            .build());
+                                            mSensorController.getSensorCapabilities())
+                                    .setSupportsAudioOutput(supportsAudioOutput)
+                                    .setSupportsAudioInput(supportsAudioInput)
+                            ).build());
                 } else {
                     if (mDisplayAdapter != null) {
                         runOnUiThread(mDisplayAdapter::clearDisplays);
@@ -128,12 +148,20 @@ public class MainActivity extends Hilt_MainActivity {
     public void onResume() {
         super.onResume();
         mDisplayAdapter.resumeAllDisplays();
+
+        if (hasRecordAudioPermission(this)) {
+            mRemoteIo.addMessageConsumer(mAudioRecorder);
+        } else {
+            mRequestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mDisplayAdapter.pauseAllDisplays();
+        mAudioRecorder.stop();
+        mRemoteIo.removeMessageConsumer(mAudioRecorder);
     }
 
     @Override
@@ -203,5 +231,10 @@ public class MainActivity extends Hilt_MainActivity {
         int visibility = dpad.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE;
         dpad.setVisibility(visibility);
         requireViewById(R.id.nav_touchpad_fragment_container).setVisibility(visibility);
+    }
+
+    private static boolean hasRecordAudioPermission(Context context) {
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
     }
 }
