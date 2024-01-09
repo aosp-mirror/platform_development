@@ -67,7 +67,7 @@ interface Tab extends View {
   styles: [
     `
       .overlay {
-        z-index: 10;
+        z-index: 30;
         position: fixed;
         top: 0px;
         left: 0px;
