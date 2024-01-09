@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 export const nodeStyles = `
-    .node {position: relative;display: inline-flex;padding: 2px 0; width: 100%;}
-    .node.clickable {cursor: pointer;}
+    .node {
+        position: relative;
+        display: inline-flex;
+        padding: 2px 0;
+        width: 100%;
+    }
+
+    .node.clickable {
+        cursor: pointer;
+    }
+
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
         background: #03ff35;
@@ -26,7 +35,9 @@ export const nodeStyles = `
         background: #ff6b6b;
     }
 
-    .node:hover:not(.selected) {background-color: rgba(127, 127, 127, 0.5)}
+    .node:hover:not(.selected) {
+        background-color: rgba(127, 127, 127, 0.5)
+    }
 
     .node:not(.selected).modified {
         background: cyan;
@@ -42,24 +53,75 @@ export const nodeStyles = `
         color: white;
     }
 
-    .selected {background-color: #87ACEC;}
+    .selected {
+        background-color: #87ACEC;
+    }
 `;
 
 // FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `
-    .node + .children:not(.flattened) {margin-left: 12px;padding-left: 11px;border-left: 1px solid var(--border-color);}
-    .node.selected + .children {border-left: 1px solid rgb(150, 150, 150);}
-    .node.child-selected + .children {border-left: 1px solid rgb(100, 100, 100);}
-    .node:hover + .children {border-left: 1px solid rgba(150, 150, 150, 0.75);}
-    .node.child-hover + .children {border-left: 1px solid #b4b4b4;}
+    .node + .children:not(.flattened) {
+        margin-left: 12px;
+        padding-left: 11px;
+        border-left: 1px solid var(--border-color);
+    }
+
+    .node.selected + .children {
+        border-left: 1px solid rgb(150, 150, 150);
+    }
+
+    .node.child-selected + .children {
+        border-left: 1px solid rgb(100, 100, 100);
+    }
+
+    .node:hover + .children {
+        border-left: 1px solid rgba(150, 150, 150, 0.75);
+    }
+
+    .node.child-hover + .children {
+        border-left: 1px solid #b4b4b4;
+    }
 `;
 
 export const nodeInnerItemStyles = `
-    .leaf-node-icon {content: ''; display: inline-block; margin-left: 40%; margin-top: 40%; height: 5px; width: 5px; border-radius: 50%;background-color: #9b9b9b;}
-    .leaf-node-icon-wrapper, .description, .toggle-tree-btn, .expand-tree-btn, .pin-node-btn { position: relative; display: inline-block;}
-    .pin-node-btn {padding: 0; transform: scale(0.7)}
-    .description {align-items: center; flex: 1 1 auto; vertical-align: middle; word-break: break-all; flex-basis: 0;}
-    .leaf-node-icon-wrapper{padding-left: 6px; padding-right: 6px; min-height: 24px; width: 24px; position:relative; align-content: center; vertical-align: middle;}
+    .leaf-node-icon {
+        content: '';
+        display: inline-block;
+        margin-left: 40%;
+        margin-top: 40%;
+        height: 5px;
+        width: 5px;
+        border-radius: 50%;
+        background-color: #9b9b9b;
+    }
+
+    .icon-wrapper, .description {
+        position: relative;
+        display: inline-block;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn {
+        padding: 0;
+    }
+
+    .pin-node-btn {
+        transform: scale(0.7);
+    }
+
+    .description {
+        align-items: center;
+        flex: 1 1 auto;
+        vertical-align: middle;
+        word-break: break-all;
+        flex-basis: 0;
+    }
+
+    .leaf-node-icon-wrapper {
+        padding-left: 6px;
+        min-height: 24px;
+        width: 24px;
+        align-content: center;
+    }
 
     .icon-button {
         background: none;
