@@ -29,8 +29,6 @@ import android.media.AudioRecord;
 import android.media.audiopolicy.AudioMix;
 import android.media.audiopolicy.AudioMixingRule;
 import android.media.audiopolicy.AudioPolicy;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Log;
 
 import androidx.annotation.GuardedBy;
@@ -58,7 +56,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-final class AudioStreamer implements AutoCloseable {
+final class AudioStreamer {
     private static final String TAG = AudioStreamer.class.getSimpleName();
 
     private static final int SAMPLE_RATE = 44000;
@@ -80,9 +78,6 @@ final class AudioStreamer implements AutoCloseable {
     private final int mPlaybackSessionId;
 
     private final Object mLock = new Object();
-
-    private final HandlerThread mHandlerThread = new HandlerThread("PolicyUpdater");
-    private final Handler mHandler;
 
     @GuardedBy("mLock")
     private AudioPolicy mAudioPolicy;
@@ -156,13 +151,11 @@ final class AudioStreamer implements AutoCloseable {
         mRemoteIo = remoteIo;
         mAudioManager = context.getSystemService(AudioManager.class);
         mPlaybackSessionId = mAudioManager.generateAudioSessionId();
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-        mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, mHandler);
     }
 
     public void start() {
-        mHandler.post(this::registerAudioPolicy);
+        mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, null);
+        registerAudioPolicy();
     }
 
     public int getPlaybackSessionId() {
@@ -236,24 +229,19 @@ final class AudioStreamer implements AutoCloseable {
 
     public void updateVdmUids(Set<Integer> uids) {
         Log.w(TAG, "Updating mixing rule to reroute uids " + uids);
-        mHandler.post(
-                () -> {
-                    synchronized (mLock) {
-                        if (mRemoteSubmixDevice == null) {
-                            Log.e(
-                                    TAG,
-                                    "Cannot update audio policy - remote submix device not known");
-                            return;
-                        }
+        synchronized (mLock) {
+            if (mRemoteSubmixDevice == null) {
+                Log.e(TAG, "Cannot update audio policy - remote submix device not known");
+                return;
+            }
 
-                        if (mReroutedUids.equals(uids)) {
-                            Log.d(TAG, "Not updating UID audio policy for same set of UIDs");
-                            return;
-                        }
+            if (mReroutedUids.equals(uids)) {
+                Log.d(TAG, "Not updating UID audio policy for same set of UIDs");
+                return;
+            }
 
-                        updateAudioPolicies(uids);
-                    }
-                });
+            updateAudioPolicies(uids);
+        }
     }
 
     // TODO(b/293611855) Use finer grained audio policy + mix controls once bugs are addressed
@@ -323,14 +311,9 @@ final class AudioStreamer implements AutoCloseable {
                 mGhostRecord.release();
                 mGhostRecord = null;
             }
-        }
-    }
 
-    @Override
-    public void close() {
-        mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
-        stop();
-        mHandlerThread.quitSafely();
+            mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
+        }
     }
 
     private AudioMixingRule createUidMixingRule(Collection<Integer> uids) {
