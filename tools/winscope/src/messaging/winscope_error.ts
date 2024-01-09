@@ -14,21 +14,84 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
+import {ElapsedTimestamp, TimeRange} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
 
-export enum WinscopeErrorType {
-  CORRUPTED_ARCHIVE,
-  FILE_OUTDATED,
-  FILE_OVERRIDDEN,
-  NO_COMMON_TIMESTAMP_TYPE,
-  NO_INPUT_FILES,
-  UNSUPPORTED_FILE_FORMAT,
+export interface WinscopeError {
+  getType(): string;
+  getMessage(): string;
 }
 
-export class WinscopeError {
-  constructor(
-    public type: WinscopeErrorType,
-    public trace: string | undefined = undefined,
-    public traceType: TraceType | undefined = undefined
-  ) {}
+export class CorruptedArchive implements WinscopeError {
+  constructor(private readonly file: File) {}
+
+  getType(): string {
+    return 'corrupted archive';
+  }
+
+  getMessage(): string {
+    return `${this.file.name}: corrupted archive`;
+  }
+}
+
+export class NoCommonTimestampType implements WinscopeError {
+  getType(): string {
+    return 'no common timestamp';
+  }
+
+  getMessage(): string {
+    return 'Failed to load traces because no common timestamp type could be found';
+  }
+}
+
+export class NoInputFiles implements WinscopeError {
+  getType(): string {
+    return 'no input';
+  }
+
+  getMessage(): string {
+    return `Input has no valid trace files`;
+  }
+}
+
+export class TraceHasOldData implements WinscopeError {
+  constructor(private readonly descriptor: string, private readonly timeGap: TimeRange) {}
+
+  getType(): string {
+    return 'old trace';
+  }
+
+  getMessage(): string {
+    const elapsedTime = new ElapsedTimestamp(
+      this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs()
+    );
+    return `${this.descriptor}: discarded because data is older than ${TimeUtils.format(
+      elapsedTime,
+      true
+    )}`;
+  }
+}
+
+export class TraceOverridden implements WinscopeError {
+  constructor(private readonly descriptor: string) {}
+
+  getType(): string {
+    return 'trace overridden';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: overridden by another trace of same type`;
+  }
+}
+
+export class UnsupportedFileFormat implements WinscopeError {
+  constructor(private readonly descriptor: string) {}
+
+  getType(): string {
+    return 'unsupported format';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: unsupported format`;
+  }
 }

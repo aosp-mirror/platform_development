@@ -15,7 +15,7 @@
  */
 
 import {ProgressListener} from 'messaging/progress_listener';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {UnsupportedFileFormat} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -84,9 +84,7 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        errorListener?.onError(
-          new WinscopeError(WinscopeErrorType.UNSUPPORTED_FILE_FORMAT, traceFile.getDescriptor())
-        );
+        errorListener?.onError(new UnsupportedFileFormat(traceFile.getDescriptor()));
       }
     }
     return parsers;

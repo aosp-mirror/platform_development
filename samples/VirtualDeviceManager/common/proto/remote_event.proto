@@ -21,7 +21,7 @@ package com.example.android.vdmdemo.common;
 option java_outer_classname = "RemoteEventProto";
 option java_package = "com.example.android.vdmdemo.common";
 
-// Next ID: 17
+// Next ID: 19
 message RemoteEvent {
   int32 display_id = 1;
 
@@ -41,13 +41,16 @@ message RemoteEvent {
     RemoteHomeEvent home_event = 14;
     DisplayChangeEvent display_change_event = 15;
     KeyboardVisibilityEvent keyboard_visibility_event = 16;
+    StartAudioInput start_audio_input = 17;
+    StopAudioInput stop_audio_input = 18;
   }
 }
 
-// TODO(b/289897950): Support virtual audio input and output
 message DeviceCapabilities {
   string device_name = 1;
   repeated SensorCapabilities sensor_capabilities = 2;
+  bool supports_audio_input = 3;
+  bool supports_audio_output = 4;
 }
 
 message DisplayRotation {
@@ -139,6 +142,14 @@ message RemoteSensorEvent {
 message StartAudio {}
 
 message StopAudio {}
+
+message StartAudioInput {
+  int32 sample_rate = 1;
+  int32 channel_mask = 2;
+  int32 encoding = 3;
+}
+
+message StopAudioInput {}
 
 message AudioFrame {
   bytes data = 1;
