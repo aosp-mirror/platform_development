@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {PersistentStore} from 'common/persistent_store';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType, ViewNode} from 'trace/trace_type';
 import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
@@ -70,11 +71,13 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           *ngIf="objectKeys(propertiesTree).length > 0 && !showViewCaptureFormat()"
           [item]="propertiesTree"
           [showNode]="showNode"
+          [store]="store"
+          [useStoredExpandedState]="true"
+          [isExpandedByDefault]="false"
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"
           (highlightedChange)="onHighlightedPropertyChange($event)"
-          [isLeaf]="isLeaf"
-          [isAlwaysCollapsed]="true"></tree-view>
+          [isLeaf]="isLeaf"></tree-view>
       </div>
     </div>
   `,
@@ -136,6 +139,7 @@ export class PropertiesComponent {
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
+  @Input() store!: PersistentStore;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 

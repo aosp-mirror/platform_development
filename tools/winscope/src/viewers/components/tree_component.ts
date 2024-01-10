@@ -21,7 +21,9 @@ import {
   Inject,
   Input,
   Output,
+  SimpleChanges,
 } from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -41,13 +43,12 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       [class.child-selected]="hasSelectedChild()"
       [class.hover]="nodeHover"
       [class.childHover]="childHover"
-      [isAlwaysCollapsed]="isAlwaysCollapsed"
       [class]="diffClass(item)"
       [style]="nodeOffsetStyle()"
       [item]="item"
       [flattened]="isFlattened"
       [isLeaf]="isLeaf(this.item)"
-      [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
+      [isExpanded]="isExpanded()"
       [hasChildren]="hasChildren()"
       [isPinned]="isPinned()"
       [isSelected]="isHighlighted(item, highlightedItem)"
@@ -60,7 +61,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
       *ngIf="hasChildren()"
       class="children"
       [class.flattened]="isFlattened"
-      [hidden]="!isCollapsed()">
+      [hidden]="!isExpanded()">
       <tree-view
         *ngFor="let child of children(); trackBy: childTrackById"
         class="childrenTree"
@@ -70,7 +71,7 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
         [isLeaf]="isLeaf"
         [dependencies]="dependencies"
         [isFlattened]="isFlattened"
-        [useGlobalCollapsedState]="useGlobalCollapsedState"
+        [useStoredExpandedState]="useStoredExpandedState"
         [initialDepth]="initialDepth + 1"
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
@@ -94,14 +95,16 @@ export class TreeComponent {
   @Input() dependencies: TraceType[] = [];
 
   @Input() item?: UiTreeNode;
-  @Input() store!: PersistentStore;
+  @Input() store?: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItem: string = '';
-  @Input() pinnedItems?: HierarchyTreeNode[] = [];
+  @Input() pinnedItems: HierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
-  @Input() useGlobalCollapsedState?: boolean;
-  @Input() isAlwaysCollapsed?: boolean;
+
+  // Conditionally use stored states. Some traces (e.g. transactions) do not provide items with the "stable id" field needed to search values in the storage.
+  @Input() useStoredExpandedState = false;
+
   @Input() showNode = (item: UiTreeNode) => true;
   @Input() isLeaf = (item?: UiTreeNode) => {
     return !item || !item.children || item.children.length === 0;
@@ -113,12 +116,13 @@ export class TreeComponent {
   @Output() hoverStart = new EventEmitter<void>();
   @Output() hoverEnd = new EventEmitter<void>();
 
-  isCollapsedByDefault = true;
-  localCollapsedState = this.isCollapsedByDefault;
+  localExpandedState = true;
   nodeHover = false;
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
+
+  private storeKeyExpandedState = '';
 
   childTrackById(index: number, child: UiTreeNode): string {
     if (child.stableId !== undefined) {
@@ -138,13 +142,18 @@ export class TreeComponent {
     this.nodeElement?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
   }
 
-  ngOnInit() {
-    if (this.isCollapsedByDefault) {
-      this.setCollapseValue(this.isCollapsedByDefault);
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['item']) {
+      this.storeKeyExpandedState = `treeView.expandedState.item.${this.dependencies}.${this.item?.stableId}`;
+      if (this.store) {
+        this.setExpandedValue(
+          true,
+          assertDefined(this.store).get(this.storeKeyExpandedState) === null
+        );
+      } else {
+        this.setExpandedValue(true);
+      }
     }
-  }
-
-  ngOnChanges() {
     if (
       this.item instanceof HierarchyTreeNode &&
       UiTreeUtils.isHighlighted(this.item, this.highlightedItem)
@@ -183,12 +192,6 @@ export class TreeComponent {
     };
   }
 
-  private updateHighlightedItem() {
-    if (this.item?.stableId) {
-      this.highlightedChange.emit(`${this.item.stableId}`);
-    }
-  }
-
   isPinned() {
     if (this.item instanceof HierarchyTreeNode) {
       return this.pinnedItems?.map((item) => `${item.stableId}`).includes(`${this.item.stableId}`);
@@ -213,25 +216,23 @@ export class TreeComponent {
   }
 
   toggleTree() {
-    this.setCollapseValue(!this.isCollapsed());
+    this.setExpandedValue(!this.isExpanded());
   }
 
   expandTree() {
-    this.setCollapseValue(true);
+    this.setExpandedValue(true);
   }
 
-  isCollapsed() {
-    if (this.isAlwaysCollapsed || this.isLeaf(this.item)) {
+  isExpanded() {
+    if (this.isLeaf(this.item)) {
       return true;
     }
 
-    if (this.useGlobalCollapsedState) {
-      return (
-        this.store.get(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`) ===
-          'true' ?? this.isCollapsedByDefault
-      );
+    if (this.useStoredExpandedState) {
+      return assertDefined(this.store).get(this.storeKeyExpandedState) === 'true' ?? false;
     }
-    return this.localCollapsedState;
+
+    return this.localExpandedState;
   }
 
   children(): UiTreeNode[] {
@@ -251,7 +252,7 @@ export class TreeComponent {
     if (!this.hasChildren()) {
       return false;
     }
-    for (const child of this.item!.children!) {
+    for (const child of assertDefined(this.item?.children)) {
       if (child.stableId && this.highlightedItem === child.stableId) {
         return true;
       }
@@ -259,14 +260,17 @@ export class TreeComponent {
     return false;
   }
 
-  private setCollapseValue(isCollapsed: boolean) {
-    if (this.useGlobalCollapsedState) {
-      this.store.add(
-        `collapsedState.item.${this.dependencies}.${this.item?.stableId}`,
-        `${isCollapsed}`
-      );
+  private updateHighlightedItem() {
+    if (this.item?.stableId) {
+      this.highlightedChange.emit(`${this.item.stableId}`);
+    }
+  }
+
+  private setExpandedValue(isExpanded: boolean, shouldUpdateStoredState = true) {
+    if (this.useStoredExpandedState && shouldUpdateStoredState) {
+      assertDefined(this.store).add(this.storeKeyExpandedState, `${isExpanded}`);
     } else {
-      this.localCollapsedState = isCollapsed;
+      this.localExpandedState = isExpanded;
     }
   }
 

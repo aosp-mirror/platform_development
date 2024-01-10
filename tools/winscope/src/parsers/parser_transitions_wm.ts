@@ -7,8 +7,8 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
-import root from 'protos/transitions/udc/root';
-import {com} from 'protos/transitions/udc/types';
+import root from 'protos/transitions/udc/json';
+import {com} from 'protos/transitions/udc/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';

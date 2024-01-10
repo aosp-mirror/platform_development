@@ -16,8 +16,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
-import root from 'protos/windowmanager/latest/root';
-import {com} from 'protos/windowmanager/latest/types';
+import root from 'protos/windowmanager/latest/json';
+import {com} from 'protos/windowmanager/latest/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
