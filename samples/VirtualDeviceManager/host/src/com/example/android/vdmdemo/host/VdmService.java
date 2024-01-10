@@ -244,7 +244,7 @@ public final class VdmService extends Hilt_VdmService {
         closeVirtualDevice();
         mRemoteIo.removeMessageConsumer(mRemoteEventConsumer);
         mDisplayManager.unregisterDisplayListener(mDisplayListener);
-        mAudioStreamer.close();
+        mAudioStreamer.stop();
         mAudioInjector.stop();
     }
 

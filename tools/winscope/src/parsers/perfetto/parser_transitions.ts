@@ -24,7 +24,7 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
-import {perfetto} from 'protos/transitions/latest/types';
+import {perfetto} from 'protos/transitions/latest/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';

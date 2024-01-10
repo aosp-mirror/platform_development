@@ -22,7 +22,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
   template: `
     <button *ngIf="showChevron()" class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
       <mat-icon>
-        {{ isCollapsed ? 'arrow_drop_down' : 'chevron_right' }}
+        {{ isExpanded ? 'arrow_drop_down' : 'chevron_right' }}
       </mat-icon>
     </button>
 
@@ -44,7 +44,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
     </div>
 
     <button
-      *ngIf="hasChildren && !isCollapsed"
+      *ngIf="hasChildren && !isExpanded"
       class="icon-button expand-tree-btn"
       [class]="collapseDiffClass"
       (click)="expandTree($event)">
@@ -57,11 +57,10 @@ export class TreeNodeComponent {
   @Input() item!: UiTreeNode;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
-  @Input() isCollapsed?: boolean;
+  @Input() isExpanded?: boolean;
   @Input() hasChildren?: boolean = false;
   @Input() isPinned?: boolean = false;
   @Input() isInPinnedSection?: boolean = false;
-  @Input() isAlwaysCollapsed?: boolean;
   @Input() isSelected?: boolean = false;
 
   @Output() toggleTreeChange = new EventEmitter<void>();
@@ -103,10 +102,8 @@ export class TreeNodeComponent {
   }
 
   toggleTree(event: MouseEvent) {
-    if (!this.isAlwaysCollapsed) {
-      event.stopPropagation();
-      this.toggleTreeChange.emit();
-    }
+    event.stopPropagation();
+    this.toggleTreeChange.emit();
   }
 
   showChevron() {
@@ -128,7 +125,7 @@ export class TreeNodeComponent {
   }
 
   updateCollapseDiffClass() {
-    if (this.isCollapsed) {
+    if (this.isExpanded) {
       return '';
     }
 

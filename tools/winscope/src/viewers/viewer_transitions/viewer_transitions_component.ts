@@ -104,8 +104,7 @@ import {UiData} from './ui_data';
         <tree-view
           [item]="uiData.selectedTransitionPropertiesTree"
           [showNode]="showNode"
-          [isLeaf]="isLeaf"
-          [isAlwaysCollapsed]="true">
+          [isLeaf]="isLeaf">
         </tree-view>
         <div *ngIf="!uiData.selectedTransitionPropertiesTree">No selected transition.</div>
       </div>

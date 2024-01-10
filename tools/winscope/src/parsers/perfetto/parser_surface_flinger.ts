@@ -16,8 +16,8 @@
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
-import root from 'protos/surfaceflinger/latest/root';
-import {perfetto} from 'protos/surfaceflinger/latest/types';
+import root from 'protos/surfaceflinger/latest/json';
+import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,

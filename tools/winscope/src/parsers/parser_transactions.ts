@@ -16,8 +16,8 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import root from 'protos/transactions/udc/root';
-import {android} from 'protos/transactions/udc/types';
+import root from 'protos/transactions/udc/json';
+import {android} from 'protos/transactions/udc/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,

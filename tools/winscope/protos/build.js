@@ -20,64 +20,72 @@ const WINSCOPE_TOP = __dirname + '/..';
 const PERFETTO_TOP = ANDROID_BUILD_TOP + '/external/perfetto';
 const OUT_TOP = __dirname + '/../deps_build/protos';
 
-runCommand(`rm -rf ${OUT_TOP}`);
+build();
 
-// IME
-buildProtos([
-    '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
-  ], 'ime/latest')
+async function build() {
+    await runCommand(`rm -rf ${OUT_TOP}`);
 
-// ProtoLog
-buildProtos([
-    '../../../../frameworks/base/core/proto/android/internal/protolog.proto'
-  ], 'protolog/latest');
+    const promises = [
+        // IME
+        buildProtos([
+            '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
+        ], 'ime/latest'),
 
-// SurfaceFlinger
-buildProtos([
-    'surfaceflinger/udc/layerstrace.proto',
-  ], 'surfaceflinger/udc');
-buildProtos([
-    '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_layers.proto',
-  ], 'surfaceflinger/latest');
+        // ProtoLog
+        buildProtos([
+            '../../../../frameworks/base/core/proto/android/internal/protolog.proto'
+        ], 'protolog/latest'),
 
-// Transactions
-buildProtos([
-    'surfaceflinger/udc/transactions.proto',
-  ], 'transactions/udc');
-buildProtos([
-    '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_transactions.proto',
-  ], 'transactions/latest');
+        // SurfaceFlinger
+        buildProtos([
+            'surfaceflinger/udc/layerstrace.proto',
+        ], 'surfaceflinger/udc'),
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_layers.proto',
+        ], 'surfaceflinger/latest'),
 
-// Transitions
-buildProtos([
-    'transitions/udc/windowmanagertransitiontrace.proto',
-    'transitions/udc/wm_shell_transition_trace.proto'
-  ], 'transitions/udc');
-buildProtos([
-      '../../../../external/perfetto/protos/perfetto/trace/android/shell_transition.proto',
-  ], 'transitions/latest');
+        // Transactions
+        buildProtos([
+            'surfaceflinger/udc/transactions.proto',
+        ], 'transactions/udc'),
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/surfaceflinger_transactions.proto',
+        ], 'transactions/latest'),
 
-// ViewCapture
-buildProtos([
-    '../../../../frameworks/libs/systemui/viewcapturelib/src/com/android/app/viewcapture/proto/view_capture.proto'
-  ], 'viewcapture/latest');
+        // Transitions
+        buildProtos([
+            'transitions/udc/windowmanagertransitiontrace.proto',
+            'transitions/udc/wm_shell_transition_trace.proto'
+        ], 'transitions/udc'),
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/shell_transition.proto',
+        ], 'transitions/latest'),
 
-// WindowManager
-buildProtos([
-    '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
-  ], 'windowmanager/latest');
+        // ViewCapture
+        buildProtos([
+            '../../../../frameworks/libs/systemui/viewcapturelib/src/com/android/app/viewcapture/proto/view_capture.proto'
+        ], 'viewcapture/latest'),
 
-// Test
-buildProtos([
-    'test/fake_proto_test.proto',
-  ], 'test/fake_proto');
+        // WindowManager
+        buildProtos([
+            '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
+        ], 'windowmanager/latest'),
 
-function buildProtos(protoPaths, outSubdir) {
+        // Test
+        buildProtos([
+            'test/fake_proto_test.proto',
+        ], 'test/fake_proto'),
+    ];
+
+    await Promise.all(promises);
+}
+
+async function buildProtos(protoPaths, outSubdir) {
     const outDir = OUT_TOP + '/' + outSubdir;
     const protoFullPaths = protoPaths.map((path) => __dirname + '/' + path);
     const rootName = outSubdir.replaceAll('/', '_');
 
-    const pbjsCommand = [
+    const commandBuildJson = [
         'npx',
         'pbjs',
         //TODO(b/318480413): for perfetto traces use '--force-bigint' as soon as available,
@@ -85,7 +93,7 @@ function buildProtos(protoPaths, outSubdir) {
         '--force-long',
         '--target json-module',
         '--wrap es6',
-        `--out ${outDir}/root.js`,
+        `--out ${outDir}/json.js`,
         `--root ${rootName}`,
         `--path ${PERFETTO_TOP}`,
         `--path ${WINSCOPE_TOP}`,
@@ -93,39 +101,43 @@ function buildProtos(protoPaths, outSubdir) {
         protoFullPaths.join(' ')
     ].join(' ');
 
-    const pbtsCommand = [
+    const commandBuildJs = [
         'npx',
         'pbjs',
         '--force-long',
         '--target static-module',
+        `--out ${outDir}/static.js`,
         `--path ${PERFETTO_TOP}`,
         `--path ${WINSCOPE_TOP}`,
         `--path ${ANDROID_BUILD_TOP}`,
         protoFullPaths.join(' '),
-        '|',
-        'npx',
-        'pbts',
-        `--out ${outDir}/types.d.ts`,
-        '-'
     ].join(' ');
 
-    runCommand(`mkdir -p ${outDir}`)
-    runCommand(pbjsCommand);
-    runCommand(pbtsCommand);
+    const commandBuildTs = [
+        'npx',
+        'pbts',
+        `--out ${outDir}/static.d.ts`,
+        `${outDir}/static.js`
+    ].join(' ');
+
+    await runCommand(`mkdir -p ${outDir}`)
+    await runCommand(commandBuildJson);
+    await runCommand(commandBuildJs);
+    await runCommand(commandBuildTs);
 }
 
 function runCommand(command) {
-    exec(command, (err, stdout, stderr) => {
-        if (err) {
-            throw Error(`
-Failed to execute command
-
-command: ${command}
-
-stdout: ${stdout}
-
-stderr: ${stderr}
-      `);
-        }
+    return new Promise((resolve, reject) => {
+        exec(command, (err, stdout, stderr) => {
+            if (err) {
+                const errorMessage =
+                    "Failed to execute command" +
+                    `\n\ncommand: ${command}` +
+                    `\n\nstdout: ${stdout}` +
+                    `\n\nstderr: ${stderr}`;
+                reject(errorMessage);
+            }
+            resolve();
+        });
     });
 }

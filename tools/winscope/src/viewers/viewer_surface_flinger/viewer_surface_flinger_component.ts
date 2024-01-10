@@ -47,6 +47,7 @@ import {UiData} from './ui_data';
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [selectedItem]="inputData?.selectedLayer ?? {}"
         [traceType]="${TraceType.SURFACE_FLINGER}"
+        [store]="store"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
         [isProtoDump]="true"></properties-view>
     </div>

@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import root from 'protos/viewcapture/latest/root';
-import {com} from 'protos/viewcapture/latest/types';
+import root from 'protos/viewcapture/latest/json';
+import {com} from 'protos/viewcapture/latest/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
