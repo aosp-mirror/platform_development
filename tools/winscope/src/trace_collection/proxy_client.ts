@@ -108,7 +108,7 @@ class ProxyRequest {
       request.responseType = type || '';
       request.open(method, client.WINSCOPE_PROXY_URL + path);
       const lastKey = client.store.get('adb.proxyKey');
-      if (lastKey !== null) {
+      if (lastKey !== undefined) {
         client.proxyKey = lastKey;
       }
       request.setRequestHeader('Winscope-Token', client.proxyKey);

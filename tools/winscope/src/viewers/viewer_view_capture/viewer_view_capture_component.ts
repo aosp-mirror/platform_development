@@ -30,6 +30,7 @@ import {UiData} from './ui_data';
       <rects-view
         class="rects-view"
         title="View Hierarchy Sketch"
+        [store]="store"
         [enableShowVirtualButton]="false"
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
