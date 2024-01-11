@@ -148,7 +148,7 @@ export class TreeComponent {
       if (this.store) {
         this.setExpandedValue(
           true,
-          assertDefined(this.store).get(this.storeKeyExpandedState) === null
+          assertDefined(this.store).get(this.storeKeyExpandedState) === undefined
         );
       } else {
         this.setExpandedValue(true);
