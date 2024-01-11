@@ -583,8 +583,8 @@ class Crate(object):
         if not self.defaults:
             self.dump_edition_flags_libs()
 
-        # TODO(perlarsen): improve and clean up dependency handling
-        library_deps = []
+        # NOTE: a crate may list the same dependency as required and optional
+        library_deps = set()
         for dependency in self.dependencies:
             if dependency["kind"] in ["dev", "build"]:
                 continue
@@ -602,10 +602,10 @@ class Crate(object):
                     for f in self.features
                 ):
                     continue
-            library_deps.append(path)
+            library_deps.add(path)
         if library_deps:
             self.write("MODULE_LIBRARY_DEPS := \\")
-            for path in library_deps:
+            for path in sorted(library_deps):
                 self.write(f"\t{path} \\")
             self.write("")
         if crate_type == "test" and not self.default_srcs:
