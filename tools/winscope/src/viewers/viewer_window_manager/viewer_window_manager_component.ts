@@ -26,6 +26,7 @@ import {UiData} from './ui_data';
       <rects-view
         class="rects-view"
         title="Windows"
+        [store]="store"
         [rects]="inputData?.rects ?? []"
         [displayIds]="inputData?.displayIds ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>

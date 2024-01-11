@@ -18,7 +18,7 @@ export class PersistentStore {
     localStorage.setItem(key, value);
   }
 
-  get(key: string) {
-    return localStorage.getItem(key);
+  get(key: string): string | undefined {
+    return localStorage.getItem(key) ?? undefined;
   }
 }

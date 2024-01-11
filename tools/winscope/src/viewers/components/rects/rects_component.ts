@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
@@ -28,15 +30,17 @@ import {Distance2D} from './types3d';
       <div class="top-view-controls">
         <mat-checkbox
           color="primary"
-          [checked]="mapper3d.getShowOnlyVisibleMode()"
+          class="show-only-visible"
+          [checked]="getShowOnlyVisibleMode()"
           (change)="onShowOnlyVisibleModeChange($event.checked!)"
           >Only visible
         </mat-checkbox>
         <mat-checkbox
           *ngIf="enableShowVirtualButton"
           color="primary"
-          [disabled]="mapper3d.getShowOnlyVisibleMode()"
-          [checked]="mapper3d.getShowVirtualMode()"
+          class="show-virtual"
+          [disabled]="getShowOnlyVisibleMode()"
+          [checked]="getShowVirtualMode()"
           (change)="onShowVirtualModeChange($event.checked!)"
           >Show virtual
         </mat-checkbox>
@@ -77,7 +81,7 @@ import {Distance2D} from './types3d';
             min="0.02"
             max="1"
             aria-label="units"
-            [value]="mapper3d.getZSpacingFactor()"
+            [value]="getZSpacingFactor()"
             (input)="onSeparationSliderChange($event.value!)"
             color="primary"></mat-slider>
         </div>
@@ -185,10 +189,13 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
   @Input() enableShowVirtualButton: boolean = true;
   @Input() zoomFactor: number = 1;
+  @Input() store?: PersistentStore;
+
   @Input() set rects(rects: UiRect[]) {
     this.internalRects = rects;
     this.drawLargeRectsAndLabels();
   }
+
   @Input() set miniRects(rects: UiRect[] | undefined) {
     this.internalMiniRects = rects;
     this.drawMiniRects();
@@ -211,8 +218,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
   private internalDisplayIds: number[] = [];
-  private internalHighlightedItem: string = '';
-
+  private internalHighlightedItem = '';
+  private storeKeyShowOnlyVisibleState = '';
+  private storeKeyShowVirtualState = '';
+  private storeKeyZSpacingFactor = '';
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;
   private miniRectsCanvas?: Canvas;
@@ -243,6 +252,10 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.onCanvasMouseDown(event)
     );
 
+    if (this.store) {
+      this.updateControlsFromStore();
+    }
+
     this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
@@ -260,7 +273,26 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.resizeObserver?.disconnect();
   }
 
+  updateControlsFromStore() {
+    this.storeKeyShowOnlyVisibleState = `rectsView.${this.title}.showOnlyVisibleState`;
+    this.storeKeyShowVirtualState = `rectsView.${this.title}.showVirtualState`;
+    this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
+
+    if (assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) === 'true') {
+      this.mapper3d.setShowOnlyVisibleMode(true);
+    }
+    if (assertDefined(this.store).get(this.storeKeyShowVirtualState) === 'true') {
+      this.mapper3d.setShowVirtualMode(true);
+    }
+    const storedZSpacingFactor = assertDefined(this.store).get(this.storeKeyZSpacingFactor);
+    if (storedZSpacingFactor !== undefined) {
+      this.mapper3d.setZSpacingFactor(Number(storedZSpacingFactor));
+    }
+    this.drawLargeRectsAndLabels();
+  }
+
   onSeparationSliderChange(factor: number) {
+    this.store?.add(this.storeKeyZSpacingFactor, `${factor}`);
     this.mapper3d.setZSpacingFactor(factor);
     this.drawLargeRectsAndLabels();
   }
@@ -309,11 +341,13 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onShowOnlyVisibleModeChange(enabled: boolean) {
+    this.store?.add(this.storeKeyShowOnlyVisibleState, `${enabled}`);
     this.mapper3d.setShowOnlyVisibleMode(enabled);
     this.drawLargeRectsAndLabels();
   }
 
   onShowVirtualModeChange(enabled: boolean) {
+    this.store?.add(this.storeKeyShowVirtualState, `${enabled}`);
     this.mapper3d.setShowVirtualMode(enabled);
     this.drawLargeRectsAndLabels();
   }
@@ -354,6 +388,18 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.elementRef.nativeElement.dispatchEvent(
       new CustomEvent(ViewerEvents.MiniRectsDblClick, {bubbles: true})
     );
+  }
+
+  getShowOnlyVisibleMode(): boolean {
+    return this.mapper3d.getShowOnlyVisibleMode();
+  }
+
+  getShowVirtualMode(): boolean {
+    return this.mapper3d.getShowVirtualMode();
+  }
+
+  getZSpacingFactor(): number {
+    return this.mapper3d.getZSpacingFactor();
   }
 
   private findClickedRectId(event: MouseEvent): string | undefined {

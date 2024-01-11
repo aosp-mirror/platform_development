@@ -27,6 +27,7 @@ import {UiData} from './ui_data';
       <rects-view
         class="rects-view"
         title="Layers"
+        [store]="store"
         [rects]="inputData?.rects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displayIds]="inputData?.displayIds ?? []"></rects-view>
