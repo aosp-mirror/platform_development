@@ -34,5 +34,7 @@
             android:authorities="com.android.sharetest.provider"
             android:name=".ImageContentProvider"
             android:grantUriPermissions="true" />
+
+        <receiver android:name=".ChosenComponentBroadcastReceiver" />
     </application>
 </manifest>
