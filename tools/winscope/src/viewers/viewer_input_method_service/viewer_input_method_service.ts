@@ -21,16 +21,19 @@ import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 
 class ViewerInputMethodService extends ViewerInputMethod {
-  override getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Input Method Service',
-        TraceType.INPUT_METHOD_SERVICE
-      ),
-    ];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
+
+  override readonly view: View;
+
+  constructor(traces: Traces, storage: Storage) {
+    super(traces, storage);
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Input Method Service',
+      TraceType.INPUT_METHOD_SERVICE
+    );
   }
 
   override getDependencies(): TraceType[] {
@@ -45,8 +48,6 @@ class ViewerInputMethodService extends ViewerInputMethod {
       this.imeUiCallback
     );
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
 }
 
 export {ViewerInputMethodService};
