@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.sharetest
 
 import android.app.Activity
@@ -43,11 +59,11 @@ private const val TYPE_ALL = "All Type Mix"
 
 @RequiresApi(34)
 class ShareTestActivity : Activity() {
-    lateinit var customActionReceiver: BroadcastReceiver
-    lateinit var mediaSelection: RadioGroup
-    lateinit var textSelection: RadioGroup
-    lateinit var mediaTypeSelection: Spinner
-    lateinit var richText: CheckBox
+    private lateinit var customActionReceiver: BroadcastReceiver
+    private lateinit var mediaSelection: RadioGroup
+    private lateinit var textSelection: RadioGroup
+    private lateinit var mediaTypeSelection: Spinner
+    private lateinit var richText: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -213,7 +229,14 @@ class ShareTestActivity : Activity() {
             share.data = ImageContentProvider.ICON_URI
         }
 
-        val chooserIntent = Intent.createChooser(share, null)
+        val chosenComponentPendingIntent = PendingIntent.getBroadcast(
+            this, 0,
+            Intent(this, ChosenComponentBroadcastReceiver::class.java),
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val chooserIntent =
+            Intent.createChooser(share, null, chosenComponentPendingIntent.intentSender)
 
         if (requireViewById<CheckBox>(R.id.include_modify_share).isChecked) {
             val pendingIntent = PendingIntent.getBroadcast(
