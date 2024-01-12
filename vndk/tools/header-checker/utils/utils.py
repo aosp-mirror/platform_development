@@ -204,7 +204,7 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
     """
     if tag in ('LLNDK', 'NDK', 'PLATFORM'):
         return f'android_{arch_cpu_str}_shared'
-    if tag.startswith('VNDK') or tag == 'VENDOR':
+    if tag == 'VENDOR':
         return f'android_vendor.{vndk_version}_{arch_cpu_str}_shared'
     if tag == 'PRODUCT':
         return f'android_product.{vndk_version}_{arch_cpu_str}_shared'
