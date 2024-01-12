@@ -44,6 +44,8 @@
         "WindowConfiguration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
         "Configuration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
         "WindowConfiguration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
-        "WindowState.orientation": "android.content.pm.ActivityInfo.ScreenOrientation"
+        "WindowState.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
+        "InsetsSourceControlProto.typeNumber": "android.view.WindowInsets.Type.InsetsType",
+        "InsetsSourceConsumerProto.typeNumber": "android.view.WindowInsets.Type.InsetsType"
     }
 }
