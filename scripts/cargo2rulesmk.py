@@ -593,6 +593,10 @@ class Crate(object):
                 if (rename := dependency["rename"])
                 else dependency["name"]
             )
+            if dependency["target"]:
+                print(
+                    f"### WARNING: ignoring target-specific dependency: {name}")
+                continue
             path = CUSTOM_MODULE_CRATES.get(
                 name, f"external/rust/crates/{name}"
             )
