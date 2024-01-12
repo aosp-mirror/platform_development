@@ -37,6 +37,7 @@ describe('LoadedParsers', () => {
   const timestamps = [
     new RealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
     new RealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
+    new RealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
   ];
 
   const filename = 'filename';
@@ -146,6 +147,66 @@ describe('LoadedParsers', () => {
     it('doesnt drop legacy parser with dump (zero timestamp)', () => {
       loadParsers([parserWm_dump, parserSf0], []);
       expectLoadResult([parserWm_dump, parserSf0], []);
+    });
+
+    it('is robust to traces with time range overlap', () => {
+      const parser = parserSf0;
+      const timestamps = assertDefined(parserSf0.getTimestamps(TimestampType.REAL));
+
+      const timestampsOverlappingFront = [timestamps[0].add(-1n), timestamps[0].add(1n)];
+      const parserOverlappingFront = new ParserBuilder<object>()
+        .setType(TraceType.TRANSACTIONS)
+        .setTimestamps(timestampsOverlappingFront)
+        .setDescriptors([filename])
+        .build();
+
+      const timestampsOverlappingBack = [
+        timestamps[timestamps.length - 1].add(-1n),
+        timestamps[timestamps.length - 1].add(1n),
+      ];
+      const parserOverlappingBack = new ParserBuilder<object>()
+        .setType(TraceType.TRANSITION)
+        .setTimestamps(timestampsOverlappingBack)
+        .setDescriptors([filename])
+        .build();
+
+      const timestampsOverlappingEntirely = [
+        timestamps[0].add(-1n),
+        timestamps[timestamps.length - 1].add(1n),
+      ];
+      const parserOverlappingEntirely = new ParserBuilder<object>()
+        .setType(TraceType.VIEW_CAPTURE)
+        .setTimestamps(timestampsOverlappingEntirely)
+        .setDescriptors([filename])
+        .build();
+
+      const timestampsOverlappingExactly = [timestamps[0], timestamps[timestamps.length - 1]];
+      const parserOverlappingExactly = new ParserBuilder<object>()
+        .setType(TraceType.WINDOW_MANAGER)
+        .setTimestamps(timestampsOverlappingExactly)
+        .setDescriptors([filename])
+        .build();
+
+      loadParsers(
+        [
+          parser,
+          parserOverlappingFront,
+          parserOverlappingBack,
+          parserOverlappingEntirely,
+          parserOverlappingExactly,
+        ],
+        []
+      );
+      expectLoadResult(
+        [
+          parser,
+          parserOverlappingFront,
+          parserOverlappingBack,
+          parserOverlappingEntirely,
+          parserOverlappingExactly,
+        ],
+        []
+      );
     });
   });
 
