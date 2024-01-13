@@ -55,4 +55,29 @@ describe('ParserEventLog', () => {
     const entry = await parser.getEntry(18, TimestampType.REAL);
     expect(entry).toBeInstanceOf(CujEvent);
   });
+
+  describe('trace with timestamps not monotonically increasing', () => {
+    let parser: Parser<Event>;
+
+    beforeAll(async () => {
+      parser = assertDefined(
+        await UnitTestUtils.getParser(
+          'traces/eventlog_timestamps_not_monotonically_increasing.winscope'
+        )
+      ) as Parser<Event>;
+    });
+
+    it('sorts entries to make timestamps monotonically increasing', () => {
+      const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+
+      expect(timestamps.length).toEqual(3);
+
+      const expected = [
+        new RealTimestamp(1681207047981157120n),
+        new RealTimestamp(1681207047991161088n),
+        new RealTimestamp(1681207047991310592n),
+      ];
+      expect(timestamps).toEqual(expected);
+    });
+  });
 });
