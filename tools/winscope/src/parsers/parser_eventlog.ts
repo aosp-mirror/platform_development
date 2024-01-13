@@ -31,6 +31,10 @@ class ParserEventLog extends AbstractParser<Event> {
   override decodeTrace(buffer: Uint8Array): Event[] {
     const eventLog = EventLogParser.prototype.parse(buffer);
 
+    eventLog.entries.sort((a: Event, b: Event) => {
+      return BigInt(a.timestamp.unixNanos) < BigInt(b.timestamp.unixNanos) ? -1 : +1;
+    });
+
     return eventLog.entries;
   }
 
