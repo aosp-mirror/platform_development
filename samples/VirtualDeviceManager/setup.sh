@@ -87,6 +87,7 @@ function privileged_install() {
 INSTALL_HOST_ONLY=false
 INSTALL_CLIENT_ONLY=false
 INSTALL_VIRTUAL_CAMERA_ONLY=false
+PERFORM_BUILD=true
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -h|--help) display_help; exit ;;
