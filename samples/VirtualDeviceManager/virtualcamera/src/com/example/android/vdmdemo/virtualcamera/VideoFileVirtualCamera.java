@@ -17,7 +17,6 @@
 package com.example.android.vdmdemo.virtualcamera;
 
 import android.companion.virtual.camera.VirtualCameraCallback;
-import android.companion.virtual.camera.VirtualCameraStreamConfig;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.view.Surface;
@@ -42,8 +41,8 @@ public class VideoFileVirtualCamera implements VirtualCameraCallback {
     }
 
     @Override
-    public void onStreamConfigured(int streamId, @NonNull Surface surface,
-            @NonNull VirtualCameraStreamConfig streamConfig) {
+    public void onStreamConfigured(int streamId, @NonNull Surface surface, int width, int height,
+            int format) {
         mMediaPlayer = Objects.requireNonNull(MediaPlayer.create(mContext,
                                     R.raw.testvideo));
         mMediaPlayer.setLooping(true);
