@@ -17,7 +17,7 @@
 package com.example.android.vdmdemo.virtualcamera;
 
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM;
-import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
+import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CAMERA;
 import static android.hardware.camera2.CameraMetadata.LENS_FACING_FRONT;
 
 import android.annotation.SuppressLint;
@@ -205,7 +205,7 @@ public final class VirtualCameraDemoService extends Hilt_VirtualCameraDemoServic
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
                         .setName(VIRTUAL_DEVICE_NAME)
-                        .setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM);
+                        .setDevicePolicy(POLICY_TYPE_CAMERA, DEVICE_POLICY_CUSTOM);
 
         VirtualDeviceManager vdm = getSystemService(VirtualDeviceManager.class);
         mVirtualDevice = Objects.requireNonNull(vdm).createVirtualDevice(associationInfo.getId(),
