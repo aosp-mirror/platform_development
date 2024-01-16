@@ -29,6 +29,7 @@
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
     <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
+    <string name="pref_enable_client_camera" translatable="false">enable_client_camera</string>
     <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
     <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>
     <string name="pref_enable_display_rotation" translatable="false">enable_display_rotation</string>

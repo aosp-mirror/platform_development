@@ -61,6 +61,8 @@ public class MainActivity extends Hilt_MainActivity {
     @Inject ConnectionManager mConnectionManager;
     @Inject InputManager mInputManager;
     @Inject VirtualSensorController mSensorController;
+
+    @Inject VirtualCameraController mVirtualCameraController;
     @Inject AudioPlayer mAudioPlayer;
     @Inject AudioRecorder mAudioRecorder;
 
@@ -88,6 +90,8 @@ public class MainActivity extends Hilt_MainActivity {
                                     .setDeviceName(Build.MODEL)
                                     .addAllSensorCapabilities(
                                             mSensorController.getSensorCapabilities())
+                                    .addAllCameraCapabilities(
+                                            mVirtualCameraController.getCameraCapabilities())
                                     .setSupportsAudioOutput(supportsAudioOutput)
                                     .setSupportsAudioInput(supportsAudioInput)
                             ).build());
