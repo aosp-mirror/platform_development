@@ -18,6 +18,7 @@ package com.example.android.vdmdemo.virtualcamera;
 
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
+import static android.hardware.camera2.CameraMetadata.LENS_FACING_FRONT;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -217,9 +218,10 @@ public final class VirtualCameraDemoService extends Hilt_VirtualCameraDemoServic
         }
 
         VirtualCamera camera = mVirtualDevice.createVirtualCamera(
-                new VirtualCameraConfig.Builder().setName(name).addStreamConfig(640, 480,
-                                ImageFormat.YUV_420_888).setVirtualCameraCallback(getMainExecutor(),
-                                cameraCallback)
+                new VirtualCameraConfig.Builder()
+                        .setName(name).addStreamConfig(640, 480, ImageFormat.YUV_420_888, 30)
+                        .setLensFacing(LENS_FACING_FRONT)
+                        .setVirtualCameraCallback(getMainExecutor(), cameraCallback)
                         .build());
 
         synchronized (mLock) {
@@ -240,5 +242,4 @@ public final class VirtualCameraDemoService extends Hilt_VirtualCameraDemoServic
             return List.copyOf(mVirtualCameras);
         }
     }
-
 }

@@ -17,7 +17,6 @@
 package com.example.android.vdmdemo.virtualcamera;
 
 import android.companion.virtual.camera.VirtualCameraCallback;
-import android.companion.virtual.camera.VirtualCameraStreamConfig;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -44,12 +43,11 @@ public class CanvasVirtualCamera implements VirtualCameraCallback {
     RenderThread mRenderThread = null;
 
     @Override
-    public void onStreamConfigured(int streamId, @NonNull Surface surface,
-            @NonNull VirtualCameraStreamConfig streamConfig) {
+    public void onStreamConfigured(int streamId, @NonNull Surface surface, int width, int height,
+            int format) {
         synchronized (mLock) {
             mRenderThread = new RenderThread(surface);
         }
-
     }
 
     @Override
@@ -98,12 +96,9 @@ public class CanvasVirtualCamera implements VirtualCameraCallback {
             }
         }
 
-
         public void stopRendering() {
             mStopRequested.set(true);
             mSurface.release();
         }
-
-
     }
 }
