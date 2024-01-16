@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+package winscope.test;
+
+// Message used for testing the fake proto machinery
+message RootMessage {
+  optional InputWindowInfoProto intdef_mapping_entry = 1;
+}
+
+message InputWindowInfoProto {
+  optional int32 layoutParamsFlags = 1;
+}
+

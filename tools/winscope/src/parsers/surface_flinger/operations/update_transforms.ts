@@ -20,32 +20,27 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
 
 export class UpdateTransforms implements Operation<PropertyTreeNode> {
-  apply(value: PropertyTreeNode): PropertyTreeNode {
+  apply(value: PropertyTreeNode): void {
     const factory = new PropertyTreeNodeFactory();
 
     this.updateTransform(
-      value.getChildById(`${value.id}.transform`),
-      value.getChildById(`${value.id}.position`),
+      value.getChildByName('transform'),
+      value.getChildByName('position'),
       factory
     );
 
     this.updateTransform(
-      value.getChildById(`${value.id}.requestedTransform`),
-      value.getChildById(`${value.id}.requestedPosition`),
+      value.getChildByName('requestedTransform'),
+      value.getChildByName('requestedPosition'),
       factory
     );
 
-    this.updateTransform(value.getChildById(`${value.id}.bufferTransform`), undefined, factory);
+    this.updateTransform(value.getChildByName('bufferTransform'), undefined, factory);
 
-    const inputWindowInfo = value.getChildById(`${value.id}.inputWindowInfo`);
+    const inputWindowInfo = value.getChildByName('inputWindowInfo');
     if (inputWindowInfo) {
-      this.updateTransform(
-        inputWindowInfo.getChildById(`${inputWindowInfo.id}.transform`),
-        undefined,
-        factory
-      );
+      this.updateTransform(inputWindowInfo.getChildByName('transform'), undefined, factory);
     }
-    return value;
   }
 
   private updateTransform(

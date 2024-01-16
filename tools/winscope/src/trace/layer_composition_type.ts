@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {TreeNode} from 'trace/tree_node/tree_node';
-
-export interface Operation<T extends TreeNode> {
-  apply(value: T): void;
+export enum LayerCompositionType {
+  HWC,
+  GPU,
 }

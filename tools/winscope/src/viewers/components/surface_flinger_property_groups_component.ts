@@ -155,15 +155,15 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
           &ngsp;
           {{ properties.calcColor }}
         </p>
-        <p class="mat-body-1 shadow">
-          <span class="mat-body-2">Shadow:</span>
-          &ngsp;
-          {{ properties.calcShadowRadius }}
-        </p>
         <p class="mat-body-1 corner-radius">
           <span class="mat-body-2">Corner Radius:</span>
           &ngsp;
           {{ properties.calcCornerRadius }}
+        </p>
+        <p class="mat-body-1 shadow">
+          <span class="mat-body-2">Shadow:</span>
+          &ngsp;
+          {{ properties.calcShadowRadius }}
         </p>
         <p class="mat-body-1">
           <span
@@ -188,11 +188,6 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
           <span class="mat-body-2">Color:</span>
           &ngsp;
           {{ properties.reqColor }}
-        </p>
-        <p class="mat-body-1 shadow">
-          <span class="mat-body-2">Shadow:</span>
-          &ngsp;
-          {{ properties.reqShadowRadius }}
         </p>
         <p class="mat-body-1 corner-radius">
           <span class="mat-body-2">Corner Radius:</span>

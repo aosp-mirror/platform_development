@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class PropertyTreeNodeFactory {
@@ -92,10 +91,6 @@ export class PropertyTreeNodeFactory {
   private isLongType(value: any): boolean {
     const typeOfVal = value.$type?.name ?? value.constructor?.name;
     if (typeOfVal === 'Long' || typeOfVal === 'BigInt') return true;
-
-    // Raw long number
-    if (ArrayUtils.equal(Object.keys(value).sort(), ['high_', 'low_'])) return true;
-
     return false;
   }
 

@@ -36,7 +36,6 @@ export interface SfCuratedProperties {
   calcCornerRadiusCrop: string;
   backgroundBlurRadius: string;
   reqColor: string;
-  reqShadowRadius: string;
   reqCornerRadius: string;
   inputTransform: PropertyTreeNode | undefined;
   inputRegion: string | undefined;

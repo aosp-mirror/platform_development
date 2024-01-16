@@ -21,6 +21,10 @@ import {AddDiffs} from './add_diffs';
 export class AddDiffsHierarchyTree extends AddDiffs<UiHierarchyTreeNode> {
   protected override addDiffsToNewRoot = true;
 
+  protected override processOldNode(oldNode: UiHierarchyTreeNode): void {
+    oldNode.forEachNodeDfs((node) => node.setIsOldNode(true));
+  }
+
   protected override processModifiedNodes(
     newNode: UiHierarchyTreeNode,
     oldNode: UiHierarchyTreeNode

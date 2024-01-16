@@ -40,8 +40,8 @@ describe('SimplifyNames', () => {
       hierarchyRoot.addChild(child);
     }
 
-    const root = operation.apply(hierarchyRoot);
-    root
+    operation.apply(hierarchyRoot);
+    hierarchyRoot
       .getAllChildren()
       .forEach((child) => expect(child.getDisplayName()).toEqual('node.child.(...).child'));
   });
@@ -60,7 +60,9 @@ describe('SimplifyNames', () => {
       hierarchyRoot.addChild(child);
     }
 
-    const root = operation.apply(hierarchyRoot);
-    root.getAllChildren().forEach((child) => expect(child.getDisplayName()).toEqual('node.child'));
+    operation.apply(hierarchyRoot);
+    hierarchyRoot
+      .getAllChildren()
+      .forEach((child) => expect(child.getDisplayName()).toEqual('node.child'));
   });
 });

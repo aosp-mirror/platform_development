@@ -45,8 +45,8 @@ describe('Filter', () => {
           name: 'discard',
         })
       );
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([]);
     });
 
     it('keeps leaf that matches filter', () => {
@@ -59,8 +59,8 @@ describe('Filter', () => {
         name: 'keep',
       });
       hierarchyRoot.addChild(child);
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([child]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([child]);
     });
 
     it('discards node with children if node and children do not match filter', () => {
@@ -79,8 +79,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([]);
     });
 
     it('keeps leaf that matches filter and its non-matching parent', () => {
@@ -99,8 +99,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([parent]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
       expect(parent.getAllChildren()).toEqual([child]);
     });
 
@@ -120,8 +120,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([parent]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
       expect(parent.getAllChildren()).toEqual([child]);
     });
 
@@ -141,8 +141,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([parent]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
       expect(parent.getAllChildren()).toEqual([child]);
     });
   });
@@ -169,8 +169,8 @@ describe('Filter', () => {
           name: 'discard',
         })
       );
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([]);
     });
 
     it('keeps leaf that matches filter', () => {
@@ -183,8 +183,8 @@ describe('Filter', () => {
         name: 'keep',
       });
       hierarchyRoot.addChild(child);
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([child]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([child]);
     });
 
     it('discards node with children if node and children do not match filter', () => {
@@ -203,8 +203,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([]);
     });
 
     it('discards leaf that matches filter but has non-matching parent', () => {
@@ -223,8 +223,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([]);
     });
 
     it('keeps parent that matches filter and discards its non-matching children', () => {
@@ -248,8 +248,8 @@ describe('Filter', () => {
       parent.addChild(childToDiscard);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([parent]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
       expect(parent.getAllChildren()).toEqual([childToKeep]);
     });
 
@@ -269,8 +269,8 @@ describe('Filter', () => {
       parent.addChild(child);
       hierarchyRoot.addChild(parent);
 
-      const root = operation.apply(hierarchyRoot);
-      expect(root.getAllChildren()).toEqual([parent]);
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
       expect(parent.getAllChildren()).toEqual([child]);
     });
   });

@@ -135,10 +135,10 @@ describe('RectsComputation', () => {
         .build(),
     ];
 
-    const rootWithRects = computation.setHierarchyRoot(hierarchyRoot).setDisplays([]).execute();
+    computation.setRoot(hierarchyRoot).executeInPlace();
 
     const rects: TraceRect[] = [];
-    rootWithRects.forEachNodeDfs((node) => {
+    hierarchyRoot.forEachNodeDfs((node) => {
       if (node.id === 'LayerTraceEntry root') {
         return;
       }
@@ -150,15 +150,17 @@ describe('RectsComputation', () => {
   });
 
   it('makes display rects', () => {
-    const displays = [
-      TreeNodeUtils.makePropertyNode('LayerTraceEntry root.displays', 'displays', {
+    const displays = TreeNodeUtils.makePropertyNode('LayerTraceEntry root.displays', 'displays', [
+      {
         id: 1,
         layerStack: 0,
         size: {w: 5, h: 5},
         layerStackSpaceRect: {left: 0, top: 0, bottom: 5, right: 5},
         transform: Transform.EMPTY,
-      }),
-    ];
+      },
+    ]);
+    hierarchyRoot.addEagerProperty(displays);
+
     const expectedDisplayRects = [
       new TraceRectBuilder()
         .setX(0)
@@ -177,10 +179,7 @@ describe('RectsComputation', () => {
         .build(),
     ];
 
-    const rootWithRects = computation
-      .setHierarchyRoot(hierarchyRoot)
-      .setDisplays(displays)
-      .execute();
-    expect(rootWithRects.getRects()).toEqual(expectedDisplayRects);
+    computation.setRoot(hierarchyRoot).executeInPlace();
+    expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
   });
 });

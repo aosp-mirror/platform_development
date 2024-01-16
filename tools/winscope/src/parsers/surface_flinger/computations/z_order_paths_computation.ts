@@ -27,23 +27,22 @@ export class ZOrderPathsComputation {
     return this;
   }
 
-  execute(): HierarchyTreeNode {
+  executeInPlace(): void {
     if (!this.root) {
       throw Error('root not set');
     }
 
-    const updatedRoot = this.updateZOrderParents(this.root);
-    updatedRoot.forEachNodeDfs((node) => {
+    this.updateZOrderParents(this.root);
+    this.root.forEachNodeDfs((node) => {
       if (node.id === 'LayerTraceEntry root') return;
       const zOrderPath = this.getZOrderPath(node);
       node.addEagerProperty(
         this.propertyFactory.makeCalculatedProperty(`${node.id}`, 'zOrderPath', zOrderPath)
       );
     });
-    return updatedRoot;
   }
 
-  private updateZOrderParents(root: HierarchyTreeNode): HierarchyTreeNode {
+  private updateZOrderParents(root: HierarchyTreeNode) {
     const layerIdToTreeNode = new Map<number, HierarchyTreeNode>();
     root.forEachNodeDfs((node) => {
       if (node.isRoot()) return;
@@ -63,7 +62,6 @@ export class ZOrderPathsComputation {
         node.setZParent(zParent);
       }
     });
-    return root;
   }
 
   private getZOrderPath(node: HierarchyTreeNode | undefined): number[] {

@@ -25,7 +25,7 @@ import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
@@ -153,7 +153,7 @@ export class Presenter {
     });
   }
 
-  updatePinnedItems(pinnedItem: UiHierarchyTreeNode) {
+  onPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {
     const pinnedId = pinnedItem.id;
     if (this.pinnedItems.map((item) => item.id).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => pinned.id !== pinnedId);
@@ -165,7 +165,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  updateHighlightedItem(id: string) {
+  onHighlightedItemChange(id: string) {
     if (this.highlightedItem === id) {
       this.highlightedItem = '';
     } else {
@@ -175,7 +175,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  updateHighlightedProperty(id: string) {
+  onHighlightedPropertyChange(id: string) {
     if (this.highlightedProperty === id) {
       this.highlightedProperty = '';
     } else {
@@ -185,7 +185,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  async updateHierarchyTree(userOptions: UserOptions) {
+  async onHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
@@ -194,7 +194,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  async filterHierarchyTree(filterString: string) {
+  async onHierarchyFilterChange(filterString: string) {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
       this.currentHierarchyTree
@@ -202,20 +202,20 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  async updatePropertiesTree(userOptions: UserOptions) {
+  async onPropertiesUserOptionsChange(userOptions: UserOptions) {
     this.propertiesUserOptions = userOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
     await this.updateSelectedTreeUiData();
   }
 
-  async filterPropertiesTree(filterString: string) {
+  async onPropertiesFilterChange(filterString: string) {
     this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 
-  async newPropertiesTree(selectedItem: UiHierarchyTreeNode) {
-    if (selectedItem.getDiff() !== DiffType.DELETED_MOVE) {
-      this.selectedHierarchyTree = selectedItem;
+  async onSelectedHierarchyTreeChange(selectedTree: UiHierarchyTreeNode) {
+    if (!selectedTree.isOldNode() || selectedTree.getDiff() === DiffType.DELETED) {
+      this.selectedHierarchyTree = selectedTree;
       await this.updateSelectedTreeUiData();
     }
   }
@@ -241,7 +241,10 @@ export class Presenter {
         this.uiData.displayPropertyGroups = true;
       }
 
-      this.uiData.propertiesTree = await this.formatPropertiesTree(propertiesTree);
+      this.uiData.propertiesTree = await this.formatPropertiesTree(
+        propertiesTree,
+        this.selectedHierarchyTree.isRoot()
+      );
     }
     this.copyUiDataAndNotifyView();
   }
@@ -284,7 +287,6 @@ export class Presenter {
       calcCornerRadiusCrop: this.getCropPropertyValue(tree, 'cornerRadiusCrop'),
       backgroundBlurRadius: this.getPixelPropertyValue(tree, 'backgroundBlurRadius'),
       reqColor: this.getColorPropertyValue(tree, 'requestedColor'),
-      reqShadowRadius: '0 px',
       reqCornerRadius: this.getPixelPropertyValue(tree, 'requestedCornerRadius'),
       inputTransform: hasInputChannel ? inputWindowInfo.getChildByName('transform') : undefined,
       inputRegion: tree.getChildByName('inputRegion')?.formattedValue(),
@@ -420,7 +422,8 @@ export class Presenter {
   }
 
   private async formatPropertiesTree(
-    propertiesTree: PropertyTreeNode
+    propertiesTree: PropertyTreeNode,
+    isHierarchyTreeRoot: boolean
   ): Promise<UiPropertyTreeNode> {
     const uiTree = UiPropertyTreeNode.from(propertiesTree);
 
@@ -443,7 +446,7 @@ export class Presenter {
       );
     }
 
-    if (this.currentHierarchyTreeName && uiTree.name === 'root') {
+    if (isHierarchyTreeRoot && this.currentHierarchyTreeName) {
       uiTree.setDisplayName(this.currentHierarchyTreeName);
     }
 
@@ -456,7 +459,7 @@ export class Presenter {
       predicatesKeepingChildren.push(UiTreeUtils.isNotDefault);
     }
 
-    if (uiTree.name !== 'root') {
+    if (!isHierarchyTreeRoot) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotCalculated);
     }
 
@@ -503,6 +506,10 @@ export class Presenter {
       if (Presenter.DENYLIST_PROPERTY_NAMES.includes(newProperty.name)) {
         continue;
       }
+      if (newProperty.source === PropertySource.CALCULATED) {
+        continue;
+      }
+
       const oldProperty = oldProperties.getChildByName(newProperty.name);
       if (!oldProperty) {
         return true;

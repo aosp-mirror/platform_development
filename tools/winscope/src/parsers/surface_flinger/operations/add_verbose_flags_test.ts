@@ -39,7 +39,9 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds HIDDEN', () => {
@@ -52,7 +54,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds OPAQUE', () => {
@@ -65,7 +68,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds SKIP_SCREENSHOT', () => {
@@ -78,7 +82,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds SECURE', () => {
@@ -91,7 +96,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds ENABLE_BACKPRESSURE', () => {
@@ -104,7 +110,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds DISPLAY_DECORATION', () => {
@@ -117,7 +124,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds IGNORE_DESTINATION_FRAME', () => {
@@ -130,7 +138,8 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds multiple flags depending on bits set', () => {
@@ -143,6 +152,7 @@ describe('AddVerboseFlags', () => {
     );
     expectedRoot.addChild(flags);
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 });

@@ -23,8 +23,8 @@ export abstract class AddDiffs<T extends DiffNode> {
   private newIdNodeMap = new Map<string, T>();
   private oldIdNodeMap = new Map<string, T>();
   protected abstract addDiffsToNewRoot: boolean;
-
   protected abstract processModifiedNodes(newNode: T, oldNode: T): void;
+  protected abstract processOldNode(oldNode: T): void;
 
   constructor(private isModified: IsModifiedCallbackType) {}
 
@@ -70,6 +70,7 @@ export abstract class AddDiffs<T extends DiffNode> {
         newChildren.forEach((child) => {
           assertDefined(oldNode).addChild(child);
         });
+        this.processOldNode(oldNode);
         diffNodes.push(oldNode);
       }
       return diffNodes;
@@ -107,6 +108,7 @@ export abstract class AddDiffs<T extends DiffNode> {
             assertDefined(oldNode).addChild(child);
           });
         }
+        this.processOldNode(oldNode);
         diffNodes.push(oldNode);
       }
 

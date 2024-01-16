@@ -107,7 +107,6 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
 
   it('displays simple requested effects', () => {
     const calculatedDiv = assertDefined(htmlElement.querySelector('.effects .right-column'));
-    expect(assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML).toContain('1 px');
     expect(assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML).toContain(
       '1 px'
     );
@@ -178,7 +177,6 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       calcCornerRadiusCrop: EMPTY_OBJ_STRING,
       backgroundBlurRadius: '1 px',
       reqColor: `${EMPTY_OBJ_STRING}, alpha: 1`,
-      reqShadowRadius: '1 px',
       reqCornerRadius: '1 px',
       inputTransform: this.transformNode,
       inputRegion: 'null',

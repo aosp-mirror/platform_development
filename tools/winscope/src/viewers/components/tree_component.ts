@@ -108,7 +108,7 @@ export class TreeComponent {
   @Input() showNode = (node: UiPropertyTreeNode | UiHierarchyTreeNode) => true;
 
   @Output() highlightedChange = new EventEmitter<string>();
-  @Output() selectedTreeChange = new EventEmitter<UiPropertyTreeNode | UiHierarchyTreeNode>();
+  @Output() selectedTreeChange = new EventEmitter<UiHierarchyTreeNode>();
   @Output() pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
   @Output() hoverStart = new EventEmitter<void>();
   @Output() hoverEnd = new EventEmitter<void>();
@@ -188,10 +188,6 @@ export class TreeComponent {
     };
   }
 
-  private updateHighlightedItem() {
-    if (this.node) this.highlightedChange.emit(this.node.id);
-  }
-
   isPinned() {
     if (this.node instanceof UiHierarchyTreeNode) {
       return this.pinnedItems?.map((item) => item.id).includes(this.node!.id);
@@ -207,7 +203,7 @@ export class TreeComponent {
     this.pinnedItemChange.emit(newPinnedItem);
   }
 
-  propagateNewSelectedTree(newTree: UiHierarchyTreeNode | UiPropertyTreeNode) {
+  propagateNewSelectedTree(newTree: UiHierarchyTreeNode) {
     this.selectedTreeChange.emit(newTree);
   }
 
@@ -245,6 +241,10 @@ export class TreeComponent {
       }
     }
     return false;
+  }
+
+  private updateHighlightedItem() {
+    if (this.node) this.highlightedChange.emit(this.node.id);
   }
 
   private setExpandedValue(isExpanded: boolean, shouldUpdateStoredState = true) {

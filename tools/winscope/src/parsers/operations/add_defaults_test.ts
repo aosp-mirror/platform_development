@@ -34,32 +34,32 @@ describe('AddDefaults', () => {
 
   it('adds only defaults from allowlist', () => {
     operation = new AddDefaults(protoType, ['number_32bit']);
-    const rootWithDefaults = operation.apply(propertyRoot);
-    expect(rootWithDefaults.getAllChildren().length).toEqual(1);
-    const defaultNode = assertDefined(rootWithDefaults.getChildByName('number_32bit'));
+    operation.apply(propertyRoot);
+    expect(propertyRoot.getAllChildren().length).toEqual(1);
+    const defaultNode = assertDefined(propertyRoot.getChildByName('number_32bit'));
     expect(defaultNode.getValue()).toEqual(0);
-    checkAllNodesAreDefault(rootWithDefaults);
+    checkAllNodesAreDefault(propertyRoot);
   });
 
   it('adds all defaults from prototype definition in absence of allowlist', () => {
     operation = new AddDefaults(protoType);
-    const rootWithDefaults = operation.apply(propertyRoot);
-    expect(rootWithDefaults.getAllChildren().length).toEqual(11);
-    checkAllNodesAreDefault(rootWithDefaults);
-    expect(assertDefined(rootWithDefaults.getChildByName('array')).getValue()).toEqual([]);
-    expect(assertDefined(rootWithDefaults.getChildByName('number_32bit')).getValue()).toEqual(0);
-    expect(assertDefined(rootWithDefaults.getChildByName('number_64bit')).getValue()).toEqual(0n);
-    expect(assertDefined(rootWithDefaults.getChildByName('boolValue')).getValue()).toBeFalse();
+    operation.apply(propertyRoot);
+    expect(propertyRoot.getAllChildren().length).toEqual(11);
+    checkAllNodesAreDefault(propertyRoot);
+    expect(assertDefined(propertyRoot.getChildByName('array')).getValue()).toEqual([]);
+    expect(assertDefined(propertyRoot.getChildByName('number_32bit')).getValue()).toEqual(0);
+    expect(assertDefined(propertyRoot.getChildByName('number_64bit')).getValue()).toEqual(0n);
+    expect(assertDefined(propertyRoot.getChildByName('boolValue')).getValue()).toBeFalse();
   });
 
   it('does not add defaults in denylist', () => {
     operation = new AddDefaults(protoType, undefined, ['number_32bit', 'number_64bit']);
-    const rootWithDefaults = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithDefaults.getAllChildren().length).toEqual(9);
-    checkAllNodesAreDefault(rootWithDefaults);
-    expect(rootWithDefaults.getChildByName('number_32bit')).toBeUndefined();
-    expect(rootWithDefaults.getChildByName('number_64bit')).toBeUndefined();
+    expect(propertyRoot.getAllChildren().length).toEqual(9);
+    checkAllNodesAreDefault(propertyRoot);
+    expect(propertyRoot.getChildByName('number_32bit')).toBeUndefined();
+    expect(propertyRoot.getChildByName('number_64bit')).toBeUndefined();
   });
 
   it('replaces undefined proto node with default node', () => {
@@ -67,12 +67,12 @@ describe('AddDefaults', () => {
     propertyRoot.addChild(
       TreeNodeUtils.makePropertyNode(propertyRoot.id, 'number_32bit', undefined)
     );
-    const rootWithDefaults = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithDefaults.getAllChildren().length).toEqual(1);
-    const defaultNode = assertDefined(rootWithDefaults.getChildByName('number_32bit'));
+    expect(propertyRoot.getAllChildren().length).toEqual(1);
+    const defaultNode = assertDefined(propertyRoot.getChildByName('number_32bit'));
     expect(defaultNode.getValue()).toEqual(0);
-    checkAllNodesAreDefault(rootWithDefaults);
+    checkAllNodesAreDefault(propertyRoot);
   });
 
   function checkAllNodesAreDefault(root: PropertyTreeNode) {

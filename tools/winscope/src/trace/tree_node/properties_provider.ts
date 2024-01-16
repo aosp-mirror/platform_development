@@ -41,7 +41,8 @@ export class PropertiesProvider {
   }
 
   addEagerProperty(property: PropertyTreeNode) {
-    this.eagerPropertiesRoot.addChild(new SetFormatters().apply(property));
+    new SetFormatters().apply(property);
+    this.eagerPropertiesRoot.addChild(property);
   }
 
   async getAll(): Promise<PropertyTreeNode> {

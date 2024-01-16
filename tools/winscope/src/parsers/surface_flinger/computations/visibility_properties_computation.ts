@@ -36,15 +36,12 @@ export class VisibilityPropertiesComputation {
     return this;
   }
 
-  setDisplays(value: PropertyTreeNode[]): this {
-    this.displays = value;
-    return this;
-  }
-
-  execute(): HierarchyTreeNode {
+  executeInPlace(): void {
     if (!this.root || !this.rootLayers) {
       throw Error('root not set');
     }
+
+    this.displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
 
     const sortedLayers = this.rootLayers.sort(this.sortLayerZ);
 
@@ -156,8 +153,6 @@ export class VisibilityPropertiesComputation {
         );
       }
     }
-
-    return this.root;
   }
 
   private getIsVisible(layer: HierarchyTreeNode): boolean {

@@ -53,9 +53,11 @@ describe('PresenterSurfaceFlinger', () => {
     positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(trace.getEntry(1));
 
     const firstEntryDataTree = await firstEntry.getValue();
-    selectedTree = UiHierarchyTreeNode.from(
-      assertDefined(firstEntryDataTree.findDfs(UiTreeUtils.makeIdMatchFilter('53 Dim layer#53')))
+    const layer = assertDefined(
+      firstEntryDataTree.findDfs(UiTreeUtils.makeIdMatchFilter('53 Dim layer#53'))
     );
+    const selectedTreeParent = UiHierarchyTreeNode.from(assertDefined(layer.getZParent()));
+    selectedTree = assertDefined(selectedTreeParent.getChildByName('Dim layer#53'));
   });
 
   beforeEach(async () => {
@@ -122,7 +124,7 @@ describe('PresenterSurfaceFlinger', () => {
       label: 'FirstPinnedItem',
     });
 
-    presenter.updatePinnedItems(pinnedItem);
+    presenter.onPinnedItemChange(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
@@ -130,7 +132,7 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.highlightedItem).toEqual('');
 
     const id = '4';
-    presenter.updateHighlightedItem(id);
+    presenter.onHighlightedItemChange(id);
     expect(uiData.highlightedItem).toBe(id);
   });
 
@@ -138,7 +140,7 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.highlightedProperty).toEqual('');
 
     const id = '4';
-    presenter.updateHighlightedProperty(id);
+    presenter.onHighlightedPropertyChange(id);
     expect(uiData.highlightedProperty).toBe(id);
   });
 
@@ -167,7 +169,7 @@ describe('PresenterSurfaceFlinger', () => {
     const oldDataTree = assertDefined(uiData.tree);
     expect(oldDataTree.getAllChildren().length).toEqual(3);
 
-    await presenter.updateHierarchyTree(userOptions);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const newDataTree = assertDefined(uiData.tree);
     expect(newDataTree.getAllChildren().length).toEqual(94);
@@ -208,7 +210,7 @@ describe('PresenterSurfaceFlinger', () => {
       'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96'
     );
 
-    await presenter.updateHierarchyTree(userOptions);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const nodeWithShortName = assertDefined(
       assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
@@ -236,17 +238,17 @@ describe('PresenterSurfaceFlinger', () => {
       },
     };
     await presenter.onAppEvent(positionUpdate);
-    await presenter.updateHierarchyTree(userOptions);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(94);
 
-    await presenter.filterHierarchyTree('Wallpaper');
+    await presenter.onHierarchyFilterChange('Wallpaper');
     // All but four layers should be filtered out
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(4);
   });
 
   it('sets properties tree and associated ui data', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.newPropertiesTree(selectedTree);
+    await presenter.onSelectedHierarchyTreeChange(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
   });
@@ -261,12 +263,12 @@ describe('PresenterSurfaceFlinger', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.newPropertiesTree(selectedTree);
+    await presenter.onSelectedHierarchyTreeChange(selectedTree);
     expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
       DiffType.NONE
     );
 
-    await presenter.updatePropertiesTree(userOptions);
+    await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
     expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
       DiffType.ADDED
@@ -286,20 +288,20 @@ describe('PresenterSurfaceFlinger', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.newPropertiesTree(selectedTree);
+    await presenter.onSelectedHierarchyTreeChange(selectedTree);
     expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
 
-    await presenter.updatePropertiesTree(userOptions);
+    await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
     expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(56);
   });
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.newPropertiesTree(selectedTree);
+    await presenter.onSelectedHierarchyTreeChange(selectedTree);
     expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
 
-    await presenter.filterPropertiesTree('bound');
+    await presenter.onPropertiesFilterChange('bound');
     expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(3);
   });
 

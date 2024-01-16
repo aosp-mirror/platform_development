@@ -79,11 +79,11 @@ describe('ZOrderPathsComputation', () => {
     layer4.setZParent(layer1);
     layer1.addChild(layer4);
 
-    const rootWithZOrderPaths = computation.setRoot(hierarchyRoot).execute();
-    const layer1WithPath = assertDefined(rootWithZOrderPaths.getChildById('1 layer1'));
-    const layer2WithPath = assertDefined(layer1WithPath.getChildById('2 layer2'));
-    const layer3WithPath = assertDefined(layer2WithPath.getChildById('3 layer3'));
-    const layer4WithPath = assertDefined(layer1WithPath.getChildById('4 layer4'));
+    computation.setRoot(hierarchyRoot).executeInPlace();
+    const layer1WithPath = assertDefined(hierarchyRoot.getChildByName('layer1'));
+    const layer2WithPath = assertDefined(layer1WithPath.getChildByName('layer2'));
+    const layer3WithPath = assertDefined(layer2WithPath.getChildByName('layer3'));
+    const layer4WithPath = assertDefined(layer1WithPath.getChildByName('layer4'));
 
     expect(getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([0]);
     expect(getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([0, 1]);
