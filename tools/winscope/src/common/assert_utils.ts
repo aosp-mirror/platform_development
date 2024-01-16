@@ -21,9 +21,9 @@ export function assertDefined<A>(value: A | null | undefined): A {
   return value;
 }
 
-export function assertTrue(value: boolean, lazyErrorMessage: () => string) {
+export function assertTrue(value: boolean, lazyErrorMessage?: () => string) {
   if (!value) {
-    throw new Error(lazyErrorMessage());
+    throw new Error(lazyErrorMessage ? lazyErrorMessage() : 'Expected value to be true');
   }
 }
 

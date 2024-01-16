@@ -23,8 +23,9 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
 
 abstract class ViewerInputMethod implements Viewer {
-  protected htmlElement: HTMLElement;
-  protected presenter: PresenterInputMethod;
+  protected readonly htmlElement: HTMLElement;
+  protected readonly presenter: PresenterInputMethod;
+  protected abstract readonly view: View;
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-input-method');
@@ -40,7 +41,10 @@ abstract class ViewerInputMethod implements Viewer {
     // do nothing
   }
 
-  abstract getViews(): View[];
+  getViews(): View[] {
+    return [this.view];
+  }
+
   abstract getDependencies(): TraceType[];
 
   protected imeUiCallback = (uiData: ImeUiData) => {

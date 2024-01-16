@@ -30,7 +30,7 @@ import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {Viewer} from 'viewers/viewer';
+import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {FilesSource} from './files_source';
 import {TimelineData} from './timeline_data';
@@ -50,6 +50,7 @@ export class Mediator {
   private tracePipeline: TracePipeline;
   private timelineData: TimelineData;
   private viewers: Viewer[] = [];
+  private focusedTabView: undefined | View;
   private areViewersLoaded = false;
   private lastRemoteToolTimestampReceived: Timestamp | undefined;
   private currentProgressListener?: ProgressListener;
@@ -143,6 +144,7 @@ export class Mediator {
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
       await this.appComponent.onWinscopeEvent(event);
       this.timelineData.setActiveViewTraceTypes(event.newFocusedView.dependencies);
+      this.focusedTabView = event.newFocusedView;
       await this.propagateTracePosition(this.timelineData.getCurrentPosition(), false);
     });
 
@@ -184,9 +186,10 @@ export class Mediator {
       return;
     }
 
-    //TODO (b/289478304): update only visible viewers (1 tab viewer + overlay viewers)
     const event = new TracePositionUpdate(position);
-    const receivers: WinscopeEventListener[] = [...this.viewers];
+    const receivers: WinscopeEventListener[] = [...this.viewers].filter((viewer) =>
+      this.isViewerVisible(viewer)
+    );
     if (!omitCrossToolProtocol) {
       receivers.push(this.crossToolProtocol);
     }
@@ -198,6 +201,25 @@ export class Mediator {
       return receiver.onWinscopeEvent(event);
     });
     await Promise.all(promises);
+  }
+
+  private isViewerVisible(viewer: Viewer): boolean {
+    if (!this.focusedTabView) {
+      // During initialization no tab is focused.
+      // Let's just consider all viewers as visible and to be updated.
+      return true;
+    }
+
+    return viewer.getViews().some((view) => {
+      if (view === this.focusedTabView) {
+        return true;
+      }
+      if (view.type === ViewType.OVERLAY) {
+        // Nice to have: update viewer only if overlay view is actually visible (not minimized)
+        return true;
+      }
+      return false;
+    });
   }
 
   private async processRemoteToolTimestampReceived(timestamp: Timestamp) {
@@ -277,7 +299,7 @@ export class Mediator {
     //    1.2. Mediator sends "trace position update" to viewers
     // 2. Mediator sends "trace position update" to viewers to initialize them (see above)
     //
-    // and because our data load operations are async and cause task suspensions, the two
+    // and because our data load operations are async and involve task suspensions, the two
     // "trace position update" could be processed concurrently within the same viewer.
     // Meaning the viewer could perform twice the initial heavy pre-processing,
     // thus increasing UI initialization times.

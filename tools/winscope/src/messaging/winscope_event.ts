@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {View, Viewer} from 'viewers/viewer';
+import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export enum WinscopeEventType {
   APP_INITIALIZED,
@@ -130,6 +131,7 @@ export class TabbedViewSwitched extends WinscopeEvent {
 
   constructor(view: View) {
     super();
+    assertTrue(view.type === ViewType.TAB);
     this.newFocusedView = view;
   }
 }

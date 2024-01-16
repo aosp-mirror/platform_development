@@ -23,6 +23,12 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerWindowManager implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-window-manager');
     this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
@@ -52,6 +58,13 @@ class ViewerWindowManager implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
       this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
     );
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Window Manager',
+      TraceType.WINDOW_MANAGER
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -63,24 +76,12 @@ class ViewerWindowManager implements Viewer {
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Window Manager',
-        TraceType.WINDOW_MANAGER
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerWindowManager.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerWindowManager};
