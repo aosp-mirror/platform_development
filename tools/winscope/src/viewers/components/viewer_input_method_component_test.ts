@@ -17,8 +17,8 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
-import {HierarchyComponent} from 'viewers/components/hierarchy_component';
-import {PropertiesComponent} from 'viewers/components/properties_component';
+import {HierarchyComponentLegacy} from 'viewers/components/legacy/hierarchy_component';
+import {PropertiesComponentLegacy} from 'viewers/components/legacy/properties_component';
 import {ViewerInputMethodComponent} from './viewer_input_method_component';
 
 describe('ViewerInputMethodComponent', () => {
@@ -30,7 +30,11 @@ describe('ViewerInputMethodComponent', () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatIconModule, MatDividerModule],
-      declarations: [ViewerInputMethodComponent, HierarchyComponent, PropertiesComponent],
+      declarations: [
+        ViewerInputMethodComponent,
+        HierarchyComponentLegacy,
+        PropertiesComponentLegacy,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
   });

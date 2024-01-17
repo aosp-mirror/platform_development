@@ -24,7 +24,10 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
@@ -32,7 +35,7 @@ import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/p
 import {PresenterInputMethod} from './presenter_input_method';
 
 export function executePresenterInputMethodTests(
-  selected: HierarchyTreeNode,
+  selected: HierarchyTreeNodeLegacy,
   propertiesTreeFilterString: string,
   expectedChildren: [number, number],
   expectHierarchyTreeWithSfSubtree: boolean,
@@ -46,7 +49,7 @@ export function executePresenterInputMethodTests(
     let presenter: PresenterInputMethod;
     let uiData: ImeUiData;
     let positionUpdate: TracePositionUpdate;
-    let selectedTree: HierarchyTreeNode;
+    let selectedTree: HierarchyTreeNodeLegacy;
 
     beforeEach(async () => {
       selectedTree = selected;
@@ -139,13 +142,17 @@ export function executePresenterInputMethodTests(
 
       let expectedChildren = expectHierarchyTreeWithSfSubtree ? 2 : 1;
       await presenter.onAppEvent(positionUpdate);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
+      expect(assertDefined(uiData.tree).children.length + uiData.sfSubtrees.length).toEqual(
+        expectedChildren
+      );
 
       // Filter out non-visible child
       expectedChildren = expectHierarchyTreeWithSfSubtree ? 1 : 0;
       presenter.updateHierarchyTree(userOptions);
       expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
+      expect(assertDefined(uiData.tree).children.length + uiData.sfSubtrees.length).toEqual(
+        expectedChildren
+      );
     });
 
     it('can filter hierarchy tree', async () => {
@@ -164,14 +171,20 @@ export function executePresenterInputMethodTests(
         },
       };
 
-      const expectedChildren = expectHierarchyTreeWithSfSubtree ? 12 : 1;
+      const expectedChildren = expectHierarchyTreeWithSfSubtree ? 11 : 1;
       await presenter.onAppEvent(positionUpdate);
       presenter.updateHierarchyTree(userOptions);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
+      let subtreeChildren = 0;
+      uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
+      expect(assertDefined(uiData.tree).children.length + subtreeChildren).toEqual(
+        expectedChildren
+      );
 
       // Filter out all children
       presenter.filterHierarchyTree('Reject all');
-      expect(uiData.tree?.children.length).toEqual(0);
+      subtreeChildren = 0;
+      uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
+      expect(assertDefined(uiData.tree).children.length + subtreeChildren).toEqual(0);
     });
 
     it('can set new properties tree and associated ui data', async () => {
@@ -185,16 +198,16 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       presenter.newPropertiesTree(selectedTree);
       let nonTerminalChildren =
-        uiData.propertiesTree?.children?.filter(
-          (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
+        (uiData.propertiesTree as PropertiesTreeNodeLegacy)?.children?.filter(
+          (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
         ) ?? [];
 
       expect(nonTerminalChildren.length).toEqual(expectedChildren[0]);
       presenter.filterPropertiesTree(propertiesTreeFilterString);
 
       nonTerminalChildren =
-        uiData.propertiesTree?.children?.filter(
-          (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
+        (uiData.propertiesTree as PropertiesTreeNodeLegacy)?.children?.filter(
+          (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
         ) ?? [];
       expect(nonTerminalChildren.length).toEqual(expectedChildren[1]);
     });

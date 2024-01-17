@@ -22,28 +22,33 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
-import {SurfaceFlingerUtils} from 'viewers/common/surface_flinger_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PresenterSfUtils} from 'viewers/common/presenter_sf_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UiData} from './ui_data';
 
 export class Presenter {
   private readonly traces: Traces;
-  private readonly surfaceFlingerTrace: Trace<object> | undefined;
+  private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private readonly viewCaptureTrace: Trace<object>;
   private viewCapturePackageNames: string[] = [];
 
   private selectedFrameData: FrameData | undefined;
   private previousFrameData: FrameData | undefined;
-  private selectedHierarchyTree: HierarchyTreeNode | undefined;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | undefined;
 
   private uiData: UiData | undefined;
 
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private pinnedIds: string[] = [];
 
   private highlightedItem: string = '';
@@ -118,15 +123,14 @@ export class Presenter {
       this.previousFrameData = await prevVcEntry?.getValue();
 
       if (this.uiData && this.surfaceFlingerTrace) {
-        const surfaceFlingerEntry = await TraceEntryFinder.findCorrespondingEntry(
+        const surfaceFlingerEntry = (await TraceEntryFinder.findCorrespondingEntry(
           this.surfaceFlingerTrace,
           event.position
-        )?.getValue();
+        )?.getValue()) as HierarchyTreeNode;
         if (surfaceFlingerEntry) {
-          this.uiData.sfRects = SurfaceFlingerUtils.makeRects(
+          this.uiData.sfRects = PresenterSfUtils.makeUiRects(
             surfaceFlingerEntry,
-            this.viewCapturePackageNames,
-            this.hierarchyUserOptions
+            this.viewCapturePackageNames
           );
         }
       }
@@ -171,23 +175,23 @@ export class Presenter {
     const rectangles: UiRect[] = [];
 
     function inner(node: any /* ViewNode */) {
-      const aUiRect: UiRect = {
-        x: node.boxPos.left,
-        y: node.boxPos.top,
-        w: node.boxPos.width,
-        h: node.boxPos.height,
-        label: '',
-        transform: undefined,
-        isVisible: node.isVisible,
-        isDisplay: false,
-        id: node.id,
-        displayId: 0,
-        isVirtual: false,
-        isClickable: true,
-        cornerRadius: 0,
-        depth: node.depth,
-        hasContent: node.isVisible,
-      };
+      const aUiRect = new UiRectBuilder()
+        .setX(node.boxPos.left)
+        .setY(node.boxPos.top)
+        .setWidth(node.boxPos.width)
+        .setHeight(node.boxPos.height)
+        .setLabel('')
+        .setIsVisible(node.isVisible)
+        .setIsDisplay(false)
+        .setId(node.id)
+        .setDisplayId(0)
+        .setIsVirtual(false)
+        .setIsClickable(true)
+        .setCornerRadius(0)
+        .setHasContent(node.isVisible)
+        .setDepth(node.depth)
+        .build();
+
       rectangles.push(aUiRect);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
     }
@@ -198,7 +202,7 @@ export class Presenter {
     return rectangles;
   }
 
-  private generateTree(): HierarchyTreeNode | null {
+  private generateTree(): HierarchyTreeNodeLegacy | null {
     if (!this.selectedFrameData?.node) {
       return null;
     }
@@ -223,7 +227,7 @@ export class Presenter {
     }
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -277,7 +281,7 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  newPropertiesTree(selectedItem: HierarchyTreeNode) {
+  newPropertiesTree(selectedItem: HierarchyTreeNodeLegacy) {
     this.selectedHierarchyTree = selectedItem;
     this.uiData!!.selectedViewNode = this.findViewNode(
       selectedItem.name,
@@ -308,8 +312,8 @@ export class Presenter {
   }
 
   private getTreeWithTransformedProperties(
-    selectedTree: HierarchyTreeNode | undefined
-  ): PropertiesTreeNode | null {
+    selectedTree: HierarchyTreeNodeLegacy | undefined
+  ): PropertiesTreeNodeLegacy | null {
     if (!selectedTree) {
       return null;
     }

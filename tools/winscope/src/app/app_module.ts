@@ -44,6 +44,14 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additional_properties_component';
+import {CoordinatesTableComponentLegacy} from 'viewers/components/legacy/coordinates_table_component';
+import {HierarchyComponentLegacy} from 'viewers/components/legacy/hierarchy_component';
+import {PropertiesComponentLegacy} from 'viewers/components/legacy/properties_component';
+import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
+import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
+import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
+import {TreeNodePropertiesDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_properties_data_view_component';
+import {ViewCapturePropertyGroupsComponentLegacy} from 'viewers/components/legacy/view_capture_property_groups_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
@@ -102,18 +110,25 @@ import {WebAdbComponent} from './components/web_adb_component';
     WebAdbComponent,
     TraceConfigComponent,
     HierarchyComponent,
+    HierarchyComponentLegacy,
     PropertiesComponent,
+    PropertiesComponentLegacy,
     RectsComponent,
     TraceViewComponent,
     TreeComponent,
+    TreeComponentLegacy,
     TreeNodeComponent,
+    TreeNodeComponentLegacy,
     TreeNodeDataViewComponent,
+    TreeNodeDataViewComponentLegacy,
     TreeNodePropertiesDataViewComponent,
+    TreeNodePropertiesDataViewComponentLegacy,
     SurfaceFlingerPropertyGroupsComponent,
     TransformMatrixComponent,
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
     CoordinatesTableComponent,
+    CoordinatesTableComponentLegacy,
     TimelineComponent,
     MiniTimelineComponent,
     ExpandedTimelineComponent,
@@ -125,9 +140,10 @@ import {WebAdbComponent} from './components/web_adb_component';
     MatDrawerContainer,
     LoadProgressComponent,
     SliderComponent,
-    ViewCapturePropertyGroupsComponent,
     ProtologScrollDirective,
     TransactionsScrollDirective,
+    ViewCapturePropertyGroupsComponent,
+    ViewCapturePropertyGroupsComponentLegacy,
   ],
   imports: [
     BrowserModule,

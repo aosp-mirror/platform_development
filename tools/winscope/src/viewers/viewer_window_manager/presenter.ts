@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
 import {DisplayContent} from 'flickerlib/windows/DisplayContent';
@@ -28,9 +28,13 @@ import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
@@ -43,9 +47,9 @@ export class Presenter {
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
   private highlightedItem: string = '';
   private highlightedProperty: string = '';
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | null = null;
   private previousEntry: TraceTreeNode | null = null;
   private entry: TraceTreeNode | null = null;
   private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
@@ -103,7 +107,7 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -159,7 +163,7 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  newPropertiesTree(selectedTree: HierarchyTreeNode) {
+  newPropertiesTree(selectedTree: HierarchyTreeNodeLegacy) {
     this.selectedHierarchyTree = selectedTree;
     this.updateSelectedTreeUiData();
   }
@@ -206,21 +210,20 @@ export class Presenter {
     };
     const displayRects: UiRect[] =
       entry.displays?.map((display: DisplayContent) => {
-        const rect: UiRect = {
-          x: display.displayRect.left,
-          y: display.displayRect.top,
-          w: display.displayRect.right - display.displayRect.left,
-          h: display.displayRect.bottom - display.displayRect.top,
-          label: `Display - ${display.title}`,
-          transform: identityMatrix,
-          isVisible: false, //TODO: check if displayRect.ref.isVisible exists
-          isDisplay: true,
-          id: display.stableId,
-          displayId: display.id,
-          isVirtual: false,
-          isClickable: false,
-          cornerRadius: 0,
-        };
+        const rect = new UiRectBuilder()
+          .setX(display.displayRect.left)
+          .setY(display.displayRect.top)
+          .setWidth(display.displayRect.right - display.displayRect.left)
+          .setHeight(display.displayRect.bottom - display.displayRect.top)
+          .setLabel(`Display - ${display.title}`)
+          .setIsVisible(false)
+          .setIsDisplay(true)
+          .setId(display.stableId)
+          .setDisplayId(display.id)
+          .setIsVirtual(false)
+          .setIsClickable(false)
+          .setCornerRadius(0)
+          .build();
         return rect;
       }) ?? [];
 
@@ -228,21 +231,20 @@ export class Presenter {
       entry.windowStates
         ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
         .map((it: any) => {
-          const rect: UiRect = {
-            x: it.rect.left,
-            y: it.rect.top,
-            w: it.rect.right - it.rect.left,
-            h: it.rect.bottom - it.rect.top,
-            label: it.rect.label,
-            transform: identityMatrix,
-            isVisible: it.isVisible,
-            isDisplay: false,
-            id: it.stableId,
-            displayId: it.displayId,
-            isVirtual: false, //TODO: is this correct?
-            isClickable: true,
-            cornerRadius: 0,
-          };
+          const rect = new UiRectBuilder()
+            .setX(it.rect.left)
+            .setY(it.rect.top)
+            .setWidth(it.rect.right - it.rect.left)
+            .setHeight(it.rect.bottom - it.rect.top)
+            .setLabel(it.rect.label)
+            .setIsVisible(it.isVisible)
+            .setIsDisplay(false)
+            .setId(it.stableId)
+            .setDisplayId(it.displayId)
+            .setIsVirtual(false)
+            .setIsClickable(true)
+            .setCornerRadius(0)
+            .build();
           return rect;
         }) ?? [];
 
@@ -278,7 +280,7 @@ export class Presenter {
       .setIsSimplifyNames(this.hierarchyUserOptions['simplifyNames']?.enabled)
       .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
-    let tree: HierarchyTreeNode | null;
+    let tree: HierarchyTreeNodeLegacy | null;
     if (
       !this.hierarchyUserOptions['showDiff']?.enabled ||
       this.hierarchyUserOptions['showDiff']?.isUnavailable
@@ -303,7 +305,9 @@ export class Presenter {
     }
   }
 
-  private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
+  private getTreeWithTransformedProperties(
+    selectedTree: HierarchyTreeNodeLegacy
+  ): PropertiesTreeNodeLegacy {
     if (!this.entry) {
       return {};
     }

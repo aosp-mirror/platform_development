@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {TraceTreeNode} from 'trace/trace_tree_node';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ImeUtils} from 'viewers/common/ime_utils';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
@@ -32,7 +34,7 @@ export class PresenterInputMethodManagerService extends PresenterInputMethod {
 
   protected override getAdditionalProperties(
     wmEntry: TraceTreeNode | undefined,
-    sfEntry: TraceTreeNode | undefined
+    sfEntry: HierarchyTreeNode | undefined
   ) {
     return new ImeAdditionalProperties(
       wmEntry ? ImeUtils.processWindowManagerTraceEntry(wmEntry) : undefined,

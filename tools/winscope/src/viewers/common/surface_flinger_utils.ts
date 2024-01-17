@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
 import {Layer, LayerTraceEntry} from 'flickerlib/common';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {UserOptions} from './user_options';
 
 export class SurfaceFlingerUtils {
@@ -46,25 +47,24 @@ export class SurfaceFlingerUtils {
       .sort(SurfaceFlingerUtils.compareLayerZ)
       .map((it: Layer) => {
         const transform: TransformMatrix = it.rect.transform?.matrix ?? it.rect.transform;
-        const rect: UiRect = {
-          x: it.rect.left,
-          y: it.rect.top,
-          w: it.rect.right - it.rect.left,
-          h: it.rect.bottom - it.rect.top,
-          label: it.rect.label,
-          transform,
-          isVisible: it.isVisible,
-          isDisplay: false,
-          id: it.stableId,
-          displayId: it.stackId,
-          isVirtual: false,
-          isClickable: true,
-          cornerRadius: it.cornerRadius,
-          hasContent: viewCapturePackageNames.includes(
-            it.rect.label.substring(0, it.rect.label.indexOf('/'))
-          ),
-        };
-        return rect;
+        return new UiRectBuilder()
+          .setX(it.rect.left)
+          .setY(it.rect.top)
+          .setWidth(it.rect.right - it.rect.left)
+          .setHeight(it.rect.bottom - it.rect.top)
+          .setLabel(it.rect.label)
+          .setTransform(transform)
+          .setIsVisible(it.isVisible)
+          .setIsDisplay(false)
+          .setId(it.stableId)
+          .setDisplayId(it.stackId)
+          .setIsVirtual(false)
+          .setIsClickable(true)
+          .setCornerRadius(it.cornerRadius)
+          .setHasContent(
+            viewCapturePackageNames.includes(it.rect.label.substring(0, it.rect.label.indexOf('/')))
+          )
+          .build();
       });
   }
 
@@ -75,23 +75,22 @@ export class SurfaceFlingerUtils {
 
     return entry.displays?.map((display: any) => {
       const transform: TransformMatrix = display.transform?.matrix ?? display.transform;
-      const rect: UiRect = {
-        x: 0,
-        y: 0,
-        w: display.size.width,
-        h: display.size.height,
-        label: 'Display',
-        transform,
-        isVisible: false,
-        isDisplay: true,
-        id: `Display - ${display.id}`,
-        displayId: display.layerStackId,
-        isVirtual: display.isVirtual ?? false,
-        isClickable: false,
-        cornerRadius: 0,
-        hasContent: false,
-      };
-      return rect;
+      return new UiRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(display.size.width)
+        .setHeight(display.size.height)
+        .setLabel('Display')
+        .setTransform(transform)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setId(`Display - ${display.id}`)
+        .setDisplayId(display.layerStackId)
+        .setIsVirtual(display.isVirtual ?? false)
+        .setIsClickable(false)
+        .setCornerRadius(0)
+        .setHasContent(false)
+        .build();
     });
   }
 

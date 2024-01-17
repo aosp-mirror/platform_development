@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/test/fake_proto/json';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
 import {FakeProtoTransformer} from './fake_proto_transformer';
@@ -95,7 +96,9 @@ describe('FakeProtoBuilder', () => {
     const proto = buildFakeProto(args);
 
     // Check it matches the snake_case to camelCase conversion performed by protobuf library (within the transformer)
-    const transformed = new FakeProtoTransformer(root.lookupType('Entry')).transform(proto);
+    const transformed = new FakeProtoTransformer(
+      TamperedMessageType.tamper(root.lookupType('Entry'))
+    ).transform(proto);
 
     expect(transformed._case_64bit).toEqual(10n);
     expect(transformed.case_64bit).toEqual(11n);

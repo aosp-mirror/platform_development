@@ -133,10 +133,10 @@ import {UiData} from './ui_data';
 
       <div class="container-properties">
         <h3 class="properties-title mat-title">Properties - Proto Dump</h3>
-        <tree-view
+        <tree-view-legacy
           *ngIf="uiData.currentPropertiesTree"
           class="properties-tree"
-          [item]="uiData.currentPropertiesTree"></tree-view>
+          [item]="uiData.currentPropertiesTree"></tree-view-legacy>
       </div>
     </div>
   `,

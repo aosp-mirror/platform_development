@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 @Component({
   selector: 'coordinates-table',
@@ -36,16 +37,16 @@ import {Component, Input} from '@angular/core';
       </tr>
       <tr>
         <td>
-          <p class="mat-body-1">{{ coordinates.left }}</p>
+          <p class="mat-body-1">{{ coordinates.getChildByName('left')?.formattedValue() }}</p>
         </td>
         <td>
-          <p class="mat-body-1">{{ coordinates.top }}</p>
+          <p class="mat-body-1">{{ coordinates.getChildByName('top')?.formattedValue() }}</p>
         </td>
         <td>
-          <p class="mat-body-1">{{ coordinates.right }}</p>
+          <p class="mat-body-1">{{ coordinates.getChildByName('right')?.formattedValue() }}</p>
         </td>
         <td>
-          <p class="mat-body-1">{{ coordinates.bottom }}</p>
+          <p class="mat-body-1">{{ coordinates.getChildByName('bottom')?.formattedValue() }}</p>
         </td>
       </tr>
     </table>
@@ -71,14 +72,14 @@ import {Component, Input} from '@angular/core';
   ],
 })
 export class CoordinatesTableComponent {
-  @Input() coordinates!: any;
+  @Input() coordinates: UiPropertyTreeNode | undefined;
 
   hasCoordinates() {
     return (
-      this.coordinates.left ||
-      this.coordinates.top ||
-      this.coordinates.right ||
-      this.coordinates.bottom
+      this.coordinates?.getChildByName('left') ||
+      this.coordinates?.getChildByName('right') ||
+      this.coordinates?.getChildByName('top') ||
+      this.coordinates?.getChildByName('bottom')
     );
   }
 }

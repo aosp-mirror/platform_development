@@ -25,6 +25,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
+import {UiRectBuilder} from './ui_rect_builder';
 
 describe('RectsComponent', () => {
   let component: TestHostComponent;
@@ -68,28 +69,28 @@ describe('RectsComponent', () => {
   it('draws scene when input data changes', async () => {
     spyOn(Canvas.prototype, 'draw').and.callThrough();
 
-    const inputRect: UiRect = {
-      x: 0,
-      y: 0,
-      w: 1,
-      h: 1,
-      label: 'rectangle1',
-      transform: {
+    const inputRect = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setLabel('rectangle1')
+      .setTransform({
         dsdx: 1,
         dsdy: 0,
         dtdx: 0,
         dtdy: 1,
         tx: 0,
         ty: 0,
-      },
-      isVisible: true,
-      isDisplay: false,
-      id: 'test-id-1234',
-      displayId: 0,
-      isVirtual: false,
-      isClickable: false,
-      cornerRadius: 0,
-    };
+      })
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setId('test-id-1234')
+      .setDisplayId(0)
+      .setIsVirtual(false)
+      .setIsClickable(false)
+      .setCornerRadius(0)
+      .build();
 
     expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
     component.rectsComponent.rects = [inputRect];

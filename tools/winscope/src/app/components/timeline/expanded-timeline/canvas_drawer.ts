@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Rect} from 'common/geometry_utils';
+import {Rect} from 'common/rect';
 
 export class CanvasDrawer {
   private canvas!: HTMLCanvasElement;

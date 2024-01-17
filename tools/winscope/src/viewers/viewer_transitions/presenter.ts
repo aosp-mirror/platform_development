@@ -16,20 +16,21 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {LayerTraceEntry, Transition, WindowManagerState} from 'flickerlib/common';
+import {Transition, WindowManagerState} from 'flickerlib/common';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {UiData} from './ui_data';
 
 export class Presenter {
   private isInitialized = false;
   private transitionTrace: Trace<object>;
-  private surfaceFlingerTrace: Trace<LayerTraceEntry> | undefined;
+  private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private windowManagerTrace: Trace<WindowManagerState> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
@@ -120,8 +121,8 @@ export class Presenter {
 
   private async makeSelectedTransitionPropertiesTree(
     transition: Transition
-  ): Promise<PropertiesTreeNode> {
-    const changes: PropertiesTreeNode[] = [];
+  ): Promise<PropertiesTreeNodeLegacy> {
+    const changes: PropertiesTreeNodeLegacy[] = [];
 
     for (const change of transition.changes) {
       const layerName = this.layerIdToName.get(change.layerId);
@@ -142,7 +143,7 @@ export class Presenter {
       });
     }
 
-    const properties: PropertiesTreeNode[] = [
+    const properties: PropertiesTreeNodeLegacy[] = [
       {propertyKey: 'id', propertyValue: transition.id},
       {propertyKey: 'type', propertyValue: transition.type},
       {propertyKey: 'aborted', propertyValue: `${transition.aborted}`},

@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FilterType, TreeUtils} from 'common/tree_utils';
+import {assertDefined} from 'common/assert_utils';
+import {Timestamp} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
+import {TreeUtils} from 'common/tree_utils';
 import {WindowContainer} from 'flickerlib/common';
-import {Layer} from 'flickerlib/layers/Layer';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {Activity} from 'flickerlib/windows/Activity';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {WindowState} from 'flickerlib/windows/WindowState';
+import {Item} from 'trace/item';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TreeNodeFilter, UiTreeUtils} from './ui_tree_utils';
 
 class ProcessedWindowManagerState {
   constructor(
@@ -37,14 +42,37 @@ class ProcessedWindowManagerState {
   ) {}
 }
 
-class ImeLayers {
+interface ImeContainerProperties {
+  id: string;
+  zOrderRelativeOfId: number;
+  z: number;
+}
+
+interface InputMethodSurfaceProperties {
+  id: string;
+  isVisible: boolean;
+  screenBounds?: PropertyTreeNode;
+  rect?: PropertyTreeNode;
+}
+
+interface RootImeProperties {
+  timestamp: string;
+}
+
+interface ImeLayerProperties {
+  imeContainer: ImeContainerProperties | undefined;
+  inputMethodSurface: InputMethodSurfaceProperties | undefined;
+  focusedWindowColor: PropertyTreeNode | undefined;
+  root: RootImeProperties | undefined;
+}
+
+class ImeLayers implements Item {
   constructor(
+    public id: string,
     public name: string,
-    public imeContainer: Layer,
-    public inputMethodSurface: Layer,
-    public focusedWindow: Layer | undefined,
-    public taskOfImeContainer: Layer | undefined,
-    public taskOfImeSnapshot: Layer | undefined
+    public properties: ImeLayerProperties,
+    public taskLayerOfImeContainer: HierarchyTreeNode | undefined,
+    public taskLayerOfImeSnapshot: HierarchyTreeNode | undefined
   ) {}
 }
 
@@ -68,42 +96,77 @@ class ImeUtils {
   }
 
   static getImeLayers(
-    entry: LayerTraceEntry,
-    processedWindowManagerState: ProcessedWindowManagerState
+    entryTree: HierarchyTreeNode,
+    processedWindowManagerState: ProcessedWindowManagerState,
+    sfEntryTimestamp: Timestamp | undefined
   ): ImeLayers | undefined {
-    const isImeContainer = TreeUtils.makeNodeFilter('ImeContainer');
-    const imeContainer = TreeUtils.findDescendantNode(entry, isImeContainer);
-    if (!imeContainer) {
+    const isImeContainer = UiTreeUtils.makeNodeFilter('ImeContainer');
+    const imeContainerLayer = entryTree.findDfs(isImeContainer);
+
+    if (!imeContainerLayer) {
       return undefined;
     }
 
-    const isInputMethodSurface = TreeUtils.makeNodeFilter('InputMethod');
-    const inputMethodSurface = TreeUtils.findDescendantNode(imeContainer, isInputMethodSurface);
+    const imeContainerProps: ImeContainerProperties = {
+      id: imeContainerLayer.id,
+      zOrderRelativeOfId: assertDefined(
+        imeContainerLayer.getEagerPropertyByName('zOrderRelativeOf')
+      ).getValue(),
+      z: assertDefined(imeContainerLayer.getEagerPropertyByName('z')).getValue(),
+    };
 
-    let focusedWindowLayer: Layer = undefined;
+    const isInputMethodSurface = UiTreeUtils.makeNodeFilter('InputMethod');
+    const inputMethodSurfaceLayer = imeContainerLayer.findDfs(isInputMethodSurface);
+
+    if (!inputMethodSurfaceLayer) {
+      return undefined;
+    }
+
+    const inputMethodSurfaceProps: InputMethodSurfaceProperties = {
+      id: inputMethodSurfaceLayer.id,
+      isVisible: assertDefined(
+        inputMethodSurfaceLayer.getEagerPropertyByName('isVisible')
+      ).getValue(),
+      screenBounds: inputMethodSurfaceLayer.getEagerPropertyByName('screenBounds'),
+      rect: inputMethodSurfaceLayer.getEagerPropertyByName('bounds'),
+    };
+
+    let focusedWindowLayer: HierarchyTreeNode | undefined;
     const focusedWindowToken = processedWindowManagerState.focusedWindow?.token;
     if (focusedWindowToken) {
-      const isFocusedWindow = TreeUtils.makeNodeFilter(focusedWindowToken);
-      focusedWindowLayer = TreeUtils.findDescendantNode(entry, isFocusedWindow);
+      const isFocusedWindow = UiTreeUtils.makeNodeFilter(focusedWindowToken);
+      focusedWindowLayer = entryTree.findDfs(isFocusedWindow);
     }
+
+    const focusedWindowColor = focusedWindowLayer
+      ? focusedWindowLayer.getEagerPropertyByName('color')
+      : undefined;
 
     // we want to see both ImeContainer and IME-snapshot if there are
     // cases where both exist
     const taskLayerOfImeContainer = ImeUtils.findAncestorTaskLayerOfImeLayer(
-      entry,
-      TreeUtils.makeNodeFilter('ImeContainer')
+      entryTree,
+      UiTreeUtils.makeNodeFilter('ImeContainer')
     );
 
     const taskLayerOfImeSnapshot = ImeUtils.findAncestorTaskLayerOfImeLayer(
-      entry,
-      TreeUtils.makeNodeFilter('IME-snapshot')
+      entryTree,
+      UiTreeUtils.makeNodeFilter('IME-snapshot')
     );
 
+    const rootProperties = sfEntryTimestamp
+      ? {timestamp: TimeUtils.format(sfEntryTimestamp)}
+      : undefined;
+
     return new ImeLayers(
-      entry.name,
-      imeContainer,
-      inputMethodSurface,
-      focusedWindowLayer,
+      entryTree.id,
+      entryTree.name,
+      {
+        imeContainer: imeContainerProps,
+        inputMethodSurface: inputMethodSurfaceProps,
+        focusedWindowColor,
+        root: rootProperties,
+      },
       taskLayerOfImeContainer,
       taskLayerOfImeSnapshot
     );
@@ -121,21 +184,21 @@ class ImeUtils {
   }
 
   private static findAncestorTaskLayerOfImeLayer(
-    entry: LayerTraceEntry,
-    isTargetImeLayer: FilterType
-  ): Layer {
-    const imeLayer = TreeUtils.findDescendantNode(entry, isTargetImeLayer);
+    entryTree: HierarchyTreeNode,
+    isTargetImeLayer: TreeNodeFilter
+  ): HierarchyTreeNode | undefined {
+    const imeLayer = entryTree.findDfs(isTargetImeLayer);
+
     if (!imeLayer) {
       return undefined;
     }
 
-    const isTaskLayer = TreeUtils.makeNodeFilter('Task|ImePlaceholder');
-    const taskLayer = TreeUtils.findAncestorNode(imeLayer, isTaskLayer) as Layer;
+    const isTaskLayer = UiTreeUtils.makeNodeFilter('Task|ImePlaceholder');
+    const taskLayer = imeLayer.findAncestor(isTaskLayer);
     if (!taskLayer) {
       return undefined;
     }
 
-    taskLayer.kind = 'SF subtree - ' + taskLayer.id;
     return taskLayer;
   }
 

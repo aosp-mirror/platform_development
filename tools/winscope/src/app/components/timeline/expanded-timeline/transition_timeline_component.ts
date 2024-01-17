@@ -15,7 +15,8 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {GeometryUtils, Point, Rect} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
+import {Rect} from 'common/rect';
 import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {Transition} from 'flickerlib/common';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -150,7 +151,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
           const transitionSegment = await this.getSegmentForTransition(entry);
           const rowToUse = this.getRowToUseFor(entry);
           const rect = this.getSegmentRect(transitionSegment.from, transitionSegment.to, rowToUse);
-          if (GeometryUtils.isPointInRect(mousePoint, rect)) {
+          if (rect.containsPoint(mousePoint)) {
             return entry;
           }
           return undefined;
@@ -206,7 +207,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
     const padding = 5;
     const rowHeight = totalRowHeight - padding;
 
-    return {x: xPosStart, y: borderPadding + rowToUse * totalRowHeight, w: width, h: rowHeight};
+    return new Rect(xPosStart, borderPadding + rowToUse * totalRowHeight, width, rowHeight);
   }
 
   override async drawTimeline() {

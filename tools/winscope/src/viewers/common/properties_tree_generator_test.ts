@@ -15,14 +15,14 @@
  */
 import Long from 'long';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
-import {PropertiesTreeNode} from './ui_tree_utils';
+import {PropertiesTreeNodeLegacy} from './ui_tree_utils_legacy';
 
 describe('PropertiesTreeGenerator', () => {
   it('handles boolean', () => {
     const input = true;
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: 'true',
     };
@@ -34,7 +34,7 @@ describe('PropertiesTreeGenerator', () => {
     const input = 10;
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: '10',
     };
@@ -46,7 +46,7 @@ describe('PropertiesTreeGenerator', () => {
     const input = new Long(10, 100, false);
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: '429496729610',
     };
@@ -58,7 +58,7 @@ describe('PropertiesTreeGenerator', () => {
     const input = 'value';
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: 'value',
     };
@@ -70,7 +70,7 @@ describe('PropertiesTreeGenerator', () => {
     const input: any[] = [];
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: '[]',
     };
@@ -82,7 +82,7 @@ describe('PropertiesTreeGenerator', () => {
     const input = ['value0', 'value1'];
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       children: [
         {
@@ -103,7 +103,7 @@ describe('PropertiesTreeGenerator', () => {
     const input = {};
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       propertyValue: '{}',
     };
@@ -118,7 +118,7 @@ describe('PropertiesTreeGenerator', () => {
     };
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       children: [
         {
@@ -144,7 +144,7 @@ describe('PropertiesTreeGenerator', () => {
     };
     const actual = new PropertiesTreeGenerator().generate('root', input);
 
-    const expected: PropertiesTreeNode = {
+    const expected: PropertiesTreeNodeLegacy = {
       propertyKey: 'root',
       children: [
         {
