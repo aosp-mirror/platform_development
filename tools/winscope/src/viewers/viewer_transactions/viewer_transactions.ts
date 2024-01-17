@@ -23,6 +23,12 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerTransactions implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+
   constructor(traces: Traces) {
     this.htmlElement = document.createElement('viewer-transactions');
 
@@ -61,6 +67,14 @@ class ViewerTransactions implements Viewer {
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Transactions',
+      TraceType.TRANSACTIONS
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -72,24 +86,12 @@ class ViewerTransactions implements Viewer {
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Transactions',
-        TraceType.TRANSACTIONS
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerTransactions.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerTransactions};

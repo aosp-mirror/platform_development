@@ -27,9 +27,11 @@ import {UiData} from './ui_data';
 
 class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
+  private readonly view: View;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-surface-flinger');
@@ -71,6 +73,14 @@ class ViewerSurfaceFlinger implements Viewer {
         this.switchToNexusLauncherViewer();
       }
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Surface Flinger',
+      TraceType.SURFACE_FLINGER
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -87,15 +97,7 @@ class ViewerSurfaceFlinger implements Viewer {
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Surface Flinger',
-        TraceType.SURFACE_FLINGER
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
