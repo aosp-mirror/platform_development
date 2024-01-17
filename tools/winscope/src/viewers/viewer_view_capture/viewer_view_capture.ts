@@ -26,9 +26,11 @@ import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
@@ -60,6 +62,14 @@ export class ViewerViewCapture implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.MiniRectsDblClick, (event) => {
       this.switchToSurfaceFlingerView();
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      this.getTitle(),
+      this.getDependencies()[0]
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -75,15 +85,7 @@ export class ViewerViewCapture implements Viewer {
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        this.getTitle(),
-        this.getDependencies()[0]
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {

@@ -87,6 +87,7 @@ function privileged_install() {
 INSTALL_HOST_ONLY=false
 INSTALL_CLIENT_ONLY=false
 INSTALL_VIRTUAL_CAMERA_ONLY=false
+PERFORM_BUILD=true
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -h|--help) display_help; exit ;;
@@ -210,8 +211,8 @@ fi
 if [[ -n "${CAMERA_DEMO_SERIAL}" ]]; then
 
   readonly CAMERA_PERM_BASENAME=com.example.android.vdmdemo.virtualcamera.xml
-  readonly CAMERA_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/virtualcamera/${PERM_BASENAME}"
-  readonly CAMERA_PERM_DST="/system/etc/permissions/${PERM_BASENAME}"
+  readonly CAMERA_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/virtualcamera/${CAMERA_PERM_BASENAME}"
+  readonly CAMERA_PERM_DST="/system/etc/permissions/${CAMERA_PERM_BASENAME}"
   readonly CAMERA_DEMO_APK_DIR=/system/priv-app/VirtualCameraDemo
 
   echo "Preparing ${CAMERA_DEMO_NAME} for privileged VirtualCameraDemo installation..."

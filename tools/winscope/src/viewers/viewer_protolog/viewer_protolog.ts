@@ -23,6 +23,12 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerProtoLog implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+
   constructor(traces: Traces) {
     this.htmlElement = document.createElement('viewer-protolog');
 
@@ -42,6 +48,14 @@ class ViewerProtoLog implements Viewer {
     this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
       this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'ProtoLog',
+      TraceType.PROTO_LOG
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -53,24 +67,12 @@ class ViewerProtoLog implements Viewer {
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'ProtoLog',
-        TraceType.PROTO_LOG
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerProtoLog.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerProtoLog};
