@@ -190,21 +190,21 @@ if [[ -n "${HOST_SERIAL}" ]]; then
   install_app "${HOST_SERIAL}" "${OUT}/system/app/VdmDemos/VdmDemos.apk" demos
   echo
 
-  readonly PERM_BASENAME=com.example.android.vdmdemo.host.xml
-  readonly PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/host/${PERM_BASENAME}"
-  readonly PERM_DST="/system/etc/permissions/${PERM_BASENAME}"
+  readonly HOST_PERM_BASENAME=com.example.android.vdmdemo.host.xml
+  readonly HOST_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/host/${HOST_PERM_BASENAME}"
+  readonly HOST_PERM_DST="/system/etc/permissions/${HOST_PERM_BASENAME}"
   readonly HOST_APK_DIR=/system/priv-app/VdmHost
 
   echo "Preparing ${HOST_NAME} for privileged VdmHost installation..."
   if adb -s "${HOST_SERIAL}" shell ls "${HOST_APK_DIR}/VdmHost.apk" > /dev/null 2>&1 \
-      && adb -s "${HOST_SERIAL}" pull "${PERM_DST}" "/tmp/${PERM_BASENAME}" > /dev/null 2>&1 \
-      && cmp --silent "/tmp/${PERM_BASENAME}" "${PERM_SRC}" \
+      && adb -s "${HOST_SERIAL}" pull "${HOST_PERM_DST}" "/tmp/${HOST_PERM_BASENAME}" > /dev/null 2>&1 \
+      && cmp --silent "/tmp/${HOST_PERM_BASENAME}" "${HOST_PERM_SRC}" \
       && (adb -s "${HOST_SERIAL}" uninstall com.example.android.vdmdemo.host > /dev/null 2>&1 || true) \
       && adb -s "${HOST_SERIAL}" install -r -d -g "${OUT}/${HOST_APK_DIR}/VdmHost.apk" > /dev/null 2>&1; then
     echo "A privileged installation already found, installed VdmHost.apk to ${HOST_NAME}"
   else
     privileged_install "${HOST_SERIAL}" "${HOST_NAME}" "${HOST_APK_DIR}" \
-                       "VdmHost.apk" "${PERM_SRC}" "${PERM_PERM_DST}"
+                       "VdmHost.apk" "${HOST_PERM_SRC}" "${HOST_PERM_DST}"
   fi
 fi
 
