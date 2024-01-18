@@ -491,7 +491,7 @@ export class Presenter {
     ];
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      predicatesKeepingChildren.push(UiTreeUtils.isNotDefault);
+      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
     }
 
     if (!isHierarchyTreeRoot) {

@@ -16,9 +16,11 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {Item} from 'trace/item';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {UiTreeUtilsLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
@@ -26,7 +28,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
   template: `
     <h2 class="view-header mat-title">WM & SF Properties</h2>
     <div class="additional-properties-content">
-      <div *ngIf="isAllPropertiesNull()" class="group">
+      <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
           There is no corresponding WM / SF additionalProperties for this IME entry – no WM / SF
           entry is recorded before this IME entry in time. View later frames for WM & SF properties.
@@ -36,123 +38,114 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
       <ng-container *ngIf="isImeManagerService">
         <div class="group">
           <button
-            *ngIf="wmProtoOrNull()"
+            *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmProtoOrNull())}"
+            [class]="{selected: isHighlighted(wmHierarchyTree())}"
             (click)="
-              onClickShowInPropertiesPanelWm(wmProtoOrNull(), additionalProperties?.wm?.name)
+              onClickShowInPropertiesPanelWm(wmHierarchyTree(), additionalProperties?.wm?.name)
             ">
             WMState
           </button>
-          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
+          <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
           <div class="left-column">
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
-              {{ additionalProperties.wm.name }}
+              {{ wmRootLabel() }}
             </p>
             <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
             </p>
           </div>
         </div>
-        <div *ngIf="wmInsetsSourceProviderOrNull()" class="group">
+        <div *ngIf="wmInsetsSourceProvider()" class="group">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmInsetsSourceProviderOrNull())}"
+            [class]="{selected: isHighlighted(wmInsetsSourceProvider())}"
             (click)="
-              onClickShowInPropertiesPanelWm(
-                wmInsetsSourceProviderOrNull(),
-                'Ime Insets Source Provider'
-              )
+              onClickShowInPropertiesPanelWm(wmInsetsSourceProvider(), 'Ime Insets Source Provider')
             ">
             IME Insets Source Provider
           </button>
           <div class="left-column">
             <p class="mat-body-2">Source Frame:</p>
-            <coordinates-table-legacy
-              [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"></coordinates-table-legacy>
+            <coordinates-table
+              [coordinates]="wmInsetsSourceProviderSourceFrame()"></coordinates-table>
             <p class="mat-body-1">
               <span class="mat-body-2">Source Visible:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderSourceVisibleOrNull() }}
+              {{ wmInsetsSourceProviderSourceVisible() }}
             </p>
             <p class="mat-body-2">Source Visible Frame:</p>
-            <coordinates-table-legacy
-              [coordinates]="
-                wmInsetsSourceProviderSourceVisibleFrameOrNull()
-              "></coordinates-table-legacy>
+            <coordinates-table
+              [coordinates]="wmInsetsSourceProviderSourceVisibleFrame()"></coordinates-table>
             <p class="mat-body-1">
               <span class="mat-body-2">Position:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderPositionOrNull() }}
+              {{ wmInsetsSourceProviderPosition() }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">IsLeashReadyForDispatching:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderIsLeashReadyOrNull() }}
+              {{ wmInsetsSourceProviderIsLeashReady() }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Controllable:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderControllableOrNull() }}
+              {{ wmInsetsSourceProviderControllable() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeControlTargetOrNull()" class="group">
+        <div *ngIf="wmImeControlTarget()" class="group">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmImeControlTargetOrNull())}"
-            (click)="
-              onClickShowInPropertiesPanelWm(wmImeControlTargetOrNull(), 'Ime Control Target')
-            ">
+            [class]="{selected: isHighlighted(wmImeControlTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeControlTarget(), 'Ime Control Target')">
             IME Control Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeControlTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeControlTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeControlTargetTitleOrNull() }}
+              {{ wmImeControlTargetTitle() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeInputTargetOrNull()" class="group">
+        <div *ngIf="wmImeInputTarget()" class="group">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmImeInputTargetOrNull())}"
-            (click)="onClickShowInPropertiesPanelWm(wmImeInputTargetOrNull(), 'Ime Input Target')">
+            [class]="{selected: isHighlighted(wmImeInputTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeInputTarget(), 'Ime Input Target')">
             IME Input Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeInputTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeInputTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeInputTargetTitleOrNull() }}
+              {{ wmImeInputTargetTitle() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeLayeringTargetOrNull()" class="group">
+        <div *ngIf="wmImeLayeringTarget()" class="group">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmImeLayeringTargetOrNull())}"
-            (click)="
-              onClickShowInPropertiesPanelWm(wmImeLayeringTargetOrNull(), 'Ime Layering Target')
-            ">
+            [class]="{selected: isHighlighted(wmImeLayeringTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeLayeringTarget(), 'Ime Layering Target')">
             IME Layering Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeLayeringTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeLayeringTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeLayeringTargetTitleOrNull() }}
+              {{ wmImeLayeringTargetTitle() }}
             </p>
           </div>
         </div>
@@ -162,20 +155,20 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         <!-- Ime Client or Ime Service -->
         <div class="group">
           <button
-            *ngIf="wmProtoOrNull()"
+            *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
             class="group-header wm-state"
-            [class]="{selected: isHighlighted(wmProtoOrNull())}"
+            [class]="{selected: isHighlighted(wmHierarchyTree())}"
             (click)="
-              onClickShowInPropertiesPanelWm(wmProtoOrNull(), additionalProperties?.wm?.name)
+              onClickShowInPropertiesPanelWm(wmHierarchyTree(), additionalProperties?.wm?.name)
             ">
             WMState
           </button>
-          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
+          <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
           <div class="left-column">
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
-              {{ additionalProperties.wm.name }}
+              {{ wmRootLabel() }}
             </p>
             <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
@@ -199,17 +192,17 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             <p class="mat-body-1">
               <span class="mat-body-2">Focused App:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedApp }}
+              {{ additionalProperties.wm.wmStateProperties.focusedApp }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Focused Activity:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedActivity }}
+              {{ additionalProperties.wm.wmStateProperties.focusedActivity }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Focused Window:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedWindow }}
+              {{ additionalProperties.wm.wmStateProperties.focusedWindow ?? 'null' }}
             </p>
             <p *ngIf="additionalProperties.sf" class="mat-body-1">
               <span class="mat-body-2">Focused Window Color:</span>
@@ -217,8 +210,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
               {{ formattedWindowColor() }}
             </p>
             <p class="mat-body-2">Input Control Target Frame:</p>
-            <coordinates-table-legacy
-              [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table-legacy>
+            <coordinates-table [coordinates]="wmControlTargetFrame()"></coordinates-table>
           </div>
         </div>
         <div class="group">
@@ -227,7 +219,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               <span class="mat-body-2">InputMethod Window:</span>
               &ngsp;
-              {{ additionalProperties.wm.isInputMethodWindowVisible }}
+              {{ additionalProperties.wm.wmStateProperties.isInputMethodWindowVisible }}
             </p>
             <p *ngIf="additionalProperties?.sf" class="mat-body-1">
               <span class="mat-body-2">InputMethod Surface:</span>
@@ -340,11 +332,11 @@ export class ImeAdditionalPropertiesComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  isHighlighted(item: any) {
-    if (item.id) {
+  isHighlighted(item: TreeNode | undefined): boolean {
+    if (item instanceof TreeNode) {
       return UiTreeUtils.isHighlighted(item, this.highlightedItem);
     }
-    return UiTreeUtilsLegacy.isHighlighted(item, this.highlightedItem);
+    return false;
   }
 
   formatProto(item: any) {
@@ -368,121 +360,132 @@ export class ImeAdditionalPropertiesComponent {
     return rootProps.timestamp;
   }
 
-  wmProtoOrNull() {
-    return this.additionalProperties?.wm?.proto;
+  wmRootLabel(): string {
+    const timestamp = this.additionalProperties?.wm?.wmStateProperties.timestamp;
+    if (!timestamp) {
+      return this.additionalProperties?.wm?.name ?? 'root';
+    }
+    return timestamp;
   }
 
-  wmInsetsSourceProviderOrNull() {
-    return this.additionalProperties?.wm?.protoImeInsetsSourceProvider
+  wmHierarchyTree(): HierarchyTreeNode | undefined {
+    return this.additionalProperties?.wm?.hierarchyTree;
+  }
+
+  wmInsetsSourceProvider(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
       ? Object.assign(
           {name: 'Ime Insets Source Provider'},
-          this.additionalProperties.wm.protoImeInsetsSourceProvider
+          this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
         )
-      : null;
+      : undefined;
   }
 
-  wmControlTargetFrameOrNull() {
+  wmControlTargetFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('insetsSourceProvider')
+      ?.getChildByName('controlTarget')
+      ?.getChildByName('windowFrames')
+      ?.getChildByName('frame');
+  }
+
+  wmInsetsSourceProviderPosition(): string {
     return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.controlTarget?.windowFrames?.frame || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('control')
+        ?.getChildByName('position')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderPositionOrNull() {
+  wmInsetsSourceProviderIsLeashReady(): string {
     return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.control
-        ?.position || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('isLeashReadyForDispatching')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderIsLeashReadyOrNull() {
+  wmInsetsSourceProviderControllable(): string {
     return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.isLeashReadyForDispatching || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('controllable')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderControllableOrNull() {
+  wmInsetsSourceProviderSourceFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('source')
+      ?.getChildByName('frame');
+  }
+
+  wmInsetsSourceProviderSourceVisible(): string {
     return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.controllable || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('source')
+        ?.getChildByName('visible')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderSourceFrameOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.frame || 'null'
-    );
+  wmInsetsSourceProviderSourceVisibleFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('source')
+      ?.getChildByName('visibleFrame');
   }
 
-  wmInsetsSourceProviderSourceVisibleOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.visible || 'null'
-    );
-  }
-
-  wmInsetsSourceProviderSourceVisibleFrameOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.visibleFrame || 'null'
-    );
-  }
-
-  wmImeControlTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeControlTarget
+  wmImeControlTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
       ? Object.assign(
           {name: 'IME Control Target'},
-          this.additionalProperties.wm.protoImeControlTarget
+          this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
         )
-      : null;
+      : undefined;
   }
 
-  wmImeControlTargetTitleOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeControlTarget?.windowContainer?.identifier?.title ||
-      'null'
-    );
+  wmImeControlTargetTitle(): string | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget?.name ?? undefined;
   }
 
-  wmImeInputTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeInputTarget
-      ? Object.assign({name: 'IME Input Target'}, this.additionalProperties.wm.protoImeInputTarget)
-      : null;
+  wmImeInputTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
+      ? Object.assign(
+          {name: 'IME Input Target'},
+          this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
+        )
+      : undefined;
   }
 
-  wmImeInputTargetTitleOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeInputTarget?.windowContainer?.identifier?.title ||
-      'null'
-    );
+  wmImeInputTargetTitle(): string | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget?.name ?? undefined;
   }
-  wmImeLayeringTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeLayeringTarget
+
+  wmImeLayeringTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
       ? Object.assign(
           {name: 'IME Layering Target'},
-          this.additionalProperties.wm.protoImeLayeringTarget
+          this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
         )
-      : null;
+      : undefined;
   }
 
-  wmImeLayeringTargetTitleOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeLayeringTarget?.windowContainer?.identifier?.title ||
-      'null'
-    );
+  wmImeLayeringTargetTitle(): string | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget?.name ?? undefined;
   }
 
-  sfImeContainerScreenBounds() {
-    return this.additionalProperties?.sf?.properties.inputMethodSurface?.screenBounds || undefined;
+  sfImeContainerScreenBounds(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.sf?.properties.inputMethodSurface?.screenBounds ?? undefined;
   }
 
-  sfImeContainerRect() {
-    return this.additionalProperties?.sf?.properties.inputMethodSurface?.rect || undefined;
+  sfImeContainerRect(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.sf?.properties.inputMethodSurface?.rect ?? undefined;
   }
 
-  isAllPropertiesNull() {
+  isAllPropertiesUndefined(): boolean {
     if (this.isImeManagerService) {
       return !this.additionalProperties?.wm;
     } else {
@@ -490,12 +493,8 @@ export class ImeAdditionalPropertiesComponent {
     }
   }
 
-  onClickShowInPropertiesPanelWm(item: any, name?: string) {
-    if (item.stableId) {
-      this.updateHighlightedItem(item.stableId);
-    } else {
-      this.updateAdditionalPropertySelected(item, name);
-    }
+  onClickShowInPropertiesPanelWm(item: TreeNode, name?: string) {
+    this.updateAdditionalPropertySelected(item, name);
   }
 
   onClickShowInPropertiesPanelSf(item: Item) {
@@ -510,10 +509,10 @@ export class ImeAdditionalPropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  private updateAdditionalPropertySelected(item: any, name?: string) {
+  private updateAdditionalPropertySelected(item: TreeNode, name?: string) {
     const itemWrapper = {
       name,
-      proto: item,
+      treeNode: item,
     };
     const event: CustomEvent = new CustomEvent(ViewerEvents.AdditionalPropertySelected, {
       bubbles: true,

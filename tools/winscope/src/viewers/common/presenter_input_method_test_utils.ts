@@ -112,14 +112,14 @@ export function executePresenterInputMethodTests(
         .setStableId('TestItem 4')
         .setLayerId(4)
         .build();
-      presenter.updatePinnedItems(pinnedItem);
+      presenter.onPinnedItemChange(pinnedItem);
       expect(uiData.pinnedItems).toContain(pinnedItem);
     });
 
     it('can update highlighted item', () => {
       expect(uiData.highlightedItem).toEqual('');
       const id = 'entry';
-      presenter.updateHighlightedItem(id);
+      presenter.onHighlightedItemChange(id);
       expect(uiData.highlightedItem).toBe(id);
     });
 
@@ -148,7 +148,7 @@ export function executePresenterInputMethodTests(
 
       // Filter out non-visible child
       expectedChildren = expectHierarchyTreeWithSfSubtree ? 1 : 0;
-      presenter.updateHierarchyTree(userOptions);
+      presenter.onHierarchyUserOptionsChange(userOptions);
       expect(uiData.hierarchyUserOptions).toEqual(userOptions);
       expect(assertDefined(uiData.tree).children.length + uiData.sfSubtrees.length).toEqual(
         expectedChildren
@@ -173,7 +173,7 @@ export function executePresenterInputMethodTests(
 
       const expectedChildren = expectHierarchyTreeWithSfSubtree ? 11 : 1;
       await presenter.onAppEvent(positionUpdate);
-      presenter.updateHierarchyTree(userOptions);
+      presenter.onHierarchyUserOptionsChange(userOptions);
       let subtreeChildren = 0;
       uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
       expect(assertDefined(uiData.tree).children.length + subtreeChildren).toEqual(
@@ -181,7 +181,7 @@ export function executePresenterInputMethodTests(
       );
 
       // Filter out all children
-      presenter.filterHierarchyTree('Reject all');
+      presenter.onHierarchyFilterChange('Reject all');
       subtreeChildren = 0;
       uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
       expect(assertDefined(uiData.tree).children.length + subtreeChildren).toEqual(0);
@@ -189,21 +189,21 @@ export function executePresenterInputMethodTests(
 
     it('can set new properties tree and associated ui data', async () => {
       await presenter.onAppEvent(positionUpdate);
-      presenter.newPropertiesTree(selectedTree);
+      presenter.onSelectedHierarchyTreeChange(selectedTree);
       // does not check specific tree values as tree transformation method may change
       expect(uiData.propertiesTree).toBeTruthy();
     });
 
     it('can filter properties tree', async () => {
       await presenter.onAppEvent(positionUpdate);
-      presenter.newPropertiesTree(selectedTree);
+      presenter.onSelectedHierarchyTreeChange(selectedTree);
       let nonTerminalChildren =
         (uiData.propertiesTree as PropertiesTreeNodeLegacy)?.children?.filter(
           (child: PropertiesTreeNodeLegacy) => typeof child.propertyKey === 'string'
         ) ?? [];
 
       expect(nonTerminalChildren.length).toEqual(expectedChildren[0]);
-      presenter.filterPropertiesTree(propertiesTreeFilterString);
+      presenter.onPropertiesFilterChange(propertiesTreeFilterString);
 
       nonTerminalChildren =
         (uiData.propertiesTree as PropertiesTreeNodeLegacy)?.children?.filter(

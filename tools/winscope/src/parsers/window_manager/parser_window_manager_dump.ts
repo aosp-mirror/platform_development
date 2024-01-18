@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {AbstractParser} from 'parsers/abstract_parser';
-import root from 'protos/windowmanager/latest/json';
 import {com} from 'protos/windowmanager/latest/static';
 import {
   CustomQueryParserResultTypeMap,
@@ -27,12 +26,16 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {RectsComputation} from './computations/rects_computation';
 import {WmCustomQueryUtils} from './custom_query_utils';
+import {HierarchyTreeBuilderWm} from './hierarchy_tree_builder_wm';
+import {ParserWmUtils} from './parser_window_manager_utils';
+import {WindowManagerServiceType} from './wm_tampered_protos';
 
 class ParserWindowManagerDump extends AbstractParser {
-  private static readonly WindowManagerServiceDumpProto = root.lookupType(
-    'com.android.server.wm.WindowManagerServiceDumpProto'
-  );
+  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -47,7 +50,7 @@ class ParserWindowManagerDump extends AbstractParser {
   }
 
   override decodeTrace(buffer: Uint8Array): com.android.server.wm.IWindowManagerServiceDumpProto[] {
-    const entryProto = ParserWindowManagerDump.WindowManagerServiceDumpProto.decode(
+    const entryProto = WindowManagerServiceType.decode(
       buffer
     ) as com.android.server.wm.IWindowManagerServiceDumpProto;
 
@@ -74,8 +77,24 @@ class ParserWindowManagerDump extends AbstractParser {
     index: number,
     timestampType: TimestampType,
     entryProto: com.android.server.wm.IWindowManagerServiceDumpProto
-  ): WindowManagerState {
-    return WindowManagerState.fromProto(entryProto);
+  ): HierarchyTreeNode {
+    return this.makeHierarchyTree(entryProto);
+  }
+
+  private makeHierarchyTree(
+    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto
+  ): HierarchyTreeNode {
+    const containers: PropertiesProvider[] = ParserWmUtils.extractContainers(
+      assertDefined(entryProto)
+    );
+
+    const entry = ParserWmUtils.makeEntryProperties(entryProto);
+
+    return new HierarchyTreeBuilderWm()
+      .setRoot(entry)
+      .setChildren(containers)
+      .setComputations([new RectsComputation()])
+      .build();
   }
 
   override customQuery<Q extends CustomQueryType>(

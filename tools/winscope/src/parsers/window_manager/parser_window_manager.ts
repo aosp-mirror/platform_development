@@ -15,9 +15,7 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {AbstractParser} from 'parsers/abstract_parser';
-import root from 'protos/windowmanager/latest/json';
 import {com} from 'protos/windowmanager/latest/static';
 import {
   CustomQueryParserResultTypeMap,
@@ -27,12 +25,19 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {RectsComputation} from './computations/rects_computation';
 import {WmCustomQueryUtils} from './custom_query_utils';
+import {HierarchyTreeBuilderWm} from './hierarchy_tree_builder_wm';
+import {ParserWmUtils} from './parser_window_manager_utils';
+import {WindowManagerTraceFileProto} from './wm_tampered_protos';
 
-export class ParserWindowManager extends AbstractParser {
-  private static readonly WindowManagerTraceFileProto = root.lookupType(
-    'com.android.server.wm.WindowManagerTraceFileProto'
-  );
+export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
+  private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
+
+  private realToElapsedTimeOffsetNs: undefined | bigint;
+  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -48,7 +53,7 @@ export class ParserWindowManager extends AbstractParser {
   }
 
   override decodeTrace(buffer: Uint8Array): com.android.server.wm.IWindowManagerTraceProto[] {
-    const decoded = ParserWindowManager.WindowManagerTraceFileProto.decode(
+    const decoded = WindowManagerTraceFileProto.decode(
       buffer
     ) as com.android.server.wm.IWindowManagerTraceFileProto;
     const timeOffset = BigInt(decoded.realToElapsedTimeOffsetNanos?.toString() ?? '0');
@@ -76,14 +81,8 @@ export class ParserWindowManager extends AbstractParser {
     index: number,
     timestampType: TimestampType,
     entry: com.android.server.wm.IWindowManagerTraceProto
-  ): WindowManagerState {
-    return WindowManagerState.fromProto(
-      entry.windowManagerService,
-      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
-      entry.where,
-      this.realToElapsedTimeOffsetNs,
-      timestampType === TimestampType.ELAPSED /*useElapsedTime*/
-    );
+  ): HierarchyTreeNode {
+    return this.makeHierarchyTree(entry);
   }
 
   override customQuery<Q extends CustomQueryType>(
@@ -107,6 +106,19 @@ export class ParserWindowManager extends AbstractParser {
       .getResult();
   }
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
-  private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
+  private makeHierarchyTree(
+    entryProto: com.android.server.wm.IWindowManagerTraceProto
+  ): HierarchyTreeNode {
+    const containers: PropertiesProvider[] = ParserWmUtils.extractContainers(
+      assertDefined(entryProto.windowManagerService)
+    );
+
+    const entry = ParserWmUtils.makeEntryProperties(assertDefined(entryProto.windowManagerService));
+
+    return new HierarchyTreeBuilderWm()
+      .setRoot(entry)
+      .setChildren(containers)
+      .setComputations([new RectsComputation()])
+      .build();
+  }
 }
