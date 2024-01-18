@@ -105,6 +105,12 @@ final class InputController {
         }
     }
 
+    void sendStylusEventToFocusedDisplay(Object stylusEvent) {
+        synchronized (mLock) {
+            getFocusedDisplayLocked().ifPresent(d -> d.processVirtualStylusEvent(stylusEvent));
+        }
+    }
+
     Optional<PointF> getFocusedDisplaySize() {
         synchronized (mLock) {
             Optional<RemoteDisplay> display = getFocusedDisplayLocked();

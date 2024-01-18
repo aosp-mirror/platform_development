@@ -96,7 +96,10 @@ final class PreferenceController {
 
             new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
                     VANILLA_ICE_CREAM,
-                    Flags::consistentDisplayFlags, Flags::interactiveScreenMirror)
+                    Flags::consistentDisplayFlags, Flags::interactiveScreenMirror),
+
+            new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
+                    VANILLA_ICE_CREAM, Flags::virtualStylus)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
 

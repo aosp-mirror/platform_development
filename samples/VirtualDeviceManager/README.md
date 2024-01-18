@@ -179,8 +179,8 @@ one displays. The display focus is based on user interaction.
 
 Each input screen has a "Back", "Home" and "Forward" buttons.
 
--   **Touchpad** shows an on-screen touchpad for injecting mouse events into
-    the focused display.
+-   **Touchpad** shows an on-screen touchpad for injecting mouse events into the
+    focused display.
 
 -   **Remote** allows the host device to act as a pointer that controls the
     mouse movement on the focused display.
@@ -190,6 +190,15 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 
 -   **Keyboard** shows the host device's on-screen keyboard and sends any key
     events to the activity on the focused display.
+
+-   **Stylus** allows for injecting simulated stylus events into the focused
+    display. Use together with the stylus demo. Run the commands below to enable
+    this functionality.
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_stylus true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
 
 #### General
 
@@ -366,6 +375,9 @@ display, if the mouse pointer is currently positioned on a streamed display.
     will use the vibrator of the device it's shown on. Note that currently there
     is no vibration support on virtual devices, so vibration requests from
     streamed activities are ignored.
+
+-   **Stylus**: A simple drawing activity that reacts on stylus input events.
+    Use together with the simulated stylus input feature of the host app.
 
 <!-- LINT.ThenChange(README.md) -->
 

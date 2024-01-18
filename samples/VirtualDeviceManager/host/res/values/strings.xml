@@ -9,6 +9,13 @@
     <string name="touchpad" translatable="false">Touchpad</string>
     <string name="remote_control" translatable="false">Remote</string>
     <string name="navigation" translatable="false">Navigation</string>
+    <string name="stylus" translatable="false">Stylus</string>
+    <string name="stylus_hover" translatable="false">Hover</string>
+    <string name="stylus_button_primary" translatable="false">Button 1</string>
+    <string name="stylus_button_secondary" translatable="false">Button 2</string>
+    <string name="stylus_eraser" translatable="false">Eraser</string>
+    <string name="stylus_tilt" translatable="false">Tilt</string>
+    <string name="stylus_label" translatable="false">Touch to simulate stylus</string>
     <string name="keyboard" translatable="false">Keyboard</string>
     <string name="touchpad_label" translatable="false">
         Swipe to move the pointer\n\n
@@ -41,6 +48,7 @@
 
     <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
     <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
+    <string name="internal_pref_virtual_stylus_supported" translatable="false">virtual_stylus_supported</string>
 
     <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
     <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>

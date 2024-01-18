@@ -14,6 +14,10 @@
         android:icon="@drawable/input_navigation"
         android:title="@string/navigation" />
     <item
+        android:id="@+id/stylus"
+        android:icon="@drawable/input_stylus"
+        android:title="@string/stylus" />
+    <item
         android:id="@+id/keyboard"
         android:icon="@drawable/input_keyboard"
         android:title="@string/keyboard" />
