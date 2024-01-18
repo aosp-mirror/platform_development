@@ -118,6 +118,24 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(preferred_license.group, add3prf.LicenseGroup.PERMISSIVE)
     self.assertEqual(preferred_license.filename, "UNLICENSE.txt")
 
+  def test_zlib_license(self):
+    self.fs.create_file("LICENSE")
+    licenses = add3prf.decide_license_type("Zlib")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.ZLIB)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
+    self.assertEqual(preferred_license.filename, "LICENSE")
+
+  def test_zlib_licensefile(self):
+    self.fs.create_file("LICENSE-ZLIB")
+    licenses = add3prf.decide_license_type("")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.ZLIB)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
+    self.assertEqual(preferred_license.filename, "LICENSE-ZLIB")
+
 class AddModuleLicenseTestCase(fake_filesystem_unittest.TestCase):
 
   def setUp(self):
