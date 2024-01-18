@@ -39,7 +39,7 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
       const height = assertDefined(size.getChildByName('h')).getValue();
       const smallestWidth = this.dpiFromPx(Math.min(width, height), Number(dpiX.getValue()));
 
-      display.addChild(
+      display.addOrReplaceChild(
         factory.makeCalculatedProperty(
           display.id,
           'isLargeScreen',
@@ -54,7 +54,7 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
         () => 'layerStack = -1; false assumption that layerStack is always unsigned'
       );
 
-      display.addChild(
+      display.addOrReplaceChild(
         factory.makeCalculatedProperty(
           display.id,
           'isOn',

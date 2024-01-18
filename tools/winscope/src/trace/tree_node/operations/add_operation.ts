@@ -24,7 +24,7 @@ export abstract class AddOperation<T extends TreeNode> implements Operation<T> {
     const newProperties = this.makeProperties(factory, value);
 
     newProperties.forEach((property) => {
-      value.addChild(property);
+      value.addOrReplaceChild(property);
     });
   }
 

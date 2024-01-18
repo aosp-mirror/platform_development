@@ -24,7 +24,7 @@ import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
 import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
 import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
 import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
@@ -66,10 +66,10 @@ describe('HierarchyComponentLegacy', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = new HierarchyTreeBuilder()
+    component.tree = new HierarchyTreeBuilderLegacy()
       .setStableId('RootNode1')
       .setName('Root node')
-      .setChildren([new HierarchyTreeBuilder().setName('Child node').build()])
+      .setChildren([new HierarchyTreeBuilderLegacy().setName('Child node').build()])
       .build();
 
     component.store = new PersistentStore();

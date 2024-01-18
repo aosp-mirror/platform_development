@@ -17,7 +17,7 @@
 import {RealTimestamp} from 'common/time';
 import {WindowManagerState} from 'flickerlib/common';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -47,7 +47,7 @@ describe('PresenterWindowManager', () => {
 
     positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
 
-    selectedTree = new HierarchyTreeBuilder()
+    selectedTree = new HierarchyTreeBuilderLegacy()
       .setName('ScreenDecorOverlayBottom')
       .setStableId('WindowContainer 2088ac1 ScreenDecorOverlayBottom')
       .setKind('WindowState')
@@ -126,7 +126,7 @@ describe('PresenterWindowManager', () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.pinnedItems).toEqual([]);
 
-    const pinnedItem = new HierarchyTreeBuilder()
+    const pinnedItem = new HierarchyTreeBuilderLegacy()
       .setName('FirstPinnedItem')
       .setStableId('TestItem 4')
       .setLayerId(4)

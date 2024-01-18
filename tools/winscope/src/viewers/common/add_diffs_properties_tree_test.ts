@@ -67,7 +67,7 @@ describe('AddDiffsPropertiesTree', () => {
     value = 'value'
   ): UiPropertyTreeNode {
     const child = TreeNodeUtils.makeUiPropertyNode('test node', 'child', value);
-    rootNode.addChild(child);
+    rootNode.addOrReplaceChild(child);
     return child;
   }
 

@@ -38,7 +38,7 @@ export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
     displayNode.setIsRoot(node.isRoot());
 
     node.getAllChildren().forEach((child) => {
-      displayNode.addChild(UiPropertyTreeNode.from(child));
+      displayNode.addOrReplaceChild(UiPropertyTreeNode.from(child));
     });
     return displayNode;
   }

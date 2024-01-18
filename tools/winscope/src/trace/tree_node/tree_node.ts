@@ -21,7 +21,7 @@ export abstract class TreeNode implements Item {
 
   constructor(public id: string, public name: string) {}
 
-  addChild(newChild: this): void {
+  addOrReplaceChild(newChild: this): void {
     const currIndex = this.children.findIndex((child) => child.id === newChild.id);
     if (currIndex !== -1) {
       this.children[currIndex] = newChild;

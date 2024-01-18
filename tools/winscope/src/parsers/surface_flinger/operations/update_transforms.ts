@@ -52,7 +52,9 @@ export class UpdateTransforms implements Operation<PropertyTreeNode> {
     if (transformNode.getChildByName('matrix')) return;
 
     const newMatrix = Transform.from(transformNode, positionNode).matrix;
-    transformNode.addChild(factory.makeCalculatedProperty(transformNode.id, 'matrix', newMatrix));
+    transformNode.addOrReplaceChild(
+      factory.makeCalculatedProperty(transformNode.id, 'matrix', newMatrix)
+    );
     transformNode.removeChild(`${transformNode.id}.dsdx`);
     transformNode.removeChild(`${transformNode.id}.dtdx`);
     transformNode.removeChild(`${transformNode.id}.dsdy`);

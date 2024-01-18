@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {LayerCompositionType} from 'trace/layer_composition_type';
 import {
   DUPLICATE_CHIP,
@@ -34,60 +34,80 @@ describe('AddChips', () => {
   let operation: AddChips;
 
   beforeEach(() => {
-    hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-      id: 'test',
-      name: 'root',
-    });
     operation = new AddChips();
   });
 
   it('adds GPU_CHIP', () => {
-    const layer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      compositionType: LayerCompositionType.GPU,
-    });
-    hierarchyRoot.addChild(layer);
-    layer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {compositionType: LayerCompositionType.GPU},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([GPU_CHIP]);
   });
 
   it('adds HWC_CHIP', () => {
-    const layerDevice = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      compositionType: LayerCompositionType.HWC,
-    });
-    hierarchyRoot.addChild(layerDevice);
-    layerDevice.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {compositionType: LayerCompositionType.HWC},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([HWC_CHIP]);
   });
 
   it('adds VISIBLE_CHIP', () => {
-    const layer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      isVisible: true,
-    });
-    hierarchyRoot.addChild(layer);
-    layer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {isVisible: true},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([VISIBLE_CHIP]);
   });
 
   it('adds DUPLICATE_CHIP', () => {
-    const layer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      isDuplicate: true,
-    });
-    hierarchyRoot.addChild(layer);
-    layer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {isDuplicate: true},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
@@ -96,13 +116,19 @@ describe('AddChips', () => {
   });
 
   it('adds RELATIVE_Z_CHIP', () => {
-    const layer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      zOrderRelativeOf: 2,
-    });
-    hierarchyRoot.addChild(layer);
-    layer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {zOrderRelativeOf: 2},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
@@ -111,14 +137,19 @@ describe('AddChips', () => {
   });
 
   it('adds MISSING_Z_PARENT_CHIP', () => {
-    const layer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      zOrderRelativeOf: 2,
-      isMissingZParent: true,
-    });
-    hierarchyRoot.addChild(layer);
-    layer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 1,
+            name: 'node',
+            properties: {zOrderRelativeOf: 2, isMissingZParent: true},
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
@@ -128,21 +159,26 @@ describe('AddChips', () => {
   });
 
   it('adds RELATIVE_Z_PARENT_CHIP', () => {
-    const childLayer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 1,
-      name: 'node',
-      zOrderRelativeOf: 2,
-    });
-    const parentLayer = TreeNodeUtils.makeUiHierarchyNode({
-      id: 2,
-      name: 'parentNode',
-      zOrderRelativeOf: -1,
-    });
-    parentLayer.addChild(childLayer);
-    childLayer.setZParent(parentLayer);
-
-    hierarchyRoot.addChild(parentLayer);
-    parentLayer.setZParent(hierarchyRoot);
+    hierarchyRoot = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('test')
+        .setName('node')
+        .setChildren([
+          {
+            id: 2,
+            name: 'parentNode',
+            properties: {id: 2, zOrderRelativeOf: -1},
+            children: [
+              {
+                id: 1,
+                name: 'node',
+                properties: {id: 1, zOrderRelativeOf: 2},
+              },
+            ],
+          },
+        ])
+        .build()
+    );
 
     operation.apply(hierarchyRoot);
     const parentWithChips = assertDefined(hierarchyRoot.getChildByName('parentNode'));

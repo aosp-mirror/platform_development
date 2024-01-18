@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 
@@ -42,40 +43,53 @@ describe('PropertyTreeNodeFactory', () => {
 
   it('makes node with string value', () => {
     const node = factory.makeProtoProperty('1 rootName', 'name', 'rootName');
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.name',
-      'name',
-      PropertySource.PROTO,
-      'rootName'
-    );
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('name')
+      .setSource(PropertySource.PROTO)
+      .setValue('rootName')
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
   it('makes node with integer value', () => {
     const node = factory.makeProtoProperty('1 rootName', 'id', 1);
-    const expectedNode = new PropertyTreeNode('1 rootName.id', 'id', PropertySource.PROTO, 1);
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('id')
+      .setSource(PropertySource.PROTO)
+      .setValue(1)
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
   it('makes node with boolean value', () => {
     const node = factory.makeProtoProperty('1 rootName', 'isPresent', true);
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.isPresent',
-      'isPresent',
-      PropertySource.PROTO,
-      true
-    );
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('isPresent')
+      .setSource(PropertySource.PROTO)
+      .setValue(true)
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
   it('makes node with bigint value', () => {
     const node = factory.makeProtoProperty('1 rootName', 'bigIntProp', BigInt(123));
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.bigIntProp',
-      'bigIntProp',
-      PropertySource.PROTO,
-      BigInt(123)
-    );
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('bigIntProp')
+      .setSource(PropertySource.PROTO)
+      .setValue(BigInt(123))
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
@@ -83,23 +97,16 @@ describe('PropertyTreeNodeFactory', () => {
     const nestedProperty = {size: 3, isPresent: false};
     const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
 
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.nestedProperty',
-      'nestedProperty',
-      PropertySource.PROTO,
-      undefined
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.size', 'size', PropertySource.PROTO, 3)
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode(
-        '1 rootName.nestedProperty.isPresent',
-        'isPresent',
-        PropertySource.PROTO,
-        false
-      )
-    );
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('nestedProperty')
+      .setSource(PropertySource.PROTO)
+      .setChildren([
+        {name: 'size', value: 3},
+        {name: 'isPresent', value: false},
+      ])
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
@@ -107,22 +114,17 @@ describe('PropertyTreeNodeFactory', () => {
     const nestedProperty = [1, 2, 3];
     const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
 
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.nestedProperty',
-      'nestedProperty',
-      PropertySource.PROTO,
-      undefined
-    );
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('nestedProperty')
+      .setSource(PropertySource.PROTO)
+      .setChildren([
+        {name: '0', value: 1},
+        {name: '1', value: 2},
+        {name: '2', value: 3},
+      ])
+      .build();
 
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.0', '0', PropertySource.PROTO, 1)
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.1', '1', PropertySource.PROTO, 2)
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.2', '2', PropertySource.PROTO, 3)
-    );
     expect(node).toEqual(expectedNode);
   });
 
@@ -130,26 +132,21 @@ describe('PropertyTreeNodeFactory', () => {
     const nestedProperty = [{width: 4, height: 8}];
     const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
 
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.nestedProperty',
-      'nestedProperty',
-      PropertySource.PROTO,
-      undefined
-    );
-
-    const expectedChild = new PropertyTreeNode(
-      '1 rootName.nestedProperty.0',
-      '0',
-      PropertySource.PROTO,
-      undefined
-    );
-    expectedChild.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.0.width', 'width', PropertySource.PROTO, 4)
-    );
-    expectedChild.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.0.height', 'height', PropertySource.PROTO, 8)
-    );
-    expectedNode.addChild(expectedChild);
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('nestedProperty')
+      .setSource(PropertySource.PROTO)
+      .setChildren([
+        {
+          name: '0',
+          value: undefined,
+          children: [
+            {name: 'width', value: 4},
+            {name: 'height', value: 8},
+          ],
+        },
+      ])
+      .build();
 
     expect(node).toEqual(expectedNode);
   });
@@ -158,59 +155,52 @@ describe('PropertyTreeNodeFactory', () => {
     const nestedProperty = [[44, 88]];
     const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
 
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.nestedProperty',
-      'nestedProperty',
-      PropertySource.PROTO,
-      undefined
-    );
-
-    const expectedChild = new PropertyTreeNode(
-      '1 rootName.nestedProperty.0',
-      '0',
-      PropertySource.PROTO,
-      undefined
-    );
-
-    expectedChild.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.0.0', '0', PropertySource.PROTO, 44)
-    );
-    expectedChild.addChild(
-      new PropertyTreeNode('1 rootName.nestedProperty.0.1', '1', PropertySource.PROTO, 88)
-    );
-    expectedNode.addChild(expectedChild);
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('nestedProperty')
+      .setSource(PropertySource.PROTO)
+      .setChildren([
+        {
+          name: '0',
+          value: undefined,
+          children: [
+            {name: '0', value: 44},
+            {name: '1', value: 88},
+          ],
+        },
+      ])
+      .build();
 
     expect(node).toEqual(expectedNode);
   });
 
   it('makes simple calculated property', () => {
     const node = factory.makeCalculatedProperty('1 rootName', 'isVisible', true);
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.isVisible',
-      'isVisible',
-      PropertySource.CALCULATED,
-      true
-    );
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('isVisible')
+      .setSource(PropertySource.CALCULATED)
+      .setValue(true)
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 
   it('makes nested calculated property', () => {
     const node = factory.makeCalculatedProperty('1 rootName', 'zOrderPath', [0, 1, 2]);
-    const expectedNode = new PropertyTreeNode(
-      '1 rootName.zOrderPath',
-      'zOrderPath',
-      PropertySource.CALCULATED,
-      undefined
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.zOrderPath.0', '0', PropertySource.CALCULATED, 0)
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.zOrderPath.1', '1', PropertySource.CALCULATED, 1)
-    );
-    expectedNode.addChild(
-      new PropertyTreeNode('1 rootName.zOrderPath.2', '2', PropertySource.CALCULATED, 2)
-    );
+
+    const expectedNode = new PropertyTreeBuilder()
+      .setRootId('1 rootName')
+      .setName('zOrderPath')
+      .setSource(PropertySource.CALCULATED)
+      .setChildren([
+        {name: '0', value: 0},
+        {name: '1', value: 1},
+        {name: '2', value: 2},
+      ])
+      .build();
+
     expect(node).toEqual(expectedNode);
   });
 });

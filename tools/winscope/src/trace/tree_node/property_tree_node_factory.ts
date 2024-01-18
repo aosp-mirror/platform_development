@@ -104,7 +104,7 @@ export class PropertyTreeNodeFactory {
 
   private addArrayProperties(root: PropertyTreeNode, value: any, source: PropertySource) {
     for (const [key, val] of Object.entries(value)) {
-      root.addChild(this.makeProperty(`${root.id}`, key, source, val));
+      root.addOrReplaceChild(this.makeProperty(`${root.id}`, key, source, val));
     }
   }
 
@@ -112,7 +112,7 @@ export class PropertyTreeNodeFactory {
     const keys = this.getValidPropertyNames(value);
 
     for (const key of keys) {
-      root.addChild(this.makeProperty(`${root.id}`, key, source, value[key]));
+      root.addOrReplaceChild(this.makeProperty(`${root.id}`, key, source, value[key]));
     }
   }
 

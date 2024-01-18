@@ -16,7 +16,7 @@
 
 import {RealTimestamp} from 'common/time';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -47,7 +47,7 @@ describe('PresenterViewCapture', () => {
       .setParser(parser)
       .build();
     positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
-    selectedTree = new HierarchyTreeBuilder()
+    selectedTree = new HierarchyTreeBuilderLegacy()
       .setName('Name@Id')
       .setStableId('stableId')
       .setKind('kind')
@@ -98,7 +98,10 @@ describe('PresenterViewCapture', () => {
   });
 
   it('updates pinned items', async () => {
-    const pinnedItem = new HierarchyTreeBuilder().setName('FirstPinnedItem').setId('id').build();
+    const pinnedItem = new HierarchyTreeBuilderLegacy()
+      .setName('FirstPinnedItem')
+      .setId('id')
+      .build();
     await presenter.onAppEvent(positionUpdate);
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);

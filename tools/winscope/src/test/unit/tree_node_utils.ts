@@ -16,12 +16,12 @@
 
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {OperationChain} from 'trace/tree_node/operations/operation_chain';
-import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {ChildHierarchy, HierarchyTreeBuilder} from './hierarchy_tree_builder';
+import {PropertyTreeBuilder} from './property_tree_builder';
 
 export class TreeNodeUtils {
   static makeRectNode(
@@ -31,22 +31,13 @@ export class TreeNodeUtils {
     bottom: number | undefined,
     id = 'test node'
   ): PropertyTreeNode {
-    const rect = new PropertyTreeNode(`${id}.rect`, 'rect', PropertySource.PROTO, undefined);
-    if (left !== undefined) {
-      rect.addChild(new PropertyTreeNode(`${id}.rect.left`, 'left', PropertySource.PROTO, left));
-    }
-    if (top !== undefined) {
-      rect.addChild(new PropertyTreeNode(`${id}.rect.top`, 'top', PropertySource.PROTO, top));
-    }
-    if (right !== undefined) {
-      rect.addChild(new PropertyTreeNode(`${id}.rect.right`, 'right', PropertySource.PROTO, right));
-    }
-    if (bottom !== undefined) {
-      rect.addChild(
-        new PropertyTreeNode(`${id}.rect.bottom`, 'bottom', PropertySource.PROTO, bottom)
-      );
-    }
-    return rect;
+    const children = [];
+    if (left !== undefined) children.push({name: 'left', value: left});
+    if (top !== undefined) children.push({name: 'top', value: top});
+    if (right !== undefined) children.push({name: 'right', value: right});
+    if (bottom !== undefined) children.push({name: 'bottom', value: bottom});
+
+    return new PropertyTreeBuilder().setRootId(id).setName('rect').setChildren(children).build();
   }
 
   static makeColorNode(
@@ -55,100 +46,69 @@ export class TreeNodeUtils {
     b: number | undefined,
     a: number | undefined
   ): PropertyTreeNode {
-    const color = new PropertyTreeNode('test node.color', 'color', PropertySource.PROTO, undefined);
-    if (r !== undefined) {
-      color.addChild(new PropertyTreeNode('test node.color.r', 'r', PropertySource.PROTO, r));
-    }
-    if (g !== undefined) {
-      color.addChild(new PropertyTreeNode('test node.color.g', 'g', PropertySource.PROTO, g));
-    }
-    if (b !== undefined) {
-      color.addChild(new PropertyTreeNode('test node.color.b', 'b', PropertySource.PROTO, b));
-    }
-    if (a !== undefined) {
-      color.addChild(new PropertyTreeNode('test node.color.a', 'a', PropertySource.PROTO, a));
-    }
-    return color;
+    const children = [];
+    if (r !== undefined) children.push({name: 'r', value: r});
+    if (g !== undefined) children.push({name: 'g', value: g});
+    if (b !== undefined) children.push({name: 'b', value: b});
+    if (a !== undefined) children.push({name: 'a', value: a});
+
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('color')
+      .setChildren(children)
+      .build();
   }
 
   static makeBufferNode(): PropertyTreeNode {
-    const buffer = new PropertyTreeNode(
-      'test node.buffer',
-      'buffer',
-      PropertySource.PROTO,
-      undefined
-    );
-    buffer.addChild(
-      new PropertyTreeNode('test node.buffer.height', 'height', PropertySource.PROTO, 0)
-    );
-    buffer.addChild(
-      new PropertyTreeNode('test node.buffer.width', 'width', PropertySource.PROTO, 1)
-    );
-    buffer.addChild(
-      new PropertyTreeNode('test node.buffer.stride', 'stride', PropertySource.PROTO, 0)
-    );
-    buffer.addChild(
-      new PropertyTreeNode('test node.buffer.format', 'format', PropertySource.PROTO, 1)
-    );
-    return buffer;
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('buffer')
+      .setChildren([
+        {name: 'height', value: 0},
+        {name: 'width', value: 1},
+        {name: 'stride', value: 0},
+        {name: 'format', value: 1},
+      ])
+      .build();
   }
 
   static makeTransformNode(type: TransformType): PropertyTreeNode {
-    const transform = new PropertyTreeNode(
-      'test node.transform',
-      'transform',
-      PropertySource.PROTO,
-      undefined
-    );
-    transform.addChild(
-      new PropertyTreeNode('test node.transform.type', 'type', PropertySource.PROTO, type)
-    );
-    return transform;
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('transform')
+      .setChildren([{name: 'type', value: type}])
+      .build();
   }
 
   static makeSizeNode(w: number | undefined, h: number | undefined): PropertyTreeNode {
-    const size = new PropertyTreeNode('test node.size', 'size', PropertySource.PROTO, undefined);
-    if (w !== undefined) {
-      size.addChild(new PropertyTreeNode('test node.size.w', 'w', PropertySource.PROTO, w));
-    }
-    if (h !== undefined) {
-      size.addChild(new PropertyTreeNode('test node.size.h', 'h', PropertySource.PROTO, h));
-    }
-    return size;
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('size')
+      .setChildren([
+        {name: 'w', value: w},
+        {name: 'h', value: h},
+      ])
+      .build();
   }
 
   static makePositionNode(x: number | undefined, y: number | undefined): PropertyTreeNode {
-    const pos = new PropertyTreeNode('test node.pos', 'pos', PropertySource.PROTO, undefined);
-    if (x !== undefined) {
-      pos.addChild(new PropertyTreeNode('test node.pos.x', 'x', PropertySource.PROTO, x));
-    }
-    if (y !== undefined) {
-      pos.addChild(new PropertyTreeNode('test node.pos.y', 'y', PropertySource.PROTO, y));
-    }
-    return pos;
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('pos')
+      .setChildren([
+        {name: 'x', value: x},
+        {name: 'y', value: y},
+      ])
+      .build();
   }
 
-  static makeHierarchyNode(proto: any): HierarchyTreeNode {
-    const id = `${proto.id}`;
-    const name = proto.name;
-    const rootId = `${id} ${name}`;
-    const propertiesTree = new PropertyTreeNode(rootId, name, PropertySource.PROTO, null);
-
-    const factory = new PropertyTreeNodeFactory();
-    for (const [key, value] of Object.entries(proto)) {
-      const prop = factory.makeProtoProperty(rootId, key, value);
-      propertiesTree.addChild(prop);
-    }
-
-    const provider = new PropertiesProvider(
-      propertiesTree,
-      async () => propertiesTree,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
-    );
-
-    return new HierarchyTreeNode(rootId, name, provider);
+  static makeHierarchyNode(proto: any, children: ChildHierarchy[] = []): HierarchyTreeNode {
+    return new HierarchyTreeBuilder()
+      .setId(`${proto.id}`)
+      .setName(proto.name)
+      .setProperties(proto)
+      .setChildren(children)
+      .build();
   }
 
   static makePropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
@@ -165,5 +125,36 @@ export class TreeNodeUtils {
 
   static makeUiPropertyNode(rootId: string, name: string, value: any): UiPropertyTreeNode {
     return UiPropertyTreeNode.from(TreeNodeUtils.makePropertyNode(rootId, name, value));
+  }
+
+  static uiHierarchyNodeEqualityTester(first: any, second: any): boolean | undefined {
+    if (first instanceof UiHierarchyTreeNode && second instanceof UiHierarchyTreeNode) {
+      return TreeNodeUtils.testUiHierarchyNodes(first, second);
+    }
+    return undefined;
+  }
+
+  private static testUiHierarchyNodes(
+    node: UiHierarchyTreeNode,
+    expectedNode: UiHierarchyTreeNode
+  ): boolean {
+    if (node.id !== expectedNode.id) return false;
+    if (node.name !== expectedNode.name) return false;
+    if (node.getDiff() !== expectedNode.getDiff()) return false;
+
+    const maxIndex = Math.max(node.getAllChildren().length, expectedNode.getAllChildren().length);
+    for (let i = 0; i < maxIndex; i++) {
+      if (!(node.getAllChildren()[i] && expectedNode.getAllChildren()[i])) return false;
+
+      if (
+        !TreeNodeUtils.testUiHierarchyNodes(
+          node.getAllChildren()[i],
+          expectedNode.getAllChildren()[i]
+        )
+      ) {
+        return false;
+      }
+    }
+    return true;
   }
 }

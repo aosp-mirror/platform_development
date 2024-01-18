@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/types2d';
@@ -30,20 +31,16 @@ describe('PresenterSfUtils', () => {
   let expectedLayer2UiRect: UiRect;
 
   beforeEach(() => {
-    hierarchyRoot = TreeNodeUtils.makeHierarchyNode({id: 'LayerTraceEntry', name: 'root'});
-
-    layer1Node = TreeNodeUtils.makeHierarchyNode({
-      id: 1,
-      name: 'layer1',
-    });
-
-    layer2Node = TreeNodeUtils.makeHierarchyNode({
-      id: 2,
-      name: 'layer2',
-    });
-
-    layer1Node.addChild(layer2Node);
-    hierarchyRoot.addChild(layer1Node);
+    hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {id: 1, name: 'layer1'},
+        {id: 2, name: 'layer2'},
+      ])
+      .build();
+    layer1Node = assertDefined(hierarchyRoot.getChildByName('layer1'));
+    layer2Node = assertDefined(hierarchyRoot.getChildByName('layer2'));
 
     expectedlayer1UiRect = new UiRectBuilder()
       .setX(0)

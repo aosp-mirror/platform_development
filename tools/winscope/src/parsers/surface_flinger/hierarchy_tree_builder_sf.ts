@@ -126,7 +126,7 @@ export class HierarchyTreeBuilderSf {
     const nodeId = this.makeNodeId(id, name, duplicateCount);
     const node = new HierarchyTreeNode(nodeId, name, propertiesProvider);
     children.forEach((child) => {
-      node.addChild(child);
+      node.addOrReplaceChild(child);
       child.setZParent(node);
     });
     return node;

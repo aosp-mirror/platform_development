@@ -30,7 +30,7 @@ describe('VisibilityPropertiesComputation', () => {
   beforeEach(() => {
     hierarchyRoot = TreeNodeUtils.makeHierarchyNode({id: 'LayerTraceEntry', name: 'root'} as Item);
     computation = new VisibilityPropertiesComputation();
-    displays = TreeNodeUtils.makePropertyNode('LayerTraceEntry root.displays', 'displays', [
+    displays = TreeNodeUtils.makePropertyNode(hierarchyRoot.id, 'displays', [
       {
         layerStack: 0,
         layerStackSpaceRect: {left: 0, right: 5, top: 0, bottom: 5},
@@ -63,7 +63,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerVisibleRegionNonEmpty);
+    hierarchyRoot.addOrReplaceChild(layerVisibleRegionNonEmpty);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('layerVisibleRegionNonEmpty'));
@@ -95,7 +95,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerHiddenByPolicy);
+    hierarchyRoot.addOrReplaceChild(layerHiddenByPolicy);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerHiddenByPolicy'));
@@ -153,8 +153,8 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    parent.addChild(childHiddenByParent);
-    hierarchyRoot.addChild(parent);
+    parent.addOrReplaceChild(childHiddenByParent);
+    hierarchyRoot.addOrReplaceChild(parent);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('parent'));
@@ -189,7 +189,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerNoActiveBuffer);
+    hierarchyRoot.addOrReplaceChild(layerNoActiveBuffer);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoActiveBuffer'));
@@ -225,7 +225,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerEmptyBounds);
+    hierarchyRoot.addOrReplaceChild(layerEmptyBounds);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyBounds'));
@@ -259,7 +259,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerNoVisibleRegion);
+    hierarchyRoot.addOrReplaceChild(layerNoVisibleRegion);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoVisibleRegion'));
@@ -293,7 +293,7 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerEmptyVisibleRegion);
+    hierarchyRoot.addOrReplaceChild(layerEmptyVisibleRegion);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyVisibleRegion'));
@@ -351,8 +351,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(occludingLayer);
-    hierarchyRoot.addChild(occludedLayer);
+    hierarchyRoot.addOrReplaceChild(occludingLayer);
+    hierarchyRoot.addOrReplaceChild(occludedLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 
@@ -419,8 +419,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(partiallyOccludingLayer);
-    hierarchyRoot.addChild(partiallyOccludedLayer);
+    hierarchyRoot.addOrReplaceChild(partiallyOccludingLayer);
+    hierarchyRoot.addOrReplaceChild(partiallyOccludedLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 
@@ -492,8 +492,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(coveringLayer);
-    hierarchyRoot.addChild(coveredLayer);
+    hierarchyRoot.addOrReplaceChild(coveringLayer);
+    hierarchyRoot.addOrReplaceChild(coveredLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 

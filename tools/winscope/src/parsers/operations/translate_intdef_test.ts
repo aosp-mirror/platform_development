@@ -17,7 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
 import root from 'protos/test/intdef_translation/json';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TranslateIntDef} from './translate_intdef';
 
 describe('TranslateIntDef', () => {
@@ -27,18 +28,15 @@ describe('TranslateIntDef', () => {
 
   beforeEach(() => {
     field = TamperedMessageType.tamper(root.lookupType('RootMessage')).fields['intdefMappingEntry'];
-    propertyRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
   });
 
   it('translates intdef from stored mapping', () => {
-    propertyRoot.addChild(
-      new PropertyTreeNode(
-        'test node.layoutParamsFlags',
-        'layoutParamsFlags',
-        PropertySource.PROTO,
-        1
-      )
-    );
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([{name: 'layoutParamsFlags', value: 1}])
+      .build();
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
     expect(

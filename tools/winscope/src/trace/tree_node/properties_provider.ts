@@ -42,7 +42,7 @@ export class PropertiesProvider {
 
   addEagerProperty(property: PropertyTreeNode) {
     new SetFormatters().apply(property);
-    this.eagerPropertiesRoot.addChild(property);
+    this.eagerPropertiesRoot.addOrReplaceChild(property);
   }
 
   async getAll(): Promise<PropertyTreeNode> {
@@ -64,7 +64,7 @@ export class PropertiesProvider {
     }
 
     children.push(...this.lazyPropertiesRoot.getAllChildren());
-    children.sort(this.sortChildren).forEach((child) => root.addChild(child));
+    children.sort(this.sortChildren).forEach((child) => root.addOrReplaceChild(child));
 
     root.setIsRoot(true);
 

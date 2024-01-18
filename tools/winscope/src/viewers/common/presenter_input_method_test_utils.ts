@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -107,7 +107,7 @@ export function executePresenterInputMethodTests(
 
     it('can update pinned items', () => {
       expect(uiData.pinnedItems).toEqual([]);
-      const pinnedItem = new HierarchyTreeBuilder()
+      const pinnedItem = new HierarchyTreeBuilderLegacy()
         .setName('FirstPinnedItem')
         .setStableId('TestItem 4')
         .setLayerId(4)
