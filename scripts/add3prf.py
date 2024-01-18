@@ -75,6 +75,7 @@ third_party {{
   identifier {{
     type: "Archive"
     value: "https://static.crates.io/crates/{name}/{name}-{version}.crate"
+    primary_source: true
   }}
   version: "{version}"
   {license_comment}license_type: {license_type}
