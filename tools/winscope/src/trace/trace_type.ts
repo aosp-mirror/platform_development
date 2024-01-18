@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Cuj, Event, Transition} from 'flickerlib/common';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
-import {HierarchyTreeNode, TraceRect, TreeNode} from 'trace/trace_data_utils';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
+import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 
 export enum TraceType {
   WINDOW_MANAGER,
@@ -52,46 +52,32 @@ export enum TraceType {
 export type ViewNode = any;
 export type FrameData = any;
 
-export interface TreeAndRects {
-  tree: HierarchyTreeNode;
-  rects: TraceRect[];
-}
-
 export interface TraceEntryTypeMap {
-  [TraceType.PROTO_LOG]: {new: LogMessage; legacy: LogMessage};
-  [TraceType.SURFACE_FLINGER]: {new: TreeAndRects; legacy: LayerTraceEntry};
-  [TraceType.SCREEN_RECORDING]: {new: ScreenRecordingTraceEntry; legacy: ScreenRecordingTraceEntry};
-  [TraceType.SYSTEM_UI]: {new: object; legacy: object};
-  [TraceType.TRANSACTIONS]: {new: TreeNode<any>; legacy: object};
-  [TraceType.TRANSACTIONS_LEGACY]: {new: TreeNode<any>; legacy: object};
-  [TraceType.WAYLAND]: {new: object; legacy: object};
-  [TraceType.WAYLAND_DUMP]: {new: object; legacy: object};
-  [TraceType.WINDOW_MANAGER]: {new: TreeAndRects; legacy: WindowManagerState};
-  [TraceType.INPUT_METHOD_CLIENTS]: {new: TreeNode<any>; legacy: object};
-  [TraceType.INPUT_METHOD_MANAGER_SERVICE]: {new: TreeNode<any>; legacy: object};
-  [TraceType.INPUT_METHOD_SERVICE]: {new: TreeNode<any>; legacy: object};
-  [TraceType.EVENT_LOG]: {new: TreeNode<any>; legacy: Event};
-  [TraceType.WM_TRANSITION]: {new: TreeNode<any>; legacy: object};
-  [TraceType.SHELL_TRANSITION]: {new: TreeNode<any>; legacy: object};
-  [TraceType.TRANSITION]: {new: TreeNode<any>; legacy: Transition};
-  [TraceType.CUJS]: {new: TreeNode<any>; legacy: Cuj};
-  [TraceType.TAG]: {new: object; legacy: object};
-  [TraceType.ERROR]: {new: object; legacy: object};
-  [TraceType.TEST_TRACE_STRING]: {new: string; legacy: string};
-  [TraceType.TEST_TRACE_NUMBER]: {new: number; legacy: number};
-  [TraceType.VIEW_CAPTURE]: {new: TreeNode<any>; legacy: object};
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: {
-    new: TreeAndRects;
-    legacy: FrameData;
-  };
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: {
-    new: TreeAndRects;
-    legacy: FrameData;
-  };
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: {
-    new: TreeAndRects;
-    legacy: FrameData;
-  };
+  [TraceType.PROTO_LOG]: LogMessage;
+  [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
+  [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
+  [TraceType.SYSTEM_UI]: object;
+  [TraceType.TRANSACTIONS]: object;
+  [TraceType.TRANSACTIONS_LEGACY]: object;
+  [TraceType.WAYLAND]: object;
+  [TraceType.WAYLAND_DUMP]: object;
+  [TraceType.WINDOW_MANAGER]: WindowManagerState;
+  [TraceType.INPUT_METHOD_CLIENTS]: object;
+  [TraceType.INPUT_METHOD_MANAGER_SERVICE]: object;
+  [TraceType.INPUT_METHOD_SERVICE]: object;
+  [TraceType.EVENT_LOG]: Event;
+  [TraceType.WM_TRANSITION]: object;
+  [TraceType.SHELL_TRANSITION]: object;
+  [TraceType.TRANSITION]: Transition;
+  [TraceType.CUJS]: Cuj;
+  [TraceType.TAG]: object;
+  [TraceType.ERROR]: object;
+  [TraceType.TEST_TRACE_STRING]: string;
+  [TraceType.TEST_TRACE_NUMBER]: number;
+  [TraceType.VIEW_CAPTURE]: object;
+  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: FrameData;
+  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: FrameData;
+  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: FrameData;
 }
 
 export class TraceTypeUtils {

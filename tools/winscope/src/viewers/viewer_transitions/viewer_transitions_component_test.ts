@@ -34,10 +34,10 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {TreeComponent} from 'viewers/components/tree_component';
-import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
-import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
+import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
+import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
+import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
+import {TreeNodePropertiesDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_properties_data_view_component';
 import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -54,10 +54,10 @@ describe('ViewerTransitionsComponent', () => {
       imports: [MatDividerModule, ScrollingModule],
       declarations: [
         ViewerTransitionsComponent,
-        TreeComponent,
-        TreeNodeComponent,
-        TreeNodeDataViewComponent,
-        TreeNodePropertiesDataViewComponent,
+        TreeComponentLegacy,
+        TreeNodeComponentLegacy,
+        TreeNodeDataViewComponentLegacy,
+        TreeNodePropertiesDataViewComponentLegacy,
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();

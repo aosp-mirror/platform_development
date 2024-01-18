@@ -31,22 +31,22 @@ import {UiData} from './ui_data';
         [displayIds]="inputData?.displayIds ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
-      <hierarchy-view
+      <hierarchy-view-legacy
         class="hierarchy-view"
         [tree]="inputData?.tree ?? null"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
-        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
+        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view-legacy>
       <mat-divider [vertical]="true"></mat-divider>
-      <properties-view
+      <properties-view-legacy
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [store]="store"
-        [isProtoDump]="true"></properties-view>
+        [isProtoDump]="true"></properties-view-legacy>
     </div>
   `,
   styles: [

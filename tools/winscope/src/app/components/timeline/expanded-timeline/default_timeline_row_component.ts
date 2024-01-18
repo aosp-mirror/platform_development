@@ -15,7 +15,8 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {GeometryUtils, Point, Rect} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
+import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
@@ -102,7 +103,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     if (candidateEntry !== undefined) {
       const timestamp = candidateEntry.getTimestamp();
       const rect = this.entryRect(timestamp);
-      if (GeometryUtils.isPointInRect(mousePoint, rect)) {
+      if (rect.containsPoint(mousePoint)) {
         return candidateEntry;
       }
     }
@@ -121,12 +122,12 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   private entryRect(entry: Timestamp, padding = 0): Rect {
     const xPos = this.getXPosOf(entry);
 
-    return {
-      x: xPos + padding,
-      y: padding,
-      w: this.entryWidth - 2 * padding,
-      h: this.entryWidth - 2 * padding,
-    };
+    return new Rect(
+      xPos + padding,
+      padding,
+      this.entryWidth - 2 * padding,
+      this.entryWidth - 2 * padding
+    );
   }
 
   private getXPosOf(entry: Timestamp): number {

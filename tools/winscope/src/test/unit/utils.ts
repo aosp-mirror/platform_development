@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
-import {LayerTraceEntry, WindowManagerState} from 'flickerlib/common';
+import {WindowManagerState} from 'flickerlib/common';
 import {ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
@@ -26,6 +26,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {TraceBuilder} from './trace_builder';
 
 class UnitTestUtils {
@@ -114,20 +115,24 @@ class UnitTestUtils {
     return UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/WindowManager.pb');
   }
 
-  static async getLayerTraceEntry(): Promise<LayerTraceEntry> {
-    return await UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/SurfaceFlinger.pb');
+  static async getLayerTraceEntry(): Promise<HierarchyTreeNode> {
+    return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
+      'traces/elapsed_timestamp/SurfaceFlinger.pb'
+    );
   }
 
-  static async getMultiDisplayLayerTraceEntry(): Promise<LayerTraceEntry> {
-    return await UnitTestUtils.getTraceEntry(
+  static async getMultiDisplayLayerTraceEntry(): Promise<HierarchyTreeNode> {
+    return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb'
     );
   }
 
   static async getImeTraceEntries(): Promise<Map<TraceType, any>> {
-    let surfaceFlingerEntry: LayerTraceEntry | undefined;
+    let surfaceFlingerEntry: HierarchyTreeNode | undefined;
     {
-      const parser = await UnitTestUtils.getParser('traces/ime/SurfaceFlinger_with_IME.pb');
+      const parser = (await UnitTestUtils.getParser(
+        'traces/ime/SurfaceFlinger_with_IME.pb'
+      )) as Parser<HierarchyTreeNode>;
       surfaceFlingerEntry = await parser.getEntry(5, TimestampType.ELAPSED);
     }
 
@@ -156,8 +161,8 @@ class UnitTestUtils {
     return entries;
   }
 
-  private static async getTraceEntry(filename: string) {
-    const parser = await UnitTestUtils.getParser(filename);
+  private static async getTraceEntry<T>(filename: string) {
+    const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
     return parser.getEntry(0, TimestampType.ELAPSED);
   }
 }

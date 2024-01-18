@@ -13,20 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {TraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {
+  HierarchyTreeNodeLegacy,
+  PropertiesTreeNodeLegacy,
+} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export class ImeUiData {
   dependencies: TraceType[];
   highlightedItem: string = '';
-  pinnedItems: HierarchyTreeNode[] = [];
+  pinnedItems: Array<HierarchyTreeNodeLegacy | UiHierarchyTreeNode> = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNode | null = null;
-  propertiesTree: PropertiesTreeNode | null = null;
+  tree: HierarchyTreeNodeLegacy | null = null;
+  sfSubtrees: UiHierarchyTreeNode[] = [];
+  propertiesTree: PropertiesTreeNodeLegacy | UiPropertyTreeNode | null = null;
   hierarchyTableProperties: TableProperties | null = null;
   additionalProperties: ImeAdditionalProperties | null = null;
 

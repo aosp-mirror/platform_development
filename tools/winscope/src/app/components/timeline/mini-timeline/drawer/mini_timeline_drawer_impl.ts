@@ -16,7 +16,7 @@
 
 import {Color} from 'app/colors';
 import {TRACE_INFO} from 'app/trace_info';
-import {Point} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
 import {CanvasMouseHandler} from './canvas_mouse_handler';

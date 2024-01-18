@@ -23,8 +23,6 @@ import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CLIPBOARD;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_RECENTS;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_SENSORS;
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -53,6 +51,7 @@ import android.util.Log;
 import android.view.Display;
 
 import androidx.annotation.NonNull;
+import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
 import com.example.android.vdmdemo.common.RemoteEventProto.DeviceCapabilities;
@@ -542,7 +541,7 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     private void updateDevicePolicy(int policyType, boolean custom) {
-        if (SDK_INT < VANILLA_ICE_CREAM) {
+        if (!BuildCompat.isAtLeastV()) {
             recreateVirtualDevice();
         } else if (mVirtualDevice != null) {
             mVirtualDevice.setDevicePolicy(

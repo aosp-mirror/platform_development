@@ -19,11 +19,11 @@ import {TraceTreeNode} from 'trace/trace_tree_node';
 
 import {
   DiffType,
-  HierarchyTreeNode,
+  HierarchyTreeNodeLegacy,
   PropertiesDump,
-  PropertiesTreeNode,
+  PropertiesTreeNodeLegacy,
   Terminal,
-} from './ui_tree_utils';
+} from './ui_tree_utils_legacy';
 
 interface TransformOptions {
   freeze: boolean;
@@ -51,7 +51,7 @@ export class TreeTransformer {
     metadataKey: null,
   };
 
-  constructor(selectedTree: HierarchyTreeNode, filter: FilterType) {
+  constructor(selectedTree: HierarchyTreeNodeLegacy, filter: FilterType) {
     this.stableId = this.compatibleStableId(selectedTree);
     this.rootName = selectedTree.name;
     this.filter = filter;
@@ -148,7 +148,7 @@ export class TreeTransformer {
     return null;
   }
 
-  transform(): PropertiesTreeNode {
+  transform(): PropertiesTreeNodeLegacy {
     const {formatter} = this.options!;
     if (!formatter) {
       throw new Error('Missing formatter, please set with setOptions()');
@@ -172,7 +172,7 @@ export class TreeTransformer {
     compareWithName: string | Terminal,
     stableId: string,
     transformOptions: TransformOptions
-  ): PropertiesTreeNode {
+  ): PropertiesTreeNodeLegacy {
     const originalProperties = properties;
     const metadata = this.getMetadata(originalProperties, transformOptions.metadataKey);
 
@@ -301,7 +301,7 @@ export class TreeTransformer {
     return transformOptions.freeze ? Object.freeze(transformedProperties) : transformedProperties;
   }
 
-  private hasChildMatchingFilter(children: PropertiesTreeNode[] | null | undefined): boolean {
+  private hasChildMatchingFilter(children: PropertiesTreeNodeLegacy[] | null | undefined): boolean {
     if (!children || children.length === 0) return false;
 
     let match = false;
@@ -349,9 +349,9 @@ export class TreeTransformer {
   private transformProperties(
     properties: PropertiesDump,
     metadataKey: string | null
-  ): PropertiesTreeNode {
+  ): PropertiesTreeNodeLegacy {
     const {skip, formatter} = this.options!;
-    const transformedProperties: PropertiesTreeNode = {
+    const transformedProperties: PropertiesTreeNodeLegacy = {
       properties: {},
     };
 
@@ -406,7 +406,7 @@ export class TreeTransformer {
     }
   }
 
-  private compatibleStableId(item: HierarchyTreeNode): string {
+  private compatibleStableId(item: HierarchyTreeNodeLegacy): string {
     // For backwards compatibility
     // (the only item that doesn't have a unique stable ID in the tree)
     if (item.stableId === 'winToken|-|') {

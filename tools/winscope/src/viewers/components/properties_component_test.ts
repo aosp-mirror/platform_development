@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PersistentStore} from 'common/persistent_store';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {PropertiesComponent} from './properties_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
+import {TreeNodeComponent} from './tree_node_component';
+import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
+import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
 
 describe('PropertiesComponent', () => {
   let fixture: ComponentFixture<PropertiesComponent>;
@@ -35,7 +40,14 @@ describe('PropertiesComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [PropertiesComponent, SurfaceFlingerPropertyGroupsComponent, TreeComponent],
+      declarations: [
+        PropertiesComponent,
+        SurfaceFlingerPropertyGroupsComponent,
+        TreeComponent,
+        TreeNodeComponent,
+        TreeNodeDataViewComponent,
+        TreeNodePropertiesDataViewComponent,
+      ],
       imports: [
         CommonModule,
         MatInputModule,
@@ -45,8 +57,9 @@ describe('PropertiesComponent', () => {
         BrowserAnimationsModule,
         FormsModule,
         ReactiveFormsModule,
+        MatIconModule,
+        MatTooltipModule,
       ],
-      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PropertiesComponent);
@@ -104,9 +117,7 @@ describe('PropertiesComponent', () => {
   });
 
   it('renders tree in proto dump upon selected item', () => {
-    component.propertiesTree = {
-      stableId: 'selectedItemProperty',
-    };
+    component.propertiesTree = TreeNodeUtils.makeUiPropertyNode('selectedItem', 'property', null);
     fixture.detectChanges();
     const treeEl = htmlElement.querySelector('tree-view');
     expect(treeEl).toBeTruthy();

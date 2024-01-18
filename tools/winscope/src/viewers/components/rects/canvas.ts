@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
 import * as THREE from 'three';
 import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';

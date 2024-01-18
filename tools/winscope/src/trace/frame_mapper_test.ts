@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -27,6 +26,7 @@ import {ScreenRecordingTraceEntry} from './screen_recording';
 import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
+import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 
 describe('FrameMapper', () => {
   const time0 = new RealTimestamp(0n);
@@ -262,7 +262,7 @@ describe('FrameMapper', () => {
 
   describe('Transactions <-> SurfaceFlinger', () => {
     let transactions: Trace<object>;
-    let surfaceFlinger: Trace<LayerTraceEntry>;
+    let surfaceFlinger: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
     beforeAll(async () => {
@@ -272,21 +272,21 @@ describe('FrameMapper', () => {
       // SURFACE_FLINGER:   0     1        2
       transactions = new TraceBuilder<object>()
         .setEntries([
-          'entry-0' as unknown as LayerTraceEntry,
-          'entry-1' as unknown as LayerTraceEntry,
-          'entry-2' as unknown as LayerTraceEntry,
-          'entry-3' as unknown as LayerTraceEntry,
-          'entry-4' as unknown as LayerTraceEntry,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
+          'entry-4' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time5, time6])
         .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 10n, 20n, 30n])
         .build();
 
-      surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
+      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as object,
-          'entry-1' as unknown as object,
-          'entry-2' as unknown as object,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2])
         .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
@@ -330,7 +330,7 @@ describe('FrameMapper', () => {
   });
 
   describe('SurfaceFlinger <-> ScreenRecording', () => {
-    let surfaceFlinger: Trace<LayerTraceEntry>;
+    let surfaceFlinger: Trace<HierarchyTreeNode>;
     let screenRecording: Trace<ScreenRecordingTraceEntry>;
     let traces: Traces;
 
@@ -340,15 +340,15 @@ describe('FrameMapper', () => {
       //                               \  \  \        \
       // SCREEN_RECORDING:     0        1  2  3        4 ... 5 <-- ignored (not connected) because too far
       // Time:                 0  1  2  3  4  5  6  7  8     10s
-      surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
+      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as LayerTraceEntry,
-          'entry-1' as unknown as LayerTraceEntry,
-          'entry-2' as unknown as LayerTraceEntry,
-          'entry-3' as unknown as LayerTraceEntry,
-          'entry-4' as unknown as LayerTraceEntry,
-          'entry-5' as unknown as LayerTraceEntry,
-          'entry-6' as unknown as LayerTraceEntry,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
+          'entry-4' as unknown as HierarchyTreeNode,
+          'entry-5' as unknown as HierarchyTreeNode,
+          'entry-6' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4, time6, time7, time8])
         .build();

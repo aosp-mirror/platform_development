@@ -1,0 +1,176 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {
+  DiffType,
+  HierarchyTreeNodeLegacy,
+  UiTreeNode,
+  UiTreeUtilsLegacy as UiTreeUtils,
+} from 'viewers/common/ui_tree_utils_legacy';
+import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
+
+@Component({
+  selector: 'tree-node-legacy',
+  template: `
+    <div *ngIf="showChevron()" class="icon-wrapper">
+      <button class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
+        <mat-icon>
+          {{ isExpanded ? 'arrow_drop_down' : 'chevron_right' }}
+        </mat-icon>
+      </button>
+    </div>
+
+    <div *ngIf="showLeafNodeIcon()" class="icon-wrapper leaf-node-icon-wrapper">
+      <mat-icon class="leaf-node-icon"></mat-icon>
+    </div>
+
+    <div *ngIf="showPinNodeIcon()" class="icon-wrapper">
+      <button class="icon-button pin-node-btn" (click)="pinNode($event)">
+        <mat-icon>
+          {{ isPinned ? 'star' : 'star_border' }}
+        </mat-icon>
+      </button>
+    </div>
+
+    <div class="description">
+      <tree-node-data-view-legacy
+        *ngIf="!isPropertiesTreeNode()"
+        [item]="item"></tree-node-data-view-legacy>
+      <tree-node-properties-data-view-legacy
+        *ngIf="isPropertiesTreeNode()"
+        [item]="item"></tree-node-properties-data-view-legacy>
+    </div>
+
+    <div *ngIf="hasChildren && !isExpanded" class="icon-wrapper">
+      <button
+        class="icon-button expand-tree-btn"
+        [class]="collapseDiffClass"
+        (click)="expandTree($event)">
+        <mat-icon aria-hidden="true"> more_horiz </mat-icon>
+      </button>
+    </div>
+  `,
+  styles: [nodeInnerItemStyles],
+})
+export class TreeNodeComponentLegacy {
+  @Input() item!: UiTreeNode;
+  @Input() isLeaf?: boolean;
+  @Input() flattened?: boolean;
+  @Input() isExpanded?: boolean;
+  @Input() hasChildren?: boolean = false;
+  @Input() isPinned?: boolean = false;
+  @Input() isInPinnedSection?: boolean = false;
+  @Input() isSelected?: boolean = false;
+
+  @Output() toggleTreeChange = new EventEmitter<void>();
+  @Output() expandTreeChange = new EventEmitter<boolean>();
+  @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
+
+  collapseDiffClass = '';
+  private el: HTMLElement;
+
+  constructor(@Inject(ElementRef) public elementRef: ElementRef) {
+    this.el = elementRef.nativeElement;
+  }
+
+  ngOnChanges() {
+    this.collapseDiffClass = this.updateCollapseDiffClass();
+    if (!this.isPinned && this.isSelected && !this.isNodeInView()) {
+      this.el.scrollIntoView({block: 'center', inline: 'nearest'});
+    }
+  }
+
+  isNodeInView() {
+    const rect = this.el.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+
+  isPropertiesTreeNode() {
+    return !(this.item instanceof HierarchyTreeNodeLegacy);
+  }
+
+  showPinNodeIcon() {
+    return (
+      (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? '')) ?? false
+    );
+  }
+
+  toggleTree(event: MouseEvent) {
+    event.stopPropagation();
+    this.toggleTreeChange.emit();
+  }
+
+  showChevron() {
+    return !this.isLeaf && !this.flattened && !this.isInPinnedSection;
+  }
+
+  showLeafNodeIcon() {
+    return !this.showChevron() && !this.isInPinnedSection;
+  }
+
+  expandTree(event: MouseEvent) {
+    event.stopPropagation();
+    this.expandTreeChange.emit();
+  }
+
+  pinNode(event: MouseEvent) {
+    event.stopPropagation();
+    this.pinNodeChange.emit(this.item);
+  }
+
+  updateCollapseDiffClass() {
+    if (this.isExpanded) {
+      return '';
+    }
+
+    const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
+
+    childrenDiffClasses.delete(DiffType.NONE);
+    childrenDiffClasses.delete(undefined);
+
+    if (childrenDiffClasses.size === 0) {
+      return '';
+    }
+    if (childrenDiffClasses.size === 1) {
+      const diffType = childrenDiffClasses.values().next().value;
+      return diffType;
+    }
+    return DiffType.MODIFIED;
+  }
+
+  private getAllDiffTypesOfChildren(item: UiTreeNode) {
+    if (!item.children) {
+      return new Set();
+    }
+
+    const classes = new Set();
+    for (const child of item.children) {
+      if (child.diffType) {
+        classes.add(child.diffType);
+      }
+      for (const diffClass of this.getAllDiffTypesOfChildren(child)) {
+        classes.add(diffClass);
+      }
+    }
+
+    return classes;
+  }
+}

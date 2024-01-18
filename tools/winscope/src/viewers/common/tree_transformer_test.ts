@@ -16,11 +16,11 @@
 import {TreeUtils} from 'common/tree_utils';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
-import {DiffType, HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
+import {DiffType, HierarchyTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 
 describe('TreeTransformer', () => {
   let entry: TraceTreeNode;
-  let selectedTree: HierarchyTreeNode;
+  let selectedTree: HierarchyTreeNodeLegacy;
   beforeAll(async () => {
     entry = {
       id: 3,
