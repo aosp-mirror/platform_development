@@ -15,7 +15,7 @@
  */
 
 import {ElementRef, EventEmitter, SimpleChanges} from '@angular/core';
-import {Point} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {CanvasDrawer} from './canvas_drawer';

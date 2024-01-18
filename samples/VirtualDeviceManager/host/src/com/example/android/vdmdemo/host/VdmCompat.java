@@ -16,15 +16,14 @@
 
 package com.example.android.vdmdemo.host;
 
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM;
-
 import android.companion.virtual.VirtualDeviceManager.VirtualDevice;
 import android.companion.virtual.flags.Flags;
 import android.content.Context;
 import android.hardware.display.VirtualDisplayConfig;
 import android.hardware.input.InputManager;
 import android.view.InputDevice;
+
+import androidx.core.os.BuildCompat;
 
 public class VdmCompat {
 
@@ -35,7 +34,7 @@ public class VdmCompat {
 
     static VirtualDisplayConfig.Builder setHomeSupported(
             VirtualDisplayConfig.Builder builder, int flags) {
-        if (SDK_INT >= VANILLA_ICE_CREAM && Flags.vdmCustomHome()) {
+        if (BuildCompat.isAtLeastV() && Flags.vdmCustomHome()) {
             return builder.setHomeSupported(true);
         } else {
             return builder.setFlags(flags | VIRTUAL_DISPLAY_FLAG_SHOULD_SHOW_SYSTEM_DECORATIONS);
@@ -43,13 +42,13 @@ public class VdmCompat {
     }
 
     static void setDisplayImePolicy(VirtualDevice virtualDevice, int displayId, int policy) {
-        if (SDK_INT >= VANILLA_ICE_CREAM) {
+        if (BuildCompat.isAtLeastV()) {
             virtualDevice.setDisplayImePolicy(displayId, policy);
         }
     }
 
     static boolean canCreateVirtualMouse(Context context) {
-        if (SDK_INT >= VANILLA_ICE_CREAM) {
+        if (BuildCompat.isAtLeastV()) {
             return true;
         }
         InputManager inputManager = context.getSystemService(InputManager.class);

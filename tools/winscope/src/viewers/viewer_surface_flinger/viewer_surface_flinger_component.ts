@@ -34,7 +34,7 @@ import {UiData} from './ui_data';
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree ?? null"
+        [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -44,9 +44,9 @@ import {UiData} from './ui_data';
       <properties-view
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"
+        [propertiesTree]="inputData?.propertiesTree"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
-        [selectedItem]="inputData?.selectedLayer ?? {}"
+        [curatedProperties]="inputData?.curatedProperties"
         [traceType]="${TraceType.SURFACE_FLINGER}"
         [store]="store"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"

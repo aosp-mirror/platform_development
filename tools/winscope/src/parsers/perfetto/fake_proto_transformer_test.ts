@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/test/fake_proto/json';
 import {FakeProtoTransformer} from './fake_proto_transformer';
 
@@ -21,7 +22,7 @@ describe('FakeProtoTransformer', () => {
   let transformer: FakeProtoTransformer;
 
   beforeAll(() => {
-    transformer = new FakeProtoTransformer(root.lookupType('Entry'));
+    transformer = new FakeProtoTransformer(TamperedMessageType.tamper(root.lookupType('Entry')));
   });
 
   it('sets default value (0) of number fields', () => {

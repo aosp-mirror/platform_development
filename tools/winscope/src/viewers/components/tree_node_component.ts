@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
-import {DiffType, HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {assertDefined} from 'common/assert_utils';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {DiffType} from 'viewers/common/ui_tree_utils_legacy';
 import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
@@ -41,13 +44,15 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
     </div>
 
     <div class="description">
-      <tree-node-data-view *ngIf="!isPropertiesTreeNode()" [item]="item"></tree-node-data-view>
+      <tree-node-data-view
+        *ngIf="node && !isPropertyTreeNode()"
+        [node]="node"></tree-node-data-view>
       <tree-node-properties-data-view
-        *ngIf="isPropertiesTreeNode()"
-        [item]="item"></tree-node-properties-data-view>
+        *ngIf="isPropertyTreeNode()"
+        [node]="node"></tree-node-properties-data-view>
     </div>
 
-    <div *ngIf="hasChildren && !isExpanded" class="icon-wrapper">
+    <div *ngIf="!isLeaf && !isExpanded" class="icon-wrapper">
       <button
         class="icon-button expand-tree-btn"
         [class]="collapseDiffClass"
@@ -59,18 +64,17 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
   styles: [nodeInnerItemStyles],
 })
 export class TreeNodeComponent {
-  @Input() item!: UiTreeNode;
+  @Input() node?: UiHierarchyTreeNode | UiPropertyTreeNode;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
   @Input() isExpanded?: boolean;
-  @Input() hasChildren?: boolean = false;
-  @Input() isPinned?: boolean = false;
-  @Input() isInPinnedSection?: boolean = false;
-  @Input() isSelected?: boolean = false;
+  @Input() isPinned: boolean = false;
+  @Input() isInPinnedSection: boolean = false;
+  @Input() isSelected: boolean = false;
 
   @Output() toggleTreeChange = new EventEmitter<void>();
   @Output() expandTreeChange = new EventEmitter<boolean>();
-  @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
+  @Output() pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
 
   collapseDiffClass = '';
   private el: HTMLElement;
@@ -96,14 +100,12 @@ export class TreeNodeComponent {
     );
   }
 
-  isPropertiesTreeNode() {
-    return !(this.item instanceof HierarchyTreeNode);
+  isPropertyTreeNode() {
+    return this.node instanceof UiPropertyTreeNode;
   }
 
   showPinNodeIcon() {
-    return (
-      (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? '')) ?? false
-    );
+    return (this.node instanceof UiHierarchyTreeNode && !this.node.isRoot()) ?? false;
   }
 
   toggleTree(event: MouseEvent) {
@@ -126,7 +128,7 @@ export class TreeNodeComponent {
 
   pinNode(event: MouseEvent) {
     event.stopPropagation();
-    this.pinNodeChange.emit(this.item);
+    this.pinNodeChange.emit(assertDefined(this.node) as UiHierarchyTreeNode);
   }
 
   updateCollapseDiffClass() {
@@ -134,7 +136,7 @@ export class TreeNodeComponent {
       return '';
     }
 
-    const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
+    const childrenDiffClasses = this.getAllDiffTypesOfChildren(assertDefined(this.node));
 
     childrenDiffClasses.delete(DiffType.NONE);
     childrenDiffClasses.delete(undefined);
@@ -149,16 +151,10 @@ export class TreeNodeComponent {
     return DiffType.MODIFIED;
   }
 
-  private getAllDiffTypesOfChildren(item: UiTreeNode) {
-    if (!item.children) {
-      return new Set();
-    }
-
+  private getAllDiffTypesOfChildren(node: UiHierarchyTreeNode | UiPropertyTreeNode) {
     const classes = new Set();
-    for (const child of item.children) {
-      if (child.diffType) {
-        classes.add(child.diffType);
-      }
+    for (const child of node.getAllChildren().values()) {
+      classes.add(child.getDiff());
       for (const diffClass of this.getAllDiffTypesOfChildren(child)) {
         classes.add(diffClass);
       }

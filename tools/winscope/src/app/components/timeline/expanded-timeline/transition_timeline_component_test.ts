@@ -25,6 +25,7 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {Rect} from 'common/rect';
 import {RealTimestamp} from 'common/time';
 import {Transition} from 'flickerlib/common';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -96,22 +97,12 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: 0,
-        y: padding,
-        w: Math.floor(width / 5),
-        h: oneRowHeight,
-      },
+      new Rect(0, padding, Math.floor(width / 5), oneRowHeight),
       component.color,
       1
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor(width / 2),
-        y: padding,
-        w: Math.floor(width / 2),
-        h: oneRowHeight,
-      },
+      new Rect(Math.floor(width / 2), padding, Math.floor(width / 2), oneRowHeight),
       component.color,
       1
     );
@@ -147,22 +138,12 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: -Math.floor(width / 10),
-        y: padding,
-        w: Math.floor(width / 5),
-        h: oneRowHeight,
-      },
+      new Rect(-Math.floor(width / 10), padding, Math.floor(width / 5), oneRowHeight),
       component.color,
       1
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor(width / 2),
-        y: padding,
-        w: Math.floor(width),
-        h: oneRowHeight,
-      },
+      new Rect(Math.floor(width / 2), padding, Math.floor(width), oneRowHeight),
       component.color,
       1
     );
@@ -197,12 +178,12 @@ describe('TransitionTimelineComponent', () => {
     const oneRowHeight = oneRowTotalHeight - padding;
     const width = component.canvasDrawer.getScaledCanvasWidth();
 
-    const expectedRect = {
-      x: Math.floor((width * 1) / 4),
-      y: padding,
-      w: Math.floor(width / 2),
-      h: oneRowHeight,
-    };
+    const expectedRect = new Rect(
+      Math.floor((width * 1) / 4),
+      padding,
+      Math.floor(width / 2),
+      oneRowHeight
+    );
     expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
     expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
 
@@ -244,12 +225,12 @@ describe('TransitionTimelineComponent', () => {
     await waitToBeCalled(drawRectSpy, 1);
     await waitToBeCalled(drawRectBorderSpy, 1);
 
-    const expectedRect = {
-      x: Math.floor((width * 1) / 4),
-      y: padding,
-      w: Math.floor(width / 2),
-      h: oneRowHeight,
-    };
+    const expectedRect = new Rect(
+      Math.floor((width * 1) / 4),
+      padding,
+      Math.floor(width / 2),
+      oneRowHeight
+    );
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
 
@@ -288,22 +269,17 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: 0,
-        y: padding,
-        w: Math.floor((width * 3) / 4),
-        h: oneRowHeight,
-      },
+      new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
       component.color,
       1
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor(width / 2),
-        y: padding + oneRowTotalHeight,
-        w: Math.floor(width / 2),
-        h: oneRowHeight,
-      },
+      new Rect(
+        Math.floor(width / 2),
+        padding + oneRowTotalHeight,
+        Math.floor(width / 2),
+        oneRowHeight
+      ),
       component.color,
       1
     );
@@ -340,22 +316,17 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: 0,
-        y: padding,
-        w: Math.floor((width * 3) / 4),
-        h: oneRowHeight,
-      },
+      new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
       component.color,
       1
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor(width / 4),
-        y: padding + oneRowTotalHeight,
-        w: Math.floor(width / 4),
-        h: oneRowHeight,
-      },
+      new Rect(
+        Math.floor(width / 4),
+        padding + oneRowTotalHeight,
+        Math.floor(width / 4),
+        oneRowHeight
+      ),
       component.color,
       1
     );
@@ -388,12 +359,7 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      {
-        x: Math.floor((width * 1) / 4),
-        y: padding,
-        w: Math.floor(width / 2),
-        h: oneRowHeight,
-      },
+      new Rect(Math.floor((width * 1) / 4), padding, Math.floor(width / 2), oneRowHeight),
       component.color,
       0.25
     );

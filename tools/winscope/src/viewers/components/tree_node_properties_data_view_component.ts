@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,46 +14,64 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {assertDefined} from 'common/assert_utils';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {DiffType} from 'viewers/common/ui_tree_utils_legacy';
 import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
   selector: 'tree-node-properties-data-view',
   template: `
-    <p class="mat-body-1">
-      {{ item.propertyKey }}
-      <ng-container *ngIf="item.propertyValue">
-        :&ngsp;
-        <span [class]="[valueClass()]" class="value">{{ item.propertyValue }}</span>
-      </ng-container>
-    </p>
+    <div class="mat-body-1" *ngIf="node">
+      {{ node.getDisplayName() }}
+      <div *ngIf="value()" class="node-property">
+        <span> :&ngsp; </span>
+        <div class="property-info">
+          <a [class]="[valueClass()]" class="value new">{{ value() }}</a>
+          <s *ngIf="isModified()" class="old-value">{{ oldValue() }}</s>
+        </div>
+      </div>
+    </div>
   `,
   styles: [treeNodePropertiesDataViewStyles],
 })
 export class TreeNodePropertiesDataViewComponent {
-  @Input() item!: PropertiesTreeNode;
+  @Input() node?: UiPropertyTreeNode;
 
   valueClass() {
-    if (!this.item.propertyValue) {
+    const property = assertDefined(this.node).formattedValue();
+    if (!property) {
       return null;
     }
 
-    if (this.item.propertyValue === 'null') {
+    if (property === 'null') {
       return 'null';
     }
 
-    if (this.item.propertyValue === 'true') {
+    if (property === 'true') {
       return 'true';
     }
 
-    if (this.item.propertyValue === 'false') {
+    if (property === 'false') {
       return 'false';
     }
 
-    if (!isNaN(Number(this.item.propertyValue))) {
+    if (!isNaN(Number(property))) {
       return 'number';
     }
 
     return null;
+  }
+
+  value() {
+    return assertDefined(this.node).formattedValue();
+  }
+
+  isModified() {
+    return assertDefined(this.node).getDiff() === DiffType.MODIFIED;
+  }
+
+  oldValue() {
+    return assertDefined(this.node).getOldValue();
   }
 }

@@ -44,8 +44,24 @@ export const treeNodeDataViewStyles = `
 `;
 
 export const treeNodePropertiesDataViewStyles = `
+    .node-property {
+        position: relative;
+        display: inline-block;
+    }
+    .property-info {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+    }
+    .old-value {
+        color: #9b9b9b;
+        display: flex;
+    }
     .value {
         color: #8A2BE2;
+    }
+    .new {
+        display: flex;
     }
     .value.null {
         color: #e1e1e1;

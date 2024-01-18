@@ -45,3 +45,15 @@ export const MISSING_LAYER = new Chip(
 export const GPU_CHIP = new Chip('GPU', 'This layer was composed on the GPU', 'gpu');
 
 export const HWC_CHIP = new Chip('HWC', 'This layer was composed by Hardware Composer', 'hwc');
+
+export const DUPLICATE_CHIP = new Chip(
+  'Duplicate',
+  "Multiple layers present with this layer's id",
+  'duplicate'
+);
+
+export const MISSING_Z_PARENT_CHIP = new Chip(
+  'MissingZParent',
+  'Is relative Z-ordered to another surface, but RelZParent is missing from hierarchy',
+  'zParent'
+);

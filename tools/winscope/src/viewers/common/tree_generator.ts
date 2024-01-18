@@ -24,7 +24,11 @@ import {
   RELATIVE_Z_PARENT_CHIP,
   VISIBLE_CHIP,
 } from 'viewers/common/chip';
-import {DiffType, HierarchyTreeNode, UiTreeUtils} from './ui_tree_utils';
+import {
+  DiffType,
+  HierarchyTreeNodeLegacy,
+  UiTreeUtilsLegacy as UiTreeUtils,
+} from './ui_tree_utils_legacy';
 
 type GetNodeIdCallbackType = (node: TraceTreeNode | null) => string | null;
 type IsModifiedCallbackType = (
@@ -50,9 +54,9 @@ export class TreeGenerator {
   private newMapping: Map<string, TraceTreeNode> | null = null;
   private oldMapping: Map<string, TraceTreeNode> | null = null;
   private readonly pinnedIds: string[];
-  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedItems: HierarchyTreeNodeLegacy[] = [];
   private relZParentIds: string[] = [];
-  private flattenedChildren: HierarchyTreeNode[] = [];
+  private flattenedChildren: HierarchyTreeNodeLegacy[] = [];
 
   constructor(inputEntry: TraceTreeNode, filter: FilterType, pinnedIds?: string[]) {
     this.inputEntry = inputEntry;
@@ -75,7 +79,7 @@ export class TreeGenerator {
     return this;
   }
 
-  generateTree(): HierarchyTreeNode | null {
+  generateTree(): HierarchyTreeNodeLegacy | null {
     return this.getCustomizedTree(this.inputEntry);
   }
 
@@ -101,7 +105,7 @@ export class TreeGenerator {
     return this;
   }
 
-  generateFinalTreeWithDiff(): HierarchyTreeNode | null {
+  generateFinalTreeWithDiff(): HierarchyTreeNodeLegacy | null {
     this.newMapping = this.generateIdToNodeMapping(this.inputEntry);
     this.oldMapping = this.previousEntry ? this.generateIdToNodeMapping(this.previousEntry) : null;
 
@@ -122,7 +126,7 @@ export class TreeGenerator {
     return this.getCustomizedTree(diffTree);
   }
 
-  private getCustomizedTree(tree: TraceTreeNode | null): HierarchyTreeNode | null {
+  private getCustomizedTree(tree: TraceTreeNode | null): HierarchyTreeNodeLegacy | null {
     if (!tree) return null;
     let newTree = this.generateTreeWithUserOptions(tree, false);
     if (!newTree) return null;
@@ -135,11 +139,11 @@ export class TreeGenerator {
     return Object.freeze(newTree);
   }
 
-  getPinnedItems(): HierarchyTreeNode[] {
+  getPinnedItems(): HierarchyTreeNodeLegacy[] {
     return this.pinnedItems;
   }
 
-  private flattenChildren(children: HierarchyTreeNode[]) {
+  private flattenChildren(children: HierarchyTreeNodeLegacy[]) {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       const childIsVisibleNode =
@@ -162,15 +166,15 @@ export class TreeGenerator {
   private generateTreeWithUserOptions(
     tree: TraceTreeNode,
     parentFilterMatch: boolean
-  ): HierarchyTreeNode | null {
+  ): HierarchyTreeNodeLegacy | null {
     return this.applyChecks(tree, parentFilterMatch);
   }
 
-  private updateTreeWithRelZParentChips(tree: HierarchyTreeNode): HierarchyTreeNode {
+  private updateTreeWithRelZParentChips(tree: HierarchyTreeNodeLegacy): HierarchyTreeNodeLegacy {
     return this.applyRelZParentCheck(tree);
   }
 
-  private applyRelZParentCheck(tree: HierarchyTreeNode) {
+  private applyRelZParentCheck(tree: HierarchyTreeNodeLegacy) {
     if (tree.id && this.relZParentIds.includes(`${tree.id}`)) {
       tree.chips.push(RELATIVE_Z_PARENT_CHIP);
     }
@@ -183,7 +187,7 @@ export class TreeGenerator {
     return tree;
   }
 
-  private addChips(tree: HierarchyTreeNode): HierarchyTreeNode {
+  private addChips(tree: HierarchyTreeNodeLegacy): HierarchyTreeNodeLegacy {
     if (
       tree.hwcCompositionType === HwcCompositionType.CLIENT ||
       tree.hwcCompositionType?.toString() === 'HWC_TYPE_CLIENT'
@@ -215,7 +219,10 @@ export class TreeGenerator {
     return tree;
   }
 
-  private applyChecks(tree: TraceTreeNode, parentFilterMatch: boolean): HierarchyTreeNode | null {
+  private applyChecks(
+    tree: TraceTreeNode,
+    parentFilterMatch: boolean
+  ): HierarchyTreeNodeLegacy | null {
     let newTree = this.makeTreeNode(tree);
 
     // add id field to tree if id does not exist (e.g. for WM traces)
@@ -306,8 +313,8 @@ export class TreeGenerator {
     return clone;
   }
 
-  private makeTreeNode(node: TraceTreeNode): HierarchyTreeNode {
-    const clone = new HierarchyTreeNode(node.name, node.kind, node.stableId);
+  private makeTreeNode(node: TraceTreeNode): HierarchyTreeNodeLegacy {
+    const clone = new HierarchyTreeNodeLegacy(node.name, node.kind, node.stableId);
     if (node.shortName) clone.shortName = node.shortName;
     if (node.type) clone.type = node.type;
     if (node.id) clone.id = node.id;

@@ -25,7 +25,7 @@ import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
+import {HierarchyTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
@@ -36,7 +36,7 @@ describe('PresenterViewCapture', () => {
   let uiData: UiData;
   let presenter: Presenter;
   let positionUpdate: TracePositionUpdate;
-  let selectedTree: HierarchyTreeNode;
+  let selectedTree: HierarchyTreeNodeLegacy;
 
   beforeAll(async () => {
     parser = await UnitTestUtils.getParser(

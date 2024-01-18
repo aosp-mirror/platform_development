@@ -24,15 +24,16 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
   template: `
     <div class="card-grid">
       <div class="left-views">
-        <hierarchy-view
+        <hierarchy-view-legacy
           class="hierarchy-view"
           [tree]="inputData?.tree ?? null"
+          [subtrees]="inputData?.sfSubtrees ?? []"
           [dependencies]="inputData?.dependencies ?? []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"
-          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
+          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view-legacy>
 
         <ng-container *ngIf="inputData?.additionalProperties">
           <mat-divider></mat-divider>
@@ -46,11 +47,11 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
 
       <mat-divider [vertical]="true"></mat-divider>
 
-      <properties-view
+      <properties-view-legacy
         class="properties-view"
         [store]="store"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view>
+        [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view-legacy>
     </div>
   `,
   styles: [

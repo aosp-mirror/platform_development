@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {TimestampType} from 'common/time';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/transactions/latest/json';
 import {perfetto} from 'protos/transactions/latest/static';
 import {
@@ -30,14 +31,19 @@ import {FakeProtoTransformer} from './fake_proto_transformer';
 import {Utils} from './utils';
 
 export class ParserTransactions extends AbstractParser<object> {
-  private static readonly LayerState = root.lookupType('perfetto.protos.LayerState');
-  private static readonly DisplayState = root.lookupType('perfetto.protos.DisplayState');
-  private protoTransformer = new FakeProtoTransformer(
+  private static readonly TransactionsTraceEntryProto = TamperedMessageType.tamper(
     root.lookupType('perfetto.protos.TransactionTraceEntry')
   );
+  private static readonly LayerState = root.lookupType('perfetto.protos.LayerState');
+  private static readonly DisplayState = root.lookupType('perfetto.protos.DisplayState');
+  private protoTransformer: FakeProtoTransformer;
 
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
+
+    this.protoTransformer = new FakeProtoTransformer(
+      ParserTransactions.TransactionsTraceEntryProto
+    );
   }
 
   override getTraceType(): TraceType {

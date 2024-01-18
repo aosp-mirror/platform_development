@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
+import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {
@@ -61,27 +63,39 @@ describe('ImeUtils', () => {
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
       entries.get(TraceType.WINDOW_MANAGER)
     );
-    const layers = ImeUtils.getImeLayers(
-      entries.get(TraceType.SURFACE_FLINGER),
-      processedWindowManagerState
-    )!;
-
-    expect(layers.inputMethodSurface.id).toEqual(280);
-    expect(layers.inputMethodSurface.isVisible).toEqual(false);
-    expect(layers.inputMethodSurface.rect.label).toEqual(
-      'Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280'
+    const layers = assertDefined(
+      ImeUtils.getImeLayers(
+        entries.get(TraceType.SURFACE_FLINGER),
+        processedWindowManagerState,
+        undefined
+      )
     );
-    expect(layers.inputMethodSurface.screenBounds).toBeDefined();
 
-    expect(layers.imeContainer.id).toEqual(12);
-    expect(layers.imeContainer.z).toEqual(1);
-    expect(layers.imeContainer.zOrderRelativeOfId).toEqual(115);
+    const inputMethodSurface = assertDefined(layers.properties.inputMethodSurface);
+    const inputMethodSurfaceRect = assertDefined(inputMethodSurface.rect);
+    expect(inputMethodSurface.id).toEqual(
+      '280 Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280'
+    );
+    expect(inputMethodSurface.isVisible).toEqual(false);
+    expect(inputMethodSurfaceRect.getChildByName('left')?.getValue()).toEqual(-10800);
+    expect(inputMethodSurfaceRect.getChildByName('top')?.getValue()).toEqual(-24136);
+    expect(inputMethodSurfaceRect.getChildByName('right')?.getValue()).toEqual(10800);
+    expect(inputMethodSurfaceRect.getChildByName('bottom')?.getValue()).toEqual(23864);
+    expect(inputMethodSurface.screenBounds).toBeDefined();
 
-    expect(String(layers.focusedWindow.color)).toEqual('r:0 g:0 b:0 a:1');
+    const imeContainer = assertDefined(layers.properties.imeContainer);
+    expect(imeContainer.id).toEqual('12 ImeContainer#12');
+    expect(imeContainer.z).toEqual(1);
+    expect(imeContainer.zOrderRelativeOfId).toEqual(115);
 
-    expect(layers.taskOfImeContainer.kind).toEqual('SF subtree - 114');
-    expect(layers.taskOfImeContainer.name).toEqual('Task=1391#114');
+    expect(assertDefined(layers.properties.focusedWindowColor).formattedValue()).toEqual(
+      `${EMPTY_OBJ_STRING}, alpha: 1`
+    );
 
-    expect(layers.taskOfImeSnapshot).toBeUndefined();
+    const taskLayerOfImeContainer = assertDefined(layers.taskLayerOfImeContainer);
+    expect(taskLayerOfImeContainer.id).toEqual('114 Task=1391#114');
+    expect(taskLayerOfImeContainer.name).toEqual('Task=1391#114');
+
+    expect(layers.taskLayerOfImeSnapshot).toBeUndefined();
   });
 });

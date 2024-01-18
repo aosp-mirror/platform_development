@@ -17,7 +17,7 @@ import {TreeUtils} from 'common/tree_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TreeGenerator} from 'viewers/common/tree_generator';
-import {DiffType, HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
+import {DiffType, HierarchyTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
 
 describe('TreeGenerator', () => {
   let entry: TraceTreeNode;
@@ -52,7 +52,7 @@ describe('TreeGenerator', () => {
   });
 
   it('generates tree', () => {
-    const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')
@@ -81,7 +81,7 @@ describe('TreeGenerator', () => {
   });
 
   it('generates diff tree with no diff', () => {
-    const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')
@@ -145,7 +145,7 @@ describe('TreeGenerator', () => {
       ],
     };
 
-    const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')

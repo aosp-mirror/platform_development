@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, NO_ERRORS_SCHEMA, QueryList, ViewChildren} from '@angular/core';
+import {Component, CUSTOM_ELEMENTS_SCHEMA, QueryList, ViewChildren} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {UiTreeNode} from 'viewers/common/ui_tree_utils';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
+import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
+import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
 
 describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
-  const children = makeTreeNodeChildren();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeComponent, TestHostComponent, TreeNodeComponent],
-      schemas: [NO_ERRORS_SCHEMA],
+      declarations: [
+        TreeComponent,
+        TestHostComponent,
+        TreeNodeComponent,
+        TreeNodeDataViewComponent,
+        TreeNodePropertiesDataViewComponent,
+      ],
+      imports: [MatTooltipModule, MatIconModule],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
@@ -50,14 +60,13 @@ describe('TreeComponent', () => {
 
   it('can identify if a parent node has a selected child', () => {
     expect(component.treeComponents.first.hasSelectedChild()).toBeFalse();
-    component.highlightedItem = '1child3';
+    component.highlightedItem = '3 Child3';
     fixture.detectChanges();
     expect(component.treeComponents.first.hasSelectedChild()).toBeTrue();
   });
 
-  it('highlights item upon node click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
+  it('highlights node upon click', () => {
+    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
     const spy = spyOn(component.treeComponents.first.highlightedChange, 'emit');
     (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 1}));
@@ -66,27 +75,30 @@ describe('TreeComponent', () => {
   });
 
   it('toggles tree upon node double click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
+    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
-    const currCollapseValue = component.treeComponents.first.localExpandedState;
+    const currLocalExpandedState = component.treeComponents.first.localExpandedState;
     (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 2}));
     fixture.detectChanges();
-    expect(!currCollapseValue).toBe(component.treeComponents.first.localExpandedState);
+    expect(!currLocalExpandedState).toBe(component.treeComponents.first.localExpandedState);
   });
 
-  it('scrolls selected node into view if out of view', async () => {
-    const treeNode = assertDefined(htmlElement.querySelector('#node1child50'));
+  it('scrolls selected node into view if out of view', () => {
+    const tree = assertDefined(component.treeComponents.get(0));
+    const treeNode = assertDefined(
+      tree.elementRef.nativeElement.querySelector(`#node${'Child50'}`)
+    );
     const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '1child50';
+    component.highlightedItem = '50 Child50';
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 
   it('does not scroll selected element if already in view', () => {
-    const treeNode = assertDefined(htmlElement.querySelector('#node1child2'));
+    const tree = assertDefined(component.treeComponents.get(0));
+    const treeNode = assertDefined(tree.elementRef.nativeElement.querySelector(`#node${'Child2'}`));
     const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '1child2';
+    component.highlightedItem = '2 Child2';
     fixture.detectChanges();
     expect(spy).not.toHaveBeenCalled();
   });
@@ -98,48 +110,32 @@ describe('TreeComponent', () => {
   });
 
   it('does not initially set expanded state to true if already exists in store', () => {
-    // item1 expanded by default
+    // tree1 expanded by default
     const tree = assertDefined(component.treeComponents.get(1));
     fixture.detectChanges();
     expect(tree.isExpanded()).toBeTrue();
 
-    // item1 collapsed
+    // tree1 collapsed
     tree.toggleTree();
     fixture.detectChanges();
     expect(tree.isExpanded()).toBeFalse();
 
-    // item0 expanded by default
-    component.itemWithStoredExpandedState = component.item0;
+    // tree0 expanded by default
+    component.itemWithStoredExpandedState = component.tree0;
     fixture.detectChanges();
     expect(tree.isExpanded()).toBeTrue();
 
-    // item0 collapsed state retained
-    component.itemWithStoredExpandedState = component.item1;
+    // tree1 collapsed state retained
+    component.itemWithStoredExpandedState = component.tree1;
     fixture.detectChanges();
     expect(tree.isExpanded()).toBeFalse();
   });
-
-  function makeTreeNodeChildren(): UiTreeNode[] {
-    const children = [];
-    for (let i = 0; i < 60; i++) {
-      const child: UiTreeNode = {
-        kind: `${i}`,
-        stableId: `1child${i}`,
-        name: `Child${i}`,
-        children: [
-          {kind: `${i}`, stableId: `1innerChild${i}`, name: `InnerChild${i}`, children: []},
-        ],
-      };
-      children.push(child);
-    }
-    return children;
-  }
 
   @Component({
     selector: 'host-component',
     template: `
       <tree-view
-        [item]="item0"
+        [node]="tree0"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
@@ -147,7 +143,7 @@ describe('TreeComponent', () => {
         [itemsClickable]="true"></tree-view>
 
       <tree-view
-        [item]="itemWithStoredExpandedState"
+        [node]="itemWithStoredExpandedState"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
@@ -157,36 +153,27 @@ describe('TreeComponent', () => {
     `,
   })
   class TestHostComponent {
-    item0: UiTreeNode = {
-      simplifyNames: false,
-      kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: 'LayerTraceEntry 1',
-      children,
-    };
+    tree0 = TreeNodeUtils.makeUiHierarchyNode({
+      id: 'RootNode',
+      name: 'Root node',
+    });
 
-    item1: UiTreeNode = {
-      simplifyNames: false,
-      kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: 'LayerTraceEntry 2',
-      children: [
-        {
-          kind: '1',
-          stableId: '2child1',
-          name: 'Child1',
-          children: [],
-        },
-      ],
-    };
+    tree1 = TreeNodeUtils.makeUiHierarchyNode({
+      id: 'RootNode2',
+      name: 'Root node',
+    });
 
-    itemWithStoredExpandedState = this.item1;
+    itemWithStoredExpandedState = this.tree1;
 
     store = new PersistentStore();
     highlightedItem = '';
 
     constructor() {
       localStorage.clear();
+      for (let i = 0; i < 60; i++) {
+        this.tree0.addChild(TreeNodeUtils.makeUiHierarchyNode({id: i, name: `Child${i}`}));
+      }
+      this.tree1.addChild(TreeNodeUtils.makeUiHierarchyNode({id: 0, name: `Child0`}));
     }
 
     @ViewChildren(TreeComponent)
