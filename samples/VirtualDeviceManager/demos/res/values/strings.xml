@@ -7,6 +7,7 @@
     <string name="secure_window_demo" translatable="false">VDM Secure Window Demo</string>
     <string name="permissions_demo" translatable="false">VDM Permissions Demo</string>
     <string name="latency_demo" translatable="false">VDM Latency Demo</string>
+    <string name="stylus_demo" translatable="false">VDM Stylus Demo</string>
 
     <string name="current_device" translatable="false">Device: %s</string>
     <string name="change_device" translatable="false">Change</string>

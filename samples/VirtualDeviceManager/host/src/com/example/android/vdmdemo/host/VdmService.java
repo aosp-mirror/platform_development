@@ -76,6 +76,7 @@ import javax.inject.Inject;
  * VDM Host service, streaming apps to a remote device and processing the input coming from there.
  */
 @AndroidEntryPoint(Service.class)
+@SuppressLint("NewApi")
 public final class VdmService extends Hilt_VdmService {
 
     public static final String TAG = "VdmHost";

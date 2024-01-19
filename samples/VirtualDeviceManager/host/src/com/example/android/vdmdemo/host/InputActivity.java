@@ -63,6 +63,7 @@ public class InputActivity extends Hilt_InputActivity {
         Fragment touchpadFragment = new MouseFragment.TouchpadFragment();
         Fragment remoteFragment = new MouseFragment.RemoteFragment();
         Fragment navigationFragment = new NavigationFragment();
+        Fragment stylusFragment = new StylusFragment();
         Fragment keyboardFragment = new Fragment();
 
         BottomNavigationView bottomNavigationView = requireViewById(R.id.bottom_nav);
@@ -81,6 +82,10 @@ public class InputActivity extends Hilt_InputActivity {
                     setShowPointerIcon(mOriginalShowPointerIconPreference);
                     fragment = navigationFragment;
                 }
+                case R.id.stylus -> {
+                    setShowPointerIcon(mOriginalShowPointerIconPreference);
+                    fragment = stylusFragment;
+                }
                 case R.id.keyboard -> {
                     setShowPointerIcon(mOriginalShowPointerIconPreference);
                     fragment = keyboardFragment;
@@ -97,6 +102,10 @@ public class InputActivity extends Hilt_InputActivity {
                     .commit();
             return true;
         });
+
+        if (!mPreferenceController.getBoolean(R.string.internal_pref_virtual_stylus_supported)) {
+            requireViewById(R.id.stylus).setVisibility(View.GONE);
+        }
         bottomNavigationView.setSelectedItemId(R.id.mouse);
 
         requireViewById(R.id.button_back).setOnClickListener(

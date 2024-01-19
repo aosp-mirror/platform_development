@@ -38,6 +38,10 @@ import android.hardware.input.VirtualMouseRelativeEvent;
 import android.hardware.input.VirtualMouseScrollEvent;
 import android.hardware.input.VirtualNavigationTouchpad;
 import android.hardware.input.VirtualNavigationTouchpadConfig;
+import android.hardware.input.VirtualStylus;
+import android.hardware.input.VirtualStylusButtonEvent;
+import android.hardware.input.VirtualStylusConfig;
+import android.hardware.input.VirtualStylusMotionEvent;
 import android.hardware.input.VirtualTouchEvent;
 import android.hardware.input.VirtualTouchscreen;
 import android.hardware.input.VirtualTouchscreenConfig;
@@ -66,6 +70,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+@SuppressLint("NewApi")
 class RemoteDisplay implements AutoCloseable {
 
     private static final String TAG = "VdmHost";
@@ -104,6 +109,7 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualMouse mMouse;
     private VirtualNavigationTouchpad mNavigationTouchpad;
     private VirtualKeyboard mKeyboard;
+    private VirtualStylus mStylus;
 
     @SuppressLint("WrongConstant")
     RemoteDisplay(
@@ -188,6 +194,9 @@ class RemoteDisplay implements AutoCloseable {
 
         if (mTouchscreen != null) {
             mTouchscreen.close();
+        }
+        if (mStylus != null) {
+            mStylus.close();
         }
         mTouchscreen =
                 mVirtualDevice.createVirtualTouchscreen(
@@ -350,6 +359,21 @@ class RemoteDisplay implements AutoCloseable {
         }
     }
 
+    void processVirtualStylusEvent(Object stylusEvent) {
+        if (mStylus == null) {
+            mStylus = mVirtualDevice.createVirtualStylus(
+                    new VirtualStylusConfig.Builder(mWidth, mHeight)
+                            .setAssociatedDisplayId(getDisplayId())
+                            .setInputDeviceName("vdmdemo-stylus" + mRemoteDisplayId)
+                            .build());
+        }
+        if (stylusEvent instanceof VirtualStylusMotionEvent) {
+            mStylus.sendMotionEvent((VirtualStylusMotionEvent) stylusEvent);
+        } else if (stylusEvent instanceof VirtualStylusButtonEvent) {
+            mStylus.sendButtonEvent((VirtualStylusButtonEvent) stylusEvent);
+        }
+    }
+
     private void processMouseEvent(RemoteInputEvent inputEvent) {
         if (!createMouseIfNeeded()) {
             return;
@@ -474,6 +498,9 @@ class RemoteDisplay implements AutoCloseable {
         mDpad.close();
         mTouchscreen.close();
         mKeyboard.close();
+        if (mStylus != null) {
+            mStylus.close();
+        }
         if (mMouse != null) {
             mMouse.close();
         }
