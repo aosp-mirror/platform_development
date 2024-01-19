@@ -66,6 +66,9 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_cross_device_clipboard,
                     VANILLA_ICE_CREAM, Flags::crossDeviceClipboard),
 
+            new BoolRule(R.string.pref_enable_client_camera, VANILLA_ICE_CREAM,
+                    Flags::virtualCamera),
+
             new BoolRule(R.string.pref_enable_client_sensors, UPSIDE_DOWN_CAKE),
 
             new BoolRule(R.string.pref_enable_client_audio, UPSIDE_DOWN_CAKE),

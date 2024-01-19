@@ -20,6 +20,7 @@ import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_DEFAULT;
 import static android.companion.virtual.VirtualDeviceParams.LOCK_STATE_ALWAYS_UNLOCKED;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
+import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CAMERA;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CLIPBOARD;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_RECENTS;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_SENSORS;
@@ -65,6 +66,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import dagger.hilt.android.AndroidEntryPoint;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -98,16 +100,26 @@ public final class VdmService extends Hilt_VdmService {
 
     private final IBinder mBinder = new LocalBinder();
 
-    @Inject ConnectionManager mConnectionManager;
-    @Inject RemoteIo mRemoteIo;
-    @Inject AudioStreamer mAudioStreamer;
-    @Inject AudioInjector mAudioInjector;
-    @Inject PreferenceController mPreferenceController;
-    @Inject DisplayRepository mDisplayRepository;
-    @Inject InputController mInputController;
+    private final Map<Integer, Consumer<Object>> mPreferenceObservers = createPreferenceObservers();
+
+    @Inject
+    ConnectionManager mConnectionManager;
+    @Inject
+    RemoteIo mRemoteIo;
+    @Inject
+    AudioStreamer mAudioStreamer;
+    @Inject
+    AudioInjector mAudioInjector;
+    @Inject
+    PreferenceController mPreferenceController;
+    @Inject
+    DisplayRepository mDisplayRepository;
+    @Inject
+    InputController mInputController;
 
     private RemoteSensorManager mRemoteSensorManager = null;
 
+    private RemoteCameraManager mRemoteCameraManager;
     private final Consumer<RemoteEvent> mRemoteEventConsumer = this::processRemoteEvent;
     private VirtualDeviceManager.VirtualDevice mVirtualDevice;
     private DeviceCapabilities mDeviceCapabilities;
@@ -119,10 +131,12 @@ public final class VdmService extends Hilt_VdmService {
     private final DisplayManager.DisplayListener mDisplayListener =
             new DisplayManager.DisplayListener() {
                 @Override
-                public void onDisplayAdded(int displayId) {}
+                public void onDisplayAdded(int displayId) {
+                }
 
                 @Override
-                public void onDisplayRemoved(int displayId) {}
+                public void onDisplayRemoved(int displayId) {
+                }
 
                 @Override
                 public void onDisplayChanged(int displayId) {
@@ -138,7 +152,8 @@ public final class VdmService extends Hilt_VdmService {
                 }
             };
 
-    public VdmService() {}
+    public VdmService() {
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -183,7 +198,7 @@ public final class VdmService extends Hilt_VdmService {
                         .setContentIntent(pendingIntentOpen)
                         .addAction(
                                 new Notification.Action.Builder(
-                                                R.drawable.close, "Stop", pendingIntentStop)
+                                        R.drawable.close, "Stop", pendingIntentStop)
                                         .build())
                         .setOngoing(true)
                         .build();
@@ -204,36 +219,7 @@ public final class VdmService extends Hilt_VdmService {
 
         mRemoteIo.addMessageConsumer(mRemoteEventConsumer);
 
-        mPreferenceController.addPreferenceObserver(this, Map.of(
-                R.string.pref_hide_from_recents,
-                b -> updateDevicePolicy(POLICY_TYPE_RECENTS, (Boolean) b),
-
-                R.string.pref_enable_cross_device_clipboard,
-                b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b),
-
-                R.string.pref_show_pointer_icon,
-                b -> {
-                    if (mVirtualDevice != null) mVirtualDevice.setShowPointerIcon((Boolean) b);
-                },
-
-                R.string.pref_enable_client_audio,
-                b -> handleAudioCapabilities(),
-
-                R.string.pref_display_ime_policy,
-                s -> {
-                    if (mVirtualDevice != null) {
-                        int policy = Integer.valueOf((String) s);
-                        Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
-                                displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
-                    }
-                },
-
-                R.string.pref_enable_client_sensors, v -> recreateVirtualDevice(),
-                R.string.pref_device_profile, v -> recreateVirtualDevice(),
-                R.string.pref_always_unlocked_device, v -> recreateVirtualDevice(),
-                R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice(),
-                R.string.pref_enable_custom_home, v -> recreateVirtualDevice()
-        ));
+        mPreferenceController.addPreferenceObserver(this, mPreferenceObservers);
     }
 
     @Override
@@ -384,7 +370,7 @@ public final class VdmService extends Hilt_VdmService {
             for (SensorCapabilities sensor : mDeviceCapabilities.getSensorCapabilitiesList()) {
                 virtualDeviceBuilder.addVirtualSensorConfig(
                         new VirtualSensorConfig.Builder(
-                                        sensor.getType(), "Remote-" + sensor.getName())
+                                sensor.getType(), "Remote-" + sensor.getName())
                                 .setMinDelay(sensor.getMinDelayUs())
                                 .setMaxDelay(sensor.getMaxDelayUs())
                                 .setPower(sensor.getPower())
@@ -401,6 +387,10 @@ public final class VdmService extends Hilt_VdmService {
                                 MoreExecutors.directExecutor(),
                                 mRemoteSensorManager.getVirtualSensorCallback());
             }
+        }
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_camera)) {
+            virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CAMERA, DEVICE_POLICY_CUSTOM);
         }
 
         VirtualDeviceManager vdm =
@@ -465,6 +455,14 @@ public final class VdmService extends Hilt_VdmService {
         mVirtualDevice.addActivityListener(
                 MoreExecutors.directExecutor(),
                 new RunningVdmUidsTracker(getApplicationContext(), mAudioStreamer, mAudioInjector));
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_camera)) {
+            if (mRemoteCameraManager != null) {
+                mRemoteCameraManager.close();
+            }
+            mRemoteCameraManager = new RemoteCameraManager(mVirtualDevice, mRemoteIo);
+            mRemoteCameraManager.createCameras(mDeviceCapabilities.getCameraCapabilitiesList());
+        }
 
         Log.i(TAG, "Created virtual device");
         if (mVirtualDeviceListener != null) {
@@ -548,5 +546,35 @@ public final class VdmService extends Hilt_VdmService {
             mVirtualDevice.setDevicePolicy(
                     policyType, custom ? DEVICE_POLICY_CUSTOM : DEVICE_POLICY_DEFAULT);
         }
+    }
+
+    private Map<Integer, Consumer<Object>> createPreferenceObservers() {
+        HashMap<Integer, Consumer<Object>> observers = new HashMap<>();
+
+        observers.put(R.string.pref_hide_from_recents,
+                b -> updateDevicePolicy(POLICY_TYPE_RECENTS, (Boolean) b));
+        observers.put(R.string.pref_enable_cross_device_clipboard,
+                b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b));
+        observers.put(R.string.pref_show_pointer_icon,
+                b -> {
+                    if (mVirtualDevice != null) mVirtualDevice.setShowPointerIcon((Boolean) b);
+                });
+        observers.put(R.string.pref_enable_client_audio, b -> handleAudioCapabilities());
+        observers.put(R.string.pref_display_ime_policy,
+                s -> {
+                    if (mVirtualDevice != null) {
+                        int policy = Integer.valueOf((String) s);
+                        Arrays.stream(mDisplayRepository.getDisplayIds()).forEach(
+                                displayId -> mVirtualDevice.setDisplayImePolicy(displayId, policy));
+                    }
+                });
+        observers.put(R.string.pref_enable_client_camera, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_enable_client_sensors, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_device_profile, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_always_unlocked_device, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_enable_client_native_ime, v -> recreateVirtualDevice());
+        observers.put(R.string.pref_enable_custom_home, v -> recreateVirtualDevice());
+
+        return observers;
     }
 }

@@ -235,6 +235,18 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
     will access the virtual sensors by default. \
     *Changing this will recreate the virtual device.*
 
+-   **Enable client Camera**: Enables front & back camera injection from the client device
+    into the host device. (WIP: Any context that is associated with the virtual device
+    will the virtual cameras by default). Run the commands below on host device \
+    to enable this functionality.
+    *Changing this will recreate the virtual device.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_camera true
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.virtual_camera_service_discovery true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 -   **Enable client Audio**: Enables audio output on the client device. Any
     context that is associated with the virtual device will play audio on the
     client by default. \

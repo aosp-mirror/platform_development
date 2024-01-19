@@ -185,7 +185,7 @@ class RemoteDisplay implements AutoCloseable {
         if (mVideoManager != null) {
             mVideoManager.stop();
         }
-        mVideoManager = VideoManager.createEncoder(mRemoteDisplayId, mRemoteIo,
+        mVideoManager = VideoManager.createDisplayEncoder(mRemoteDisplayId, mRemoteIo,
                 mPreferenceController.getBoolean(R.string.pref_record_encoder_output));
         Surface surface = mVideoManager.createInputSurface(mWidth, mHeight, DISPLAY_FPS);
         mVirtualDisplay.setSurface(surface);
