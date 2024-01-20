@@ -66,6 +66,9 @@ final class PreferenceController {
             new BoolRule(R.string.pref_enable_cross_device_clipboard,
                     VANILLA_ICE_CREAM, Flags::crossDeviceClipboard),
 
+            new BoolRule(R.string.pref_enable_client_camera, VANILLA_ICE_CREAM,
+                    Flags::virtualCamera),
+
             new BoolRule(R.string.pref_enable_client_sensors, UPSIDE_DOWN_CAKE),
 
             new BoolRule(R.string.pref_enable_client_audio, UPSIDE_DOWN_CAKE),
@@ -96,7 +99,10 @@ final class PreferenceController {
 
             new InternalBoolRule(R.string.internal_pref_mirror_displays_supported,
                     VANILLA_ICE_CREAM,
-                    Flags::consistentDisplayFlags, Flags::interactiveScreenMirror)
+                    Flags::consistentDisplayFlags, Flags::interactiveScreenMirror),
+
+            new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
+                    VANILLA_ICE_CREAM, Flags::virtualStylus)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
 

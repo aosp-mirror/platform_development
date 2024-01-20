@@ -37,6 +37,11 @@
             android:defaultValue="true"
             app:iconSpaceReserved="false" />
         <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_camera"
+            android:title="Enable client camera"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
             android:key="@string/pref_enable_client_audio"
             android:title="Enable client audio"
             android:defaultValue="true"
