@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Transition, TransitionsTrace} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
@@ -24,17 +25,17 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   private readonly wmTransitionTrace: Parser<object> | undefined;
   private readonly shellTransitionTrace: Parser<object> | undefined;
   private readonly descriptors: string[];
+  private decodedEntries: Transition[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
-    super(parsers);
-
-    const wmTransitionTraces = this.parsers.filter(
+    super();
+    const wmTransitionTraces = parsers.filter(
       (it) => it.getTraceType() === TraceType.WM_TRANSITION
     );
     if (wmTransitionTraces.length > 0) {
       this.wmTransitionTrace = wmTransitionTraces[0];
     }
-    const shellTransitionTraces = this.parsers.filter(
+    const shellTransitionTraces = parsers.filter(
       (it) => it.getTraceType() === TraceType.SHELL_TRANSITION
     );
     if (shellTransitionTraces.length > 0) {
@@ -49,54 +50,50 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     }
   }
 
-  override canProvideEntries(): boolean {
-    return this.wmTransitionTrace !== undefined && this.shellTransitionTrace !== undefined;
-  }
-
-  getLengthEntries(): number {
-    return this.getDecodedEntries().length;
-  }
-
-  getEntry(index: number, timestampType: TimestampType): Transition {
-    return this.getDecodedEntries()[index];
-  }
-
-  private decodedEntries: Transition[] | undefined;
-  getDecodedEntries(): Transition[] {
-    if (this.decodedEntries === undefined) {
-      if (this.wmTransitionTrace === undefined) {
-        throw new Error('Missing WM Transition trace');
-      }
-
-      if (this.shellTransitionTrace === undefined) {
-        throw new Error('Missing Shell Transition trace');
-      }
-
-      const wmTransitionEntries: Transition[] = [];
-      for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
-        wmTransitionEntries.push(this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
-      }
-
-      const shellTransitionEntries: Transition[] = [];
-      for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
-        shellTransitionEntries.push(this.shellTransitionTrace.getEntry(index, TimestampType.REAL));
-      }
-
-      const transitionsTrace = new TransitionsTrace(
-        wmTransitionEntries.concat(shellTransitionEntries)
-      );
-
-      this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
+  override async parse() {
+    if (this.wmTransitionTrace === undefined) {
+      throw new Error('Missing WM Transition trace');
     }
 
-    return this.decodedEntries;
+    if (this.shellTransitionTrace === undefined) {
+      throw new Error('Missing Shell Transition trace');
+    }
+
+    const wmTransitionEntries: Transition[] = [];
+    for (let index = 0; index < this.wmTransitionTrace.getLengthEntries(); index++) {
+      wmTransitionEntries.push(await this.wmTransitionTrace.getEntry(index, TimestampType.REAL));
+    }
+
+    const shellTransitionEntries: Transition[] = [];
+    for (let index = 0; index < this.shellTransitionTrace.getLengthEntries(); index++) {
+      shellTransitionEntries.push(
+        await this.shellTransitionTrace.getEntry(index, TimestampType.REAL)
+      );
+    }
+
+    const transitionsTrace = new TransitionsTrace(
+      wmTransitionEntries.concat(shellTransitionEntries)
+    );
+
+    this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
+
+    await this.parseTimestamps();
+  }
+
+  override getLengthEntries(): number {
+    return assertDefined(this.decodedEntries).length;
+  }
+
+  override getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+    const entry = assertDefined(this.decodedEntries)[index];
+    return Promise.resolve(entry);
   }
 
   override getDescriptors(): string[] {
     return this.descriptors;
   }
 
-  getTraceType(): TraceType {
+  override getTraceType(): TraceType {
     return TraceType.TRANSITION;
   }
 

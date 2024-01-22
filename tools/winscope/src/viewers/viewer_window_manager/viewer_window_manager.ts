@@ -51,8 +51,8 @@ class ViewerWindowManager implements Viewer {
     );
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.presenter.onTracePositionUpdate(position);
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.presenter.onTracePositionUpdate(position);
   }
 
   getViews(): View[] {

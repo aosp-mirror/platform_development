@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {LogMessage} from 'trace/protolog';
@@ -23,11 +24,11 @@ import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Presenter} from './presenter';
-import {UiData} from './ui_data';
+import {UiData, UiDataMessage} from './ui_data';
 
 describe('ViewerProtoLogPresenter', () => {
   let presenter: Presenter;
-  let inputMessages: LogMessage[];
+  let inputMessages: UiDataMessage[];
   let trace: Trace<LogMessage>;
   let position10: TracePosition;
   let position11: TracePosition;
@@ -43,7 +44,11 @@ describe('ViewerProtoLogPresenter', () => {
       new LogMessage('text0', 'time', 'tag0', 'level0', 'sourcefile0', 10n),
       new LogMessage('text1', 'time', 'tag1', 'level1', 'sourcefile1', 11n),
       new LogMessage('text2', 'time', 'tag2', 'level2', 'sourcefile2', 12n),
-    ];
+    ].map((message, index) => {
+      (message as UiDataMessage).originalIndex = index;
+      return message as UiDataMessage;
+    });
+
     trace = new TraceBuilder<LogMessage>()
       .setEntries(inputMessages)
       .setTimestamps([time10, time11, time12])
@@ -60,116 +65,121 @@ describe('ViewerProtoLogPresenter', () => {
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
+    await presenter.onTracePositionUpdate(position10); // trigger initialization
   });
 
-  it('is robust to empty trace', () => {
+  it('is robust to empty trace', async () => {
     const traces = new TracesBuilder().setEntries(TraceType.PROTO_LOG, []).build();
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
 
-    expect(outputUiData!.messages).toEqual([]);
-    expect(outputUiData!.currentMessageIndex).toBeUndefined();
+    expect(assertDefined(outputUiData).messages).toEqual([]);
+    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
 
-    presenter.onTracePositionUpdate(position10);
-    expect(outputUiData!.messages).toEqual([]);
-    expect(outputUiData!.currentMessageIndex).toBeUndefined();
+    await presenter.onTracePositionUpdate(position10);
+    expect(assertDefined(outputUiData).messages).toEqual([]);
+    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
   });
 
-  it('processes trace position updates', () => {
-    presenter.onTracePositionUpdate(position10);
+  it('processes trace position updates', async () => {
+    await presenter.onTracePositionUpdate(position10);
 
-    expect(outputUiData!.allLogLevels).toEqual(['level0', 'level1', 'level2']);
-    expect(outputUiData!.allTags).toEqual(['tag0', 'tag1', 'tag2']);
-    expect(outputUiData!.allSourceFiles).toEqual(['sourcefile0', 'sourcefile1', 'sourcefile2']);
-    expect(outputUiData!.messages).toEqual(inputMessages);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).allLogLevels).toEqual(['level0', 'level1', 'level2']);
+    expect(assertDefined(outputUiData).allTags).toEqual(['tag0', 'tag1', 'tag2']);
+    expect(assertDefined(outputUiData).allSourceFiles).toEqual([
+      'sourcefile0',
+      'sourcefile1',
+      'sourcefile2',
+    ]);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
   });
 
   it('updates displayed messages according to log levels filter', () => {
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onLogLevelsFilterChanged([]);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onLogLevelsFilterChanged(['level1']);
-    expect(outputUiData!.messages).toEqual([inputMessages[1]]);
+    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
 
     presenter.onLogLevelsFilterChanged(['level0', 'level1', 'level2']);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
   });
 
   it('updates displayed messages according to tags filter', () => {
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onTagsFilterChanged([]);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onTagsFilterChanged(['tag1']);
-    expect(outputUiData!.messages).toEqual([inputMessages[1]]);
+    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
 
     presenter.onTagsFilterChanged(['tag0', 'tag1', 'tag2']);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
   });
 
   it('updates displayed messages according to source files filter', () => {
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onSourceFilesFilterChanged([]);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onSourceFilesFilterChanged(['sourcefile1']);
-    expect(outputUiData!.messages).toEqual([inputMessages[1]]);
+    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
 
     presenter.onSourceFilesFilterChanged(['sourcefile0', 'sourcefile1', 'sourcefile2']);
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
   });
 
   it('updates displayed messages according to search string filter', () => {
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onSearchStringFilterChanged('');
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onSearchStringFilterChanged('text');
-    expect(outputUiData!.messages).toEqual(inputMessages);
+    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
 
     presenter.onSearchStringFilterChanged('text0');
-    expect(outputUiData!.messages).toEqual([inputMessages[0]]);
+    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[0]]);
 
     presenter.onSearchStringFilterChanged('text1');
-    expect(outputUiData!.messages).toEqual([inputMessages[1]]);
+    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
   });
 
-  it('computes current message index', () => {
+  it('computes current message index', async () => {
     // Position -> entry #0
-    presenter.onTracePositionUpdate(position10);
+    await presenter.onTracePositionUpdate(position10);
     presenter.onLogLevelsFilterChanged([]);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     presenter.onLogLevelsFilterChanged(['level0']);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     presenter.onLogLevelsFilterChanged([]);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     // Position -> entry #1
-    presenter.onTracePositionUpdate(position11);
+    await presenter.onTracePositionUpdate(position11);
     presenter.onLogLevelsFilterChanged([]);
-    expect(outputUiData!.currentMessageIndex).toEqual(1);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
     presenter.onLogLevelsFilterChanged(['level0']);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     presenter.onLogLevelsFilterChanged(['level1']);
-    expect(outputUiData!.currentMessageIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     presenter.onLogLevelsFilterChanged(['level0', 'level1']);
-    expect(outputUiData!.currentMessageIndex).toEqual(1);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
     // Position -> entry #2
-    presenter.onTracePositionUpdate(position12);
+    await presenter.onTracePositionUpdate(position12);
     presenter.onLogLevelsFilterChanged([]);
-    expect(outputUiData!.currentMessageIndex).toEqual(2);
+    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(2);
   });
 });

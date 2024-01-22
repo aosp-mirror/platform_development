@@ -18,12 +18,11 @@ import {Timestamp} from 'trace/timestamp';
 import {AbsoluteFrameIndex, Trace} from 'trace/trace';
 
 export class TraceUtils {
-  static extractEntries<T>(trace: Trace<T>): T[] {
-    const entries = new Array<T>();
-    trace.forEachEntry((entry) => {
-      entries.push(entry.getValue());
+  static async extractEntries<T>(trace: Trace<T>): Promise<T[]> {
+    const promises = trace.mapEntry(async (entry, index) => {
+      return await entry.getValue();
     });
-    return entries;
+    return await Promise.all(promises);
   }
 
   static extractTimestamps<T>(trace: Trace<T>): Timestamp[] {
@@ -34,11 +33,12 @@ export class TraceUtils {
     return timestamps;
   }
 
-  static extractFrames<T>(trace: Trace<T>): Map<AbsoluteFrameIndex, T[]> {
+  static async extractFrames<T>(trace: Trace<T>): Promise<Map<AbsoluteFrameIndex, T[]>> {
     const frames = new Map<AbsoluteFrameIndex, T[]>();
-    trace.forEachFrame((frame, index) => {
-      frames.set(index, TraceUtils.extractEntries(frame));
+    const promises = trace.mapFrame(async (frame, index) => {
+      frames.set(index, await TraceUtils.extractEntries(frame));
     });
+    await Promise.all(promises);
     return frames;
   }
 }

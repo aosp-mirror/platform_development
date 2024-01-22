@@ -39,7 +39,8 @@ WindowContainer.fromProto = (
   nextSeq: () => number,
   nameOverride: string | null = null,
   identifierOverride: string | null = null,
-  tokenOverride: any = null
+  tokenOverride: any = null,
+  visibleOverride: boolean | null = null
 ): WindowContainer => {
   if (proto == null) {
     return null;
@@ -61,7 +62,7 @@ WindowContainer.fromProto = (
     token,
     proto.orientation,
     proto.surfaceControl?.layerId ?? 0,
-    proto.visible,
+    visibleOverride ?? proto.visible,
     config,
     children,
     containerOrder
@@ -105,7 +106,7 @@ WindowContainer.childrenFromProto = (
 };
 
 function createConfigurationContainer(proto: any): ConfigurationContainer {
-  const entry = new ConfigurationContainer(
+  const entry = ConfigurationContainer.Companion.from(
     createConfiguration(proto?.overrideConfiguration ?? null),
     createConfiguration(proto?.fullConfiguration ?? null),
     createConfiguration(proto?.mergedOverrideConfiguration ?? null)
@@ -125,7 +126,7 @@ function createConfiguration(proto: any): Configuration {
     windowConfiguration = createWindowConfiguration(proto.windowConfiguration);
   }
 
-  return new Configuration(
+  return Configuration.Companion.from(
     windowConfiguration,
     proto?.densityDpi ?? 0,
     proto?.orientation ?? 0,
@@ -138,7 +139,7 @@ function createConfiguration(proto: any): Configuration {
 }
 
 function createWindowConfiguration(proto: any): WindowConfiguration {
-  return new WindowConfiguration(
+  return WindowConfiguration.Companion.from(
     toRect(proto.appBounds),
     toRect(proto.bounds),
     toRect(proto.maxBounds),

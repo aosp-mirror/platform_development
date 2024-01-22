@@ -33,6 +33,7 @@ import {Distance2D} from './types3d';
           >Only visible
         </mat-checkbox>
         <mat-checkbox
+          *ngIf="enableShowVirtualButton"
           color="primary"
           [disabled]="mapper3d.getShowOnlyVisibleMode()"
           [checked]="mapper3d.getShowVirtualMode()"
@@ -166,6 +167,7 @@ import {Distance2D} from './types3d';
 })
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
+  @Input() enableShowVirtualButton: boolean = true;
   @Input() set rects(rects: Rectangle[]) {
     this.internalRects = rects;
     this.drawScene();

@@ -64,6 +64,42 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(preferred_license.group, add3prf.LicenseGroup.RECIPROCAL)
     self.assertEqual(preferred_license.filename, "LICENSE")
 
+  def test_0bsd_license(self):
+    self.fs.create_file("LICENSE")
+    licenses = add3prf.decide_license_type("0BSD")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.ZERO_BSD)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.PERMISSIVE)
+    self.assertEqual(preferred_license.filename, "LICENSE")
+
+  def test_0bsd_licensefile(self):
+    self.fs.create_file("LICENSE-0BSD")
+    licenses = add3prf.decide_license_type("")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.ZERO_BSD)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.PERMISSIVE)
+    self.assertEqual(preferred_license.filename, "LICENSE-0BSD")
+
+  def test_unlicense_license(self):
+    self.fs.create_file("LICENSE")
+    licenses = add3prf.decide_license_type("Unlicense")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.UNLICENSE)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.PERMISSIVE)
+    self.assertEqual(preferred_license.filename, "LICENSE")
+
+  def test_unlicense_licensefile(self):
+    self.fs.create_file("UNLICENSE")
+    licenses = add3prf.decide_license_type("")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.UNLICENSE)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.PERMISSIVE)
+    self.assertEqual(preferred_license.filename, "UNLICENSE")
+
 
 class AddModuleLicenseTestCase(fake_filesystem_unittest.TestCase):
 
