@@ -12,6 +12,9 @@ android_app {
     static_libs: [
         "androidx.annotation_annotation",
     ],
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }
 
 prebuilt_etc {

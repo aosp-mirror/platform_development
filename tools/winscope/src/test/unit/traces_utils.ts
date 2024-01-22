@@ -14,31 +14,37 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {AbsoluteFrameIndex} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {TraceUtils} from './trace_utils';
 
 export class TracesUtils {
-  static extractEntries(traces: Traces): Map<TraceType, Array<{}>> {
+  static async extractEntries(traces: Traces): Promise<Map<TraceType, Array<{}>>> {
     const entries = new Map<TraceType, Array<{}>>();
 
-    traces.forEachTrace((trace) => {
-      entries.set(trace.type, TraceUtils.extractEntries(trace));
+    const promises = traces.mapTrace(async (trace) => {
+      entries.set(trace.type, await TraceUtils.extractEntries(trace));
     });
+    await Promise.all(promises);
 
     return entries;
   }
 
-  static extractFrames(traces: Traces): Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>> {
+  static async extractFrames(
+    traces: Traces
+  ): Promise<Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>> {
     const frames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
 
-    traces.forEachFrame((frame, index) => {
+    const framePromises = traces.mapFrame(async (frame, index) => {
       frames.set(index, new Map<TraceType, Array<{}>>());
-      frame.forEachTrace((trace, type) => {
-        frames.get(index)?.set(type, TraceUtils.extractEntries(trace));
+      const tracePromises = frame.mapTrace(async (trace, type) => {
+        assertDefined(frames.get(index)).set(type, await TraceUtils.extractEntries(trace));
       });
+      await Promise.all(tracePromises);
     });
+    await Promise.all(framePromises);
 
     return frames;
   }

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {Cuj, CujTrace, EventLog, Transition} from 'trace/flickerlib/common';
+import {assertDefined} from 'common/assert_utils';
+import {Cuj, EventLog, Transition} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
@@ -24,11 +25,12 @@ import {ParserEventLog} from './parser_eventlog';
 export class TracesParserCujs extends AbstractTracesParser<Transition> {
   private readonly eventLogTrace: ParserEventLog | undefined;
   private readonly descriptors: string[];
+  private decodedEntries: Cuj[] | undefined;
 
   constructor(parsers: Array<Parser<object>>) {
-    super(parsers);
+    super();
 
-    const eventlogTraces = this.parsers.filter((it) => it.getTraceType() === TraceType.EVENT_LOG);
+    const eventlogTraces = parsers.filter((it) => it.getTraceType() === TraceType.EVENT_LOG);
     if (eventlogTraces.length > 0) {
       this.eventLogTrace = eventlogTraces[0] as ParserEventLog;
     }
@@ -40,35 +42,29 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     }
   }
 
-  override canProvideEntries(): boolean {
-    return this.eventLogTrace !== undefined;
-  }
-
-  getLengthEntries(): number {
-    return this.getDecodedEntries().length;
-  }
-
-  getEntry(index: number, timestampType: TimestampType): Transition {
-    return this.getDecodedEntries()[index];
-  }
-
-  private cujTrace: CujTrace | undefined;
-  getDecodedEntries(): Cuj[] {
+  override async parse() {
     if (this.eventLogTrace === undefined) {
       throw new Error('eventLogTrace not defined');
     }
 
-    if (this.cujTrace === undefined) {
-      const events: Event[] = [];
+    const events: Event[] = [];
 
-      for (let i = 0; i < this.eventLogTrace.getLengthEntries(); i++) {
-        events.push(this.eventLogTrace.getEntry(i, TimestampType.REAL));
-      }
-
-      this.cujTrace = new EventLog(events).cujTrace;
+    for (let i = 0; i < this.eventLogTrace.getLengthEntries(); i++) {
+      events.push(await this.eventLogTrace.getEntry(i, TimestampType.REAL));
     }
 
-    return this.cujTrace.entries;
+    this.decodedEntries = new EventLog(events).cujTrace.entries;
+
+    await this.parseTimestamps();
+  }
+
+  getLengthEntries(): number {
+    return assertDefined(this.decodedEntries).length;
+  }
+
+  getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+    const entry = assertDefined(this.decodedEntries)[index];
+    return Promise.resolve(entry);
   }
 
   override getDescriptors(): string[] {

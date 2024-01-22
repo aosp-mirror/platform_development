@@ -16,7 +16,7 @@
 
 import {RealTimestamp} from 'trace/timestamp';
 
-export type OnTimestampReceived = (timestamp: RealTimestamp) => void;
+export type OnTimestampReceived = (timestamp: RealTimestamp) => Promise<void>;
 
 export interface RemoteTimestampReceiver {
   setOnTimestampReceived(callback: OnTimestampReceived): void;

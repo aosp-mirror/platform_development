@@ -181,14 +181,16 @@ check for common libraries by the following steps:
      -name libfoo.so.opt0.abidiff
    ```
 
-## How to Resolve ABI Difference
+## FAQ
+
+### How to Resolve ABI Difference
 
 The build system compares the source code with three sets of reference dumps:
 **current version**, **opt-in**, and **previous version**. The ABI difference
 is propagated as build errors. This section describes the common methods to
 resolve them.
 
-### Update Reference ABI Dumps for Current Version
+#### Update Reference ABI Dumps for Current Version
 
 When the build system finds difference between the source code and the ABI
 reference dumps for the **current version**, it instructs you to run
@@ -214,7 +216,7 @@ For more command line options, run:
 $ utils/create_reference_dumps.py --help
 ```
 
-### Update Opt-in Reference ABI Dumps
+#### Update Opt-in Reference ABI Dumps
 
 When the build system finds difference between the source code and the
 **opt-in** ABI reference dumps, it instructs you to run
@@ -231,7 +233,7 @@ You may specify `-products` if you don't want to create the ABI dumps for
 all architectures. For example, with `-products aosp_arm`, the command creates
 dumps for 32-bit arm only.
 
-### Configure Cross-Version ABI Check
+#### Configure Cross-Version ABI Check
 
 When the build system finds incompatibility between the source code and the ABI
 of the **previous version**, it instructs you to follow this document to
@@ -289,3 +291,52 @@ in `libfoo` between the current source and the previous version, `33`:
 
 For more information about the config files, please refer to
 [Configuration](#Configuration).
+
+### How to Ignore Weak Symbol Difference
+
+If you compile Android with a customized toolchain, it may produce different
+weak symbols. You may make header-abi-diff ignore the weak symbols by adding
+`config.json` to each reference dump directory. For example, the following
+configuration makes header-abi-diff ignore weak symbols for all x86_64 NDK
+libraries at API level 33:
+
+`prebuilts/abi-dumps/ndk/33/64/x86_64/source-based/config.json`
+
+```
+{
+  "global": {
+    "flags": {
+      "allow_adding_removing_weak_symbols": true,
+    },
+  },
+}
+```
+
+To ignore weak symbols for a specific library, you can add extra flags to its
+Android.bp. For example,
+
+```
+cc_library {
+    header_abi_checker: {
+        diff_flags: ["-allow-adding-removing-weak-symbols"],
+    },
+}
+```
+
+### How to Disable the ABI Check
+
+You can disable the ABI check entirely by setting the environment variable
+`SKIP_ABI_CHECKS`. For example,
+
+`$ SKIP_ABI_CHECKS=true make`
+
+You can disable the ABI check for a specific library by using the property
+`enabled` in its Android.bp. For example,
+
+```
+cc_library {
+    header_abi_checker: {
+        enabled: false,
+    },
+}
+```

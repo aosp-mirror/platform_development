@@ -28,12 +28,20 @@ import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
 export class Presenter {
-  private trace: Trace<object>;
+  private readonly trace: Trace<object>;
   private entry?: TraceEntry<object>;
   private originalIndicesOfUiDataEntries: number[];
   private uiData = UiData.EMPTY;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-  private static readonly VALUE_NA = 'N/A';
+
+  private isInitialized = false;
+  private allUiDataEntries: UiDataEntry[] = [];
+  private allVSyncIds: string[] = [];
+  private allPids: string[] = [];
+  private allUids: string[] = [];
+  private allTypes: string[] = [];
+  private allLayerAndDisplayIds: string[] = [];
+  private allTransactionIds: string[] = [];
+
   private vsyncIdFilter: string[] = [];
   private pidFilter: string[] = [];
   private uidFilter: string[] = [];
@@ -42,15 +50,19 @@ export class Presenter {
   private idFilter: string | undefined = undefined;
   private whatSearchString = '';
 
+  private readonly notifyUiDataCallback: (data: UiData) => void;
+  private static readonly VALUE_NA = 'N/A';
+
   constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
     this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.originalIndicesOfUiDataEntries = [];
-    this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onTracePositionUpdate(position: TracePosition) {
+  async onTracePositionUpdate(position: TracePosition) {
+    await this.initializeIfNeeded();
+
     this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
 
     this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
@@ -67,31 +79,31 @@ export class Presenter {
 
   onVSyncIdFilterChanged(vsyncIds: string[]) {
     this.vsyncIdFilter = vsyncIds;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onPidFilterChanged(pids: string[]) {
     this.pidFilter = pids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onUidFilterChanged(uids: string[]) {
     this.uidFilter = uids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onTypeFilterChanged(types: string[]) {
     this.typeFilter = types;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onLayerIdFilterChanged(ids: string[]) {
     this.layerIdFilter = ids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -101,13 +113,13 @@ export class Presenter {
     } else {
       this.idFilter = id;
     }
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onWhatSearchStringChanged(searchString: string) {
     this.whatSearchString = searchString;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -129,23 +141,45 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private computeUiData() {
-    const entries = this.makeUiDataEntries();
+  private async initializeIfNeeded() {
+    if (this.isInitialized) {
+      return;
+    }
 
-    const allVSyncIds = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) =>
-      entry.vsyncId.toString()
+    this.allUiDataEntries = await this.makeUiDataEntries();
+
+    this.allVSyncIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.vsyncId.toString()
     );
-    const allPids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.pid);
-    const allUids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.uid);
-    const allTypes = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.type);
-    const allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
-      entries,
+    this.allPids = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.pid
+    );
+    this.allUids = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.uid
+    );
+    this.allTypes = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.type
+    );
+    this.allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
       (entry: UiDataEntry) => entry.layerOrDisplayId
     );
-    const allTransactionIds = this.getUniqueUiDataEntryValues(
-      entries,
+    this.allTransactionIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
       (entry: UiDataEntry) => entry.transactionId
     );
+
+    this.uiData = this.computeUiData();
+
+    this.isInitialized = true;
+  }
+
+  private computeUiData(): UiData {
+    const entries = this.allUiDataEntries;
 
     let filteredEntries = entries;
 
@@ -192,13 +226,13 @@ export class Presenter {
       selectedEntryIndex
     );
 
-    this.uiData = new UiData(
-      allVSyncIds,
-      allPids,
-      allUids,
-      allTypes,
-      allLayerAndDisplayIds,
-      allTransactionIds,
+    return new UiData(
+      this.allVSyncIds,
+      this.allPids,
+      this.allUids,
+      this.allTypes,
+      this.allLayerAndDisplayIds,
+      this.allTransactionIds,
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
@@ -238,16 +272,15 @@ export class Presenter {
     return undefined;
   }
 
-  private makeUiDataEntries(): UiDataEntry[] {
+  private async makeUiDataEntries(): Promise<UiDataEntry[]> {
     const treeGenerator = new PropertiesTreeGenerator();
     const entries: UiDataEntry[] = [];
     const formattingOptions = ObjectFormatter.displayDefaults;
     ObjectFormatter.displayDefaults = true;
 
-    this.trace.forEachEntry((entry, originalIndex) => {
-      const timestampType = entry.getTimestamp().getType();
-      const entryProto = entry.getValue() as any;
-      const realToElapsedTimeOffsetNs = entryProto.realToElapsedTimeOffsetNs;
+    for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
+      const entry = this.trace.getEntry(originalIndex);
+      const entryProto = (await entry.getValue()) as any;
 
       for (const transactionStateProto of entryProto.transactions) {
         for (const layerStateProto of transactionStateProto.layerChanges) {
@@ -395,7 +428,7 @@ export class Presenter {
           )
         );
       }
-    });
+    }
 
     ObjectFormatter.displayDefaults = formattingOptions;
 

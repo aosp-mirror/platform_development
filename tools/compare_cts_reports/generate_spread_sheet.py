@@ -27,6 +27,7 @@ python3 generate_spread_sheet.py \
 """
 
 import argparse
+import constant
 import csv
 import gspread
 import os
@@ -183,7 +184,9 @@ def _write_compare_details(
 
     # Module changes, need a new header row.
     if module_name != curr_module:
-      rows_content.append([f'{module_name} [{abi}]', ''] + [''] * num_reports)
+      module_with_abi = (module_name if abi == constant.ABI_IGNORED
+                         else f'{module_name} [{abi}]')
+      rows_content.append([module_with_abi, ''] + [''] * num_reports)
       module_header_row = len(rows_content)
       header_cell = _get_range_cell(
           begin_row=curr_row, begin_column='A',

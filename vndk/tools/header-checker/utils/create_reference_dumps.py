@@ -13,8 +13,8 @@ from utils import (
 PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
-PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
-NON_AOSP_TAGS = {'VENDOR', 'PRODUCT', 'VNDK-ext', 'VNDK-SP-ext'}
+PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform')
+NON_AOSP_TAGS = {'VENDOR', 'PRODUCT'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
 
@@ -28,9 +28,8 @@ class GetRefDumpDirStem:
 
 
 class GetVersionedRefDumpDirStem:
-    def __init__(self, chosen_vndk_version, chosen_platform_version,
+    def __init__(self, chosen_platform_version,
                  binder_bitness):
-        self.chosen_vndk_version = chosen_vndk_version
         self.chosen_platform_version = chosen_platform_version
         self.binder_bitness = binder_bitness
 
@@ -38,10 +37,8 @@ class GetVersionedRefDumpDirStem:
         if subdir not in PREBUILTS_ABI_DUMPS_SUBDIRS:
             raise ValueError(f'"{subdir}" is not a valid dump directory under '
                              f'{PREBUILTS_ABI_DUMPS_DIR}.')
-        version_stem = (self.chosen_vndk_version
-                        if subdir == 'vndk'
-                        else self.chosen_platform_version)
-        return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir, version_stem,
+        return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir,
+                            self.chosen_platform_version,
                             self.binder_bitness, arch_str)
 
 
@@ -61,8 +58,6 @@ def tag_to_dir_name(tag):
         return 'ndk'
     if tag in ('PLATFORM', 'LLNDK'):
         return 'platform'
-    if tag.startswith('VNDK'):
-        return 'vndk'
     raise ValueError(tag + ' is not a known tag.')
 
 
@@ -98,27 +93,19 @@ def create_source_abi_reference_dumps_for_all_products(args):
 
     for product in args.products:
         build_target = BuildTarget(product, args.release, args.build_variant)
-        build_vars = get_build_vars(
-            ['PLATFORM_VNDK_VERSION', 'BOARD_VNDK_VERSION', 'BINDER32BIT',
+        (
+            platform_vndk_version, binder_32_bit,
+            platform_version_codename, platform_sdk_version
+        ) = build_vars = get_build_vars(
+            ['PLATFORM_VNDK_VERSION', 'BINDER32BIT',
              'PLATFORM_VERSION_CODENAME', 'PLATFORM_SDK_VERSION'],
-            build_target)
-
-        platform_vndk_version = build_vars[0]
-        board_vndk_version = build_vars[1]
-        platform_version_codename = build_vars[3]
-        platform_sdk_version = build_vars[4]
-        if build_vars[2] == 'true':
+            build_target
+        )
+        if binder_32_bit == 'true':
             binder_bitness = '32'
         else:
             binder_bitness = '64'
 
-        # This logic must be in sync with the logic for reference ABI dumps
-        # directory in `build/soong/cc/library.go`.
-        # chosen_vndk_version is either the codename or the finalized
-        # PLATFORM_SDK_VERSION.
-        chosen_vndk_version = (platform_vndk_version
-                               if board_vndk_version in ('current', '')
-                               else board_vndk_version)
         # chosen_platform_version is expected to be the finalized
         # PLATFORM_SDK_VERSION if the codename is REL.
         chosen_platform_version = (platform_sdk_version
@@ -134,7 +121,6 @@ def create_source_abi_reference_dumps_for_all_products(args):
             exclude_tags = ()
         else:
             get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
-                chosen_vndk_version,
                 chosen_platform_version,
                 binder_bitness)
             exclude_tags = NON_AOSP_TAGS
