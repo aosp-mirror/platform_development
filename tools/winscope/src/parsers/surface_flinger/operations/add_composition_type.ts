@@ -18,13 +18,10 @@ import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {LayerCompositionType} from 'trace/layer_composition_type';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddCompositionType extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(
-    factory: PropertyTreeNodeFactory,
-    value: PropertyTreeNode
-  ): PropertyTreeNode[] {
+  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
     const hwcCompositionType = value.getChildByName('hwcCompositionType')?.getValue();
     let compositionType: LayerCompositionType | undefined;
 
@@ -37,7 +34,13 @@ export class AddCompositionType extends AddOperation<PropertyTreeNode> {
 
     return compositionType === undefined
       ? []
-      : [factory.makeCalculatedProperty(value.id, 'compositionType', compositionType)];
+      : [
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            value.id,
+            'compositionType',
+            compositionType
+          ),
+        ];
   }
 
   private readonly gpuLayerCompositionTypes = [

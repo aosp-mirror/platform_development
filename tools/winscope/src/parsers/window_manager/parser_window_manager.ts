@@ -16,6 +16,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/windowmanager/latest/json';
 import {com} from 'protos/windowmanager/latest/static';
 import {
@@ -26,8 +27,7 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
-import {ParserWindowManagerUtils} from './parser_window_manager_utils';
+import {WmCustomQueryUtils} from './custom_query_utils';
 
 export class ParserWindowManager extends AbstractParser {
   private static readonly WindowManagerTraceFileProto = root.lookupType(
@@ -97,7 +97,7 @@ export class ParserWindowManager extends AbstractParser {
         this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
           .forEach((windowManagerTraceProto) => {
-            ParserWindowManagerUtils.parseWindowsTokenAndTitle(
+            WmCustomQueryUtils.parseWindowsTokenAndTitle(
               windowManagerTraceProto?.windowManagerService?.rootWindowContainer,
               result
             );

@@ -17,43 +17,39 @@
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class UpdateTransforms implements Operation<PropertyTreeNode> {
   apply(value: PropertyTreeNode): void {
-    const factory = new PropertyTreeNodeFactory();
-
-    this.updateTransform(
-      value.getChildByName('transform'),
-      value.getChildByName('position'),
-      factory
-    );
+    this.updateTransform(value.getChildByName('transform'), value.getChildByName('position'));
 
     this.updateTransform(
       value.getChildByName('requestedTransform'),
-      value.getChildByName('requestedPosition'),
-      factory
+      value.getChildByName('requestedPosition')
     );
 
-    this.updateTransform(value.getChildByName('bufferTransform'), undefined, factory);
+    this.updateTransform(value.getChildByName('bufferTransform'), undefined);
 
     const inputWindowInfo = value.getChildByName('inputWindowInfo');
     if (inputWindowInfo) {
-      this.updateTransform(inputWindowInfo.getChildByName('transform'), undefined, factory);
+      this.updateTransform(inputWindowInfo.getChildByName('transform'), undefined);
     }
   }
 
   private updateTransform(
     transformNode: PropertyTreeNode | undefined,
-    positionNode: PropertyTreeNode | undefined,
-    factory: PropertyTreeNodeFactory
+    positionNode: PropertyTreeNode | undefined
   ) {
     if (!transformNode) return;
     if (transformNode.getChildByName('matrix')) return;
 
     const newMatrix = Transform.from(transformNode, positionNode).matrix;
     transformNode.addOrReplaceChild(
-      factory.makeCalculatedProperty(transformNode.id, 'matrix', newMatrix)
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        transformNode.id,
+        'matrix',
+        newMatrix
+      )
     );
     transformNode.removeChild(`${transformNode.id}.dsdx`);
     transformNode.removeChild(`${transformNode.id}.dtdx`);

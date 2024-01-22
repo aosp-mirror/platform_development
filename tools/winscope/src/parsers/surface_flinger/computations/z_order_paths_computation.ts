@@ -16,10 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class ZOrderPathsComputation {
-  private propertyFactory = new PropertyTreeNodeFactory();
   private root: HierarchyTreeNode | undefined;
 
   setRoot(value: HierarchyTreeNode): ZOrderPathsComputation {
@@ -37,7 +36,11 @@ export class ZOrderPathsComputation {
       if (node.id === 'LayerTraceEntry root') return;
       const zOrderPath = this.getZOrderPath(node);
       node.addEagerProperty(
-        this.propertyFactory.makeCalculatedProperty(`${node.id}`, 'zOrderPath', zOrderPath)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          `${node.id}`,
+          'zOrderPath',
+          zOrderPath
+        )
       );
     });
   }
@@ -55,7 +58,11 @@ export class ZOrderPathsComputation {
         const zParent = layerIdToTreeNode.get(zOrderRelativeOf);
         if (!zParent) {
           node.addEagerProperty(
-            this.propertyFactory.makeCalculatedProperty(node.id, 'isMissingZParent', true)
+            DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+              node.id,
+              'isMissingZParent',
+              true
+            )
           );
           return;
         }

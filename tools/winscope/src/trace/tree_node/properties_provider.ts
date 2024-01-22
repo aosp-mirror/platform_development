@@ -17,7 +17,7 @@
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from './property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from './property_tree_node_factory';
 
 export class PropertiesProvider {
   private eagerPropertiesRoot: PropertyTreeNode;
@@ -48,7 +48,7 @@ export class PropertiesProvider {
   async getAll(): Promise<PropertyTreeNode> {
     if (this.allPropertiesRoot) return this.allPropertiesRoot;
 
-    const root = new PropertyTreeNodeFactory().makePropertyRoot(
+    const root = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makePropertyRoot(
       this.eagerPropertiesRoot.id,
       this.eagerPropertiesRoot.name,
       PropertySource.PROTO,

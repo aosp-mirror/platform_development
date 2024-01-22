@@ -18,7 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {RectsComputation} from './computations/rects_computation';
 import {VisibilityPropertiesComputation} from './computations/visibility_properties_computation';
 import {ZOrderPathsComputation} from './computations/z_order_paths_computation';
@@ -71,7 +71,7 @@ export class HierarchyTreeBuilderSf {
         curr.push(layer);
         console.warn(`Duplicate layer id ${id} found. Adding it as duplicate to the hierarchy`);
         layer.addEagerProperty(
-          new PropertyTreeNodeFactory().makeCalculatedProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layerProperties.id,
             'isDuplicate',
             true

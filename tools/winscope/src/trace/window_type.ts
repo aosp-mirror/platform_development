@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-import {Operation} from 'trace/tree_node/operations/operation';
-import {TreeNode} from 'trace/tree_node/tree_node';
+export enum WindowType {
+  UNKNOWN = 0,
+  STARTING = 1,
+  EXITING = 2,
+  DEBUGGER = 3,
+}
 
-export abstract class AddOperation<T extends TreeNode> implements Operation<T> {
-  apply(value: T): void {
-    const newProperties = this.makeProperties(value);
-
-    newProperties.forEach((property) => {
-      value.addOrReplaceChild(property);
-    });
-  }
-
-  protected abstract makeProperties(value: T): T[];
+export enum WindowTypePrefix {
+  STARTING = 'Starting ',
+  DEBUGGER = 'Waiting For Debugger: ',
 }

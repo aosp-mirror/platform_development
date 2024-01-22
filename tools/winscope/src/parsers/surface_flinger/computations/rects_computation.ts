@@ -22,7 +22,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 class RectSfFactory {
-  makeDisplayRects(displays: PropertyTreeNode[]): TraceRect[] {
+  makeDisplayRects(displays: ReadonlyArray<PropertyTreeNode>): TraceRect[] {
     const names = new Set<string>();
     return displays.map((display) => {
       const size = display.getChildByName('size');

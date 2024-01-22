@@ -58,8 +58,8 @@ describe('PropertyTreeBuilderFromProto', () => {
       .setIsRoot(true)
       .setChildren([
         {name: 'id', value: 1},
-        {name: 'name', value: 'rootName'},
         {name: 'isPresent', value: true},
+        {name: 'name', value: 'rootName'},
       ])
       .build();
 
@@ -79,9 +79,9 @@ describe('PropertyTreeBuilderFromProto', () => {
       .setName('rootName')
       .setIsRoot(true)
       .setChildren([
+        {name: 'bigIntProp', value: BigInt(123)},
         {name: 'id', value: 1},
         {name: 'name', value: 'rootName'},
-        {name: 'bigIntProp', value: BigInt(123)},
       ])
       .build();
 
@@ -107,8 +107,8 @@ describe('PropertyTreeBuilderFromProto', () => {
           name: 'nestedProperty',
           value: undefined,
           children: [
-            {name: 'size', value: 3},
             {name: 'isPresent', value: false},
+            {name: 'size', value: 3},
           ],
         },
       ])
@@ -170,8 +170,8 @@ describe('PropertyTreeBuilderFromProto', () => {
               name: '0',
               value: undefined,
               children: [
-                {name: 'w', value: 4},
                 {name: 'h', value: 8},
+                {name: 'w', value: 4},
               ],
             },
           ],

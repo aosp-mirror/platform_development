@@ -17,7 +17,7 @@
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ChildHierarchy, HierarchyTreeBuilder} from './hierarchy_tree_builder';
@@ -112,11 +112,11 @@ export class TreeNodeUtils {
   }
 
   static makePropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
-    return new PropertyTreeNodeFactory().makeProtoProperty(rootId, name, value);
+    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(rootId, name, value);
   }
 
   static makeCalculatedPropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
-    return new PropertyTreeNodeFactory().makeCalculatedProperty(rootId, name, value);
+    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(rootId, name, value);
   }
 
   static makeUiHierarchyNode(proto: any): UiHierarchyTreeNode {

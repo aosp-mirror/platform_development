@@ -375,7 +375,7 @@ export class Presenter {
     return summary;
   }
 
-  private mapNodeArrayToString(nodes: PropertyTreeNode[]): string {
+  private mapNodeArrayToString(nodes: ReadonlyArray<PropertyTreeNode>): string {
     return nodes.map((reason) => reason.formattedValue()).join(', ');
   }
 

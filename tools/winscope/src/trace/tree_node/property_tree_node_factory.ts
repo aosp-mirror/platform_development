@@ -63,7 +63,7 @@ export class PropertyTreeNodeFactory {
 
     const innerRoot = this.makePropertyRoot(
       name.length > 0 ? `${rootId}.${name}` : rootId,
-      name.length > 0 ? name : rootName.slice(1, rootName.length).join(''),
+      name.length > 0 ? name : rootName.slice(1, rootName.length).join(' '),
       source,
       undefined
     );
@@ -143,6 +143,8 @@ export class PropertyTreeNodeFactory {
       });
       obj = Object.getPrototypeOf(obj);
     } while (obj);
-    return props;
+    return props.sort((a, b) => (a < b ? -1 : 1));
   }
 }
+
+export const DEFAULT_PROPERTY_TREE_NODE_FACTORY = new PropertyTreeNodeFactory();

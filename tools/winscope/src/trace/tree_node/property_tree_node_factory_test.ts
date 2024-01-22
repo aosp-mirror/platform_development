@@ -102,8 +102,8 @@ describe('PropertyTreeNodeFactory', () => {
       .setName('nestedProperty')
       .setSource(PropertySource.PROTO)
       .setChildren([
-        {name: 'size', value: 3},
         {name: 'isPresent', value: false},
+        {name: 'size', value: 3},
       ])
       .build();
 
@@ -141,8 +141,8 @@ describe('PropertyTreeNodeFactory', () => {
           name: '0',
           value: undefined,
           children: [
-            {name: 'width', value: 4},
             {name: 'height', value: 8},
+            {name: 'width', value: 4},
           ],
         },
       ])

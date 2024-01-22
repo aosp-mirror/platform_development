@@ -134,11 +134,11 @@ export abstract class AddDiffs<T extends DiffNode> {
       oldNode?.getAllChildren().length ?? 0
     );
     for (let i = 0; i < numOfChildren; i++) {
-      const newChild = newNode?.getAllChildren()?.at(i);
-      let oldChild = oldNode?.getAllChildren()?.at(i);
+      const newChild = newNode?.getAllChildren()[i];
+      let oldChild = oldNode?.getAllChildren()[i];
 
       if (!oldChild && newChild) {
-        oldChild = oldNode?.getAllChildren()?.find((node) => node.name === newChild.name);
+        oldChild = oldNode?.getAllChildren().find((node) => node.name === newChild.name);
       }
 
       const childDiffTrees = await this.generateDiffNodes(

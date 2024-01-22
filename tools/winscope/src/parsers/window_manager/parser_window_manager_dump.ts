@@ -16,6 +16,7 @@
 
 import {Timestamp, TimestampType} from 'common/time';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/windowmanager/latest/json';
 import {com} from 'protos/windowmanager/latest/static';
 import {
@@ -26,8 +27,7 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
-import {ParserWindowManagerUtils} from './parser_window_manager_utils';
+import {WmCustomQueryUtils} from './custom_query_utils';
 
 class ParserWindowManagerDump extends AbstractParser {
   private static readonly WindowManagerServiceDumpProto = root.lookupType(
@@ -89,7 +89,7 @@ class ParserWindowManagerDump extends AbstractParser {
         this.decodedEntries
           .slice(entriesRange.start, entriesRange.end)
           .forEach((windowManagerServiceDumpProto) => {
-            ParserWindowManagerUtils.parseWindowsTokenAndTitle(
+            WmCustomQueryUtils.parseWindowsTokenAndTitle(
               windowManagerServiceDumpProto?.rootWindowContainer,
               result
             );
