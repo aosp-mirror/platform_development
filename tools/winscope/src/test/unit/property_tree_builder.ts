@@ -52,7 +52,7 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
     );
   }
 
-  protected override addChildNode(rootNode: PropertyTreeNode, child: ChildProperty): void {
+  protected override addOrReplaceChildNode(rootNode: PropertyTreeNode, child: ChildProperty): void {
     const childNode = new PropertyTreeBuilder()
       .setRootId(rootNode.id)
       .setName(child.name)

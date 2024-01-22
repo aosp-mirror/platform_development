@@ -15,10 +15,11 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class ZOrderPathsComputation {
+export class ZOrderPathsComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
 
   setRoot(value: HierarchyTreeNode): ZOrderPathsComputation {

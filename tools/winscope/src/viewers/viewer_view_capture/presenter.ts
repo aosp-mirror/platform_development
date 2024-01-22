@@ -23,9 +23,9 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {PresenterSfUtils} from 'viewers/common/presenter_sf_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
+import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {
   HierarchyTreeNodeLegacy,
   PropertiesTreeNodeLegacy,
@@ -128,7 +128,7 @@ export class Presenter {
           event.position
         )?.getValue()) as HierarchyTreeNode;
         if (surfaceFlingerEntry) {
-          this.uiData.sfRects = PresenterSfUtils.makeUiRects(
+          this.uiData.sfRects = UI_RECT_FACTORY.makeUiRects(
             surfaceFlingerEntry,
             this.viewCapturePackageNames
           );

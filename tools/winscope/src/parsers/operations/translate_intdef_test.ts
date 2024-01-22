@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/test/intdef_translation/json';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -24,10 +24,10 @@ import {TranslateIntDef} from './translate_intdef';
 describe('TranslateIntDef', () => {
   let propertyRoot: PropertyTreeNode;
   let operation: TranslateIntDef;
-  let field: TamperedProtoField;
+  let rootField: TamperedMessageType;
 
   beforeEach(() => {
-    field = TamperedMessageType.tamper(root.lookupType('RootMessage')).fields['intdefMappingEntry'];
+    rootField = TamperedMessageType.tamper(root.lookupType('RootMessage'));
   });
 
   it('translates intdef from stored mapping', () => {
@@ -37,10 +37,71 @@ describe('TranslateIntDef', () => {
       .setName('node')
       .setChildren([{name: 'layoutParamsFlags', value: 1}])
       .build();
+
+    const field = rootField.fields['intdefMappingEntry'];
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
     expect(
       assertDefined(propertyRoot.getChildByName('layoutParamsFlags')).formattedValue()
     ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
+  });
+
+  it('translates intdef from field mapping', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .setChildren([
+        {
+          name: 'windowLayoutParams',
+          value: undefined,
+          children: [
+            {name: 'type', value: 1},
+            {name: 'gravity', value: 1},
+            {name: 'softInputMode', value: 1},
+            {name: 'inputFeatureFlags', value: 1},
+            {name: 'flags', value: 1},
+            {name: 'systemUiVisibilityFlags', value: 1},
+            {name: 'subtreeSystemUiVisibilityFlags', value: 1},
+            {name: 'appearance', value: 1},
+            {name: 'behavior', value: 1},
+          ],
+        },
+      ])
+      .build();
+
+    const field = rootField.fields['windowLayoutParams'];
+    operation = new TranslateIntDef(field);
+    operation.apply(propertyRoot);
+
+    const params = assertDefined(propertyRoot.getChildByName('windowLayoutParams'));
+
+    expect(assertDefined(params.getChildByName('type')).formattedValue()).toEqual(
+      'TYPE_BASE_APPLICATION'
+    );
+    expect(assertDefined(params.getChildByName('gravity')).formattedValue()).toEqual(
+      'CENTER_HORIZONTAL'
+    );
+    expect(assertDefined(params.getChildByName('softInputMode')).formattedValue()).toEqual(
+      'SOFT_INPUT_STATE_UNCHANGED'
+    );
+    expect(assertDefined(params.getChildByName('inputFeatureFlags')).formattedValue()).toEqual(
+      'INPUT_FEATURE_NO_INPUT_CHANNEL'
+    );
+    expect(assertDefined(params.getChildByName('flags')).formattedValue()).toEqual(
+      'FLAG_ALLOW_LOCK_WHILE_SCREEN_ON'
+    );
+    expect(
+      assertDefined(params.getChildByName('systemUiVisibilityFlags')).formattedValue()
+    ).toEqual('SYSTEM_UI_FLAG_LOW_PROFILE');
+    expect(
+      assertDefined(params.getChildByName('subtreeSystemUiVisibilityFlags')).formattedValue()
+    ).toEqual('SYSTEM_UI_FLAG_LOW_PROFILE');
+    expect(assertDefined(params.getChildByName('appearance')).formattedValue()).toEqual(
+      'APPEARANCE_OPAQUE_STATUS_BARS'
+    );
+    expect(assertDefined(params.getChildByName('behavior')).formattedValue()).toEqual(
+      'BEHAVIOR_DEFAULT'
+    );
   });
 });

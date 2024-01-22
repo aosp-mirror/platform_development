@@ -84,7 +84,7 @@ describe('AddChips', () => {
           {
             id: 1,
             name: 'node',
-            properties: {isVisible: true},
+            properties: {isComputedVisible: true},
           },
         ])
         .build()

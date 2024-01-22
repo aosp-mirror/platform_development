@@ -125,7 +125,7 @@ class ImeUtils {
     const inputMethodSurfaceProps: InputMethodSurfaceProperties = {
       id: inputMethodSurfaceLayer.id,
       isVisible: assertDefined(
-        inputMethodSurfaceLayer.getEagerPropertyByName('isVisible')
+        inputMethodSurfaceLayer.getEagerPropertyByName('isComputedVisible')
       ).getValue(),
       screenBounds: inputMethodSurfaceLayer.getEagerPropertyByName('screenBounds'),
       rect: inputMethodSurfaceLayer.getEagerPropertyByName('bounds'),

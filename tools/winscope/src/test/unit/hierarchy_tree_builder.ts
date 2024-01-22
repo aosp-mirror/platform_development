@@ -54,7 +54,10 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
     return new HierarchyTreeNode(rootId, assertDefined(this.name), provider);
   }
 
-  protected override addChildNode(rootNode: HierarchyTreeNode, child: ChildHierarchy): void {
+  protected override addOrReplaceChildNode(
+    rootNode: HierarchyTreeNode,
+    child: ChildHierarchy
+  ): void {
     const childNode = new HierarchyTreeBuilder()
       .setId(child.id)
       .setName(child.name)

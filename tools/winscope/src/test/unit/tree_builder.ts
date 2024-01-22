@@ -39,11 +39,11 @@ export abstract class TreeBuilder<T, U> {
 
     const rootNode = this.makeRootNode();
 
-    this.children.forEach((child) => this.addChildNode(rootNode, child));
+    this.children.forEach((child) => this.addOrReplaceChildNode(rootNode, child));
 
     return rootNode;
   }
 
   protected abstract makeRootNode(): T;
-  protected abstract addChildNode(rootNode: T, child: U): void;
+  protected abstract addOrReplaceChildNode(rootNode: T, child: U): void;
 }

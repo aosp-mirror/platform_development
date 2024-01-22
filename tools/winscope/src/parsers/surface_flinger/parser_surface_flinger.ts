@@ -35,6 +35,9 @@ import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
+import {RectsComputation} from './computations/rects_computation';
+import {VisibilityPropertiesComputation} from './computations/visibility_properties_computation';
+import {ZOrderPathsComputation} from './computations/z_order_paths_computation';
 import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
 import {ParserSfUtils} from './parser_surface_flinger_utils';
 
@@ -223,7 +226,15 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       ])
       .build();
 
-    return new HierarchyTreeBuilderSf().setEntry(entry).setLayers(layers).build();
+    return new HierarchyTreeBuilderSf()
+      .setRoot(entry)
+      .setChildren(layers)
+      .setComputations([
+        new ZOrderPathsComputation(),
+        new VisibilityPropertiesComputation(),
+        new RectsComputation(),
+      ])
+      .build();
   }
 }
 

@@ -19,11 +19,12 @@ import {Rect} from 'common/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {Transform, TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class VisibilityPropertiesComputation {
+export class VisibilityPropertiesComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
   private rootLayers: HierarchyTreeNode[] | undefined;
   private displays: PropertyTreeNode[] = [];
@@ -59,7 +60,7 @@ export class VisibilityPropertiesComputation {
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
-            'isVisible',
+            'isComputedVisible',
             isVisible
           )
         );
@@ -99,7 +100,11 @@ export class VisibilityPropertiesComputation {
       }
 
       layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(layer.id, 'isVisible', isVisible)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          layer.id,
+          'isComputedVisible',
+          isVisible
+        )
       );
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(

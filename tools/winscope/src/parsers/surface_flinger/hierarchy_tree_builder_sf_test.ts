@@ -15,7 +15,6 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -30,7 +29,11 @@ describe('HierarchyTreeBuilderSf', () => {
   beforeEach(() => {
     jasmine.addCustomEqualityTester(nodeEqualityTester);
     builder = new HierarchyTreeBuilderSf();
-    const testPropertyNode = TreeNodeUtils.makePropertyNode('test node', 'test node', null);
+    const testPropertyNode = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('LayerTraceEntry')
+      .setName('root')
+      .build();
     entry = new PropertiesProvider(
       testPropertyNode,
       async () => testPropertyNode,
@@ -41,17 +44,17 @@ describe('HierarchyTreeBuilderSf', () => {
   });
 
   it('throws error if entry not set', () => {
-    const noEntryError = new Error('entry not set');
-    expect(() => builder.setLayers([]).build()).toThrow(noEntryError);
+    const noEntryError = new Error('root not set');
+    expect(() => builder.setChildren([]).build()).toThrow(noEntryError);
   });
 
   it('throws error if layers not set', () => {
-    const noLayersError = new Error('layers not set');
-    expect(() => builder.setEntry(entry).build()).toThrow(noLayersError);
+    const noLayersError = new Error('children not set');
+    expect(() => builder.setRoot(entry).build()).toThrow(noLayersError);
   });
 
   it('builds root with no children correctly', () => {
-    const root = builder.setEntry(entry).setLayers([]).build();
+    const root = builder.setRoot(entry).setChildren([]).build();
 
     const propertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -96,7 +99,7 @@ describe('HierarchyTreeBuilderSf', () => {
       OperationChain.emptyChain<PropertyTreeNode>()
     );
 
-    const root = builder.setEntry(entry).setLayers([layer1Provider]).build();
+    const root = builder.setRoot(entry).setChildren([layer1Provider]).build();
 
     const propertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -170,7 +173,7 @@ describe('HierarchyTreeBuilderSf', () => {
       OperationChain.emptyChain<PropertyTreeNode>()
     );
 
-    const root = builder.setEntry(entry).setLayers([layer1Provider, layer2Provider]).build();
+    const root = builder.setRoot(entry).setChildren([layer1Provider, layer2Provider]).build();
 
     const propertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -248,8 +251,8 @@ describe('HierarchyTreeBuilderSf', () => {
     );
 
     const root = builder
-      .setEntry(entry)
-      .setLayers([layer1Provider, layer2Provider, layer2Provider])
+      .setRoot(entry)
+      .setChildren([layer1Provider, layer2Provider, layer2Provider])
       .build();
 
     const propertiesTree = new PropertyTreeBuilder()
