@@ -21,6 +21,10 @@ import {DiffType} from './diff_type';
 export class AddDiffsPropertiesTree extends AddDiffs<UiPropertyTreeNode> {
   protected override addDiffsToNewRoot = false;
 
+  protected override processOldNode(oldNode: UiPropertyTreeNode): void {
+    //do nothing
+  }
+
   protected override processModifiedNodes(
     newNode: UiPropertyTreeNode,
     oldNode: UiPropertyTreeNode

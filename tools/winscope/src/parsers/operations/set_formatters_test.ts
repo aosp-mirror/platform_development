@@ -38,21 +38,19 @@ describe('SetFormatters', () => {
       new PropertyTreeNode('test node.enum0', 'enum0', PropertySource.PROTO, 0)
     );
     operation = new SetFormatters(field);
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(rootWithFormatters.getChildByName('enum0')?.formattedValue()).toEqual(
-      'ENUM0_VALUE_ZERO'
-    );
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(propertyRoot.getChildByName('enum0')?.formattedValue()).toEqual('ENUM0_VALUE_ZERO');
   });
 
   it('adds correct formatter for color node', () => {
     propertyRoot.addChild(TreeNodeUtils.makeColorNode(0, 0, 0, 1));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('color')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('color')).formattedValue()).toEqual(
       `${EMPTY_OBJ_STRING}, alpha: 1`
     );
   });
@@ -60,10 +58,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for rect node', () => {
     propertyRoot.addChild(TreeNodeUtils.makeRectNode(0, 0, 1, 1));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('rect')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('rect')).formattedValue()).toEqual(
       '(0, 0) - (1, 1)'
     );
   });
@@ -71,10 +69,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for buffer node', () => {
     propertyRoot.addChild(TreeNodeUtils.makeBufferNode());
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('buffer')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('buffer')).formattedValue()).toEqual(
       'w: 1, h: 0, stride: 0, format: 1'
     );
   });
@@ -82,12 +80,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for size node', () => {
     propertyRoot.addChild(TreeNodeUtils.makeSizeNode(1, 2));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('size')).formattedValue()).toEqual(
-      '1 x 2'
-    );
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('size')).formattedValue()).toEqual('1 x 2');
   });
 
   it('adds correct formatter for region node', () => {
@@ -103,10 +99,10 @@ describe('SetFormatters', () => {
     propertyRoot.addChild(region);
 
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('region')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('region')).formattedValue()).toEqual(
       'SkRegion((0, 0, 1, 1))'
     );
   });
@@ -114,10 +110,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for position node', () => {
     propertyRoot.addChild(TreeNodeUtils.makePositionNode(1, 2));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('pos')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('pos')).formattedValue()).toEqual(
       'x: 1, y: 2'
     );
   });
@@ -125,10 +121,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for transform node', () => {
     propertyRoot.addChild(TreeNodeUtils.makeTransformNode(TransformType.EMPTY));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('transform')).formattedValue()).toEqual(
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('transform')).formattedValue()).toEqual(
       'IDENTITY'
     );
   });
@@ -145,12 +141,10 @@ describe('SetFormatters', () => {
     );
     propertyRoot.addChild(property);
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    const propertyWithFormatters = assertDefined(
-      rootWithFormatters.getChildByName('nestedProperty')
-    );
+    expect(propertyRoot.formattedValue()).toEqual('');
+    const propertyWithFormatters = assertDefined(propertyRoot.getChildByName('nestedProperty'));
     expect(propertyWithFormatters.formattedValue()).toEqual('');
     expect(assertDefined(propertyWithFormatters.getChildByName('val')).formattedValue()).toEqual(
       '1'
@@ -160,10 +154,10 @@ describe('SetFormatters', () => {
   it('adds correct formatter for simple leaf property', () => {
     propertyRoot.addChild(new PropertyTreeNode('test node.val', 'val', PropertySource.PROTO, 1));
     operation = new SetFormatters();
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('val')).formattedValue()).toEqual('1');
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('val')).formattedValue()).toEqual('1');
   });
 
   it('adds custom formatter', () => {
@@ -171,11 +165,9 @@ describe('SetFormatters', () => {
       new PropertyTreeNode('test node.layerId', 'layerId', PropertySource.PROTO, -1)
     );
     operation = new SetFormatters(undefined, new Map([['layerId', LAYER_ID_FORMATTER]]));
-    const rootWithFormatters = operation.apply(propertyRoot);
+    operation.apply(propertyRoot);
 
-    expect(rootWithFormatters.formattedValue()).toEqual('');
-    expect(assertDefined(rootWithFormatters.getChildByName('layerId')).formattedValue()).toEqual(
-      'none'
-    );
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(assertDefined(propertyRoot.getChildByName('layerId')).formattedValue()).toEqual('none');
   });
 });

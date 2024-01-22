@@ -47,8 +47,8 @@ describe('FlattenChildren', () => {
       prevChild = child;
     }
 
-    const root = operation.apply(hierarchyRoot);
-    expect(root.getAllChildren().length).toEqual(10);
+    operation.apply(hierarchyRoot);
+    expect(hierarchyRoot.getAllChildren().length).toEqual(10);
   });
 
   it('flattens children in expected order for multiple root children', () => {
@@ -95,8 +95,8 @@ describe('FlattenChildren', () => {
       prevChild = child;
     }
 
-    const root = operation.apply(hierarchyRoot);
-    expect(root.getAllChildren()).toEqual(expectedChildren);
+    operation.apply(hierarchyRoot);
+    expect(hierarchyRoot.getAllChildren()).toEqual(expectedChildren);
   });
 
   it('leaves flat tree unchanged', () => {
@@ -113,7 +113,7 @@ describe('FlattenChildren', () => {
       hierarchyRoot.addChild(child);
     }
     expect(hierarchyRoot.getAllChildren().length).toEqual(10);
-    const root = operation.apply(hierarchyRoot);
-    expect(root.getAllChildren().length).toEqual(10);
+    operation.apply(hierarchyRoot);
+    expect(hierarchyRoot.getAllChildren().length).toEqual(10);
   });
 });

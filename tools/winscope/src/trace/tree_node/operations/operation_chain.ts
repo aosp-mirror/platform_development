@@ -22,7 +22,7 @@ export class OperationChain<T extends TreeNode> {
 
   apply(value: T): T {
     this.enclosedOperations.forEach((operation: Operation<T>) => {
-      value = operation.apply(value);
+      operation.apply(value);
     });
 
     return value;

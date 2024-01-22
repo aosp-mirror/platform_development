@@ -30,10 +30,6 @@ export class PropertyTreeNode extends TreeNode {
     super(id, name);
   }
 
-  getChildByName(name: string): this | undefined {
-    return this.children.find((child) => child.name === name);
-  }
-
   getValue(): any {
     return this.value;
   }

@@ -21,23 +21,22 @@ import {TreeNodeFilter} from 'viewers/common/ui_tree_utils';
 export class Filter<T extends TreeNode> implements Operation<T> {
   constructor(private predicates: TreeNodeFilter[], private keepParentsAndChildren: boolean) {}
 
-  apply(node: T): T {
-    for (let child of node.getAllChildren()) {
+  apply(node: T): void {
+    for (const child of node.getAllChildren()) {
       if (!this.testPredicates(child)) {
         if (!this.keepParentsAndChildren || child.getAllChildren().length === 0) {
           node.removeChild(child.id);
         } else if (this.keepParentsAndChildren) {
-          child = this.apply(child);
+          this.apply(child);
 
           if (child.getAllChildren().length === 0) {
             node.removeChild(child.id);
           }
         }
       } else if (!this.keepParentsAndChildren) {
-        child = this.apply(child);
+        this.apply(child);
       }
     }
-    return node;
   }
 
   testPredicates(node: T): boolean {

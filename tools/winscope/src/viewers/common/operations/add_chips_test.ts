@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {android} from 'protos/surfaceflinger/udc/static';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {LayerCompositionType} from 'trace/layer_composition_type';
 import {
   DUPLICATE_CHIP,
   GPU_CHIP,
@@ -45,36 +45,26 @@ describe('AddChips', () => {
     const layer = TreeNodeUtils.makeUiHierarchyNode({
       id: 1,
       name: 'node',
-      hwcCompositionType: android.surfaceflinger.HwcCompositionType.CLIENT,
+      compositionType: LayerCompositionType.GPU,
     });
     hierarchyRoot.addChild(layer);
     layer.setZParent(hierarchyRoot);
 
-    expect(assertDefined(operation.apply(hierarchyRoot).getChildById('1 node')).getChips()).toEqual(
-      [GPU_CHIP]
-    );
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([GPU_CHIP]);
   });
 
   it('adds HWC_CHIP', () => {
     const layerDevice = TreeNodeUtils.makeUiHierarchyNode({
       id: 1,
       name: 'node',
-      hwcCompositionType: android.surfaceflinger.HwcCompositionType.DEVICE,
+      compositionType: LayerCompositionType.HWC,
     });
     hierarchyRoot.addChild(layerDevice);
     layerDevice.setZParent(hierarchyRoot);
 
-    const layerSolidColor = TreeNodeUtils.makeUiHierarchyNode({
-      id: 2,
-      name: 'node',
-      hwcCompositionType: android.surfaceflinger.HwcCompositionType.SOLID_COLOR,
-    });
-    hierarchyRoot.addChild(layerSolidColor);
-    layerSolidColor.setZParent(hierarchyRoot);
-
-    const rootWithChips = operation.apply(hierarchyRoot);
-    expect(assertDefined(rootWithChips.getChildById('1 node')).getChips()).toEqual([HWC_CHIP]);
-    expect(assertDefined(rootWithChips.getChildById('2 node')).getChips()).toEqual([HWC_CHIP]);
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([HWC_CHIP]);
   });
 
   it('adds VISIBLE_CHIP', () => {
@@ -86,9 +76,8 @@ describe('AddChips', () => {
     hierarchyRoot.addChild(layer);
     layer.setZParent(hierarchyRoot);
 
-    expect(assertDefined(operation.apply(hierarchyRoot).getChildById('1 node')).getChips()).toEqual(
-      [VISIBLE_CHIP]
-    );
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([VISIBLE_CHIP]);
   });
 
   it('adds DUPLICATE_CHIP', () => {
@@ -100,9 +89,10 @@ describe('AddChips', () => {
     hierarchyRoot.addChild(layer);
     layer.setZParent(hierarchyRoot);
 
-    expect(assertDefined(operation.apply(hierarchyRoot).getChildById('1 node')).getChips()).toEqual(
-      [DUPLICATE_CHIP]
-    );
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
+      DUPLICATE_CHIP,
+    ]);
   });
 
   it('adds RELATIVE_Z_CHIP', () => {
@@ -114,9 +104,10 @@ describe('AddChips', () => {
     hierarchyRoot.addChild(layer);
     layer.setZParent(hierarchyRoot);
 
-    expect(assertDefined(operation.apply(hierarchyRoot).getChildById('1 node')).getChips()).toEqual(
-      [RELATIVE_Z_CHIP]
-    );
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
+      RELATIVE_Z_CHIP,
+    ]);
   });
 
   it('adds MISSING_Z_PARENT_CHIP', () => {
@@ -129,9 +120,11 @@ describe('AddChips', () => {
     hierarchyRoot.addChild(layer);
     layer.setZParent(hierarchyRoot);
 
-    expect(assertDefined(operation.apply(hierarchyRoot).getChildById('1 node')).getChips()).toEqual(
-      [RELATIVE_Z_CHIP, MISSING_Z_PARENT_CHIP]
-    );
+    operation.apply(hierarchyRoot);
+    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
+      RELATIVE_Z_CHIP,
+      MISSING_Z_PARENT_CHIP,
+    ]);
   });
 
   it('adds RELATIVE_Z_PARENT_CHIP', () => {
@@ -151,10 +144,10 @@ describe('AddChips', () => {
     hierarchyRoot.addChild(parentLayer);
     parentLayer.setZParent(hierarchyRoot);
 
-    const root = operation.apply(hierarchyRoot);
-    const parentWithChips = assertDefined(root.getChildById('2 parentNode'));
+    operation.apply(hierarchyRoot);
+    const parentWithChips = assertDefined(hierarchyRoot.getChildByName('parentNode'));
     expect(parentWithChips.getChips()).toEqual([RELATIVE_Z_PARENT_CHIP]);
-    expect(assertDefined(parentWithChips.getChildById('1 node')).getChips()).toEqual([
+    expect(assertDefined(parentWithChips.getChildByName('node')).getChips()).toEqual([
       RELATIVE_Z_CHIP,
     ]);
   });

@@ -41,38 +41,42 @@ class ViewerSurfaceFlinger implements Viewer {
     });
 
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
+      this.presenter.onPinnedItemChange((event as CustomEvent).detail.pinnedItem)
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.updateHighlightedItem(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(`${(event as CustomEvent).detail.id}`)
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedPropertyChange, (event) =>
-      this.presenter.updateHighlightedProperty(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedPropertyChange(`${(event as CustomEvent).detail.id}`)
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyUserOptionsChange,
       async (event) =>
-        await this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)
+        await this.presenter.onHierarchyUserOptionsChange((event as CustomEvent).detail.userOptions)
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
       async (event) =>
-        await this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString)
+        await this.presenter.onHierarchyFilterChange((event as CustomEvent).detail.filterString)
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
       async (event) =>
-        await this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions)
+        await this.presenter.onPropertiesUserOptionsChange(
+          (event as CustomEvent).detail.userOptions
+        )
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       async (event) =>
-        await this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString)
+        await this.presenter.onPropertiesFilterChange((event as CustomEvent).detail.filterString)
     );
     this.htmlElement.addEventListener(
       ViewerEvents.SelectedTreeChange,
       async (event) =>
-        await this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
+        await this.presenter.onSelectedHierarchyTreeChange(
+          (event as CustomEvent).detail.selectedItem
+        )
     );
     this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
       if (

@@ -32,7 +32,7 @@ export class HierarchyTreeNode extends TreeNode {
   }
 
   getEagerPropertyByName(name: string): PropertyTreeNode | undefined {
-    return this.propertiesProvider.getEagerProperties().getChildById(`${this.id}.${name}`);
+    return this.propertiesProvider.getEagerProperties().getChildByName(name);
   }
 
   addEagerProperty(property: PropertyTreeNode): void {
