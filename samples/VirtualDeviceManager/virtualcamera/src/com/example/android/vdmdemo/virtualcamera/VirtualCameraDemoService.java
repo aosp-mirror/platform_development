@@ -218,8 +218,8 @@ public final class VirtualCameraDemoService extends Hilt_VirtualCameraDemoServic
         }
 
         VirtualCamera camera = mVirtualDevice.createVirtualCamera(
-                new VirtualCameraConfig.Builder()
-                        .setName(name).addStreamConfig(640, 480, ImageFormat.YUV_420_888, 30)
+                new VirtualCameraConfig.Builder(name)
+                        .addStreamConfig(640, 480, ImageFormat.YUV_420_888, 30)
                         .setLensFacing(LENS_FACING_FRONT)
                         .setVirtualCameraCallback(getMainExecutor(), cameraCallback)
                         .build());
