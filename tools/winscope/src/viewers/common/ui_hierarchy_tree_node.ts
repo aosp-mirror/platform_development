@@ -23,6 +23,7 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
   private chips: Chip[] = [];
   private diff: DiffType = DiffType.NONE;
   private displayName: string = this.name;
+  private isOldNodeInternal = false;
 
   static from(node: HierarchyTreeNode, parent?: UiHierarchyTreeNode): UiHierarchyTreeNode {
     const displayNode = new UiHierarchyTreeNode(
@@ -63,5 +64,13 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
 
   getChips(): Chip[] {
     return this.chips;
+  }
+
+  setIsOldNode(value: boolean) {
+    this.isOldNodeInternal = value;
+  }
+
+  isOldNode() {
+    return this.isOldNodeInternal;
   }
 }

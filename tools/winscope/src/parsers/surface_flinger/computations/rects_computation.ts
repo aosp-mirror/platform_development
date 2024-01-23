@@ -91,29 +91,19 @@ class RectSfFactory {
 
 export class RectsComputation {
   private root: HierarchyTreeNode | undefined;
-  private displays: PropertyTreeNode[] | undefined;
   private readonly rectsFactory = new RectSfFactory();
 
-  setHierarchyRoot(value: HierarchyTreeNode): this {
+  setRoot(value: HierarchyTreeNode): this {
     this.root = value;
     return this;
   }
 
-  setDisplays(value: PropertyTreeNode[]): this {
-    this.displays = value;
-    return this;
-  }
-
-  execute() {
+  executeInPlace(): void {
     if (!this.root) {
       throw Error('root not set');
     }
-    if (!this.displays) {
-      throw Error('displays not set');
-    }
-    const rootLayers = this.root.getAllChildren();
 
-    rootLayers.forEach((rootLayer) => {
+    this.root.getAllChildren().forEach((rootLayer) => {
       rootLayer.forEachNodeDfs((layer) => {
         const rect = this.rectsFactory.makeLayerRect(layer);
         if (!rect) {
@@ -123,9 +113,8 @@ export class RectsComputation {
       });
     });
 
-    const displayRects = this.rectsFactory.makeDisplayRects(this.displays);
+    const displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
+    const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
-
-    return this.root;
   }
 }

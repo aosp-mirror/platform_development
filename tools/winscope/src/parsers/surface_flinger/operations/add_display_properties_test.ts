@@ -39,8 +39,9 @@ describe('AddDisplayProperties', () => {
     ]);
     propertyRoot.addChild(displays);
 
+    operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      operation.apply(propertyRoot).getChildByName('displays')
+      propertyRoot.getChildByName('displays')
     ).getAllChildren()[0];
     expect(displayWithProperties.getChildByName('isLargeScreen')?.getValue()).toEqual(true);
   });
@@ -56,8 +57,9 @@ describe('AddDisplayProperties', () => {
     ]);
     propertyRoot.addChild(displays);
 
+    operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      operation.apply(propertyRoot).getChildByName('displays')
+      propertyRoot.getChildByName('displays')
     ).getAllChildren()[0];
     expect(displayWithProperties.getChildByName('isLargeScreen')?.getValue()).toEqual(false);
   });
@@ -73,8 +75,9 @@ describe('AddDisplayProperties', () => {
     ]);
     propertyRoot.addChild(displays);
 
+    operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      operation.apply(propertyRoot).getChildByName('displays')
+      propertyRoot.getChildByName('displays')
     ).getAllChildren()[0];
     expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(true);
   });
@@ -85,13 +88,14 @@ describe('AddDisplayProperties', () => {
         dpiX: 0,
         dpiY: 0,
         size: {w: 1080, h: 2340},
-        layerStack: -1,
+        layerStack: 4294967295,
       },
     ]);
     propertyRoot.addChild(displays);
 
+    operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      operation.apply(propertyRoot).getChildByName('displays')
+      propertyRoot.getChildByName('displays')
     ).getAllChildren()[0];
     expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(false);
   });

@@ -267,9 +267,9 @@ describe('PropertyTreeBuilderFromProto', () => {
     const tree = builder.setData(proto).setDenyList(['children', 'timestamp']).build();
     expect(tree.getAllChildren().length).toEqual(2);
 
-    expect(tree.getChildById('1 rootName.id')).toBeDefined();
-    expect(tree.getChildById('1 rootName.timestamp')).toBeUndefined();
-    expect(tree.getChildById('1 rootName.name')).toBeDefined();
-    expect(tree.getChildById('1 rootName.children')).toBeUndefined();
+    expect(tree.getChildByName('id')).toBeDefined();
+    expect(tree.getChildByName('timestamp')).toBeUndefined();
+    expect(tree.getChildByName('name')).toBeDefined();
+    expect(tree.getChildByName('children')).toBeUndefined();
   });
 });

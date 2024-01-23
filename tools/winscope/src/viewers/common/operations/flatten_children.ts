@@ -18,7 +18,7 @@ import {Operation} from 'trace/tree_node/operations/operation';
 import {UiHierarchyTreeNode} from '../ui_hierarchy_tree_node';
 
 export class FlattenChildren implements Operation<UiHierarchyTreeNode> {
-  apply(node: UiHierarchyTreeNode): UiHierarchyTreeNode {
+  apply(node: UiHierarchyTreeNode): void {
     const flattenedChildren = this.extractFlattenedChildren(node);
 
     node.removeAllChildren();
@@ -26,8 +26,6 @@ export class FlattenChildren implements Operation<UiHierarchyTreeNode> {
       child.removeAllChildren();
       node.addChild(child);
     });
-
-    return node;
   }
 
   private extractFlattenedChildren(node: UiHierarchyTreeNode): UiHierarchyTreeNode[] {

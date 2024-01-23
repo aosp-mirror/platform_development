@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {HierarchyTreeNodeBuilder} from 'trace/tree_node/hierarchy_tree_node_builder';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
@@ -28,7 +27,6 @@ export class HierarchyTreeBuilderSf {
   private processed = new Map<number, number>();
   private entry: PropertiesProvider | undefined;
   private layers: PropertiesProvider[] | undefined;
-  private excludesCompositionState: boolean = false;
 
   setEntry(value: PropertiesProvider): this {
     this.entry = value;
@@ -37,11 +35,6 @@ export class HierarchyTreeBuilderSf {
 
   setLayers(value: PropertiesProvider[]): this {
     this.layers = value;
-    return this;
-  }
-
-  setExcludesCompositionState(value: boolean): this {
-    this.excludesCompositionState = value;
     return this;
   }
 
@@ -57,31 +50,16 @@ export class HierarchyTreeBuilderSf {
     const rootLayers = this.findRootLayers(this.layers);
 
     const rootChildren = rootLayers.map((layer) => {
-      return this.buildSubtree(layer, this.excludesCompositionState, idToLayer);
+      return this.buildSubtree(layer, idToLayer);
     });
 
-    const root = new HierarchyTreeNodeBuilder()
-      .setId('LayerTraceEntry')
-      .setName('root')
-      .setPropertiesProvider(this.entry)
-      .setChildren(rootChildren)
-      .build();
+    const root = this.buildHierarchyTreeNode('LayerTraceEntry', 'root', rootChildren, this.entry);
 
-    const rootWithZOrderPaths = new ZOrderPathsComputation().setRoot(root).execute();
+    new ZOrderPathsComputation().setRoot(root).executeInPlace();
+    new VisibilityPropertiesComputation().setRoot(root).executeInPlace();
+    new RectsComputation().setRoot(root).executeInPlace();
 
-    const displays = root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
-
-    const rootWithVisibility = new VisibilityPropertiesComputation()
-      .setRoot(rootWithZOrderPaths)
-      .setDisplays(displays)
-      .execute();
-
-    const finalRoot = new RectsComputation()
-      .setHierarchyRoot(rootWithVisibility)
-      .setDisplays(displays)
-      .execute();
-
-    return finalRoot;
+    return root;
   }
 
   private buildIdToLayerMap(layers: PropertiesProvider[]): Map<number, PropertiesProvider[]> {
@@ -117,7 +95,6 @@ export class HierarchyTreeBuilderSf {
 
   private buildSubtree(
     layer: PropertiesProvider,
-    excludesCompositionState: boolean,
     idToLayer: Map<number, PropertiesProvider[]>
   ): HierarchyTreeNode {
     const eagerProperties = layer.getEagerProperties();
@@ -132,16 +109,34 @@ export class HierarchyTreeBuilderSf {
     childIds.forEach((childId: PropertyTreeNode) => {
       const numberId = Number(childId.getValue());
       assertDefined(idToLayer.get(numberId)).forEach((childLayer) => {
-        children.push(this.buildSubtree(childLayer, excludesCompositionState, idToLayer));
+        children.push(this.buildSubtree(childLayer, idToLayer));
       });
     });
 
-    return new HierarchyTreeNodeBuilder()
-      .setId(id)
-      .setName(name)
-      .setDuplicateCount(duplicateCount)
-      .setPropertiesProvider(layer)
-      .setChildren(children)
-      .build();
+    return this.buildHierarchyTreeNode(id, name, children, layer, duplicateCount);
+  }
+
+  private buildHierarchyTreeNode(
+    id: string,
+    name: string,
+    children: HierarchyTreeNode[],
+    propertiesProvider: PropertiesProvider,
+    duplicateCount = 0
+  ): HierarchyTreeNode {
+    const nodeId = this.makeNodeId(id, name, duplicateCount);
+    const node = new HierarchyTreeNode(nodeId, name, propertiesProvider);
+    children.forEach((child) => {
+      node.addChild(child);
+      child.setZParent(node);
+    });
+    return node;
+  }
+
+  private makeNodeId(id: string, name: string, duplicateCount: number): string {
+    let nodeId = `${id} ${name}`;
+    if (duplicateCount > 0) {
+      nodeId += ` duplicate(${duplicateCount})`;
+    }
+    return nodeId;
   }
 }

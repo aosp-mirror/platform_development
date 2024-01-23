@@ -37,18 +37,18 @@ export class PropertiesProviderBuilder {
     return this;
   }
 
-  addCommonOperation(operation: Operation<PropertyTreeNode>): this {
-    this.commonOperations.push(operation);
+  setCommonOperations(operations: Array<Operation<PropertyTreeNode>>): this {
+    this.commonOperations = new OperationChain<PropertyTreeNode>(operations);
     return this;
   }
 
-  addEagerOperation(operation: Operation<PropertyTreeNode>): this {
-    this.eagerOperations.push(operation);
+  setEagerOperations(operations: Array<Operation<PropertyTreeNode>>): this {
+    this.eagerOperations = new OperationChain<PropertyTreeNode>(operations);
     return this;
   }
 
-  addLazyOperation(operation: Operation<PropertyTreeNode>): this {
-    this.lazyOperations.push(operation);
+  setLazyOperations(operations: Array<Operation<PropertyTreeNode>>): this {
+    this.lazyOperations = new OperationChain<PropertyTreeNode>(operations);
     return this;
   }
 
