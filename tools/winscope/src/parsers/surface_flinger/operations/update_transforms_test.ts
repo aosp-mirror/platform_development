@@ -26,8 +26,8 @@ describe('UpdateTransforms', () => {
   let protoPosition: any;
 
   beforeEach(() => {
-    propertyRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
     operation = new UpdateTransforms();
+    propertyRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
     protoTransform = {
       dsdx: 0,
       dtdx: 0,
@@ -50,8 +50,8 @@ describe('UpdateTransforms', () => {
 
     const expectedRoot = makeExpectedMatrixNode('test node', 'transform');
 
-    const updatedRoot = operation.apply(propertyRoot);
-    const transformNode = assertDefined(updatedRoot.getChildByName('transform'));
+    operation.apply(propertyRoot);
+    const transformNode = assertDefined(propertyRoot.getChildByName('transform'));
     expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
@@ -65,11 +65,9 @@ describe('UpdateTransforms', () => {
 
     const expectedRoot = makeExpectedMatrixNode('test node', 'requestedTransform');
 
-    const updatedRoot = operation.apply(propertyRoot);
-    const transformNode = assertDefined(
-      updatedRoot.getChildById(`${propertyRoot.id}.requestedTransform`)
-    );
-    expect(transformNode.getChildById(`${transformNode.id}.matrix`)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    const transformNode = assertDefined(propertyRoot.getChildByName('requestedTransform'));
+    expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   it('adds matrix to buffer transform', () => {
@@ -79,11 +77,9 @@ describe('UpdateTransforms', () => {
 
     const expectedRoot = makeExpectedMatrixNode('test node', 'bufferTransform');
 
-    const updatedRoot = operation.apply(propertyRoot);
-    const transformNode = assertDefined(
-      updatedRoot.getChildById(`${propertyRoot.id}.bufferTransform`)
-    );
-    expect(transformNode.getChildById(`${transformNode.id}.matrix`)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    const transformNode = assertDefined(propertyRoot.getChildByName('bufferTransform'));
+    expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   it('adds matrix to input window info transform', () => {
@@ -95,14 +91,10 @@ describe('UpdateTransforms', () => {
 
     const expectedRoot = makeExpectedMatrixNode('test node.inputWindowInfo', 'transform');
 
-    const updatedRoot = operation.apply(propertyRoot);
-    const inputWindowNode = assertDefined(
-      updatedRoot.getChildById(`${propertyRoot.id}.inputWindowInfo`)
-    );
-    const transformNode = assertDefined(
-      inputWindowNode.getChildById(`${inputWindowNode.id}.transform`)
-    );
-    expect(transformNode.getChildById(`${transformNode.id}.matrix`)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    const inputWindowNode = assertDefined(propertyRoot.getChildByName('inputWindowInfo'));
+    const transformNode = assertDefined(inputWindowNode.getChildByName('transform'));
+    expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   function makeExpectedMatrixNode(rootId: string, transformName: string): PropertyTreeNode {

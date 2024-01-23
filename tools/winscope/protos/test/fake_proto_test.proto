@@ -5,7 +5,6 @@ package winscope.test;
 // Message used for testing the fake proto machinery
 message RootMessage {
   optional Entry entry = 1;
-  optional InputWindowInfoProto intdef_mapping_entry = 2;
 }
 
 enum Enum0 {
@@ -33,6 +32,3 @@ message Entry {
   optional bool bool_value = 11;
 }
 
-message InputWindowInfoProto {
-  optional int32 layoutParamsFlags = 1;
-}

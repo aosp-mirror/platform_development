@@ -36,7 +36,8 @@ describe('AddExcludesCompositionState', () => {
       true
     );
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('creates excludesCompositionState node with false value', () => {
@@ -47,6 +48,7 @@ describe('AddExcludesCompositionState', () => {
       false
     );
     expectedRoot.addChild(expectedResult);
-    expect(operation.apply(propertyRoot)).toEqual(expectedRoot);
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
   });
 });

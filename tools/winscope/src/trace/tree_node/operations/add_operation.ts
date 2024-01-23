@@ -19,15 +19,13 @@ import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factor
 import {TreeNode} from 'trace/tree_node/tree_node';
 
 export abstract class AddOperation<T extends TreeNode> implements Operation<T> {
-  apply(value: T): T {
+  apply(value: T): void {
     const factory = new PropertyTreeNodeFactory();
     const newProperties = this.makeProperties(factory, value);
 
     newProperties.forEach((property) => {
       value.addChild(property);
     });
-
-    return value;
   }
 
   protected abstract makeProperties(factory: PropertyTreeNodeFactory, value: T): T[];

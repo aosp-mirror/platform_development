@@ -38,8 +38,8 @@ export abstract class TreeNode implements Item {
     this.children = [];
   }
 
-  getChildById(id: string): this | undefined {
-    return this.children.find((child) => child.id === id);
+  getChildByName(name: string): this | undefined {
+    return this.children.find((child) => child.name === name);
   }
 
   getAllChildren(): this[] {

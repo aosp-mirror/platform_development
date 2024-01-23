@@ -17,11 +17,44 @@
 import {assertDefined} from 'common/assert_utils';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
-import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {AddCompositionType} from './operations/add_composition_type';
+import {AddDisplayProperties} from './operations/add_display_properties';
+import {AddExcludesCompositionState} from './operations/add_excludes_composition_state';
+import {AddVerboseFlags} from './operations/add_verbose_flags';
+import {UpdateTransforms} from './operations/update_transforms';
 
 export class ParserSfUtils {
+  static readonly EAGER_PROPERTIES = [
+    'id',
+    'name',
+    'type',
+    'parent',
+    'children',
+    'bounds',
+    'transform',
+    'position',
+    'requestedTransform',
+    'requestedPosition',
+    'bufferTransform',
+    'inputWindowInfo',
+    'flags',
+    'z',
+    'cornerRadius',
+    'layerStack',
+    'isOpaque',
+    'activeBuffer',
+    'visibleRegion',
+    'color',
+    'isRelativeOf',
+    'zOrderRelativeOf',
+    'screenBounds',
+    'shadowRadius',
+    'backgroundBlurRadius',
+    'hwcCompositionType',
+  ];
+
   static readonly DENYLIST_PROPERTIES = [
     'length',
     'prototype',
@@ -33,11 +66,14 @@ export class ParserSfUtils {
     'name',
   ];
 
-  static readonly CUSTOM_FORMATTERS = new Map([
-    ['cropLayerId', LAYER_ID_FORMATTER],
-    ['zOrderRelativeOf', LAYER_ID_FORMATTER],
-    ['hwcCompositionType', new EnumFormatter(android.surfaceflinger.HwcCompositionType)],
-  ]);
+  static readonly OPERATIONS = {
+    UpdateTransforms: new UpdateTransforms(),
+    AddVerboseFlags: new AddVerboseFlags(),
+    AddExcludesCompositionStateTrue: new AddExcludesCompositionState(true),
+    AddExcludesCompositionStateFalse: new AddExcludesCompositionState(false),
+    AddDisplayProperties: new AddDisplayProperties(),
+    AddCompositionType: new AddCompositionType(),
+  };
 
   static makeEagerPropertiesTree(
     layer: android.surfaceflinger.ILayerProto | perfetto.protos.ILayerProto,
@@ -108,33 +144,4 @@ export class ParserSfUtils {
         .build();
     };
   }
-
-  static readonly EAGER_PROPERTIES = [
-    'id',
-    'name',
-    'type',
-    'parent',
-    'children',
-    'bounds',
-    'transform',
-    'position',
-    'requestedTransform',
-    'requestedPosition',
-    'bufferTransform',
-    'inputWindowInfo',
-    'flags',
-    'z',
-    'cornerRadius',
-    'layerStack',
-    'isOpaque',
-    'activeBuffer',
-    'visibleRegion',
-    'color',
-    'isRelativeOf',
-    'zOrderRelativeOf',
-    'screenBounds',
-    'shadowRadius',
-    'backgroundBlurRadius',
-    'hwcCompositionType',
-  ];
 }

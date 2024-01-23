@@ -40,7 +40,7 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     private readonly customFormatters?: Map<string, PropertyFormatter>
   ) {}
 
-  apply(value: PropertyTreeNode, parentField = this.rootField): PropertyTreeNode {
+  apply(value: PropertyTreeNode, parentField = this.rootField): void {
     let field: TamperedProtoField | undefined;
     let enumType: protobuf.Enum | undefined;
 
@@ -62,8 +62,6 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     value.getAllChildren().forEach((value) => {
       this.apply(value, field);
     });
-
-    return value;
   }
 
   private getFormatter(

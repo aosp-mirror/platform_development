@@ -71,10 +71,15 @@ async function build() {
             '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
         ], 'windowmanager/latest'),
 
-        // Test
+        // Test proto fields
         buildProtos([
             'test/fake_proto_test.proto',
         ], 'test/fake_proto'),
+
+        // Test intdef translation
+        buildProtos([
+            'test/intdef_translation_test.proto',
+        ], 'test/intdef_translation'),
     ];
 
     await Promise.all(promises);

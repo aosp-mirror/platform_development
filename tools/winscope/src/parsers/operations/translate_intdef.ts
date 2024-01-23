@@ -23,11 +23,11 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 export class TranslateIntDef implements Operation<PropertyTreeNode> {
   constructor(private readonly rootField: TamperedProtoField) {}
 
-  apply(value: PropertyTreeNode, parentField = this.rootField): PropertyTreeNode {
+  apply(value: PropertyTreeNode, parentField = this.rootField): void {
     const protoType = parentField.tamperedMessageType;
 
     if (protoType === undefined) {
-      return value;
+      return;
     }
 
     let field = parentField;
@@ -37,7 +37,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
 
     if (value.getAllChildren().length > 0) {
       value.getAllChildren().forEach((value) => {
-        value = this.apply(value, field);
+        this.apply(value, field);
       });
     } else {
       if (typeof value.getValue() === 'number' && value.getValue() !== -1) {
@@ -47,8 +47,6 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
         }
       }
     }
-
-    return value;
   }
 
   private translateIntDefToStringIfNeeded(
@@ -74,7 +72,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
   }
 
   private getIntFlagsAsStrings(intFlags: number, annotationType: string): string {
-    const flags = [];
+    let flags = '';
 
     const mapping = intDefMapping[annotationType as keyof typeof intDefMapping].values;
 
@@ -96,7 +94,8 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
         (leftOver & flagValue && (intFlags & flagValue) === flagValue) ||
         (parsedIntFlags === 0 && flagValue === 0)
       ) {
-        flags.push(mapping[flagValue as keyof typeof mapping]);
+        if (flags.length > 0) flags += ' | ';
+        flags += mapping[flagValue as keyof typeof mapping];
 
         leftOver = leftOver & ~flagValue;
       }
@@ -108,10 +107,10 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
 
     if (leftOver) {
       // If 0 is a valid flag value that isn't in the intDefMapping it will be ignored
-      flags.push(leftOver);
+      flags += leftOver;
     }
 
-    return flags.join(' | ');
+    return flags;
   }
 
   private readonly intDefColumn: {[key: string]: string} = {
@@ -133,5 +132,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
     'Configuration.orientation': 'android.content.pm.ActivityInfo.ScreenOrientation',
     'WindowConfiguration.orientation': 'android.content.pm.ActivityInfo.ScreenOrientation',
     'WindowState.orientation': 'android.content.pm.ActivityInfo.ScreenOrientation',
+    'InsetsSourceControlProto.typeNumber': 'android.view.WindowInsets.Type.InsetsType',
+    'InsetsSourceConsumerProto.typeNumber': 'android.view.WindowInsets.Type.InsetsType',
   };
 }

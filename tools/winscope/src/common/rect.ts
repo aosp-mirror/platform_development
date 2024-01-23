@@ -18,7 +18,7 @@ import {Point} from 'common/geometry_types';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class Rect {
-  constructor(public x: number, public y: number, public w: number, public h: number) {}
+  constructor(readonly x: number, readonly y: number, readonly w: number, readonly h: number) {}
 
   static from(node: PropertyTreeNode): Rect {
     const left = node.getChildByName('left')?.getValue() ?? 0;
@@ -63,22 +63,22 @@ export class Rect {
       this.y <= other.y + other.h &&
       other.y <= this.y + this.h
     ) {
-      const intersectionRect = new Rect(this.x, this.y, this.w, this.h);
+      let [x, y, w, h] = [this.x, this.y, this.w, this.h];
 
       if (this.x < other.x) {
-        intersectionRect.x = other.x;
+        x = other.x;
       }
       if (this.y < other.y) {
-        intersectionRect.y = other.y;
+        y = other.y;
       }
       if (this.x + this.w > other.x + other.w) {
-        intersectionRect.w = other.w;
+        w = other.w;
       }
       if (this.y + this.h > other.y + other.h) {
-        intersectionRect.h = other.h;
+        h = other.h;
       }
 
-      return !intersectionRect.isEmpty();
+      return !new Rect(x, y, w, h).isEmpty();
     }
 
     return false;

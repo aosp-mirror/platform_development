@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
-import root from 'protos/test/fake_proto/json';
+import root from 'protos/test/intdef_translation/json';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TranslateIntDef} from './translate_intdef';
 
@@ -40,10 +40,9 @@ describe('TranslateIntDef', () => {
       )
     );
     operation = new TranslateIntDef(field);
+    operation.apply(propertyRoot);
     expect(
-      assertDefined(
-        operation.apply(propertyRoot).getChildByName('layoutParamsFlags')
-      ).formattedValue()
+      assertDefined(propertyRoot.getChildByName('layoutParamsFlags')).formattedValue()
     ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
   });
 });
