@@ -61,3 +61,13 @@ flag {
   }
 }
 
+flag {
+  name: "support_bugfix_templates_demo_flag_fixed_read_only"
+  namespace: "core_experiments_team_internal"
+  description: "A fixed-read-only flag for bugfix workflow demo"
+  bug: "311226181"
+  is_fixed_read_only: true
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
