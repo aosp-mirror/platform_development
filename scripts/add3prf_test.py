@@ -154,6 +154,15 @@ class LicenseDetectionTestCase(fake_filesystem_unittest.TestCase):
     self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
     self.assertEqual(preferred_license.filename, "LICENSE-BOOST")
 
+  def test_bsd_licensefile(self):
+    self.fs.create_file("LICENSE-BSD")
+    licenses = add3prf.decide_license_type("")
+    self.assertEqual(len(licenses), 1)
+    preferred_license = licenses[0]
+    self.assertEqual(preferred_license.type, add3prf.LicenseType.BSD_LIKE)
+    self.assertEqual(preferred_license.group, add3prf.LicenseGroup.NOTICE)
+    self.assertEqual(preferred_license.filename, "LICENSE-BSD")
+
 class AddModuleLicenseTestCase(fake_filesystem_unittest.TestCase):
 
   def setUp(self):

@@ -207,8 +207,10 @@ def decide_license_type(cargo_license):
     lowered_name = os.path.splitext(license_file.lower())[0]
     if lowered_name == "license-apache":
       licenses.append(License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file))
-    if lowered_name == "license-boost":
+    elif lowered_name == "license-boost":
       licenses.append(License(LicenseType.BOOST, LicenseGroup.NOTICE, license_file))
+    elif lowered_name == "license-bsd":
+      licenses.append(License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-mit":
       licenses.append(License(LicenseType.MIT, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-0bsd":
