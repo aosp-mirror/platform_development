@@ -158,8 +158,14 @@ public class VideoManager {
                 mDecoderThread.exit();
             }
             mCallbackThread.quitSafely();
-            mMediaCodec.flush();
-            mMediaCodec.stop();
+            try {
+                mMediaCodec.flush();
+                mMediaCodec.stop();
+            } catch (IllegalStateException exception) {
+                // It's possible the codec transitioned from "executing" state, because
+                // the surface was already released.
+                Log.w(TAG, "IllegalStateException while flushing codec", exception);
+            }
             mMediaCodec.release();
             mMediaCodec = null;
         }
@@ -275,18 +281,24 @@ public class VideoManager {
                         if (mMediaCodec == null) {
                             continue;
                         }
-                        ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
-                        byte[] data = encodedFrame.getFrameData().toByteArray();
-                        Objects.requireNonNull(inBuffer).put(data);
-                        if (mRecordEncoderOutput) {
-                            mStorageFile.writeOutputFile(data);
+                        try {
+                            ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
+                            byte[] data = encodedFrame.getFrameData().toByteArray();
+                            Objects.requireNonNull(inBuffer).put(data);
+                            if (mRecordEncoderOutput) {
+                                mStorageFile.writeOutputFile(data);
+                            }
+                            mMediaCodec.queueInputBuffer(
+                                    inputBuffer,
+                                    0,
+                                    encodedFrame.getFrameData().size(),
+                                    encodedFrame.getPresentationTimeUs(),
+                                    encodedFrame.getFlags());
+                        } catch (MediaCodec.CodecException exception) {
+                            Log.e(TAG, "MediaCodec exception while queuing input", exception);
+                            mMediaCodec.release();
+                            mMediaCodec = null;
                         }
-                        mMediaCodec.queueInputBuffer(
-                                inputBuffer,
-                                0,
-                                encodedFrame.getFrameData().size(),
-                                encodedFrame.getPresentationTimeUs(),
-                                encodedFrame.getFlags());
                     }
                 } catch (InterruptedException e) {
                     if (mExit.get()) {
