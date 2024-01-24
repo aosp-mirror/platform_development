@@ -42,6 +42,7 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
@@ -49,7 +50,9 @@ type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
+  private readonly traces: Traces;
   private readonly trace: Trace<HierarchyTreeNode>;
+  private viewCapturePackageNames: string[] = [];
   private uiData: UiData;
   private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
@@ -112,6 +115,7 @@ export class Presenter {
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType
   ) {
+    this.traces = traces;
     this.trace = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
@@ -120,6 +124,8 @@ export class Presenter {
 
   async onAppEvent(event: WinscopeEvent) {
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       this.currentHierarchyTree = await entry?.getValue();
       if (entry) this.currentHierarchyTreeName = TimeUtils.format(entry.getTimestamp());
@@ -142,7 +148,10 @@ export class Presenter {
       if (this.currentHierarchyTree) {
         this.uiData.highlightedItem = this.highlightedItem;
         this.uiData.highlightedProperty = this.highlightedProperty;
-        this.uiData.rects = PresenterSfUtils.makeUiRects(this.currentHierarchyTree);
+        this.uiData.rects = PresenterSfUtils.makeUiRects(
+          this.currentHierarchyTree,
+          this.viewCapturePackageNames
+        );
         this.uiData.displayIds = this.getDisplayIds(this.uiData.rects);
         this.pinnedItems = [];
         this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
@@ -218,6 +227,10 @@ export class Presenter {
       this.selectedHierarchyTree = selectedTree;
       await this.updateSelectedTreeUiData();
     }
+  }
+
+  private async initializeIfNeeded() {
+    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(this.traces);
   }
 
   private getDisplayIds(rects: UiRect[]): number[] {
