@@ -41,9 +41,7 @@ import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
 import {SetRootTransformProperties} from './operations/set_root_transform_properties';
 import {NodeField, NodeType} from './vc_tampered_protos';
 
-export class ParserViewCaptureWindow
-  implements Parser<com.android.app.viewcapture.data.IFrameData>
-{
+export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   private static readonly EAGER_PROPERTIES = [
     'classnameIndex',
     'hashcode',
@@ -111,12 +109,9 @@ export class ParserViewCaptureWindow
     return this.timestamps.get(type);
   }
 
-  getEntry(index: number, _: TimestampType): Promise<com.android.app.viewcapture.data.IFrameData> {
-    ParserViewCaptureWindow.formatProperties(
-      assertDefined(this.frameData[index].node),
-      this.classNames
-    );
-    return Promise.resolve(this.frameData[index]);
+  getEntry(index: number, _: TimestampType): Promise<HierarchyTreeNode> {
+    const tree = this.makeHierarchyTree(this.frameData[index]);
+    return Promise.resolve(tree);
   }
 
   customQuery<Q extends CustomQueryType>(
@@ -167,7 +162,7 @@ export class ParserViewCaptureWindow
     return new HierarchyTreeBuilderVc()
       .setRoot(nodes[0])
       .setChildren(nodes.slice(1))
-      .setComputations([new RectsComputation(), new VisibilityComputation()])
+      .setComputations([new VisibilityComputation(), new RectsComputation()])
       .build();
   }
 
@@ -250,113 +245,5 @@ export class ParserViewCaptureWindow
         .setDenyList(ParserViewCaptureWindow.DENYLIST_PROPERTIES)
         .build();
     };
-  }
-
-  private static formatProperties(
-    root: com.android.app.viewcapture.data.IViewNode,
-    classNames: string[]
-  ): com.android.app.viewcapture.data.IViewNode {
-    const DEPTH_MAGNIFICATION = 4;
-    const VISIBLE = 0;
-
-    function inner(
-      node: any,
-      leftShift: number,
-      topShift: number,
-      scaleX: number,
-      scaleY: number,
-      depth: number,
-      isParentVisible: boolean
-    ) {
-      const newScaleX = scaleX * node.scaleX;
-      const newScaleY = scaleY * node.scaleY;
-
-      const l =
-        leftShift +
-        (node.left + node.translationX) * scaleX +
-        (node.width * (scaleX - newScaleX)) / 2;
-      const t =
-        topShift +
-        (node.top + node.translationY) * scaleY +
-        (node.height * (scaleY - newScaleY)) / 2;
-      node.boxPos = {
-        left: l,
-        top: t,
-        width: node.width * newScaleX,
-        height: node.height * newScaleY,
-      };
-
-      node.name = `${classNames[node.classnameIndex]}@${node.hashcode}`;
-
-      node.shortName = node.name.split('.');
-      node.shortName = node.shortName[node.shortName.length - 1];
-
-      node.isVisible = isParentVisible && VISIBLE === node.visibility;
-
-      for (let i = 0; i < node.children.length; i++) {
-        inner(
-          node.children[i],
-          l - node.scrollX,
-          t - node.scrollY,
-          newScaleX,
-          newScaleY,
-          depth + 1,
-          node.isVisible
-        );
-        node.children[i].parent = node;
-      }
-
-      // TODO: Audit these properties
-      node.depth = depth * DEPTH_MAGNIFICATION;
-      node.className = node.name.substring(0, node.name.indexOf('@'));
-      node.type = 'ViewNode';
-      node.layerId = 0;
-      node.isMissing = false;
-      node.hwcCompositionType = 0;
-      node.zOrderRelativeOfId = -1;
-      node.isRootLayer = false;
-      node.skip = null;
-      node.id = node.name;
-      node.stableId = node.id;
-      node.equals = (other: any) => ParserViewCaptureWindow.equals(node, other);
-    }
-
-    root.scaleX = root.scaleY = 1;
-    root.translationX = root.translationY = 0;
-    inner(root, 0, 0, 1, 1, 0, true);
-
-    (root as any).isRootLayer = true;
-    return root;
-  }
-
-  /** This method is used by the tree_generator to determine if 2 nodes have equivalent properties. */
-  private static equals(node: any, other: any): boolean {
-    if (!node && !other) {
-      return true;
-    }
-    if (!node || !other) {
-      return false;
-    }
-    return (
-      node.id === other.id &&
-      node.name === other.name &&
-      node.hashcode === other.hashcode &&
-      node.left === other.left &&
-      node.top === other.top &&
-      node.height === other.height &&
-      node.width === other.width &&
-      node.elevation === other.elevation &&
-      node.scaleX === other.scaleX &&
-      node.scaleY === other.scaleY &&
-      node.scrollX === other.scrollX &&
-      node.scrollY === other.scrollY &&
-      node.translationX === other.translationX &&
-      node.translationY === other.translationY &&
-      node.alpha === other.alpha &&
-      node.visibility === other.visibility &&
-      node.willNotDraw === other.willNotDraw &&
-      node.clipChildren === other.clipChildren &&
-      node.depth === other.depth
-    );
   }
 }

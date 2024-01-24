@@ -61,7 +61,7 @@ describe('PresenterSurfaceFlinger', () => {
     selectedTree = assertDefined(selectedTreeParent.getChildByName('Dim layer#53'));
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 
@@ -320,7 +320,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('updates view capture package names', async () => {
-    const vcTrace = new TraceBuilder<object>()
+    const vcTrace = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
       .setParserCustomQueryResult(
         CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,

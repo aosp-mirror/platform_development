@@ -17,18 +17,12 @@
 import {Operation} from 'trace/tree_node/operations/operation';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 
-export class SimplifyNames implements Operation<UiHierarchyTreeNode> {
+export class SimplifyNamesVc implements Operation<UiHierarchyTreeNode> {
   apply(node: UiHierarchyTreeNode): void {
     node.forEachNodeDfs(this.shortenName);
   }
 
   private shortenName(node: UiHierarchyTreeNode) {
-    const classParts = (node.name + '').split('.');
-    if (classParts.length <= 3) {
-      return;
-    }
-
-    const className = classParts.slice(-1)[0]; // last element
-    node.setDisplayName(`${classParts[0]}.${classParts[1]}.(...).${className}`);
+    node.setDisplayName(node.name.split('.').slice(-1)[0]);
   }
 }

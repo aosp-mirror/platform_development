@@ -38,24 +38,24 @@ import {UiData} from './ui_data';
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displays]="[{displayId: 0, stackId: 0}]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
-      <hierarchy-view-legacy
+      <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree ?? null"
+        [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
-        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view-legacy>
+        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
       <mat-divider [vertical]="true"></mat-divider>
-      <properties-view-legacy
+      <properties-view
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [selectedItem]="inputData?.selectedViewNode ?? null"
+        [propertiesTree]="inputData?.propertiesTree"
+        [curatedProperties]="inputData?.curatedProperties"
         [traceType]="${TraceType.VIEW_CAPTURE}"
         [store]="store"
         [isProtoDump]="false">
-      </properties-view-legacy>
+      </properties-view>
     </div>
   `,
   styles: [

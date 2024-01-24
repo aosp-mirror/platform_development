@@ -15,16 +15,17 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ParsingUtils} from 'parsers/parsing_utils';
 import {com} from 'protos/viewcapture/latest/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {ParsingUtils} from '../parsing_utils';
 import {ParserViewCaptureWindow} from './parser_view_capture_window';
 import {ExportedData} from './vc_tampered_protos';
 
 export class ParserViewCapture {
-  private readonly windowParsers: Array<Parser<com.android.app.viewcapture.data.IFrameData>> = [];
+  private readonly windowParsers: Array<Parser<HierarchyTreeNode>> = [];
 
   constructor(private readonly traceFile: TraceFile) {}
 
@@ -58,7 +59,7 @@ export class ParserViewCapture {
     return TraceType.VIEW_CAPTURE;
   }
 
-  getWindowParsers(): Array<Parser<com.android.app.viewcapture.data.IFrameData>> {
+  getWindowParsers(): Array<Parser<HierarchyTreeNode>> {
     return this.windowParsers;
   }
 

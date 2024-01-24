@@ -47,10 +47,6 @@ export enum TraceType {
   VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
 }
 
-// view capture types
-export type ViewNode = any;
-export type FrameData = any;
-
 export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: LogMessage;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
@@ -73,10 +69,10 @@ export interface TraceEntryTypeMap {
   [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
-  [TraceType.VIEW_CAPTURE]: object;
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: FrameData;
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: FrameData;
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: FrameData;
+  [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
+  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: HierarchyTreeNode;
+  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: HierarchyTreeNode;
+  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: HierarchyTreeNode;
 }
 
 export class TraceTypeUtils {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/types2d';
@@ -41,6 +42,29 @@ class UiRectFactory {
           viewCapturePackageNames.includes(traceRect.name.substring(0, traceRect.name.indexOf('/')))
         )
         .setDepth(traceRect.depth)
+        .build();
+    });
+  }
+
+  makeVcUiRects(hierarchyRoot: HierarchyTreeNode): UiRect[] {
+    const traceRects = this.extractRects(hierarchyRoot);
+    return traceRects.map((traceRect) => {
+      return new UiRectBuilder()
+        .setX(traceRect.x)
+        .setY(traceRect.y)
+        .setWidth(traceRect.w)
+        .setHeight(traceRect.h)
+        .setLabel('')
+        .setTransform(traceRect.transform)
+        .setIsVisible(traceRect.isVisible)
+        .setIsDisplay(traceRect.isDisplay)
+        .setId(traceRect.id)
+        .setGroupId(traceRect.groupId)
+        .setIsVirtual(traceRect.isVirtual)
+        .setIsClickable(true)
+        .setCornerRadius(traceRect.cornerRadius)
+        .setHasContent(traceRect.isVisible)
+        .setDepth(assertDefined(traceRect.depth))
         .build();
     });
   }
