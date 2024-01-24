@@ -75,20 +75,20 @@ describe('TreeComponentLegacy', () => {
     expect(!currCollapseValue).toBe(component.treeComponents.first.localExpandedState);
   });
 
-  it('scrolls selected node into view if out of view', () => {
-    const treeNode = assertDefined(htmlElement.querySelector('#node1child50'));
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '1child50';
+  it('scrolls selected node only if not in view', () => {
+    const treeNode = assertDefined(htmlElement.querySelector('#node1child79'));
+    const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
+    component.highlightedItem = '1child79';
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
-  });
+    expect(spy).toHaveBeenCalledTimes(1);
 
-  it('does not scroll selected element if already in view', () => {
-    const treeNode = assertDefined(htmlElement.querySelector('#node1child2'));
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '1child2';
+    component.highlightedItem = '';
     fixture.detectChanges();
-    expect(spy).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    component.highlightedItem = '1child79';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it('sets initial expanded state to true by default', () => {
@@ -121,7 +121,7 @@ describe('TreeComponentLegacy', () => {
 
   function makeTreeNodeChildren(): UiTreeNode[] {
     const children = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 80; i++) {
       const child: UiTreeNode = {
         kind: `${i}`,
         stableId: `1child${i}`,
