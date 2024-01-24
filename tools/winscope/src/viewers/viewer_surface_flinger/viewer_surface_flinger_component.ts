@@ -28,9 +28,10 @@ import {UiData} from './ui_data';
         class="rects-view"
         title="Layers"
         [store]="store"
+        [isStackBased]="true"
         [rects]="inputData?.rects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displayIds]="inputData?.displayIds ?? []"></rects-view>
+        [displays]="inputData?.displays ?? []"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"

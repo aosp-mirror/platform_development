@@ -23,8 +23,17 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 class RectSfFactory {
   makeDisplayRects(displays: PropertyTreeNode[]): TraceRect[] {
+    const names = new Set<string>();
     return displays.map((display) => {
       const size = display.getChildByName('size');
+      const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
+
+      let displayName = assertDefined(display.getChildByName('name')).getValue();
+      if (names.has(displayName)) {
+        displayName += ' (Mirror)';
+      } else {
+        names.add(displayName);
+      }
 
       return new TraceRectBuilder()
         .setX(0)
@@ -32,11 +41,11 @@ class RectSfFactory {
         .setWidth(size?.getChildByName('w')?.getValue() ?? 0)
         .setHeight(size?.getChildByName('h')?.getValue() ?? 0)
         .setId(`Display - ${assertDefined(display.getChildByName('id')).getValue()}`)
-        .setName('Display')
+        .setName(displayName)
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setZOrderPath([])
-        .setGroupId(assertDefined(display.getChildByName('layerStack')).getValue())
+        .setGroupId(layerStack)
         .setIsVisible(false)
         .setIsDisplay(true)
         .setIsVirtual(display.getChildByName('isVirtual')?.getValue() ?? false)

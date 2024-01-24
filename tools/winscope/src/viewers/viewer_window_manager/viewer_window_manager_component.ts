@@ -28,7 +28,7 @@ import {UiData} from './ui_data';
         title="Windows"
         [store]="store"
         [rects]="inputData?.rects ?? []"
-        [displayIds]="inputData?.displayIds ?? []"
+        [displays]="inputData?.displays ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view-legacy

@@ -21,11 +21,13 @@ import {FilterType, TreeUtils} from 'common/tree_utils';
 import {DisplayContent} from 'flickerlib/windows/DisplayContent';
 import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {
@@ -191,7 +193,7 @@ export class Presenter {
         this.uiData.highlightedItem = this.highlightedItem;
         this.uiData.highlightedProperty = this.highlightedProperty;
         this.uiData.rects = this.generateRects(this.entry);
-        this.uiData.displayIds = this.getDisplayIds(this.entry);
+        this.uiData.displays = this.getDisplays(this.entry);
         this.uiData.tree = this.generateTree();
       }
 
@@ -216,10 +218,11 @@ export class Presenter {
           .setWidth(display.displayRect.right - display.displayRect.left)
           .setHeight(display.displayRect.bottom - display.displayRect.top)
           .setLabel(`Display - ${display.title}`)
+          .setTransform(Transform.EMPTY.matrix)
           .setIsVisible(false)
           .setIsDisplay(true)
-          .setId(display.stableId)
-          .setDisplayId(display.id)
+          .setId(display.id)
+          .setGroupId(display.displayId)
           .setIsVirtual(false)
           .setIsClickable(false)
           .setCornerRadius(0)
@@ -237,10 +240,11 @@ export class Presenter {
             .setWidth(it.rect.right - it.rect.left)
             .setHeight(it.rect.bottom - it.rect.top)
             .setLabel(it.rect.label)
+            .setTransform(Transform.EMPTY.matrix)
             .setIsVisible(it.isVisible)
             .setIsDisplay(false)
             .setId(it.stableId)
-            .setDisplayId(it.displayId)
+            .setGroupId(it.displayId)
             .setIsVirtual(false)
             .setIsClickable(true)
             .setCornerRadius(0)
@@ -251,13 +255,19 @@ export class Presenter {
     return windowRects.concat(displayRects);
   }
 
-  private getDisplayIds(entry: TraceTreeNode): number[] {
-    const ids = new Set<number>();
-    entry.windowStates?.map((it: any) => {
-      ids.add(it.displayId);
+  private getDisplays(entry: TraceTreeNode): DisplayIdentifier[] {
+    const ids: DisplayIdentifier[] = [];
+    entry.displays?.forEach((it: DisplayContent) => {
+      ids.push({displayId: it.id, groupId: it.displayId, name: it.title});
     });
-    return Array.from(ids.values()).sort((a, b) => {
-      return a - b;
+    return ids.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
     });
   }
 

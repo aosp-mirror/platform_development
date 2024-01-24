@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {TraceType} from 'trace/trace_type';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {
   HierarchyTreeNodeLegacy,
   PropertiesTreeNodeLegacy,
@@ -24,7 +25,7 @@ import {UiRect} from 'viewers/components/rects/types2d';
 export class UiData {
   dependencies: TraceType[];
   rects: UiRect[] = [];
-  displayIds: number[] = [];
+  displays: DisplayIdentifier[] = [];
   highlightedItem: string = '';
   highlightedProperty: string = '';
   pinnedItems: HierarchyTreeNodeLegacy[] = [];
