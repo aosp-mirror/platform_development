@@ -74,7 +74,7 @@ description: {description}
 third_party {{
   identifier {{
     type: "crates.io"
-    value: "https://crates.io/crates/{name}"
+    value: "{name}"
   }}
   identifier {{
     type: "Archive"
