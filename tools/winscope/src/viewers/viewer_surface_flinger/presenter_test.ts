@@ -21,6 +21,7 @@ import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -310,6 +311,28 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.displayIds.length).toEqual(5);
     // we want the ids to be sorted
     expect(uiData.displayIds).toEqual([0, 2, 3, 4, 5]);
+  });
+
+  it('updates view capture package names', async () => {
+    const vcTrace = new TraceBuilder<object>()
+      .setEntries([await UnitTestUtils.getViewCaptureEntry()])
+      .setParserCustomQueryResult(
+        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+        'com.google.android.apps.nexuslauncher'
+      )
+      .build();
+    const traces = new Traces();
+    traces.setTrace(TraceType.SURFACE_FLINGER, trace);
+    traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, vcTrace);
+    const presenter = new Presenter(traces, new MockStorage(), (newData: UiData) => {
+      uiData = newData;
+    });
+
+    const firstEntry = trace.getEntry(0);
+    const positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+
+    await presenter.onAppEvent(positionUpdate);
+    expect(uiData.rects.filter((rect) => rect.hasContent).length).toEqual(1);
   });
 
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
