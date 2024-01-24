@@ -93,6 +93,7 @@ pub enum TargetKind {
     Bench,
     Example,
     Lib,
+    Rlib,
     Staticlib,
     Cdylib,
     ProcMacro,
@@ -130,6 +131,7 @@ fn parse_cargo_metadata(
                 TargetKind::Cdylib,
                 TargetKind::Lib,
                 TargetKind::ProcMacro,
+                TargetKind::Rlib,
                 TargetKind::Staticlib,
                 TargetKind::Test,
             ]
