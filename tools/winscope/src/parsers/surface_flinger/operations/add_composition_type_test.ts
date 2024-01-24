@@ -51,11 +51,51 @@ describe('AddCompositionType', () => {
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
+  it('creates compositionType node with GPU value for received string', () => {
+    const hwcCompositionType = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'hwcCompositionType',
+      perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT]
+    );
+    propertyRoot.addChild(hwcCompositionType);
+
+    const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
+      'test node',
+      'compositionType',
+      LayerCompositionType.GPU
+    );
+    expectedRoot.addChild(hwcCompositionType);
+    expectedRoot.addChild(expectedCompositionType);
+
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
+  });
+
   it('creates compositionType node with HWC value for HwcCompositionType.HWC_TYPE_DEVICE', () => {
     const hwcCompositionType = TreeNodeUtils.makePropertyNode(
       propertyRoot.id,
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE
+    );
+    propertyRoot.addChild(hwcCompositionType);
+
+    const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
+      'test node',
+      'compositionType',
+      LayerCompositionType.HWC
+    );
+    expectedRoot.addChild(hwcCompositionType);
+    expectedRoot.addChild(expectedCompositionType);
+
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
+  });
+
+  it('creates compositionType node with HWC value for string HwcCompositionType.HWC_TYPE_DEVICE', () => {
+    const hwcCompositionType = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'hwcCompositionType',
+      perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE]
     );
     propertyRoot.addChild(hwcCompositionType);
 
@@ -91,7 +131,27 @@ describe('AddCompositionType', () => {
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
-  it('does not create compositionType node if hwcCompositionType not in mapping', () => {
+  it('creates compositionType node with HWC value for string HwcCompositionType.HWC_TYPE_SOLID_COLOR', () => {
+    const hwcCompositionType = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'hwcCompositionType',
+      perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR]
+    );
+    propertyRoot.addChild(hwcCompositionType);
+
+    const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
+      'test node',
+      'compositionType',
+      LayerCompositionType.HWC
+    );
+    expectedRoot.addChild(hwcCompositionType);
+    expectedRoot.addChild(expectedCompositionType);
+
+    operation.apply(propertyRoot);
+    expect(propertyRoot).toEqual(expectedRoot);
+  });
+
+  it('does not create compositionType node if hwcCompositionType does not match checks', () => {
     const hwcCompositionType = TreeNodeUtils.makePropertyNode(
       propertyRoot.id,
       'hwcCompositionType',

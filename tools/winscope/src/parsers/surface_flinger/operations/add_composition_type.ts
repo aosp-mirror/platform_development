@@ -28,12 +28,10 @@ export class AddCompositionType extends AddOperation<PropertyTreeNode> {
     const hwcCompositionType = value.getChildByName('hwcCompositionType')?.getValue();
     let compositionType: LayerCompositionType | undefined;
 
-    if (hwcCompositionType === perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT) {
+    // must check both enum and string values due to SF perfetto dumps giving translated proto values
+    if (this.gpuLayerCompositionTypes.includes(hwcCompositionType)) {
       compositionType = LayerCompositionType.GPU;
-    } else if (
-      hwcCompositionType === perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE ||
-      hwcCompositionType === perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR
-    ) {
+    } else if (this.hwcLayerCompositionTypes.includes(hwcCompositionType)) {
       compositionType = LayerCompositionType.HWC;
     }
 
@@ -41,4 +39,16 @@ export class AddCompositionType extends AddOperation<PropertyTreeNode> {
       ? []
       : [factory.makeCalculatedProperty(value.id, 'compositionType', compositionType)];
   }
+
+  private readonly gpuLayerCompositionTypes = [
+    perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT,
+    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT],
+  ];
+
+  private readonly hwcLayerCompositionTypes = [
+    perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE,
+    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE],
+    perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR,
+    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR],
+  ];
 }
