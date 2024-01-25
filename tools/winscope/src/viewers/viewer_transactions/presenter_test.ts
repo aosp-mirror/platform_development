@@ -15,14 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp, TimestampType} from 'common/time';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
@@ -52,12 +52,12 @@ describe('PresenterTransactions', () => {
 
     expect(outputUiData).toEqual(UiData.EMPTY);
 
-    await presenter.onTracePositionUpdate(TracePosition.fromTimestamp(new RealTimestamp(10n)));
+    await presenter.onAppEvent(TracePositionUpdate.fromTimestamp(new RealTimestamp(10n)));
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
 
   it('processes trace position update and computes output UI data', async () => {
-    await presenter.onTracePositionUpdate(createTracePosition(0));
+    await presenter.onAppEvent(createTracePositionUpdate(0));
 
     expect(assertDefined(outputUiData).allPids).toEqual([
       'N/A',
@@ -98,11 +98,11 @@ describe('PresenterTransactions', () => {
   });
 
   it('processes trace position update and updates current entry and scroll position', async () => {
-    await presenter.onTracePositionUpdate(createTracePosition(0));
+    await presenter.onAppEvent(createTracePositionUpdate(0));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
     expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
 
-    await presenter.onTracePositionUpdate(createTracePosition(10));
+    await presenter.onAppEvent(createTracePositionUpdate(10));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
     expect(assertDefined(outputUiData).scrollToIndex).toEqual(13);
   });
@@ -234,7 +234,7 @@ describe('PresenterTransactions', () => {
   });
 
   it('updates selected entry and properties tree when entry is clicked', async () => {
-    await presenter.onTracePositionUpdate(createTracePosition(0));
+    await presenter.onAppEvent(createTracePositionUpdate(0));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
     expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
     expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
@@ -261,15 +261,15 @@ describe('PresenterTransactions', () => {
   });
 
   it('computes current entry index', async () => {
-    await presenter.onTracePositionUpdate(createTracePosition(0));
+    await presenter.onAppEvent(createTracePositionUpdate(0));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
 
-    await presenter.onTracePositionUpdate(createTracePosition(10));
+    await presenter.onAppEvent(createTracePositionUpdate(10));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
   });
 
   it('updates current entry index when filters change', async () => {
-    await presenter.onTracePositionUpdate(createTracePosition(10));
+    await presenter.onAppEvent(createTracePositionUpdate(10));
 
     presenter.onPidFilterChanged([]);
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
@@ -304,10 +304,11 @@ describe('PresenterTransactions', () => {
       outputUiData = data;
     });
 
-    await presenter.onTracePositionUpdate(createTracePosition(0)); // trigger initialization
+    await presenter.onAppEvent(createTracePositionUpdate(0)); // trigger initialization
   };
 
-  const createTracePosition = (entryIndex: number): TracePosition => {
-    return TracePosition.fromTraceEntry(trace.getEntry(entryIndex));
+  const createTracePositionUpdate = (entryIndex: number): TracePositionUpdate => {
+    const entry = trace.getEntry(entryIndex);
+    return TracePositionUpdate.fromTraceEntry(entry);
   };
 });

@@ -42,7 +42,9 @@ public class JobWorkServiceActivity extends Activity {
 
         mJobScheduler = (JobScheduler)getSystemService(JOB_SCHEDULER_SERVICE);
         mJobInfo = new JobInfo.Builder(R.string.job_service_created,
-                new ComponentName(this, JobWorkService.class)).setOverrideDeadline(0).build();
+                new ComponentName(this, JobWorkService.class))
+                .setRequiresBatteryNotLow(true)
+                .build();
 
         setContentView(R.layout.job_work_service_activity);
 

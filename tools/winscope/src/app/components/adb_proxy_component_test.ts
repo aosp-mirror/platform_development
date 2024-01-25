@@ -21,6 +21,7 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {AdbProxyComponent} from './adb_proxy_component';
 
@@ -76,14 +77,60 @@ describe('AdbProxyComponent', () => {
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('lock');
   });
 
-  it('check retry button acts as expected', async () => {
+  it('check download proxy button downloads proxy', () => {
     component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    spyOn(component, 'restart').and.callThrough();
+    const spy = spyOn(window, 'open');
+    const button: HTMLButtonElement | null = htmlElement.querySelector('.download-proxy-btn');
+    expect(button).toBeInstanceOf(HTMLButtonElement);
+    button?.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
+  });
+
+  it('check retry button if no proxy trys to reconnect proxy', () => {
+    component.proxy.setState(ProxyState.NO_PROXY);
+    fixture.detectChanges();
     const button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
-    button?.dispatchEvent(new Event('click'));
-    await fixture.whenStable();
-    expect(component.restart).toHaveBeenCalled();
+    button?.click();
+    fixture.detectChanges();
+    expect(component.proxy.state).toBe(ProxyState.CONNECTING);
+  });
+
+  it('check input proxy token saved as expected', () => {
+    const spy = spyOn(component.addKey, 'emit');
+
+    component.proxy.setState(ProxyState.UNAUTH);
+    fixture.detectChanges();
+    let button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
+    button?.click();
+    fixture.detectChanges();
+    expect(spy).not.toHaveBeenCalled();
+
+    component.proxy.setState(ProxyState.UNAUTH);
+    component.proxyKeyItem = '12345';
+    fixture.detectChanges();
+    button = htmlElement.querySelector('.retry');
+    button?.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('retries proxy connection on enter key', async () => {
+    const spy = spyOn(component.proxyChange, 'emit');
+    component.proxy.setState(ProxyState.UNAUTH);
+    fixture.detectChanges();
+    const proxyKeyInputField = assertDefined(
+      htmlElement.querySelector('.proxy-key-input-field')
+    ) as HTMLInputElement;
+    const proxyKeyInput = assertDefined(
+      proxyKeyInputField.querySelector('input')
+    ) as HTMLInputElement;
+
+    proxyKeyInput.value = '12345';
+    proxyKeyInputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
   });
 });

@@ -15,7 +15,7 @@
  */
 
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {RealTimestamp} from './timestamp';
+import {RealTimestamp} from '../common/time';
 import {Trace} from './trace';
 
 describe('TraceEntry', () => {

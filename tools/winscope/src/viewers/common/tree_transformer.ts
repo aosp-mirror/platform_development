@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FilterType, TreeNode} from 'common/tree_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {FilterType, TreeUtilsNode} from 'common/tree_utils';
+import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 
 import {
@@ -343,7 +343,7 @@ export class TreeTransformer {
 
   private filterMatches(item: PropertiesDump | null): boolean {
     //TODO: fix PropertiesDump type. What is it? Why does it declare only a "key" property and yet it is used as a TreeNode?
-    return this.filter(item as TreeNode) ?? false;
+    return this.filter(item as TreeUtilsNode) ?? false;
   }
 
   private transformProperties(

@@ -16,17 +16,23 @@
 
 import {
   ActiveBuffer,
+  Color,
   EMPTY_COLOR,
   EMPTY_RECT,
   EMPTY_RECTF,
   EMPTY_TRANSFORM,
   Layer,
   LayerProperties,
-} from 'trace/flickerlib/common';
+} from 'flickerlib/common';
 
 class LayerBuilder {
   setFlags(value: number): LayerBuilder {
     this.flags = value;
+    return this;
+  }
+
+  setColor(color: Color): LayerBuilder {
+    this.color = color;
     return this;
   }
 
@@ -36,28 +42,20 @@ class LayerBuilder {
       new ActiveBuffer(0, 0, 0, 0),
       this.flags,
       EMPTY_RECTF /* bounds */,
-      EMPTY_COLOR,
+      this.color,
       false /* isOpaque */,
-      0 /* shadowRadius */,
-      0 /* cornerRadius */,
-      'type' /* type */,
+      1 /* shadowRadius */,
+      1 /* cornerRadius */,
       EMPTY_RECTF /* screenBounds */,
       EMPTY_TRANSFORM /* transform */,
-      EMPTY_RECTF /* sourceBounds */,
       0 /* effectiveScalingMode */,
       EMPTY_TRANSFORM /* bufferTransform */,
       0 /* hwcCompositionType */,
-      EMPTY_RECTF /* hwcCrop */,
-      EMPTY_RECT /* hwcFrame */,
-      0 /* backgroundBlurRadius */,
+      1 /* backgroundBlurRadius */,
       EMPTY_RECT /* crop */,
       false /* isRelativeOf */,
       -1 /* zOrderRelativeOfId */,
       0 /* stackId */,
-      EMPTY_TRANSFORM /* requestedTransform */,
-      EMPTY_COLOR /* requestedColor */,
-      EMPTY_RECTF /* cornerRadiusCrop */,
-      EMPTY_TRANSFORM /* inputTransform */,
       null /* inputRegion */
     );
 
@@ -66,12 +64,13 @@ class LayerBuilder {
       0 /* id */,
       -1 /*parentId */,
       0 /* z */,
-      0 /* currFrame */,
+      '0' /* currFrameString */,
       properties
     );
   }
 
   private flags = 0;
+  private color = EMPTY_COLOR;
 }
 
 export {LayerBuilder};

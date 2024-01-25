@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
+import {Timestamp} from '../common/time';
 import {AbsoluteFrameIndex} from './index_types';
-import {Timestamp} from './timestamp';
 import {Trace} from './trace';
 import {TraceEntryTypeMap, TraceType} from './trace_type';
 
 export class Traces {
   private traces = new Map<TraceType, Trace<{}>>();
 
-  setTrace<T extends TraceType>(type: T, trace: Trace<TraceEntryTypeMap[T]>) {
+  setTrace<T extends TraceType>(type: T, trace: Trace<TraceEntryTypeMap[T]['legacy']>) {
     this.traces.set(type, trace);
   }
 
-  getTrace<T extends TraceType>(type: T): Trace<TraceEntryTypeMap[T]> | undefined {
-    return this.traces.get(type) as Trace<TraceEntryTypeMap[T]> | undefined;
+  getTrace<T extends TraceType>(type: T): Trace<TraceEntryTypeMap[T]['legacy']> | undefined {
+    return this.traces.get(type) as Trace<TraceEntryTypeMap[T]['legacy']> | undefined;
   }
 
   deleteTrace<T extends TraceType>(type: T) {
