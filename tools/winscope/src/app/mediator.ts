@@ -347,6 +347,7 @@ export class Mediator {
     this.viewers = [];
     this.areViewersLoaded = false;
     this.lastRemoteToolTimestampReceived = undefined;
+    this.focusedTabView = undefined;
     await this.appComponent.onWinscopeEvent(new ViewersUnloaded());
   }
 }
