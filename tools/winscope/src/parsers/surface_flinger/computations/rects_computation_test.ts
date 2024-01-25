@@ -157,6 +157,7 @@ describe('RectsComputation', () => {
         size: {w: 5, h: 5},
         layerStackSpaceRect: {left: 0, top: 0, bottom: 5, right: 5},
         transform: Transform.EMPTY,
+        name: 'Test Display',
       },
     ]);
     hierarchyRoot.addEagerProperty(displays);
@@ -168,7 +169,7 @@ describe('RectsComputation', () => {
         .setWidth(5)
         .setHeight(5)
         .setId('Display - 1')
-        .setName('Display')
+        .setName('Test Display')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setZOrderPath([])

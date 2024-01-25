@@ -98,7 +98,7 @@ while [[ "$#" -gt 0 ]]; do
         -c|--client) INSTALL_HOST=false; shift ;;
         -i|--install-only) PERFORM_BUILD=false; shift ;;
         -cd|--camera_demo) INSTALL_VIRTUAL_CAMERA=true; INSTALL_HOST=false; INSTALL_CLIENT=false; shift;;
-        *) echo "Unknown parameter passed: $1" ;;
+        *) echo "Unknown parameter passed: $1"; display_help; exit ;;
     esac
 done
 

@@ -32,6 +32,7 @@ import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {DiffType} from 'viewers/common/diff_type';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {FlattenChildren} from 'viewers/common/operations/flatten_children';
@@ -42,6 +43,7 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
@@ -49,7 +51,9 @@ type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
+  private readonly traces: Traces;
   private readonly trace: Trace<HierarchyTreeNode>;
+  private viewCapturePackageNames: string[] = [];
   private uiData: UiData;
   private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
@@ -112,6 +116,7 @@ export class Presenter {
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType
   ) {
+    this.traces = traces;
     this.trace = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
@@ -120,6 +125,8 @@ export class Presenter {
 
   async onAppEvent(event: WinscopeEvent) {
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       this.currentHierarchyTree = await entry?.getValue();
       if (entry) this.currentHierarchyTreeName = TimeUtils.format(entry.getTimestamp());
@@ -142,12 +149,15 @@ export class Presenter {
       if (this.currentHierarchyTree) {
         this.uiData.highlightedItem = this.highlightedItem;
         this.uiData.highlightedProperty = this.highlightedProperty;
-        this.uiData.rects = PresenterSfUtils.makeUiRects(this.currentHierarchyTree);
-        this.uiData.displayIds = this.getDisplayIds(this.uiData.rects);
+        this.uiData.rects = PresenterSfUtils.makeUiRects(
+          this.currentHierarchyTree,
+          this.viewCapturePackageNames
+        );
         this.pinnedItems = [];
         this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
           this.currentHierarchyTree
         );
+        this.uiData.displays = this.getDisplays(this.uiData.rects);
       }
       this.copyUiDataAndNotifyView();
     });
@@ -220,13 +230,38 @@ export class Presenter {
     }
   }
 
-  private getDisplayIds(rects: UiRect[]): number[] {
-    const ids = new Set<number>();
+  private async initializeIfNeeded() {
+    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(this.traces);
+  }
+
+  private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
+    const ids: DisplayIdentifier[] = [];
+
     rects.forEach((rect: UiRect) => {
-      ids.add(rect.displayId);
+      if (!rect.isDisplay) return;
+      const displayId = rect.id.slice(10, rect.id.length);
+      ids.push({displayId, groupId: rect.groupId, name: rect.label});
     });
-    return Array.from(ids.values()).sort((a, b) => {
-      return a - b;
+
+    let offscreenDisplayCount = 0;
+    rects.forEach((rect: UiRect) => {
+      if (rect.isDisplay) return;
+
+      if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
+        offscreenDisplayCount++;
+        const name = 'Offscreen Display' + (offscreenDisplayCount > 1 ? offscreenDisplayCount : '');
+        ids.push({displayId: -1, groupId: rect.groupId, name});
+      }
+    });
+
+    return ids.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      }
+      if (a.name > b.name) {
+        return 1;
+      }
+      return 0;
     });
   }
 

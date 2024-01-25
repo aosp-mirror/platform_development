@@ -27,7 +27,7 @@ export class UiRectBuilder {
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
   id: string | undefined;
-  displayId: number | undefined;
+  groupId: number | undefined;
   isVirtual: boolean | undefined;
   isClickable: boolean | undefined;
   cornerRadius: number | undefined;
@@ -79,8 +79,8 @@ export class UiRectBuilder {
     return this;
   }
 
-  setDisplayId(value: number) {
-    this.displayId = value;
+  setGroupId(value: number) {
+    this.groupId = value;
     return this;
   }
 
@@ -142,8 +142,8 @@ export class UiRectBuilder {
       throw Error('id not set');
     }
 
-    if (this.displayId === undefined) {
-      throw Error('displayId not set');
+    if (this.groupId === undefined) {
+      throw Error('groupId not set');
     }
 
     if (this.isVirtual === undefined) {
@@ -167,7 +167,7 @@ export class UiRectBuilder {
       this.isVisible,
       this.isDisplay,
       this.id,
-      this.displayId,
+      this.groupId,
       this.isVirtual,
       this.isClickable,
       this.cornerRadius,

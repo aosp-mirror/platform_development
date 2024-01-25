@@ -121,6 +121,12 @@ class UnitTestUtils {
     );
   }
 
+  static async getViewCaptureEntry(): Promise<object> {
+    return await UnitTestUtils.getTraceEntry<object>(
+      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
+    );
+  }
+
   static async getMultiDisplayLayerTraceEntry(): Promise<HierarchyTreeNode> {
     return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb'
