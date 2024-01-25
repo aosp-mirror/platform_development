@@ -39,7 +39,7 @@ class Mapper3D {
   private panScreenDistance: Distance2D = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
   private showVirtualMode = false; // by default don't show virtual displays
-  private currentDisplayId = 0; // default stack id is usually 0
+  private currentGroupId = 0; // default stack id is usually 0
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
@@ -104,12 +104,12 @@ class Mapper3D {
     this.showVirtualMode = enabled;
   }
 
-  getCurrentDisplayId(): number {
-    return this.currentDisplayId;
+  getCurrentGroupId(): number {
+    return this.currentGroupId;
   }
 
-  setCurrentDisplayId(id: number) {
-    this.currentDisplayId = id;
+  setCurrentGroupId(id: number) {
+    this.currentGroupId = id;
   }
 
   computeScene(): Scene3D {
@@ -133,7 +133,7 @@ class Mapper3D {
   }
 
   private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    rects = rects.filter((rect) => rect.displayId === this.currentDisplayId);
+    rects = rects.filter((rect) => rect.groupId === this.currentGroupId);
 
     if (this.showOnlyVisibleMode) {
       rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);

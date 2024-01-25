@@ -36,7 +36,7 @@ import {UiData} from './ui_data';
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displayIds]="[0]"></rects-view>
+        [displays]="[{displayId: 0, stackId: 0}]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view-legacy
         class="hierarchy-view"

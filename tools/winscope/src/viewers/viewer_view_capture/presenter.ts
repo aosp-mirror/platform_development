@@ -184,14 +184,13 @@ export class Presenter {
         .setIsVisible(node.isVisible)
         .setIsDisplay(false)
         .setId(node.id)
-        .setDisplayId(0)
+        .setGroupId(0)
         .setIsVirtual(false)
         .setIsClickable(true)
         .setCornerRadius(0)
         .setHasContent(node.isVisible)
         .setDepth(node.depth)
         .build();
-
       rectangles.push(aUiRect);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
     }

@@ -36,7 +36,7 @@ export class PresenterSfUtils {
         .setIsVisible(traceRect.isVisible)
         .setIsDisplay(traceRect.isDisplay)
         .setId(traceRect.id)
-        .setDisplayId(traceRect.groupId)
+        .setGroupId(traceRect.groupId)
         .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(!traceRect.isDisplay)
         .setCornerRadius(traceRect.cornerRadius)

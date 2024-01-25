@@ -83,24 +83,21 @@ describe('TreeComponent', () => {
     expect(!currLocalExpandedState).toBe(component.treeComponents.first.localExpandedState);
   });
 
-  it('scrolls selected node into view if out of view', () => {
+  it('scrolls selected node only if not in view', () => {
     const tree = assertDefined(component.treeComponents.get(0));
-    const treeNode = assertDefined(
-      tree.elementRef.nativeElement.querySelector(`#node${'Child50'}`)
-    );
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '50 Child50';
+    const treeNode = assertDefined(tree.elementRef.nativeElement.querySelector(`#nodeChild79`));
+    const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
+    component.highlightedItem = '79 Child79';
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
-  });
+    expect(spy).toHaveBeenCalledTimes(1);
 
-  it('does not scroll selected element if already in view', () => {
-    const tree = assertDefined(component.treeComponents.get(0));
-    const treeNode = assertDefined(tree.elementRef.nativeElement.querySelector(`#node${'Child2'}`));
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = '2 Child2';
+    component.highlightedItem = '';
     fixture.detectChanges();
-    expect(spy).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    component.highlightedItem = '79 Child79';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it('sets initial expanded state to true by default', () => {
@@ -170,7 +167,7 @@ describe('TreeComponent', () => {
 
     constructor() {
       localStorage.clear();
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 80; i++) {
         this.tree0.addChild(TreeNodeUtils.makeUiHierarchyNode({id: i, name: `Child${i}`}));
       }
       this.tree1.addChild(TreeNodeUtils.makeUiHierarchyNode({id: 0, name: `Child0`}));
