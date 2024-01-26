@@ -81,7 +81,8 @@ function is_perfetto_data_source_available {
 function is_any_perfetto_data_source_available {
     if is_perfetto_data_source_available android.surfaceflinger.layers || \
        is_perfetto_data_source_available android.surfaceflinger.transactions || \
-       is_perfetto_data_source_available com.android.wm.shell.transition; then
+       is_perfetto_data_source_available com.android.wm.shell.transition || \
+       is_perfetto_data_source_available android.protolog; then
         return 0
     else
         return 1
@@ -90,7 +91,7 @@ function is_any_perfetto_data_source_available {
 
 function is_flag_set {
     local flag_name=$1
-    if adb shell dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
+    if dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
         return 0
     else
         return 1
@@ -256,8 +257,29 @@ fi
     ),
     "proto_log": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
-        'su root cmd window logging start\necho "WM logging started."',
-        'su root cmd window logging stop >/dev/null 2>&1'
+        f"""
+if is_perfetto_data_source_available android.protolog && \
+    is_flag_set windowing_tools/android.tracing.perfetto_protolog; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.protolog"
+    }}
+}}
+EOF
+    echo 'ProtoLog (perfetto) configured to start along the other perfetto traces'
+else
+    su root cmd window logging start
+    echo "ProtoLog (legacy) started."
+fi
+        """,
+        """
+if ! is_perfetto_data_source_available android.protolog && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_protolog; then
+    su root cmd window logging stop >/dev/null 2>&1
+    echo "ProtoLog (legacy) stopped."
+fi
+        """
     ),
     "ime_trace_clients": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
