@@ -71,3 +71,24 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "support_wear_bugfix_templates_demo_flag"
+  namespace: "wear_sysui"
+  description: "A server-side flag for wear bugfix workflow demo"
+  bug: "311226181"
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
+
+flag {
+  name: "support_wear_bugfix_templates_demo_flag_fixed_read_only"
+  namespace: "wear_sysui"
+  description: "A fixed-read-only flag for wear bugfix workflow demo"
+  bug: "311226181"
+  is_fixed_read_only: true
+  metadata {
+    purpose: PURPOSE_BUGFIX
+  }
+}
