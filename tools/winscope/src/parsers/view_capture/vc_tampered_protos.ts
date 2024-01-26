@@ -25,5 +25,3 @@ export const ExportedData = TamperedMessageType.tamper(
 export const NodeField = assertDefined(
   ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData'].tamperedMessageType
 ).fields['node'];
-
-export const NodeType = assertDefined(NodeField.tamperedMessageType);

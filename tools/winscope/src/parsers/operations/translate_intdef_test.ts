@@ -24,10 +24,10 @@ import {TranslateIntDef} from './translate_intdef';
 describe('TranslateIntDef', () => {
   let propertyRoot: PropertyTreeNode;
   let operation: TranslateIntDef;
-  let rootField: TamperedMessageType;
+  let rootType: TamperedMessageType;
 
   beforeEach(() => {
-    rootField = TamperedMessageType.tamper(root.lookupType('RootMessage'));
+    rootType = TamperedMessageType.tamper(root.lookupType('RootMessage'));
   });
 
   it('translates intdef from stored mapping', () => {
@@ -38,7 +38,7 @@ describe('TranslateIntDef', () => {
       .setChildren([{name: 'layoutParamsFlags', value: 1}])
       .build();
 
-    const field = rootField.fields['intdefMappingEntry'];
+    const field = rootType.fields['intdefMappingEntry'];
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
     expect(
@@ -70,7 +70,7 @@ describe('TranslateIntDef', () => {
       ])
       .build();
 
-    const field = rootField.fields['windowLayoutParams'];
+    const field = rootType.fields['windowLayoutParams'];
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
 

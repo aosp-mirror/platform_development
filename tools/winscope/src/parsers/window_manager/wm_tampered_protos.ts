@@ -26,38 +26,37 @@ export const WindowManagerServiceField = assertDefined(
   WindowManagerTraceFileProto.fields['entry'].tamperedMessageType
 ).fields['windowManagerService'];
 
-export const WindowManagerServiceType = assertDefined(
-  WindowManagerServiceField.tamperedMessageType
-);
+export const RootWindowContainerField = assertDefined(WindowManagerServiceField.tamperedMessageType)
+  .fields['rootWindowContainer'];
 
-export const RootWindowContainerField = WindowManagerServiceType.fields['rootWindowContainer'];
-export const RootWindowContainerType = assertDefined(RootWindowContainerField.tamperedMessageType);
+export const WindowContainerField = assertDefined(RootWindowContainerField.tamperedMessageType)
+  .fields['windowContainer'];
 
-export const WindowContainerField = RootWindowContainerType.fields['windowContainer'];
-export const WindowContainerType = assertDefined(WindowContainerField.tamperedMessageType);
+export const WindowContainerChildField = assertDefined(WindowContainerField.tamperedMessageType)
+  .fields['children'];
 
-export const WindowContainerChildField = WindowContainerType.fields['children'];
-export const WindowContainerChildType = assertDefined(
-  WindowContainerChildField.tamperedMessageType
-);
+export const DisplayContentField = assertDefined(WindowContainerChildField.tamperedMessageType)
+  .fields['displayContent'];
 
-export const DisplayContentField = WindowContainerChildType.fields['displayContent'];
-export const DisplayContentType = assertDefined(DisplayContentField.tamperedMessageType);
+export const DisplayAreaField = assertDefined(WindowContainerChildField.tamperedMessageType).fields[
+  'displayArea'
+];
 
-export const DisplayAreaField = WindowContainerChildType.fields['displayArea'];
-export const DisplayAreaType = assertDefined(DisplayAreaField.tamperedMessageType);
+export const TaskField = assertDefined(WindowContainerChildField.tamperedMessageType).fields[
+  'task'
+];
 
-export const TaskField = WindowContainerChildType.fields['task'];
-export const TaskType = assertDefined(TaskField.tamperedMessageType);
+export const ActivityField = assertDefined(WindowContainerChildField.tamperedMessageType).fields[
+  'activity'
+];
 
-export const ActivityField = WindowContainerChildType.fields['activity'];
-export const ActivityType = assertDefined(ActivityField.tamperedMessageType);
+export const WindowTokenField = assertDefined(WindowContainerChildField.tamperedMessageType).fields[
+  'windowToken'
+];
 
-export const WindowTokenField = WindowContainerChildType.fields['windowToken'];
-export const WindowTokenType = assertDefined(WindowTokenField.tamperedMessageType);
+export const WindowStateField = assertDefined(WindowContainerChildField.tamperedMessageType).fields[
+  'window'
+];
 
-export const WindowStateField = WindowContainerChildType.fields['window'];
-export const WindowStateType = assertDefined(WindowStateField.tamperedMessageType);
-
-export const TaskFragmentField = WindowContainerChildType.fields['taskFragment'];
-export const TaskFragmentType = assertDefined(TaskFragmentField.tamperedMessageType);
+export const TaskFragmentField = assertDefined(WindowContainerChildField.tamperedMessageType)
+  .fields['taskFragment'];

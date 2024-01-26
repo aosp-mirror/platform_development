@@ -39,7 +39,7 @@ import {RectsComputation} from './computations/rects_computation';
 import {VisibilityComputation} from './computations/visibility_computation';
 import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
 import {SetRootTransformProperties} from './operations/set_root_transform_properties';
-import {NodeField, NodeType} from './vc_tampered_protos';
+import {NodeField} from './vc_tampered_protos';
 
 export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   private static readonly EAGER_PROPERTIES = [
@@ -63,9 +63,9 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   private static readonly Operations = {
     SetFormattersNode: new SetFormatters(NodeField),
     TranslateIntDefNode: new TranslateIntDef(NodeField),
-    AddDefaultsNodeEager: new AddDefaults(NodeType, ParserViewCaptureWindow.EAGER_PROPERTIES),
+    AddDefaultsNodeEager: new AddDefaults(NodeField, ParserViewCaptureWindow.EAGER_PROPERTIES),
     AddDefaultsNodeLazy: new AddDefaults(
-      NodeType,
+      NodeField,
       undefined,
       ParserViewCaptureWindow.EAGER_PROPERTIES.concat(ParserViewCaptureWindow.DENYLIST_PROPERTIES)
     ),
