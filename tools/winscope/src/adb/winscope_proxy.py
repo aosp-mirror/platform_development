@@ -87,6 +87,15 @@ function is_any_perfetto_data_source_available {
         return 1
     fi
 }
+
+function is_flag_set {
+    local flag_name=$1
+    if adb shell dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
 """
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
@@ -214,7 +223,7 @@ fi
     "transactions": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
         f"""
-if is_perfetto_data_source_available android.surfaceflinger.transaction; then
+if is_perfetto_data_source_available android.surfaceflinger.transactions; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
@@ -232,7 +241,7 @@ else
 fi
 """,
         """
-if ! is_perfetto_data_source_available android.surfaceflinger.transaction; then
+if ! is_perfetto_data_source_available android.surfaceflinger.transactions; then
     su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1
 fi
 """
@@ -279,7 +288,8 @@ fi
         [WinscopeFileMatcher(WINSCOPE_DIR, "wm_transition_trace", "wm_transition_trace"),
          WinscopeFileMatcher(WINSCOPE_DIR, "shell_transition_trace", "shell_transition_trace")],
          f"""
-if is_perfetto_data_source_available com.android.wm.shell.transition; then
+if is_perfetto_data_source_available com.android.wm.shell.transition && \
+    is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
@@ -294,7 +304,8 @@ else
 fi
         """,
         """
-if ! is_perfetto_data_source_available com.android.wm.shell.transition; then
+if ! is_perfetto_data_source_available com.android.wm.shell.transition && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
     su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1
     echo 'Transition traces (legacy) stopped.'
 fi
