@@ -54,8 +54,8 @@ final class RemoteCameraManager implements AutoCloseable {
 
     void createCameras(List<RemoteEventProto.CameraCapabilities> cameraCapabilities) {
         for (RemoteEventProto.CameraCapabilities capabilities : cameraCapabilities) {
-            VirtualCameraConfig config = new VirtualCameraConfig.Builder()
-                        .setName("Remote camera " + capabilities.getCameraId())
+            VirtualCameraConfig config = new VirtualCameraConfig.Builder(
+                    "Remote camera " + capabilities.getCameraId())
                         .addStreamConfig(capabilities.getWidth(), capabilities.getHeight(),
                                             ImageFormat.YUV_420_888, capabilities.getFps())
                         .setVirtualCameraCallback(MoreExecutors.directExecutor(),
