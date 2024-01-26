@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -25,7 +24,6 @@ import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/ime/latest/json';
 import {android} from 'protos/ime/latest/static';
 import {TraceFile} from 'trace/trace_file';
-import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
@@ -34,7 +32,7 @@ import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builde
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {HierarchyTreeBuilderInputMethod} from './hierarchy_tree_builder_input_method';
 
-class ParserInputMethodManagerService extends AbstractParser {
+class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMMTRACE
 
   private static readonly ENTRY_DENYLIST_PROPERTIES = ['inputMethodManagerService'];
@@ -82,13 +80,14 @@ class ParserInputMethodManagerService extends AbstractParser {
   };
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
+  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }
 
-  getTraceType(): TraceType {
+  override getTraceType(): TraceType {
     return TraceType.INPUT_METHOD_MANAGER_SERVICE;
   }
 
@@ -124,43 +123,11 @@ class ParserInputMethodManagerService extends AbstractParser {
     index: number,
     timestampType: TimestampType,
     entry: android.view.inputmethod.IInputMethodManagerServiceTraceProto
-  ): TraceTreeNode {
+  ): HierarchyTreeNode {
     if (entry.elapsedRealtimeNanos === undefined || entry.elapsedRealtimeNanos === null) {
       throw Error('Missing elapsedRealtimeNanos on entry');
     }
-
-    const elapsedRealtimeNanos = BigInt(entry.elapsedRealtimeNanos.toString());
-
-    let clockTimeNanos: bigint | undefined = undefined;
-    if (this.realToElapsedTimeOffsetNs !== undefined && entry.elapsedRealtimeNanos !== undefined) {
-      clockTimeNanos = elapsedRealtimeNanos + this.realToElapsedTimeOffsetNs;
-    }
-
-    const timestamp = Timestamp.from(
-      timestampType,
-      elapsedRealtimeNanos,
-      this.realToElapsedTimeOffsetNs
-    );
-
-    return {
-      name: TimeUtils.format(timestamp) + ' - ' + entry.where,
-      kind: 'InputMethodManagerService entry',
-      children: [
-        {
-          obj: entry.inputMethodManagerService,
-          kind: 'InputMethodManagerService',
-          name: '',
-          children: [],
-          stableId: 'managerservice',
-          id: 'managerservice',
-        },
-      ],
-      obj: entry,
-      stableId: 'entry',
-      id: 'entry',
-      elapsedRealtimeNanos,
-      clockTimeNanos,
-    };
+    return this.makeHierarchyTree(entry);
   }
 
   private makeHierarchyTree(

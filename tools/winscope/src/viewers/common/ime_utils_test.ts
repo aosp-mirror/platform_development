@@ -23,7 +23,7 @@ describe('ImeUtils', () => {
   it('processes WindowManager trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processed = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER),
+      assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined
     );
 
@@ -81,12 +81,12 @@ describe('ImeUtils', () => {
   it('processes SurfaceFlinger trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER),
+      assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
       undefined
     );
     const layers = assertDefined(
       ImeUtils.getImeLayers(
-        entries.get(TraceType.SURFACE_FLINGER),
+        assertDefined(entries.get(TraceType.SURFACE_FLINGER)),
         processedWindowManagerState,
         undefined
       )
