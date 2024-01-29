@@ -33,12 +33,17 @@ describe('AddDiffsPropertiesTree', () => {
   const addDiffs = new AddDiffsPropertiesTree(isModified);
 
   describe('AddDiffs tests', () => {
-    executeAddDiffsTests(nodeEqualityTester, makeRoot, makeChildAndAddToRoot, addDiffs);
+    executeAddDiffsTests(
+      TreeNodeUtils.treeNodeEqualityTester,
+      makeRoot,
+      makeChildAndAddToRoot,
+      addDiffs
+    );
   });
 
   describe('Property tree tests', () => {
     beforeEach(() => {
-      jasmine.addCustomEqualityTester(nodeEqualityTester);
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
       newRoot = makeRoot();
       oldRoot = makeRoot();
       expectedRoot = makeRoot();
@@ -69,26 +74,5 @@ describe('AddDiffsPropertiesTree', () => {
     const child = TreeNodeUtils.makeUiPropertyNode('test node', 'child', value);
     rootNode.addOrReplaceChild(child);
     return child;
-  }
-
-  function nodeEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof UiPropertyTreeNode && second instanceof UiPropertyTreeNode) {
-      return testPropertyTreeNodes(first, second);
-    }
-    return undefined;
-  }
-
-  function testPropertyTreeNodes(
-    node: UiPropertyTreeNode,
-    expectedNode: UiPropertyTreeNode
-  ): boolean {
-    if (node.id !== expectedNode.id) return false;
-    if (node.name !== expectedNode.name) return false;
-    if (node.getDiff() !== expectedNode.getDiff()) return false;
-
-    for (const [index, child] of node.getAllChildren().entries()) {
-      if (!testPropertyTreeNodes(child, expectedNode.getAllChildren()[index])) return false;
-    }
-    return true;
   }
 });
