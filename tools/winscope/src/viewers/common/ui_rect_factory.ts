@@ -40,34 +40,22 @@ class UiRectFactory {
         .setHasContent(
           viewCapturePackageNames.includes(traceRect.name.substring(0, traceRect.name.indexOf('/')))
         )
+        .setDepth(traceRect.depth)
         .build();
     });
   }
 
   private extractRects(hierarchyRoot: HierarchyTreeNode): TraceRect[] {
     const rects: TraceRect[] = [];
-    const displayRects: TraceRect[] = [];
 
     hierarchyRoot.forEachNodeDfs((node) => {
       const nodeRects = node.getRects();
       if (nodeRects && nodeRects.length > 0) {
-        nodeRects[0].isDisplay ? displayRects.push(...nodeRects) : rects.push(...nodeRects);
+        rects.push(...nodeRects);
       }
     });
 
-    return rects.sort(this.compareLayerZ).concat(displayRects);
-  }
-
-  private compareLayerZ(a: TraceRect, b: TraceRect): number {
-    const zipLength = Math.min(a.zOrderPath.length, b.zOrderPath.length);
-    for (let i = 0; i < zipLength; ++i) {
-      const zOrderA = a.zOrderPath[i];
-      const zOrderB = b.zOrderPath[i];
-      if (zOrderA > zOrderB) return -1;
-      if (zOrderA < zOrderB) return 1;
-    }
-    // When z-order is the same, the layer with larger ID is on top
-    return a.id > b.id ? -1 : 1;
+    return rects;
   }
 }
 

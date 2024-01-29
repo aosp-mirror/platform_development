@@ -112,8 +112,13 @@ class Mapper3D {
     this.currentGroupId = id;
   }
 
+  private compareDepth(a: UiRect, b: UiRect): number {
+    return a.depth > b.depth ? -1 : 1;
+  }
+
   computeScene(): Scene3D {
     const rects2d = this.selectRectsToDraw(this.rects);
+    rects2d.sort(this.compareDepth);
     const rects3d = this.computeRects(rects2d);
     const labels3d = this.computeLabels(rects2d, rects3d);
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
@@ -175,13 +180,9 @@ class Mapper3D {
 
     let z = 0;
     const rects3d = rects2d.map((rect2d): Rect3D => {
-      if (rect2d.depth !== undefined) {
-        z =
-          this.zSpacingFactor *
-          (Mapper3D.Z_SPACING_MAX * rect2d.depth + computeAntiZFightingOffset(rect2d.depth));
-      } else {
-        z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
-      }
+      z =
+        this.zSpacingFactor *
+        (Mapper3D.Z_SPACING_MAX * rect2d.depth + computeAntiZFightingOffset(rect2d.depth));
 
       const darkFactor = rect2d.isVisible
         ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal

@@ -158,6 +158,10 @@ export class UiRectBuilder {
       throw Error('cornerRadius not set');
     }
 
+    if (this.depth === undefined) {
+      throw Error('depth not set');
+    }
+
     return new UiRect(
       this.x,
       this.y,

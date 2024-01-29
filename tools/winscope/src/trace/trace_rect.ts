@@ -28,11 +28,11 @@ export class TraceRect extends Rect implements Item {
     readonly name: string,
     readonly cornerRadius: number,
     readonly transform: TransformMatrix,
-    readonly zOrderPath: number[],
     readonly groupId: number,
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
-    readonly isVirtual: boolean
+    readonly isVirtual: boolean,
+    readonly depth: number
   ) {
     super(x, y, w, h);
   }

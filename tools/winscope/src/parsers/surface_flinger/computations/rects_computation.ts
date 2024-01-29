@@ -25,7 +25,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 class RectSfFactory {
   makeDisplayRects(displays: ReadonlyArray<PropertyTreeNode>): TraceRect[] {
     const names = new Set<string>();
-    return displays.map((display) => {
+    return displays.map((display, index) => {
       const size = display.getChildByName('size');
       const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
 
@@ -45,36 +45,20 @@ class RectSfFactory {
         .setName(displayName)
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([])
         .setGroupId(layerStack)
         .setIsVisible(false)
         .setIsDisplay(true)
         .setIsVirtual(display.getChildByName('isVirtual')?.getValue() ?? false)
+        .setDepth(index)
         .build();
     });
   }
 
-  makeLayerRect(layer: HierarchyTreeNode): TraceRect | undefined {
-    const zOrderPathNode = layer.getEagerPropertyByName('zOrderPath');
-    if (zOrderPathNode === undefined) {
-      throw Error('Z order path has not been computed');
-    }
+  makeLayerRect(layer: HierarchyTreeNode, absoluteZ: number): TraceRect {
+    const isVisible = assertDefined(layer.getEagerPropertyByName('isComputedVisible')).getValue();
 
-    const isVisible = layer.getEagerPropertyByName('isComputedVisible')?.getValue();
-    if (isVisible === undefined) {
-      throw Error('Visibility has not been computed');
-    }
+    const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
 
-    const occludedBy = layer.getEagerPropertyByName('occludedBy');
-
-    if (!isVisible && (occludedBy === undefined || occludedBy.getAllChildren().length === 0)) {
-      return undefined;
-    }
-
-    const bounds = layer.getEagerPropertyByName('bounds');
-    if (!bounds) {
-      return undefined;
-    }
     const name = assertDefined(layer.getEagerPropertyByName('name')).getValue();
     const boundsLeft = assertDefined(bounds.getChildByName('left')).getValue();
     const boundsTop = assertDefined(bounds.getChildByName('top')).getValue();
@@ -90,11 +74,11 @@ class RectSfFactory {
       .setName(name)
       .setCornerRadius(layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0)
       .setTransform(Transform.from(assertDefined(layer.getEagerPropertyByName('transform'))).matrix)
-      .setZOrderPath(zOrderPathNode.getAllChildren().map((child) => child.getValue()))
       .setGroupId(assertDefined(layer.getEagerPropertyByName('layerStack')).getValue())
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setIsVirtual(false)
+      .setDepth(absoluteZ)
       .build();
   }
 }
@@ -113,18 +97,61 @@ export class RectsComputation implements Computation {
       throw Error('root not set');
     }
 
-    this.root.getAllChildren().forEach((rootLayer) => {
-      rootLayer.forEachNodeDfs((layer) => {
-        const rect = this.rectsFactory.makeLayerRect(layer);
-        if (!rect) {
-          return;
-        }
-        layer.setRects([rect]);
-      });
-    });
-
     const displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
     const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
+
+    const layersWithRects = this.extractLayersWithRects(this.root);
+    layersWithRects.sort(this.compareLayerZ);
+
+    let absoluteZ = displayRects.length;
+    for (let i = layersWithRects.length - 1; i > -1; i--) {
+      const layer = layersWithRects[i];
+      const rect = this.rectsFactory.makeLayerRect(layer, absoluteZ);
+      layer.setRects([rect]);
+      absoluteZ++;
+    }
+  }
+
+  private extractLayersWithRects(hierarchyRoot: HierarchyTreeNode): HierarchyTreeNode[] {
+    return hierarchyRoot.filterDfs(this.hasLayerRect);
+  }
+
+  private hasLayerRect(node: HierarchyTreeNode): boolean {
+    if (node.isRoot()) return false;
+
+    const isVisible = node.getEagerPropertyByName('isComputedVisible')?.getValue();
+    if (isVisible === undefined) {
+      throw Error('Visibility has not been computed');
+    }
+
+    const occludedBy = node.getEagerPropertyByName('occludedBy');
+    if (!isVisible && (occludedBy === undefined || occludedBy.getAllChildren().length === 0)) {
+      return false;
+    }
+
+    const bounds = node.getEagerPropertyByName('bounds');
+    if (!bounds) return false;
+
+    return true;
+  }
+
+  private compareLayerZ(a: HierarchyTreeNode, b: HierarchyTreeNode): number {
+    const aZOrderPath: number[] = assertDefined(a.getEagerPropertyByName('zOrderPath'))
+      .getAllChildren()
+      .map((child) => child.getValue());
+    const bZOrderPath: number[] = assertDefined(b.getEagerPropertyByName('zOrderPath'))
+      .getAllChildren()
+      .map((child) => child.getValue());
+
+    const zipLength = Math.min(aZOrderPath.length, bZOrderPath.length);
+    for (let i = 0; i < zipLength; ++i) {
+      const zOrderA = aZOrderPath[i];
+      const zOrderB = bZOrderPath[i];
+      if (zOrderA > zOrderB) return -1;
+      if (zOrderA < zOrderB) return 1;
+    }
+    // When z-order is the same, the layer with larger ID is on top
+    return a.id > b.id ? -1 : 1;
   }
 }
