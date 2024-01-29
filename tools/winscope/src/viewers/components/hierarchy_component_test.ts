@@ -63,7 +63,7 @@ describe('HierarchyComponent', () => {
     htmlElement = fixture.nativeElement;
 
     const tree = TreeNodeUtils.makeUiHierarchyNode({id: 'RootNode1', name: 'Root node'});
-    tree.addChild(TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}));
+    tree.addOrReplaceChild(TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}));
     component.tree = tree;
 
     component.store = new PersistentStore();

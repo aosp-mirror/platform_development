@@ -35,12 +35,17 @@ describe('AddDiffsHierarchyTree', () => {
   const addDiffs = new AddDiffsHierarchyTree(isModified);
 
   describe('AddDiffs tests', () => {
-    executeAddDiffsTests(nodeEqualityTester, makeRoot, makeChildAndAddToRoot, addDiffs);
+    executeAddDiffsTests(
+      TreeNodeUtils.uiHierarchyNodeEqualityTester,
+      makeRoot,
+      makeChildAndAddToRoot,
+      addDiffs
+    );
   });
 
   describe('Hierarchy tree tests', () => {
     beforeEach(() => {
-      jasmine.addCustomEqualityTester(nodeEqualityTester);
+      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
       newRoot = makeRoot();
       oldRoot = makeRoot();
       expectedRoot = makeRoot();
@@ -106,7 +111,7 @@ describe('AddDiffsHierarchyTree', () => {
       name: 'child',
       exampleProperty: value,
     });
-    rootNode.addChild(child);
+    rootNode.addOrReplaceChild(child);
     child.setZParent(rootNode);
     return child;
   }
@@ -117,29 +122,8 @@ describe('AddDiffsHierarchyTree', () => {
       name: 'parent',
       exampleProperty: 'value',
     });
-    rootNode.addChild(parent);
+    rootNode.addOrReplaceChild(parent);
     parent.setZParent(rootNode);
     return parent;
-  }
-
-  function nodeEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof UiHierarchyTreeNode && second instanceof UiHierarchyTreeNode) {
-      return testHierarchyTreeNodes(first, second);
-    }
-    return undefined;
-  }
-
-  function testHierarchyTreeNodes(
-    node: UiHierarchyTreeNode,
-    expectedNode: UiHierarchyTreeNode
-  ): boolean {
-    if (node.id !== expectedNode.id) return false;
-    if (node.name !== expectedNode.name) return false;
-    if (node.getDiff() !== expectedNode.getDiff()) return false;
-
-    for (const [index, child] of node.getAllChildren().entries()) {
-      if (!testHierarchyTreeNodes(child, expectedNode.getAllChildren()[index])) return false;
-    }
-    return true;
   }
 });

@@ -18,12 +18,10 @@ import {assertDefined, assertTrue} from 'common/assert_utils';
 import {DisplayLayerStack} from 'trace/display_layer_stack';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddDisplayProperties implements Operation<PropertyTreeNode> {
   apply(value: PropertyTreeNode): void {
-    const factory = new PropertyTreeNodeFactory();
-
     const displays = value.getChildByName('displays');
 
     if (!displays) return;
@@ -39,8 +37,8 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
       const height = assertDefined(size.getChildByName('h')).getValue();
       const smallestWidth = this.dpiFromPx(Math.min(width, height), Number(dpiX.getValue()));
 
-      display.addChild(
-        factory.makeCalculatedProperty(
+      display.addOrReplaceChild(
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           display.id,
           'isLargeScreen',
           smallestWidth >= AddDisplayProperties.TABLET_MIN_DPS
@@ -54,8 +52,8 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
         () => 'layerStack = -1; false assumption that layerStack is always unsigned'
       );
 
-      display.addChild(
-        factory.makeCalculatedProperty(
+      display.addOrReplaceChild(
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           display.id,
           'isOn',
           layerStack !== DisplayLayerStack.INVALID_LAYER_STACK

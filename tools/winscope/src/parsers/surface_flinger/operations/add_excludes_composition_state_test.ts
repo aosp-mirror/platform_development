@@ -31,11 +31,11 @@ describe('AddExcludesCompositionState', () => {
   it('creates excludesCompositionState node with true value', () => {
     operation = new AddExcludesCompositionState(true);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'excludesCompositionState',
       true
     );
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
@@ -43,11 +43,11 @@ describe('AddExcludesCompositionState', () => {
   it('creates excludesCompositionState node with false value', () => {
     operation = new AddExcludesCompositionState(false);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'excludesCompositionState',
       false
     );
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });

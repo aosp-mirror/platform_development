@@ -23,45 +23,66 @@ describe('ImeUtils', () => {
   it('processes WindowManager trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processed = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)
+      entries.get(TraceType.WINDOW_MANAGER),
+      undefined
     );
 
-    expect(processed.focusedApp).toEqual(
+    expect(processed.wmStateProperties.focusedApp).toEqual(
       'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity'
     );
 
-    expect(processed.focusedActivity.token).toEqual('9d8c2ef');
-    expect(processed.focusedActivity.layerId).toEqual(260);
-
-    expect(processed.focusedWindow.token).toEqual('928b3d');
-    expect(processed.focusedWindow.title).toEqual(
-      'com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity'
+    expect(processed.wmStateProperties.focusedActivity).toEqual(
+      '{9d8c2ef com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity} state=RESUMED visible=true'
     );
 
-    expect(processed.protoImeControlTarget.windowContainer.identifier.title).toEqual(
+    expect(processed.wmStateProperties.focusedWindow).toEqual(
+      '{928b3d com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity EXITING} type=TYPE_BASE_APPLICATION cf={empty} pf=(0, 0) - (1080, 2400)'
+    );
+
+    const imeControlTarget = assertDefined(processed.wmStateProperties.imeControlTarget);
+
+    expect(
+      imeControlTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue()
+    ).toEqual(
       'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
     );
-    expect(processed.protoImeControlTarget.windowContainer.identifier.hashCode).toEqual(247026562);
 
-    expect(processed.protoImeInputTarget.windowContainer.identifier.title).toEqual(
+    const imeInputTarget = assertDefined(processed.wmStateProperties.imeInputTarget);
+    expect(
+      imeInputTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue()
+    ).toEqual(
       'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
     );
-    expect(processed.protoImeInputTarget.windowContainer.identifier.hashCode).toEqual(247026562);
 
-    expect(processed.protoImeInsetsSourceProvider.insetsSourceProvider).toBeDefined();
+    expect(
+      processed.wmStateProperties.imeInsetsSourceProvider?.getChildByName('insetsSourceProvider')
+    ).toBeDefined();
 
-    expect(processed.protoImeLayeringTarget.windowContainer.identifier.title).toEqual(
-      'SnapshotStartingWindow for taskId=1393'
-    );
-    expect(processed.protoImeLayeringTarget.windowContainer.identifier.hashCode).toEqual(222907471);
+    const imeLayeringTarget = assertDefined(processed.wmStateProperties.imeLayeringTarget);
+    expect(
+      imeLayeringTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue()
+    ).toEqual('SnapshotStartingWindow for taskId=1393');
 
-    expect(processed.isInputMethodWindowVisible).toBeFalse();
+    expect(processed.wmStateProperties.isInputMethodWindowVisible).toBeFalse();
   });
 
   it('processes SurfaceFlinger trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)
+      entries.get(TraceType.WINDOW_MANAGER),
+      undefined
     );
     const layers = assertDefined(
       ImeUtils.getImeLayers(

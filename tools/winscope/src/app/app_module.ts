@@ -44,7 +44,6 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additional_properties_component';
-import {CoordinatesTableComponentLegacy} from 'viewers/components/legacy/coordinates_table_component';
 import {HierarchyComponentLegacy} from 'viewers/components/legacy/hierarchy_component';
 import {PropertiesComponentLegacy} from 'viewers/components/legacy/properties_component';
 import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
@@ -128,7 +127,6 @@ import {WebAdbComponent} from './components/web_adb_component';
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
     CoordinatesTableComponent,
-    CoordinatesTableComponentLegacy,
     TimelineComponent,
     MiniTimelineComponent,
     ExpandedTimelineComponent,

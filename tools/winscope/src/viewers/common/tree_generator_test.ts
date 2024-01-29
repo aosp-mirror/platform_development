@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {TreeUtils} from 'common/tree_utils';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {DiffType, HierarchyTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
@@ -52,17 +52,17 @@ describe('TreeGenerator', () => {
   });
 
   it('generates tree', () => {
-    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilderLegacy()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')
       .setChildren([
-        new HierarchyTreeBuilder()
+        new HierarchyTreeBuilderLegacy()
           .setName('Child1')
           .setStableId('3 Child1')
           .setKind('3')
           .setChildren([
-            new HierarchyTreeBuilder()
+            new HierarchyTreeBuilderLegacy()
               .setName('Child2')
               .setStableId('2 Child2')
               .setKind('2')
@@ -81,17 +81,17 @@ describe('TreeGenerator', () => {
   });
 
   it('generates diff tree with no diff', () => {
-    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilderLegacy()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')
       .setChildren([
-        new HierarchyTreeBuilder()
+        new HierarchyTreeBuilderLegacy()
           .setName('Child1')
           .setStableId('3 Child1')
           .setKind('3')
           .setChildren([
-            new HierarchyTreeBuilder()
+            new HierarchyTreeBuilderLegacy()
               .setName('Child2')
               .setStableId('2 Child2')
               .setKind('2')
@@ -145,17 +145,17 @@ describe('TreeGenerator', () => {
       ],
     };
 
-    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilder()
+    const expected: HierarchyTreeNodeLegacy = new HierarchyTreeBuilderLegacy()
       .setName('LayerTraceEntry')
       .setKind('entry')
       .setStableId('LayerTraceEntry')
       .setChildren([
-        new HierarchyTreeBuilder()
+        new HierarchyTreeBuilderLegacy()
           .setName('Child1')
           .setStableId('3 Child1')
           .setKind('3')
           .setChildren([
-            new HierarchyTreeBuilder()
+            new HierarchyTreeBuilderLegacy()
               .setName('Child2')
               .setStableId('2 Child2')
               .setKind('2')
@@ -166,7 +166,7 @@ describe('TreeGenerator', () => {
           .setId(3)
           .setDiffType(DiffType.NONE)
           .build(),
-        new HierarchyTreeBuilder()
+        new HierarchyTreeBuilderLegacy()
           .setName('Child2')
           .setStableId('2 Child2')
           .setKind('2')

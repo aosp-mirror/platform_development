@@ -30,128 +30,128 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds no verbose flags', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x0);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x0);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       ''
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds HIDDEN', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x1);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x1);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'HIDDEN (0x1)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds OPAQUE', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x2);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x2);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'OPAQUE (0x2)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds SKIP_SCREENSHOT', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x40);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x40);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'SKIP_SCREENSHOT (0x40)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds SECURE', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x80);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x80);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'SECURE (0x80)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds ENABLE_BACKPRESSURE', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x100);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x100);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'ENABLE_BACKPRESSURE (0x100)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds DISPLAY_DECORATION', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x200);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x200);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'DISPLAY_DECORATION (0x200)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds IGNORE_DESTINATION_FRAME', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x400);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x400);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'IGNORE_DESTINATION_FRAME (0x400)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds multiple flags depending on bits set', () => {
-    const flags = TreeNodeUtils.makePropertyNode('test node', 'flags', 0x101);
-    propertyRoot.addChild(flags);
+    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x101);
+    propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'verboseFlags',
       'HIDDEN|ENABLE_BACKPRESSURE (0x101)'
     );
-    expectedRoot.addChild(flags);
-    expectedRoot.addChild(expectedResult);
+    expectedRoot.addOrReplaceChild(flags);
+    expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });

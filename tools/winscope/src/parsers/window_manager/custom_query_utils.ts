@@ -19,7 +19,7 @@ import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_quer
 type WindowsTokenAndTitle =
   CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE];
 
-export class ParserWindowManagerUtils {
+export class WmCustomQueryUtils {
   private static readonly NA = 'n/a';
 
   static parseWindowsTokenAndTitle(
@@ -28,14 +28,10 @@ export class ParserWindowManagerUtils {
   ) {
     const token =
       rootWindowContainer?.windowContainer?.identifier?.hashCode?.toString(16) ??
-      ParserWindowManagerUtils.NA;
-    const title =
-      rootWindowContainer?.windowContainer?.identifier?.title ?? ParserWindowManagerUtils.NA;
+      WmCustomQueryUtils.NA;
+    const title = rootWindowContainer?.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(
-      rootWindowContainer?.windowContainer,
-      result
-    );
+    WmCustomQueryUtils.parseWindowContainerProto(rootWindowContainer?.windowContainer, result);
   }
 
   private static parseWindowContainerProto(
@@ -47,23 +43,17 @@ export class ParserWindowManagerUtils {
     }
 
     for (const windowContainerChildProto of proto?.children ?? []) {
-      ParserWindowManagerUtils.parseActivityRecordProto(windowContainerChildProto.activity, result);
-      ParserWindowManagerUtils.parseDisplayAreaProto(windowContainerChildProto.displayArea, result);
-      ParserWindowManagerUtils.parseDisplayContentProto(
-        windowContainerChildProto.displayContent,
-        result
-      );
-      ParserWindowManagerUtils.parseTaskProto(windowContainerChildProto.task, result);
-      ParserWindowManagerUtils.parseTaskFragmentProto(
-        windowContainerChildProto.taskFragment,
-        result
-      );
-      ParserWindowManagerUtils.parseWindowStateProto(windowContainerChildProto.window, result);
-      ParserWindowManagerUtils.parseWindowContainerProto(
+      WmCustomQueryUtils.parseActivityRecordProto(windowContainerChildProto.activity, result);
+      WmCustomQueryUtils.parseDisplayAreaProto(windowContainerChildProto.displayArea, result);
+      WmCustomQueryUtils.parseDisplayContentProto(windowContainerChildProto.displayContent, result);
+      WmCustomQueryUtils.parseTaskProto(windowContainerChildProto.task, result);
+      WmCustomQueryUtils.parseTaskFragmentProto(windowContainerChildProto.taskFragment, result);
+      WmCustomQueryUtils.parseWindowStateProto(windowContainerChildProto.window, result);
+      WmCustomQueryUtils.parseWindowContainerProto(
         windowContainerChildProto.windowContainer,
         result
       );
-      ParserWindowManagerUtils.parseWindowTokenProto(windowContainerChildProto.windowToken, result);
+      WmCustomQueryUtils.parseWindowTokenProto(windowContainerChildProto.windowToken, result);
     }
   }
 
@@ -74,10 +64,10 @@ export class ParserWindowManagerUtils {
     if (!proto) {
       return;
     }
-    const token = proto.windowToken?.hashCode?.toString(16) ?? ParserWindowManagerUtils.NA;
-    const title = proto.name ?? ParserWindowManagerUtils.NA;
+    const token = proto.windowToken?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
+    const title = proto.name ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(proto.windowToken?.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(proto.windowToken?.windowContainer, result);
   }
 
   private static parseDisplayAreaProto(
@@ -88,10 +78,10 @@ export class ParserWindowManagerUtils {
       return;
     }
     const token =
-      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? ParserWindowManagerUtils.NA;
-    const title = proto.name ?? ParserWindowManagerUtils.NA;
+      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
+    const title = proto.name ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(proto.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(proto.windowContainer, result);
   }
 
   private static parseDisplayContentProto(
@@ -103,13 +93,10 @@ export class ParserWindowManagerUtils {
     }
     const token =
       proto.rootDisplayArea?.windowContainer?.identifier?.hashCode?.toString(16) ??
-      ParserWindowManagerUtils.NA;
-    const title = proto.displayInfo?.name ?? ParserWindowManagerUtils.NA;
+      WmCustomQueryUtils.NA;
+    const title = proto.displayInfo?.name ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(
-      proto.rootDisplayArea?.windowContainer,
-      result
-    );
+    WmCustomQueryUtils.parseWindowContainerProto(proto.rootDisplayArea?.windowContainer, result);
   }
 
   private static parseTaskProto(
@@ -121,14 +108,13 @@ export class ParserWindowManagerUtils {
     }
     const token =
       proto.taskFragment?.windowContainer?.identifier?.hashCode?.toString(16) ??
-      ParserWindowManagerUtils.NA;
-    const title =
-      proto.taskFragment?.windowContainer?.identifier?.title ?? ParserWindowManagerUtils.NA;
+      WmCustomQueryUtils.NA;
+    const title = proto.taskFragment?.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
     result.push({token, title});
     for (const activity of proto.activities ?? []) {
-      ParserWindowManagerUtils.parseActivityRecordProto(activity, result);
+      WmCustomQueryUtils.parseActivityRecordProto(activity, result);
     }
-    ParserWindowManagerUtils.parseTaskFragmentProto(proto.taskFragment, result);
+    WmCustomQueryUtils.parseTaskFragmentProto(proto.taskFragment, result);
   }
 
   private static parseTaskFragmentProto(
@@ -138,7 +124,7 @@ export class ParserWindowManagerUtils {
     if (!proto) {
       return;
     }
-    ParserWindowManagerUtils.parseWindowContainerProto(proto?.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(proto?.windowContainer, result);
   }
 
   private static parseWindowStateProto(
@@ -149,10 +135,10 @@ export class ParserWindowManagerUtils {
       return;
     }
     const token =
-      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? ParserWindowManagerUtils.NA;
-    const title = proto.windowContainer?.identifier?.title ?? ParserWindowManagerUtils.NA;
+      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
+    const title = proto.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    ParserWindowManagerUtils.parseWindowContainerProto(proto.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(proto.windowContainer, result);
   }
 
   private static parseWindowTokenProto(
@@ -162,8 +148,8 @@ export class ParserWindowManagerUtils {
     if (!proto) {
       return;
     }
-    const hash = proto.hashCode?.toString(16) ?? ParserWindowManagerUtils.NA;
+    const hash = proto.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
     result.push({token: hash, title: hash});
-    ParserWindowManagerUtils.parseWindowContainerProto(proto.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(proto.windowContainer, result);
   }
 }

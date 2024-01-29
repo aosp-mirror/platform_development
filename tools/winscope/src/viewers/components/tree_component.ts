@@ -161,7 +161,7 @@ export class TreeComponent {
   isLeaf(node?: UiPropertyTreeNode | UiHierarchyTreeNode): boolean {
     if (node === undefined) return true;
     if (node instanceof UiHierarchyTreeNode) return node.getAllChildren().length === 0;
-    return node.formattedValue().length > 0;
+    return node.formattedValue().length > 0 || node.getAllChildren().length === 0;
   }
 
   onNodeClick(event: MouseEvent) {

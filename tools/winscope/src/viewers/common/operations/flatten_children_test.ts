@@ -36,14 +36,14 @@ describe('FlattenChildren', () => {
       id: 0,
       name: 'child',
     });
-    hierarchyRoot.addChild(prevChild);
+    hierarchyRoot.addOrReplaceChild(prevChild);
 
     for (let i = 1; i < 10; i++) {
       const child = TreeNodeUtils.makeUiHierarchyNode({
         id: i,
         name: 'child',
       });
-      prevChild.addChild(child);
+      prevChild.addOrReplaceChild(child);
       prevChild = child;
     }
 
@@ -63,7 +63,7 @@ describe('FlattenChildren', () => {
       id: 0,
       name: 'child',
     });
-    hierarchyRoot.addChild(firstChild);
+    hierarchyRoot.addOrReplaceChild(firstChild);
     expectedChildren.push(firstChild);
 
     let prevChild = firstChild;
@@ -72,7 +72,7 @@ describe('FlattenChildren', () => {
         id: i,
         name: 'child',
       });
-      prevChild.addChild(child);
+      prevChild.addOrReplaceChild(child);
       expectedChildren.push(child);
       prevChild = child;
     }
@@ -81,7 +81,7 @@ describe('FlattenChildren', () => {
       id: 5,
       name: 'child',
     });
-    hierarchyRoot.addChild(secondChild);
+    hierarchyRoot.addOrReplaceChild(secondChild);
     expectedChildren.push(secondChild);
 
     prevChild = secondChild;
@@ -90,7 +90,7 @@ describe('FlattenChildren', () => {
         id: i,
         name: 'child',
       });
-      prevChild.addChild(child);
+      prevChild.addOrReplaceChild(child);
       expectedChildren.push(child);
       prevChild = child;
     }
@@ -110,7 +110,7 @@ describe('FlattenChildren', () => {
         id: i,
         name: 'child',
       });
-      hierarchyRoot.addChild(child);
+      hierarchyRoot.addOrReplaceChild(child);
     }
     expect(hierarchyRoot.getAllChildren().length).toEqual(10);
     operation.apply(hierarchyRoot);

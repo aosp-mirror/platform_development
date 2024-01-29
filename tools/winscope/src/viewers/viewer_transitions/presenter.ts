@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {Transition, WindowManagerState} from 'flickerlib/common';
+import {Transition} from 'flickerlib/common';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
@@ -31,7 +31,7 @@ export class Presenter {
   private isInitialized = false;
   private transitionTrace: Trace<object>;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
-  private windowManagerTrace: Trace<WindowManagerState> | undefined;
+  private windowManagerTrace: Trace<HierarchyTreeNode> | undefined;
   private layerIdToName = new Map<number, string>();
   private windowTokenToTitle = new Map<string, string>();
   private uiData = UiData.EMPTY;

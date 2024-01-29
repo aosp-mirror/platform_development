@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {
   BUFFER_FORMATTER,
@@ -172,10 +174,15 @@ describe('Formatters', () => {
 
   describe('RegionFormatter', () => {
     it('translates region correctly', () => {
-      const region = new PropertyTreeNode('region', 'region', PropertySource.PROTO, undefined);
-      const rect = new PropertyTreeNode('region.rect', 'rect', PropertySource.PROTO, []);
-      rect.addChild(TreeNodeUtils.makeRectNode(0, 0, 1080, 2340));
-      region.addChild(rect);
+      const region = new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('region')
+        .setChildren([{name: 'rect', value: []}])
+        .build();
+
+      const rectNode = assertDefined(region.getChildByName('rect'));
+      rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, 1080, 2340));
+
       expect(REGION_FORMATTER.format(region)).toEqual('SkRegion((0, 0, 1080, 2340))');
     });
   });

@@ -44,7 +44,7 @@ export class AddChips implements Operation<UiHierarchyTreeNode> {
         node.addChip(HWC_CHIP);
       }
 
-      if (node.getEagerPropertyByName('isVisible')?.getValue()) {
+      if (node.getEagerPropertyByName('isComputedVisible')?.getValue()) {
         node.addChip(VISIBLE_CHIP);
       }
 
