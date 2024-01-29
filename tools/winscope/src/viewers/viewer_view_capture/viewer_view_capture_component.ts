@@ -73,6 +73,6 @@ import {UiData} from './ui_data';
   ],
 })
 export class ViewerViewCaptureComponent {
-  @Input() inputData?: UiData;
-  @Input() store: PersistentStore = new PersistentStore();
+  @Input() inputData: UiData | undefined;
+  @Input() store: PersistentStore | undefined;
 }
