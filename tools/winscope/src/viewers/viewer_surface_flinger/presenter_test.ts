@@ -122,7 +122,7 @@ describe('PresenterSurfaceFlinger', () => {
 
     const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
       id: 'TestItem 4',
-      label: 'FirstPinnedItem',
+      name: 'FirstPinnedItem',
     });
 
     presenter.onPinnedItemChange(pinnedItem);

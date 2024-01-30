@@ -15,7 +15,6 @@
  */
 
 import {Cuj, Event, Transition} from 'flickerlib/common';
-import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
@@ -61,7 +60,7 @@ export interface TraceEntryTypeMap {
   [TraceType.TRANSACTIONS_LEGACY]: object;
   [TraceType.WAYLAND]: object;
   [TraceType.WAYLAND_DUMP]: object;
-  [TraceType.WINDOW_MANAGER]: WindowManagerState;
+  [TraceType.WINDOW_MANAGER]: HierarchyTreeNode;
   [TraceType.INPUT_METHOD_CLIENTS]: object;
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: object;
   [TraceType.INPUT_METHOD_SERVICE]: object;

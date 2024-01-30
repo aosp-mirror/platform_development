@@ -214,7 +214,7 @@ class Mapper3D {
 
   private getColorType(rect2d: UiRect): ColorType {
     let colorType: ColorType;
-    if (this.highlightedRectId === rect2d.id) {
+    if (this.highlightedRectId === rect2d.id && rect2d.isClickable) {
       colorType = ColorType.HIGHLIGHTED;
     } else if (rect2d.hasContent === true) {
       colorType = ColorType.HAS_CONTENT;
@@ -314,7 +314,7 @@ class Mapper3D {
         z: lineStart.z,
       };
 
-      const isHighlighted = this.highlightedRectId === rect2d.id;
+      const isHighlighted = rect2d.isClickable && this.highlightedRectId === rect2d.id;
 
       const label3d: Label3D = {
         circle: {

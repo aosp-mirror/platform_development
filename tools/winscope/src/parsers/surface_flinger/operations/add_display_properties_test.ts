@@ -37,7 +37,7 @@ describe('AddDisplayProperties', () => {
         layerStack: 0,
       },
     ]);
-    propertyRoot.addChild(displays);
+    propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
@@ -55,7 +55,7 @@ describe('AddDisplayProperties', () => {
         layerStack: 0,
       },
     ]);
-    propertyRoot.addChild(displays);
+    propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
@@ -73,7 +73,7 @@ describe('AddDisplayProperties', () => {
         layerStack: 0,
       },
     ]);
-    propertyRoot.addChild(displays);
+    propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
@@ -91,7 +91,7 @@ describe('AddDisplayProperties', () => {
         layerStack: 4294967295,
       },
     ]);
-    propertyRoot.addChild(displays);
+    propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(

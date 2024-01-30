@@ -19,12 +19,12 @@ import {Rect} from 'common/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {Transform, TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class VisibilityPropertiesComputation {
-  private propertyFactory = new PropertyTreeNodeFactory();
+export class VisibilityPropertiesComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
   private rootLayers: HierarchyTreeNode[] | undefined;
   private displays: PropertyTreeNode[] = [];
@@ -32,7 +32,7 @@ export class VisibilityPropertiesComputation {
 
   setRoot(value: HierarchyTreeNode): VisibilityPropertiesComputation {
     this.root = value;
-    this.rootLayers = value.getAllChildren();
+    this.rootLayers = value.getAllChildren().slice();
     return this;
   }
 
@@ -41,7 +41,7 @@ export class VisibilityPropertiesComputation {
       throw Error('root not set');
     }
 
-    this.displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
+    this.displays = this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ?? [];
 
     const sortedLayers = this.rootLayers.sort(this.sortLayerZ);
 
@@ -58,10 +58,14 @@ export class VisibilityPropertiesComputation {
       let isVisible = this.getIsVisible(layer);
       if (!isVisible) {
         layer.addEagerProperty(
-          this.propertyFactory.makeCalculatedProperty(layer.id, 'isVisible', isVisible)
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'isComputedVisible',
+            isVisible
+          )
         );
         layer.addEagerProperty(
-          this.propertyFactory.makeCalculatedProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
             'visibilityReason',
             this.getVisibilityReasons(layer)
@@ -96,10 +100,18 @@ export class VisibilityPropertiesComputation {
       }
 
       layer.addEagerProperty(
-        this.propertyFactory.makeCalculatedProperty(layer.id, 'isVisible', isVisible)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          layer.id,
+          'isComputedVisible',
+          isVisible
+        )
       );
       layer.addEagerProperty(
-        this.propertyFactory.makeCalculatedProperty(layer.id, 'occludedBy', occludedBy)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          layer.id,
+          'occludedBy',
+          occludedBy
+        )
       );
 
       const partiallyOccludedBy = opaqueLayers
@@ -117,7 +129,7 @@ export class VisibilityPropertiesComputation {
         .map((other) => this.getDefinedValue(other, 'id'));
 
       layer.addEagerProperty(
-        this.propertyFactory.makeCalculatedProperty(
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           layer.id,
           'partiallyOccludedBy',
           partiallyOccludedBy
@@ -136,7 +148,7 @@ export class VisibilityPropertiesComputation {
         .map((other) => this.getDefinedValue(other, 'id'));
 
       layer.addEagerProperty(
-        this.propertyFactory.makeCalculatedProperty(layer.id, 'coveredBy', coveredBy)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(layer.id, 'coveredBy', coveredBy)
       );
 
       this.getDefinedValue(layer, 'isOpaque')
@@ -145,7 +157,7 @@ export class VisibilityPropertiesComputation {
 
       if (!isVisible) {
         layer.addEagerProperty(
-          this.propertyFactory.makeCalculatedProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
             'visibilityReason',
             this.getVisibilityReasons(layer)

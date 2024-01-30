@@ -16,74 +16,82 @@
 
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {Item} from 'trace/item';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
-import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {RectsComputation} from './rects_computation';
 
 describe('RectsComputation', () => {
-  let hierarchyRoot: HierarchyTreeNode;
   let computation: RectsComputation;
 
   beforeEach(() => {
-    hierarchyRoot = TreeNodeUtils.makeHierarchyNode({id: 'LayerTraceEntry', name: 'root'} as Item);
     computation = new RectsComputation();
   });
 
   it('makes layer rects', () => {
-    const layer1Node = TreeNodeUtils.makeHierarchyNode({
-      id: 1,
-      name: 'layer1',
-      z: 0,
-      zOrderRelativeOf: -1,
-      cornerRadius: 0,
-      layerStack: 0,
-      bounds: {left: 0, top: 0, right: 1, bottom: 1},
-      parent: -1,
-      children: [2],
-      zOrderPath: [0],
-      isVisible: true,
-      transform: Transform.EMPTY,
-    } as android.surfaceflinger.ILayerProto);
-
-    layer1Node.addChild(
-      TreeNodeUtils.makeHierarchyNode({
-        id: 2,
-        name: 'layer2',
-        parent: 1,
-        children: [],
-        z: 1,
-        zOrderRelativeOf: -1,
-        cornerRadius: 2,
-        layerStack: 0,
-        bounds: {left: 0, top: 0, right: 2, bottom: 2},
-        zOrderPath: [0, 1],
-        occludedBy: [1],
-        isVisible: false,
-        transform: Transform.EMPTY,
-      } as android.surfaceflinger.ILayerProto)
-    );
-
-    hierarchyRoot.addChild(layer1Node);
-
-    hierarchyRoot.addChild(
-      TreeNodeUtils.makeHierarchyNode({
-        id: 4,
-        name: 'layerRelativeZ',
-        parent: 1,
-        children: [],
-        z: 2,
-        zOrderRelativeOf: 1,
-        cornerRadius: 0,
-        layerStack: 0,
-        bounds: {left: 0, top: 0, right: 5, bottom: 5},
-        zOrderPath: [0, 2],
-        isVisible: true,
-        transform: Transform.EMPTY,
-      } as android.surfaceflinger.ILayerProto)
-    );
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            z: 0,
+            zOrderRelativeOf: -1,
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 1, bottom: 1},
+            parent: -1,
+            children: [2],
+            zOrderPath: [0],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+          children: [
+            {
+              id: 2,
+              name: 'layer2',
+              properties: {
+                id: 2,
+                name: 'layer2',
+                parent: 1,
+                children: [],
+                z: 1,
+                zOrderRelativeOf: -1,
+                cornerRadius: 2,
+                layerStack: 0,
+                bounds: {left: 0, top: 0, right: 2, bottom: 2},
+                zOrderPath: [0, 1],
+                occludedBy: [1],
+                isComputedVisible: false,
+                transform: Transform.EMPTY,
+              } as android.surfaceflinger.ILayerProto,
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: 'layerRelativeZ',
+          properties: {
+            id: 4,
+            name: 'layerRelativeZ',
+            parent: 1,
+            children: [],
+            z: 2,
+            zOrderRelativeOf: 1,
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 5, bottom: 5},
+            zOrderPath: [0, 2],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
 
     const expectedRects: TraceRect[] = [
       new TraceRectBuilder()
@@ -150,17 +158,22 @@ describe('RectsComputation', () => {
   });
 
   it('makes display rects', () => {
-    const displays = TreeNodeUtils.makePropertyNode('LayerTraceEntry root.displays', 'displays', [
-      {
-        id: 1,
-        layerStack: 0,
-        size: {w: 5, h: 5},
-        layerStackSpaceRect: {left: 0, top: 0, bottom: 5, right: 5},
-        transform: Transform.EMPTY,
-        name: 'Test Display',
-      },
-    ]);
-    hierarchyRoot.addEagerProperty(displays);
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setProperties({
+        displays: [
+          {
+            id: 1,
+            layerStack: 0,
+            size: {w: 5, h: 5},
+            layerStackSpaceRect: {left: 0, top: 0, bottom: 5, right: 5},
+            transform: Transform.EMPTY,
+            name: 'Test Display',
+          },
+        ],
+      })
+      .build();
 
     const expectedDisplayRects = [
       new TraceRectBuilder()

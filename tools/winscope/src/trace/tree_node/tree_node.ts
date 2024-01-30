@@ -21,7 +21,7 @@ export abstract class TreeNode implements Item {
 
   constructor(public id: string, public name: string) {}
 
-  addChild(newChild: this): void {
+  addOrReplaceChild(newChild: this): void {
     const currIndex = this.children.findIndex((child) => child.id === newChild.id);
     if (currIndex !== -1) {
       this.children[currIndex] = newChild;
@@ -42,15 +42,20 @@ export abstract class TreeNode implements Item {
     return this.children.find((child) => child.name === name);
   }
 
-  getAllChildren(): this[] {
+  getAllChildren(): ReadonlyArray<this> {
     return this.children;
   }
 
-  forEachNodeDfs(callback: (node: this) => void) {
+  forEachNodeDfs(callback: (node: this) => void, reverseChildren = false) {
     callback(this);
-    this.children.forEach((child) => {
-      child.forEachNodeDfs(callback);
-    });
+
+    if (reverseChildren) {
+      for (let i = this.children.length - 1; i > -1; i--) {
+        this.children[i].forEachNodeDfs(callback, reverseChildren);
+      }
+    } else {
+      this.children.forEach((child) => child.forEachNodeDfs(callback, reverseChildren));
+    }
   }
 
   findDfs(targetNodeFilter: (node: this) => boolean): this | undefined {
@@ -64,6 +69,18 @@ export abstract class TreeNode implements Item {
     }
 
     return undefined;
+  }
+
+  filterDfs(predicate: (node: this) => boolean, reverseChildren = false): this[] {
+    const result: this[] = [];
+
+    this.forEachNodeDfs((node) => {
+      if (predicate(node)) {
+        result.push(node);
+      }
+    }, reverseChildren);
+
+    return result;
   }
 
   abstract isRoot(): boolean;

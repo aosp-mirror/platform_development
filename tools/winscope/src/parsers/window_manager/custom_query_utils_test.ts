@@ -17,7 +17,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {TraceType} from 'trace/trace_type';
 
-describe('ParserWindowManagerUtils', async () => {
+describe('WmCustomQueryUtils', async () => {
   it('parseWindowsTokenAndTitle()', async () => {
     const trace = await UnitTestUtils.getTrace(
       TraceType.WINDOW_MANAGER,

@@ -17,7 +17,6 @@
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -27,6 +26,7 @@ import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {ImeLayers, ImeUtils, ProcessedWindowManagerState} from 'viewers/common/ime_utils';
@@ -52,7 +52,7 @@ type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
 export abstract class PresenterInputMethod {
   private readonly imeTrace: Trace<object>;
-  private readonly wmTrace?: Trace<WindowManagerState>;
+  private readonly wmTrace?: Trace<HierarchyTreeNode>;
   private readonly sfTrace?: Trace<HierarchyTreeNode>;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private layerHierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
@@ -60,7 +60,7 @@ export abstract class PresenterInputMethod {
   private layerPropertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private pinnedItems: Array<HierarchyTreeNodeLegacy | UiHierarchyTreeNode> = [];
   private pinnedIds: string[] = [];
-  private selectedHierarchyTree: HierarchyTreeNodeLegacy | UiHierarchyTreeNode | undefined;
+  private selectedHierarchyTree: HierarchyTreeNodeLegacy | HierarchyTreeNode | undefined;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
   protected readonly dependencies: TraceType[];
@@ -123,6 +123,7 @@ export abstract class PresenterInputMethod {
       this.uiData = new ImeUiData(this.dependencies);
       this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
       this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+      this.selectedHierarchyTree = undefined;
 
       const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(event.position);
 
@@ -132,7 +133,8 @@ export abstract class PresenterInputMethod {
         this.uiData.additionalProperties = this.getAdditionalProperties(
           await wmEntry?.getValue(),
           await sfEntry?.getValue(),
-          sfEntry?.getTimestamp()
+          sfEntry?.getTimestamp(),
+          wmEntry?.getTimestamp()
         );
         this.uiData.tree = this.generateTree();
         this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
@@ -141,7 +143,7 @@ export abstract class PresenterInputMethod {
     });
   }
 
-  updatePinnedItems(pinnedItem: HierarchyTreeNodeLegacy | UiHierarchyTreeNode) {
+  onPinnedItemChange(pinnedItem: HierarchyTreeNodeLegacy | UiHierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
@@ -153,7 +155,7 @@ export abstract class PresenterInputMethod {
     this.copyUiDataAndNotifyView();
   }
 
-  updateHighlightedItem(id: string) {
+  onHighlightedItemChange(id: string) {
     if (this.highlightedItem === id) {
       this.highlightedItem = '';
     } else {
@@ -163,7 +165,7 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  updateHierarchyTree(userOptions: UserOptions) {
+  onHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
@@ -173,7 +175,7 @@ export abstract class PresenterInputMethod {
     this.copyUiDataAndNotifyView();
   }
 
-  filterHierarchyTree(filterString: string) {
+  onHierarchyFilterChange(filterString: string) {
     this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.layerHierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
@@ -183,19 +185,19 @@ export abstract class PresenterInputMethod {
     this.copyUiDataAndNotifyView();
   }
 
-  async updatePropertiesTree(userOptions: UserOptions) {
+  async onPropertiesUserOptionsChange(userOptions: UserOptions) {
     this.propertiesUserOptions = userOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
     await this.updateSelectedTreeUiData();
   }
 
-  async filterPropertiesTree(filterString: string) {
+  async onPropertiesFilterChange(filterString: string) {
     this.propertiesFilter = TreeUtils.makeNodeFilter(filterString);
     this.layerPropertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 
-  async newPropertiesTree(selectedItem: HierarchyTreeNodeLegacy | UiHierarchyTreeNode) {
+  async onSelectedHierarchyTreeChange(selectedItem: HierarchyTreeNodeLegacy | UiHierarchyTreeNode) {
     if (this.selectedHierarchyTree?.id !== selectedItem.id) {
       this.additionalPropertyEntry = null;
       this.selectedHierarchyTree = selectedItem;
@@ -203,32 +205,37 @@ export abstract class PresenterInputMethod {
     }
   }
 
-  async newAdditionalPropertiesTree(selectedItem: any) {
-    this.selectedHierarchyTree = new HierarchyTreeNodeLegacy(
-      selectedItem.name,
-      'AdditionalProperty',
-      'AdditionalProperty'
-    );
-    this.additionalPropertyEntry = {
-      name: selectedItem.name,
-      kind: 'AdditionalProperty',
-      children: [],
-      stableId: 'AdditionalProperty',
-      proto: selectedItem.proto,
-    };
-    await this.updateSelectedTreeUiData();
+  async onAdditionalPropertySelected(selectedItem: {name: string | undefined; treeNode: TreeNode}) {
+    if (selectedItem.treeNode instanceof HierarchyTreeNode) {
+      this.highlightedItem = '';
+      this.uiData.highlightedItem = this.highlightedItem;
+
+      this.selectedHierarchyTree = selectedItem.treeNode;
+      this.additionalPropertyEntry = {
+        name: selectedItem.name ?? '',
+        kind: 'AdditionalProperty',
+        children: [],
+        stableId: 'AdditionalProperty',
+        proto: selectedItem,
+      };
+      await this.updateSelectedTreeUiData();
+    } else if (selectedItem.treeNode instanceof PropertyTreeNode) {
+      this.uiData.propertiesTree = this.formatAdditionalPropertiesTree(selectedItem.treeNode);
+      this.copyUiDataAndNotifyView();
+    }
   }
 
   protected getAdditionalProperties(
-    wmEntry: TraceTreeNode | undefined,
+    wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
-    sfEntryTimestamp: Timestamp | undefined
+    sfEntryTimestamp: Timestamp | undefined,
+    wmEntryTimestamp: Timestamp | undefined
   ): ImeAdditionalProperties {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;
 
     if (wmEntry) {
-      wmProperties = ImeUtils.processWindowManagerTraceEntry(wmEntry);
+      wmProperties = ImeUtils.processWindowManagerTraceEntry(wmEntry, wmEntryTimestamp);
 
       if (sfEntry) {
         sfProperties = ImeUtils.getImeLayers(sfEntry, wmProperties, sfEntryTimestamp);
@@ -279,8 +286,10 @@ export abstract class PresenterInputMethod {
       this.uiData.propertiesTree = this.getTreeWithTransformedProperties(
         this.selectedHierarchyTree
       );
-    } else if (this.selectedHierarchyTree instanceof UiHierarchyTreeNode) {
-      this.uiData.propertiesTree = await this.getSfPropertiesTree(this.selectedHierarchyTree);
+    } else if (this.selectedHierarchyTree instanceof HierarchyTreeNode) {
+      this.uiData.propertiesTree = await this.getAdditionalPropertiesTree(
+        this.selectedHierarchyTree
+      );
     }
     this.copyUiDataAndNotifyView();
   }
@@ -305,11 +314,11 @@ export abstract class PresenterInputMethod {
     return transformedTree;
   }
 
-  private async getSfPropertiesTree(
-    selectedHierarchyTree: UiHierarchyTreeNode
+  private async getAdditionalPropertiesTree(
+    selectedHierarchyTree: HierarchyTreeNode
   ): Promise<UiPropertyTreeNode> {
     const propertiesTree = await selectedHierarchyTree.getAllProperties();
-    return this.formattedSfPropertiesTree(propertiesTree);
+    return this.formatAdditionalPropertiesTree(propertiesTree);
   }
 
   private findTraceEntries(
@@ -317,7 +326,7 @@ export abstract class PresenterInputMethod {
   ): [
     TraceEntry<object> | undefined,
     TraceEntry<HierarchyTreeNode> | undefined,
-    TraceEntry<WindowManagerState> | undefined
+    TraceEntry<HierarchyTreeNode> | undefined
   ] {
     const imeEntry = TraceEntryFinder.findCorrespondingEntry(this.imeTrace, position);
     if (!imeEntry) {
@@ -379,21 +388,20 @@ export abstract class PresenterInputMethod {
     return pinnedNodes;
   }
 
-  private formattedSfPropertiesTree(propertiesTree: PropertyTreeNode): UiPropertyTreeNode {
-    const predicates = [this.layerPropertiesFilter, UiTreeUtils.isNotCalculated];
+  private formatAdditionalPropertiesTree(propertiesTree: PropertyTreeNode): UiPropertyTreeNode {
+    const predicatesKeepingChildren = [this.layerPropertiesFilter];
+    const predicatesDiscardingChildren = [
+      UiTreeUtils.isNotCalculated,
+      UiTreeUtils.makeDenyListFilter(PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES),
+    ];
     if (this.propertiesUserOptions['showDefaults']?.enabled) {
-      predicates.push(UiTreeUtils.isNotDefault);
+      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
     }
 
     return new UiTreeFormatter<UiPropertyTreeNode>()
       .setUiTree(UiPropertyTreeNode.from(propertiesTree))
-      .addOperation(
-        new Filter(
-          [UiTreeUtils.makeDenyListFilter(PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES)],
-          false
-        )
-      )
-      .addOperation(new Filter(predicates, true))
+      .addOperation(new Filter(predicatesDiscardingChildren, false))
+      .addOperation(new Filter(predicatesKeepingChildren, true))
       .format();
   }
 

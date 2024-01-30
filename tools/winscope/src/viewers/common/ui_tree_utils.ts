@@ -28,7 +28,8 @@ export class UiTreeUtils {
 
   static isVisible: TreeNodeFilter = (node: TreeNode) => {
     return (
-      node instanceof UiHierarchyTreeNode && node.getEagerPropertyByName('isVisible')?.getValue()
+      node instanceof UiHierarchyTreeNode &&
+      node.getEagerPropertyByName('isComputedVisible')?.getValue()
     );
   };
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -25,6 +26,7 @@ describe('Filter', () => {
 
   describe('keeping parents and children', () => {
     beforeEach(() => {
+      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
       const filter = (item: TreeNode | undefined) => {
         if (item) {
           return item.name === 'keep';
@@ -35,120 +37,204 @@ describe('Filter', () => {
     });
 
     it('discards leaf that does not match filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      hierarchyRoot.addChild(
-        TreeNodeUtils.makeUiHierarchyNode({
-          id: 'node',
-          name: 'discard',
-        })
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'discard'}])
+          .build()
       );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('root').build()
+      );
+
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps leaf that matches filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'node',
-        name: 'keep',
-      });
-      hierarchyRoot.addChild(child);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'keep'}])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'keep'}])
+          .build()
+      );
+
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('discards node with children if node and children do not match filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'discard',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'discard',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'discard',
+              children: [
+                {
+                  id: 'node',
+                  name: 'discard',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('root').build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps leaf that matches filter and its non-matching parent', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'discard',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'keep',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'discard',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'discard',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
-      expect(parent.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps parent that matches filter and its non-matching children', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'keep',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'discard',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'discard',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'discard',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
-      expect(parent.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps parent that matches filter and its matching children', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'keep',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'keep',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
-      expect(parent.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
   });
 
   describe('without keeping parents and children', () => {
     beforeEach(() => {
+      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
       const filter = (item: TreeNode | undefined) => {
         if (item) {
           return item.name === 'keep';
@@ -159,119 +245,187 @@ describe('Filter', () => {
     });
 
     it('discards leaf that does not match filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      hierarchyRoot.addChild(
-        TreeNodeUtils.makeUiHierarchyNode({
-          id: 'node',
-          name: 'discard',
-        })
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'discard'}])
+          .build()
       );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('root').build()
+      );
+
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps leaf that matches filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'node',
-        name: 'keep',
-      });
-      hierarchyRoot.addChild(child);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'keep'}])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([{id: 'node', name: 'keep'}])
+          .build()
+      );
+
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('discards node with children if node and children do not match filter', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'discard',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'discard',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'discard',
+              children: [
+                {
+                  id: 'child',
+                  name: 'discard',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('root').build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('discards leaf that matches filter but has non-matching parent', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'discard',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'keep',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'discard',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('root').build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps parent that matches filter and discards its non-matching children', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'keep',
-      });
-      const childToKeep = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'keep',
-      });
-      const childToDiscard = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'discard',
-      });
-      parent.addChild(childToKeep);
-      parent.addChild(childToDiscard);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+                {
+                  id: 'child',
+                  name: 'discard',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
-      expect(parent.getAllChildren()).toEqual([childToKeep]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
 
     it('keeps parent that matches filter and its matching children', () => {
-      hierarchyRoot = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'test',
-        name: 'root',
-      });
-      const parent = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'parent',
-        name: 'keep',
-      });
-      const child = TreeNodeUtils.makeUiHierarchyNode({
-        id: 'child',
-        name: 'keep',
-      });
-      parent.addChild(child);
-      hierarchyRoot.addChild(parent);
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('root')
+          .setChildren([
+            {
+              id: 'parent',
+              name: 'keep',
+              children: [
+                {
+                  id: 'child',
+                  name: 'keep',
+                },
+              ],
+            },
+          ])
+          .build()
+      );
 
       operation.apply(hierarchyRoot);
-      expect(hierarchyRoot.getAllChildren()).toEqual([parent]);
-      expect(parent.getAllChildren()).toEqual([child]);
+      expect(hierarchyRoot).toEqual(expectedRoot);
     });
   });
 });

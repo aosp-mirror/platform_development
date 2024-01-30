@@ -22,6 +22,9 @@ import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {Utils} from 'parsers/perfetto/utils';
+import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
+import {VisibilityPropertiesComputation} from 'parsers/surface_flinger/computations/visibility_properties_computation';
+import {ZOrderPathsComputation} from 'parsers/surface_flinger/computations/z_order_paths_computation';
 import {HierarchyTreeBuilderSf} from 'parsers/surface_flinger/hierarchy_tree_builder_sf';
 import {ParserSfUtils} from 'parsers/surface_flinger/parser_surface_flinger_utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -217,7 +220,15 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       ])
       .build();
 
-    return new HierarchyTreeBuilderSf().setEntry(entry).setLayers(layers).build();
+    return new HierarchyTreeBuilderSf()
+      .setRoot(entry)
+      .setChildren(layers)
+      .setComputations([
+        new ZOrderPathsComputation(),
+        new VisibilityPropertiesComputation(),
+        new RectsComputation(),
+      ])
+      .build();
   }
 
   private async querySnapshotLayers(index: number): Promise<perfetto.protos.ILayerProto[]> {
