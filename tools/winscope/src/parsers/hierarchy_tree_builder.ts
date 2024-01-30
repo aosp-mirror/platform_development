@@ -71,16 +71,16 @@ export abstract class HierarchyTreeBuilder {
     identifierToChild: Map<string | number, PropertiesProvider[]>
   ): HierarchyTreeNode {
     const childProperties = child.getEagerProperties();
-    const subChildren: HierarchyTreeNode[] = assertDefined(
-      childProperties.getChildByName('children')
-    )
-      .getAllChildren()
-      .flatMap((identifier: PropertyTreeNode) => {
-        const key = this.getIdentifierValue(identifier);
-        return assertDefined(identifierToChild.get(key)).map((child) => {
-          return this.buildSubtree(child, identifierToChild);
-        });
-      });
+    const subChildren: HierarchyTreeNode[] =
+      childProperties
+        .getChildByName('children')
+        ?.getAllChildren()
+        .flatMap((identifier: PropertyTreeNode) => {
+          const key = this.getIdentifierValue(identifier);
+          return assertDefined(identifierToChild.get(key)).map((child) => {
+            return this.buildSubtree(child, identifierToChild);
+          });
+        }) ?? [];
 
     return this.buildHierarchyTreeNode(
       childProperties.id,
