@@ -69,8 +69,8 @@ import {UiData} from './ui_data';
   ],
 })
 export class ViewerSurfaceFlingerComponent {
-  @Input() inputData?: UiData;
-  @Input() store: PersistentStore = new PersistentStore();
+  @Input() inputData: UiData | undefined;
+  @Input() store: PersistentStore | undefined;
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;

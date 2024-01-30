@@ -23,6 +23,10 @@ import {MatListModule} from '@angular/material/list';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {MockStorage} from 'test/unit/mock_storage';
+import {TraceConfigurationMap, TRACES} from 'trace_collection/trace_collection_utils';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {TraceConfigComponent} from './trace_config_component';
@@ -58,6 +62,31 @@ describe('CollectTracesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.isAdbProxy = true;
+    component.storage = new MockStorage();
+    component.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'TracingSettings',
+      TRACES['default'],
+      component.storage
+    );
+    component.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'DumpSettings',
+      {
+        window_dump: {
+          name: 'Window Manager',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
+        layers_dump: {
+          name: 'Surface Flinger',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
+      },
+      component.storage
+    );
+    fixture.detectChanges();
   });
 
   it('can be created', () => {
@@ -65,18 +94,17 @@ describe('CollectTracesComponent', () => {
   });
 
   it('renders the expected card title', () => {
-    fixture.detectChanges();
     expect(htmlElement.querySelector('.title')?.innerHTML).toContain('Collect Traces');
   });
 
   it('displays connecting message', () => {
-    component.connect.isConnectingState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isConnectingState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
     expect(htmlElement.querySelector('.connecting-message')?.innerHTML).toContain('Connecting...');
   });
 
   it('displays adb set up', async () => {
-    component.connect.adbSuccess = jasmine.createSpy().and.returnValue(false);
+    assertDefined(component.connect).adbSuccess = jasmine.createSpy().and.returnValue(false);
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       expect(htmlElement.querySelector('.set-up-adb')).toBeTruthy();
@@ -88,7 +116,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays adb proxy element', async () => {
-    component.connect.adbSuccess = jasmine.createSpy().and.returnValue(false);
+    assertDefined(component.connect).adbSuccess = jasmine.createSpy().and.returnValue(false);
     component.isAdbProxy = true;
     fixture.detectChanges();
     fixture.whenStable().then(() => {
@@ -98,7 +126,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays web adb element', async () => {
-    component.connect.adbSuccess = jasmine.createSpy().and.returnValue(false);
+    assertDefined(component.connect).adbSuccess = jasmine.createSpy().and.returnValue(false);
     component.isAdbProxy = false;
     fixture.detectChanges();
     fixture.whenStable().then(() => {
@@ -108,7 +136,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('changes to adb workflow tab', async () => {
-    component.connect.adbSuccess = jasmine.createSpy().and.returnValue(false);
+    assertDefined(component.connect).adbSuccess = jasmine.createSpy().and.returnValue(false);
     component.isAdbProxy = true;
     fixture.detectChanges();
     fixture.whenStable().then(() => {
@@ -122,8 +150,8 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays no connected devices', async () => {
-    component.connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
-    component.connect.devices = jasmine.createSpy().and.returnValue({});
+    assertDefined(component.connect).isDevicesState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).devices = jasmine.createSpy().and.returnValue({});
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       const el = htmlElement.querySelector('.devices-connecting');
@@ -133,8 +161,8 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays connected authorised devices', async () => {
-    component.connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
-    component.connect.devices = jasmine
+    assertDefined(component.connect).isDevicesState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).devices = jasmine
       .createSpy()
       .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
     fixture.detectChanges();
@@ -148,8 +176,8 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays connected unauthorised devices', async () => {
-    component.connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
-    component.connect.devices = jasmine
+    assertDefined(component.connect).isDevicesState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).devices = jasmine
       .createSpy()
       .and.returnValue({'35562': {model: 'Pixel 6', authorised: false}});
     fixture.detectChanges();
@@ -163,10 +191,10 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays trace collection config elements', async () => {
-    component.connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    component.connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
-    component.connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    assertDefined(component.connect).devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    assertDefined(component.connect).selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
     fixture.whenStable().then(() => {
@@ -185,10 +213,10 @@ describe('CollectTracesComponent', () => {
   });
 
   it('start trace button works as expected', async () => {
-    component.connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    component.connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
-    component.connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    assertDefined(component.connect).devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    assertDefined(component.connect).selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
     fixture.whenStable().then(() => {
@@ -197,16 +225,16 @@ describe('CollectTracesComponent', () => {
       start?.dispatchEvent(new Event('click'));
       fixture.whenStable().then(() => {
         expect(component.startTracing).toHaveBeenCalled();
-        expect(component.connect.startTrace).toHaveBeenCalled();
+        expect(assertDefined(component.connect).startTrace).toHaveBeenCalled();
       });
     });
   });
 
   it('dump state button works as expected', async () => {
-    component.connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    component.connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
-    component.connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    assertDefined(component.connect).devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    assertDefined(component.connect).selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
     fixture.whenStable().then(() => {
@@ -215,16 +243,16 @@ describe('CollectTracesComponent', () => {
       dump?.dispatchEvent(new Event('click'));
       fixture.whenStable().then(() => {
         expect(component.dumpState).toHaveBeenCalled();
-        expect(component.connect.dumpState).toHaveBeenCalled();
+        expect(assertDefined(component.connect).dumpState).toHaveBeenCalled();
       });
     });
   });
 
   it('change device button works as expected', async () => {
-    component.connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    component.connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
-    component.connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    assertDefined(component.connect).devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    assertDefined(component.connect).selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
     fixture.whenStable().then(() => {
@@ -232,14 +260,14 @@ describe('CollectTracesComponent', () => {
       expect(change).toBeInstanceOf(HTMLButtonElement);
       change?.dispatchEvent(new Event('click'));
       fixture.whenStable().then(() => {
-        expect(component.connect.resetLastDevice).toHaveBeenCalled();
+        expect(assertDefined(component.connect).resetLastDevice).toHaveBeenCalled();
       });
     });
   });
 
   it('displays unknown error message', () => {
-    component.connect.isErrorState = jasmine.createSpy().and.returnValue(true);
-    component.connect.proxy!.errorText = 'bad things are happening';
+    assertDefined(component.connect).isErrorState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).proxy!.errorText = 'bad things are happening';
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       const el = htmlElement.querySelector('.unknown-error');
@@ -249,13 +277,13 @@ describe('CollectTracesComponent', () => {
       expect(retry).toBeInstanceOf(HTMLButtonElement);
       retry?.dispatchEvent(new Event('click'));
       fixture.whenStable().then(() => {
-        expect(component.connect.restart).toHaveBeenCalled();
+        expect(assertDefined(component.connect).restart).toHaveBeenCalled();
       });
     });
   });
 
   it('displays end tracing elements', () => {
-    component.connect.isEndTraceState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isEndTraceState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       const el = htmlElement.querySelector('.end-tracing');
@@ -267,13 +295,13 @@ describe('CollectTracesComponent', () => {
       end?.dispatchEvent(new Event('click'));
       fixture.whenStable().then(() => {
         expect(component.endTrace).toHaveBeenCalled();
-        expect(component.connect.endTrace).toHaveBeenCalled();
+        expect(assertDefined(component.connect).endTrace).toHaveBeenCalled();
       });
     });
   });
 
   it('displays loading data elements', () => {
-    component.connect.isLoadDataState = jasmine.createSpy().and.returnValue(true);
+    assertDefined(component.connect).isLoadDataState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       expect(htmlElement.querySelector('.load-data')?.innerHTML).toContain('Loading data...');

@@ -16,6 +16,7 @@
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
+import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TabbedViewSwitched, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
@@ -101,8 +102,8 @@ interface Tab {
   ],
 })
 export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventListener {
-  @Input() viewers!: Viewer[];
-  @Input() store!: PersistentStore;
+  @Input() viewers: Viewer[] = [];
+  @Input() store: PersistentStore | undefined;
 
   TRACE_INFO = TRACE_INFO;
   tabs: Tab[] = [];
@@ -181,9 +182,9 @@ export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventLi
 
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
-      const container = this.elementRef.nativeElement.querySelector(
-        '.overlay .draggable-container'
-      )!;
+      const container = assertDefined(
+        this.elementRef.nativeElement.querySelector('.overlay .draggable-container')
+      );
       container.appendChild(view.htmlElement);
     });
   }
@@ -199,7 +200,9 @@ export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventLi
       // (added to the DOM) it has style.display == "". This fixes the
       // initialization/rendering issues with cdk-virtual-scroll-viewport
       // components inside the tab contents.
-      const traceViewContent = this.elementRef.nativeElement.querySelector('.trace-view-content')!;
+      const traceViewContent = assertDefined(
+        this.elementRef.nativeElement.querySelector('.trace-view-content')
+      );
       traceViewContent.appendChild(tab.view.htmlElement);
       tab.addedToDom = true;
     } else {
