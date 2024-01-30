@@ -15,6 +15,7 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -27,7 +28,7 @@ describe('HierarchyTreeBuilderWm', () => {
   let entryPropertiesTree: PropertyTreeNode;
 
   beforeEach(() => {
-    jasmine.addCustomEqualityTester(nodeEqualityTester);
+    jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
     builder = new HierarchyTreeBuilderWm();
     entryPropertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -73,55 +74,13 @@ describe('HierarchyTreeBuilderWm', () => {
 
   it('builds root with children correctly', () => {
     const container1Props = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('DisplayContent 1234567')
-      .setName('container1')
-      .setChildren([
-        {name: 'id', value: 1},
-        {name: 'name', value: 'container1'},
-        {name: 'token', value: '1234567'},
-        {name: 'children', value: []},
-      ])
-      .build();
-
-    const container1Provider = new PropertiesProvider(
-      container1Props,
-      async () => container1Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
-    );
-
-    const root = builder.setRoot(entry).setChildren([container1Provider]).build();
-
-    const expectedRoot = new HierarchyTreeNode(
-      'WindowManagerState root',
-      'root',
-      new PropertiesProvider(
-        entryPropertiesTree,
-        async () => entryPropertiesTree,
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
-    );
-    expectedRoot.addOrReplaceChild(
-      new HierarchyTreeNode('DisplayContent 1234567 container1', 'container1', container1Provider)
-    );
-
-    expect(root).toEqual(expectedRoot);
-  });
-
-  it('builds root with nested children correctly', () => {
-    const container1Props = new PropertyTreeBuilder()
-      .setRootId('DisplayContent 1234567')
-      .setName('container1')
+      .setRootId('RootWindowContainer')
+      .setName('1234567 container1')
       .setIsRoot(true)
       .setChildren([
         {name: 'id', value: 1},
-        {name: 'name', value: 'container1'},
         {name: 'token', value: '1234567'},
-        {name: 'children', value: [7654321]},
+        {name: 'children', children: [{name: '0', value: '7654321'}]},
       ])
       .build();
 
@@ -134,12 +93,11 @@ describe('HierarchyTreeBuilderWm', () => {
     );
 
     const container2Props = new PropertyTreeBuilder()
-      .setRootId('DisplayArea 7654321')
-      .setName('container2')
+      .setRootId('DisplayContent')
+      .setName('7654321 container2')
       .setIsRoot(true)
       .setChildren([
         {name: 'id', value: 2},
-        {name: 'name', value: 'container2'},
         {name: 'token', value: '7654321'},
         {name: 'children', value: []},
       ])
@@ -169,14 +127,96 @@ describe('HierarchyTreeBuilderWm', () => {
         OperationChain.emptyChain<PropertyTreeNode>()
       )
     );
-    const expectedRootLayer = new HierarchyTreeNode(
-      'DisplayContent 1234567 container1',
-      'container1',
-      container1Provider
+    expectedRoot.addOrReplaceChild(
+      new HierarchyTreeNode('DisplayContent 7654321 container2', 'container2', container1Provider)
     );
-    const expectedNestedLayer = new HierarchyTreeNode(
-      'DisplayArea 7654321 container2',
+
+    expect(root).toEqual(expectedRoot);
+  });
+
+  it('builds root with nested children correctly', () => {
+    const container1Props = new PropertyTreeBuilder()
+      .setRootId('RootWindowContainer')
+      .setName('1234567 container1')
+      .setIsRoot(true)
+      .setChildren([
+        {name: 'id', value: 1},
+        {name: 'token', value: '1234567'},
+        {name: 'children', children: [{name: '0', value: '7654321'}]},
+      ])
+      .build();
+
+    const container1Provider = new PropertiesProvider(
+      container1Props,
+      async () => container1Props,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>()
+    );
+
+    const container2Props = new PropertyTreeBuilder()
+      .setRootId('DisplayContent')
+      .setName('7654321 container2')
+      .setIsRoot(true)
+      .setChildren([
+        {name: 'id', value: 2},
+        {name: 'token', value: '7654321'},
+        {name: 'children', children: [{name: '0', value: '4646464'}]},
+      ])
+      .build();
+
+    const container2Provider = new PropertiesProvider(
+      container2Props,
+      async () => container2Props,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>()
+    );
+
+    const container3Props = new PropertyTreeBuilder()
+      .setRootId('DisplayArea')
+      .setName('4646464 container3')
+      .setIsRoot(true)
+      .setChildren([
+        {name: 'id', value: 3},
+        {name: 'token', value: '4646464'},
+        {name: 'children', value: []},
+      ])
+      .build();
+
+    const container3Provider = new PropertiesProvider(
+      container3Props,
+      async () => container3Props,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>()
+    );
+
+    const root = builder
+      .setRoot(entry)
+      .setChildren([container1Provider, container2Provider, container3Provider])
+      .build();
+
+    const expectedRoot = new HierarchyTreeNode(
+      'WindowManagerState root',
+      'root',
+      new PropertiesProvider(
+        entryPropertiesTree,
+        async () => entryPropertiesTree,
+        OperationChain.emptyChain<PropertyTreeNode>(),
+        OperationChain.emptyChain<PropertyTreeNode>(),
+        OperationChain.emptyChain<PropertyTreeNode>()
+      )
+    );
+    const expectedRootLayer = new HierarchyTreeNode(
+      'DisplayContent 7654321 container2',
       'container2',
+      container2Provider
+    );
+
+    const expectedNestedLayer = new HierarchyTreeNode(
+      'DisplayArea 4646464 container3',
+      'container3',
       container2Provider
     );
     expectedRootLayer.addOrReplaceChild(expectedNestedLayer);
@@ -184,24 +224,4 @@ describe('HierarchyTreeBuilderWm', () => {
 
     expect(root).toEqual(expectedRoot);
   });
-
-  function nodeEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof HierarchyTreeNode && second instanceof HierarchyTreeNode) {
-      return testHierarchyTreeNodes(first, second);
-    }
-    return undefined;
-  }
-
-  function testHierarchyTreeNodes(
-    node: HierarchyTreeNode,
-    expectedNode: HierarchyTreeNode
-  ): boolean {
-    if (node.id !== expectedNode.id) return false;
-    if (node.name !== expectedNode.name) return false;
-
-    for (const [index, child] of node.getAllChildren().entries()) {
-      if (!testHierarchyTreeNodes(child, expectedNode.getAllChildren()[index])) return false;
-    }
-    return true;
-  }
 });

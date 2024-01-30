@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-import {Operation} from 'trace/tree_node/operations/operation';
-import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {assertDefined} from 'common/assert_utils';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
+import root from 'protos/viewcapture/latest/json';
 
-export class SimplifyNames implements Operation<UiHierarchyTreeNode> {
-  apply(node: UiHierarchyTreeNode): void {
-    node.forEachNodeDfs(this.shortenName);
-  }
+export const ExportedData = TamperedMessageType.tamper(
+  root.lookupType('com.android.app.viewcapture.data.ExportedData')
+);
 
-  private shortenName(node: UiHierarchyTreeNode) {
-    const classParts = (node.name + '').split('.');
-    if (classParts.length <= 3) {
-      return;
-    }
-
-    const className = classParts.slice(-1)[0]; // last element
-    node.setDisplayName(`${classParts[0]}.${classParts[1]}.(...).${className}`);
-  }
-}
+export const NodeField = assertDefined(
+  ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData'].tamperedMessageType
+).fields['node'];

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import {TraceType, ViewNode} from 'trace/trace_type';
-import {
-  HierarchyTreeNodeLegacy,
-  PropertiesTreeNodeLegacy,
-} from 'viewers/common/ui_tree_utils_legacy';
+import {TraceType} from 'trace/trace_type';
+import {VcCuratedProperties} from 'viewers/common/curated_properties';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 
@@ -29,12 +28,12 @@ export class UiData {
   constructor(
     readonly rects: UiRect[],
     public sfRects: UiRect[] | undefined,
-    public tree: HierarchyTreeNodeLegacy | null,
+    public tree: UiHierarchyTreeNode | undefined,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
-    public pinnedItems: HierarchyTreeNodeLegacy[],
+    public pinnedItems: UiHierarchyTreeNode[],
     public highlightedItem: string,
-    public propertiesTree: PropertiesTreeNodeLegacy | null,
-    public selectedViewNode: ViewNode
+    public propertiesTree: UiPropertyTreeNode | undefined,
+    public curatedProperties: VcCuratedProperties | undefined
   ) {}
 }

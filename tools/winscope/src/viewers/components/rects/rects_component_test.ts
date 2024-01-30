@@ -101,6 +101,7 @@ describe('RectsComponent', () => {
       .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
+      .setDepth(0)
       .build();
 
     expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);

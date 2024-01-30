@@ -50,7 +50,6 @@ import {TreeComponentLegacy} from 'viewers/components/legacy/tree_component';
 import {TreeNodeComponentLegacy} from 'viewers/components/legacy/tree_node_component';
 import {TreeNodeDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_data_view_component';
 import {TreeNodePropertiesDataViewComponentLegacy} from 'viewers/components/legacy/tree_node_properties_data_view_component';
-import {ViewCapturePropertyGroupsComponentLegacy} from 'viewers/components/legacy/view_capture_property_groups_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
@@ -141,7 +140,6 @@ import {WebAdbComponent} from './components/web_adb_component';
     ProtologScrollDirective,
     TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
-    ViewCapturePropertyGroupsComponentLegacy,
   ],
   imports: [
     BrowserModule,

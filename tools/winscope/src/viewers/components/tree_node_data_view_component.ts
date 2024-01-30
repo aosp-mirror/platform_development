@@ -23,8 +23,8 @@ import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_v
   selector: 'tree-node-data-view',
   template: `
     <span class="mat-body-1" *ngIf="node">
-      <span class="mat-body-2">{{ heading() }}</span>
-      <ng-container>&ngsp;-&ngsp;</ng-container>
+      <span class="mat-body-2" *ngIf="node.heading()">{{ node.heading() }}</span>
+      <ng-container *ngIf="node.heading()">&ngsp;-&ngsp;</ng-container>
       <span [matTooltip]="nodeTooltip()">{{ node.getDisplayName() }}</span>
       <div *ngFor="let chip of node.getChips()" [class]="chipClass(chip)" [matTooltip]="chip.long">
         {{ chip.short }}
@@ -35,10 +35,6 @@ import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_v
 })
 export class TreeNodeDataViewComponent {
   @Input() node?: UiHierarchyTreeNode;
-
-  heading() {
-    return assertDefined(this.node).id.split(' ')[0].split('.')[0];
-  }
 
   nodeTooltip() {
     return assertDefined(this.node).name;

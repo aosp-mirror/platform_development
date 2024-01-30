@@ -24,6 +24,7 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
   private diff: DiffType = DiffType.NONE;
   private displayName: string = this.name;
   private isOldNodeInternal = false;
+  private showHeading = true;
 
   static from(node: HierarchyTreeNode, parent?: UiHierarchyTreeNode): UiHierarchyTreeNode {
     const displayNode = new UiHierarchyTreeNode(
@@ -48,6 +49,14 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
 
   getDiff(): DiffType {
     return this.diff;
+  }
+
+  heading(): string | undefined {
+    return this.showHeading ? this.id.split(' ')[0].split('.')[0] : undefined;
+  }
+
+  setShowHeading(value: boolean) {
+    this.showHeading = value;
   }
 
   setDisplayName(name: string) {

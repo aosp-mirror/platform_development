@@ -36,7 +36,7 @@ describe('AddDiffsHierarchyTree', () => {
 
   describe('AddDiffs tests', () => {
     executeAddDiffsTests(
-      TreeNodeUtils.uiHierarchyNodeEqualityTester,
+      TreeNodeUtils.treeNodeEqualityTester,
       makeRoot,
       makeChildAndAddToRoot,
       addDiffs
@@ -45,7 +45,7 @@ describe('AddDiffsHierarchyTree', () => {
 
   describe('Hierarchy tree tests', () => {
     beforeEach(() => {
-      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
       newRoot = makeRoot();
       oldRoot = makeRoot();
       expectedRoot = makeRoot();

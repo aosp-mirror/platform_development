@@ -39,13 +39,9 @@ describe('RectsComputation', () => {
           properties: {
             id: 1,
             name: 'layer1',
-            z: 0,
-            zOrderRelativeOf: -1,
             cornerRadius: 0,
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
-            parent: -1,
-            children: [2],
             zOrderPath: [0],
             isComputedVisible: true,
             transform: Transform.EMPTY,
@@ -57,10 +53,6 @@ describe('RectsComputation', () => {
               properties: {
                 id: 2,
                 name: 'layer2',
-                parent: 1,
-                children: [],
-                z: 1,
-                zOrderRelativeOf: -1,
                 cornerRadius: 2,
                 layerStack: 0,
                 bounds: {left: 0, top: 0, right: 2, bottom: 2},
@@ -78,10 +70,6 @@ describe('RectsComputation', () => {
           properties: {
             id: 4,
             name: 'layerRelativeZ',
-            parent: 1,
-            children: [],
-            z: 2,
-            zOrderRelativeOf: 1,
             cornerRadius: 0,
             layerStack: 0,
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
@@ -103,7 +91,7 @@ describe('RectsComputation', () => {
         .setName('layer1')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([0])
+        .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
         .setIsDisplay(false)
@@ -119,7 +107,7 @@ describe('RectsComputation', () => {
         .setName('layer2')
         .setCornerRadius(2)
         .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([0, 1])
+        .setDepth(1)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
@@ -135,7 +123,7 @@ describe('RectsComputation', () => {
         .setName('layerRelativeZ')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([0, 2])
+        .setDepth(2)
         .setGroupId(0)
         .setIsVisible(true)
         .setIsDisplay(false)
@@ -167,7 +155,6 @@ describe('RectsComputation', () => {
             id: 1,
             layerStack: 0,
             size: {w: 5, h: 5},
-            layerStackSpaceRect: {left: 0, top: 0, bottom: 5, right: 5},
             transform: Transform.EMPTY,
             name: 'Test Display',
           },
@@ -185,7 +172,7 @@ describe('RectsComputation', () => {
         .setName('Test Display')
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([])
+        .setDepth(0)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
@@ -195,5 +182,173 @@ describe('RectsComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
+  });
+
+  it('handles z-order paths with different lengths', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 1, bottom: 1},
+            zOrderPath: [0, 1],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 2,
+          name: 'layer2',
+          properties: {
+            id: 2,
+            name: 'layer2',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 2, bottom: 2},
+            zOrderPath: [0, 0, 0],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
+
+    const expectedRects: TraceRect[] = [
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(1)
+        .setHeight(1)
+        .setId('1 layer1')
+        .setName('layer1')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(2)
+        .setHeight(2)
+        .setId('2 layer2')
+        .setName('layer2')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+    ];
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+
+    const rects: TraceRect[] = [];
+    hierarchyRoot.forEachNodeDfs((node) => {
+      if (node.id === 'LayerTraceEntry root') {
+        return;
+      }
+      const nodeRects = node.getRects();
+      if (nodeRects) rects.push(...nodeRects);
+    });
+
+    expect(rects).toEqual(expectedRects);
+  });
+
+  it('handles z-order paths with equal values (fall back to Layer ID comparison)', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 1, bottom: 1},
+            zOrderPath: [0, 1],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 2,
+          name: 'layer2',
+          properties: {
+            id: 2,
+            name: 'layer2',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 2, bottom: 2},
+            zOrderPath: [0, 1, 0],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
+
+    const expectedRects: TraceRect[] = [
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(1)
+        .setHeight(1)
+        .setId('1 layer1')
+        .setName('layer1')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(2)
+        .setHeight(2)
+        .setId('2 layer2')
+        .setName('layer2')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+    ];
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+
+    const rects: TraceRect[] = [];
+    hierarchyRoot.forEachNodeDfs((node) => {
+      if (node.id === 'LayerTraceEntry root') {
+        return;
+      }
+      const nodeRects = node.getRects();
+      if (nodeRects) rects.push(...nodeRects);
+    });
+
+    expect(rects).toEqual(expectedRects);
   });
 });

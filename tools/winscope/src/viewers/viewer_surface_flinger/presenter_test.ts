@@ -61,7 +61,7 @@ describe('PresenterSurfaceFlinger', () => {
     selectedTree = assertDefined(selectedTreeParent.getChildByName('Dim layer#53'));
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 
@@ -114,7 +114,7 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.rects[0].x).toEqual(0);
     expect(uiData.rects[0].y).toEqual(0);
     expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(74);
+    expect(uiData.rects[0].h).toEqual(2400);
   });
 
   it('updates pinned items', () => {
@@ -320,7 +320,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('updates view capture package names', async () => {
-    const vcTrace = new TraceBuilder<object>()
+    const vcTrace = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
       .setParserCustomQueryResult(
         CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,

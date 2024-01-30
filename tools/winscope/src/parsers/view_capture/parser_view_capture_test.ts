@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -20,16 +21,17 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserViewCapture', () => {
-  let parser: Parser<object>;
-  let trace: Trace<object>;
+  let parser: Parser<HierarchyTreeNode>;
+  let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser(
+    parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
-    );
-    trace = new TraceBuilder<object>()
+    )) as Parser<HierarchyTreeNode>;
+    trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
       .setParser(parser)
       .build();
@@ -45,7 +47,9 @@ describe('ParserViewCapture', () => {
       new Timestamp(TimestampType.ELAPSED, 181114421012750n),
       new Timestamp(TimestampType.ELAPSED, 181114429047540n),
     ];
-    expect(parser.getTimestamps(TimestampType.ELAPSED)!.slice(0, 3)).toEqual(expected);
+    expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
+      expected
+    );
   });
 
   it('provides real timestamps', () => {
@@ -54,13 +58,12 @@ describe('ParserViewCapture', () => {
       new Timestamp(TimestampType.REAL, 1691692936301385080n),
       new Timestamp(TimestampType.REAL, 1691692936309419870n),
     ];
-    expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
+    expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
   });
 
   it('retrieves trace entry', async () => {
-    const entry = (await parser.getEntry(1, TimestampType.REAL)) as any;
-    expect(entry.timestamp).toBeTruthy();
-    expect(entry.node).toBeTruthy();
+    const entry = await parser.getEntry(1, TimestampType.REAL);
+    expect(entry.id).toEqual('ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962');
   });
 
   it('supports VIEW_CAPTURE_PACKAGE_NAME custom query', async () => {

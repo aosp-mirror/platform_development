@@ -29,7 +29,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     <div class="view-header">
       <div class="title-filter">
         <h2 class="hierarchy-title mat-title">Hierarchy</h2>
-        <mat-form-field>
+        <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
           <input
             matInput
