@@ -134,11 +134,24 @@ import {UploadTracesComponent} from './upload_traces_component';
           *ngIf="showDataLoadedElements"
           color="primary"
           mat-stroked-button
+          class="upload-new"
           (click)="onUploadNewButtonClick()">
           Upload New
         </button>
+
         <button
           mat-icon-button
+          matTooltip="Documentation"
+          class="documentation"
+          (click)="
+            goToLink('https://source.android.com/docs/core/graphics/tracing-win-transitions')
+          ">
+          <mat-icon>help</mat-icon>
+        </button>
+
+        <button
+          mat-icon-button
+          class="report-bug"
           matTooltip="Report bug"
           (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
           <mat-icon>bug_report</mat-icon>
@@ -146,6 +159,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
         <button
           mat-icon-button
+          class="dark-mode"
           matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
           (click)="setDarkMode(!isDarkModeOn)">
           <mat-icon>
