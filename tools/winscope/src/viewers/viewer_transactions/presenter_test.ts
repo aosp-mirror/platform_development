@@ -17,26 +17,33 @@
 import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp, TimestampType} from 'common/time';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
 
 describe('PresenterTransactions', () => {
-  let parser: Parser<object>;
-  let trace: Trace<object>;
+  let parser: Parser<PropertyTreeNode>;
+  let trace: Trace<PropertyTreeNode>;
   let traces: Traces;
   let presenter: Presenter;
   let outputUiData: undefined | UiData;
   const TOTAL_OUTPUT_ENTRIES = 1647;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/Transactions.pb');
+    jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+    parser = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/Transactions.pb'
+    )) as Parser<PropertyTreeNode>;
   });
 
   beforeEach(async () => {
@@ -46,12 +53,24 @@ describe('PresenterTransactions', () => {
 
   it('is robust to empty trace', async () => {
     const traces = new TracesBuilder().setEntries(TraceType.TRANSACTIONS, []).build();
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
     expect(outputUiData).toEqual(UiData.EMPTY);
 
+    const expectedUiData = UiData.EMPTY;
+    expectedUiData.propertiesUserOptions = {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    };
     await presenter.onAppEvent(TracePositionUpdate.fromTimestamp(new RealTimestamp(10n)));
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
@@ -216,7 +235,7 @@ describe('PresenterTransactions', () => {
     for (const entry of assertDefined(outputUiData).entries) {
       expect(entry.layerOrDisplayId).toEqual('');
       expect(entry.what).toEqual('');
-      expect(entry.propertiesTree).toEqual({});
+      expect(entry.propertiesTree).toEqual(undefined);
     }
   });
 
@@ -235,11 +254,23 @@ describe('PresenterTransactions', () => {
 
   it('updates selected entry and properties tree when entry is clicked', async () => {
     await presenter.onAppEvent(createTracePositionUpdate(0));
+    presenter.onPropertiesUserOptionsChange({
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: true,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    });
+
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
     expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
     expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
     expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      assertDefined(outputUiData).entries[0].propertiesTree
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[0].propertiesTree))
     );
 
     presenter.onEntryClicked(10);
@@ -247,7 +278,7 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
     expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
     expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      assertDefined(outputUiData).entries[10].propertiesTree
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[10].propertiesTree))
     );
 
     // remove selection when selected entry is clicked again
@@ -256,7 +287,7 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
     expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
     expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      assertDefined(outputUiData).entries[0].propertiesTree
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[0].propertiesTree))
     );
   });
 
@@ -295,12 +326,15 @@ describe('PresenterTransactions', () => {
   });
 
   const setUpTestEnvironment = async (timestampType: TimestampType) => {
-    trace = new TraceBuilder<object>().setParser(parser).setTimestampType(timestampType).build();
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setParser(parser)
+      .setTimestampType(timestampType)
+      .build();
 
     traces = new Traces();
     traces.setTrace(TraceType.TRANSACTIONS, trace);
 
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
       outputUiData = data;
     });
 

@@ -16,20 +16,27 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {TimeUtils} from 'common/time_utils';
-import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
-import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {Filter} from 'viewers/common/operations/filter';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
+import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
+type NotifyViewCallbackType = (uiData: UiData) => void;
+
 export class Presenter {
-  private readonly trace: Trace<object>;
-  private entry?: TraceEntry<object>;
+  private readonly trace: Trace<PropertyTreeNode>;
+  private entry?: TraceEntry<PropertyTreeNode>;
   private originalIndicesOfUiDataEntries: number[];
   private uiData = UiData.EMPTY;
 
@@ -49,13 +56,34 @@ export class Presenter {
   private layerIdFilter: string[] = [];
   private idFilter: string | undefined = undefined;
   private whatSearchString = '';
+  private currentPropertiesTree: PropertyTreeNode | undefined;
 
-  private readonly notifyUiDataCallback: (data: UiData) => void;
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'TransactionsPropertyOptions',
+    {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    },
+    this.storage
+  );
+
+  private readonly notifyUiDataCallback: NotifyViewCallbackType;
   private static readonly VALUE_NA = 'N/A';
 
-  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
+  constructor(
+    traces: Traces,
+    private readonly storage: Storage,
+    notifyViewCallback: NotifyViewCallbackType
+  ) {
     this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
-    this.notifyUiDataCallback = notifyUiDataCallback;
+    this.notifyUiDataCallback = notifyViewCallback;
     this.originalIndicesOfUiDataEntries = [];
     this.notifyUiDataCallback(this.uiData);
   }
@@ -67,11 +95,12 @@ export class Presenter {
       this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
       this.uiData.selectedEntryIndex = undefined;
       this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-      this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+      this.currentPropertiesTree = this.computeCurrentPropertiesTree(
         this.uiData.entries,
         this.uiData.currentEntryIndex,
         this.uiData.selectedEntryIndex
       );
+      this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
 
       this.notifyUiDataCallback(this.uiData);
     });
@@ -132,12 +161,21 @@ export class Presenter {
 
     this.uiData.scrollToIndex = undefined; // no scrolling
 
-    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       this.uiData.entries,
       this.uiData.currentEntryIndex,
       this.uiData.selectedEntryIndex
     );
 
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+
+    this.notifyUiDataCallback(this.uiData);
+  }
+
+  onPropertiesUserOptionsChange(userOptions: UserOptions) {
+    this.propertiesUserOptions = userOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -220,11 +258,13 @@ export class Presenter {
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
     const selectedEntryIndex = undefined;
-    const currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex
     );
+
+    const formattedPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
 
     return new UiData(
       this.allVSyncIds,
@@ -237,7 +277,8 @@ export class Presenter {
       currentEntryIndex,
       selectedEntryIndex,
       currentEntryIndex,
-      currentPropertiesTree
+      formattedPropertiesTree,
+      this.propertiesUserOptions
     );
   }
 
@@ -262,7 +303,7 @@ export class Presenter {
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
     selectedEntryIndex: undefined | number
-  ): undefined | PropertiesTreeNodeLegacy {
+  ): PropertyTreeNode | undefined {
     if (selectedEntryIndex !== undefined) {
       return entries[selectedEntryIndex].propertiesTree;
     }
@@ -272,11 +313,23 @@ export class Presenter {
     return undefined;
   }
 
+  private formatPropertiesTree(
+    propertiesTree: PropertyTreeNode | undefined
+  ): UiPropertyTreeNode | undefined {
+    if (!propertiesTree) return undefined;
+
+    const uiTree = UiPropertyTreeNode.from(propertiesTree);
+    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(uiTree);
+
+    if (!this.propertiesUserOptions['showDefaults']?.enabled) {
+      formatter.addOperation(new Filter([UiTreeUtils.isNotDefault], false));
+    }
+
+    return formatter.addOperation(new SetRootDisplayNames()).format();
+  }
+
   private async makeUiDataEntries(): Promise<UiDataEntry[]> {
-    const treeGenerator = new PropertiesTreeGenerator();
     const entries: UiDataEntry[] = [];
-    const formattingOptions = ObjectFormatter.displayDefaults;
-    ObjectFormatter.displayDefaults = true;
 
     const entryProtos = await Promise.all(
       this.trace.mapEntry(async (entry) => {
@@ -286,157 +339,172 @@ export class Presenter {
 
     for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
       const entry = this.trace.getEntry(originalIndex);
-      const entryProto = entryProtos[originalIndex] as any;
+      const entryNode = entryProtos[originalIndex];
+      const vsyncId = Number(assertDefined(entryNode.getChildByName('vsyncId')).getValue());
+      const entryTimestamp = TimeUtils.format(entry.getTimestamp());
 
-      for (const transactionStateProto of entryProto.transactions) {
-        for (const layerStateProto of transactionStateProto.layerChanges) {
+      for (const transactionState of assertDefined(
+        entryNode.getChildByName('transactions')
+      ).getAllChildren()) {
+        const pid = assertDefined(transactionState.getChildByName('pid')).formattedValue();
+        const uid = assertDefined(transactionState.getChildByName('uid')).formattedValue();
+        const transactionId = assertDefined(
+          transactionState.getChildByName('transactionId')
+        ).formattedValue();
+
+        const layerChanges = assertDefined(
+          transactionState.getChildByName('layerChanges')
+        ).getAllChildren();
+        for (const layerState of layerChanges) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.LAYER_CHANGED,
-              layerStateProto.layerId.toString(),
-              transactionStateProto.transactionId.toString(),
-              layerStateProto.what,
-              treeGenerator.generate('LayerState', ObjectFormatter.format(layerStateProto))
+              assertDefined(layerState.getChildByName('layerId')).formattedValue(),
+              transactionId,
+              assertDefined(layerState.getChildByName('what')).formattedValue(),
+              layerState
             )
           );
         }
 
-        for (const displayStateProto of transactionStateProto.displayChanges) {
+        const displayChanges = assertDefined(
+          transactionState.getChildByName('displayChanges')
+        ).getAllChildren();
+        for (const displayState of displayChanges) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.DISPLAY_CHANGED,
-              displayStateProto.id.toString(),
-              transactionStateProto.transactionId.toString(),
-              displayStateProto.what,
-              treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
+              assertDefined(displayState.getChildByName('id')).formattedValue(),
+              transactionId,
+              assertDefined(displayState.getChildByName('what')).formattedValue(),
+              displayState
             )
           );
         }
 
-        if (
-          transactionStateProto.layerChanges.length === 0 &&
-          transactionStateProto.displayChanges.length === 0
-        ) {
+        if (layerChanges.length === 0 && displayChanges.length === 0) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.NO_OP,
               '',
-              transactionStateProto.transactionId.toString(),
+              transactionId,
               '',
-              {}
+              undefined
             )
           );
         }
       }
 
-      for (const layerCreationArgsProto of entryProto.addedLayers) {
+      for (const layerCreationArgs of assertDefined(
+        entryNode.getChildByName('addedLayers')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_ADDED,
-            layerCreationArgsProto.layerId.toString(),
+            assertDefined(layerCreationArgs.getChildByName('layerId')).formattedValue(),
             '',
             '',
-            treeGenerator.generate(
-              'LayerCreationArgs',
-              ObjectFormatter.format(layerCreationArgsProto)
-            )
+            layerCreationArgs
           )
         );
       }
 
-      for (const destroyedLayerId of entryProto.destroyedLayers) {
+      for (const destroyedLayerId of assertDefined(
+        entryNode.getChildByName('destroyedLayers')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_DESTROYED,
-            destroyedLayerId.toString(),
+            destroyedLayerId.formattedValue(),
             '',
             '',
-            treeGenerator.generate('DestroyedLayerId', ObjectFormatter.format(destroyedLayerId))
+            destroyedLayerId
           )
         );
       }
 
-      for (const displayStateProto of entryProto.addedDisplays) {
+      for (const displayState of assertDefined(
+        entryNode.getChildByName('addedDisplays')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.DISPLAY_ADDED,
-            displayStateProto.id.toString(),
+            assertDefined(displayState.getChildByName('id')).formattedValue(),
             '',
-            displayStateProto.what,
-            treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
+            assertDefined(displayState.getChildByName('what')).formattedValue(),
+            displayState
           )
         );
       }
 
-      for (const removedDisplayId of entryProto.removedDisplays) {
+      for (const removedDisplayId of assertDefined(
+        entryNode.getChildByName('removedDisplays')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.DISPLAY_REMOVED,
-            removedDisplayId.toString(),
+            removedDisplayId.formattedValue(),
             '',
             '',
-            treeGenerator.generate('RemovedDisplayId', ObjectFormatter.format(removedDisplayId))
+            removedDisplayId
           )
         );
       }
 
-      for (const destroyedLayerHandleId of entryProto.destroyedLayerHandles) {
+      for (const destroyedLayerHandleId of assertDefined(
+        entryNode.getChildByName('destroyedLayerHandles')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_HANDLE_DESTROYED,
-            destroyedLayerHandleId.toString(),
+            destroyedLayerHandleId.formattedValue(),
             '',
             '',
-            treeGenerator.generate(
-              'DestroyedLayerHandleId',
-              ObjectFormatter.format(destroyedLayerHandleId)
-            )
+            destroyedLayerHandleId
           )
         );
       }
     }
-
-    ObjectFormatter.displayDefaults = formattingOptions;
 
     return entries;
   }

@@ -25,34 +25,20 @@ describe('FakeProtoTransformer', () => {
     transformer = new FakeProtoTransformer(TamperedMessageType.tamper(root.lookupType('Entry')));
   });
 
-  it('sets default value (0) of number fields', () => {
-    const proto = {};
-    const transformed = transformer.transform(proto);
-    expect(transformed.number_32bit).toEqual(0);
-    expect(transformed.number_64bit).toEqual(0n);
-  });
-
   it('sets default value (empty array) of array fields', () => {
     const proto = {};
     const transformed = transformer.transform(proto);
     expect(transformed.array).toEqual([]);
   });
 
-  it('sets default value (id 0) of enum fields', () => {
-    const proto = {};
-    const transformed = transformer.transform(proto);
-    expect(transformed.enum0).toEqual('ENUM0_VALUE_ZERO');
-    expect(transformed.enum1).toEqual('ENUM1_VALUE_ZERO');
-  });
-
-  it('decodes enum fields', () => {
+  it('does not decode enum fields', () => {
     const proto = {
       enum0: 1n,
       enum1: 1n,
     };
     const transformed = transformer.transform(proto);
-    expect(transformed.enum0).toEqual('ENUM0_VALUE_ONE');
-    expect(transformed.enum1).toEqual('ENUM1_VALUE_ONE');
+    expect(transformed.enum0).toEqual(1);
+    expect(transformed.enum1).toEqual(1);
   });
 
   it('converts fields to number if 32-bits type', () => {

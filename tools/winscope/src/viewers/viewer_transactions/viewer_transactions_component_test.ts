@@ -17,8 +17,9 @@ import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling'
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
-import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -75,7 +76,11 @@ describe('ViewerTransactionsComponent', () => {
     });
 
     function makeUiData(): UiData {
-      const propertiesTree = new PropertiesTreeGenerator().generate('ROOT', {KEY: 'VALUE'});
+      const propertiesTree = new PropertyTreeBuilder()
+        .setRootId('Transactions')
+        .setName('tree')
+        .setValue(null)
+        .build();
 
       const entry = new UiDataEntry(
         0,
@@ -90,7 +95,20 @@ describe('ViewerTransactionsComponent', () => {
         propertiesTree
       );
 
-      return new UiData([], [], [], [], [], [], [entry], 0, 0, 0, propertiesTree);
+      return new UiData(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [entry],
+        0,
+        0,
+        0,
+        UiPropertyTreeNode.from(propertiesTree),
+        {}
+      );
     }
   });
 
@@ -98,8 +116,25 @@ describe('ViewerTransactionsComponent', () => {
     executeScrollComponentTests('entry', setUpTestEnvironment);
 
     function makeUiDataForScroll(): UiData {
-      const propertiesTree = new PropertiesTreeGenerator().generate('ROOT', {KEY: 'VALUE'});
-      const uiData = new UiData([], [], [], [], [], [], [], 0, 0, 0, propertiesTree);
+      const propertiesTree = new PropertyTreeBuilder()
+        .setRootId('Transactions')
+        .setName('tree')
+        .setValue(null)
+        .build();
+      const uiData = new UiData(
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        0,
+        0,
+        0,
+        UiPropertyTreeNode.from(propertiesTree),
+        {}
+      );
       const shortMessage = 'flag1 | flag2';
       const longMessage = shortMessage.repeat(20);
       for (let i = 0; i < 200; i++) {

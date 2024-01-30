@@ -66,7 +66,7 @@ export class FakeProtoTransformer {
     // Leaf (enum)
     const enumId = this.tryGetEnumId(proto);
     if (field.tamperedEnumType && enumId !== undefined) {
-      return this.getValuesByIdProto(enumId, field.tamperedEnumType.valuesById);
+      return Number(enumId);
     }
 
     // Leaf (default value)
@@ -101,16 +101,12 @@ export class FakeProtoTransformer {
     return proto;
   }
 
-  protected shouldCheckIfPrimitiveLeaf(proto: FakeProto, field: TamperedProtoField): boolean {
-    return !field.repeated;
+  private shouldCheckIfPrimitiveLeaf(proto: FakeProto, field: TamperedProtoField): boolean {
+    return !field.repeated && proto !== null && proto !== undefined;
   }
 
-  protected getValuesByIdProto(enumId: FakeProto, valuesById: {[key: number]: string}): FakeProto {
-    return valuesById[Number(enumId)];
-  }
-
-  protected getDefaultValue(proto: FakeProto, field: TamperedProtoField) {
-    return field.repeated ? [] : field.defaultValue;
+  private getDefaultValue(proto: FakeProto, field: TamperedProtoField) {
+    return field.repeated ? [] : proto;
   }
 
   private tryGetEnumId(proto: FakeProto): number | undefined {
