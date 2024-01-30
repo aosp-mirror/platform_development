@@ -17,13 +17,10 @@
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddVerboseFlags extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(
-    factory: PropertyTreeNodeFactory,
-    value: PropertyTreeNode
-  ): PropertyTreeNode[] {
+  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
     const flags = value.getChildByName('flags')?.getValue();
     if (value.getChildByName('verboseFlags') || flags === undefined) return [];
 
@@ -42,6 +39,12 @@ export class AddVerboseFlags extends AddOperation<PropertyTreeNode> {
       verboseFlagsStr = `${tokens.join('|')} (0x${flags.toString(16)})`;
     }
 
-    return [factory.makeCalculatedProperty(value.id, 'verboseFlags', verboseFlagsStr)];
+    return [
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'verboseFlags',
+        verboseFlagsStr
+      ),
+    ];
   }
 }

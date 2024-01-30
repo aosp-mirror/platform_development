@@ -53,7 +53,7 @@ const COLOR_FORMATTER = new ColorFormatter();
 
 class RectFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    if (RawDataUtils.isEmptyObj(node)) {
+    if (!RawDataUtils.isRect(node) || RawDataUtils.isEmptyObj(node)) {
       return EMPTY_OBJ_STRING;
     }
     return `(${node.getChildByName('left')?.getValue() ?? 0}, ${

@@ -19,7 +19,8 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
 import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
@@ -150,15 +151,15 @@ describe('TreeComponent', () => {
     `,
   })
   class TestHostComponent {
-    tree0 = TreeNodeUtils.makeUiHierarchyNode({
-      id: 'RootNode',
-      name: 'Root node',
-    });
+    tree0: UiHierarchyTreeNode;
 
-    tree1 = TreeNodeUtils.makeUiHierarchyNode({
-      id: 'RootNode2',
-      name: 'Root node',
-    });
+    tree1 = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('RootNode2')
+        .setName('Root node')
+        .setChildren([{id: 0, name: 'Child0'}])
+        .build()
+    );
 
     itemWithStoredExpandedState = this.tree1;
 
@@ -167,10 +168,17 @@ describe('TreeComponent', () => {
 
     constructor() {
       localStorage.clear();
+      const children = [];
       for (let i = 0; i < 80; i++) {
-        this.tree0.addChild(TreeNodeUtils.makeUiHierarchyNode({id: i, name: `Child${i}`}));
+        children.push({id: i, name: `Child${i}`});
       }
-      this.tree1.addChild(TreeNodeUtils.makeUiHierarchyNode({id: 0, name: `Child0`}));
+      this.tree0 = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('RootNode')
+          .setName('Root node')
+          .setChildren(children)
+          .build()
+      );
     }
 
     @ViewChildren(TreeComponent)

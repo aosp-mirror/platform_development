@@ -17,6 +17,8 @@
 import {ProgressListener} from 'messaging/progress_listener';
 import {UnsupportedFileFormat} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {ParserWindowManager} from 'parsers/window_manager/parser_window_manager';
+import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {FileAndParser} from './file_and_parser';
@@ -31,8 +33,6 @@ import {ParserTransactions} from './parser_transactions';
 import {ParserTransitionsShell} from './parser_transitions_shell';
 import {ParserTransitionsWm} from './parser_transitions_wm';
 import {ParserViewCapture} from './parser_view_capture';
-import {ParserWindowManager} from './parser_window_manager';
-import {ParserWindowManagerDump} from './parser_window_manager_dump';
 import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
 
 export class ParserFactory {

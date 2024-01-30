@@ -37,15 +37,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.GPU
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -57,15 +57,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT]
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.GPU
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -77,15 +77,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.HWC
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -97,15 +97,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE]
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.HWC
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -117,15 +117,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.HWC
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -137,15 +137,15 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR]
     );
-    propertyRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
 
     const expectedCompositionType = TreeNodeUtils.makeCalculatedPropertyNode(
-      'test node',
+      expectedRoot.id,
       'compositionType',
       LayerCompositionType.HWC
     );
-    expectedRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(expectedCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(expectedCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
@@ -157,8 +157,8 @@ describe('AddCompositionType', () => {
       'hwcCompositionType',
       0
     );
-    propertyRoot.addChild(hwcCompositionType);
-    expectedRoot.addChild(hwcCompositionType);
+    propertyRoot.addOrReplaceChild(hwcCompositionType);
+    expectedRoot.addOrReplaceChild(hwcCompositionType);
 
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);

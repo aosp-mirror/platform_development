@@ -30,7 +30,7 @@ describe('VisibilityPropertiesComputation', () => {
   beforeEach(() => {
     hierarchyRoot = TreeNodeUtils.makeHierarchyNode({id: 'LayerTraceEntry', name: 'root'} as Item);
     computation = new VisibilityPropertiesComputation();
-    displays = TreeNodeUtils.makePropertyNode('LayerTraceEntry root.displays', 'displays', [
+    displays = TreeNodeUtils.makePropertyNode(hierarchyRoot.id, 'displays', [
       {
         layerStack: 0,
         layerStackSpaceRect: {left: 0, right: 5, top: 0, bottom: 5},
@@ -63,11 +63,13 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerVisibleRegionNonEmpty);
+    hierarchyRoot.addOrReplaceChild(layerVisibleRegionNonEmpty);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('layerVisibleRegionNonEmpty'));
-    expect(assertDefined(visibleLayer.getEagerPropertyByName('isVisible')).getValue()).toBeTrue();
+    expect(
+      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeTrue();
   });
 
   it('detects non-visible layer that is hidden by policy or parent', () => {
@@ -95,12 +97,12 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerHiddenByPolicy);
+    hierarchyRoot.addOrReplaceChild(layerHiddenByPolicy);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerHiddenByPolicy'));
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
   });
 
@@ -153,15 +155,19 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    parent.addChild(childHiddenByParent);
-    hierarchyRoot.addChild(parent);
+    parent.addOrReplaceChild(childHiddenByParent);
+    hierarchyRoot.addOrReplaceChild(parent);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('parent'));
-    expect(assertDefined(visibleLayer.getEagerPropertyByName('isVisible')).getValue()).toBeTrue();
+    expect(
+      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeTrue();
 
     const hiddenLayer = assertDefined(visibleLayer.getChildByName('childHiddenByParent'));
-    expect(assertDefined(hiddenLayer.getEagerPropertyByName('isVisible')).getValue()).toBeFalse();
+    expect(
+      assertDefined(hiddenLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeFalse();
   });
 
   it('detects non-visible layer due to null active buffer', () => {
@@ -189,12 +195,12 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerNoActiveBuffer);
+    hierarchyRoot.addOrReplaceChild(layerNoActiveBuffer);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoActiveBuffer'));
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
   });
 
@@ -225,12 +231,12 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerEmptyBounds);
+    hierarchyRoot.addOrReplaceChild(layerEmptyBounds);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyBounds'));
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
   });
 
@@ -259,12 +265,12 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerNoVisibleRegion);
+    hierarchyRoot.addOrReplaceChild(layerNoVisibleRegion);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoVisibleRegion'));
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
   });
 
@@ -293,12 +299,12 @@ describe('VisibilityPropertiesComputation', () => {
       screenBounds: null,
       isOpaque: false,
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(layerEmptyVisibleRegion);
+    hierarchyRoot.addOrReplaceChild(layerEmptyVisibleRegion);
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyVisibleRegion'));
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
   });
 
@@ -351,8 +357,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(occludingLayer);
-    hierarchyRoot.addChild(occludedLayer);
+    hierarchyRoot.addOrReplaceChild(occludingLayer);
+    hierarchyRoot.addOrReplaceChild(occludedLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 
@@ -360,13 +366,15 @@ describe('VisibilityPropertiesComputation', () => {
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('occludingLayer'));
 
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeFalse();
     expect(
       invisibleLayer.getEagerPropertyByName('occludedBy')?.getChildByName('0')?.getValue()
     ).toEqual(2);
 
-    expect(assertDefined(visibleLayer.getEagerPropertyByName('isVisible')).getValue()).toBeTrue();
+    expect(
+      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeTrue();
     expect(visibleLayer.getEagerPropertyByName('occludedBy')?.getValue()).toEqual([]);
   });
 
@@ -419,8 +427,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(partiallyOccludingLayer);
-    hierarchyRoot.addChild(partiallyOccludedLayer);
+    hierarchyRoot.addOrReplaceChild(partiallyOccludingLayer);
+    hierarchyRoot.addOrReplaceChild(partiallyOccludedLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 
@@ -430,7 +438,7 @@ describe('VisibilityPropertiesComputation', () => {
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('partiallyOccludingLayer'));
 
     expect(
-      assertDefined(partiallyVisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(partiallyVisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeTrue();
     expect(
       partiallyVisibleLayer
@@ -439,7 +447,9 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getValue()
     ).toEqual(2);
 
-    expect(assertDefined(visibleLayer.getEagerPropertyByName('isVisible')).getValue()).toBeTrue();
+    expect(
+      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeTrue();
     expect(visibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue()).toEqual([]);
   });
 
@@ -492,8 +502,8 @@ describe('VisibilityPropertiesComputation', () => {
         dtdy: 1,
       },
     } as android.surfaceflinger.ILayerProto);
-    hierarchyRoot.addChild(coveringLayer);
-    hierarchyRoot.addChild(coveredLayer);
+    hierarchyRoot.addOrReplaceChild(coveringLayer);
+    hierarchyRoot.addOrReplaceChild(coveredLayer);
     hierarchyRoot.addEagerProperty(displays);
     computation.setRoot(hierarchyRoot).executeInPlace();
 
@@ -501,13 +511,15 @@ describe('VisibilityPropertiesComputation', () => {
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('coveringLayer'));
 
     expect(
-      assertDefined(coveredVisibleLayer.getEagerPropertyByName('isVisible')).getValue()
+      assertDefined(coveredVisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
     ).toBeTrue();
     expect(
       coveredVisibleLayer.getEagerPropertyByName('coveredBy')?.getChildByName('0')?.getValue()
     ).toEqual(2);
 
-    expect(assertDefined(visibleLayer.getEagerPropertyByName('isVisible')).getValue()).toBeTrue();
+    expect(
+      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+    ).toBeTrue();
     expect(visibleLayer.getEagerPropertyByName('coveredBy')?.getValue()).toEqual([]);
   });
 });

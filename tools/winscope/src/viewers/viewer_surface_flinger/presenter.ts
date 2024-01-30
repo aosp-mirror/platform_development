@@ -37,9 +37,9 @@ import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {FlattenChildren} from 'viewers/common/operations/flatten_children';
 import {SimplifyNames} from 'viewers/common/operations/simplify_names';
-import {PresenterSfUtils} from 'viewers/common/presenter_sf_utils';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -149,7 +149,7 @@ export class Presenter {
       if (this.currentHierarchyTree) {
         this.uiData.highlightedItem = this.highlightedItem;
         this.uiData.highlightedProperty = this.highlightedProperty;
-        this.uiData.rects = PresenterSfUtils.makeUiRects(
+        this.uiData.rects = UI_RECT_FACTORY.makeUiRects(
           this.currentHierarchyTree,
           this.viewCapturePackageNames
         );
@@ -375,7 +375,7 @@ export class Presenter {
     return summary;
   }
 
-  private mapNodeArrayToString(nodes: PropertyTreeNode[]): string {
+  private mapNodeArrayToString(nodes: ReadonlyArray<PropertyTreeNode>): string {
     return nodes.map((reason) => reason.formattedValue()).join(', ');
   }
 
@@ -491,7 +491,7 @@ export class Presenter {
     ];
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      predicatesKeepingChildren.push(UiTreeUtils.isNotDefault);
+      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
     }
 
     if (!isHierarchyTreeRoot) {

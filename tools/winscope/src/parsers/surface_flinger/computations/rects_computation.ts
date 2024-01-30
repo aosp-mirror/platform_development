@@ -18,11 +18,12 @@ import {assertDefined} from 'common/assert_utils';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
+import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 class RectSfFactory {
-  makeDisplayRects(displays: PropertyTreeNode[]): TraceRect[] {
+  makeDisplayRects(displays: ReadonlyArray<PropertyTreeNode>): TraceRect[] {
     const names = new Set<string>();
     return displays.map((display) => {
       const size = display.getChildByName('size');
@@ -59,7 +60,7 @@ class RectSfFactory {
       throw Error('Z order path has not been computed');
     }
 
-    const isVisible = layer.getEagerPropertyByName('isVisible')?.getValue();
+    const isVisible = layer.getEagerPropertyByName('isComputedVisible')?.getValue();
     if (isVisible === undefined) {
       throw Error('Visibility has not been computed');
     }
@@ -98,7 +99,7 @@ class RectSfFactory {
   }
 }
 
-export class RectsComputation {
+export class RectsComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
   private readonly rectsFactory = new RectSfFactory();
 

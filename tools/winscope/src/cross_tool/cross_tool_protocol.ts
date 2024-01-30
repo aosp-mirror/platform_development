@@ -69,13 +69,6 @@ export class CrossToolProtocol implements WinscopeEventEmitter, WinscopeEventLis
 
   private async onMessageReceived(event: MessageEvent) {
     if (!OriginAllowList.isAllowed(event.origin)) {
-      console.log(
-        'Cross-tool protocol ignoring message from non-allowed origin.',
-        'Origin:',
-        event.origin,
-        'Message:',
-        event.data
-      );
       return;
     }
 

@@ -149,7 +149,9 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         )
       );
 
-      expect(dupLayer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(dupLayer.name).toEqual(
+        'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
+      );
       expect(dupLayer.getAllChildren().length).toEqual(0);
     });
   });

@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 import {Timestamp, TimestampType} from 'common/time';
-import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserWindowManagerDump', () => {
-  let parser: Parser<WindowManagerState>;
-  let trace: Trace<WindowManagerState>;
+  let parser: Parser<HierarchyTreeNode>;
+  let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser('traces/dump_WindowManager.pb');
-    trace = new TraceBuilder().setType(TraceType.WINDOW_MANAGER).setParser(parser).build();
+    parser = (await UnitTestUtils.getParser(
+      'traces/dump_WindowManager.pb'
+    )) as Parser<HierarchyTreeNode>;
+    trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.WINDOW_MANAGER)
+      .setParser(parser)
+      .build();
   });
 
   it('has expected trace type', () => {
@@ -47,8 +52,10 @@ describe('ParserWindowManagerDump', () => {
 
   it('retrieves trace entry', async () => {
     const entry = await parser.getEntry(0, TimestampType.ELAPSED);
-    expect(entry).toBeInstanceOf(WindowManagerState);
-    expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(0n);
+    expect(entry).toBeInstanceOf(HierarchyTreeNode);
+    expect(entry.getEagerPropertyByName('focusedApp')?.getValue()).toEqual(
+      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+    );
   });
 
   it('supports WM_WINDOWS_TOKEN_AND_TITLE custom query', async () => {

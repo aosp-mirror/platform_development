@@ -37,7 +37,7 @@ describe('SimplifyNames', () => {
         id: i,
         name: 'node' + '.child'.repeat(10),
       });
-      hierarchyRoot.addChild(child);
+      hierarchyRoot.addOrReplaceChild(child);
     }
 
     operation.apply(hierarchyRoot);
@@ -57,7 +57,7 @@ describe('SimplifyNames', () => {
         id: i,
         name: 'node.child',
       });
-      hierarchyRoot.addChild(child);
+      hierarchyRoot.addOrReplaceChild(child);
     }
 
     operation.apply(hierarchyRoot);

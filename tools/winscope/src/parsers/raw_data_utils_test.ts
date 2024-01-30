@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {RawDataUtils} from './raw_data_utils';
 
 describe('RawDataUtils', () => {
@@ -54,9 +55,17 @@ describe('RawDataUtils', () => {
     const sizeOnlyH = TreeNodeUtils.makeSizeNode(undefined, 0);
     expect(RawDataUtils.isSize(sizeOnlyH)).toBeTrue();
 
-    const notSize = TreeNodeUtils.makeSizeNode(0, 0);
-    notSize.addChild(new PropertyTreeNode('size.x', 'x', PropertySource.PROTO, 0));
-    notSize.addChild(new PropertyTreeNode('size.y', 'y', PropertySource.PROTO, 0));
+    const notSize = new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('size')
+      .setChildren([
+        {name: 'w', value: 0},
+        {name: 'h', value: 0},
+        {name: 'x', value: 0},
+        {name: 'y', value: 0},
+      ])
+      .build();
+
     expect(RawDataUtils.isSize(notSize)).toBeFalse();
   });
 
@@ -71,22 +80,36 @@ describe('RawDataUtils', () => {
     const posOnlyY = TreeNodeUtils.makePositionNode(undefined, 0);
     expect(RawDataUtils.isPosition(posOnlyY)).toBeTrue();
 
-    const notPos = TreeNodeUtils.makePositionNode(0, 0);
-    notPos.addChild(new PropertyTreeNode('pos.w', 'w', PropertySource.PROTO, 0));
-    notPos.addChild(new PropertyTreeNode('pos.h', 'h', PropertySource.PROTO, 0));
+    const notPos = new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('pos')
+      .setChildren([
+        {name: 'w', value: 0},
+        {name: 'h', value: 0},
+        {name: 'x', value: 0},
+        {name: 'y', value: 0},
+      ])
+      .build();
+
     expect(RawDataUtils.isPosition(notPos)).toBeFalse();
   });
 
   it('identifies region', () => {
-    const region = new PropertyTreeNode('region', 'region', PropertySource.PROTO, undefined);
-    const rect = new PropertyTreeNode('region.rect', 'rect', PropertySource.PROTO, []);
-    region.addChild(rect);
+    const region = new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('region')
+      .setChildren([{name: 'rect', value: []}])
+      .build();
     expect(RawDataUtils.isRegion(region)).toBeTrue();
 
-    rect.addChild(TreeNodeUtils.makeRectNode(0, 0, 1, 1));
-    rect.addChild(TreeNodeUtils.makeRectNode(0, 0, undefined, undefined));
-    rect.addChild(TreeNodeUtils.makeRectNode(undefined, undefined, 1, 1));
+    const rectNode = assertDefined(region.getChildByName('rect'));
+    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, 1, 1, rectNode.id));
+    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, undefined, undefined, rectNode.id));
+    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(undefined, undefined, 1, 1, rectNode.id));
     expect(RawDataUtils.isRegion(region)).toBeTrue();
+
+    rectNode.addOrReplaceChild(TreeNodeUtils.makeColorNode(0, 0, 0, 0));
+    expect(RawDataUtils.isRegion(region)).toBeFalse();
   });
 
   it('identifies non-empty color and rect', () => {

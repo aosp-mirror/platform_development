@@ -16,68 +16,76 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {android} from 'protos/surfaceflinger/udc/static';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {Item} from 'trace/item';
-import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('ZOrderPathsComputation', () => {
-  let hierarchyRoot: HierarchyTreeNode;
   let computation: ZOrderPathsComputation;
 
   beforeEach(() => {
-    hierarchyRoot = TreeNodeUtils.makeHierarchyNode({
-      id: 'LayerTraceEntry',
-      name: 'root',
-    } as Item);
     computation = new ZOrderPathsComputation();
   });
 
   it('calculates zOrderPath', () => {
-    const layer1 = TreeNodeUtils.makeHierarchyNode({
-      id: 1,
-      name: 'layer1',
-      parent: -1,
-      children: [2, 4],
-      z: 0,
-      zOrderRelativeOf: -1,
-    } as android.surfaceflinger.ILayerProto);
-    const layer2 = TreeNodeUtils.makeHierarchyNode({
-      id: 2,
-      name: 'layer2',
-      parent: 1,
-      children: [3],
-      z: 1,
-      zOrderRelativeOf: -1,
-    } as android.surfaceflinger.ILayerProto);
-    const layer3 = TreeNodeUtils.makeHierarchyNode({
-      id: 3,
-      name: 'layer3',
-      parent: 2,
-      children: [],
-      z: 1,
-      zOrderRelativeOf: -1,
-    } as android.surfaceflinger.ILayerProto);
-    const layer4 = TreeNodeUtils.makeHierarchyNode({
-      id: 4,
-      name: 'layer4',
-      parent: 1,
-      children: [],
-      z: 2,
-      zOrderRelativeOf: 1,
-    } as android.surfaceflinger.ILayerProto);
-    layer1.setZParent(hierarchyRoot);
-    hierarchyRoot.addChild(layer1);
-
-    layer2.setZParent(layer1);
-    layer1.addChild(layer2);
-
-    layer3.setZParent(layer2);
-    layer2.addChild(layer3);
-
-    layer4.setZParent(layer1);
-    layer1.addChild(layer4);
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            parent: -1,
+            children: [2, 4],
+            z: 0,
+            zOrderRelativeOf: -1,
+          } as android.surfaceflinger.ILayerProto,
+          children: [
+            {
+              id: 2,
+              name: 'layer2',
+              properties: {
+                id: 2,
+                name: 'layer2',
+                parent: 1,
+                children: [3],
+                z: 1,
+                zOrderRelativeOf: -1,
+              } as android.surfaceflinger.ILayerProto,
+              children: [
+                {
+                  id: 3,
+                  name: 'layer3',
+                  properties: {
+                    id: 3,
+                    name: 'layer3',
+                    parent: 2,
+                    children: [],
+                    z: 1,
+                    zOrderRelativeOf: -1,
+                  } as android.surfaceflinger.ILayerProto,
+                },
+              ],
+            },
+            {
+              id: 4,
+              name: 'layer4',
+              properties: {
+                id: 4,
+                name: 'layer4',
+                parent: 1,
+                children: [],
+                z: 2,
+                zOrderRelativeOf: 1,
+              } as android.surfaceflinger.ILayerProto,
+            },
+          ],
+        },
+      ])
+      .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const layer1WithPath = assertDefined(hierarchyRoot.getChildByName('layer1'));

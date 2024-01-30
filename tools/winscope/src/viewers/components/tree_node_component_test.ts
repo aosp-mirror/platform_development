@@ -18,7 +18,8 @@ import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/co
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {TreeNodeComponent} from './tree_node_component';
 import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
 import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
@@ -95,11 +96,13 @@ describe('TreeNodeComponent', () => {
     `,
   })
   class TestHostComponent {
-    node = TreeNodeUtils.makeUiHierarchyNode({id: 'LayerTraceEntry', name: '4'});
-
-    constructor() {
-      this.node.addChild(TreeNodeUtils.makeUiHierarchyNode({id: 1, name: 'Child1'}));
-    }
+    node = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('4')
+        .setChildren([{id: 1, name: 'Child 1'}])
+        .build()
+    );
 
     isSelected = false;
 

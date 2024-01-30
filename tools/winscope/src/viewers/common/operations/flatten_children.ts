@@ -24,7 +24,7 @@ export class FlattenChildren implements Operation<UiHierarchyTreeNode> {
     node.removeAllChildren();
     flattenedChildren.forEach((child) => {
       child.removeAllChildren();
-      node.addChild(child);
+      node.addOrReplaceChild(child);
     });
   }
 
