@@ -32,7 +32,9 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
+import {globalConfig} from 'common/global_config';
 import {PersistentStore} from 'common/persistent_store';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {CrossPlatform, NoCache} from 'flickerlib/common';
@@ -46,9 +48,11 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {MockStorage} from 'test/unit/mock_storage';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
+import {TraceConfigurationMap, TRACES} from 'trace_collection/trace_collection_utils';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {View, Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
@@ -130,11 +134,24 @@ import {UploadTracesComponent} from './upload_traces_component';
           *ngIf="showDataLoadedElements"
           color="primary"
           mat-stroked-button
+          class="upload-new"
           (click)="onUploadNewButtonClick()">
           Upload New
         </button>
+
         <button
           mat-icon-button
+          matTooltip="Documentation"
+          class="documentation"
+          (click)="
+            goToLink('https://source.android.com/docs/core/graphics/tracing-win-transitions')
+          ">
+          <mat-icon>help</mat-icon>
+        </button>
+
+        <button
+          mat-icon-button
+          class="report-bug"
           matTooltip="Report bug"
           (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
           <mat-icon>bug_report</mat-icon>
@@ -142,6 +159,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
         <button
           mat-icon-button
+          class="dark-mode"
           matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
           (click)="setDarkMode(!isDarkModeOn)">
           <mat-icon>
@@ -182,8 +200,10 @@ import {UploadTracesComponent} from './upload_traces_component';
           <div class="card-grid landing-grid">
             <collect-traces
               class="collect-traces-card homepage-card"
-              (filesCollected)="onFilesCollected($event)"
-              [store]="store"></collect-traces>
+              [traceConfig]="traceConfig"
+              [dumpConfig]="dumpConfig"
+              [storage]="traceConfigStorage"
+              (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
               class="upload-traces-card homepage-card"
@@ -284,7 +304,7 @@ export class AppComponent implements WinscopeEventListener {
   collapsedTimelineHeight = 0;
   TRACE_INFO = TRACE_INFO;
   isEditingFilename = false;
-  store: PersistentStore = new PersistentStore();
+  store = new PersistentStore();
   viewers: Viewer[] = [];
 
   isDarkModeOn!: boolean;
@@ -299,6 +319,9 @@ export class AppComponent implements WinscopeEventListener {
     'winscope',
     Validators.compose([Validators.required, Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX)])
   );
+  traceConfig: TraceConfigurationMap;
+  dumpConfig: TraceConfigurationMap;
+  traceConfigStorage: Storage;
 
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
@@ -379,6 +402,32 @@ export class AppComponent implements WinscopeEventListener {
         createCustomElement(ViewerViewCaptureComponent, {injector})
       );
     }
+
+    this.traceConfigStorage = globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+
+    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'TracingSettings',
+      TRACES['default'],
+      this.traceConfigStorage
+    );
+    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'DumpSettings',
+      {
+        window_dump: {
+          name: 'Window Manager',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
+        layers_dump: {
+          name: 'Surface Flinger',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
+      },
+      this.traceConfigStorage
+    );
   }
 
   async ngAfterViewInit() {
@@ -436,6 +485,7 @@ export class AppComponent implements WinscopeEventListener {
 
   async onUploadNewButtonClick() {
     await this.mediator.onWinscopeEvent(new AppResetRequest());
+    this.store.clear('treeView');
   }
 
   async onViewTracesButtonClick() {

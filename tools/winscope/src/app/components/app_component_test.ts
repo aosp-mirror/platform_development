@@ -112,9 +112,8 @@ describe('AppComponent', () => {
     expect(component.title).toEqual('winscope');
   });
 
-  it('renders the page title', () => {
-    const title = assertDefined(htmlElement.querySelector('.app-title'));
-    expect(title.innerHTML).toContain('Winscope');
+  it('shows permanent header items on homepage', () => {
+    checkPermanentHeaderItems();
   });
 
   it('displays correct elements when no data loaded', () => {
@@ -128,6 +127,8 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
+    expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    checkPermanentHeaderItems();
   });
 
   it('displays correct elements when data loaded', () => {
@@ -142,6 +143,8 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.viewers')).toBeTruthy();
+    expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    checkPermanentHeaderItems();
   });
 
   it('downloads traces on download button click', () => {
@@ -257,5 +260,12 @@ describe('AppComponent', () => {
     const pencilButton = assertDefined(htmlElement.querySelector('.edit-button'));
     pencilButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
+  }
+
+  function checkPermanentHeaderItems() {
+    expect(assertDefined(htmlElement.querySelector('.app-title')).innerHTML).toContain('Winscope');
+    expect(htmlElement.querySelector('.documentation')).toBeTruthy();
+    expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
+    expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();
   }
 });

@@ -29,7 +29,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
 
-        <mat-form-field>
+        <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
 
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
@@ -173,7 +173,7 @@ export class PropertiesComponent {
       this.traceType === TraceType.VIEW_CAPTURE &&
       this.filterString === '' &&
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
-      this.userOptions['showDiff']?.enabled === false &&
+      !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined
     );
   }

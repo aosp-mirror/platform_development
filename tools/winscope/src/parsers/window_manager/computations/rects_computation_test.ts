@@ -15,7 +15,6 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {com} from 'protos/windowmanager/latest/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -62,8 +61,7 @@ describe('RectsComputation', () => {
         .setId('1 Test Display')
         .setName('Display - Test Display')
         .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([])
+        .setDepth(0)
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(true)
@@ -108,8 +106,7 @@ describe('RectsComputation', () => {
         .setId('WindowState state1')
         .setName('state1')
         .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([0])
+        .setDepth(1)
         .setGroupId(1)
         .setIsVisible(true)
         .setIsDisplay(false)
@@ -124,8 +121,7 @@ describe('RectsComputation', () => {
         .setId('WindowState state2')
         .setName('state2')
         .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setZOrderPath([1])
+        .setDepth(2)
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(false)

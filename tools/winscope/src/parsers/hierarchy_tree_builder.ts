@@ -21,7 +21,7 @@ import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export abstract class HierarchyTreeBuilder {
-  private root: PropertiesProvider | undefined;
+  protected root: PropertiesProvider | undefined;
   private children: PropertiesProvider[] | undefined;
   private computations: Computation[] = [];
 

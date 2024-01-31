@@ -15,6 +15,7 @@
  */
 
 import {TransformMatrix} from 'common/geometry_types';
+import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from './trace_rect';
 
 export class TraceRectBuilder {
@@ -25,12 +26,12 @@ export class TraceRectBuilder {
   id: string | undefined;
   name: string | undefined;
   cornerRadius: number | undefined;
-  transform: TransformMatrix | undefined;
-  zOrderPath: number[] | undefined;
+  transform: TransformMatrix = Transform.EMPTY.matrix;
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
   isVirtual: boolean | undefined;
+  depth: number | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -72,11 +73,6 @@ export class TraceRectBuilder {
     return this;
   }
 
-  setZOrderPath(value: number[]) {
-    this.zOrderPath = value;
-    return this;
-  }
-
   setGroupId(value: number) {
     this.groupId = value;
     return this;
@@ -94,6 +90,11 @@ export class TraceRectBuilder {
 
   setIsVirtual(value: boolean) {
     this.isVirtual = value;
+    return this;
+  }
+
+  setDepth(value: number) {
+    this.depth = value;
     return this;
   }
 
@@ -126,14 +127,6 @@ export class TraceRectBuilder {
       throw Error('cornerRadius not set');
     }
 
-    if (this.transform === undefined) {
-      throw Error('transform not set');
-    }
-
-    if (this.zOrderPath === undefined) {
-      throw Error('zOrderPath not set');
-    }
-
     if (this.groupId === undefined) {
       throw Error('groupId not set');
     }
@@ -150,6 +143,10 @@ export class TraceRectBuilder {
       throw Error('isVirtual not set');
     }
 
+    if (this.depth === undefined) {
+      throw Error('depth not set');
+    }
+
     return new TraceRect(
       this.x,
       this.y,
@@ -159,11 +156,11 @@ export class TraceRectBuilder {
       this.name,
       this.cornerRadius,
       this.transform,
-      this.zOrderPath,
       this.groupId,
       this.isVisible,
       this.isDisplay,
-      this.isVirtual
+      this.isVirtual,
+      this.depth
     );
   }
 }

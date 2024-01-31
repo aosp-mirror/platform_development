@@ -32,7 +32,7 @@ export class UiRect extends Rect {
     readonly isClickable: boolean,
     readonly cornerRadius: number,
     readonly transform: TransformMatrix | undefined,
-    readonly depth: number | undefined,
+    readonly depth: number,
     readonly hasContent: boolean | undefined
   ) {
     super(x, y, w, h);

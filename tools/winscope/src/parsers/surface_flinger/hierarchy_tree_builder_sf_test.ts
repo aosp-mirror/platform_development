@@ -15,6 +15,7 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -27,7 +28,7 @@ describe('HierarchyTreeBuilderSf', () => {
   let entry: PropertiesProvider;
 
   beforeEach(() => {
-    jasmine.addCustomEqualityTester(nodeEqualityTester);
+    jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
     builder = new HierarchyTreeBuilderSf();
     const testPropertyNode = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -250,9 +251,29 @@ describe('HierarchyTreeBuilderSf', () => {
       OperationChain.emptyChain<PropertyTreeNode>()
     );
 
+    const layer2DupProps = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('2')
+      .setName('layer2 duplicate(1)')
+      .setChildren([
+        {name: 'id', value: 2},
+        {name: 'name', value: 'layer2'},
+        {name: 'parent', value: 1},
+        {name: 'children', value: []},
+        {name: 'flags', value: LayerFlag.HIDDEN},
+      ])
+      .build();
+    const layer2DupProvider = new PropertiesProvider(
+      layer2DupProps,
+      async () => layer2DupProps,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>()
+    );
+
     const root = builder
       .setRoot(entry)
-      .setChildren([layer1Provider, layer2Provider, layer2Provider])
+      .setChildren([layer1Provider, layer2Provider, layer2DupProvider])
       .build();
 
     const propertiesTree = new PropertyTreeBuilder()
@@ -276,7 +297,7 @@ describe('HierarchyTreeBuilderSf', () => {
     const expectedNestedLayer = new HierarchyTreeNode('2 layer2', 'layer2', layer2Provider);
     const expectedDupNestedLayer = new HierarchyTreeNode(
       '2 layer2 duplicate(1)',
-      'layer2',
+      'layer2 duplicate(1)',
       layer2Provider
     );
     expectedRootLayer.addOrReplaceChild(expectedNestedLayer);
@@ -285,24 +306,4 @@ describe('HierarchyTreeBuilderSf', () => {
 
     expect(root).toEqual(expectedRoot);
   });
-
-  function nodeEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof HierarchyTreeNode && second instanceof HierarchyTreeNode) {
-      return testHierarchyTreeNodes(first, second);
-    }
-    return undefined;
-  }
-
-  function testHierarchyTreeNodes(
-    node: HierarchyTreeNode,
-    expectedNode: HierarchyTreeNode
-  ): boolean {
-    if (node.id !== expectedNode.id) return false;
-    if (node.name !== expectedNode.name) return false;
-
-    for (const [index, child] of node.getAllChildren().entries()) {
-      if (!testHierarchyTreeNodes(child, expectedNode.getAllChildren()[index])) return false;
-    }
-    return true;
-  }
 });

@@ -18,6 +18,8 @@ import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
+import {TreeNode} from 'trace/tree_node/tree_node';
+import {DiffNode} from 'viewers/common/diff_node';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ChildHierarchy, HierarchyTreeBuilder} from './hierarchy_tree_builder';
@@ -127,31 +129,30 @@ export class TreeNodeUtils {
     return UiPropertyTreeNode.from(TreeNodeUtils.makePropertyNode(rootId, name, value));
   }
 
-  static uiHierarchyNodeEqualityTester(first: any, second: any): boolean | undefined {
-    if (first instanceof UiHierarchyTreeNode && second instanceof UiHierarchyTreeNode) {
-      return TreeNodeUtils.testUiHierarchyNodes(first, second);
+  static treeNodeEqualityTester(first: any, second: any): boolean | undefined {
+    if (first instanceof TreeNode && second instanceof TreeNode) {
+      return TreeNodeUtils.testTreeNodes(first, second);
     }
     return undefined;
   }
 
-  private static testUiHierarchyNodes(
-    node: UiHierarchyTreeNode,
-    expectedNode: UiHierarchyTreeNode
-  ): boolean {
+  private static testTreeNodes(node: TreeNode, expectedNode: TreeNode): boolean {
     if (node.id !== expectedNode.id) return false;
     if (node.name !== expectedNode.name) return false;
-    if (node.getDiff() !== expectedNode.getDiff()) return false;
 
-    const maxIndex = Math.max(node.getAllChildren().length, expectedNode.getAllChildren().length);
-    for (let i = 0; i < maxIndex; i++) {
-      if (!(node.getAllChildren()[i] && expectedNode.getAllChildren()[i])) return false;
+    if ((node as DiffNode).getDiff && (expectedNode as DiffNode).getDiff) {
+      if ((node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()) return false;
+    }
 
-      if (
-        !TreeNodeUtils.testUiHierarchyNodes(
-          node.getAllChildren()[i],
-          expectedNode.getAllChildren()[i]
-        )
-      ) {
+    const nodeChildren = node.getAllChildren();
+    const expectedChildren = expectedNode.getAllChildren();
+    if (nodeChildren.length !== expectedChildren.length) return false;
+
+    for (let i = 0; i < nodeChildren.length; i++) {
+      const nodeChild = nodeChildren[i];
+      const expectedChild = expectedChildren[i];
+
+      if (!TreeNodeUtils.testTreeNodes(nodeChild, expectedChild)) {
         return false;
       }
     }

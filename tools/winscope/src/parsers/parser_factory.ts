@@ -32,8 +32,8 @@ import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
 import {ParserTransactions} from './parser_transactions';
 import {ParserTransitionsShell} from './parser_transitions_shell';
 import {ParserTransitionsWm} from './parser_transitions_wm';
-import {ParserViewCapture} from './parser_view_capture';
 import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
+import {ParserViewCapture} from './view_capture/parser_view_capture';
 
 export class ParserFactory {
   static readonly PARSERS = [

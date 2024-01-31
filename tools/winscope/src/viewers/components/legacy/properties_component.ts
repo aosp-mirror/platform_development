@@ -16,7 +16,7 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceTreeNode} from 'trace/trace_tree_node';
-import {TraceType, ViewNode} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesTreeNodeLegacy, Terminal} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
@@ -46,11 +46,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           >{{ userOptions[option].name }}</mat-checkbox
         >
       </div>
-
-      <view-capture-property-groups-legacy
-        *ngIf="showViewCaptureFormat()"
-        class="property-groups"
-        [item]="selectedItem"></view-capture-property-groups-legacy>
     </div>
 
     <mat-divider></mat-divider>
@@ -64,7 +59,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
 
       <div class="tree-wrapper">
         <tree-view-legacy
-          *ngIf="isValidLegacyTree() && !showViewCaptureFormat()"
+          *ngIf="isValidLegacyTree()"
           [item]="propertiesTree"
           [showNode]="showNode"
           [store]="store"
@@ -75,7 +70,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           [isLeaf]="isLeaf"></tree-view-legacy>
 
         <tree-view
-          *ngIf="isValidTree() && !showViewCaptureFormat()"
+          *ngIf="isValidTree()"
           [node]="propertiesTree"
           [store]="store"
           [useStoredExpandedState]="true"
@@ -139,7 +134,7 @@ export class PropertiesComponentLegacy {
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNodeLegacy | PropertyTreeNode = {};
   @Input() highlightedProperty: string = '';
-  @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
+  @Input() selectedItem: TraceTreeNode | null = null;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
@@ -189,16 +184,6 @@ export class PropertiesComponentLegacy {
 
   itemIsSelected() {
     return this.selectedItem && Object.keys(this.selectedItem).length > 0;
-  }
-
-  showViewCaptureFormat(): boolean {
-    return (
-      this.traceType === TraceType.VIEW_CAPTURE &&
-      this.filterString === '' &&
-      // Todo: Highlight Inline in formatted ViewCapture Properties Component.
-      this.userOptions['showDiff']?.enabled === false &&
-      this.selectedItem
-    );
   }
 
   isSurfaceFlinger(): boolean {
