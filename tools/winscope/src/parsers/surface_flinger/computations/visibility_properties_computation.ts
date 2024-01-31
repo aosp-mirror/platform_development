@@ -343,17 +343,10 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private isHiddenByParent(layer: HierarchyTreeNode): boolean {
-    const parentId = layer.getEagerPropertyByName('parent');
-    if (!parentId) return false;
-    const parentLayersWithDupId = this.rootLayers?.filter(
-      (node) => this.getDefinedValue(node, 'id') === parentId
-    );
-    if (!parentLayersWithDupId) return false;
-
-    // all children of all layers with duplicated id moved to children of the final layer detetcted
-    const parentLayer = parentLayersWithDupId[parentLayersWithDupId.length - 1];
+    const parentLayer = assertDefined(layer.getZParent());
     return (
-      parentLayer && (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))
+      !parentLayer.isRoot() &&
+      (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))
     );
   }
 

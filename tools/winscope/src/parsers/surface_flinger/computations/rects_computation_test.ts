@@ -145,6 +145,90 @@ describe('RectsComputation', () => {
     expect(rects).toEqual(expectedRects);
   });
 
+  it('handles layer rects with different group ids', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layer1',
+          properties: {
+            id: 1,
+            name: 'layer1',
+            cornerRadius: 0,
+            layerStack: 0,
+            bounds: {left: 0, top: 0, right: 1, bottom: 1},
+            zOrderPath: [0],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 2,
+          name: 'layer2',
+          properties: {
+            id: 2,
+            name: 'layer2',
+            cornerRadius: 0,
+            layerStack: 1,
+            bounds: {left: 0, top: 0, right: 1, bottom: 1},
+            zOrderPath: [0],
+            isComputedVisible: true,
+            transform: Transform.EMPTY,
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
+
+    const expectedRects: TraceRect[] = [
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(1)
+        .setHeight(1)
+        .setId('1 layer1')
+        .setName('layer1')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(1)
+        .setHeight(1)
+        .setId('2 layer2')
+        .setName('layer2')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
+        .setGroupId(1)
+        .setIsVisible(true)
+        .setIsDisplay(false)
+        .setIsVirtual(false)
+        .build(),
+    ];
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+
+    const rects: TraceRect[] = [];
+    hierarchyRoot.forEachNodeDfs((node) => {
+      if (node.id === 'LayerTraceEntry root') {
+        return;
+      }
+      const nodeRects = node.getRects();
+      if (nodeRects) rects.push(...nodeRects);
+    });
+
+    expect(rects).toEqual(expectedRects);
+  });
+
   it('makes display rects', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
