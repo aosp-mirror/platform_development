@@ -35,12 +35,13 @@ export interface Connection {
   isConnectingState(): boolean;
   throwNoTargetsError(): any;
   startTrace(
+    requestedTraces: string[],
     reqEnableConfig?: string[],
     reqSelectedSfConfig?: ConfigMap,
     reqSelectedWmConfig?: ConfigMap
   ): any;
   endTrace(): any;
   adbData(): File[];
-  dumpState(): any;
+  dumpState(requestedDumps: string[]): any;
   proxy?: ProxyClient;
 }

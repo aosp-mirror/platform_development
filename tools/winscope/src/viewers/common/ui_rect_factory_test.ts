@@ -27,8 +27,6 @@ describe('UI_RECT_FACTORY', () => {
   let hierarchyRoot: HierarchyTreeNode;
   let layer1Node: HierarchyTreeNode;
   let layer2Node: HierarchyTreeNode;
-  let expectedlayer1UiRect: UiRect;
-  let expectedLayer2UiRect: UiRect;
 
   beforeEach(() => {
     hierarchyRoot = new HierarchyTreeBuilder()
@@ -41,8 +39,13 @@ describe('UI_RECT_FACTORY', () => {
       .build();
     layer1Node = assertDefined(hierarchyRoot.getChildByName('layer1'));
     layer2Node = assertDefined(hierarchyRoot.getChildByName('layer2'));
+  });
 
-    expectedlayer1UiRect = new UiRectBuilder()
+  it('extracts rects from hierarchy tree', () => {
+    buildRectAndSetToLayerNode(layer1Node, 0);
+    buildRectAndSetToLayerNode(layer2Node, 1);
+
+    const expectedlayer1UiRect = new UiRectBuilder()
       .setX(0)
       .setY(0)
       .setWidth(1)
@@ -57,9 +60,10 @@ describe('UI_RECT_FACTORY', () => {
       .setIsClickable(true)
       .setIsVirtual(false)
       .setHasContent(false)
+      .setDepth(0)
       .build();
 
-    expectedLayer2UiRect = new UiRectBuilder()
+    const expectedLayer2UiRect = new UiRectBuilder()
       .setX(0)
       .setY(0)
       .setWidth(1)
@@ -74,42 +78,59 @@ describe('UI_RECT_FACTORY', () => {
       .setIsClickable(true)
       .setIsVirtual(false)
       .setHasContent(false)
+      .setDepth(1)
       .build();
-  });
 
-  it('extracts rects from hierarchy tree', () => {
-    buildRectAndSetToLayerNode(layer1Node, [0]);
-    buildRectAndSetToLayerNode(layer2Node, [0, 1]);
-    const expectedRects: UiRect[] = [expectedLayer2UiRect, expectedlayer1UiRect];
+    const expectedRects: UiRect[] = [expectedlayer1UiRect, expectedLayer2UiRect];
 
     expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
   });
 
-  it('handles z-order paths with equal lengths', () => {
-    buildRectAndSetToLayerNode(layer1Node, [1]);
-    buildRectAndSetToLayerNode(layer2Node, [0]);
+  it('handles depth order different to dfs order', () => {
+    buildRectAndSetToLayerNode(layer1Node, 1);
+    buildRectAndSetToLayerNode(layer2Node, 0);
+
+    const expectedlayer1UiRect = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setId('1 layer1')
+      .setLabel('layer1')
+      .setCornerRadius(0)
+      .setGroupId(0)
+      .setTransform(Transform.EMPTY.matrix)
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setIsClickable(true)
+      .setIsVirtual(false)
+      .setHasContent(false)
+      .setDepth(1)
+      .build();
+
+    const expectedLayer2UiRect = new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setId('2 layer2')
+      .setLabel('layer2')
+      .setCornerRadius(0)
+      .setGroupId(0)
+      .setTransform(Transform.EMPTY.matrix)
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setIsClickable(true)
+      .setIsVirtual(false)
+      .setHasContent(false)
+      .setDepth(0)
+      .build();
 
     const expectedRects: UiRect[] = [expectedlayer1UiRect, expectedLayer2UiRect];
     expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
   });
 
-  it('handles z-order paths with different lengths', () => {
-    buildRectAndSetToLayerNode(layer1Node, [0, 1]);
-    buildRectAndSetToLayerNode(layer2Node, [0, 0, 0]);
-
-    const expectedRects: UiRect[] = [expectedlayer1UiRect, expectedLayer2UiRect];
-    expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
-  });
-
-  it('handles z-order paths with equal values (fall back to Layer ID comparison)', () => {
-    buildRectAndSetToLayerNode(layer1Node, [0, 1]);
-    buildRectAndSetToLayerNode(layer2Node, [0, 1, 0]);
-
-    const expectedRects: UiRect[] = [expectedLayer2UiRect, expectedlayer1UiRect];
-    expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
-  });
-
-  function buildRectAndSetToLayerNode(layerNode: HierarchyTreeNode, zOrderPath: number[]) {
+  function buildRectAndSetToLayerNode(layerNode: HierarchyTreeNode, depth: number) {
     const rect = new TraceRectBuilder()
       .setX(0)
       .setY(0)
@@ -119,7 +140,7 @@ describe('UI_RECT_FACTORY', () => {
       .setName(layerNode.name)
       .setCornerRadius(0)
       .setTransform(Transform.EMPTY.matrix)
-      .setZOrderPath(zOrderPath)
+      .setDepth(depth)
       .setGroupId(0)
       .setIsVisible(true)
       .setIsDisplay(false)

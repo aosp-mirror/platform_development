@@ -26,7 +26,7 @@ describe('Filter', () => {
 
   describe('keeping parents and children', () => {
     beforeEach(() => {
-      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
       const filter = (item: TreeNode | undefined) => {
         if (item) {
           return item.name === 'keep';
@@ -234,7 +234,7 @@ describe('Filter', () => {
 
   describe('without keeping parents and children', () => {
     beforeEach(() => {
-      jasmine.addCustomEqualityTester(TreeNodeUtils.uiHierarchyNodeEqualityTester);
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
       const filter = (item: TreeNode | undefined) => {
         if (item) {
           return item.name === 'keep';

@@ -15,14 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 class RectWmFactory {
-  makeDisplayRect(display: HierarchyTreeNode): TraceRect {
+  makeDisplayRect(display: HierarchyTreeNode, absoluteZ: number): TraceRect {
     const displayInfo = display.getEagerPropertyByName('displayInfo');
     const displayRectWidth = displayInfo?.getChildByName('logicalWidth')?.getValue() ?? 0;
     const displayRectHeight = displayInfo?.getChildByName('logicalHeight')?.getValue() ?? 0;
@@ -35,12 +34,11 @@ class RectWmFactory {
       .setId(display.id)
       .setName(`Display - ${display.name}`)
       .setCornerRadius(0)
-      .setTransform(Transform.EMPTY.matrix)
-      .setZOrderPath([])
       .setGroupId(assertDefined(display.getEagerPropertyByName('id')).getValue())
       .setIsVisible(false)
       .setIsDisplay(true)
       .setIsVirtual(false)
+      .setDepth(absoluteZ)
       .build();
   }
 
@@ -70,12 +68,11 @@ class RectWmFactory {
       .setId(container.id)
       .setName(container.name)
       .setCornerRadius(0)
-      .setTransform(Transform.EMPTY.matrix)
-      .setZOrderPath([absoluteZ])
       .setGroupId(displayId)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setIsVirtual(false)
+      .setDepth(absoluteZ)
       .build();
   }
 }
@@ -95,10 +92,10 @@ export class RectsComputation implements Computation {
     }
 
     this.root.getAllChildren().forEach((displayContent) => {
-      const displayRect = this.rectsFactory.makeDisplayRect(displayContent);
+      const displayRect = this.rectsFactory.makeDisplayRect(displayContent, 0);
       displayContent.setRects([displayRect]);
 
-      let absoluteZ = 0;
+      let absoluteZ = 1;
       displayContent.getAllChildren().forEach((child) => {
         child.forEachNodeDfs((container) => {
           if (!container.id.startsWith('WindowState ')) return;

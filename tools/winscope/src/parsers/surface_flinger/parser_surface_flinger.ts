@@ -53,15 +53,9 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     root.lookupType('android.surfaceflinger.LayersTraceFileProto')
   );
   private static readonly entryField = ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
-  private static readonly entryType = assertDefined(
-    ParserSurfaceFlinger.entryField.tamperedMessageType
-  );
   private static readonly layerField = assertDefined(
-    ParserSurfaceFlinger.entryType.fields['layers'].tamperedMessageType
+    ParserSurfaceFlinger.entryField.tamperedMessageType?.fields['layers'].tamperedMessageType
   ).fields['layers'];
-  private static readonly layerType = assertDefined(
-    ParserSurfaceFlinger.layerField.tamperedMessageType
-  );
 
   private static readonly Operations = {
     SetFormattersLayer: new SetFormatters(
@@ -70,11 +64,11 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     ),
     TranslateIntDefLayer: new TranslateIntDef(ParserSurfaceFlinger.layerField),
     AddDefaultsLayerEager: new AddDefaults(
-      ParserSurfaceFlinger.layerType,
+      ParserSurfaceFlinger.layerField,
       ParserSfUtils.EAGER_PROPERTIES
     ),
     AddDefaultsLayerLazy: new AddDefaults(
-      ParserSurfaceFlinger.layerType,
+      ParserSurfaceFlinger.layerField,
       undefined,
       ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES)
     ),
@@ -83,9 +77,9 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       ParserSurfaceFlinger.CUSTOM_FORMATTERS
     ),
     TranslateIntDefEntry: new TranslateIntDef(ParserSurfaceFlinger.entryField),
-    AddDefaultsEntryEager: new AddDefaults(ParserSurfaceFlinger.entryType, ['displays']),
+    AddDefaultsEntryEager: new AddDefaults(ParserSurfaceFlinger.entryField, ['displays']),
     AddDefaultsEntryLazy: new AddDefaults(
-      ParserSurfaceFlinger.entryType,
+      ParserSurfaceFlinger.entryField,
       undefined,
       ParserSfUtils.DENYLIST_PROPERTIES
     ),

@@ -32,7 +32,7 @@ import {RectsComputation} from './computations/rects_computation';
 import {WmCustomQueryUtils} from './custom_query_utils';
 import {HierarchyTreeBuilderWm} from './hierarchy_tree_builder_wm';
 import {ParserWmUtils} from './parser_window_manager_utils';
-import {WindowManagerServiceType} from './wm_tampered_protos';
+import {WindowManagerServiceField} from './wm_tampered_protos';
 
 class ParserWindowManagerDump extends AbstractParser {
   protected override shouldAddDefaultsToProto = false;
@@ -50,7 +50,7 @@ class ParserWindowManagerDump extends AbstractParser {
   }
 
   override decodeTrace(buffer: Uint8Array): com.android.server.wm.IWindowManagerServiceDumpProto[] {
-    const entryProto = WindowManagerServiceType.decode(
+    const entryProto = assertDefined(WindowManagerServiceField.tamperedMessageType).decode(
       buffer
     ) as com.android.server.wm.IWindowManagerServiceDumpProto;
 

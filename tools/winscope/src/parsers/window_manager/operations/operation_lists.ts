@@ -43,13 +43,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.WindowManagerServiceType,
+          WmTamperedProtos.WindowManagerServiceField,
           WM_EAGER_PROPERTIES.get(WmProtoType.WindowManagerService)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.WindowManagerServiceType,
+          WmTamperedProtos.WindowManagerServiceField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowManagerService)
         ),
@@ -66,13 +66,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.RootWindowContainerType,
+          WmTamperedProtos.RootWindowContainerField,
           WM_EAGER_PROPERTIES.get(WmProtoType.RootWindowContainer)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.RootWindowContainerType,
+          WmTamperedProtos.RootWindowContainerField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.RootWindowContainer)
         ),
@@ -89,14 +89,14 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.WindowContainerType,
+          WmTamperedProtos.WindowContainerField,
           WM_EAGER_PROPERTIES.get(WmProtoType.WindowContainer)
         ),
         new AddIsVisible(),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.WindowContainerType,
+          WmTamperedProtos.WindowContainerField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowContainer)
         ),
@@ -113,13 +113,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.DisplayContentType,
+          WmTamperedProtos.DisplayContentField,
           WM_EAGER_PROPERTIES.get(WmProtoType.DisplayContent)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.DisplayContentType,
+          WmTamperedProtos.DisplayContentField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayContent)
         ),
@@ -136,13 +136,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.DisplayAreaType,
+          WmTamperedProtos.DisplayAreaField,
           WM_EAGER_PROPERTIES.get(WmProtoType.DisplayArea)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.DisplayAreaType,
+          WmTamperedProtos.DisplayAreaField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayArea)
         ),
@@ -158,11 +158,11 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
         new TranslateIntDef(WmTamperedProtos.TaskField),
       ],
       eager: [
-        new AddDefaults(WmTamperedProtos.TaskType, WM_EAGER_PROPERTIES.get(WmProtoType.Task)),
+        new AddDefaults(WmTamperedProtos.TaskField, WM_EAGER_PROPERTIES.get(WmProtoType.Task)),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.TaskType,
+          WmTamperedProtos.TaskField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.Task)
         ),
@@ -179,14 +179,14 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.ActivityType,
+          WmTamperedProtos.ActivityField,
           WM_EAGER_PROPERTIES.get(WmProtoType.Activity)
         ),
         new AddIsVisible(),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.ActivityType,
+          WmTamperedProtos.ActivityField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.Activity)
         ),
@@ -203,13 +203,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.WindowTokenType,
+          WmTamperedProtos.WindowTokenField,
           WM_EAGER_PROPERTIES.get(WmProtoType.WindowToken)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.WindowTokenType,
+          WmTamperedProtos.WindowTokenField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowToken)
         ),
@@ -232,7 +232,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.WindowStateType,
+          WmTamperedProtos.WindowStateField,
           WM_EAGER_PROPERTIES.get(WmProtoType.WindowState)
         ),
         new AddWindowType(),
@@ -240,7 +240,7 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.WindowStateType,
+          WmTamperedProtos.WindowStateField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowState)
         ),
@@ -257,13 +257,13 @@ export const WM_OPERATION_LISTS = new Map<WmProtoType, OperationLists>([
       ],
       eager: [
         new AddDefaults(
-          WmTamperedProtos.TaskFragmentType,
+          WmTamperedProtos.TaskFragmentField,
           WM_EAGER_PROPERTIES.get(WmProtoType.TaskFragment)
         ),
       ],
       lazy: [
         new AddDefaults(
-          WmTamperedProtos.TaskFragmentType,
+          WmTamperedProtos.TaskFragmentField,
           undefined,
           WM_DENYLIST_PROPERTIES.get(WmProtoType.TaskFragment)
         ),

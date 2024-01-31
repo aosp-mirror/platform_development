@@ -200,7 +200,7 @@ class ProxyRequest {
     );
   }
 
-  onSuccessGetDevices = (request: XMLHttpRequest) => {
+  onSuccessGetDevices = async (request: XMLHttpRequest) => {
     const client = proxyClient;
     try {
       client.devices = JSON.parse(request.responseText);
@@ -264,7 +264,7 @@ export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
   readonly VERSION = '1.2';
   state: ProxyState = ProxyState.CONNECTING;
-  stateChangeListeners: Array<{(param: ProxyState, errorText: string): void}> = [];
+  stateChangeListeners: Array<{(param: ProxyState, errorText: string): Promise<void>}> = [];
   refresh_worker: NodeJS.Timer | null = null;
   devices: Device = {};
   selectedDevice = '';
@@ -274,20 +274,20 @@ export class ProxyClient {
   lastDevice = '';
   store = new PersistentStore();
 
-  setState(state: ProxyState, errorText = '') {
+  async setState(state: ProxyState, errorText = '') {
     this.state = state;
     this.errorText = errorText;
     for (const listener of this.stateChangeListeners) {
-      listener(state, errorText);
+      await listener(state, errorText);
     }
   }
 
-  onProxyChange(fn: (state: ProxyState, errorText: string) => void) {
+  onProxyChange(fn: (state: ProxyState, errorText: string) => Promise<void>) {
     this.removeOnProxyChange(fn);
     this.stateChangeListeners.push(fn);
   }
 
-  removeOnProxyChange(removeFn: (state: ProxyState, errorText: string) => void) {
+  removeOnProxyChange(removeFn: (state: ProxyState, errorText: string) => Promise<void>) {
     this.stateChangeListeners = this.stateChangeListeners.filter((fn) => fn !== removeFn);
   }
 
