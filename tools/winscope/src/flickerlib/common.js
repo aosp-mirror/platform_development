@@ -17,54 +17,6 @@
 // Imports all the compiled common Flicker library classes and exports them
 // as clean es6 modules rather than having them be commonjs modules
 
-// WM
-const WindowManagerTrace =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerTrace;
-const WindowManagerState =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerState;
-const WindowManagerTraceEntryBuilder =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerTraceEntryBuilder;
-const Activity = require('flickerlib/flicker').android.tools.common.traces.wm.Activity;
-const Configuration = require('flickerlib/flicker').android.tools.common.traces.wm.Configuration;
-const ConfigurationContainer =
-  require('flickerlib/flicker').android.tools.common.traces.wm.ConfigurationContainer;
-const DisplayArea = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayArea;
-const DisplayContent = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayContent;
-const DisplayCutout = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayCutout;
-const KeyguardControllerState =
-  require('flickerlib/flicker').android.tools.common.traces.wm.KeyguardControllerState;
-const RootWindowContainer =
-  require('flickerlib/flicker').android.tools.common.traces.wm.RootWindowContainer;
-const Task = require('flickerlib/flicker').android.tools.common.traces.wm.Task;
-const TaskFragment = require('flickerlib/flicker').android.tools.common.traces.wm.TaskFragment;
-const WindowConfiguration =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowConfiguration;
-const WindowContainer =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowContainer;
-const WindowLayoutParams =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowLayoutParams;
-const WindowManagerPolicy =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerPolicy;
-const WindowState = require('flickerlib/flicker').android.tools.common.traces.wm.WindowState;
-const WindowToken = require('flickerlib/flicker').android.tools.common.traces.wm.WindowToken;
-
-// SF
-const HwcCompositionType =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.HwcCompositionType;
-const Layer = require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Layer;
-const LayerProperties =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerProperties;
-const LayerTraceEntry =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntry;
-const LayerTraceEntryBuilder =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntryBuilder;
-const LayersTrace =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayersTrace;
-const Transform =
-  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Transform;
-const Display = require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Display;
-const Region = require('flickerlib/flicker').android.tools.common.datatypes.Region;
-
 // Event Log
 const EventLog = require('flickerlib/flicker').android.tools.common.traces.events.EventLog;
 const CujEvent = require('flickerlib/flicker').android.tools.common.traces.events.CujEvent;
@@ -90,6 +42,7 @@ const WmTransitionData =
   require('flickerlib/flicker').android.tools.common.traces.wm.WmTransitionData;
 
 // Common
+const Region = require('flickerlib/flicker').android.tools.common.datatypes.Region;
 const Size = require('flickerlib/flicker').android.tools.common.datatypes.Size;
 const ActiveBuffer = require('flickerlib/flicker').android.tools.common.datatypes.ActiveBuffer;
 const Color = require('flickerlib/flicker').android.tools.common.datatypes.Color;
@@ -116,8 +69,6 @@ const EMPTY_RECT = Rect.Companion.EMPTY;
 const EMPTY_RECTF = RectF.Companion.EMPTY;
 const EMPTY_POINT = Point.Companion.EMPTY;
 const EMPTY_POINTF = PointF.Companion.EMPTY;
-const EMPTY_MATRIX33 = Matrix33.Companion.identity(0, 0);
-const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX33);
 
 function toSize(proto) {
   if (proto == null) {
@@ -260,59 +211,7 @@ function toRegion(proto) {
   return new Region(rects);
 }
 
-function toTransform(proto) {
-  if (proto == null) {
-    return EMPTY_TRANSFORM;
-  }
-  const dsdx = proto.dsdx ?? 0;
-  const dtdx = proto.dtdx ?? 0;
-  const tx = proto.tx ?? 0;
-  const dsdy = proto.dsdy ?? 0;
-  const dtdy = proto.dtdy ?? 0;
-  const ty = proto.ty ?? 0;
-
-  if (dsdx || dtdx || tx || dsdy || dtdy || ty) {
-    const matrix = new Matrix33(dsdx, dtdx, tx, dsdy, dtdy, ty);
-    return new Transform(proto.type ?? 0, matrix);
-  }
-
-  if (proto.type) {
-    return new Transform(proto.type ?? 0, EMPTY_MATRIX33);
-  }
-  return EMPTY_TRANSFORM;
-}
-
 export {
-  Activity,
-  Configuration,
-  ConfigurationContainer,
-  DisplayArea,
-  DisplayContent,
-  KeyguardControllerState,
-  DisplayCutout,
-  RootWindowContainer,
-  Task,
-  TaskFragment,
-  WindowConfiguration,
-  WindowContainer,
-  WindowState,
-  WindowToken,
-  WindowLayoutParams,
-  WindowManagerPolicy,
-  WindowManagerTrace,
-  WindowManagerState,
-  WindowManagerTraceEntryBuilder,
-  // SF
-  HwcCompositionType,
-  Layer,
-  LayerProperties,
-  LayerTraceEntry,
-  LayerTraceEntryBuilder,
-  LayersTrace,
-  Transform,
-  Matrix33,
-  Display,
-  // Eventlog
   EventLog,
   CujEvent,
   CujType,
@@ -356,7 +255,6 @@ export {
   toRect,
   toRectF,
   toRegion,
-  toTransform,
   // Constants
   EMPTY_BUFFER,
   EMPTY_COLOR,
@@ -364,6 +262,4 @@ export {
   EMPTY_RECTF,
   EMPTY_POINT,
   EMPTY_POINTF,
-  EMPTY_MATRIX33,
-  EMPTY_TRANSFORM,
 };
