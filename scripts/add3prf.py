@@ -45,6 +45,8 @@ YMD_LINE_MATCHER = re.compile(YMD_LINE_PATTERN)
 # patterns to match different licence types in LICENSE*
 APACHE_PATTERN = r"^.*Apache License.*$"
 APACHE_MATCHER = re.compile(APACHE_PATTERN)
+BOOST_PATTERN = r"^.Boost Software License.*Version 1.0.*$"
+BOOST_MATCHER = re.compile(BOOST_PATTERN)
 MIT_PATTERN = r"^.*MIT License.*$"
 MIT_MATCHER = re.compile(MIT_PATTERN)
 BSD_PATTERN = r"^.*BSD .*License.*$"
@@ -55,6 +57,8 @@ UNLICENSE_PATTERN = r"^.*unlicense\.org.*$"
 UNLICENSE_MATCHER = re.compile(UNLICENSE_PATTERN)
 ZERO_BSD_PATTERN = r"^.*Zero-Clause BSD.*$"
 ZERO_BSD_MATCHER = re.compile(ZERO_BSD_PATTERN)
+ZLIB_PATTERN = r"^.*zlib License.$"
+ZLIB_MATCHER = re.compile(ZLIB_PATTERN)
 MULTI_LICENSE_COMMENT = ("# Dual-licensed, using the least restrictive "
         "per go/thirdpartylicenses#same.\n  ")
 
@@ -70,11 +74,12 @@ description: {description}
 third_party {{
   identifier {{
     type: "crates.io"
-    value: "https://crates.io/crates/{name}"
+    value: "{name}"
   }}
   identifier {{
     type: "Archive"
     value: "https://static.crates.io/crates/{name}/{name}-{version}.crate"
+    primary_source: true
   }}
   version: "{version}"
   {license_comment}license_type: {license_type}
@@ -136,6 +141,8 @@ def grep_license_keyword(license_file):
     for line in input_file:
       if APACHE_MATCHER.match(line):
         return License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file)
+      if BOOST_MATCHER.match(line):
+        return License(LicenseType.BOOST, LicenseGroup.NOTICE, license_file)
       if MIT_MATCHER.match(line):
         return License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)
       if BSD_MATCHER.match(line):
@@ -146,6 +153,8 @@ def grep_license_keyword(license_file):
         return License(LicenseType.UNLICENSE, LicenseGroup.PERMISSIVE, license_file)
       if ZERO_BSD_MATCHER.match(line):
         return License(LicenseType.ZERO_BSD, LicenseGroup.PERMISSIVE, license_file)
+      if ZLIB_MATCHER.match(line):
+        return License(LicenseType.ZLIB, LicenseGroup.NOTICE, license_file)
   print("ERROR: cannot decide license type in", license_file,
         "assume BSD_LIKE")
   return License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file)
@@ -165,6 +174,8 @@ class LicenseType(enum.IntEnum):
   MPL = 5
   ZERO_BSD = 6
   UNLICENSE = 7
+  ZLIB = 8
+  BOOST = 9
 
 class LicenseGroup(enum.Enum):
   """A group of license as defined by go/thirdpartylicenses#types
@@ -192,14 +203,20 @@ def decide_license_type(cargo_license):
   # Some crate like time-macros-impl uses lower case names like LICENSE-Apache.
   licenses = []
   license_file = None
-  for license_file in glob.glob("LICENSE*") + glob.glob("COPYING*") + glob.glob("UNLICENSE"):
-    lowered_name = license_file.lower()
+  for license_file in glob.glob("LICENSE*") + glob.glob("COPYING*") + glob.glob("UNLICENSE*"):
+    lowered_name = os.path.splitext(license_file.lower())[0]
     if lowered_name == "license-apache":
       licenses.append(License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file))
+    elif lowered_name == "license-boost":
+      licenses.append(License(LicenseType.BOOST, LicenseGroup.NOTICE, license_file))
+    elif lowered_name == "license-bsd":
+      licenses.append(License(LicenseType.BSD_LIKE, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-mit":
       licenses.append(License(LicenseType.MIT, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "license-0bsd":
       licenses.append(License(LicenseType.ZERO_BSD, LicenseGroup.PERMISSIVE, license_file))
+    elif lowered_name == "license-zlib":
+      licenses.append(License(LicenseType.ZLIB, LicenseGroup.NOTICE, license_file))
     elif lowered_name == "unlicense":
       licenses.append(License(LicenseType.UNLICENSE, LicenseGroup.PERMISSIVE, license_file))
   if licenses:
@@ -211,6 +228,8 @@ def decide_license_type(cargo_license):
   # Cargo.toml.
   if "Apache" in cargo_license:
     return [License(LicenseType.APACHE2, LicenseGroup.NOTICE, license_file)]
+  if "BSL" in cargo_license:
+    return [License(LicenseType.BOOST, LicenseGroup.NOTICE, license_file)]
   if "MIT" in cargo_license:
     return [License(LicenseType.MIT, LicenseGroup.NOTICE, license_file)]
   if "0BSD" in cargo_license:
@@ -223,6 +242,8 @@ def decide_license_type(cargo_license):
     return [License(LicenseType.MPL, LicenseGroup.RECIPROCAL, license_file)]
   if "Unlicense" in cargo_license:
     return [License(LicenseType.UNLICENSE, LicenseGroup.PERMISSIVE, license_file)]
+  if "Zlib" in cargo_license:
+    return [License(LicenseType.ZLIB, LicenseGroup.NOTICE, license_file)]
   return [grep_license_keyword(license_file)]
 
 
@@ -261,7 +282,7 @@ def add_license(target):
 def add_module_license(license_type):
   """Touch MODULE_LICENSE_type file."""
   # Do not change existing MODULE_* files.
-  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE", "MPL", "0BSD", "UNLICENSE"]:
+  for suffix in ["MIT", "APACHE", "APACHE2", "BSD_LIKE", "MPL", "0BSD", "UNLICENSE", "ZLIB", "BOOST"]:
     module_file = "MODULE_LICENSE_" + suffix
     if os.path.exists(module_file):
       if license_type.name != suffix:
