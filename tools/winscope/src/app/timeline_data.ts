@@ -22,7 +22,7 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 
 export class TimelineData {
   private traces = new Traces();
@@ -55,6 +55,14 @@ export class TimelineData {
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
     this.timestampType = this.firstEntry?.getTimestamp().getType();
+
+    const types = traces
+      .mapTrace((trace, type) => type)
+      .sort(TraceTypeUtils.compareByDisplayOrder)
+      .filter((type) => type !== TraceType.SCREEN_RECORDING);
+    if (types.length > 0) {
+      this.setActiveViewTraceTypes([types[0]]);
+    }
   }
 
   private lastReturnedCurrentPosition?: TracePosition;

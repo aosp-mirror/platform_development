@@ -24,14 +24,19 @@ import {TimelineData} from './timeline_data';
 describe('TimelineData', () => {
   let timelineData: TimelineData;
 
+  const timestamp9 = new RealTimestamp(9n);
   const timestamp10 = new RealTimestamp(10n);
   const timestamp11 = new RealTimestamp(11n);
 
   const traces = new TracesBuilder()
+    .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
     .build();
 
+  const position9 = TracePosition.fromTraceEntry(
+    assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0)
+  );
   const position10 = TracePosition.fromTraceEntry(
     assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER)).getEntry(0)
   );
@@ -71,7 +76,7 @@ describe('TimelineData', () => {
     });
   });
 
-  it('uses first entry by default', () => {
+  it('uses first entry of first active trace by default', () => {
     timelineData.initialize(traces, undefined);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
   });
@@ -94,7 +99,7 @@ describe('TimelineData', () => {
     timelineData.initialize(traces, undefined);
 
     timelineData.setActiveViewTraceTypes([]);
-    expect(timelineData.getCurrentPosition()).toEqual(position10);
+    expect(timelineData.getCurrentPosition()).toEqual(position9);
 
     timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
     expect(timelineData.getCurrentPosition()).toEqual(position11);
