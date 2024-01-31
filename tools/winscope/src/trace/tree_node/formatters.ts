@@ -21,6 +21,13 @@ import {PropertyTreeNode} from './property_tree_node';
 const EMPTY_OBJ_STRING = '{empty}';
 const EMPTY_ARRAY_STRING = '[empty]';
 
+function formatNumber(value: number): string {
+  if (!Number.isInteger(value)) {
+    return value.toFixed(3).toString();
+  }
+  return value.toString();
+}
+
 interface PropertyFormatter {
   format(node: PropertyTreeNode): string;
 }
@@ -32,6 +39,10 @@ class DefaultPropertyFormatter implements PropertyFormatter {
       return EMPTY_ARRAY_STRING;
     }
 
+    if (typeof value === 'number') {
+      return formatNumber(value);
+    }
+
     if (value?.toString) return value.toString();
 
     return `${value}`;
@@ -41,12 +52,16 @@ const DEFAULT_PROPERTY_FORMATTER = new DefaultPropertyFormatter();
 
 class ColorFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
+    const alpha = formatNumber(node.getChildByName('a')?.getValue() ?? 0);
     if (RawDataUtils.isEmptyObj(node)) {
-      return `${EMPTY_OBJ_STRING}, alpha: ${node.getChildByName('a')?.getValue() ?? 'unknown'}`;
+      return `${EMPTY_OBJ_STRING}, alpha: ${alpha}`;
     }
-    return `(${node.getChildByName('r')?.getValue() ?? 0}, ${
-      node.getChildByName('g')?.getValue() ?? 0
-    }, ${node.getChildByName('b')?.getValue() ?? 0}, ${node.getChildByName('a')?.getValue() ?? 0})`;
+
+    const r = formatNumber(node.getChildByName('r')?.getValue() ?? 0);
+    const g = formatNumber(node.getChildByName('g')?.getValue() ?? 0);
+    const b = formatNumber(node.getChildByName('b')?.getValue() ?? 0);
+
+    return `(${r}, ${g}, ${b}, ${alpha})`;
   }
 }
 const COLOR_FORMATTER = new ColorFormatter();
@@ -56,11 +71,12 @@ class RectFormatter implements PropertyFormatter {
     if (!RawDataUtils.isRect(node) || RawDataUtils.isEmptyObj(node)) {
       return EMPTY_OBJ_STRING;
     }
-    return `(${node.getChildByName('left')?.getValue() ?? 0}, ${
-      node.getChildByName('top')?.getValue() ?? 0
-    }) - (${node.getChildByName('right')?.getValue() ?? 0}, ${
-      node.getChildByName('bottom')?.getValue() ?? 0
-    })`;
+    const left = formatNumber(node.getChildByName('left')?.getValue() ?? 0);
+    const top = formatNumber(node.getChildByName('top')?.getValue() ?? 0);
+    const right = formatNumber(node.getChildByName('right')?.getValue() ?? 0);
+    const bottom = formatNumber(node.getChildByName('bottom')?.getValue() ?? 0);
+
+    return `(${left}, ${top}) - (${right}, ${bottom})`;
   }
 }
 const RECT_FORMATTER = new RectFormatter();
@@ -103,9 +119,9 @@ const SIZE_FORMATTER = new SizeFormatter();
 
 class PositionFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    return `x: ${node.getChildByName('x')?.getValue() ?? 0}, y: ${
-      node.getChildByName('y')?.getValue() ?? 0
-    }`;
+    const x = formatNumber(node.getChildByName('x')?.getValue() ?? 0);
+    const y = formatNumber(node.getChildByName('y')?.getValue() ?? 0);
+    return `x: ${x}, y: ${y}`;
   }
 }
 const POSITION_FORMATTER = new PositionFormatter();
