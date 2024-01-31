@@ -18,11 +18,11 @@ import {assertDefined} from 'common/assert_utils';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {PropertiesProvider} from './properties_provider';
+import {LazyPropertiesStrategyType, PropertiesProvider} from './properties_provider';
 
 export class PropertiesProviderBuilder {
   private eagerProperties: PropertyTreeNode | undefined;
-  private lazyPropertiesStrategy: (() => Promise<PropertyTreeNode>) | undefined;
+  private lazyPropertiesStrategy: LazyPropertiesStrategyType | undefined;
   private commonOperations = OperationChain.emptyChain<PropertyTreeNode>();
   private eagerOperations = OperationChain.emptyChain<PropertyTreeNode>();
   private lazyOperations = OperationChain.emptyChain<PropertyTreeNode>();
@@ -32,7 +32,7 @@ export class PropertiesProviderBuilder {
     return this;
   }
 
-  setLazyPropertiesStrategy(value: () => Promise<PropertyTreeNode>): this {
+  setLazyPropertiesStrategy(value: LazyPropertiesStrategyType): this {
     this.lazyPropertiesStrategy = value;
     return this;
   }

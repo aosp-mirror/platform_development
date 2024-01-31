@@ -82,6 +82,24 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         (highlightedChange)="onHighlightedItemChange($event)"
         (pinnedItemChange)="onPinnedItemChange($event)"
         (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
+
+      <div class="children">
+        <tree-view
+          *ngFor="let subtree of subtrees; trackBy: trackById"
+          class="childrenTree"
+          [node]="subtree"
+          [store]="store"
+          [dependencies]="dependencies"
+          [isFlattened]="isFlattened()"
+          [useStoredExpandedState]="true"
+          [initialDepth]="1"
+          [highlightedItem]="highlightedItem"
+          [pinnedItems]="pinnedItems"
+          [itemsClickable]="true"
+          (highlightedChange)="onHighlightedItemChange($event)"
+          (pinnedItemChange)="onPinnedItemChange($event)"
+          (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
+      </div>
     </div>
   `,
   styles: [
@@ -134,6 +152,7 @@ export class HierarchyComponent {
   isHighlighted = UiTreeUtils.isHighlighted;
 
   @Input() tree: UiHierarchyTreeNode | undefined;
+  @Input() subtrees: UiHierarchyTreeNode[] = [];
   @Input() tableProperties: TableProperties | undefined;
   @Input() dependencies: TraceType[] = [];
   @Input() highlightedItem: string = '';
@@ -142,6 +161,10 @@ export class HierarchyComponent {
   @Input() userOptions: UserOptions = {};
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+
+  trackById(index: number, child: UiHierarchyTreeNode): string {
+    return child.id;
+  }
 
   isFlattened() {
     return this.userOptions['flat']?.enabled;

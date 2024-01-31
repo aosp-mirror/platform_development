@@ -17,15 +17,16 @@ import {Timestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserInputMethodlClients', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser<any>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser(
+      parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/InputMethodClients.pb'
-      );
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -54,15 +55,18 @@ describe('ParserInputMethodlClients', () => {
 
     it('retrieves trace entry', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
-      expect(BigInt(entry.elapsedRealtimeNanos)).toEqual(15647516364n);
+      expect(entry).toBeInstanceOf(HierarchyTreeNode);
+      expect(entry.id).toEqual('InputMethodClients entry');
     });
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser<any>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/InputMethodClients.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/InputMethodClients.pb'
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -81,7 +85,8 @@ describe('ParserInputMethodlClients', () => {
 
     it('retrieves trace entry from elapsed timestamp', async () => {
       const entry = await parser.getEntry(0, TimestampType.ELAPSED);
-      expect(BigInt(entry.elapsedRealtimeNanos)).toEqual(1149083651642n);
+      expect(entry).toBeInstanceOf(HierarchyTreeNode);
+      expect(entry.id).toEqual('InputMethodClients entry');
     });
   });
 });

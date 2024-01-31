@@ -19,6 +19,8 @@ import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from './property_tree_node_factory';
 
+export type LazyPropertiesStrategyType = () => Promise<PropertyTreeNode>;
+
 export class PropertiesProvider {
   private eagerPropertiesRoot: PropertyTreeNode;
   private lazyPropertiesRoot: PropertyTreeNode | undefined;
@@ -26,7 +28,7 @@ export class PropertiesProvider {
 
   constructor(
     eagerPropertiesRoot: PropertyTreeNode,
-    private readonly lazyPropertiesStrategy: () => Promise<PropertyTreeNode>,
+    private readonly lazyPropertiesStrategy: LazyPropertiesStrategyType,
     private readonly commonOperations: OperationChain<PropertyTreeNode>,
     private readonly eagerOperations: OperationChain<PropertyTreeNode>,
     private readonly lazyOperations: OperationChain<PropertyTreeNode>

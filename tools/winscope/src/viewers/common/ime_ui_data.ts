@@ -17,10 +17,6 @@
 import {TraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
-import {
-  HierarchyTreeNodeLegacy,
-  PropertiesTreeNodeLegacy,
-} from 'viewers/common/ui_tree_utils_legacy';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -28,14 +24,14 @@ import {UiPropertyTreeNode} from './ui_property_tree_node';
 export class ImeUiData {
   dependencies: TraceType[];
   highlightedItem: string = '';
-  pinnedItems: Array<HierarchyTreeNodeLegacy | UiHierarchyTreeNode> = [];
+  pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNodeLegacy | null = null;
+  tree: UiHierarchyTreeNode | undefined;
   sfSubtrees: UiHierarchyTreeNode[] = [];
-  propertiesTree: PropertiesTreeNodeLegacy | UiPropertyTreeNode | null = null;
-  hierarchyTableProperties: TableProperties | null = null;
-  additionalProperties: ImeAdditionalProperties | null = null;
+  propertiesTree: UiPropertyTreeNode | undefined;
+  hierarchyTableProperties: TableProperties | undefined;
+  additionalProperties: ImeAdditionalProperties | undefined;
 
   constructor(dependencies?: TraceType[]) {
     this.dependencies = dependencies ?? [];

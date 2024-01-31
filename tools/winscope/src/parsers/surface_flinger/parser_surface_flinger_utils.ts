@@ -17,6 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {perfetto} from 'protos/surfaceflinger/latest/static';
 import {android} from 'protos/surfaceflinger/udc/static';
+import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AddCompositionType} from './operations/add_composition_type';
@@ -120,7 +121,7 @@ export class ParserSfUtils {
   static makeLayerLazyPropertiesStrategy(
     layer: android.surfaceflinger.ILayerProto | perfetto.protos.ILayerProto,
     duplicateCount: number
-  ) {
+  ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
         .setData(layer)
@@ -134,7 +135,7 @@ export class ParserSfUtils {
 
   static makeEntryLazyPropertiesStrategy(
     entry: android.surfaceflinger.ILayersTraceProto | perfetto.protos.ILayersSnapshotProto
-  ) {
+  ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
         .setData(entry)

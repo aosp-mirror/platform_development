@@ -100,7 +100,7 @@ describe('FrameMapper', () => {
   });
 
   describe('IME <-> WindowManager', () => {
-    let ime: Trace<object>;
+    let ime: Trace<HierarchyTreeNode>;
     let windowManager: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
@@ -109,12 +109,12 @@ describe('FrameMapper', () => {
       //                    |        |
       // WINDOW_MANAGER:    0        1  2
       // Time:           0  1  2  3  4  5
-      ime = new TraceBuilder<object>()
+      ime = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as object,
-          'entry-1' as unknown as object,
-          'entry-2' as unknown as object,
-          'entry-3' as unknown as object,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4])
         .build();

@@ -24,16 +24,16 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
   template: `
     <div class="card-grid">
       <div class="left-views">
-        <hierarchy-view-legacy
+        <hierarchy-view
           class="hierarchy-view"
-          [tree]="inputData?.tree ?? null"
+          [tree]="inputData?.tree"
           [subtrees]="inputData?.sfSubtrees ?? []"
           [dependencies]="inputData?.dependencies ?? []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"
-          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view-legacy>
+          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
 
         <ng-container *ngIf="inputData?.additionalProperties">
           <mat-divider></mat-divider>
@@ -41,17 +41,17 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
           <ime-additional-properties
             class="ime-additional-properties"
             [highlightedItem]="inputData?.highlightedItem"
-            [additionalProperties]="inputData?.additionalProperties!"></ime-additional-properties>
+            [additionalProperties]="inputData.additionalProperties"></ime-additional-properties>
         </ng-container>
       </div>
 
       <mat-divider [vertical]="true"></mat-divider>
 
-      <properties-view-legacy
+      <properties-view
         class="properties-view"
         [store]="store"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view-legacy>
+        [propertiesTree]="inputData?.propertiesTree"></properties-view>
     </div>
   `,
   styles: [
@@ -75,7 +75,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
   ],
 })
 export class ViewerInputMethodComponent {
-  @Input() inputData: ImeUiData | null = null;
+  @Input() inputData: ImeUiData | undefined;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;

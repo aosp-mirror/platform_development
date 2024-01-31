@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {HierarchyTreeBuilderLegacy} from 'test/unit/hierarchy_tree_builder_legacy';
+
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {executePresenterInputMethodTests} from 'viewers/common/presenter_input_method_test_utils';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
 describe('PresenterInputMethodClients', () => {
   describe('PresenterInputMethod tests:', () => {
-    const selectedTree = new HierarchyTreeBuilderLegacy()
-      .setId('entry')
-      .setStableId('entry')
+    const selectedTree = new HierarchyTreeBuilder()
+      .setId('InputMethodClients')
+      .setName('entry')
+      .setProperties({where: 'location', elapsedNanos: 0})
       .build();
 
     executePresenterInputMethodTests(
       selectedTree,
-      'elapsed',
+      'where',
       [2, 1],
       true,
       PresenterInputMethodClients,
