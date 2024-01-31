@@ -31,7 +31,6 @@ import {UiData} from './ui_data';
         class="rects-view"
         title="View Hierarchy Sketch"
         [store]="store"
-        [enableShowVirtualButton]="false"
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
