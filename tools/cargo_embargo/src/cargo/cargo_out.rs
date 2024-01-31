@@ -358,9 +358,13 @@ impl Crate {
                 _ if arg.starts_with("--edition=") => {}
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
+                _ if arg.starts_with("--allow=clippy") => {}
                 _ if arg.starts_with("-Wclippy") => {}
+                _ if arg.starts_with("--warn=clippy") => {}
                 _ if arg.starts_with("-D") => {}
+                _ if arg.starts_with("--deny=") => {}
                 _ if arg.starts_with("-W") => {}
+                _ if arg.starts_with("--warn=") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
