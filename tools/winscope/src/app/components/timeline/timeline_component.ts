@@ -504,7 +504,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
-    if (this.isInputFormFocused) {
+    if (this.isInputFormFocused || !this.timelineData.hasTimestamps()) {
       return;
     }
     if (event.key === 'ArrowLeft') {
