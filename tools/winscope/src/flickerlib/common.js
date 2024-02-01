@@ -47,14 +47,10 @@ const Size = require('flickerlib/flicker').android.tools.common.datatypes.Size;
 const ActiveBuffer = require('flickerlib/flicker').android.tools.common.datatypes.ActiveBuffer;
 const Color = require('flickerlib/flicker').android.tools.common.datatypes.Color;
 const Insets = require('flickerlib/flicker').android.tools.common.datatypes.Insets;
-const Matrix33 = require('flickerlib/flicker').android.tools.common.datatypes.Matrix33;
-const PlatformConsts = require('flickerlib/flicker').android.tools.common.PlatformConsts;
-const Rotation = require('flickerlib/flicker').android.tools.common.Rotation;
 const Point = require('flickerlib/flicker').android.tools.common.datatypes.Point;
 const PointF = require('flickerlib/flicker').android.tools.common.datatypes.PointF;
 const Rect = require('flickerlib/flicker').android.tools.common.datatypes.Rect;
 const RectF = require('flickerlib/flicker').android.tools.common.datatypes.RectF;
-const WindowingMode = require('flickerlib/flicker').android.tools.common.traces.wm.WindowingMode;
 const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
 const Timestamp = require('flickerlib/flicker').android.tools.common.Timestamp;
 const TimestampFactory = require('flickerlib/flicker').android.tools.common.TimestampFactory;
@@ -233,13 +229,10 @@ export {
   ActiveBuffer,
   Color,
   Insets,
-  PlatformConsts,
   Point,
   Rect,
   RectF,
   Region,
-  Rotation,
-  WindowingMode,
   CrossPlatform,
   Timestamp,
   TimestampFactory,
