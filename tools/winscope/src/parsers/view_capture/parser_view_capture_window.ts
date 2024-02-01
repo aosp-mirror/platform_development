@@ -72,7 +72,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     SetRootTransformProperties: new SetRootTransformProperties(),
   };
 
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+  private timestamps = new Map<TimestampType, Timestamp[]>();
 
   constructor(
     private readonly descriptors: string[],
@@ -173,7 +173,9 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     const eagerOperations: Array<Operation<PropertyTreeNode>> = [
       ParserViewCaptureWindow.Operations.AddDefaultsNodeEager,
     ];
-    if (isRoot) eagerOperations.push(ParserViewCaptureWindow.Operations.SetRootTransformProperties);
+    if (isRoot) {
+      eagerOperations.push(ParserViewCaptureWindow.Operations.SetRootTransformProperties);
+    }
 
     const eagerProperties = this.makeEagerPropertiesTree(node);
     const lazyPropertiesStrategy = this.makeLazyPropertiesStrategy(node);
@@ -206,7 +208,9 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     let obj = node;
     do {
       Object.getOwnPropertyNames(obj).forEach((it) => {
-        if (!ParserViewCaptureWindow.EAGER_PROPERTIES.includes(it)) denyList.push(it);
+        if (!ParserViewCaptureWindow.EAGER_PROPERTIES.includes(it)) {
+          denyList.push(it);
+        }
       });
       obj = Object.getPrototypeOf(obj);
     } while (obj);

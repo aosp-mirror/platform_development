@@ -17,34 +17,35 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {TraceType} from 'trace/trace_type';
 
-describe('WmCustomQueryUtils', async () => {
-  it('parseWindowsTokenAndTitle()', async () => {
-    const trace = await UnitTestUtils.getTrace(
-      TraceType.WINDOW_MANAGER,
-      'traces/elapsed_and_real_timestamp/WindowManager.pb'
-    );
-    const tokenAndTitles = await trace
-      .sliceEntries(0, 1)
-      .customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
+describe('WmCustomQueryUtils', () =>
+  (async () => {
+    it('parseWindowsTokenAndTitle()', async () => {
+      const trace = await UnitTestUtils.getTrace(
+        TraceType.WINDOW_MANAGER,
+        'traces/elapsed_and_real_timestamp/WindowManager.pb'
+      );
+      const tokenAndTitles = await trace
+        .sliceEntries(0, 1)
+        .customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
 
-    expect(tokenAndTitles.length).toEqual(69);
+      expect(tokenAndTitles.length).toEqual(69);
 
-    // RootWindowContainerProto
-    expect(tokenAndTitles).toContain({token: '478edff', title: 'WindowContainer'});
-    // DisplayContentProto
-    expect(tokenAndTitles).toContain({token: '1f3454e', title: 'Built-in Screen'});
-    // DisplayAreaProto
-    expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'});
-    // WindowTokenProto
-    expect(tokenAndTitles).toContain({token: '509ad2f', title: '509ad2f'});
-    // WindowStateProto
-    expect(tokenAndTitles).toContain({token: 'b3b210d', title: 'ScreenDecorOverlay'});
-    // TaskProto
-    expect(tokenAndTitles).toContain({token: '7493986', title: 'Task'});
-    // ActivityRecordProto
-    expect(tokenAndTitles).toContain({
-      token: 'f7092ed',
-      title: 'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
+      // RootWindowContainerProto
+      expect(tokenAndTitles).toContain({token: '478edff', title: 'WindowContainer'});
+      // DisplayContentProto
+      expect(tokenAndTitles).toContain({token: '1f3454e', title: 'Built-in Screen'});
+      // DisplayAreaProto
+      expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'});
+      // WindowTokenProto
+      expect(tokenAndTitles).toContain({token: '509ad2f', title: '509ad2f'});
+      // WindowStateProto
+      expect(tokenAndTitles).toContain({token: 'b3b210d', title: 'ScreenDecorOverlay'});
+      // TaskProto
+      expect(tokenAndTitles).toContain({token: '7493986', title: 'Task'});
+      // ActivityRecordProto
+      expect(tokenAndTitles).toContain({
+        token: 'f7092ed',
+        title: 'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
+      });
     });
-  });
-});
+  })());

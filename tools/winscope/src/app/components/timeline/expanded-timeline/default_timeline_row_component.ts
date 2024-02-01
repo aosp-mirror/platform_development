@@ -44,7 +44,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   @Input() selectedEntry: TraceEntry<{}> | undefined = undefined;
   @Input() selectionRange!: TimeRange;
 
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
   @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;

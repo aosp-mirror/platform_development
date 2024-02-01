@@ -156,10 +156,10 @@ export class AdbProxyComponent {
   proxy: ProxyClient = proxyClient;
 
   @Output()
-  proxyChange = new EventEmitter<ProxyClient>();
+  readonly proxyChange = new EventEmitter<ProxyClient>();
 
   @Output()
-  addKey = new EventEmitter<string>();
+  readonly addKey = new EventEmitter<string>();
 
   states = ProxyState;
   proxyKeyItem = '';

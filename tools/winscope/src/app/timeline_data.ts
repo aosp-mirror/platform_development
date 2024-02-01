@@ -250,7 +250,7 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
-  private lastReturnedCurrentEntries: Map<TraceType, TraceEntry<any> | undefined> = new Map();
+  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
   findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {

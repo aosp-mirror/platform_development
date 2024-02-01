@@ -277,12 +277,6 @@ export class VisibilityPropertiesComputation implements Computation {
     return colorNode;
   }
 
-  private getBounds(layer: HierarchyTreeNode): Rect | undefined {
-    const boundsNode = layer.getEagerPropertyByName('bounds');
-    if (boundsNode) this.getRect(boundsNode);
-    return undefined;
-  }
-
   private getDisplaySize(layer: HierarchyTreeNode): Rect {
     const displaySize = new Rect(0, 0, 0, 0);
     const matchingDisplay = this.displays.find(

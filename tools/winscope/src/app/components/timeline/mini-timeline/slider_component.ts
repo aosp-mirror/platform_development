@@ -123,7 +123,7 @@ export class SliderComponent {
   @Input() zoomRange: TimeRange | undefined;
   @Input() currentPosition: TracePosition | undefined;
 
-  @Output() onZoomChanged = new EventEmitter<TimeRange>();
+  @Output() readonly onZoomChanged = new EventEmitter<TimeRange>();
 
   dragging = false;
   sliderWidth = 0;

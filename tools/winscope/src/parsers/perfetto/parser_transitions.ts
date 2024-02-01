@@ -61,7 +61,7 @@ export class ParserTransitions extends AbstractParser<Transition> {
         transitionProto.finishTransactionId.toString(),
         TransitionType.Companion.fromInt(Number(transitionProto.type)),
         transitionProto.targets.map(
-          (it: any) =>
+          (it: perfetto.protos.ShellTransition.ITarget) =>
             new TransitionChange(
               TransitionType.Companion.fromInt(Number(it.mode)),
               Number(it.layerId),

@@ -22,7 +22,6 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 describe('ParserSurfaceFlingerDump', () => {
   describe('trace with elapsed + real timestamp', () => {
     let parser: Parser<HierarchyTreeNode>;
-    const DUMP_REAL_TIME = 1659176624505188647n;
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(

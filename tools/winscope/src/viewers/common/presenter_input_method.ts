@@ -58,7 +58,7 @@ export abstract class PresenterInputMethod {
   readonly notifyViewCallback: NotifyImeViewCallbackType;
   protected readonly dependencies: TraceType[];
   protected uiData: ImeUiData;
-  protected highlightedItem: string = '';
+  protected highlightedItem = '';
   protected entry: HierarchyTreeNode | undefined;
   protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
     'ImeHierarchyOptions',

@@ -93,8 +93,8 @@ export class MiniTimelineComponent {
   @Input() currentTracePosition!: TracePosition;
   @Input() selectedTraces!: TraceType[];
 
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
-  @Output() onSeekTimestampUpdate = new EventEmitter<Timestamp | undefined>();
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onSeekTimestampUpdate = new EventEmitter<Timestamp | undefined>();
 
   @ViewChild('miniTimelineWrapper', {static: false}) miniTimelineWrapper!: ElementRef;
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
@@ -197,18 +197,15 @@ export class MiniTimelineComponent {
     this.onZoomChanged(this.timelineData.getFullTimeRange());
   }
 
-  zoomIn(zoomOn: Timestamp | undefined = undefined) {
+  zoomIn(zoomOn?: Timestamp) {
     this.zoom({nominator: 3n, denominator: 4n}, zoomOn);
   }
 
-  zoomOut(zoomOn: Timestamp | undefined = undefined) {
+  zoomOut(zoomOn?: Timestamp) {
     this.zoom({nominator: 5n, denominator: 4n}, zoomOn);
   }
 
-  zoom(
-    zoomRatio: {nominator: bigint; denominator: bigint},
-    zoomOn: Timestamp | undefined = undefined
-  ) {
+  zoom(zoomRatio: {nominator: bigint; denominator: bigint}, zoomOn?: Timestamp) {
     const fullRange = this.timelineData.getFullTimeRange();
     const currentZoomRange = this.timelineData.getZoomRange();
     const currentZoomWidth = currentZoomRange.to.minus(currentZoomRange.from);

@@ -257,7 +257,9 @@ export class UploadTracesComponent implements ProgressListener {
     return this.ngZone.run(() => {
       let hasFilesWithViewers = false;
       this.tracePipeline.getTraces().forEachTrace((trace) => {
-        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) hasFilesWithViewers = true;
+        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
+          hasFilesWithViewers = true;
+        }
       });
 
       return hasFilesWithViewers;

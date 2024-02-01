@@ -19,7 +19,6 @@ import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_v
 describe('TreeNodePropertiesDataViewComponent', () => {
   let fixture: ComponentFixture<TreeNodePropertiesDataViewComponent>;
   let component: TreeNodePropertiesDataViewComponent;
-  let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
@@ -31,7 +30,6 @@ describe('TreeNodePropertiesDataViewComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(TreeNodePropertiesDataViewComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {

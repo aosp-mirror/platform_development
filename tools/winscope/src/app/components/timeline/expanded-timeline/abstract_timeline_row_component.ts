@@ -26,7 +26,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   abstract wrapperRef: ElementRef;
   abstract canvasRef: ElementRef;
 
-  canvasDrawer: CanvasDrawer = new CanvasDrawer();
+  canvasDrawer = new CanvasDrawer();
 
   getCanvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;

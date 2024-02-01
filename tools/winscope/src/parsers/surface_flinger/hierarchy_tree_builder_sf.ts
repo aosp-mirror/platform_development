@@ -50,7 +50,7 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
   protected override makeRootChildren(
     children: PropertiesProvider[],
     identifierToChild: Map<string | number, PropertiesProvider[]>
-  ): ReadonlyArray<HierarchyTreeNode> {
+  ): readonly HierarchyTreeNode[] {
     const rootLayers = children.filter((layer) => {
       const hasParent =
         assertDefined(layer.getEagerProperties().getChildByName('parent')).getValue() !== -1;

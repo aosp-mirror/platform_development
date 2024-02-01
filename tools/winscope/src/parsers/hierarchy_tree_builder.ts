@@ -93,7 +93,7 @@ export abstract class HierarchyTreeBuilder {
   private buildHierarchyTreeNode(
     id: string,
     name: string,
-    children: ReadonlyArray<HierarchyTreeNode>,
+    children: readonly HierarchyTreeNode[],
     propertiesProvider: PropertiesProvider
   ): HierarchyTreeNode {
     const node = new HierarchyTreeNode(id, name, propertiesProvider);
@@ -111,7 +111,7 @@ export abstract class HierarchyTreeBuilder {
   protected abstract makeRootChildren(
     children: PropertiesProvider[],
     identifierToChild: Map<string | number, PropertiesProvider[]>
-  ): ReadonlyArray<HierarchyTreeNode>;
+  ): readonly HierarchyTreeNode[];
 
   protected abstract getIdentifierValue(identifier: PropertyTreeNode): string | number;
   protected abstract getSubtreeName(propertyTreeName: string): string;

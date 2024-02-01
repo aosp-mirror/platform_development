@@ -321,7 +321,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
 
-  @Output() collapsedTimelineSizeChanged = new EventEmitter<number>();
+  @Output() readonly collapsedTimelineSizeChanged = new EventEmitter<number>();
 
   @ViewChild('collapsedTimeline') private collapsedTimelineRef!: ElementRef;
 
