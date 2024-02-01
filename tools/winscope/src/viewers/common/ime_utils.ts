@@ -179,17 +179,6 @@ class ImeAdditionalPropertiesUtils {
     );
   }
 
-  transformInputConnectionCall(entry: any) {
-    const obj = Object.assign({}, entry);
-    if (obj.inputConnectionCall) {
-      Object.getOwnPropertyNames(obj.inputConnectionCall).forEach((name) => {
-        const value = Object.getOwnPropertyDescriptor(obj.inputConnectionCall, name);
-        if (!value?.value) delete obj.inputConnectionCall[name];
-      });
-    }
-    return obj;
-  }
-
   private getFocusedWindowString(entry: HierarchyTreeNode): string | undefined {
     let focusedWindowString = undefined;
     const focusedWindow = WmImeUtils.getFocusedWindow(entry);

@@ -31,4 +31,3 @@ message Entry {
 
   optional bool bool_value = 11;
 }
-

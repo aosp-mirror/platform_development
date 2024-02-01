@@ -17,8 +17,8 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
-import {HierarchyComponentLegacy} from 'viewers/components/legacy/hierarchy_component';
-import {PropertiesComponentLegacy} from 'viewers/components/legacy/properties_component';
+import {HierarchyComponent} from 'viewers/components/hierarchy_component';
+import {PropertiesComponent} from 'viewers/components/properties_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {ViewerViewCaptureComponent} from './viewer_view_capture_component';
 
@@ -33,8 +33,8 @@ describe('ViewerViewCaptureComponent', () => {
       imports: [MatIconModule, MatDividerModule],
       declarations: [
         ViewerViewCaptureComponent,
-        HierarchyComponentLegacy,
-        PropertiesComponentLegacy,
+        HierarchyComponent,
+        PropertiesComponent,
         RectsComponent,
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],

@@ -38,7 +38,6 @@ class Mapper3D {
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
   private panScreenDistance: Distance2D = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
-  private showVirtualMode = false; // by default don't show virtual displays
   private currentGroupId = 0; // default stack id is usually 0
 
   setRects(rects: UiRect[]) {
@@ -96,14 +95,6 @@ class Mapper3D {
     this.showOnlyVisibleMode = enabled;
   }
 
-  getShowVirtualMode(): boolean {
-    return this.showVirtualMode;
-  }
-
-  setShowVirtualMode(enabled: boolean) {
-    this.showVirtualMode = enabled;
-  }
-
   getCurrentGroupId(): number {
     return this.currentGroupId;
   }
@@ -142,10 +133,6 @@ class Mapper3D {
 
     if (this.showOnlyVisibleMode) {
       rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
-    }
-
-    if (!this.showVirtualMode) {
-      rects = rects.filter((rect) => !rect.isVirtual);
     }
 
     return rects;

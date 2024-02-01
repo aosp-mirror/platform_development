@@ -249,7 +249,8 @@ export class Presenter {
 
       if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
         offscreenDisplayCount++;
-        const name = 'Offscreen Display' + (offscreenDisplayCount > 1 ? offscreenDisplayCount : '');
+        const name =
+          'Offscreen Display' + (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
         ids.push({displayId: -1, groupId: rect.groupId, name});
       }
     });

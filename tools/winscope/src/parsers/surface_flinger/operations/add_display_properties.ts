@@ -48,7 +48,7 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
       const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
 
       assertTrue(
-        layerStack !== -1,
+        layerStack !== -1 && layerStack !== -1n,
         () => 'layerStack = -1; false assumption that layerStack is always unsigned'
       );
 

@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {com} from 'protos/windowmanager/latest/static';
-import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {LazyPropertiesStrategyType, PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -110,7 +110,7 @@ class ParserWindowManagerUtils {
 
   private makeEntryLazyPropertiesStrategy(
     entry: com.android.server.wm.IWindowManagerServiceDumpProto
-  ) {
+  ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
         .setData(entry)
@@ -227,13 +227,15 @@ class ParserWindowManagerUtils {
       .setDenyList(denyList)
       .build();
 
-    containerProperties.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-        containerProperties.id,
-        'children',
-        this.mapChildrenToTokens(children)
-      )
-    );
+    if (children.length > 0) {
+      containerProperties.addOrReplaceChild(
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          containerProperties.id,
+          'children',
+          this.mapChildrenToTokens(children)
+        )
+      );
+    }
 
     containerProperties.addOrReplaceChild(
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
@@ -249,7 +251,7 @@ class ParserWindowManagerUtils {
   private makeContainerChildLazyPropertiesStrategy(
     containerChild: com.android.server.wm.IWindowContainerChildProto,
     containerChildType: WmProtoType
-  ) {
+  ): LazyPropertiesStrategyType {
     return async () => {
       const identifier = this.getIdentifier(containerChild);
       const name = this.getName(containerChild, identifier);

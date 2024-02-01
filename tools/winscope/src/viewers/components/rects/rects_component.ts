@@ -46,15 +46,6 @@ import {Distance2D} from './types3d';
           (change)="onShowOnlyVisibleModeChange($event.checked!)"
           >Only visible
         </mat-checkbox>
-        <mat-checkbox
-          *ngIf="enableShowVirtualButton"
-          color="primary"
-          class="show-virtual"
-          [disabled]="getShowOnlyVisibleMode()"
-          [checked]="getShowVirtualMode()"
-          (change)="onShowVirtualModeChange($event.checked!)"
-          >Show virtual
-        </mat-checkbox>
         <div class="right-btn-container">
           <button color="primary" mat-icon-button (click)="onZoomInClick()">
             <mat-icon aria-hidden="true"> zoom_in </mat-icon>
@@ -213,7 +204,6 @@ import {Distance2D} from './types3d';
 })
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
-  @Input() enableShowVirtualButton: boolean = true;
   @Input() zoomFactor: number = 1;
   @Input() store?: PersistentStore;
   @Input() isStackBased = false;
@@ -226,7 +216,6 @@ export class RectsComponent implements OnInit, OnDestroy {
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
   private storeKeyShowOnlyVisibleState = '';
-  private storeKeyShowVirtualState = '';
   private storeKeyZSpacingFactor = '';
   private internalDisplays: DisplayIdentifier[] = [];
   private internalGroupIds = new Set<number>();
@@ -351,14 +340,10 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   updateControlsFromStore() {
     this.storeKeyShowOnlyVisibleState = `rectsView.${this.title}.showOnlyVisibleState`;
-    this.storeKeyShowVirtualState = `rectsView.${this.title}.showVirtualState`;
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
 
     if (assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) === 'true') {
       this.mapper3d.setShowOnlyVisibleMode(true);
-    }
-    if (assertDefined(this.store).get(this.storeKeyShowVirtualState) === 'true') {
-      this.mapper3d.setShowVirtualMode(true);
     }
     const storedZSpacingFactor = assertDefined(this.store).get(this.storeKeyZSpacingFactor);
     if (storedZSpacingFactor !== undefined) {
@@ -419,12 +404,6 @@ export class RectsComponent implements OnInit, OnDestroy {
   onShowOnlyVisibleModeChange(enabled: boolean) {
     this.store?.add(this.storeKeyShowOnlyVisibleState, `${enabled}`);
     this.mapper3d.setShowOnlyVisibleMode(enabled);
-    this.drawLargeRectsAndLabels();
-  }
-
-  onShowVirtualModeChange(enabled: boolean) {
-    this.store?.add(this.storeKeyShowVirtualState, `${enabled}`);
-    this.mapper3d.setShowVirtualMode(enabled);
     this.drawLargeRectsAndLabels();
   }
 
@@ -506,10 +485,6 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   getShowOnlyVisibleMode(): boolean {
     return this.mapper3d.getShowOnlyVisibleMode();
-  }
-
-  getShowVirtualMode(): boolean {
-    return this.mapper3d.getShowVirtualMode();
   }
 
   getZSpacingFactor(): number {

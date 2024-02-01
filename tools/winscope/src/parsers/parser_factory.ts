@@ -22,10 +22,10 @@ import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_mana
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {FileAndParser} from './file_and_parser';
+import {ParserInputMethodClients} from './input_method/parser_input_method_clients';
+import {ParserInputMethodManagerService} from './input_method/parser_input_method_manager_service';
+import {ParserInputMethodService} from './input_method/parser_input_method_service';
 import {ParserEventLog} from './parser_eventlog';
-import {ParserInputMethodClients} from './parser_input_method_clients';
-import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
-import {ParserInputMethodService} from './parser_input_method_service';
 import {ParserProtoLog} from './parser_protolog';
 import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';

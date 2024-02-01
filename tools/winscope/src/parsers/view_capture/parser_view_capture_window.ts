@@ -30,7 +30,7 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
-import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {LazyPropertiesStrategyType, PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -235,7 +235,9 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     return children.map((child) => assertDefined(child.hashcode));
   }
 
-  private makeLazyPropertiesStrategy(node: com.android.app.viewcapture.data.IViewNode) {
+  private makeLazyPropertiesStrategy(
+    node: com.android.app.viewcapture.data.IViewNode
+  ): LazyPropertiesStrategyType {
     return async () => {
       const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${node.hashcode}`;
       return new PropertyTreeBuilderFromProto()
