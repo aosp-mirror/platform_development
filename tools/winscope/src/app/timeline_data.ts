@@ -58,8 +58,10 @@ export class TimelineData {
 
     const types = traces
       .mapTrace((trace, type) => type)
-      .sort(TraceTypeUtils.compareByDisplayOrder)
-      .filter((type) => type !== TraceType.SCREEN_RECORDING);
+      .filter(
+        (type) => TraceTypeUtils.isTraceTypeWithViewer(type) && type !== TraceType.SCREEN_RECORDING
+      )
+      .sort(TraceTypeUtils.compareByDisplayOrder);
     if (types.length > 0) {
       this.setActiveViewTraceTypes([types[0]]);
     }

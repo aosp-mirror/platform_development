@@ -30,6 +30,7 @@ describe('TimelineData', () => {
 
   const traces = new TracesBuilder()
     .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
+    .setTimestamps(TraceType.EVENT_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
     .build();
