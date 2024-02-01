@@ -22,12 +22,26 @@ import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodManagerService extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
+    const inputMethodManagerService = this.entry?.getChildByName('inputMethodManagerService');
+
+    const curMethodId = inputMethodManagerService
+      ?.getEagerPropertyByName('curMethodId')
+      ?.formattedValue();
+    const curFocusedWindowName = inputMethodManagerService
+      ?.getEagerPropertyByName('curFocusedWindowName')
+      ?.formattedValue();
+    const lastImeTargetWindowName = inputMethodManagerService
+      ?.getEagerPropertyByName('lastImeTargetWindowName')
+      ?.formattedValue();
+    const inputShown =
+      inputMethodManagerService?.getEagerPropertyByName('inputShown')?.getValue() ?? false;
+
     return {
       ...new ImManagerServiceTableProperties(
-        this.entry?.obj?.inputMethodManagerService?.curMethodId,
-        this.entry?.obj?.inputMethodManagerService?.curFocusedWindowName,
-        this.entry?.obj?.inputMethodManagerService?.lastImeTargetWindowName,
-        this.entry?.obj?.inputMethodManagerService?.inputShown ?? false
+        curMethodId,
+        curFocusedWindowName,
+        lastImeTargetWindowName,
+        inputShown
       ),
     };
   }

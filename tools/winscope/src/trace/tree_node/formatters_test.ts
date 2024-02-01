@@ -45,8 +45,13 @@ describe('Formatters', () => {
         )
       ).toEqual('test_string');
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, 0.4))
-      ).toEqual('0.4');
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, 0.1234)
+        )
+      ).toEqual('0.123');
+      expect(
+        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, 1.5))
+      ).toEqual('1.500');
     });
 
     it('translates values with toString method correctly', () => {
@@ -84,8 +89,8 @@ describe('Formatters', () => {
       expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 1))).toEqual(
         '(1, 2, 3, 1)'
       );
-      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.5))).toEqual(
-        '(1, 2, 3, 0.5)'
+      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.608))).toEqual(
+        '(1, 2, 3, 0.608)'
       );
     });
   });
@@ -106,6 +111,9 @@ describe('Formatters', () => {
       );
       expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 10, 10))).toEqual(
         '(0, 0) - (10, 10)'
+      );
+      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 1.6431, 10456.9086, 10))).toEqual(
+        '(0, 1.643) - (10456.909, 10)'
       );
     });
   });
@@ -169,6 +177,9 @@ describe('Formatters', () => {
   describe('PositionFormatter', () => {
     it('translates position correctly', () => {
       expect(POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1, 2))).toEqual('x: 1, y: 2');
+      expect(POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1.5, 2.2916))).toEqual(
+        'x: 1.500, y: 2.292'
+      );
     });
   });
 

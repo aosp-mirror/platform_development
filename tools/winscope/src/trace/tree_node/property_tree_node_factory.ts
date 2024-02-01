@@ -17,7 +17,7 @@
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class PropertyTreeNodeFactory {
-  constructor(private denylistProperties: string[] = []) {}
+  constructor(private denylistProperties: string[] = [], private visitPrototype = true) {}
 
   makePropertyRoot(
     rootId: string,
@@ -141,7 +141,7 @@ export class PropertyTreeNodeFactory {
           props.push(prop);
         }
       });
-      obj = Object.getPrototypeOf(obj);
+      obj = this.visitPrototype ? Object.getPrototypeOf(obj) : undefined;
     } while (obj);
     return props.sort((a, b) => (a < b ? -1 : 1));
   }

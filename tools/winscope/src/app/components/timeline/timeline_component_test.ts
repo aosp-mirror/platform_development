@@ -144,6 +144,18 @@ describe('TimelineComponent', () => {
     // error message shown
     const errorMessageContainer = assertDefined(htmlElement.querySelector('.no-timestamps-msg'));
     expect(errorMessageContainer.textContent).toContain('No timeline to show!');
+
+    // arrow key presses don't do anything
+    const spyNextEntry = spyOn(component, 'moveToNextEntry');
+    const spyPrevEntry = spyOn(component, 'moveToPreviousEntry');
+
+    component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
+    expect(spyNextEntry).not.toHaveBeenCalled();
+
+    component.handleKeyboardEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+    fixture.detectChanges();
+    expect(spyPrevEntry).not.toHaveBeenCalled();
   });
 
   it('handles some empty traces', () => {

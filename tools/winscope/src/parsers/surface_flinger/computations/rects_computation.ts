@@ -24,16 +24,19 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 class RectSfFactory {
   makeDisplayRects(displays: ReadonlyArray<PropertyTreeNode>): TraceRect[] {
-    const names = new Set<string>();
+    const nameCounts = new Map<string, number>();
     return displays.map((display, index) => {
       const size = display.getChildByName('size');
       const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
+      let displayName = display.getChildByName('name')?.getValue() ?? '';
+      const id = assertDefined(display.getChildByName('id')).getValue();
 
-      let displayName = assertDefined(display.getChildByName('name')).getValue();
-      if (names.has(displayName)) {
-        displayName += ' (Mirror)';
+      const existingNameCount = nameCounts.get(displayName);
+      if (existingNameCount !== undefined) {
+        nameCounts.set(displayName, existingNameCount + 1);
+        displayName += ` (Mirror ${existingNameCount + 1})`;
       } else {
-        names.add(displayName);
+        nameCounts.set(displayName, 1);
       }
 
       return new TraceRectBuilder()
@@ -41,7 +44,7 @@ class RectSfFactory {
         .setY(0)
         .setWidth(size?.getChildByName('w')?.getValue() ?? 0)
         .setHeight(size?.getChildByName('h')?.getValue() ?? 0)
-        .setId(`Display - ${assertDefined(display.getChildByName('id')).getValue()}`)
+        .setId(`Display - ${id}`)
         .setName(displayName)
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
@@ -54,7 +57,7 @@ class RectSfFactory {
     });
   }
 
-  makeLayerRect(layer: HierarchyTreeNode, absoluteZ: number): TraceRect {
+  makeLayerRect(layer: HierarchyTreeNode, layerStack: number, absoluteZ: number): TraceRect {
     const isVisible = assertDefined(layer.getEagerPropertyByName('isComputedVisible')).getValue();
 
     const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
@@ -74,7 +77,7 @@ class RectSfFactory {
       .setName(name)
       .setCornerRadius(layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0)
       .setTransform(Transform.from(assertDefined(layer.getEagerPropertyByName('transform'))).matrix)
-      .setGroupId(assertDefined(layer.getEagerPropertyByName('layerStack')).getValue())
+      .setGroupId(layerStack)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setIsVirtual(false)
@@ -96,20 +99,24 @@ export class RectsComputation implements Computation {
     if (!this.root) {
       throw Error('root not set');
     }
+    const groupIdToAbsoluteZ = new Map<number, number>();
 
     const displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
     const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
 
+    displayRects.forEach((displayRect) => groupIdToAbsoluteZ.set(displayRect.groupId, 1));
+
     const layersWithRects = this.extractLayersWithRects(this.root);
     layersWithRects.sort(this.compareLayerZ);
 
-    let absoluteZ = displayRects.length;
     for (let i = layersWithRects.length - 1; i > -1; i--) {
       const layer = layersWithRects[i];
-      const rect = this.rectsFactory.makeLayerRect(layer, absoluteZ);
+      const layerStack = assertDefined(layer.getEagerPropertyByName('layerStack')).getValue();
+      const absoluteZ = groupIdToAbsoluteZ.get(layerStack) ?? 0;
+      const rect = this.rectsFactory.makeLayerRect(layer, layerStack, absoluteZ);
       layer.setRects([rect]);
-      absoluteZ++;
+      groupIdToAbsoluteZ.set(layerStack, absoluteZ + 1);
     }
   }
 
