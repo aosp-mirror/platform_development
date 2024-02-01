@@ -35,8 +35,8 @@ export class HierarchyTreeBuilderWm extends HierarchyTreeBuilder {
 
   protected override makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<any, PropertiesProvider[]>
-  ): ReadonlyArray<HierarchyTreeNode> {
+    identifierToChild: Map<string | number, PropertiesProvider[]>
+  ): readonly HierarchyTreeNode[] {
     if (children.length === 0) return [];
     return this.buildSubtree(children[0], identifierToChild).getAllChildren();
   }

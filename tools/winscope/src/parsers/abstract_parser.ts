@@ -27,7 +27,7 @@ import {TraceType} from 'trace/trace_type';
 import {ParsingUtils} from './parsing_utils';
 
 abstract class AbstractParser<T extends object = object> implements Parser<T> {
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+  private timestamps = new Map<TimestampType, Timestamp[]>();
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
   protected shouldAddDefaultsToProto = true; // TODO(b/311643292): remove when refactoring complete

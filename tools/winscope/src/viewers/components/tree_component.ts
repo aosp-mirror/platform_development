@@ -98,7 +98,7 @@ export class TreeComponent {
   @Input() store?: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
-  @Input() highlightedItem: string = '';
+  @Input() highlightedItem = '';
   @Input() pinnedItems?: UiHierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
 
@@ -107,11 +107,11 @@ export class TreeComponent {
 
   @Input() showNode = (node: UiPropertyTreeNode | UiHierarchyTreeNode) => true;
 
-  @Output() highlightedChange = new EventEmitter<string>();
-  @Output() selectedTreeChange = new EventEmitter<UiHierarchyTreeNode>();
-  @Output() pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
-  @Output() hoverStart = new EventEmitter<void>();
-  @Output() hoverEnd = new EventEmitter<void>();
+  @Output() readonly highlightedChange = new EventEmitter<string>();
+  @Output() readonly selectedTreeChange = new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly hoverStart = new EventEmitter<void>();
+  @Output() readonly hoverEnd = new EventEmitter<void>();
 
   localExpandedState = true;
   nodeHover = false;
@@ -160,7 +160,9 @@ export class TreeComponent {
 
   isLeaf(node?: UiPropertyTreeNode | UiHierarchyTreeNode): boolean {
     if (node === undefined) return true;
-    if (node instanceof UiHierarchyTreeNode) return node.getAllChildren().length === 0;
+    if (node instanceof UiHierarchyTreeNode) {
+      return node.getAllChildren().length === 0;
+    }
     return node.formattedValue().length > 0 || node.getAllChildren().length === 0;
   }
 

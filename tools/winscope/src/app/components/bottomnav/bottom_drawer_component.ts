@@ -163,6 +163,10 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
   }
 }
 
+/**
+ * Container for Material drawers
+ * @docs-private
+ */
 @Component({
   selector: 'mat-drawer-container',
   exportAs: 'matDrawerContainer',

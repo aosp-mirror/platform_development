@@ -18,14 +18,12 @@ import {Input} from '@angular/core';
 import {VariableHeightScrollStrategy} from './variable_height_scroll_strategy';
 
 export abstract class VariableHeightScrollDirective<T extends object> {
-  private scrollItemsInternal: T[] = [];
   abstract scrollStrategy: VariableHeightScrollStrategy;
 
   @Input()
   set scrollItems(items: T[]) {
     if (this.scrollItems !== items) {
       this.scrollStrategy.updateItems(items);
-      this.scrollItemsInternal = items;
     }
   }
 }

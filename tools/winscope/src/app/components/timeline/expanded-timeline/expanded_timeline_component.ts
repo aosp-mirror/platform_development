@@ -154,7 +154,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 })
 export class ExpandedTimelineComponent {
   @Input() timelineData!: TimelineData;
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('expandedTimelineWrapper', {static: false}) warpperRef!: ElementRef;

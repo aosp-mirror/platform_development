@@ -19,7 +19,7 @@ import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 
 export class PropertyTreeBuilderFromProto {
   private denylistProperties: string[] = [];
-  private duplicateCount: number = 0;
+  private duplicateCount = 0;
   private proto: any | undefined;
   private rootId: string | number = 'UnknownRootId';
   private rootName: string | undefined = 'UnknownRootName';

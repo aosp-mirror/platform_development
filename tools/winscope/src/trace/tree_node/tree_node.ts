@@ -42,7 +42,7 @@ export abstract class TreeNode implements Item {
     return this.children.find((child) => child.name === name);
   }
 
-  getAllChildren(): ReadonlyArray<this> {
+  getAllChildren(): readonly this[] {
     return this.children;
   }
 

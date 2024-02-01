@@ -20,7 +20,6 @@ import {CoordinatesTableComponent} from './coordinates_table_component';
 describe('CoordinatesTableComponent', () => {
   let fixture: ComponentFixture<CoordinatesTableComponent>;
   let component: CoordinatesTableComponent;
-  let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
@@ -32,7 +31,6 @@ describe('CoordinatesTableComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CoordinatesTableComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {

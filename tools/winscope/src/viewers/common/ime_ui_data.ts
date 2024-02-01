@@ -23,7 +23,7 @@ import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export class ImeUiData {
   dependencies: TraceType[];
-  highlightedItem: string = '';
+  highlightedItem = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};

@@ -30,7 +30,7 @@ export class HierarchyTreeBuilderInputMethod extends HierarchyTreeBuilder {
   protected override makeRootChildren(
     children: PropertiesProvider[],
     identifierToChild: Map<string | number, PropertiesProvider[]>
-  ): ReadonlyArray<HierarchyTreeNode> {
+  ): readonly HierarchyTreeNode[] {
     if (children.length === 0) return [];
     return [this.buildSubtree(children[0], identifierToChild)];
   }
