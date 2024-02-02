@@ -227,7 +227,8 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
     """
     lsdump_paths = collections.defaultdict(
         lambda: collections.defaultdict(dict))
-    suffixes = collections.defaultdict(dict)
+    suffixes = collections.defaultdict(
+        lambda: collections.defaultdict(dict))
 
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
@@ -258,12 +259,12 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
                 if not variant:
                     continue
                 new_suffix = variant[len(prefix):]
-                old_suffix = suffixes[libname].get(arch_cpu)
+                old_suffix = suffixes[libname][arch_cpu].get(tag)
                 if (not old_suffix or
                         _get_module_variant_sort_key(new_suffix) >
                         _get_module_variant_sort_key(old_suffix)):
                     lsdump_paths[libname][arch_cpu][tag] = path
-                    suffixes[libname][arch_cpu] = new_suffix
+                    suffixes[libname][arch_cpu][tag] = new_suffix
     return lsdump_paths
 
 
