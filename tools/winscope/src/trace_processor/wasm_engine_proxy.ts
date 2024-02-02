@@ -15,7 +15,6 @@
 import {assertExists, assertTrue} from './logging';
 
 import {Engine, LoadingTracker} from './engine';
-import {EngineWorkerInitMessage} from './worker_messages';
 
 let bundlePath: string;
 let idleWasmWorker: Worker;

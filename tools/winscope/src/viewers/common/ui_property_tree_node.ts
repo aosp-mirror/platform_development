@@ -22,7 +22,7 @@ import {DiffType} from './diff_type';
 export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
   private diff: DiffType = DiffType.NONE;
   private displayName: string = this.name;
-  private oldValue: string = 'null';
+  private oldValue = 'null';
 
   static from(node: PropertyTreeNode): UiPropertyTreeNode {
     const displayNode = new UiPropertyTreeNode(

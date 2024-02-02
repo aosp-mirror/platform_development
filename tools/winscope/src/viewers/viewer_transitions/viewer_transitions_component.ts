@@ -415,5 +415,9 @@ export class ViewerTransitionsComponent {
   private elementRef: ElementRef;
 }
 
-const bigIntMax = (...args: Array<bigint>) => args.reduce((m, e) => (e > m ? e : m));
-const bigIntMin = (...args: Array<bigint>) => args.reduce((m, e) => (e < m ? e : m));
+function bigIntMax(...args: Array<bigint>) {
+  return args.reduce((m, e) => (e > m ? e : m));
+}
+function bigIntMin(...args: Array<bigint>) {
+  return args.reduce((m, e) => (e < m ? e : m));
+}

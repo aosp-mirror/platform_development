@@ -68,13 +68,13 @@ export class TreeNodeComponent {
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
   @Input() isExpanded?: boolean;
-  @Input() isPinned: boolean = false;
-  @Input() isInPinnedSection: boolean = false;
-  @Input() isSelected: boolean = false;
+  @Input() isPinned = false;
+  @Input() isInPinnedSection = false;
+  @Input() isSelected = false;
 
-  @Output() toggleTreeChange = new EventEmitter<void>();
-  @Output() expandTreeChange = new EventEmitter<boolean>();
-  @Output() pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly toggleTreeChange = new EventEmitter<void>();
+  @Output() readonly expandTreeChange = new EventEmitter<boolean>();
+  @Output() readonly pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
 
   collapseDiffClass = '';
   private el: HTMLElement;

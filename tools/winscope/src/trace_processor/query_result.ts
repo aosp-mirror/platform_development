@@ -63,13 +63,13 @@ export const NUM = 0;
 export const STR = 'str';
 export const NUM_NULL: number|null = 1;
 export const STR_NULL: string|null = 'str_null';
-export const BLOB: Uint8Array = new Uint8Array();
+export const BLOB = new Uint8Array();
 export const BLOB_NULL: Uint8Array|null = new Uint8Array();
 export const LONG: bigint = 0n;
 export const LONG_NULL: bigint|null = 1n;
 
-export type ColumnType = string|number|bigint|null|Uint8Array;
-export type SqlValue = ColumnType;
+export type ColumnType = string|number|bigint|Uint8Array;
+export type SqlValue = ColumnType|null;
 
 const SHIFT_32BITS = 32n;
 
@@ -158,7 +158,7 @@ export class QueryError extends Error {
 
 // One row extracted from an SQL result:
 export interface Row {
-  [key: string]: ColumnType;
+  [key: string]: ColumnType|null;
 }
 
 // The methods that any iterator has to implement.
@@ -173,7 +173,7 @@ export interface RowIteratorBase {
   // for (const it = queryResult.iter({}); it.valid(); it.next()) {
   //   for (const columnName : queryResult.columns()) {
   //      console.log(it.get(columnName));
-  get(columnName: string): ColumnType;
+  get(columnName: string): ColumnType|null;
 }
 
 // A RowIterator is a type that has all the fields defined in the query spec
@@ -185,7 +185,7 @@ export interface RowIteratorBase {
 //  console.log(iter.name, iter.surname);
 export type RowIterator<T extends Row> = RowIteratorBase&T;
 
-function columnTypeToString(t: ColumnType): string {
+function columnTypeToString(t: ColumnType|null): string {
   switch (t) {
     case NUM:
       return 'NUM';
@@ -208,7 +208,7 @@ function columnTypeToString(t: ColumnType): string {
   }
 }
 
-function isCompatible(actual: CellType, expected: ColumnType): boolean {
+function isCompatible(actual: CellType, expected: ColumnType|null): boolean {
   switch (actual) {
     case CellType.CELL_NULL:
       return expected === NUM_NULL || expected === STR_NULL ||
@@ -692,7 +692,7 @@ class RowIteratorImpl implements RowIteratorBase {
   }
 
 
-  get(columnName: string): ColumnType {
+  get(columnName: string): ColumnType|null {
     const res = this.rowData[columnName];
     if (res === undefined) {
       throw new Error(
@@ -866,7 +866,7 @@ class RowIteratorImplWithRowData implements RowIteratorBase {
 
   next: () => void;
   valid: () => boolean;
-  get: (columnName: string) => ColumnType;
+  get: (columnName: string) => ColumnType|null;
 
   constructor(querySpec: Row, res: QueryResultImpl) {
     const thisAsRow = this as {} as Row;

@@ -36,7 +36,7 @@ export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
   protected override makeRootChildren(
     children: PropertiesProvider[],
     identifierToChild: Map<string | number, PropertiesProvider[]>
-  ): ReadonlyArray<HierarchyTreeNode> {
+  ): readonly HierarchyTreeNode[] {
     const rootChildrenHashcodes = assertDefined(
       assertDefined(this.root).getEagerProperties().getChildByName('children')
     )

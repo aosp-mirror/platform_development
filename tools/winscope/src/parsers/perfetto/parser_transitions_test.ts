@@ -16,23 +16,19 @@
 import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {Transition, TransitionType} from 'flickerlib/common';
-import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 
 describe('Perfetto ParserTransitions', () => {
   describe('valid trace', () => {
     let parser: Parser<Transition>;
-    let trace: Trace<Transition>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
         'traces/perfetto/shell_transitions_trace.perfetto-trace'
       );
-      trace = new TraceBuilder().setType(TraceType.TRANSITION).setParser(parser).build();
     });
 
     it('has expected trace type', () => {

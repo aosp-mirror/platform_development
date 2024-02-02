@@ -57,8 +57,8 @@ export class Presenter {
   private uiData: UiData;
   private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private highlightedItem: string = '';
-  private highlightedProperty: string = '';
+  private highlightedItem = '';
+  private highlightedProperty = '';
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: UiHierarchyTreeNode | undefined;
@@ -376,7 +376,7 @@ export class Presenter {
     return summary;
   }
 
-  private mapNodeArrayToString(nodes: ReadonlyArray<PropertyTreeNode>): string {
+  private mapNodeArrayToString(nodes: readonly PropertyTreeNode[]): string {
     return nodes.map((reason) => reason.formattedValue()).join(', ');
   }
 

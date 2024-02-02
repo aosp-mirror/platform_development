@@ -66,7 +66,6 @@ describe('Transformer', () => {
     const transformer = new Transformer(fromRange, toRange);
 
     const rangeStart = fromRange.from.getValueNs();
-    const rangeEnd = fromRange.to.getValueNs();
     const range = fromRange.to.getValueNs() - fromRange.from.getValueNs();
 
     expect(transformer.untransform(toRange.from).getValueNs()).toBe(fromRange.from.getValueNs());

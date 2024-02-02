@@ -95,7 +95,7 @@ export interface BugReportMetadata {
  * Defines of the issue access limit. See:
  * http://go/buganizer/concepts/access-control#accesslimit
  */
-export const enum IssueAccessLimit {
+export enum IssueAccessLimit {
   INTERNAL = '',
   VISIBLE_TO_PARTNERS = 'Visible to Partners',
   VISIBLE_TO_PUBLIC = 'Visible to Public',

@@ -36,7 +36,6 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 describe('TransitionTimelineComponent', () => {
   let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
-  let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -60,7 +59,6 @@ describe('TransitionTimelineComponent', () => {
       .compileComponents();
     fixture = TestBed.createComponent(TransitionTimelineComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {
@@ -150,11 +148,11 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw selected entry', async () => {
-    const transition = {
+    const transition: Transition = {
       createTime: {unixNanos: 35n},
       finishTime: {unixNanos: 85n},
       aborted: true,
-    } as Transition;
+    };
     component.trace = new TraceBuilder()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
@@ -192,11 +190,11 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw hovering entry', async () => {
-    const transition = {
+    const transition: Transition = {
       createTime: {unixNanos: 35n},
       finishTime: {unixNanos: 85n},
       aborted: true,
-    } as Transition;
+    };
     component.trace = new TraceBuilder()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])

@@ -58,8 +58,10 @@ export class TimelineData {
 
     const types = traces
       .mapTrace((trace, type) => type)
-      .sort(TraceTypeUtils.compareByDisplayOrder)
-      .filter((type) => type !== TraceType.SCREEN_RECORDING);
+      .filter(
+        (type) => TraceTypeUtils.isTraceTypeWithViewer(type) && type !== TraceType.SCREEN_RECORDING
+      )
+      .sort(TraceTypeUtils.compareByDisplayOrder);
     if (types.length > 0) {
       this.setActiveViewTraceTypes([types[0]]);
     }
@@ -248,7 +250,7 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
-  private lastReturnedCurrentEntries: Map<TraceType, TraceEntry<any> | undefined> = new Map();
+  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
   findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {

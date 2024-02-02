@@ -65,9 +65,14 @@ class ParserProtoLog extends AbstractParser {
       return [];
     }
 
-    fileProto.log.sort((a: any, b: any) => {
-      return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
-    });
+    fileProto.log.sort(
+      (
+        a: com.android.internal.protolog.IProtoLogMessage,
+        b: com.android.internal.protolog.IProtoLogMessage
+      ) => {
+        return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
+      }
+    );
 
     return fileProto.log;
   }

@@ -131,7 +131,7 @@ export class PropertiesComponent {
 
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
-  @Input() highlightedProperty: string = '';
+  @Input() highlightedProperty = '';
   @Input() curatedProperties: CuratedProperties | undefined;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
@@ -141,7 +141,7 @@ export class PropertiesComponent {
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   filterTree() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+    const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
     });
@@ -149,7 +149,7 @@ export class PropertiesComponent {
   }
 
   onHighlightedPropertyChange(newId: string) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
+    const event = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
       bubbles: true,
       detail: {id: newId},
     });
@@ -157,7 +157,7 @@ export class PropertiesComponent {
   }
 
   updateTree() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
+    const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},
     });

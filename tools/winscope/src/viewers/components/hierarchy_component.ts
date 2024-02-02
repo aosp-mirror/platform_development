@@ -155,7 +155,7 @@ export class HierarchyComponent {
   @Input() subtrees: UiHierarchyTreeNode[] = [];
   @Input() tableProperties: TableProperties | undefined;
   @Input() dependencies: TraceType[] = [];
-  @Input() highlightedItem: string = '';
+  @Input() highlightedItem = '';
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
@@ -180,7 +180,7 @@ export class HierarchyComponent {
   }
 
   onUserOptionChange() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
+    const event = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},
     });
@@ -188,7 +188,7 @@ export class HierarchyComponent {
   }
 
   onFilterChange() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
+    const event = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
     });
@@ -196,7 +196,7 @@ export class HierarchyComponent {
   }
 
   onHighlightedItemChange(newId: string) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
+    const event = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},
     });
@@ -204,7 +204,7 @@ export class HierarchyComponent {
   }
 
   onSelectedTreeChange(item: UiHierarchyTreeNode) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.SelectedTreeChange, {
+    const event = new CustomEvent(ViewerEvents.SelectedTreeChange, {
       bubbles: true,
       detail: {selectedItem: item},
     });
@@ -212,7 +212,7 @@ export class HierarchyComponent {
   }
 
   onPinnedItemChange(item: UiHierarchyTreeNode) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyPinnedChange, {
+    const event = new CustomEvent(ViewerEvents.HierarchyPinnedChange, {
       bubbles: true,
       detail: {pinnedItem: item},
     });

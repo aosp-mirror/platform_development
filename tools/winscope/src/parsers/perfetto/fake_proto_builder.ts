@@ -49,7 +49,7 @@ export class FakeProtoBuilder {
     intValue: bigint | undefined,
     realValue: number | undefined,
     stringValue: string | undefined
-  ): any {
+  ): string | bigint | number | boolean | null | undefined {
     switch (valueType) {
       case 'bool':
         return Boolean(intValue);
@@ -64,7 +64,7 @@ export class FakeProtoBuilder {
       case 'uint':
         return intValue;
       default:
-      // do nothing
+        throw new Error(`Unsupported type ${valueType}`);
     }
   }
 }
