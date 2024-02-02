@@ -25,7 +25,6 @@ import {
 } from './index_types';
 import {Parser} from './parser';
 import {Timestamp, TimestampType} from './timestamp';
-import {TraceFile} from './trace_file';
 import {TraceType} from './trace_type';
 
 export {
@@ -66,16 +65,18 @@ export class TraceEntry<T> {
     return this.framesRange;
   }
 
-  getValue(): T {
-    return this.parser.getEntry(this.index, this.timestamp.getType());
+  async getValue(): Promise<T> {
+    return await this.parser.getEntry(this.index, this.timestamp.getType());
   }
 }
 
 export class Trace<T> {
-  readonly file?: TraceFile;
+  readonly type: TraceType;
   readonly lengthEntries: number;
-  readonly fullTrace: Trace<T>;
 
+  private readonly parser: Parser<T>;
+  private readonly descriptors: string[];
+  private readonly fullTrace: Trace<T>;
   private timestampType: TimestampType | undefined;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
@@ -107,13 +108,16 @@ export class Trace<T> {
   }
 
   private constructor(
-    readonly type: TraceType,
-    readonly parser: Parser<T>,
-    readonly descriptors: string[],
+    type: TraceType,
+    parser: Parser<T>,
+    descriptors: string[],
     fullTrace: Trace<T> | undefined,
     timestampType: TimestampType | undefined,
     entriesRange: EntriesRange | undefined
   ) {
+    this.type = type;
+    this.parser = parser;
+    this.descriptors = descriptors;
     this.fullTrace = fullTrace ?? this;
     this.entriesRange = entriesRange ?? {start: 0, end: parser.getLengthEntries()};
     this.lengthEntries = this.entriesRange.end - this.entriesRange.start;
@@ -323,6 +327,14 @@ export class Trace<T> {
     }
   }
 
+  mapEntry<U>(callback: (entry: TraceEntry<T>, index: RelativeEntryIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachEntry((entry, index) => {
+      result.push(callback(entry, index));
+    });
+    return result;
+  }
+
   forEachTimestamp(callback: (timestamp: Timestamp, index: RelativeEntryIndex) => void) {
     const timestamps = this.getFullTraceTimestamps();
     for (let index = 0; index < this.lengthEntries; ++index) {
@@ -338,6 +350,14 @@ export class Trace<T> {
     for (let frame = this.framesRange.start; frame < this.framesRange.end; ++frame) {
       callback(this.getFrame(frame), frame);
     }
+  }
+
+  mapFrame<U>(callback: (frame: Trace<T>, index: AbsoluteFrameIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachFrame((traces, index) => {
+      result.push(callback(traces, index));
+    });
+    return result;
   }
 
   getFramesRange(): FramesRange | undefined {

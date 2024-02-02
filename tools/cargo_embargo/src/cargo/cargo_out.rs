@@ -14,6 +14,7 @@
 
 use super::metadata::WorkspaceMetadata;
 use super::{Crate, CrateType, Extern, ExternType};
+use crate::CargoOutput;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
@@ -23,7 +24,6 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
 use std::env;
-use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -31,16 +31,14 @@ use std::path::PathBuf;
 /// the rustc invocations.
 ///
 /// Ignores crates outside the current directory and build script crates.
-pub fn parse_cargo_out(
-    cargo_out_path: impl AsRef<Path>,
-    cargo_metadata_path: impl AsRef<Path>,
-) -> Result<Vec<Crate>> {
-    let cargo_out = read_to_string(cargo_out_path).context("failed to read cargo.out")?;
-    let metadata = serde_json::from_reader(
-        File::open(cargo_metadata_path).context("failed to open cargo.metadata")?,
+pub fn parse_cargo_out(cargo_output: &CargoOutput) -> Result<Vec<Crate>> {
+    let metadata = serde_json::from_str(&cargo_output.cargo_metadata)
+        .context("failed to parse cargo metadata")?;
+    parse_cargo_out_str(
+        &cargo_output.cargo_out,
+        &metadata,
+        env::current_dir().unwrap().canonicalize().unwrap(),
     )
-    .context("failed to parse cargo.metadata")?;
-    parse_cargo_out_str(&cargo_out, &metadata, env::current_dir().unwrap().canonicalize().unwrap())
 }
 
 /// Parses the given `cargo.out` and `cargo.metadata` file contents and generates a list of crates
@@ -60,7 +58,7 @@ fn parse_cargo_out_str(
 
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let mut c = Crate::from_rustc_invocation(rustc, metadata)
+        let c = Crate::from_rustc_invocation(rustc, metadata, &cargo_out.tests)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
@@ -70,15 +68,9 @@ fn parse_cargo_out_str(
         if !c.package_dir.starts_with(&base_directory) {
             continue;
         }
-        if let Some(test_contents) = c
-            .output_filename
-            .as_ref()
-            .and_then(|f| cargo_out.tests.get(f).and_then(|m| m.get(&c.main_src)))
-        {
-            c.empty_test = !test_contents.tests && !test_contents.benchmarks;
-        }
         crates.push(c);
     }
+    crates.dedup();
     Ok(crates)
 }
 
@@ -237,7 +229,11 @@ impl CargoOut {
 }
 
 impl Crate {
-    fn from_rustc_invocation(rustc: &str, metadata: &WorkspaceMetadata) -> Result<Crate> {
+    fn from_rustc_invocation(
+        rustc: &str,
+        metadata: &WorkspaceMetadata,
+        tests: &BTreeMap<String, BTreeMap<PathBuf, TestContents>>,
+    ) -> Result<Crate> {
         let mut out = Crate::default();
         let mut extra_filename = String::new();
 
@@ -362,9 +358,13 @@ impl Crate {
                 _ if arg.starts_with("--edition=") => {}
                 _ if arg.starts_with("--json=") => {}
                 _ if arg.starts_with("-Aclippy") => {}
+                _ if arg.starts_with("--allow=clippy") => {}
                 _ if arg.starts_with("-Wclippy") => {}
+                _ if arg.starts_with("--warn=clippy") => {}
                 _ if arg.starts_with("-D") => {}
+                _ if arg.starts_with("--deny=") => {}
                 _ if arg.starts_with("-W") => {}
+                _ if arg.starts_with("--warn=") => {}
 
                 arg => bail!("unsupported rustc argument: {arg:?}"),
             }
@@ -409,9 +409,14 @@ impl Crate {
                 )
             })?;
         out.package_name = package_metadata.name.clone();
-        out.output_filename = Some(out.name.clone() + &extra_filename);
         out.version = Some(package_metadata.version.clone());
         out.edition = package_metadata.edition.clone();
+
+        let output_filename = out.name.clone() + &extra_filename;
+        if let Some(test_contents) = tests.get(&output_filename).and_then(|m| m.get(&out.main_src))
+        {
+            out.empty_test = !test_contents.tests && !test_contents.benchmarks;
+        }
 
         Ok(out)
     }

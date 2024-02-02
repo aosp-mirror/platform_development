@@ -107,9 +107,11 @@ export class MiniTimelineComponent {
 
   private getTracesToShow(): Traces {
     const traces = new Traces();
-    this.selectedTraces.forEach((type) => {
-      traces.setTrace(type, assertDefined(this.timelineData.getTraces().getTrace(type)));
-    });
+    this.selectedTraces
+      .filter((type) => this.timelineData.getTraces().getTrace(type) !== undefined)
+      .forEach((type) => {
+        traces.setTrace(type, assertDefined(this.timelineData.getTraces().getTrace(type)));
+      });
     return traces;
   }
 

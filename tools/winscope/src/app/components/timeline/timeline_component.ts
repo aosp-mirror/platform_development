@@ -30,8 +30,14 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {StringUtils} from 'common/string_utils';
 import {TimeUtils} from 'common/time_utils';
+import {
+  OnTracePositionUpdate,
+  TracePositionUpdateEmitter,
+} from 'interfaces/trace_position_update_emitter';
 import {TracePositionUpdateListener} from 'interfaces/trace_position_update_listener';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
@@ -287,7 +293,7 @@ import {MiniTimelineComponent} from './mini_timeline_component';
     `,
   ],
 })
-export class TimelineComponent implements TracePositionUpdateListener {
+export class TimelineComponent implements TracePositionUpdateEmitter, TracePositionUpdateListener {
   readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
   readonly MAX_SELECTED_TRACES = 3;
 
@@ -358,6 +364,8 @@ export class TimelineComponent implements TracePositionUpdateListener {
 
   TRACE_INFO = TRACE_INFO;
 
+  private onTracePositionUpdateCallback: OnTracePositionUpdate = FunctionUtils.DO_NOTHING_ASYNC;
+
   constructor(
     @Inject(DomSanitizer) private sanitizer: DomSanitizer,
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef
@@ -381,17 +389,21 @@ export class TimelineComponent implements TracePositionUpdateListener {
     this.collapsedTimelineSizeChanged.emit(height);
   }
 
+  setOnTracePositionUpdate(callback: OnTracePositionUpdate) {
+    this.onTracePositionUpdateCallback = callback;
+  }
+
   getVideoCurrentTime() {
     return this.timelineData.searchCorrespondingScreenRecordingTimeSeconds(
       this.getCurrentTracePosition()
     );
   }
 
-  private seekTimestamp: Timestamp | undefined;
+  private seekTracePosition?: TracePosition;
 
   getCurrentTracePosition(): TracePosition {
-    if (this.seekTimestamp !== undefined) {
-      return TracePosition.fromTimestamp(this.seekTimestamp);
+    if (this.seekTracePosition) {
+      return this.seekTracePosition;
     }
 
     const position = this.timelineData.getCurrentPosition();
@@ -411,8 +423,9 @@ export class TimelineComponent implements TracePositionUpdateListener {
     this.changeDetectorRef.detectChanges();
   }
 
-  updatePosition(position: TracePosition) {
+  async updatePosition(position: TracePosition) {
     this.timelineData.setPosition(position);
+    await this.onTracePositionUpdateCallback(position);
   }
 
   usingRealtime(): boolean {
@@ -420,7 +433,11 @@ export class TimelineComponent implements TracePositionUpdateListener {
   }
 
   updateSeekTimestamp(timestamp: Timestamp | undefined) {
-    this.seekTimestamp = timestamp;
+    if (timestamp) {
+      this.seekTracePosition = TracePosition.fromTimestamp(timestamp);
+    } else {
+      this.seekTracePosition = undefined;
+    }
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -464,16 +481,19 @@ export class TimelineComponent implements TracePositionUpdateListener {
   }
 
   @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
+  async handleKeyboardEvent(event: KeyboardEvent) {
     if (event.key === 'ArrowLeft') {
-      this.moveToPreviousEntry();
+      await this.moveToPreviousEntry();
     } else if (event.key === 'ArrowRight') {
-      this.moveToNextEntry();
+      await this.moveToNextEntry();
     }
   }
 
   hasPrevEntry(): boolean {
     if (!this.internalActiveTrace) {
+      return false;
+    }
+    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
       return false;
     }
     return this.timelineData.getPreviousEntryFor(this.internalActiveTrace) !== undefined;
@@ -483,45 +503,50 @@ export class TimelineComponent implements TracePositionUpdateListener {
     if (!this.internalActiveTrace) {
       return false;
     }
+    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
+      return false;
+    }
     return this.timelineData.getNextEntryFor(this.internalActiveTrace) !== undefined;
   }
 
-  moveToPreviousEntry() {
+  async moveToPreviousEntry() {
     if (!this.internalActiveTrace) {
       return;
     }
     this.timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
+    await this.onTracePositionUpdateCallback(assertDefined(this.timelineData.getCurrentPosition()));
   }
 
-  moveToNextEntry() {
+  async moveToNextEntry() {
     if (!this.internalActiveTrace) {
       return;
     }
     this.timelineData.moveToNextEntryFor(this.internalActiveTrace);
+    await this.onTracePositionUpdateCallback(assertDefined(this.timelineData.getCurrentPosition()));
   }
 
-  humanElapsedTimeInputChange(event: Event) {
+  async humanElapsedTimeInputChange(event: Event) {
     if (event.type !== 'change') {
       return;
     }
     const target = event.target as HTMLInputElement;
     const timestamp = TimeUtils.parseHumanElapsed(target.value);
-    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
-  humanRealTimeInputChanged(event: Event) {
+  async humanRealTimeInputChanged(event: Event) {
     if (event.type !== 'change') {
       return;
     }
     const target = event.target as HTMLInputElement;
 
     const timestamp = TimeUtils.parseHumanReal(target.value);
-    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
-  nanosecondsInputTimeChange(event: Event) {
+  async nanosecondsInputTimeChange(event: Event) {
     if (event.type !== 'change') {
       return;
     }
@@ -531,7 +556,7 @@ export class TimelineComponent implements TracePositionUpdateListener {
       this.timelineData.getTimestampType()!,
       StringUtils.parseBigIntStrippingUnit(target.value)
     );
-    this.timelineData.setPosition(TracePosition.fromTimestamp(timestamp));
+    await this.updatePosition(TracePosition.fromTimestamp(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 }

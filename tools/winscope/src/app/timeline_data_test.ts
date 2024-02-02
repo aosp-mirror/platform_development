@@ -20,16 +20,8 @@ import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {TimelineData} from './timeline_data';
 
-class TracePositionUpdateListener {
-  onTracePositionUpdate(position: TracePosition) {
-    // do nothing
-  }
-}
-
 describe('TimelineData', () => {
   let timelineData: TimelineData;
-  const positionUpdateListener = new TracePositionUpdateListener();
-
   const timestamp10 = new Timestamp(TimestampType.REAL, 10n);
   const timestamp11 = new Timestamp(TimestampType.REAL, 11n);
 
@@ -47,9 +39,6 @@ describe('TimelineData', () => {
 
   beforeEach(() => {
     timelineData = new TimelineData();
-    timelineData.setOnTracePositionUpdate((position) => {
-      positionUpdateListener.onTracePositionUpdate(position);
-    });
   });
 
   it('can be initialized', () => {
@@ -57,6 +46,20 @@ describe('TimelineData', () => {
 
     timelineData.initialize(traces, undefined);
     expect(timelineData.getCurrentPosition()).toBeDefined();
+  });
+
+  it('ignores dumps with no timestamp', () => {
+    expect(timelineData.getCurrentPosition()).toBeUndefined();
+
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10, timestamp11])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [new Timestamp(TimestampType.REAL, 0n)])
+      .build();
+
+    timelineData.initialize(traces, undefined);
+    expect(timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined();
+    expect(timelineData.getFullTimeRange().from).toBe(timestamp10);
+    expect(timelineData.getFullTimeRange().to).toBe(timestamp11);
   });
 
   it('uses first entry by default', () => {
@@ -93,30 +96,6 @@ describe('TimelineData', () => {
 
     timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
-  });
-
-  it('executes callback on position update', () => {
-    spyOn(positionUpdateListener, 'onTracePositionUpdate');
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(0);
-
-    timelineData.initialize(traces, undefined);
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(1);
-
-    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(2);
-  });
-
-  it("doesn't execute callback when position doesn't change", () => {
-    timelineData.initialize(traces, undefined);
-
-    spyOn(positionUpdateListener, 'onTracePositionUpdate');
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(0);
-
-    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(0);
-
-    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
-    expect(positionUpdateListener.onTracePositionUpdate).toHaveBeenCalledTimes(0);
   });
 
   it('hasTimestamps()', () => {

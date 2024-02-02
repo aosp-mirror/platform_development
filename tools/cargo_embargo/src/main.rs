@@ -30,7 +30,6 @@ mod bp;
 mod cargo;
 mod config;
 
-use crate::config::legacy;
 use crate::config::Config;
 use crate::config::PackageConfig;
 use crate::config::PackageVariantConfig;
@@ -40,27 +39,30 @@ use anyhow::Context;
 use anyhow::Result;
 use bp::*;
 use cargo::{
-    cargo_out::parse_cargo_out, metadata::parse_cargo_metadata_file, Crate, CrateType, ExternType,
+    cargo_out::parse_cargo_out, metadata::parse_cargo_metadata_str, Crate, CrateType, ExternType,
 };
 use clap::Parser;
 use clap::Subcommand;
 use log::debug;
+use nix::fcntl::OFlag;
+use nix::unistd::pipe2;
 use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::VecDeque;
 use std::env;
-use std::fs::File;
-use std::io::Write;
+use std::fs::{read_to_string, write, File};
+use std::io::{Read, Write};
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::path::Path;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 // Major TODOs
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
 //  * handle warnings. put them in comments in the android.bp, some kind of report section
 
 /// Rust modules which shouldn't use the default generated names, to avoid conflicts or confusion.
-static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     [
         ("libash", "libash_rust"),
         ("libatomic", "libatomic_rust"),
@@ -80,11 +82,21 @@ static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     .collect()
 });
 
-fn renamed_module(name: &str) -> &str {
-    if let Some(renamed) = RENAME_MAP.get(name) {
-        renamed
+/// Given a proposed module name, returns `None` if it is blocked by the given config, or
+/// else apply any name overrides and returns the name to use.
+fn override_module_name(
+    module_name: &str,
+    blocklist: &[String],
+    module_name_overrides: &BTreeMap<String, String>,
+) -> Option<String> {
+    if blocklist.iter().any(|blocked_name| blocked_name == module_name) {
+        None
+    } else if let Some(overridden_name) = module_name_overrides.get(module_name) {
+        Some(overridden_name.to_string())
+    } else if let Some(renamed) = RENAME_MAP.get(module_name) {
+        Some(renamed.to_string())
     } else {
-        name
+        Some(module_name.to_string())
     }
 }
 
@@ -94,51 +106,50 @@ struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
-    /// Config file.
-    #[clap(long)]
-    cfg: PathBuf,
     /// Skip the `cargo build` commands and reuse the "cargo.out" file from a previous run if
     /// available.
     #[clap(long)]
     reuse_cargo_out: bool,
     #[command(subcommand)]
-    mode: Option<Mode>,
+    mode: Mode,
 }
 
 #[derive(Clone, Debug, Subcommand)]
 enum Mode {
-    /// Converts a legacy `cargo2android.json` config file to the equivalent `cargo_embargo.json`
-    /// config.
-    Convert {
-        package_name: String,
-        #[arg(long)]
-        no_build: bool,
+    /// Generates `Android.bp` files for the crates under the current directory using the given
+    /// config file.
+    Generate {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
     },
     /// Dumps information about the crates to the given JSON file.
-    DumpCrates { crates: PathBuf },
+    DumpCrates {
+        /// `cargo_embargo.json` config file to use.
+        config: PathBuf,
+        /// Path to `crates.json` to output.
+        crates: PathBuf,
+    },
+    /// Tries to automatically generate a suitable `cargo_embargo.json` config file for the package
+    /// in the current directory.
+    Autoconfig {
+        /// `cargo_embargo.json` config file to create.
+        config: PathBuf,
+    },
 }
 
 fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
 
-    let json_str = std::fs::read_to_string(&args.cfg)
-        .with_context(|| format!("failed to read file: {:?}", args.cfg))?;
-    // Add some basic support for comments to JSON.
-    let json_str: String = json_str.lines().filter(|l| !l.trim_start().starts_with("//")).collect();
-
     match &args.mode {
-        Some(Mode::Convert { package_name, no_build }) => {
-            let legacy_config = legacy::Config::from_json_str(&json_str)?;
-            let new_config = legacy_config.to_embargo(package_name, !no_build)?;
-            let new_config_str = new_config.to_json_string()?;
-            println!("{}", new_config_str);
+        Mode::DumpCrates { config, crates } => {
+            dump_crates(&args, config, crates)?;
         }
-        Some(Mode::DumpCrates { crates }) => {
-            dump_crates(&args, &json_str, crates)?;
+        Mode::Generate { config } => {
+            run_embargo(&args, config)?;
         }
-        None => {
-            run_embargo(&args, &json_str)?;
+        Mode::Autoconfig { config } => {
+            autoconfig(&args, config)?;
         }
     }
 
@@ -147,14 +158,58 @@ fn main() -> Result<()> {
 
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
-fn dump_crates(args: &Args, json_str: &str, crates_filename: &Path) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
     serde_json::to_writer(
         File::create(crates_filename)
             .with_context(|| format!("Failed to create {:?}", crates_filename))?,
         &crates,
     )?;
+    Ok(())
+}
+
+/// Tries to automatically generate a suitable `cargo_embargo.json` for the package in the current
+/// directory.
+fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
+    println!("Trying default config with tests...");
+    let mut config_with_build = Config {
+        variants: vec![VariantConfig { tests: true, ..Default::default() }],
+        package: Default::default(),
+    };
+    let mut crates_with_build = make_all_crates(args, &config_with_build)?;
+
+    let has_tests =
+        crates_with_build[0].iter().any(|c| c.types.contains(&CrateType::Test) && !c.empty_test);
+    if !has_tests {
+        println!("No tests, removing from config.");
+        config_with_build =
+            Config { variants: vec![Default::default()], package: Default::default() };
+        crates_with_build = make_all_crates(args, &config_with_build)?;
+    }
+
+    println!("Trying without cargo build...");
+    let config_no_build = Config {
+        variants: vec![VariantConfig { run_cargo: false, tests: has_tests, ..Default::default() }],
+        package: Default::default(),
+    };
+    let crates_without_build = make_all_crates(args, &config_no_build)?;
+
+    let config = if crates_with_build == crates_without_build {
+        println!("Output without build was the same, using that.");
+        config_no_build
+    } else {
+        println!("Output without build was different. Need to run cargo build.");
+        println!("With build: {}", serde_json::to_string_pretty(&crates_with_build)?);
+        println!("Without build: {}", serde_json::to_string_pretty(&crates_without_build)?);
+        config_with_build
+    };
+    write(config_filename, format!("{}\n", config.to_json_string()?))?;
+    println!(
+        "Wrote config to {0}. Run `cargo_embargo generate {0}` to use it.",
+        config_filename.to_string_lossy()
+    );
+
     Ok(())
 }
 
@@ -214,21 +269,28 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
 
     let cargo_out_path = "cargo.out";
     let cargo_metadata_path = "cargo.metadata";
-    if !args.reuse_cargo_out || !Path::new(cargo_out_path).exists() {
-        generate_cargo_out(cfg, cargo_out_path, cargo_metadata_path)
-            .context("generate_cargo_out failed")?;
-    }
+    let cargo_output = if args.reuse_cargo_out && Path::new(cargo_out_path).exists() {
+        CargoOutput {
+            cargo_out: read_to_string(cargo_out_path)?,
+            cargo_metadata: read_to_string(cargo_metadata_path)?,
+        }
+    } else {
+        let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
+        write(cargo_out_path, &cargo_output.cargo_out)?;
+        write(cargo_metadata_path, &cargo_output.cargo_metadata)?;
+        cargo_output
+    };
 
     if cfg.run_cargo {
-        parse_cargo_out(cargo_out_path, cargo_metadata_path).context("parse_cargo_out failed")
+        parse_cargo_out(&cargo_output).context("parse_cargo_out failed")
     } else {
-        parse_cargo_metadata_file(cargo_metadata_path, cfg)
+        parse_cargo_metadata_str(&cargo_output.cargo_metadata, cfg)
     }
 }
 
 /// Runs cargo_embargo with the given JSON configuration string.
-fn run_embargo(args: &Args, json_str: &str) -> Result<()> {
-    let cfg = Config::from_json_str(json_str)?;
+fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
+    let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
 
     // TODO: Use different directories for different variants.
@@ -303,32 +365,54 @@ fn write_all_bp(
     Ok(())
 }
 
-fn run_cargo(cargo_out: &mut File, cmd: &mut Command) -> Result<()> {
-    use std::os::unix::io::OwnedFd;
-    use std::process::Stdio;
-    let fd: OwnedFd = cargo_out.try_clone()?.into();
+/// Runs the given command, and returns its standard output and standard error as a string.
+fn run_cargo(cmd: &mut Command) -> Result<String> {
+    let (pipe_read, pipe_write) = pipe()?;
+    cmd.stdout(pipe_write.try_clone()?).stderr(pipe_write).stdin(Stdio::null());
     debug!("Running: {:?}\n", cmd);
-    let output = cmd.stdout(Stdio::from(fd.try_clone()?)).stderr(Stdio::from(fd)).output()?;
-    if !output.status.success() {
-        bail!("cargo command failed with exit status: {:?}", output.status);
+    let mut child = cmd.spawn()?;
+
+    // Unset the stdout and stderr for the command so that they are dropped in this process.
+    // Otherwise the `read_to_string` below will block forever as there is still an open write file
+    // descriptor for the pipe even after the child finishes.
+    cmd.stderr(Stdio::null()).stdout(Stdio::null());
+
+    let mut output = String::new();
+    File::from(pipe_read).read_to_string(&mut output)?;
+    let status = child.wait()?;
+    if !status.success() {
+        bail!(
+            "cargo command `{:?}` failed with exit status: {:?}.\nOutput: \n------\n{}\n------",
+            cmd,
+            status,
+            output
+        );
     }
-    Ok(())
+
+    Ok(output)
 }
 
-/// Run various cargo commands and save the output to `cargo_out_path`.
-fn generate_cargo_out(
-    cfg: &VariantConfig,
-    cargo_out_path: &str,
-    cargo_metadata_path: &str,
-) -> Result<()> {
-    let mut cargo_out_file = std::fs::File::create(cargo_out_path)?;
-    let mut cargo_metadata_file = std::fs::File::create(cargo_metadata_path)?;
+/// Creates a new pipe and returns the file descriptors for each end of it.
+fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
+    let (a, b) = pipe2(OFlag::O_CLOEXEC)?;
+    // SAFETY: We just created the file descriptors, so we own them.
+    unsafe { Ok((OwnedFd::from_raw_fd(a), OwnedFd::from_raw_fd(b))) }
+}
 
+/// The raw output from running `cargo metadata`, `cargo build` and other commands.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CargoOutput {
+    cargo_metadata: String,
+    cargo_out: String,
+}
+
+/// Run various cargo commands and returns the output.
+fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
     let verbose_args = ["-v"];
     let target_dir_args = ["--target-dir", "target.tmp"];
 
     // cargo clean
-    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))
+    run_cargo(Command::new("cargo").arg("clean").args(target_dir_args))
         .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
@@ -356,8 +440,7 @@ fn generate_cargo_out(
     };
 
     // cargo metadata
-    run_cargo(
-        &mut cargo_metadata_file,
+    let cargo_metadata = run_cargo(
         Command::new("cargo")
             .arg("metadata")
             .arg("-q") // don't output warnings to stderr
@@ -367,10 +450,10 @@ fn generate_cargo_out(
     )
     .context("Running cargo metadata")?;
 
+    let mut cargo_out = String::new();
     if cfg.run_cargo {
         // cargo build
-        run_cargo(
-            &mut cargo_out_file,
+        cargo_out += &run_cargo(
             Command::new("cargo")
                 .args(["build", "--target", default_target])
                 .args(verbose_args)
@@ -381,8 +464,7 @@ fn generate_cargo_out(
 
         if cfg.tests {
             // cargo build --tests
-            run_cargo(
-                &mut cargo_out_file,
+            cargo_out += &run_cargo(
                 Command::new("cargo")
                     .args(["build", "--target", default_target, "--tests"])
                     .args(verbose_args)
@@ -391,8 +473,7 @@ fn generate_cargo_out(
                     .args(&feature_args),
             )?;
             // cargo test -- --list
-            run_cargo(
-                &mut cargo_out_file,
+            cargo_out += &run_cargo(
                 Command::new("cargo")
                     .args(["test", "--target", default_target])
                     .args(target_dir_args)
@@ -403,7 +484,7 @@ fn generate_cargo_out(
         }
     }
 
-    Ok(())
+    Ok(CargoOutput { cargo_metadata, cargo_out })
 }
 
 /// Create the Android.bp file for `package_dir`.
@@ -499,14 +580,21 @@ fn generate_android_bp(
             .collect();
 
         let mut m = BpModule::new("genrule".to_string());
-        let module_name = format!("copy_{}_build_out", package_name);
-        m.props.set("name", module_name.clone());
-        m.props.set("srcs", vec!["out/*"]);
-        m.props.set("cmd", "cp $(in) $(genDir)");
-        m.props.set("out", outs);
-        modules.push(m);
+        if let Some(module_name) = override_module_name(
+            &format!("copy_{}_build_out", package_name),
+            &cfg.module_blocklist,
+            &cfg.module_name_overrides,
+        ) {
+            m.props.set("name", module_name.clone());
+            m.props.set("srcs", vec!["out/*"]);
+            m.props.set("cmd", "cp $(in) $(genDir)");
+            m.props.set("out", outs);
+            modules.push(m);
 
-        vec![":".to_string() + &module_name]
+            vec![":".to_string() + &module_name]
+        } else {
+            vec![]
+        }
     } else {
         vec![]
     };
@@ -637,11 +725,11 @@ fn crate_to_bp_modules(
         };
 
         let mut m = BpModule::new(module_type.clone());
-        let module_name = cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-        let module_name = renamed_module(module_name);
-        if cfg.module_blocklist.iter().any(|blocked_name| blocked_name == module_name) {
+        let Some(module_name) =
+            override_module_name(&module_name, &cfg.module_blocklist, &cfg.module_name_overrides)
+        else {
             continue;
-        }
+        };
         if matches!(
             crate_type,
             CrateType::Lib
@@ -653,7 +741,7 @@ fn crate_to_bp_modules(
         {
             bail!("Module name must start with lib{} but was {}", crate_.name, module_name);
         }
-        m.props.set("name", module_name);
+        m.props.set("name", module_name.clone());
 
         if let Some(defaults) = &cfg.global_defaults {
             m.props.set("defaults", vec![defaults.clone()]);
@@ -726,15 +814,16 @@ fn crate_to_bp_modules(
             let mut result = Vec::new();
             for x in libs {
                 let module_name = "lib".to_string() + x.as_str();
-                let module_name =
-                    cfg.module_name_overrides.get(&module_name).unwrap_or(&module_name);
-                let module_name = renamed_module(module_name);
-                if package_cfg.dep_blocklist.iter().any(|blocked| blocked == module_name) {
-                    continue;
+                if let Some(module_name) = override_module_name(
+                    &module_name,
+                    &package_cfg.dep_blocklist,
+                    &cfg.module_name_overrides,
+                ) {
+                    result.push(module_name);
                 }
-                result.push(module_name.to_string());
             }
             result.sort();
+            result.dedup();
             result
         };
         m.props.set_if_nonempty("rustlibs", process_lib_deps(rust_libs));
@@ -791,7 +880,7 @@ fn crate_to_bp_modules(
             m.props.set("stdlibs", stdlibs);
         }
 
-        if let Some(visibility) = cfg.module_visibility.get(module_name) {
+        if let Some(visibility) = cfg.module_visibility.get(&module_name) {
             m.props.set("visibility", visibility.clone());
         }
 

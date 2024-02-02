@@ -42,10 +42,9 @@ describe('ParserInputMethodService', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
     });
 
-    it('retrieves trace entry', () => {
-      expect(BigInt(parser.getEntry(0, TimestampType.REAL)!.elapsedRealtimeNanos)).toEqual(
-        16578752896n
-      );
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(0, TimestampType.REAL);
+      expect(BigInt(entry.elapsedRealtimeNanos)).toEqual(16578752896n);
     });
   });
 
@@ -70,10 +69,9 @@ describe('ParserInputMethodService', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
     });
 
-    it('retrieves trace entry', () => {
-      expect(BigInt(parser.getEntry(0, TimestampType.ELAPSED)!.elapsedRealtimeNanos)).toEqual(
-        1149230019887n
-      );
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
+      expect(BigInt(entry.elapsedRealtimeNanos)).toEqual(1149230019887n);
     });
   });
 });

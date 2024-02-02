@@ -15,11 +15,13 @@
  */
 
 import {
+  HwcCompositionType,
   Layer,
   LayerProperties,
   Rect,
   toActiveBuffer,
   toColor,
+  toCropRect,
   toRect,
   toRectF,
   toRegion,
@@ -47,10 +49,7 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
   const inputRegion = toRegion(
     proto.inputWindowInfo ? proto.inputWindowInfo.touchableRegion : null
   );
-  let crop: Rect;
-  if (proto.crop) {
-    crop = toRect(proto.crop);
-  }
+  const crop: Rect = toCropRect(proto.crop);
 
   const properties = new LayerProperties(
     visibleRegion,
@@ -67,7 +66,7 @@ Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
     sourceBounds,
     /* effectiveScalingMode */ proto.effectiveScalingMode,
     bufferTransform,
-    /* hwcCompositionType */ proto.hwcCompositionType,
+    /* hwcCompositionType */ new HwcCompositionType(proto.hwcCompositionType),
     hwcCrop,
     hwcFrame,
     /* backgroundBlurRadius */ proto.backgroundBlurRadius,

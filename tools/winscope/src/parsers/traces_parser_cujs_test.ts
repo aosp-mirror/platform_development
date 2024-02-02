@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Cuj} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
 import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
-import {TracesParserCujs} from './traces_parser_cujs';
 
 describe('ParserCujs', () => {
   let parser: Parser<Cuj>;
 
   beforeAll(async () => {
-    const eventLogParser = assertDefined(
-      await UnitTestUtils.getParser('traces/eventlog.winscope')
-    ) as Parser<Event>;
-
-    parser = new TracesParserCujs([eventLogParser]);
+    parser = await UnitTestUtils.getTracesParser(['traces/eventlog.winscope']);
   });
 
   it('has expected trace type', () => {
