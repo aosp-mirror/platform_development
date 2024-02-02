@@ -27,6 +27,10 @@ import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
 
+/**
+ * Mini timeline drawer implementation
+ * @docs-private
+ */
 export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
@@ -191,7 +195,6 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   }
 
   private drawTimelineGuides() {
-    const edgeBarHeight = (this.innerHeight * 1) / 2;
     const edgeBarWidth = 4;
 
     const boldBarHeight = (this.innerHeight * 1) / 5;

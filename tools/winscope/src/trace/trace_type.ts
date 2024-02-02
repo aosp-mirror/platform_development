@@ -87,26 +87,7 @@ export class TraceTypeUtils {
     TraceType.SCREEN_RECORDING,
   ];
 
-  private static DISPLAY_ORDER = [
-    TraceType.SCREEN_RECORDING,
-    TraceType.SURFACE_FLINGER,
-    TraceType.WINDOW_MANAGER,
-    TraceType.INPUT_METHOD_CLIENTS,
-    TraceType.INPUT_METHOD_MANAGER_SERVICE,
-    TraceType.INPUT_METHOD_SERVICE,
-    TraceType.TRANSACTIONS,
-    TraceType.TRANSACTIONS_LEGACY,
-    TraceType.PROTO_LOG,
-    TraceType.WM_TRANSITION,
-    TraceType.SHELL_TRANSITION,
-    TraceType.TRANSITION,
-    TraceType.VIEW_CAPTURE,
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-  ];
-
-  private static TRACES_WITH_VIEWERS = [
+  private static TRACES_WITH_VIEWERS_DISPLAY_ORDER = [
     TraceType.SCREEN_RECORDING,
     TraceType.SURFACE_FLINGER,
     TraceType.WINDOW_MANAGER,
@@ -124,7 +105,7 @@ export class TraceTypeUtils {
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {
-    return TraceTypeUtils.TRACES_WITH_VIEWERS.includes(t);
+    return TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER.includes(t);
   }
 
   static compareByUiPipelineOrder(t: TraceType, u: TraceType) {
@@ -134,8 +115,14 @@ export class TraceTypeUtils {
   }
 
   static compareByDisplayOrder(t: TraceType, u: TraceType) {
-    const tIndex = TraceTypeUtils.findIndexInOrder(t, TraceTypeUtils.DISPLAY_ORDER);
-    const uIndex = TraceTypeUtils.findIndexInOrder(u, TraceTypeUtils.DISPLAY_ORDER);
+    const tIndex = TraceTypeUtils.findIndexInOrder(
+      t,
+      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER
+    );
+    const uIndex = TraceTypeUtils.findIndexInOrder(
+      u,
+      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER
+    );
     return tIndex - uIndex;
   }
 

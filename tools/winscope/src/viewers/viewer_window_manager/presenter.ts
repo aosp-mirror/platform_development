@@ -52,8 +52,8 @@ export class Presenter {
   private uiData: UiData;
   private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
   private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private highlightedItem: string = '';
-  private highlightedProperty: string = '';
+  private highlightedItem = '';
+  private highlightedProperty = '';
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: UiHierarchyTreeNode | undefined;
@@ -120,7 +120,9 @@ export class Presenter {
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
       const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
       this.currentHierarchyTree = await entry?.getValue();
-      if (entry) this.currentHierarchyTreeName = TimeUtils.format(entry.getTimestamp());
+      if (entry) {
+        this.currentHierarchyTreeName = TimeUtils.format(entry.getTimestamp());
+      }
 
       this.previousEntry =
         entry && entry.getIndex() > 0 ? this.trace.getEntry(entry.getIndex() - 1) : undefined;
@@ -256,7 +258,9 @@ export class Presenter {
 
     const uiTree = UiHierarchyTreeNode.from(hierarchyTree);
 
-    if (this.currentHierarchyTreeName) uiTree.setDisplayName(this.currentHierarchyTreeName);
+    if (this.currentHierarchyTreeName) {
+      uiTree.setDisplayName(this.currentHierarchyTreeName);
+    }
 
     const formatter = new UiTreeFormatter<UiHierarchyTreeNode>().setUiTree(uiTree);
 

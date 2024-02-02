@@ -360,7 +360,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
   @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
 
-  @Output() filesCollected = new EventEmitter<File[]>();
+  @Output() readonly filesCollected = new EventEmitter<File[]>();
 
   constructor(@Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {}
 

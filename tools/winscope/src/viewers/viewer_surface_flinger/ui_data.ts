@@ -26,8 +26,8 @@ export class UiData {
   dependencies: TraceType[];
   rects: UiRect[] = [];
   displays: DisplayIdentifier[] = [];
-  highlightedItem: string = '';
-  highlightedProperty: string = '';
+  highlightedItem = '';
+  highlightedProperty = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};

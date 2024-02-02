@@ -106,7 +106,7 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
 
   @Input() traceConfig: TraceConfigurationMap | undefined;
-  @Output() traceConfigChange = new EventEmitter<TraceConfigurationMap>();
+  @Output() readonly traceConfigChange = new EventEmitter<TraceConfigurationMap>();
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];

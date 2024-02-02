@@ -108,7 +108,7 @@ export abstract class VariableHeightScrollStrategy implements VirtualScrollStrat
       return;
     }
 
-    let cacheUpdated: boolean = false;
+    let cacheUpdated = false;
 
     for (const node of this.wrapper.childNodes) {
       if (node && node.nodeName === 'DIV') {

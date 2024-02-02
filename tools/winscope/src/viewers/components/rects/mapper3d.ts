@@ -32,11 +32,11 @@ class Mapper3D {
   private static readonly ZOOM_FACTOR_STEP = 0.2;
 
   private rects: UiRect[] = [];
-  private highlightedRectId: string = '';
+  private highlightedRectId = '';
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private panScreenDistance: Distance2D = new Distance2D(0, 0);
+  private panScreenDistance = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
   private currentGroupId = 0; // default stack id is usually 0
 
@@ -64,12 +64,12 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor(times: number = 1) {
+  increaseZoomFactor(times = 1) {
     this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor(times: number = 1) {
+  decreaseZoomFactor(times = 1) {
     this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }

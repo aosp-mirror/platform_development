@@ -24,10 +24,10 @@ import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 
 class PerfettoLogMessageTableRow {
-  message: string = '<NO_MESSAGE>';
-  tag: string = '<NO_TAG>';
-  level: string = '<NO_LEVEL>';
-  location: string = '<NO_LOC>';
+  message = '<NO_MESSAGE>';
+  tag = '<NO_TAG>';
+  level = '<NO_LEVEL>';
+  location = '<NO_LOC>';
   timestamp: bigint = 0n;
 
   constructor(timestamp: bigint, tag: string, level: string, message: string) {

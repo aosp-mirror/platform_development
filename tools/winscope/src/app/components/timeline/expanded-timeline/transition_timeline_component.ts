@@ -49,7 +49,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Tr
   @Input() selectedEntry: TraceEntry<Transition> | undefined = undefined;
   @Input() selectionRange!: TimeRange;
 
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) override canvasRef!: ElementRef;
   @ViewChild('wrapper', {static: false}) override wrapperRef!: ElementRef;

@@ -20,6 +20,10 @@ import {CanvasMouseHandler, DragListener, DropListener} from './canvas_mouse_han
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 
+/**
+ * Canvas mouse handling implementation
+ * @docs-private
+ */
 export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   // Ordered top most element to bottom most
   private draggableObjects: DraggableCanvasObject[] = [];
@@ -30,7 +34,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
 
   constructor(
     private drawer: MiniTimelineDrawer,
-    private defaultCursor: string = 'auto',
+    private defaultCursor = 'auto',
     private onUnhandledMouseDown: (point: Point) => void = (point) => {}
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {

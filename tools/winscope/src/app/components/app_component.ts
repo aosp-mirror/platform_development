@@ -315,7 +315,7 @@ export class AppComponent implements WinscopeEventListener {
   currentTimestamp?: Timestamp;
   activeView?: View;
   activeTrace?: Trace<object>;
-  filenameFormControl: FormControl = new FormControl(
+  filenameFormControl = new FormControl(
     'winscope',
     Validators.compose([Validators.required, Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX)])
   );

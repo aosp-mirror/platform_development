@@ -27,7 +27,6 @@ import {
   toRectF,
   toRegion,
   toSize,
-  toTransform,
 } from './common';
 import config from './Configuration.json';
 
@@ -191,8 +190,6 @@ export class ObjectFormatter {
         return toRectF(obj);
       case `RegionProto`:
         return toRegion(obj);
-      case `TransformProto`:
-        return toTransform(obj);
       case 'ColorTransformProto': {
         const formatted = ObjectFormatter.formatColorTransform(obj.val);
         return `${formatted}`;

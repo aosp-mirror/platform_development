@@ -204,13 +204,13 @@ import {Distance2D} from './types3d';
 })
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
-  @Input() zoomFactor: number = 1;
+  @Input() zoomFactor = 1;
   @Input() store?: PersistentStore;
   @Input() isStackBased = false;
   @Input() rects: UiRect[] = [];
   @Input() miniRects: UiRect[] | undefined;
   @Input() displays: DisplayIdentifier[] = [];
-  @Input() highlightedItem: string = '';
+  @Input() highlightedItem = '';
 
   private stackSelected = false;
   private internalRects: UiRect[] = [];
@@ -219,7 +219,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private storeKeyZSpacingFactor = '';
   private internalDisplays: DisplayIdentifier[] = [];
   private internalGroupIds = new Set<number>();
-  private internalHighlightedItem: string = '';
+  private internalHighlightedItem = '';
   private currentDisplay: DisplayIdentifier | undefined;
   private mapper3d: Mapper3D;
   private largeRectsCanvas?: Canvas;
