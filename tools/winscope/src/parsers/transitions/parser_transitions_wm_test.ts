@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('WmFileParserTransitions', () => {
-  let parser: Parser<object>;
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser(
+    parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
-    );
+    )) as Parser<PropertyTreeNode>;
   });
 
   it('has expected trace type', () => {
@@ -33,29 +35,16 @@ describe('WmFileParserTransitions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
-
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
     expect(timestamps.length).toEqual(8);
-
-    const expected = [
-      new ElapsedTimestamp(57649586217344n),
-      new ElapsedTimestamp(57649691956439n),
-      new ElapsedTimestamp(57650183020323n),
-    ];
-    expect(timestamps.slice(0, 3)).toEqual(expected);
+    const expected = new ElapsedTimestamp(0n);
+    timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
   it('provides real timestamps', () => {
-    const expected = [
-      new RealTimestamp(1683188477542869667n),
-      new RealTimestamp(1683188477648608762n),
-      new RealTimestamp(1683188478139672646n),
-    ];
-
-    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
-
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
     expect(timestamps.length).toEqual(8);
-
-    expect(timestamps.slice(0, 3)).toEqual(expected);
+    const expected = new RealTimestamp(1683130827956652323n);
+    timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 });

@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {Transition, TransitionsTrace} from 'flickerlib/common';
 import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -24,11 +23,11 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ParserTransitionsUtils} from './parser_transitions_utils';
 
-export class TracesParserTransitions extends AbstractTracesParser<Transition> {
-  private readonly wmTransitionTrace: Trace<object> | undefined;
-  private readonly shellTransitionTrace: Trace<object> | undefined;
+export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNode> {
+  private readonly wmTransitionTrace: Trace<PropertyTreeNode> | undefined;
+  private readonly shellTransitionTrace: Trace<PropertyTreeNode> | undefined;
   private readonly descriptors: string[];
-  private decodedEntries: Transition[] | undefined;
+  private decodedEntries: PropertyTreeNode[] | undefined;
 
   constructor(traces: Traces) {
     super();
@@ -54,19 +53,17 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
       throw new Error('Missing Shell Transition trace');
     }
 
-    const wmTransitionEntries: Transition[] = await Promise.all(
+    const wmTransitionEntries: PropertyTreeNode[] = await Promise.all(
       this.wmTransitionTrace.mapEntry((entry) => entry.getValue())
     );
 
-    const shellTransitionEntries: Transition[] = await Promise.all(
+    const shellTransitionEntries: PropertyTreeNode[] = await Promise.all(
       this.shellTransitionTrace.mapEntry((entry) => entry.getValue())
     );
 
-    const transitionsTrace = new TransitionsTrace(
-      wmTransitionEntries.concat(shellTransitionEntries)
-    );
+    const allEntries = wmTransitionEntries.concat(shellTransitionEntries);
 
-    this.decodedEntries = transitionsTrace.asCompressed().entries as Transition[];
+    this.decodedEntries = this.compressEntries(allEntries);
 
     await this.parseTimestamps();
   }
@@ -75,7 +72,7 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     return assertDefined(this.decodedEntries).length;
   }
 
-  override getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+  override getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -88,13 +85,20 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
     return TraceType.TRANSITION;
   }
 
-  override getTimestamp(type: TimestampType, transition: Transition): undefined | Timestamp {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(transition.timestamp.elapsedNanos.toString()));
-    } else if (type === TimestampType.REAL) {
-      return new Timestamp(type, BigInt(transition.timestamp.unixNanos.toString()));
-    }
-    return undefined;
+  override getTimestamp(
+    type: TimestampType,
+    decodedEntry: PropertyTreeNode
+  ): undefined | Timestamp {
+    // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
+    const realToElapsedTimeOffsetNs = decodedEntry
+      .getChildByName('realToElapsedTimeOffsetNs')
+      ?.getValue();
+    const dispatchTimeLong = decodedEntry
+      .getChildByName('shellData')
+      ?.getChildByName('dispatchTimeNs')
+      ?.getValue();
+    const timestampNs = dispatchTimeLong ? BigInt(dispatchTimeLong.toString()) : 0n;
+    return Timestamp.from(type, timestampNs, realToElapsedTimeOffsetNs);
   }
 
   private compressEntries(allTransitions: PropertyTreeNode[]): PropertyTreeNode[] {
@@ -122,9 +126,26 @@ export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   }
 
   private compareByTimestamp(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    const aTimestamp = assertDefined(a.getChildByName('timestampNs')).getValue();
-    const bTimestamp = assertDefined(b.getChildByName('timestampNs')).getValue();
-    return aTimestamp < bTimestamp ? -1 : 1;
+    const aTimestamp = BigInt(
+      assertDefined(a.getChildByName('shellData'))
+        .getChildByName('dispatchTimeNs')
+        ?.getValue()
+        .toString() ?? 0n
+    );
+    const bTimestamp = BigInt(
+      assertDefined(b.getChildByName('shellData'))
+        .getChildByName('dispatchTimeNs')
+        ?.getValue()
+        .toString() ?? 0n
+    );
+    if (aTimestamp !== bTimestamp) {
+      return aTimestamp < bTimestamp ? -1 : 1;
+    }
+    // if dispatchTimeNs not present for both, fallback to id
+    return assertDefined(a.getChildByName('id')).getValue() <
+      assertDefined(b.getChildByName('id')).getValue()
+      ? -1
+      : 1;
   }
 
   private mergePartialTransitions(
