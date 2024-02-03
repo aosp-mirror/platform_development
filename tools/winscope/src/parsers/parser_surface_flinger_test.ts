@@ -25,7 +25,7 @@ describe('ParserSurfaceFlinger', () => {
     const parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
     )) as Parser<LayerTraceEntry>;
-    const entry = parser.getEntry(0, TimestampType.REAL);
+    const entry = await parser.getEntry(0, TimestampType.REAL);
 
     {
       const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 27);
@@ -76,8 +76,8 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('formats entry timestamps', () => {
-      const entry = parser.getEntry(1, TimestampType.REAL);
+    it('formats entry timestamps', async () => {
+      const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(entry.name).toEqual('2022-07-29T15:04:49.233029376');
       expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(14631249355n);
       expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089233029344n);
@@ -107,8 +107,8 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
     });
 
-    it('formats entry timestamps', () => {
-      const entry = parser.getEntry(0, TimestampType.ELAPSED);
+    it('formats entry timestamps', async () => {
+      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry.name).toEqual('14m10s335ms483446ns');
     });
   });

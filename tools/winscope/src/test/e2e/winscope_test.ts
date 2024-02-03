@@ -17,11 +17,13 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('winscope', () => {
-  beforeAll(() => {
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('has title', () => {
-      const title = element(by.css('.app-title'));
-      expect(title.getText()).toContain('Winscope');
-    });
+  beforeAll(async () => {
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
+  });
+
+  it('has title', () => {
+    const title = element(by.css('.app-title'));
+    expect(title.getText()).toContain('Winscope');
+  });
 });

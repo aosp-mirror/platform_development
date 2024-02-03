@@ -21,7 +21,12 @@
         "rootWindowContainer",
         "windowContainer",
         "children",
-        "stableId"
+        "stableId",
+        "boxPos",
+        "classnameIndex",
+        "depth",
+        "zOrderRelativeOfId",
+        "isRootLayer"
     ],
     "intDefColumn": {
         "WindowLayoutParams.type": "android.view.WindowManager.LayoutParams.WindowType",
@@ -34,6 +39,7 @@
         "WindowLayoutParams.behavior": "android.view.WindowInsetsController.Behavior",
         "WindowLayoutParams.fitInsetsSides": "android.view.WindowInsets.Side.InsetsSide",
         "InputWindowInfoProto.layoutParamsFlags": "android.view.WindowManager.LayoutParams.Flags",
+        "InputWindowInfoProto.inputConfig": "android.view.InputWindowHandle.InputConfigFlags",
         "Configuration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
         "WindowConfiguration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
         "Configuration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",

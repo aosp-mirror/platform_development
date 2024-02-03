@@ -15,16 +15,18 @@
  */
 import {LogMessage} from 'trace/protolog';
 
-class UiData {
+export interface UiDataMessage extends LogMessage {
+  originalIndex: number;
+}
+
+export class UiData {
   constructor(
     public allLogLevels: string[],
     public allTags: string[],
     public allSourceFiles: string[],
-    public messages: LogMessage[],
+    public messages: UiDataMessage[],
     public currentMessageIndex: undefined | number
   ) {}
 
   static EMPTY = new UiData([], [], [], [], undefined);
 }
-
-export {UiData};

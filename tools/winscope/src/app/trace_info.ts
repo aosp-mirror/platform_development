@@ -108,6 +108,13 @@ export const TRACE_INFO: TraceInfoMap = {
     color: '#137333',
     downloadArchiveDir: 'launcher',
   },
+  // TODO: Choose ViewCapture icon, color, title name, and download archive directory
+  [TraceType.VIEW_CAPTURE]: {
+    name: 'View Capture',
+    icon: LAUNCHER_ICON,
+    color: '#137333',
+    downloadArchiveDir: 'launcher',
+  },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
     icon: IME_ICON,

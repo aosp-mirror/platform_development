@@ -33,7 +33,7 @@ class View {
 }
 
 interface Viewer {
-  onTracePositionUpdate(position: TracePosition): void;
+  onTracePositionUpdate(position: TracePosition): Promise<void>;
   getViews(): View[];
   getDependencies(): TraceType[];
 }
