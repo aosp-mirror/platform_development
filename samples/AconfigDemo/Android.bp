@@ -6,7 +6,7 @@ android_app {
     name: "AconfigDemoActivity",
     manifest: "AndroidManifest.xml",
     srcs: [
-        "src/**/*.java"
+        "src/**/*.java",
     ],
     platform_apis: true,
     certificate: "platform",
@@ -28,6 +28,7 @@ android_app {
 aconfig_declarations {
     name: "aconfig_demo_flags",
     package: "com.example.android.aconfig.demo.flags",
+    container: "system",
     srcs: ["aconfig_demo_flags.aconfig"],
 }
 
@@ -60,7 +61,6 @@ java_library {
     ],
 }
 
-
 cc_aconfig_library {
     name: "aconfig_demo_flags_c_lib",
     aconfig_declarations: "aconfig_demo_flags",
@@ -77,7 +77,7 @@ cc_library {
         "-Wno-unused-parameter",
     ],
     header_libs: [
-      "jni_headers",
+        "jni_headers",
     ],
     shared_libs: [
         "server_configurable_flags",
@@ -101,7 +101,7 @@ rust_ffi_shared {
     rustlibs: [
         "libjni",
         "libaconfig_demo_flags_rust",
-    ]
+    ],
 }
 
 // Test setup
