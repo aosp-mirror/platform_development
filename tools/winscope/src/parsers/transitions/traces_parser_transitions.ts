@@ -17,10 +17,10 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {Transition, TransitionsTrace} from 'flickerlib/common';
+import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {AbstractTracesParser} from './abstract_traces_parser';
 
 export class TracesParserTransitions extends AbstractTracesParser<Transition> {
   private readonly wmTransitionTrace: Trace<object> | undefined;

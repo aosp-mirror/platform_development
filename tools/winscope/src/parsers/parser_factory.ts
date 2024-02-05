@@ -29,10 +29,10 @@ import {ParserEventLog} from './parser_eventlog';
 import {ParserProtoLog} from './parser_protolog';
 import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
-import {ParserTransitionsShell} from './parser_transitions_shell';
-import {ParserTransitionsWm} from './parser_transitions_wm';
 import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
 import {ParserTransactions} from './transactions/parser_transactions';
+import {ParserTransitionsShell} from './transitions/parser_transitions_shell';
+import {ParserTransitionsWm} from './transitions/parser_transitions_wm';
 import {ParserViewCapture} from './view_capture/parser_view_capture';
 
 export class ParserFactory {

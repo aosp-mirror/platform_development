@@ -17,11 +17,11 @@
 import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {CrossPlatform, ShellTransitionData, Transition, WmTransitionData} from 'flickerlib/common';
+import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
 
 export class ParserTransitionsShell extends AbstractParser {
   private static readonly WmShellTransitionsTraceProto = (root as any).lookupType(
