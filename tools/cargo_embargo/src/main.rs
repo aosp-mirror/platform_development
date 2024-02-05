@@ -288,7 +288,7 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     }
 }
 
-/// Runs cargo_embargo with the given JSON configuration string.
+/// Runs cargo_embargo with the given JSON configuration file.
 fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
     let cfg = Config::from_file(config_filename)?;
     let crates = make_all_crates(args, &cfg)?;
@@ -316,6 +316,18 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
                     Err(e) => eprintln!("failed to check for out files: {}", e),
                 }
             }
+        }
+    }
+
+    // If we were configured to run cargo, check whether we could have got away without it.
+    if cfg.variants.iter().any(|variant| variant.run_cargo) && package_out_files.is_empty() {
+        let mut cfg_no_cargo = cfg.clone();
+        for variant in &mut cfg_no_cargo.variants {
+            variant.run_cargo = false;
+        }
+        let crates_no_cargo = make_all_crates(args, &cfg_no_cargo)?;
+        if crates_no_cargo == crates {
+            eprintln!("Running cargo appears to be unnecessary for this crate, consider adding `\"run_cargo\": false` to your cargo_embargo.json.");
         }
     }
 
