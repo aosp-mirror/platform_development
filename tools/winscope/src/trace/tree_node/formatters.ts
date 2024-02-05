@@ -184,6 +184,7 @@ class TimestampFormatter implements PropertyFormatter {
     return 'null';
   }
 }
+const ELAPSED_TIMESTAMP_FORMATTER = new TimestampFormatter(TimestampType.ELAPSED);
 
 export {
   EMPTY_OBJ_STRING,
@@ -201,4 +202,5 @@ export {
   EnumFormatter,
   FixedStringFormatter,
   TimestampFormatter,
+  ELAPSED_TIMESTAMP_FORMATTER,
 };
