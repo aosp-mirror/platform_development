@@ -4,7 +4,7 @@ import {Transition} from 'flickerlib/common';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {Segment} from '../../utils';
+import {Segment} from '../../segment';
 import {Transformer} from '../transformer';
 import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
 
