@@ -22,13 +22,16 @@ import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ParserTransitionsUtils} from './parser_transitions_utils';
 
 export class ParserTransitionsShell extends AbstractParser {
-  private static readonly WmShellTransitionsTraceProto = (root as any).lookupType(
+  private static readonly WmShellTransitionsTraceProto = root.lookupType(
     'com.android.wm.shell.WmShellTransitionTraceProto'
   );
+
   private realToElapsedTimeOffsetNs: undefined | bigint;
-  private handlerMapping: undefined | Map<number, string>;
+  private handlerMapping: undefined | {[key: number]: string};
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -41,14 +44,14 @@ export class ParserTransitionsShell extends AbstractParser {
   override decodeTrace(traceBuffer: Uint8Array): com.android.wm.shell.ITransition[] {
     const decodedProto = ParserTransitionsShell.WmShellTransitionsTraceProto.decode(
       traceBuffer
-    ) as com.android.wm.shell.IWmShellTransitionTraceProto;
+    ) as unknown as com.android.wm.shell.IWmShellTransitionTraceProto;
 
     const timeOffset = BigInt(decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0');
     this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
 
-    this.handlerMapping = new Map<number, string>();
+    this.handlerMapping = {};
     for (const mapping of decodedProto.handlerMappings ?? []) {
-      this.handlerMapping.set(mapping.id, mapping.name);
+      this.handlerMapping[mapping.id] = mapping.name;
     }
 
     return decodedProto.transitions ?? [];
@@ -60,6 +63,24 @@ export class ParserTransitionsShell extends AbstractParser {
     entryProto: com.android.wm.shell.ITransition
   ): Transition {
     return this.parseShellTransitionEntry(entryProto);
+  }
+
+  override getTimestamp(type: TimestampType, decodedEntry: Transition): undefined | Timestamp {
+    decodedEntry = this.parseShellTransitionEntry(decodedEntry);
+
+    if (type === TimestampType.ELAPSED) {
+      return new ElapsedTimestamp(BigInt(decodedEntry.timestamp.elapsedNanos.toString()));
+    }
+
+    if (type === TimestampType.REAL) {
+      return new RealTimestamp(BigInt(decodedEntry.timestamp.unixNanos.toString()));
+    }
+
+    throw new Error('Timestamp type unsupported');
+  }
+
+  protected getMagicNumber(): number[] | undefined {
+    return [0x09, 0x57, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WMSTRACE
   }
 
   private parseShellTransitionEntry(entry: com.android.wm.shell.ITransition): Transition {
@@ -123,7 +144,7 @@ export class ParserTransitionsShell extends AbstractParser {
         mergeRequestTime,
         mergeTime,
         abortTime,
-        this.handlerMapping.get(assertDefined(entry.handler)),
+        this.handlerMapping[assertDefined(entry.handler)],
         mergeTarget
       )
     );
@@ -143,21 +164,20 @@ export class ParserTransitionsShell extends AbstractParser {
     }
   }
 
-  protected getMagicNumber(): number[] | undefined {
-    return [0x09, 0x57, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WMSTRACE
-  }
+  private makePropertiesTree(
+    timestampType: TimestampType,
+    entryProto: com.android.wm.shell.ITransition
+  ): PropertyTreeNode {
+    this.validateShellTransitionEntry(entryProto);
 
-  override getTimestamp(type: TimestampType, decodedEntry: Transition): undefined | Timestamp {
-    decodedEntry = this.parseShellTransitionEntry(decodedEntry);
+    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree({
+      entry: entryProto,
+      realToElapsedTimeOffsetNs: this.realToElapsedTimeOffsetNs,
+      timestampType,
+      handlerMapping: this.handlerMapping,
+    });
+    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree();
 
-    if (type === TimestampType.ELAPSED) {
-      return new ElapsedTimestamp(BigInt(decodedEntry.timestamp.elapsedNanos.toString()));
-    }
-
-    if (type === TimestampType.REAL) {
-      return new RealTimestamp(BigInt(decodedEntry.timestamp.unixNanos.toString()));
-    }
-
-    throw new Error('Timestamp type unsupported');
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);
   }
 }

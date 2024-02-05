@@ -24,14 +24,18 @@ import {
   TransitionType,
   WmTransitionData,
 } from 'flickerlib/common';
+import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {perfetto} from 'protos/transitions/latest/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 import {FakeProtoBuilder} from './fake_proto_builder';
 
 export class ParserTransitions extends AbstractParser<Transition> {
+  private handlerIdToName: {[id: number]: string} | undefined = undefined;
+
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
   }
@@ -80,6 +84,47 @@ export class ParserTransitions extends AbstractParser<Transition> {
     );
   }
 
+  protected override getTableName(): string {
+    return 'window_manager_shell_transitions';
+  }
+
+  private makePropertiesTree(
+    timestampType: TimestampType,
+    transitionProto: perfetto.protos.ShellTransition
+  ): PropertyTreeNode {
+    this.validatePerfettoTransition(transitionProto);
+
+    const perfettoTransitionInfo = {
+      entry: transitionProto,
+      realToElapsedTimeOffsetNs: assertDefined(this.realToElapsedTimeOffsetNs),
+      timestampType,
+      handlerMapping: this.handlerIdToName,
+    };
+
+    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(perfettoTransitionInfo, [
+      'createTimeNs',
+      'sendTimeNs',
+      'wmAbortTimeNs',
+      'finishTimeNs',
+      'startTransactionId',
+      'finishTransactionId',
+      'type',
+      'targets',
+      'flags',
+      'startingWindowRemoveTimeNs',
+    ]);
+    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree(perfettoTransitionInfo, [
+      'dispatchTimeNs',
+      'mergeTimeNs',
+      'mergeRequestTimeNs',
+      'shellAbortTimeNs',
+      'handler',
+      'mergeTarget',
+    ]);
+
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);
+  }
+
   private toTimestamp(n: string | undefined): Timestamp | null {
     if (n === undefined) {
       return null;
@@ -89,10 +134,6 @@ export class ParserTransitions extends AbstractParser<Transition> {
     const unixNs = BigInt(n) + realToElapsedTimeOffsetNs;
 
     return CrossPlatform.timestamp.fromString(n.toString(), null, unixNs.toString());
-  }
-
-  protected override getTableName(): string {
-    return 'window_manager_shell_transitions';
   }
 
   private async queryTransition(index: number): Promise<perfetto.protos.ShellTransition> {
@@ -141,7 +182,28 @@ export class ParserTransitions extends AbstractParser<Transition> {
     return handlers;
   }
 
-  private handlerIdToName: {[id: number]: string} | undefined = undefined;
+  private validatePerfettoTransition(transition: perfetto.protos.IShellTransition) {
+    if (transition.id === 0) {
+      throw new Error('Entry need a non null id');
+    }
+    if (
+      !transition.createTimeNs &&
+      !transition.sendTimeNs &&
+      !transition.wmAbortTimeNs &&
+      !transition.finishTimeNs
+    ) {
+      throw new Error('Requires at least one non-null wm data timestamp');
+    }
+
+    if (
+      !transition.dispatchTimeNs &&
+      !transition.mergeRequestTimeNs &&
+      !transition.mergeTimeNs &&
+      !transition.shellAbortTimeNs
+    ) {
+      throw new Error('Requires at least one non-null shell data timestamp');
+    }
+  }
 }
 
 interface TransitionHandler {

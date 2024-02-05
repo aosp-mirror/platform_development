@@ -28,12 +28,15 @@ import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ParserTransitionsUtils} from './parser_transitions_utils';
 
 export class ParserTransitionsWm extends AbstractParser {
-  private realToElapsedTimeOffsetNs: undefined | bigint;
   private static readonly TransitionTraceProto = root.lookupType(
     'com.android.server.wm.shell.TransitionTraceProto'
   );
+
+  private realToElapsedTimeOffsetNs: undefined | bigint;
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -193,5 +196,21 @@ export class ParserTransitionsWm extends AbstractParser {
     if (!entry.createTimeNs && !entry.sendTimeNs && !entry.abortTimeNs && !entry.finishTimeNs) {
       throw new Error('Requires at least one non-null timestamp');
     }
+  }
+
+  private makePropertiesTree(
+    timestampType: TimestampType,
+    entryProto: com.android.server.wm.shell.ITransition
+  ): PropertyTreeNode {
+    this.validateWmTransitionEntry(entryProto);
+
+    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree();
+    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree({
+      entry: entryProto,
+      realToElapsedTimeOffsetNs: this.realToElapsedTimeOffsetNs,
+      timestampType,
+    });
+
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);
   }
 }
