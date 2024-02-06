@@ -48,10 +48,6 @@ abstract class ViewerInputMethod implements Viewer {
   abstract getDependencies(): TraceType[];
 
   protected imeUiCallback = (uiData: ImeUiData) => {
-    // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
-    // automatically ensures that the UI will change via the Angular change detection cycle. Without
-    // resetting, Angular does not auto-detect that inputData has changed.
-    (this.htmlElement as any).inputData = null;
     (this.htmlElement as any).inputData = uiData;
   };
 

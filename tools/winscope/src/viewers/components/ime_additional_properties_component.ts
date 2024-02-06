@@ -20,14 +20,14 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
-import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ImeContainerProperties, InputMethodSurfaceProperties} from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
   selector: 'ime-additional-properties',
   template: `
     <h2 class="view-header mat-title">WM & SF Properties</h2>
-    <div class="additional-properties-content">
+    <div class="additional-properties-content" *ngIf="additionalProperties">
       <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
           There is no corresponding WM / SF additionalProperties for this IME entry – no WM / SF
@@ -36,20 +36,18 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
       </div>
 
       <ng-container *ngIf="isImeManagerService">
-        <div class="group">
+        <div class="group ime-manager-service">
           <button
             *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmHierarchyTree())}"
-            (click)="
-              onClickShowInPropertiesPanelWm(wmHierarchyTree(), additionalProperties?.wm?.name)
-            ">
+            (click)="onClickShowInPropertiesPanelWm(wmHierarchyTree(), 'Window Manager State')">
             WMState
           </button>
           <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
-          <div class="left-column">
+          <div class="left-column wm-state">
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               {{ wmRootLabel() }}
             </p>
@@ -102,7 +100,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           <button
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header ime-control-target"
             [class]="{selected: isHighlighted(wmImeControlTarget())}"
             (click)="onClickShowInPropertiesPanelWm(wmImeControlTarget(), 'Ime Control Target')">
             IME Control Target
@@ -160,9 +158,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             mat-button
             class="group-header wm-state"
             [class]="{selected: isHighlighted(wmHierarchyTree())}"
-            (click)="
-              onClickShowInPropertiesPanelWm(wmHierarchyTree(), additionalProperties?.wm?.name)
-            ">
+            (click)="onClickShowInPropertiesPanelWm(wmHierarchyTree(), 'Window Manager State')">
             WMState
           </button>
           <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
@@ -322,6 +318,11 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         flex: 1;
         padding: 0 5px;
       }
+
+      .selected {
+        background-color: #87acec;
+        color: black;
+      }
     `,
   ],
 })
@@ -332,17 +333,10 @@ export class ImeAdditionalPropertiesComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  isHighlighted(item: TreeNode | undefined): boolean {
-    if (item instanceof TreeNode) {
-      return UiTreeUtils.isHighlighted(item, this.highlightedItem);
-    }
-    return false;
-  }
-
-  formatProto(item: any) {
-    if (item?.prettyPrint) {
-      return item.prettyPrint();
-    }
+  isHighlighted(
+    item: TreeNode | ImeContainerProperties | InputMethodSurfaceProperties | undefined
+  ): boolean {
+    return item ? item.id === this.highlightedItem : false;
   }
 
   formattedWindowColor(): string {
@@ -373,12 +367,7 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   wmInsetsSourceProvider(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
-      ? Object.assign(
-          {name: 'Ime Insets Source Provider'},
-          this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
-        )
-      : undefined;
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider;
   }
 
   wmControlTargetFrame(): PropertyTreeNode | undefined {
@@ -439,42 +428,45 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   wmImeControlTarget(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
-      ? Object.assign(
-          {name: 'IME Control Target'},
-          this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
-        )
-      : undefined;
+    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget;
   }
 
   wmImeControlTargetTitle(): string | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget?.name ?? undefined;
+    return (
+      this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
+    );
   }
 
   wmImeInputTarget(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
-      ? Object.assign(
-          {name: 'IME Input Target'},
-          this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
-        )
-      : undefined;
+    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget;
   }
 
   wmImeInputTargetTitle(): string | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget?.name ?? undefined;
+    return (
+      this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
+    );
   }
 
   wmImeLayeringTarget(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
-      ? Object.assign(
-          {name: 'IME Layering Target'},
-          this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
-        )
-      : undefined;
+    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget;
   }
 
   wmImeLayeringTargetTitle(): string | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget?.name ?? undefined;
+    return (
+      this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
+    );
   }
 
   sfImeContainerScreenBounds(): PropertyTreeNode | undefined {
@@ -493,7 +485,7 @@ export class ImeAdditionalPropertiesComponent {
     }
   }
 
-  onClickShowInPropertiesPanelWm(item: TreeNode, name?: string) {
+  onClickShowInPropertiesPanelWm(item: TreeNode, name: string) {
     this.updateAdditionalPropertySelected(item, name);
   }
 
@@ -509,7 +501,7 @@ export class ImeAdditionalPropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  private updateAdditionalPropertySelected(item: TreeNode, name?: string) {
+  private updateAdditionalPropertySelected(item: TreeNode, name: string) {
     const itemWrapper = {
       name,
       treeNode: item,

@@ -44,13 +44,13 @@ export class ProcessedWindowManagerState implements Item {
   ) {}
 }
 
-interface ImeContainerProperties {
+export interface ImeContainerProperties {
   id: string;
   zOrderRelativeOfId: number;
   z: number;
 }
 
-interface InputMethodSurfaceProperties {
+export interface InputMethodSurfaceProperties {
   id: string;
   isVisible: boolean;
   screenBounds?: PropertyTreeNode;

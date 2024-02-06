@@ -35,14 +35,13 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
           [store]="store"
           [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
 
-        <ng-container *ngIf="inputData?.additionalProperties">
-          <mat-divider></mat-divider>
+        <mat-divider></mat-divider>
 
-          <ime-additional-properties
-            class="ime-additional-properties"
-            [highlightedItem]="inputData?.highlightedItem"
-            [additionalProperties]="inputData.additionalProperties"></ime-additional-properties>
-        </ng-container>
+        <ime-additional-properties
+          class="ime-additional-properties"
+          [isImeManagerService]="isImeManagerService()"
+          [highlightedItem]="inputData?.highlightedItem ?? ''"
+          [additionalProperties]="inputData?.additionalProperties"></ime-additional-properties>
       </div>
 
       <mat-divider [vertical]="true"></mat-divider>
@@ -80,4 +79,8 @@ export class ViewerInputMethodComponent {
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
+
+  isImeManagerService(): boolean {
+    return this.inputData?.dependencies.includes(TraceType.INPUT_METHOD_MANAGER_SERVICE) ?? false;
+  }
 }

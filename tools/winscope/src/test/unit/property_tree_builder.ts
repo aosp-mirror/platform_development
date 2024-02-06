@@ -72,7 +72,7 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
   }
 }
 
-interface ChildProperty {
+export interface ChildProperty {
   name: string;
   value?: any;
   children?: ChildProperty[];
