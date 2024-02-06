@@ -42,7 +42,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
           [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="updateTree()"
+          (ngModelChange)="onUserOptionChange()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
           >{{ userOptions[option].name }}</mat-checkbox
         >
@@ -156,7 +156,7 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  updateTree() {
+  onUserOptionChange() {
     const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},

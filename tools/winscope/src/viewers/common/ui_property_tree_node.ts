@@ -37,7 +37,9 @@ export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
 
     displayNode.setIsRoot(node.isRoot());
 
-    node.getAllChildren().forEach((child) => {
+    const children = [...node.getAllChildren()].sort((a, b) => (a.name < b.name ? -1 : 1));
+
+    children.forEach((child) => {
       displayNode.addOrReplaceChild(UiPropertyTreeNode.from(child));
     });
     return displayNode;

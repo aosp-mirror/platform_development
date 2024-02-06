@@ -26,6 +26,7 @@ import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 describe('FrameMapper', () => {
   const time0 = new RealTimestamp(0n);
@@ -164,7 +165,7 @@ describe('FrameMapper', () => {
 
   describe('WindowManager <-> Transactions', () => {
     let windowManager: Trace<HierarchyTreeNode>;
-    let transactions: Trace<object>;
+    let transactions: Trace<PropertyTreeNode>;
     let traces: Traces;
 
     beforeAll(async () => {
@@ -184,15 +185,15 @@ describe('FrameMapper', () => {
         .setTimestamps([time1, time2, time4, time5])
         .build();
 
-      transactions = new TraceBuilder<object>()
+      transactions = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as object,
-          'entry-1' as unknown as object,
-          'entry-2' as unknown as object,
-          'entry-3' as unknown as object,
-          'entry-4' as unknown as object,
-          'entry-5' as unknown as object,
-          'entry-6' as unknown as object,
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
+          'entry-5' as unknown as PropertyTreeNode,
+          'entry-6' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time3, time4, time5, time10seconds])
         .setFrame(0, 0)
@@ -260,7 +261,7 @@ describe('FrameMapper', () => {
   });
 
   describe('Transactions <-> SurfaceFlinger', () => {
-    let transactions: Trace<object>;
+    let transactions: Trace<PropertyTreeNode>;
     let surfaceFlinger: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
@@ -269,13 +270,13 @@ describe('FrameMapper', () => {
       //                  \     \        \
       //                   \     \        \
       // SURFACE_FLINGER:   0     1        2
-      transactions = new TraceBuilder<object>()
+      transactions = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as HierarchyTreeNode,
-          'entry-1' as unknown as HierarchyTreeNode,
-          'entry-2' as unknown as HierarchyTreeNode,
-          'entry-3' as unknown as HierarchyTreeNode,
-          'entry-4' as unknown as HierarchyTreeNode,
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time5, time6])
         .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 10n, 20n, 30n])

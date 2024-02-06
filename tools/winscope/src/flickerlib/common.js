@@ -20,13 +20,9 @@
 // Event Log
 const EventLog = require('flickerlib/flicker').android.tools.common.traces.events.EventLog;
 const CujEvent = require('flickerlib/flicker').android.tools.common.traces.events.CujEvent;
-const CujType = require('flickerlib/flicker').android.tools.common.traces.events.CujType;
 const Event = require('flickerlib/flicker').android.tools.common.traces.events.Event;
-const FlickerEvent = require('flickerlib/flicker').android.tools.common.traces.events.FlickerEvent;
-const FocusEvent = require('flickerlib/flicker').android.tools.common.traces.events.FocusEvent;
 const EventLogParser =
   require('flickerlib/flicker').android.tools.common.parsers.events.EventLogParser;
-const CujTrace = require('flickerlib/flicker').android.tools.common.parsers.events.CujTrace;
 const Cuj = require('flickerlib/flicker').android.tools.common.parsers.events.Cuj;
 
 // Transitions
@@ -42,180 +38,16 @@ const WmTransitionData =
   require('flickerlib/flicker').android.tools.common.traces.wm.WmTransitionData;
 
 // Common
-const Region = require('flickerlib/flicker').android.tools.common.datatypes.Region;
-const Size = require('flickerlib/flicker').android.tools.common.datatypes.Size;
-const ActiveBuffer = require('flickerlib/flicker').android.tools.common.datatypes.ActiveBuffer;
-const Color = require('flickerlib/flicker').android.tools.common.datatypes.Color;
-const Insets = require('flickerlib/flicker').android.tools.common.datatypes.Insets;
-const Point = require('flickerlib/flicker').android.tools.common.datatypes.Point;
-const PointF = require('flickerlib/flicker').android.tools.common.datatypes.PointF;
-const Rect = require('flickerlib/flicker').android.tools.common.datatypes.Rect;
-const RectF = require('flickerlib/flicker').android.tools.common.datatypes.RectF;
 const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
 const Timestamp = require('flickerlib/flicker').android.tools.common.Timestamp;
-const TimestampFactory = require('flickerlib/flicker').android.tools.common.TimestampFactory;
 
 const NoCache = require('flickerlib/flicker').android.tools.common.NoCache;
-
-const EMPTY_SIZE = Size.Companion.EMPTY;
-const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
-const EMPTY_COLOR = Color.Companion.EMPTY;
-const EMPTY_INSETS = Insets.Companion.EMPTY;
-const EMPTY_RECT = Rect.Companion.EMPTY;
-const EMPTY_RECTF = RectF.Companion.EMPTY;
-const EMPTY_POINT = Point.Companion.EMPTY;
-const EMPTY_POINTF = PointF.Companion.EMPTY;
-
-function toSize(proto) {
-  if (proto == null) {
-    return EMPTY_SIZE;
-  }
-  const width = proto.width ?? proto.w ?? 0;
-  const height = proto.height ?? proto.h ?? 0;
-  if (width || height) {
-    return new Size(width, height);
-  }
-  return EMPTY_SIZE;
-}
-
-function toActiveBuffer(proto) {
-  const width = proto?.width ?? 0;
-  const height = proto?.height ?? 0;
-  const stride = proto?.stride ?? 0;
-  const format = proto?.format ?? 0;
-
-  if (width || height || stride || format) {
-    return new ActiveBuffer(width, height, stride, format);
-  }
-  return EMPTY_BUFFER;
-}
-
-function toColor(proto, hasAlpha = true) {
-  if (proto == null) {
-    return EMPTY_COLOR;
-  }
-  const r = proto.r ?? 0;
-  const g = proto.g ?? 0;
-  const b = proto.b ?? 0;
-  let a = proto.a;
-  if (a === null && !hasAlpha) {
-    a = 1;
-  }
-  if (r || g || b || a) {
-    return new Color(r, g, b, a);
-  }
-  return EMPTY_COLOR;
-}
-
-function toPoint(proto) {
-  if (proto == null) {
-    return null;
-  }
-  const x = proto.x ?? 0;
-  const y = proto.y ?? 0;
-  if (x || y) {
-    return new Point(x, y);
-  }
-  return EMPTY_POINT;
-}
-
-function toPointF(proto) {
-  if (proto == null) {
-    return null;
-  }
-  const x = proto.x ?? 0;
-  const y = proto.y ?? 0;
-  if (x || y) {
-    return new PointF(x, y);
-  }
-  return EMPTY_POINTF;
-}
-
-function toInsets(proto) {
-  if (proto == null) {
-    return EMPTY_INSETS;
-  }
-
-  const left = proto?.left ?? 0;
-  const top = proto?.top ?? 0;
-  const right = proto?.right ?? 0;
-  const bottom = proto?.bottom ?? 0;
-  if (left || top || right || bottom) {
-    return new Insets(left, top, right, bottom);
-  }
-  return EMPTY_INSETS;
-}
-
-function toCropRect(proto) {
-  if (proto == null) return EMPTY_RECT;
-
-  const right = proto.right || 0;
-  const left = proto.left || 0;
-  const bottom = proto.bottom || 0;
-  const top = proto.top || 0;
-
-  // crop (0,0) (-1,-1) means no crop
-  if (right == -1 && left == 0 && bottom == -1 && top == 0) EMPTY_RECT;
-
-  if (right - left <= 0 || bottom - top <= 0) return EMPTY_RECT;
-
-  return Rect.Companion.from(left, top, right, bottom);
-}
-
-function toRect(proto) {
-  if (proto == null) {
-    return EMPTY_RECT;
-  }
-
-  const left = proto?.left ?? 0;
-  const top = proto?.top ?? 0;
-  const right = proto?.right ?? 0;
-  const bottom = proto?.bottom ?? 0;
-  if (left || top || right || bottom) {
-    return new Rect(left, top, right, bottom);
-  }
-  return EMPTY_RECT;
-}
-
-function toRectF(proto) {
-  if (proto == null) {
-    return EMPTY_RECTF;
-  }
-
-  const left = proto?.left ?? 0;
-  const top = proto?.top ?? 0;
-  const right = proto?.right ?? 0;
-  const bottom = proto?.bottom ?? 0;
-  if (left || top || right || bottom) {
-    return new RectF(left, top, right, bottom);
-  }
-  return EMPTY_RECTF;
-}
-
-function toRegion(proto) {
-  if (proto == null) {
-    return null;
-  }
-
-  const rects = [];
-  for (let x = 0; x < proto.rect.length; x++) {
-    const rect = proto.rect[x];
-    const parsedRect = toRect(rect);
-    rects.push(parsedRect);
-  }
-
-  return new Region(rects);
-}
 
 export {
   EventLog,
   CujEvent,
-  CujType,
   Event,
-  FlickerEvent,
-  FocusEvent,
   EventLogParser,
-  CujTrace,
   Cuj,
   // Transitions
   Transition,
@@ -225,34 +57,7 @@ export {
   ShellTransitionData,
   WmTransitionData,
   // Common
-  Size,
-  ActiveBuffer,
-  Color,
-  Insets,
-  Point,
-  Rect,
-  RectF,
-  Region,
   CrossPlatform,
   Timestamp,
-  TimestampFactory,
   NoCache,
-  // Service
-  toSize,
-  toActiveBuffer,
-  toColor,
-  toCropRect,
-  toInsets,
-  toPoint,
-  toPointF,
-  toRect,
-  toRectF,
-  toRegion,
-  // Constants
-  EMPTY_BUFFER,
-  EMPTY_COLOR,
-  EMPTY_RECT,
-  EMPTY_RECTF,
-  EMPTY_POINT,
-  EMPTY_POINTF,
 };

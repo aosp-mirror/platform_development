@@ -143,7 +143,7 @@ export class PropertyTreeNodeFactory {
       });
       obj = this.visitPrototype ? Object.getPrototypeOf(obj) : undefined;
     } while (obj);
-    return props.sort((a, b) => (a < b ? -1 : 1));
+    return props;
   }
 }
 

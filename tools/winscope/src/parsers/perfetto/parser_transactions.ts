@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {AddDefaults} from 'parsers/operations/add_defaults';
+import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
 import root from 'protos/transactions/latest/json';
 import {perfetto} from 'protos/transactions/latest/static';
 import {
@@ -25,24 +29,33 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 import {FakeProtoTransformer} from './fake_proto_transformer';
 import {Utils} from './utils';
 
-export class ParserTransactions extends AbstractParser<object> {
-  private static readonly TransactionsTraceEntryProto = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.TransactionTraceEntry')
+export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
+  private static readonly TransactionsTraceFileProto = TamperedMessageType.tamper(
+    root.lookupType('perfetto.protos.TransactionTraceFile')
   );
-  private static readonly LayerState = root.lookupType('perfetto.protos.LayerState');
-  private static readonly DisplayState = root.lookupType('perfetto.protos.DisplayState');
+  private static readonly TransactionsTraceEntryField =
+    ParserTransactions.TransactionsTraceFileProto.fields['entry'];
+
+  private static readonly OPERATIONS = [
+    new AddDefaults(ParserTransactions.TransactionsTraceEntryField),
+    new SetFormatters(ParserTransactions.TransactionsTraceEntryField),
+    new TranslateChanges(),
+  ];
+
   private protoTransformer: FakeProtoTransformer;
 
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
 
     this.protoTransformer = new FakeProtoTransformer(
-      ParserTransactions.TransactionsTraceEntryProto
+      assertDefined(ParserTransactions.TransactionsTraceEntryField.tamperedMessageType)
     );
   }
 
@@ -50,14 +63,10 @@ export class ParserTransactions extends AbstractParser<object> {
     return TraceType.TRANSACTIONS;
   }
 
-  override async getEntry(
-    index: number,
-    timestampType: TimestampType
-  ): Promise<perfetto.protos.ITransactionTraceEntry> {
+  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
     let entryProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
     entryProto = this.protoTransformer.transform(entryProto);
-    entryProto = this.decodeWhatBitsetFields(entryProto);
-    return entryProto;
+    return this.makePropertiesTree(entryProto);
   }
 
   protected override getTableName(): string {
@@ -75,50 +84,16 @@ export class ParserTransactions extends AbstractParser<object> {
       .getResult();
   }
 
-  private decodeWhatBitsetFields(
-    transactionTraceEntry: perfetto.protos.ITransactionTraceEntry
-  ): perfetto.protos.ITransactionTraceEntry {
-    const decodeBitset32 = (bitset: number, EnumProto: any) => {
-      return Object.keys(EnumProto).filter((key) => {
-        const value = EnumProto[key];
-        return (bitset & value) !== 0;
-      });
-    };
+  private makePropertiesTree(entryProto: perfetto.protos.TransactionTraceEntry): PropertyTreeNode {
+    const tree = new PropertyTreeBuilderFromProto()
+      .setData(entryProto)
+      .setRootId('TransactionsTraceEntry')
+      .setRootName('entry')
+      .build();
 
-    const concatBitsetTokens = (tokens: string[]) => {
-      if (tokens.length === 0) {
-        return '0';
-      }
-      return tokens.join(' | ');
-    };
-
-    const LayerStateChangesLsbEnum = (ParserTransactions.LayerState as any).ChangesLsb;
-    const LayerStateChangesMsbEnum = (ParserTransactions.LayerState as any).ChangesMsb;
-    const DisplayStateChangesEnum = (ParserTransactions.DisplayState as any).Changes;
-
-    transactionTraceEntry.transactions?.forEach((transactionState) => {
-      transactionState?.layerChanges?.forEach((layerState) => {
-        const originalValue = BigInt(layerState.what?.toString() ?? 0n);
-        (layerState.what as unknown as string) = concatBitsetTokens(
-          decodeBitset32(Number(originalValue), LayerStateChangesLsbEnum).concat(
-            decodeBitset32(Number(originalValue >> 32n), LayerStateChangesMsbEnum)
-          )
-        );
-      });
-
-      transactionState.displayChanges?.forEach((displayState) => {
-        (displayState.what as unknown as string) = concatBitsetTokens(
-          decodeBitset32(Number(displayState.what), DisplayStateChangesEnum)
-        );
-      });
+    ParserTransactions.OPERATIONS.forEach((operation) => {
+      operation.apply(tree);
     });
-
-    transactionTraceEntry?.addedDisplays?.forEach((displayState) => {
-      (displayState.what as unknown as string) = concatBitsetTokens(
-        decodeBitset32(Number(displayState.what), DisplayStateChangesEnum)
-      );
-    });
-
-    return transactionTraceEntry;
+    return tree;
   }
 }

@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {PropertiesTreeNodeLegacy} from 'viewers/common/ui_tree_utils_legacy';
+
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UserOptions} from 'viewers/common/user_options';
 
 class UiData {
   constructor(
@@ -27,10 +30,24 @@ class UiData {
     public currentEntryIndex: undefined | number,
     public selectedEntryIndex: undefined | number,
     public scrollToIndex: undefined | number,
-    public currentPropertiesTree: undefined | PropertiesTreeNodeLegacy
+    public currentPropertiesTree: undefined | UiPropertyTreeNode,
+    public propertiesUserOptions: UserOptions
   ) {}
 
-  static EMPTY = new UiData([], [], [], [], [], [], [], undefined, undefined, undefined, undefined);
+  static EMPTY = new UiData(
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {}
+  );
 }
 
 class UiDataEntry {
@@ -44,7 +61,7 @@ class UiDataEntry {
     public layerOrDisplayId: string,
     public transactionId: string,
     public what: string,
-    public propertiesTree?: PropertiesTreeNodeLegacy
+    public propertiesTree: PropertyTreeNode | undefined
   ) {}
 }
 
