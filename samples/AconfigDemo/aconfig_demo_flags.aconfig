@@ -1,4 +1,5 @@
 package: "com.example.android.aconfig.demo.flags"
+container: "system"
 
 flag {
   name: "append_injected_content"

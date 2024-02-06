@@ -1,4 +1,5 @@
 package: "com.android.trunk_stable_workflow_testing"
+container: "system"
 
 flag {
   name: "welcome_aboard"
