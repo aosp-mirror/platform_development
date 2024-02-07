@@ -16,13 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {Cuj, EventLog, Transition} from 'flickerlib/common';
+import {Cuj, EventLog} from 'flickerlib/common';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {AbstractTracesParser} from './abstract_traces_parser';
 
-export class TracesParserCujs extends AbstractTracesParser<Transition> {
+export class TracesParserCujs extends AbstractTracesParser<Cuj> {
   private readonly eventLogTrace: Trace<object> | undefined;
   private readonly descriptors: string[];
   private decodedEntries: Cuj[] | undefined;
@@ -56,7 +56,7 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     return assertDefined(this.decodedEntries).length;
   }
 
-  getEntry(index: number, timestampType: TimestampType): Promise<Transition> {
+  getEntry(index: number, timestampType: TimestampType): Promise<Cuj> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -69,7 +69,7 @@ export class TracesParserCujs extends AbstractTracesParser<Transition> {
     return TraceType.CUJS;
   }
 
-  override getTimestamp(type: TimestampType, transition: Transition): undefined | Timestamp {
+  override getTimestamp(type: TimestampType, transition: Cuj): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(transition.timestamp.elapsedNanos.toString()));
     } else if (type === TimestampType.REAL) {

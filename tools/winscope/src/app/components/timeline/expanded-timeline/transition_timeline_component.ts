@@ -15,6 +15,7 @@
  */
 
 import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
+import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
@@ -23,7 +24,6 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TimelineUtils} from '../timeline_utils';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 
 @Component({

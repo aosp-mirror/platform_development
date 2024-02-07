@@ -25,18 +25,6 @@ const EventLogParser =
   require('flickerlib/flicker').android.tools.common.parsers.events.EventLogParser;
 const Cuj = require('flickerlib/flicker').android.tools.common.parsers.events.Cuj;
 
-// Transitions
-const Transition = require('flickerlib/flicker').android.tools.common.traces.wm.Transition;
-const TransitionType = require('flickerlib/flicker').android.tools.common.traces.wm.TransitionType;
-const TransitionChange =
-  require('flickerlib/flicker').android.tools.common.traces.wm.TransitionChange;
-const TransitionsTrace =
-  require('flickerlib/flicker').android.tools.common.traces.wm.TransitionsTrace;
-const ShellTransitionData =
-  require('flickerlib/flicker').android.tools.common.traces.wm.ShellTransitionData;
-const WmTransitionData =
-  require('flickerlib/flicker').android.tools.common.traces.wm.WmTransitionData;
-
 // Common
 const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
 const Timestamp = require('flickerlib/flicker').android.tools.common.Timestamp;
@@ -49,13 +37,6 @@ export {
   Event,
   EventLogParser,
   Cuj,
-  // Transitions
-  Transition,
-  TransitionType,
-  TransitionChange,
-  TransitionsTrace,
-  ShellTransitionData,
-  WmTransitionData,
   // Common
   CrossPlatform,
   Timestamp,

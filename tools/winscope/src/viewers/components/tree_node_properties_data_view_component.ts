@@ -15,8 +15,8 @@
  */
 import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
+import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {DiffType} from 'viewers/common/ui_tree_utils_legacy';
 import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
