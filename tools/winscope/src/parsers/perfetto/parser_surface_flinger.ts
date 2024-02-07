@@ -21,6 +21,7 @@ import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
+import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
 import {VisibilityPropertiesComputation} from 'parsers/surface_flinger/computations/visibility_properties_computation';
@@ -43,7 +44,6 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
-import {FakeProtoTransformerSf} from './fake_proto_transformer_surface_flinger';
 
 export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly CUSTOM_FORMATTERS = new Map([
@@ -88,15 +88,15 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     ),
   };
 
-  private layersSnapshotProtoTransformer: FakeProtoTransformerSf;
-  private layerProtoTransformer: FakeProtoTransformerSf;
+  private layersSnapshotProtoTransformer: FakeProtoTransformer;
+  private layerProtoTransformer: FakeProtoTransformer;
 
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
-    this.layersSnapshotProtoTransformer = new FakeProtoTransformerSf(
+    this.layersSnapshotProtoTransformer = new FakeProtoTransformer(
       assertDefined(ParserSurfaceFlinger.entryField.tamperedMessageType)
     );
-    this.layerProtoTransformer = new FakeProtoTransformerSf(
+    this.layerProtoTransformer = new FakeProtoTransformer(
       assertDefined(ParserSurfaceFlinger.layerField.tamperedMessageType)
     );
   }

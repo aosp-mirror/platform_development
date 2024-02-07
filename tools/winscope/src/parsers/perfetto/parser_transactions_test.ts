@@ -20,9 +20,10 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('Perfetto ParserTransactions', () => {
-  let parser: Parser<object>;
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     parser = await UnitTestUtils.getPerfettoParser(
@@ -63,46 +64,87 @@ describe('Perfetto ParserTransactions', () => {
 
   it('retrieves trace entry from real timestamp', async () => {
     const entry = await parser.getEntry(1, TimestampType.REAL);
-    expect(BigInt((entry as any).elapsedRealtimeNanos)).toEqual(2517952515n);
+    expect(entry.id).toEqual('TransactionsTraceEntry entry');
   });
 
   it('transforms fake proto built from trace processor args', async () => {
-    const entry0 = (await parser.getEntry(0, TimestampType.REAL)) as any;
-    const entry2 = (await parser.getEntry(2, TimestampType.REAL)) as any;
+    const entry0 = await parser.getEntry(0, TimestampType.REAL);
+    const entry2 = await parser.getEntry(2, TimestampType.REAL);
 
     // Add empty arrays
-    expect(entry0.addedDisplays).toEqual([]);
-    expect(entry0.destroyedLayers).toEqual([]);
-    expect(entry0.removedDisplays).toEqual([]);
-    expect(entry0.destroyedLayerHandles).toEqual([]);
-    expect(entry0.displays).toEqual([]);
+    expect(entry0.getChildByName('addedDisplays')?.getAllChildren()).toEqual([]);
+    expect(entry0.getChildByName('destroyedLayers')?.getAllChildren()).toEqual([]);
+    expect(entry0.getChildByName('removedDisplays')?.getAllChildren()).toEqual([]);
+    expect(entry0.getChildByName('destroyedLayerHandles')?.getAllChildren()).toEqual([]);
+    expect(entry0.getChildByName('displays')?.getAllChildren()).toEqual([]);
 
     // Add default values
-    expect(entry0.transactions[1].pid).toEqual(0);
+    expect(
+      entry0.getChildByName('transactions')?.getChildByName('1')?.getChildByName('pid')?.getValue()
+    ).toEqual(0);
 
     // Convert value types (bigint -> number)
-    expect(entry0.transactions[1].uid).toEqual(1003);
+    expect(
+      entry0.getChildByName('transactions')?.getChildByName('1')?.getChildByName('uid')?.getValue()
+    ).toEqual(1003);
 
     // Decode enum IDs
-    expect(entry0.transactions[0].layerChanges[0].dropInputMode).toEqual('NONE');
-    expect(entry2.transactions[0].layerChanges[0].bufferData.pixelFormat).toEqual(
-      'PIXEL_FORMAT_RGBA_1010102'
-    );
+    expect(
+      entry0
+        .getChildByName('transactions')
+        ?.getChildByName('0')
+        ?.getChildByName('layerChanges')
+        ?.getChildByName('0')
+        ?.getChildByName('dropInputMode')
+        ?.formattedValue()
+    ).toEqual('NONE');
+
+    expect(
+      entry2
+        .getChildByName('transactions')
+        ?.getChildByName('0')
+        ?.getChildByName('layerChanges')
+        ?.getChildByName('0')
+        ?.getChildByName('bufferData')
+        ?.getChildByName('pixelFormat')
+        ?.formattedValue()
+    ).toEqual('PIXEL_FORMAT_RGBA_1010102');
   });
 
   it("decodes 'what' field in proto", async () => {
     {
-      const entry = (await parser.getEntry(0, TimestampType.REAL)) as any;
-      expect(entry.transactions[0].layerChanges[0].what).toEqual('eLayerChanged');
-      expect(entry.transactions[1].layerChanges[0].what).toEqual(
-        'eFlagsChanged | eDestinationFrameChanged'
-      );
+      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const transactions = assertDefined(entry.getChildByName('transactions'));
+      expect(
+        transactions
+          .getChildByName('0')
+          ?.getChildByName('layerChanges')
+          ?.getChildByName('0')
+          ?.getChildByName('what')
+          ?.formattedValue()
+      ).toEqual('eLayerChanged');
+
+      expect(
+        transactions
+          .getChildByName('1')
+          ?.getChildByName('layerChanges')
+          ?.getChildByName('0')
+          ?.getChildByName('what')
+          ?.formattedValue()
+      ).toEqual('eFlagsChanged | eDestinationFrameChanged');
     }
     {
-      const entry = (await parser.getEntry(222, TimestampType.REAL)) as any;
-      expect(entry.transactions[1].displayChanges[0].what).toEqual(
-        'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged'
-      );
+      const entry = await parser.getEntry(222, TimestampType.REAL);
+      const transactions = assertDefined(entry.getChildByName('transactions'));
+
+      expect(
+        transactions
+          .getChildByName('1')
+          ?.getChildByName('displayChanges')
+          ?.getChildByName('0')
+          ?.getChildByName('what')
+          ?.formattedValue()
+      ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
     }
   });
 

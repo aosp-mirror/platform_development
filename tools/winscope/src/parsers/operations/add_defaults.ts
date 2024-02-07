@@ -98,7 +98,7 @@ export class AddDefaults extends AddOperation<PropertyTreeNode> {
 
       if (
         !existingNode ||
-        existingNode.getValue() === field.defaultValue ||
+        existingNode.getValue() === defaultValue ||
         (existingNode.getValue() === undefined && existingNode.getAllChildren().length === 0)
       ) {
         existingNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeDefaultProperty(

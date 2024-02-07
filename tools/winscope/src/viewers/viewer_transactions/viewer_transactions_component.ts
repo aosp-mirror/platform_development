@@ -16,6 +16,7 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -133,10 +134,21 @@ import {UiData} from './ui_data';
 
       <div class="container-properties">
         <h3 class="properties-title mat-title">Properties - Proto Dump</h3>
-        <tree-view-legacy
+        <div class="view-controls">
+          <mat-checkbox
+            *ngFor="let option of objectKeys(uiData.propertiesUserOptions)"
+            color="primary"
+            [(ngModel)]="uiData.propertiesUserOptions[option].enabled"
+            [disabled]="uiData.propertiesUserOptions[option].isUnavailable ?? false"
+            (ngModelChange)="onUserOptionChange()"
+            [matTooltip]="uiData.propertiesUserOptions[option].tooltip ?? ''"
+            >{{ uiData.propertiesUserOptions[option].name }}</mat-checkbox
+          >
+        </div>
+        <tree-view
           *ngIf="uiData.currentPropertiesTree"
           class="properties-tree"
-          [item]="uiData.currentPropertiesTree"></tree-view-legacy>
+          [node]="uiData.currentPropertiesTree"></tree-view>
       </div>
     </div>
   `,
@@ -234,6 +246,7 @@ import {UiData} from './ui_data';
   ],
 })
 class ViewerTransactionsComponent {
+  objectKeys = Object.keys;
   uiData: UiData = UiData.EMPTY;
   idString = '';
   whatSearchString = '';
@@ -283,6 +296,14 @@ class ViewerTransactionsComponent {
 
   onEntryClicked(index: number) {
     this.emitEvent(Events.EntryClicked, index);
+  }
+
+  onUserOptionChange() {
+    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
+      bubbles: true,
+      detail: {userOptions: this.uiData.propertiesUserOptions},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   isCurrentEntry(index: number): boolean {
