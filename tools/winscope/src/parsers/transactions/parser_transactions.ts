@@ -16,6 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {AddDefaults} from 'parsers/operations/add_defaults';
+import {SetFormatters} from 'parsers/operations/set_formatters';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/transactions/udc/json';
 import {android} from 'protos/transactions/udc/static';
 import {
@@ -26,12 +29,28 @@ import {
 import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
+import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {AbstractParser} from '../abstract_parser';
+import {TranslateChanges} from './operations/translate_changes';
 
-class ParserTransactions extends AbstractParser {
-  private static readonly TransactionsTraceFileProto = root.lookupType(
-    'android.surfaceflinger.TransactionTraceFile'
+class ParserTransactions extends AbstractParser<PropertyTreeNode> {
+  private static readonly MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
+
+  private static readonly TransactionsTraceFileProto = TamperedMessageType.tamper(
+    root.lookupType('android.surfaceflinger.TransactionTraceFile')
   );
+  private static readonly TransactionsTraceEntryField =
+    ParserTransactions.TransactionsTraceFileProto.fields['entry'];
+
+  private static readonly OPERATIONS = [
+    new AddDefaults(ParserTransactions.TransactionsTraceEntryField),
+    new SetFormatters(ParserTransactions.TransactionsTraceEntryField),
+    new TranslateChanges(),
+  ];
+
+  private realToElapsedTimeOffsetNs: undefined | bigint;
+  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);
@@ -51,62 +70,10 @@ class ParserTransactions extends AbstractParser {
       buffer
     ) as android.surfaceflinger.proto.ITransactionTraceFile;
 
-    this.decodeWhatFields(decodedProto);
-
     const timeOffset = BigInt(decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0');
     this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
 
     return decodedProto.entry ?? [];
-  }
-
-  private decodeWhatFields(decodedProto: android.surfaceflinger.proto.ITransactionTraceFile) {
-    const decodeBitset32 = (bitset: number, EnumProto: any) => {
-      return Object.keys(EnumProto).filter((key) => {
-        const value = EnumProto[key];
-        return (bitset & value) !== 0;
-      });
-    };
-
-    const concatBitsetTokens = (tokens: string[]) => {
-      if (tokens.length === 0) {
-        return '0';
-      }
-      return tokens.join(' | ');
-    };
-
-    const LayerStateChangesLsbEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
-      .LayerState.ChangesLsb;
-    const LayerStateChangesMsbEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
-      .LayerState.ChangesMsb;
-    const DisplayStateChangesEnum = (ParserTransactions.TransactionsTraceFileProto?.parent as any)
-      .DisplayState.Changes;
-
-    decodedProto.entry?.forEach((transactionTraceEntry) => {
-      transactionTraceEntry.transactions?.forEach((transactionState) => {
-        transactionState.layerChanges?.forEach((layerState) => {
-          //TODO(priyankaspatel): modify properties tree instead of tampering the proto
-          (layerState.what as unknown as string) = concatBitsetTokens(
-            decodeBitset32(assertDefined(layerState.what).low, LayerStateChangesLsbEnum).concat(
-              decodeBitset32(assertDefined(layerState.what).high, LayerStateChangesMsbEnum)
-            )
-          );
-        });
-
-        transactionState.displayChanges?.forEach((displayState) => {
-          //TODO(priyankaspatel): modify properties tree instead of tampering the proto
-          (displayState.what as unknown as string) = concatBitsetTokens(
-            decodeBitset32(assertDefined(displayState.what), DisplayStateChangesEnum)
-          );
-        });
-      });
-
-      transactionTraceEntry.addedDisplays?.forEach((displayState) => {
-        //TODO(priyankaspatel): modify properties tree instead of tampering the proto
-        (displayState.what as unknown as string) = concatBitsetTokens(
-          decodeBitset32(assertDefined(displayState.what), DisplayStateChangesEnum)
-        );
-      });
-    });
   }
 
   override getTimestamp(
@@ -129,8 +96,8 @@ class ParserTransactions extends AbstractParser {
     index: number,
     timestampType: TimestampType,
     entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
-  ): android.surfaceflinger.proto.ITransactionTraceEntry {
-    return entryProto;
+  ): PropertyTreeNode {
+    return this.makePropertiesTree(entryProto);
   }
 
   override customQuery<Q extends CustomQueryType>(
@@ -146,8 +113,20 @@ class ParserTransactions extends AbstractParser {
       .getResult();
   }
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
-  private static readonly MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
+  private makePropertiesTree(
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+  ): PropertyTreeNode {
+    const tree = new PropertyTreeBuilderFromProto()
+      .setData(entryProto)
+      .setRootId('TransactionsTraceEntry')
+      .setRootName('entry')
+      .build();
+
+    ParserTransactions.OPERATIONS.forEach((operation) => {
+      operation.apply(tree);
+    });
+    return tree;
+  }
 }
 
 export {ParserTransactions};

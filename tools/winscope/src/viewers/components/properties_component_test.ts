@@ -109,7 +109,7 @@ describe('PropertiesComponent', () => {
     const box = htmlElement.querySelector('.view-controls input');
     expect(box).toBeTruthy();
 
-    const spy = spyOn(component, 'updateTree');
+    const spy = spyOn(component, 'onUserOptionChange');
     (box as HTMLInputElement).checked = true;
     (box as HTMLInputElement).dispatchEvent(new Event('click'));
     fixture.detectChanges();

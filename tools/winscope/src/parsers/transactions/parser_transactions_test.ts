@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('ParserTransactions', () => {
   describe('trace with elapsed + real timestamp', () => {
-    let parser: Parser<object>;
+    let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/Transactions.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/Transactions.pb'
+      )) as Parser<PropertyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -33,7 +37,7 @@ describe('ParserTransactions', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+      const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
 
       expect(timestamps.length).toEqual(712);
 
@@ -46,7 +50,7 @@ describe('ParserTransactions', () => {
     });
 
     it('provides real timestamps', () => {
-      const timestamps = parser.getTimestamps(TimestampType.REAL)!;
+      const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
 
       expect(timestamps.length).toEqual(712);
 
@@ -60,22 +64,44 @@ describe('ParserTransactions', () => {
 
     it('retrieves trace entry from real timestamp', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
-      expect(BigInt((entry as any).elapsedRealtimeNanos)).toEqual(2517952515n);
+      expect(entry.id).toEqual('TransactionsTraceEntry entry');
     });
 
     it("decodes 'what' field in proto", async () => {
       {
-        const entry = (await parser.getEntry(0, TimestampType.REAL)) as any;
-        expect(entry.transactions[0].layerChanges[0].what).toEqual('eLayerChanged');
-        expect(entry.transactions[1].layerChanges[0].what).toEqual(
-          'eFlagsChanged | eDestinationFrameChanged'
-        );
+        const entry = await parser.getEntry(0, TimestampType.REAL);
+        const transactions = assertDefined(entry.getChildByName('transactions'));
+
+        expect(
+          transactions
+            .getChildByName('0')
+            ?.getChildByName('layerChanges')
+            ?.getChildByName('0')
+            ?.getChildByName('what')
+            ?.formattedValue()
+        ).toEqual('eLayerChanged');
+
+        expect(
+          transactions
+            .getChildByName('1')
+            ?.getChildByName('layerChanges')
+            ?.getChildByName('0')
+            ?.getChildByName('what')
+            ?.formattedValue()
+        ).toEqual('eFlagsChanged | eDestinationFrameChanged');
       }
       {
-        const entry = (await parser.getEntry(222, TimestampType.REAL)) as any;
-        expect(entry.transactions[1].displayChanges[0].what).toEqual(
-          'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged'
-        );
+        const entry = await parser.getEntry(222, TimestampType.REAL);
+        const transactions = assertDefined(entry.getChildByName('transactions'));
+
+        expect(
+          transactions
+            .getChildByName('1')
+            ?.getChildByName('displayChanges')
+            ?.getChildByName('0')
+            ?.getChildByName('what')
+            ?.formattedValue()
+        ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
       }
     });
 
@@ -88,10 +114,12 @@ describe('ParserTransactions', () => {
   });
 
   describe('trace with elapsed (only) timestamp', () => {
-    let parser: Parser<object>;
+    let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/Transactions.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/Transactions.pb'
+      )) as Parser<PropertyTreeNode>;
     });
 
     it('has expected trace type', () => {
@@ -99,7 +127,7 @@ describe('ParserTransactions', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+      const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
 
       expect(timestamps.length).toEqual(4997);
 

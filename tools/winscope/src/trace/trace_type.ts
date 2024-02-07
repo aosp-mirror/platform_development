@@ -18,6 +18,7 @@ import {Cuj, Event, Transition} from 'flickerlib/common';
 import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 export enum TraceType {
   WINDOW_MANAGER,
@@ -52,7 +53,7 @@ export interface TraceEntryTypeMap {
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
   [TraceType.SYSTEM_UI]: object;
-  [TraceType.TRANSACTIONS]: object;
+  [TraceType.TRANSACTIONS]: PropertyTreeNode;
   [TraceType.TRANSACTIONS_LEGACY]: object;
   [TraceType.WAYLAND]: object;
   [TraceType.WAYLAND_DUMP]: object;

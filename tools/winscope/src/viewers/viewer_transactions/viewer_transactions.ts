@@ -17,6 +17,7 @@
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
 import {Presenter} from './presenter';
@@ -29,10 +30,10 @@ class ViewerTransactions implements Viewer {
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(traces: Traces) {
+  constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-transactions');
 
-    this.presenter = new Presenter(traces, (data: UiData) => {
+    this.presenter = new Presenter(traces, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
@@ -67,6 +68,14 @@ class ViewerTransactions implements Viewer {
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.PropertiesUserOptionsChange,
+      async (event) =>
+        await this.presenter.onPropertiesUserOptionsChange(
+          (event as CustomEvent).detail.userOptions
+        )
+    );
 
     this.view = new View(
       ViewType.TAB,
