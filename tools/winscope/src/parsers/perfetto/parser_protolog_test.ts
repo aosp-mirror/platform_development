@@ -17,29 +17,11 @@ import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {LogMessage} from 'trace/protolog';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('Perfetto ParserProtolog', () => {
-  let parser: Parser<object>;
-
-  const expectedFirstLogMessageElapsed = {
-    text: 'Sent Transition (#11) createdAt=01-29 17:54:23.793',
-    time: '1h38m59s2ms349294ns',
-    tag: 'WindowManager',
-    level: 'VERBOSE',
-    at: '<NO_LOC>',
-    timestamp: 5939002349294n,
-  };
-
-  const expectedFirstLogMessageReal = {
-    text: 'Sent Transition (#11) createdAt=01-29 17:54:23.793',
-    time: '2024-01-29T16:54:24.827624563',
-    tag: 'WindowManager',
-    level: 'VERBOSE',
-    at: '<NO_LOC>',
-    timestamp: 1706547264827624563n,
-  };
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     parser = await UnitTestUtils.getPerfettoParser(
@@ -83,14 +65,28 @@ describe('Perfetto ParserProtolog', () => {
   it('reconstructs human-readable log message (ELAPSED time)', async () => {
     const message = await parser.getEntry(0, TimestampType.ELAPSED);
 
-    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageElapsed);
-    expect(message).toBeInstanceOf(LogMessage);
+    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
+      'Sent Transition (#11) createdAt=01-29 17:54:23.793'
+    );
+    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
+      '1h38m59s2ms349294ns'
+    );
+    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
+    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('VERBOSE');
+    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual('<NO_LOC>');
   });
 
   it('reconstructs human-readable log message (REAL time)', async () => {
     const message = await parser.getEntry(0, TimestampType.REAL);
 
-    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageReal);
-    expect(message).toBeInstanceOf(LogMessage);
+    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
+      'Sent Transition (#11) createdAt=01-29 17:54:23.793'
+    );
+    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
+      '2024-01-29T16:54:24.827624563'
+    );
+    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
+    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('VERBOSE');
+    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual('<NO_LOC>');
   });
 });

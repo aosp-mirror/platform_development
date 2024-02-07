@@ -23,7 +23,6 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {LogMessage} from 'trace/protolog';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
@@ -77,16 +76,15 @@ describe('ViewerProtologComponent', () => {
       const shortMessage = 'test information about message';
       const longMessage = shortMessage.repeat(10);
       for (let i = 0; i < 200; i++) {
-        const uiDataMessage = new LogMessage(
-          i % 2 === 0 ? shortMessage : longMessage,
-          '2022-11-21T18:05:09.777144978',
-          'WindowManager',
-          'INFO',
-          'test_source_file.java',
-          BigInt(123)
-        );
-        (uiDataMessage as UiDataMessage).originalIndex = i;
-        messages.push(uiDataMessage as UiDataMessage);
+        const uiDataMessage: UiDataMessage = {
+          originalIndex: i,
+          text: i % 2 === 0 ? shortMessage : longMessage,
+          time: '2022-11-21T18:05:09.777144978',
+          tag: 'WindowManager',
+          level: 'INFO',
+          at: 'test_source_file.java',
+        };
+        messages.push(uiDataMessage);
       }
       return new UiData([], [], [], messages, undefined);
     }
