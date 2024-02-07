@@ -28,7 +28,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
-import {Transition} from 'flickerlib/common';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -78,14 +78,38 @@ describe('ExpandedTimelineComponent', () => {
       .setEntries(TraceType.TRANSACTIONS, [{}])
       .setTimestamps(TraceType.TRANSACTIONS, [new RealTimestamp(12n)])
       .setEntries(TraceType.TRANSITION, [
-        {
-          createTime: {unixNanos: 10n},
-          finishTime: {unixNanos: 30n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 60n},
-          finishTime: {unixNanos: 110n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 30n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 10n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 110n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 60n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps(TraceType.TRANSITION, [new RealTimestamp(10n), new RealTimestamp(60n)])
       .setTimestamps(TraceType.PROTO_LOG, [])
@@ -116,7 +140,7 @@ describe('ExpandedTimelineComponent', () => {
 
     // initially only first entry of SF is set
     singleTimelines.forEach((timeline) => {
-      if (timeline.trace.type === TraceType.SURFACE_FLINGER) {
+      if (assertDefined(timeline.trace).type === TraceType.SURFACE_FLINGER) {
         const entry = assertDefined(timeline.selectedEntry);
         expect(entry.getFullTrace().type).toBe(TraceType.SURFACE_FLINGER);
       } else {
@@ -130,7 +154,9 @@ describe('ExpandedTimelineComponent', () => {
 
   it('passes selectedEntry of correct type into each timeline on position change', () => {
     // 3 out of the 5 traces have timestamps before or at 11n
-    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(11n)));
+    assertDefined(component.timelineData).setPosition(
+      TracePosition.fromTimestamp(new RealTimestamp(11n))
+    );
     fixture.detectChanges();
 
     const singleTimelines = assertDefined(component.singleTimelines);
@@ -139,24 +165,28 @@ describe('ExpandedTimelineComponent', () => {
     singleTimelines.forEach((timeline) => {
       // protolog and transactions traces have no timestamps before current position
       if (
-        timeline.trace.type === TraceType.PROTO_LOG ||
-        timeline.trace.type === TraceType.TRANSACTIONS
+        assertDefined(timeline.trace).type === TraceType.PROTO_LOG ||
+        assertDefined(timeline.trace).type === TraceType.TRANSACTIONS
       ) {
         expect(timeline.selectedEntry).toBeUndefined();
       } else {
         const selectedEntry = assertDefined(timeline.selectedEntry);
-        expect(selectedEntry.getFullTrace().type).toEqual(timeline.trace.type);
+        expect(selectedEntry.getFullTrace().type).toEqual(assertDefined(timeline.trace).type);
       }
     });
 
     const transitionTimeline = assertDefined(component.transitionTimelines).first;
     const selectedEntry = assertDefined(transitionTimeline.selectedEntry);
-    expect(selectedEntry.getFullTrace().type).toEqual(transitionTimeline.trace.type);
+    expect(selectedEntry.getFullTrace().type).toEqual(assertDefined(transitionTimeline.trace).type);
   });
 
   it('getAllLoadedTraces causes timelines to render in correct order', () => {
     // traces in timelineData are in order of being set in Traces API
-    expect(component.timelineData.getTraces().mapTrace((trace) => trace.type)).toEqual([
+    expect(
+      assertDefined(component.timelineData)
+        .getTraces()
+        .mapTrace((trace) => trace.type)
+    ).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
       TraceType.TRANSACTIONS,

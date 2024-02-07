@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeNode} from './property_tree_node';
@@ -152,6 +154,9 @@ class EnumFormatter implements PropertyFormatter {
     if (typeof value === 'number' && this.valuesById[value]) {
       return this.valuesById[value];
     }
+    if (typeof value === 'bigint' && this.valuesById[Number(value)]) {
+      return this.valuesById[Number(value)];
+    }
     return `${value}`;
   }
 }
@@ -163,6 +168,23 @@ class FixedStringFormatter implements PropertyFormatter {
     return this.fixedStringValue;
   }
 }
+
+class TimestampFormatter implements PropertyFormatter {
+  constructor(
+    private readonly timestampType: TimestampType,
+    private readonly realToElapsedTimeOffsetNs?: bigint
+  ) {}
+
+  format(node: PropertyTreeNode): string {
+    const nanos = BigInt(node.getValue().toString());
+    if (nanos !== 0n) {
+      const timestamp = Timestamp.from(this.timestampType, nanos, this.realToElapsedTimeOffsetNs);
+      return TimeUtils.format(timestamp);
+    }
+    return 'null';
+  }
+}
+const ELAPSED_TIMESTAMP_FORMATTER = new TimestampFormatter(TimestampType.ELAPSED);
 
 export {
   EMPTY_OBJ_STRING,
@@ -179,4 +201,6 @@ export {
   REGION_FORMATTER,
   EnumFormatter,
   FixedStringFormatter,
+  TimestampFormatter,
+  ELAPSED_TIMESTAMP_FORMATTER,
 };

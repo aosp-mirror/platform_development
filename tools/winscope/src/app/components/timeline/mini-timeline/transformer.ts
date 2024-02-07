@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Segment} from 'app/components/timeline/segment';
 import {TimeRange, Timestamp, TimestampType} from 'common/time';
-import {Segment} from '../utils';
 
 export class Transformer {
   private timestampType: TimestampType;

@@ -27,10 +27,11 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Rect} from 'common/rect';
 import {RealTimestamp} from 'common/time';
-import {Transition} from 'flickerlib/common';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TransitionTimelineComponent} from './transition_timeline_component';
 
 describe('TransitionTimelineComponent', () => {
@@ -66,17 +67,42 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw non-overlapping transitions', async () => {
-    component.trace = new TraceBuilder()
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 10n},
-          finishTime: {unixNanos: 30n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 60n},
-          finishTime: {unixNanos: 110n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 30n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 10n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 110n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 60n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
       .build();
@@ -107,17 +133,41 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw transitions zoomed in', async () => {
-    component.trace = new TraceBuilder()
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 0n},
-          finishTime: {unixNanos: 20n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 60n},
-          finishTime: {unixNanos: 160n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 20n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 0n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 160n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 60n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
       .build();
@@ -136,7 +186,7 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).toHaveBeenCalledTimes(2);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(-Math.floor(width / 10), padding, Math.floor(width / 5), oneRowHeight),
+      new Rect(0, padding, Math.floor(width / 10), oneRowHeight),
       component.color,
       1
     );
@@ -148,12 +198,23 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw selected entry', async () => {
-    const transition: Transition = {
-      createTime: {unixNanos: 35n},
-      finishTime: {unixNanos: 85n},
-      aborted: true,
-    };
-    component.trace = new TraceBuilder()
+    const transition = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: 85n}],
+        },
+        {
+          name: 'shellData',
+          children: [{name: 'dispatchTimeNs', value: 35n}],
+        },
+        {name: 'aborted', value: false},
+      ])
+      .build();
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
       .setTimestamps([new RealTimestamp(35n)])
@@ -163,19 +224,16 @@ describe('TransitionTimelineComponent', () => {
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
-
     const waitPromises = [waitToBeCalled(drawRectSpy, 1), waitToBeCalled(drawRectBorderSpy, 1)];
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
-
     await Promise.all(waitPromises);
 
     const padding = 5;
     const oneRowTotalHeight = 30;
     const oneRowHeight = oneRowTotalHeight - padding;
     const width = component.canvasDrawer.getScaledCanvasWidth();
-
     const expectedRect = new Rect(
       Math.floor((width * 1) / 4),
       padding,
@@ -183,19 +241,29 @@ describe('TransitionTimelineComponent', () => {
       oneRowHeight
     );
     expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
-    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
-
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1);
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
     expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   });
 
   it('can draw hovering entry', async () => {
-    const transition: Transition = {
-      createTime: {unixNanos: 35n},
-      finishTime: {unixNanos: 85n},
-      aborted: true,
-    };
-    component.trace = new TraceBuilder()
+    const transition = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('TransitionsTraceEntry')
+      .setName('transition')
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: 85n}],
+        },
+        {
+          name: 'shellData',
+          children: [{name: 'dispatchTimeNs', value: 35n}],
+        },
+        {name: 'aborted', value: false},
+      ])
+      .build();
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
       .setTimestamps([new RealTimestamp(35n)])
@@ -212,17 +280,14 @@ describe('TransitionTimelineComponent', () => {
     const oneRowTotalHeight = 30;
     const oneRowHeight = oneRowTotalHeight - padding;
     const width = component.canvasDrawer.getScaledCanvasWidth();
-
     component.handleMouseMove({
       offsetX: Math.floor(width / 2),
       offsetY: oneRowTotalHeight / 2,
       preventDefault: () => {},
       stopPropagation: () => {},
     } as MouseEvent);
-
     await waitToBeCalled(drawRectSpy, 1);
     await waitToBeCalled(drawRectBorderSpy, 1);
-
     const expectedRect = new Rect(
       Math.floor((width * 1) / 4),
       padding,
@@ -230,24 +295,47 @@ describe('TransitionTimelineComponent', () => {
       oneRowHeight
     );
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 0.25);
-
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1);
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
     expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   });
 
   it('can draw overlapping transitions (default)', async () => {
-    component.trace = new TraceBuilder()
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 10n},
-          finishTime: {unixNanos: 85n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 60n},
-          finishTime: {unixNanos: 110n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 85n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 10n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 110n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 60n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
       .build();
@@ -284,17 +372,41 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw overlapping transitions (contained)', async () => {
-    component.trace = new TraceBuilder()
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 10n},
-          finishTime: {unixNanos: 85n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 35n},
-          finishTime: {unixNanos: 60n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 85n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 10n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: 60n}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: 35n}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(10n), new RealTimestamp(35n)])
       .build();
@@ -331,14 +443,28 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw aborted transitions', async () => {
-    component.trace = new TraceBuilder()
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 35n},
-          finishTime: {unixNanos: 85n},
-          aborted: true,
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              value: null,
+            },
+            {
+              name: 'shellData',
+              children: [
+                {name: 'dispatchTimeNs', value: 35n},
+                {name: 'abortTimeNs', value: 85n},
+              ],
+            },
+            {name: 'aborted', value: true},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(35n)])
       .build();
@@ -363,18 +489,28 @@ describe('TransitionTimelineComponent', () => {
     );
   });
 
-  it('does not render transition with min creation time', async () => {
-    component.trace = new TraceBuilder()
+  it('does not render transition with create time but no dispatch time', async () => {
+    component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([
-        {
-          createTime: {unixNanos: 10n, isMin: true},
-          finishTime: {unixNanos: 30n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [
+                {name: 'createTimeNs', value: 10n},
+                {name: 'finishTimeNs', value: 85n},
+              ],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
       .setTimestamps([new RealTimestamp(10n)])
       .build();
-    component.shouldNotRenderEntries.push(0);
     component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');

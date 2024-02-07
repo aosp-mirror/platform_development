@@ -78,7 +78,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     private readonly descriptors: string[],
     private readonly frameData: com.android.app.viewcapture.data.IFrameData[],
     private readonly traceType: TraceType,
-    private readonly realToElapsedTimeOffsetNanos: bigint,
+    private readonly realToElapsedTimeOffsetNs: bigint,
     private readonly packageName: string,
     private readonly classNames: string[]
   ) {
@@ -139,7 +139,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
         const timestamp = Timestamp.from(
           type,
           BigInt(assertDefined(entry.timestamp).toString()),
-          this.realToElapsedTimeOffsetNanos
+          this.realToElapsedTimeOffsetNs
         );
         if (timestamp === undefined) {
           areTimestampsValid = false;

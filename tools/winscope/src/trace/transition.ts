@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-import {Transition} from 'trace/transition';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
-export class UiData {
-  constructor(public entries: Transition[], public selectedTransition?: UiPropertyTreeNode) {}
-
-  static EMPTY = new UiData([], undefined);
+export interface Transition {
+  id: number;
+  type: string;
+  sendTime?: string;
+  finishTime?: string;
+  duration?: string;
+  merged: boolean;
+  aborted: boolean;
+  played: boolean;
+  realToElapsedTimeOffsetNs?: bigint;
+  propertiesTree: PropertyTreeNode;
 }

@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {PropertyFormatter} from 'trace/tree_node/formatters';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeBuilder} from './tree_builder';
 
@@ -22,6 +23,7 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
   isRoot: boolean = false;
   source = PropertySource.PROTO;
   value: any;
+  formatter: PropertyFormatter | undefined;
 
   setIsRoot(value: boolean): this {
     this.isRoot = value;
@@ -43,13 +45,20 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
     return this;
   }
 
+  setFormatter(value: PropertyFormatter | undefined): this {
+    this.formatter = value;
+    return this;
+  }
+
   protected override makeRootNode(): PropertyTreeNode {
-    return new PropertyTreeNode(
+    const node = new PropertyTreeNode(
       this.isRoot ? this.makeRootId() : this.makePropertyNodeId(),
       assertDefined(this.name),
       this.source,
       this.value
     );
+    if (this.formatter) node.setFormatter(this.formatter);
+    return node;
   }
 
   protected override addOrReplaceChildNode(rootNode: PropertyTreeNode, child: ChildProperty): void {
@@ -59,6 +68,7 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
       .setSource(child.source ?? assertDefined(this.source))
       .setValue(child.value)
       .setChildren(child.children ?? [])
+      .setFormatter(child.formatter)
       .build();
     rootNode.addOrReplaceChild(childNode);
   }
@@ -77,4 +87,5 @@ interface ChildProperty {
   value?: any;
   children?: ChildProperty[];
   source?: PropertySource;
+  formatter?: PropertyFormatter;
 }

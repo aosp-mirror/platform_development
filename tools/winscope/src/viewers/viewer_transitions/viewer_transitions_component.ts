@@ -15,10 +15,8 @@
  */
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {ElapsedTimestamp, TimestampType} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
-import {Transition} from 'flickerlib/common';
-import {Terminal} from 'viewers/common/ui_tree_utils_legacy';
+import {Transition} from 'trace/transition';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -28,11 +26,11 @@ import {UiData} from './ui_data';
     <div class="card-grid container">
       <div class="entries">
         <div class="table-header table-row">
-          <div class="id">Id</div>
-          <div class="type">Type</div>
-          <div class="send-time">Send Time</div>
-          <div class="duration">Duration</div>
-          <div class="status">Status</div>
+          <div class="id mat-body-2">Id</div>
+          <div class="type mat-body-2">Type</div>
+          <div class="send-time mat-body-2">Send Time</div>
+          <div class="duration mat-body-2">Duration</div>
+          <div class="status mat-body-2">Status</div>
         </div>
         <cdk-virtual-scroll-viewport itemSize="53" class="scroll">
           <div
@@ -47,34 +45,22 @@ import {UiData} from './ui_data';
               <span class="mat-body-1">{{ transition.type }}</span>
             </div>
             <div class="send-time">
-              <span *ngIf="!transition.sendTime.isMin" class="mat-body-1">{{
-                formattedTime(transition.sendTime, uiData.timestampType)
-              }}</span>
-              <span *ngIf="transition.sendTime.isMin"> n/a </span>
+              <span *ngIf="transition.sendTime" class="mat-body-1">{{ transition.sendTime }}</span>
+              <span *ngIf="!transition.sendTime" class="mat-body-1"> n/a </span>
             </div>
             <div class="duration">
-              <span
-                *ngIf="!transition.sendTime.isMin && !transition.finishTime.isMax"
-                class="mat-body-1"
-                >{{
-                  formattedTimeDiff(
-                    transition.sendTime,
-                    transition.finishTime,
-                    uiData.timestampType
-                  )
-                }}</span
-              >
-              <span *ngIf="transition.sendTime.isMin || transition.finishTime.isMax">n/a</span>
+              <span *ngIf="transition.duration" class="mat-body-1">{{ transition.duration }}</span>
+              <span *ngIf="!transition.duration" class="mat-body-1"> n/a </span>
             </div>
             <div class="status">
               <div *ngIf="transition.merged">
-                <span>MERGED</span>
+                <span class="mat-body-1">MERGED</span>
                 <mat-icon aria-hidden="false" fontIcon="merge" matTooltip="merged" icon-gray>
                 </mat-icon>
               </div>
 
               <div *ngIf="transition.aborted && !transition.merged">
-                <span>ABORTED</span>
+                <span class="mat-body-1">ABORTED</span>
                 <mat-icon
                   aria-hidden="false"
                   fontIcon="close"
@@ -84,7 +70,7 @@ import {UiData} from './ui_data';
               </div>
 
               <div *ngIf="transition.played && !transition.aborted && !transition.merged">
-                <span>PLAYED</span>
+                <span class="mat-body-1">PLAYED</span>
                 <mat-icon
                   aria-hidden="false"
                   fontIcon="check"
@@ -101,12 +87,8 @@ import {UiData} from './ui_data';
 
       <div class="container-properties">
         <h3 class="properties-title mat-title">Selected Transition</h3>
-        <tree-view-legacy
-          [item]="uiData.selectedTransitionPropertiesTree"
-          [showNode]="showNode"
-          [isLeaf]="isLeaf">
-        </tree-view-legacy>
-        <div *ngIf="!uiData.selectedTransitionPropertiesTree">No selected transition.</div>
+        <tree-view [node]="uiData.selectedTransition"></tree-view>
+        <div *ngIf="!uiData.selectedTransition" class="mat-body-1">No selected transition.</div>
       </div>
     </div>
   `,
@@ -214,210 +196,39 @@ import {UiData} from './ui_data';
   ],
 })
 export class ViewerTransitionsComponent {
-  transitionHeight = '20px';
-  transitionDividerWidth = '3px';
-
-  constructor(@Inject(ElementRef) elementRef: ElementRef) {
-    this.elementRef = elementRef;
-  }
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   @Input()
   set inputData(data: UiData) {
     this.uiData = data;
   }
 
-  getMinOfRanges(): bigint {
-    if (this.uiData.entries.length === 0) {
-      return 0n;
-    }
-    const minOfRange = bigIntMin(
-      ...this.uiData.entries
-        .filter((it) => !it.createTime.isMin)
-        .map((it) => BigInt(it.createTime.elapsedNanos.toString()))
-    );
-    return minOfRange;
-  }
-
-  getMaxOfRanges(): bigint {
-    if (this.uiData.entries.length === 0) {
-      return 0n;
-    }
-    const maxOfRange = bigIntMax(
-      ...this.uiData.entries
-        .filter((it) => !it.finishTime.isMax)
-        .map((it) => BigInt(it.finishTime.elapsedNanos.toString()))
-    );
-    return maxOfRange;
-  }
-
-  formattedTime(time: any, timestampType: TimestampType): string {
-    return TimeUtils.formattedKotlinTimestamp(time, timestampType);
-  }
-
-  formattedTimeDiff(time1: any, time2: any, timestampType: TimestampType): string {
-    const timeDiff = new ElapsedTimestamp(
-      BigInt(time2.elapsedNanos.toString()) - BigInt(time1.elapsedNanos.toString())
-    );
-    return TimeUtils.format(timeDiff);
-  }
-
-  widthOf(transition: Transition) {
-    const fullRange = this.getMaxOfRanges() - this.getMinOfRanges();
-
-    let finish = BigInt(transition.finishTime.elapsedNanos.toString());
-    if (transition.finishTime.elapsedNanos.isMax) {
-      finish = this.getMaxOfRanges();
-    }
-
-    let start = BigInt(transition.createTime.elapsedNanos.toString());
-    if (transition.createTime.elapsedNanos.isMin) {
-      start = this.getMinOfRanges();
-    }
-
-    const minWidthPercent = 0.5;
-    return `${Math.max(minWidthPercent, Number((finish - start) * 100n) / Number(fullRange))}%`;
-  }
-
-  startOf(transition: Transition) {
-    const fullRange = this.getMaxOfRanges() - this.getMinOfRanges();
-    return `${
-      Number(
-        (BigInt(transition.createTime.elapsedNanos.toString()) - this.getMinOfRanges()) * 100n
-      ) / Number(fullRange)
-    }%`;
-  }
-
-  sendOf(transition: Transition) {
-    const fullRange = this.getMaxOfRanges() - this.getMinOfRanges();
-    return `${
-      Number((BigInt(transition.sendTime.elapsedNanos.toString()) - this.getMinOfRanges()) * 100n) /
-      Number(fullRange)
-    }%`;
-  }
-
   onTransitionClicked(transition: Transition): void {
-    this.emitEvent(Events.TransitionSelected, transition);
-  }
-
-  transitionRectStyle(transition: Transition): string {
-    if (this.uiData.selectedTransition === transition) {
-      return 'fill:rgb(0, 0, 230)';
-    } else if (transition.aborted) {
-      return 'fill:rgb(255, 0, 0)';
-    } else {
-      return 'fill:rgb(78, 205, 230)';
-    }
-  }
-
-  transitionDividerRectStyle(transition: Transition): string {
-    return 'fill:rgb(255, 0, 0)';
-  }
-
-  showNode(item: any) {
-    return (
-      !(item instanceof Terminal) &&
-      !(item.name instanceof Terminal) &&
-      !(item.propertyKey instanceof Terminal)
-    );
-  }
-
-  isLeaf(item: any) {
-    return (
-      !item.children ||
-      item.children.length === 0 ||
-      item.children.filter((c: any) => !(c instanceof Terminal)).length === 0
-    );
+    this.emitEvent(Events.TransitionSelected, transition.propertiesTree);
   }
 
   isCurrentTransition(transition: Transition): boolean {
-    return this.uiData.selectedTransition === transition;
+    return (
+      transition.id ===
+        this.uiData.selectedTransition
+          ?.getChildByName('wmData')
+          ?.getChildByName('id')
+          ?.getValue() ||
+      transition.id ===
+        this.uiData.selectedTransition
+          ?.getChildByName('shellData')
+          ?.getChildByName('id')
+          ?.getValue()
+    );
   }
 
-  assignRowsToTransitions(): Map<Transition, number> {
-    const fullRange = this.getMaxOfRanges() - this.getMinOfRanges();
-    const assignedRows = new Map<Transition, number>();
-
-    const sortedTransitions = [...this.uiData.entries].sort((t1, t2) => {
-      const diff =
-        BigInt(t1.createTime.elapsedNanos.toString()) -
-        BigInt(t2.createTime.elapsedNanos.toString());
-      if (diff < 0) {
-        return -1;
-      }
-      if (diff > 0) {
-        return 1;
-      }
-      return 0;
-    });
-
-    const rowFirstAvailableTime = new Map<number, bigint>();
-    let rowsUsed = 1;
-    rowFirstAvailableTime.set(0, 0n);
-
-    for (const transition of sortedTransitions) {
-      const start = BigInt(transition.createTime.elapsedNanos.toString());
-      const end = BigInt(transition.finishTime.elapsedNanos.toString());
-
-      let rowIndexWithSpace = undefined;
-      for (let rowIndex = 0; rowIndex < rowsUsed; rowIndex++) {
-        if (start > rowFirstAvailableTime.get(rowIndex)!) {
-          // current row has space
-          rowIndexWithSpace = rowIndex;
-          break;
-        }
-      }
-
-      if (rowIndexWithSpace === undefined) {
-        rowIndexWithSpace = rowsUsed;
-        rowsUsed++;
-      }
-
-      assignedRows.set(transition, rowIndexWithSpace);
-
-      const minimumPaddingBetweenEntries = fullRange / 100n;
-
-      rowFirstAvailableTime.set(rowIndexWithSpace, end + minimumPaddingBetweenEntries);
-    }
-
-    return assignedRows;
-  }
-
-  timelineRows(): number[] {
-    return [...new Set(this.assignRowsToTransitions().values())];
-  }
-
-  transitionsOnRow(row: number): Transition[] {
-    const transitions = [];
-    const assignedRows = this.assignRowsToTransitions();
-
-    for (const transition of assignedRows.keys()) {
-      if (row === assignedRows.get(transition)) {
-        transitions.push(transition);
-      }
-    }
-
-    return transitions;
-  }
-
-  rowsRequiredForTransitions(): number {
-    return Math.max(...this.assignRowsToTransitions().values());
-  }
-
-  emitEvent(event: string, data: any) {
+  emitEvent(event: string, propertiesTree: PropertyTreeNode) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
-      detail: data,
+      detail: propertiesTree,
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
 
   uiData: UiData = UiData.EMPTY;
-  private elementRef: ElementRef;
-}
-
-function bigIntMax(...args: Array<bigint>) {
-  return args.reduce((m, e) => (e > m ? e : m));
-}
-function bigIntMin(...args: Array<bigint>) {
-  return args.reduce((m, e) => (e < m ? e : m));
 }
