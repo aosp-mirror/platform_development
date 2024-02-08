@@ -19,7 +19,7 @@ import {Item} from 'trace/item';
 export abstract class TreeNode implements Item {
   protected children: this[] = [];
 
-  constructor(public id: string, public name: string) {}
+  constructor(readonly id: string, readonly name: string) {}
 
   addOrReplaceChild(newChild: this): void {
     const currIndex = this.children.findIndex((child) => child.id === newChild.id);

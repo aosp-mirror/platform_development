@@ -24,6 +24,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {UserOptions} from 'viewers/common/user_options';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
@@ -31,17 +32,19 @@ import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_ma
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
 import {PresenterInputMethod} from './presenter_input_method';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export function executePresenterInputMethodTests(
   selected: HierarchyTreeNode,
   propertiesTreeFilterString: string,
-  expectedChildren: [number, number],
+  expectedChildren: number[],
   expectHierarchyTreeWithSfSubtree: boolean,
   PresenterInputMethod:
     | typeof PresenterInputMethodClients
     | typeof PresenterInputMethodService
     | typeof PresenterInputMethodManagerService,
-  imeTraceType: TraceType
+  imeTraceType: TraceType,
+  selectedPropertyTree?: PropertyTreeNode
 ) {
   describe('PresenterInputMethod', () => {
     let presenter: PresenterInputMethod;
@@ -52,6 +55,7 @@ export function executePresenterInputMethodTests(
     let entries: Map<TraceType, HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
       await loadTraces();
     });
 
@@ -189,10 +193,29 @@ export function executePresenterInputMethodTests(
 
     it('can set new properties tree and associated ui data', async () => {
       setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
       await presenter.onAppEvent(positionUpdate);
       await presenter.onSelectedHierarchyTreeChange(selectedTree);
-      // does not check specific tree values as tree transformation method may change
-      expect(uiData.propertiesTree).toBeTruthy();
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.name).toEqual(selectedTree.name);
+    });
+
+    it('can show/hide defaults in properties tree', async () => {
+      setUpPresenter([imeTraceType]);
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
+        expectedChildren[0]
+      );
+      await presenter.onPropertiesUserOptionsChange({
+        showDefaults: {
+          name: 'Show defaults',
+          enabled: true,
+        },
+      });
+      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
+        expectedChildren[2]
+      );
     });
 
     it('can filter properties tree', async () => {
@@ -207,6 +230,33 @@ export function executePresenterInputMethodTests(
       expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
         expectedChildren[1]
       );
+    });
+
+    it('can set new additional properties tree and associated ui data from hierarchy tree node', async () => {
+      setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onAdditionalPropertySelected({name: 'Test Tree', treeNode: selectedTree});
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.getDisplayName()).toEqual('Test Tree');
+      expect(uiData.highlightedItem).toEqual(selectedTree.id);
+    });
+
+    it('can set new additional properties tree and associated ui data from property tree node', async () => {
+      if (!selectedPropertyTree) {
+        return;
+      }
+      setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onAdditionalPropertySelected({
+        name: 'Additional Properties Tree',
+        treeNode: selectedPropertyTree,
+      });
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.getDisplayName()).toEqual('Additional Properties Tree');
+      expect(propertiesTree).toEqual(UiPropertyTreeNode.from(selectedPropertyTree));
+      expect(uiData.highlightedItem).toEqual(selectedPropertyTree.id);
     });
 
     async function loadTraces() {

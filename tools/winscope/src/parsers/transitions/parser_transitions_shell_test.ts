@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('ShellFileParserTransitions', () => {
-  let parser: Parser<object>;
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser(
+    parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
-    );
+    )) as Parser<PropertyTreeNode>;
   });
 
   it('has expected trace type', () => {
@@ -33,29 +35,28 @@ describe('ShellFileParserTransitions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
-
-    expect(timestamps.length).toEqual(6);
-
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
     const expected = [
       new ElapsedTimestamp(57649649922341n),
-      new ElapsedTimestamp(57649829445249n),
-      new ElapsedTimestamp(57649829526223n),
+      new ElapsedTimestamp(0n),
+      new ElapsedTimestamp(0n),
+      new ElapsedTimestamp(57651299086892n),
+      new ElapsedTimestamp(0n),
+      new ElapsedTimestamp(0n),
     ];
-    expect(timestamps.slice(0, 3)).toEqual(expected);
+    expect(timestamps).toEqual(expected);
   });
 
   it('provides real timestamps', () => {
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
     const expected = [
       new RealTimestamp(1683188477607285317n),
-      new RealTimestamp(1683188477786808225n),
-      new RealTimestamp(1683188477786889199n),
+      new RealTimestamp(1683130827957362976n),
+      new RealTimestamp(1683130827957362976n),
+      new RealTimestamp(1683188479256449868n),
+      new RealTimestamp(1683130827957362976n),
+      new RealTimestamp(1683130827957362976n),
     ];
-
-    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
-
-    expect(timestamps.length).toEqual(6);
-
-    expect(timestamps.slice(0, 3)).toEqual(expected);
+    expect(timestamps).toEqual(expected);
   });
 });

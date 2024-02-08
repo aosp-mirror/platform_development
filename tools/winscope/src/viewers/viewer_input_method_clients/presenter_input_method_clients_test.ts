@@ -16,6 +16,7 @@
 
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
+import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {executePresenterInputMethodTests} from 'viewers/common/presenter_input_method_test_utils';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
@@ -25,12 +26,13 @@ describe('PresenterInputMethodClients', () => {
       .setId('InputMethodClients')
       .setName('entry')
       .setProperties({where: 'location', elapsedNanos: 0})
+      .addChildProperty({name: 'test default property', value: 0, source: PropertySource.DEFAULT})
       .build();
 
     executePresenterInputMethodTests(
       selectedTree,
       'where',
-      [2, 1],
+      [2, 1, 3],
       true,
       PresenterInputMethodClients,
       TraceType.INPUT_METHOD_CLIENTS
