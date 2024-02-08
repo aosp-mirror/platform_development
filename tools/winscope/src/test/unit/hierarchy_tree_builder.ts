@@ -20,10 +20,12 @@ import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {ChildProperty, PropertyTreeBuilder} from './property_tree_builder';
 import {TreeBuilder} from './tree_builder';
 
 export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHierarchy> {
-  properties: any;
+  private properties: any;
+  private additionalProperties: ChildProperty[] = [];
 
   setId(value: any): this {
     this.id = value;
@@ -35,6 +37,11 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
     return this;
   }
 
+  addChildProperty(value: ChildProperty): this {
+    this.additionalProperties.push(value);
+    return this;
+  }
+
   protected override makeRootNode(): HierarchyTreeNode {
     const rootId = this.makeHierarchyNodeId();
 
@@ -43,6 +50,16 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
       assertDefined(this.name),
       this.properties
     );
+    this.additionalProperties.forEach((property) => {
+      const childNode = new PropertyTreeBuilder()
+        .setRootId(propertiesTree.id)
+        .setName(property.name)
+        .setSource(property.source ?? propertiesTree.source)
+        .setValue(property.value)
+        .setChildren(property.children ?? [])
+        .build();
+      propertiesTree.addOrReplaceChild(childNode);
+    });
     const provider = new PropertiesProvider(
       propertiesTree,
       async () => propertiesTree,

@@ -53,6 +53,8 @@ export abstract class PresenterInputMethod {
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | undefined;
+  private selectedAdditionalPropertiesTree: PropertyTreeNode | undefined;
+  private selectedAdditionalPropertiesTreeName: string | undefined;
   private currentImeEntryTimestamp: string | undefined;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
@@ -116,6 +118,7 @@ export abstract class PresenterInputMethod {
       this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
       this.uiData.propertiesUserOptions = this.propertiesUserOptions;
       this.selectedHierarchyTree = undefined;
+      this.clearAdditionalPropertyTreeSelection();
 
       const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(event.position);
 
@@ -133,6 +136,8 @@ export abstract class PresenterInputMethod {
           true
         );
         this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
+
+        await this.updateAdditionalPropertyTree(this.uiData.additionalProperties);
       }
       this.copyUiDataAndNotifyView();
     });
@@ -151,13 +156,8 @@ export abstract class PresenterInputMethod {
   }
 
   onHighlightedItemChange(id: string) {
-    if (this.highlightedItem === id) {
-      this.highlightedItem = '';
-    } else {
-      this.highlightedItem = id; //if multi-select surfaces implemented, remove this line
-    }
-    this.uiData.highlightedItem = this.highlightedItem;
-    this.notifyViewCallback(this.uiData);
+    this.updateHighlightedItem(id);
+    this.copyUiDataAndNotifyView();
   }
 
   onHierarchyUserOptionsChange(userOptions: UserOptions) {
@@ -198,21 +198,24 @@ export abstract class PresenterInputMethod {
 
   async onSelectedHierarchyTreeChange(selectedItem: UiHierarchyTreeNode) {
     if (this.selectedHierarchyTree?.id !== selectedItem.id) {
+      this.clearAdditionalPropertyTreeSelection();
       this.selectedHierarchyTree = selectedItem;
       await this.updateSelectedTreeUiData();
     }
   }
 
-  async onAdditionalPropertySelected(selectedItem: {name: string | undefined; treeNode: TreeNode}) {
+  async onAdditionalPropertySelected(selectedItem: {name: string; treeNode: TreeNode}) {
+    this.updateHighlightedItem(selectedItem.treeNode.id);
     if (selectedItem.treeNode instanceof HierarchyTreeNode) {
-      this.highlightedItem = '';
-      this.uiData.highlightedItem = this.highlightedItem;
+      this.selectedAdditionalPropertiesTree = undefined;
       this.selectedHierarchyTree = selectedItem.treeNode;
-      await this.updateSelectedTreeUiData();
     } else if (selectedItem.treeNode instanceof PropertyTreeNode) {
-      this.uiData.propertiesTree = this.formatPropertiesTree(selectedItem.treeNode);
-      this.copyUiDataAndNotifyView();
+      this.selectedHierarchyTree = undefined;
+      this.selectedAdditionalPropertiesTree = selectedItem.treeNode;
     }
+
+    this.selectedAdditionalPropertiesTreeName = selectedItem.name;
+    await this.updateSelectedTreeUiData();
   }
 
   protected getAdditionalProperties(
@@ -235,6 +238,15 @@ export abstract class PresenterInputMethod {
     }
 
     return new ImeAdditionalProperties(wmProperties, sfProperties);
+  }
+
+  private updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
+    } else {
+      this.highlightedItem = id; //if multi-select surfaces implemented, remove this line
+    }
+    this.uiData.highlightedItem = this.highlightedItem;
   }
 
   private getSfSubtrees(sfProperties: ImeLayers): UiHierarchyTreeNode[] {
@@ -260,8 +272,15 @@ export abstract class PresenterInputMethod {
   private async updateSelectedTreeUiData() {
     if (this.selectedHierarchyTree) {
       this.uiData.propertiesTree = await this.getPropertiesTree(this.selectedHierarchyTree);
+    } else if (this.selectedAdditionalPropertiesTree) {
+      this.uiData.propertiesTree = this.formatPropertiesTree(this.selectedAdditionalPropertiesTree);
     }
     this.copyUiDataAndNotifyView();
+  }
+
+  private clearAdditionalPropertyTreeSelection() {
+    this.selectedAdditionalPropertiesTree = undefined;
+    this.selectedAdditionalPropertiesTreeName = undefined;
   }
 
   private updatePinnedIds(newId: string) {
@@ -379,11 +398,57 @@ export abstract class PresenterInputMethod {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
     }
 
+    const uiTree = UiPropertyTreeNode.from(propertiesTree);
+
+    if (this.selectedAdditionalPropertiesTreeName) {
+      uiTree.setDisplayName(this.selectedAdditionalPropertiesTreeName);
+    }
+
     return new UiTreeFormatter<UiPropertyTreeNode>()
-      .setUiTree(UiPropertyTreeNode.from(propertiesTree))
+      .setUiTree(uiTree)
       .addOperation(new Filter(predicatesDiscardingChildren, false))
       .addOperation(new Filter(predicatesKeepingChildren, true))
       .format();
+  }
+
+  private async updateAdditionalPropertyTree(additionalProperties: ImeAdditionalProperties) {
+    if (this.highlightedItem.includes('WindowManagerState')) {
+      this.selectedAdditionalPropertiesTree = undefined;
+      const wmHierarchyTree = additionalProperties.wm?.hierarchyTree;
+      this.selectedHierarchyTree = wmHierarchyTree;
+      this.selectedAdditionalPropertiesTreeName = wmHierarchyTree
+        ? 'Window Manager State'
+        : undefined;
+    } else if (this.highlightedItem.includes('imeInsetsSourceProvider')) {
+      this.selectedHierarchyTree = undefined;
+      const imeInsetsSourceProvider =
+        additionalProperties.wm?.wmStateProperties?.imeInsetsSourceProvider;
+      this.selectedAdditionalPropertiesTree = imeInsetsSourceProvider;
+      this.selectedAdditionalPropertiesTreeName = imeInsetsSourceProvider
+        ? 'Ime Insets Source Provider'
+        : undefined;
+    } else if (this.highlightedItem.includes('inputMethodControlTarget')) {
+      this.selectedHierarchyTree = undefined;
+      const imeControlTarget = additionalProperties.wm?.wmStateProperties?.imeControlTarget;
+      this.selectedAdditionalPropertiesTree = imeControlTarget;
+      this.selectedAdditionalPropertiesTreeName = imeControlTarget
+        ? 'Ime Control Target'
+        : undefined;
+    } else if (this.highlightedItem.includes('inputMethodInputTarget')) {
+      this.selectedHierarchyTree = undefined;
+      const imeInputTarget = additionalProperties.wm?.wmStateProperties?.imeInputTarget;
+      this.selectedAdditionalPropertiesTree = imeInputTarget;
+      this.selectedAdditionalPropertiesTreeName = imeInputTarget ? 'Ime Input Target' : undefined;
+    } else if (this.highlightedItem.includes('inputMethodTarget')) {
+      this.selectedHierarchyTree = undefined;
+      const imeLayeringTarget = additionalProperties.wm?.wmStateProperties?.imeLayeringTarget;
+      this.selectedAdditionalPropertiesTree = imeLayeringTarget;
+      this.selectedAdditionalPropertiesTreeName = imeLayeringTarget
+        ? 'Ime Layering Target'
+        : undefined;
+    }
+
+    await this.updateSelectedTreeUiData();
   }
 
   private copyUiDataAndNotifyView() {

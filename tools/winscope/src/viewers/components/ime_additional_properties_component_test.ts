@@ -52,25 +52,61 @@ describe('ImeAdditionalPropertiesComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('shows client or service sf properties', () => {
+    expect(htmlElement.querySelector('.ime-container')).toBeDefined();
+    expect(htmlElement.querySelector('.input-method-surface')).toBeDefined();
+  });
+
   it('emits update additional property tree event on wm state button click', () => {
-    const button: HTMLButtonElement | null = htmlElement.querySelector('.wm-state');
-    assertDefined(button).click();
+    const button = assertDefined(htmlElement.querySelector('.wm-state')) as HTMLButtonElement;
+    expect(button.className).not.toContain('selected');
+    button.click();
     fixture.detectChanges();
-    expect(component.additionalPropertieTree).toBe('wmState');
+    expect(component.additionalPropertieTreeName).toEqual('Window Manager State');
+    expect(button.className).toContain('selected');
   });
 
   it('propagates new ime container layer on button click', () => {
-    const button: HTMLButtonElement | null = htmlElement.querySelector('.ime-container');
-    assertDefined(button).click();
+    const button = assertDefined(htmlElement.querySelector('.ime-container')) as HTMLButtonElement;
+    expect(button.className).not.toContain('selected');
+    button.click();
     fixture.detectChanges();
-    expect(component.highlightedItem).toBe('123');
+    expect(component.highlightedItem).toEqual('123');
+    expect(button.className).toContain('selected');
   });
 
   it('propagates new input method surface layer on button click', () => {
-    const button: HTMLButtonElement | null = htmlElement.querySelector('.input-method-surface');
-    assertDefined(button).click();
+    const button = assertDefined(
+      htmlElement.querySelector('.input-method-surface')
+    ) as HTMLButtonElement;
+    expect(button.className).not.toContain('selected');
+    button.click();
     fixture.detectChanges();
-    expect(component.highlightedItem).toBe('456');
+    expect(component.highlightedItem).toEqual('456');
+    expect(button.className).toContain('selected');
+  });
+
+  it('shows ime manager service wm properties', () => {
+    component.isImeManagerService = true;
+    fixture.detectChanges();
+    const imeManagerService = assertDefined(htmlElement.querySelector('.ime-manager-service'));
+    expect(assertDefined(imeManagerService.querySelector('.wm-state')).textContent).toContain(
+      '1970-01-01T00:00:00.000000000'
+    );
+    expect(imeManagerService.querySelector('.ime-control-target')).toBeDefined();
+  });
+
+  it('propagates new property tree node window on button click', () => {
+    component.isImeManagerService = true;
+    fixture.detectChanges();
+    const button = assertDefined(
+      htmlElement.querySelector('.ime-control-target')
+    ) as HTMLButtonElement;
+    expect(button.className).not.toContain('selected');
+    button.click();
+    fixture.detectChanges();
+    expect(component.additionalPropertieTreeName).toEqual('Ime Control Target');
+    expect(button.className).toContain('selected');
   });
 
   @Component({
@@ -78,22 +114,28 @@ describe('ImeAdditionalPropertiesComponent', () => {
     template: `
       <ime-additional-properties
         [highlightedItem]="highlightedItem"
-        [isImeManagerService]="false"
+        [isImeManagerService]="isImeManagerService"
         [additionalProperties]="additionalProperties"></ime-additional-properties>
     `,
   })
   class TestHostComponent {
+    isImeManagerService = false;
+
     additionalProperties = new ImeAdditionalProperties(
       {
         id: 'wmStateId',
         name: 'wmState',
         wmStateProperties: {
-          timestamp: undefined,
+          timestamp: '1970-01-01T00:00:00.000000000',
           focusedApp: 'exampleFocusedApp',
           focusedWindow: undefined,
           focusedActivity: undefined,
           isInputMethodWindowVisible: false,
-          imeControlTarget: undefined,
+          imeControlTarget: TreeNodeUtils.makePropertyNode(
+            'DisplayContent.inputMethodControlTarget',
+            'inputMethodControlTarget',
+            null
+          ),
           imeInputTarget: undefined,
           imeLayeringTarget: undefined,
           imeInsetsSourceProvider: undefined,
@@ -114,13 +156,14 @@ describe('ImeAdditionalPropertiesComponent', () => {
       }
     );
     highlightedItem = '';
-    additionalPropertieTree = '';
+    additionalPropertieTreeName: string | undefined;
 
     onHighlightedChange = (event: Event) => {
       this.highlightedItem = (event as CustomEvent).detail.id;
     };
     onAdditionalPropertySelectedChange = (event: Event) => {
-      this.additionalPropertieTree = (event as CustomEvent).detail.selectedItem.name;
+      this.highlightedItem = (event as CustomEvent).detail.selectedItem.treeNode.id;
+      this.additionalPropertieTreeName = (event as CustomEvent).detail.selectedItem.name;
     };
   }
 });
