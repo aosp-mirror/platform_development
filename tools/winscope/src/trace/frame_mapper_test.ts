@@ -20,7 +20,6 @@ import {RealTimestamp} from '../common/time';
 import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
-import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 import {Trace} from './trace';
 import {Traces} from './traces';
@@ -43,7 +42,7 @@ describe('FrameMapper', () => {
   const time10seconds = new RealTimestamp(10n * 1000000000n);
 
   describe('ProtoLog <-> WindowManager', () => {
-    let protoLog: Trace<LogMessage>;
+    let protoLog: Trace<PropertyTreeNode>;
     let windowManager: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
@@ -53,14 +52,14 @@ describe('FrameMapper', () => {
       // PROTO_LOG:      0  1  2     3  4  5
       // WINDOW_MANAGER:          0     1
       // Time:           0  1  2  3  4  5  6
-      protoLog = new TraceBuilder<LogMessage>()
+      protoLog = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as LogMessage,
-          'entry-1' as unknown as LogMessage,
-          'entry-2' as unknown as LogMessage,
-          'entry-3' as unknown as LogMessage,
-          'entry-4' as unknown as LogMessage,
-          'entry-5' as unknown as LogMessage,
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
+          'entry-5' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4, time5, time6])
         .build();

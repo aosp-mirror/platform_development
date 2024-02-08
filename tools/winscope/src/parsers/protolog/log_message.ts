@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-export interface UiDataMessage {
-  readonly originalIndex: number;
-  readonly text: string;
-  readonly time: string;
-  readonly tag: string;
-  readonly level: string;
-  readonly at: string;
-}
-
-export class UiData {
-  constructor(
-    public allLogLevels: string[],
-    public allTags: string[],
-    public allSourceFiles: string[],
-    public messages: UiDataMessage[],
-    public currentMessageIndex: undefined | number
-  ) {}
-
-  static EMPTY = new UiData([], [], [], [], undefined);
+export interface LogMessage {
+  text: string;
+  tag: string;
+  level: string;
+  at: string;
+  timestamp: bigint;
 }

@@ -13,37 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {LogMessage} from 'trace/protolog';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 describe('ParserProtoLog', () => {
-  let parser: Parser<LogMessage>;
-
-  const expectedFirstLogMessageElapsed = {
-    text: 'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
-    time: '14m10s746ms266486ns',
-    tag: 'WindowManager',
-    level: 'DEBUG',
-    at: 'com/android/server/wm/InsetsSourceProvider.java',
-    timestamp: 850746266486n,
-  };
-
-  const expectedFirstLogMessageReal = {
-    text: 'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
-    time: '2022-06-20T12:12:05.377266486',
-    tag: 'WindowManager',
-    level: 'DEBUG',
-    at: 'com/android/server/wm/InsetsSourceProvider.java',
-    timestamp: 1655727125377266486n,
-  };
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/ProtoLog.pb'
-    )) as Parser<LogMessage>;
+    )) as Parser<PropertyTreeNode>;
   });
 
   it('has expected trace type', () => {
@@ -81,13 +65,32 @@ describe('ParserProtoLog', () => {
   it('reconstructs human-readable log message (ELAPSED time)', async () => {
     const message = await parser.getEntry(0, TimestampType.ELAPSED);
 
-    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageElapsed);
-    expect(message).toBeInstanceOf(LogMessage);
+    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
+      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false'
+    );
+    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
+      '14m10s746ms266486ns'
+    );
+    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
+    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('DEBUG');
+    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual(
+      'com/android/server/wm/InsetsSourceProvider.java'
+    );
   });
 
   it('reconstructs human-readable log message (REAL time)', async () => {
     const message = await parser.getEntry(0, TimestampType.REAL);
 
-    expect(Object.assign({}, message)).toEqual(expectedFirstLogMessageReal);
+    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
+      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false'
+    );
+    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
+      '2022-06-20T12:12:05.377266486'
+    );
+    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
+    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('DEBUG');
+    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual(
+      'com/android/server/wm/InsetsSourceProvider.java'
+    );
   });
 });
