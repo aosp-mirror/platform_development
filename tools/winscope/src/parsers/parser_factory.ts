@@ -21,11 +21,11 @@ import {ParserWindowManager} from 'parsers/window_manager/parser_window_manager'
 import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {ParserEventLog} from './events/parser_eventlog';
 import {FileAndParser} from './file_and_parser';
 import {ParserInputMethodClients} from './input_method/parser_input_method_clients';
 import {ParserInputMethodManagerService} from './input_method/parser_input_method_manager_service';
 import {ParserInputMethodService} from './input_method/parser_input_method_service';
-import {ParserEventLog} from './parser_eventlog';
 import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
 import {ParserProtoLog} from './protolog/parser_protolog';
