@@ -28,38 +28,4 @@ export class ParsingUtils {
       }
     }
   }
-
-  // Add default values to the proto objects.
-  static addDefaultProtoFields(protoObj: any): any {
-    if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
-      return protoObj;
-    }
-
-    for (const fieldName in protoObj.$type.fields) {
-      if (Object.prototype.hasOwnProperty.call(protoObj.$type.fields, fieldName)) {
-        const fieldProperties = protoObj.$type.fields[fieldName];
-        const field = protoObj[fieldName];
-
-        if (Array.isArray(field)) {
-          field.forEach((item, _) => {
-            ParsingUtils.addDefaultProtoFields(item);
-          });
-          continue;
-        }
-
-        if (!field) {
-          protoObj[fieldName] = fieldProperties.defaultValue;
-        }
-
-        if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-          protoObj[fieldName] =
-            fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-          continue;
-        }
-        ParsingUtils.addDefaultProtoFields(protoObj[fieldName]);
-      }
-    }
-
-    return protoObj;
-  }
 }

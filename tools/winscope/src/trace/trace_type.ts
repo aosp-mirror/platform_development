@@ -36,8 +36,6 @@ export enum TraceType {
   SHELL_TRANSITION,
   TRANSITION,
   CUJS,
-  TAG,
-  ERROR,
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
@@ -74,8 +72,6 @@ export interface TraceEntryTypeMap {
   [TraceType.SHELL_TRANSITION]: PropertyTreeNode;
   [TraceType.TRANSITION]: PropertyTreeNode;
   [TraceType.CUJS]: PropertyTreeNode;
-  [TraceType.TAG]: object;
-  [TraceType.ERROR]: object;
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;

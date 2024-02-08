@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {UiData} from './ui_data';
@@ -68,6 +67,5 @@ export class ViewerWindowManagerComponent {
   @Input() inputData: UiData | undefined;
   @Input() store: PersistentStore | undefined;
   @Input() active = false;
-  TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
 }
