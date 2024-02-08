@@ -19,7 +19,7 @@ package com.android.commands.monkey;
 import android.app.ActivityManager;
 import android.app.AppGlobals;
 import android.app.IActivityManager;
-import android.content.Context;
+import android.companion.virtual.VirtualDeviceManager;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
@@ -51,10 +51,10 @@ public class MonkeyPermissionEvent extends MonkeyEvent {
                     grant ? "grant" : "revoke", mPermissionInfo.name, mPkg));
             if (grant) {
                 permissionManager.grantRuntimePermission(mPkg, mPermissionInfo.name,
-                        Context.DEVICE_ID_DEFAULT, currentUser);
+                        VirtualDeviceManager.PERSISTENT_DEVICE_ID_DEFAULT, currentUser);
             } else {
                 permissionManager.revokeRuntimePermission(mPkg, mPermissionInfo.name,
-                        Context.DEVICE_ID_DEFAULT, currentUser, null);
+                        VirtualDeviceManager.PERSISTENT_DEVICE_ID_DEFAULT, currentUser, null);
             }
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (RemoteException re) {
