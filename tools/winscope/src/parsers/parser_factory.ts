@@ -26,9 +26,9 @@ import {ParserInputMethodClients} from './input_method/parser_input_method_clien
 import {ParserInputMethodManagerService} from './input_method/parser_input_method_manager_service';
 import {ParserInputMethodService} from './input_method/parser_input_method_service';
 import {ParserEventLog} from './parser_eventlog';
-import {ParserProtoLog} from './parser_protolog';
 import {ParserScreenRecording} from './parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
+import {ParserProtoLog} from './protolog/parser_protolog';
 import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
 import {ParserTransactions} from './transactions/parser_transactions';
 import {ParserTransitionsShell} from './transitions/parser_transitions_shell';

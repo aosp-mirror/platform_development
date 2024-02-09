@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
-import {LogMessage} from 'trace/protolog';
+import {TimestampType} from 'common/time';
+import {LogMessage} from 'parsers/protolog/log_message';
+import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 
@@ -38,7 +38,7 @@ class PerfettoLogMessageTableRow {
   }
 }
 
-export class ParserProtolog extends AbstractParser<LogMessage> {
+export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
   constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
     super(traceFile, traceProcessor);
   }
@@ -47,27 +47,20 @@ export class ParserProtolog extends AbstractParser<LogMessage> {
     return TraceType.PROTO_LOG;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<LogMessage> {
+  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
     const protologEntry = await this.queryProtoLogEntry(index);
+    const logMessage: LogMessage = {
+      text: protologEntry.message,
+      tag: protologEntry.tag,
+      level: protologEntry.level,
+      at: protologEntry.location,
+      timestamp: protologEntry.timestamp,
+    };
 
-    let time: string;
-    let timestamp: bigint;
-    const realToElapsedTimeOffsetNs = assertDefined(this.realToElapsedTimeOffsetNs);
-    if (timestampType === TimestampType.REAL) {
-      timestamp = protologEntry.timestamp + realToElapsedTimeOffsetNs;
-      time = TimeUtils.format(new RealTimestamp(timestamp));
-    } else {
-      timestamp = protologEntry.timestamp;
-      time = TimeUtils.format(new ElapsedTimestamp(timestamp));
-    }
-
-    return new LogMessage(
-      protologEntry.message,
-      time,
-      protologEntry.tag,
-      protologEntry.level,
-      protologEntry.location,
-      timestamp
+    return ParserProtologUtils.makeMessagePropertiesTree(
+      logMessage,
+      timestampType,
+      this.realToElapsedTimeOffsetNs
     );
   }
 

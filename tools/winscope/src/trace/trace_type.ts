@@ -15,7 +15,6 @@
  */
 
 import {Cuj, Event} from 'flickerlib/common';
-import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
 import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
@@ -49,7 +48,7 @@ export enum TraceType {
 }
 
 export interface TraceEntryTypeMap {
-  [TraceType.PROTO_LOG]: LogMessage;
+  [TraceType.PROTO_LOG]: PropertyTreeNode;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
   [TraceType.SYSTEM_UI]: object;

@@ -181,25 +181,51 @@ import {UiData} from './ui_data';
         flex-direction: row;
       }
 
-      .filters div {
-        flex: 1;
+      .filters div,
+      .entries div {
         padding: 4px;
       }
 
-      .filters .vsyncid mat-form-field {
-        width: 120px;
+      .time {
+        flex: 0 1 250px;
       }
 
-      .filters div.time {
-        flex: 2;
+      .id {
+        flex: none;
+        width: 125px;
       }
 
-      .filters div.what {
-        flex: 3;
+      .id mat-form-field {
+        flex: none;
+        width: 125px;
       }
 
-      .filters .id mat-form-field {
-        width: 150px;
+      .vsyncid {
+        flex: none;
+        width: 110px;
+      }
+
+      .vsyncid mat-form-field {
+        flex: none;
+        width: 110px;
+      }
+
+      .pid {
+        flex: none;
+        width: 75px;
+      }
+
+      .uid {
+        flex: none;
+        width: 75px;
+      }
+
+      .type {
+        width: 200px;
+      }
+
+      .what {
+        flex: 2 0 250px;
       }
 
       .filters .what {
@@ -208,19 +234,6 @@ import {UiData} from './ui_data';
 
       .filters .what mat-form-field {
         width: 250px;
-      }
-
-      .entry div {
-        flex: 1;
-        padding: 4px;
-      }
-
-      .entry div.time {
-        flex: 2;
-      }
-
-      .entry div.what {
-        flex: 3;
       }
 
       .entry.current-entry {
@@ -234,7 +247,8 @@ import {UiData} from './ui_data';
       }
 
       mat-form-field {
-        width: 100px;
+        width: 75px;
+        font-size: 12px;
       }
 
       ::ng-deep .mat-select-panel-wrap {
