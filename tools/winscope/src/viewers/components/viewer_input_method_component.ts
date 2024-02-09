@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
@@ -77,8 +76,6 @@ export class ViewerInputMethodComponent {
   @Input() inputData: ImeUiData | undefined;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
-  TRACE_INFO = TRACE_INFO;
-  TraceType = TraceType;
 
   isImeManagerService(): boolean {
     return this.inputData?.dependencies.includes(TraceType.INPUT_METHOD_MANAGER_SERVICE) ?? false;

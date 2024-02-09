@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import {RealTimestamp} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
-import {RealTimestamp} from '../common/time';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
 import {Trace} from './trace';

@@ -15,7 +15,7 @@
  */
 
 import {Operation} from 'trace/tree_node/operations/operation';
-import {UiHierarchyTreeNode} from '../ui_hierarchy_tree_node';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 
 export class FlattenChildren implements Operation<UiHierarchyTreeNode> {
   apply(node: UiHierarchyTreeNode): void {

@@ -15,7 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {Timestamp, TimestampType} from '../common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,

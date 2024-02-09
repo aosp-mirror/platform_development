@@ -113,7 +113,7 @@ export class TimelineData {
   }
 
   makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
-    let trace: Trace<object> | undefined;
+    let trace: Trace<{}> | undefined;
     if (this.activeViewTraceTypes.length > 0) {
       trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
     }

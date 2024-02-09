@@ -83,6 +83,14 @@ class StringUtils {
     return StringUtils.isAlpha(char) && char === char.toUpperCase();
   }
 
+  static isBlank(str: string): boolean {
+    return str.replace(/\s/g, '').length === 0;
+  }
+
+  static isNumeric(str: string): boolean {
+    return Number(str).toString() === str;
+  }
+
   private static capitalizeFirstCharIfAlpha(word: string): string {
     if (word.length === 0) {
       return word;

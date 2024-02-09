@@ -16,13 +16,13 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/protolog/latest/json';
 import {com} from 'protos/protolog/latest/static';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import configJson from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
-import {AbstractParser} from '../abstract_parser';
 import {LogMessage} from './log_message';
 import {ParserProtologUtils} from './parser_protolog_utils';
 
@@ -33,7 +33,6 @@ class ParserProtoLog extends AbstractParser {
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = '1.0.0';
 
-  protected override shouldAddDefaultsToProto: boolean = false;
   private realToElapsedTimeOffsetNs: bigint | undefined;
 
   constructor(trace: TraceFile) {

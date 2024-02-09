@@ -25,7 +25,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -280,9 +280,15 @@ describe('PresenterViewCapture', () => {
 
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
-    traces.setTrace(parser.getTraceType(), trace);
-    return new Presenter(parser.getTraceType(), traces, new MockStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    const traceType = parser.getTraceType();
+    traces.setTrace(traceType, trace);
+    return new Presenter(
+      traceType as ViewCaptureTraceType,
+      traces,
+      new MockStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      }
+    );
   }
 });

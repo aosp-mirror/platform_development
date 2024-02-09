@@ -79,7 +79,6 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
   };
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);

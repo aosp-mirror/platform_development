@@ -37,7 +37,6 @@ import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
-import {CrossPlatform, NoCache} from 'flickerlib/common';
 import {
   AppFilesCollected,
   AppFilesUploaded,
@@ -335,8 +334,6 @@ export class AppComponent implements WinscopeEventListener {
     @Inject(Title) private pageTitle: Title,
     @Inject(NgZone) private ngZone: NgZone
   ) {
-    CrossPlatform.setCache(new NoCache());
-
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
     this.tracePipeline = new TracePipeline();

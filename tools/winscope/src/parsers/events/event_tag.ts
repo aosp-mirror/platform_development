@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
-
-export class ParsingUtils {
-  static throwIfMagicNumberDoesntMatch(traceBuffer: Uint8Array, magicNumber: number[] | undefined) {
-    if (magicNumber !== undefined) {
-      const bufferContainsMagicNumber = ArrayUtils.equal(
-        magicNumber,
-        traceBuffer.slice(0, magicNumber.length)
-      );
-      if (!bufferContainsMagicNumber) {
-        throw TypeError("buffer doesn't contain expected magic number");
-      }
-    }
-  }
+export enum EventTag {
+  INPUT_FOCUS_TAG = 'input_focus',
+  JANK_CUJ_BEGIN_TAG = 'jank_cuj_events_begin_request',
+  JANK_CUJ_END_TAG = 'jank_cuj_events_end_request',
+  JANK_CUJ_CANCEL_TAG = 'jank_cuj_events_cancel_request',
 }

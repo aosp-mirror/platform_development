@@ -18,14 +18,14 @@ import {FunctionUtils} from 'common/function_utils';
 import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
+  static readonly DEPENDENCIES: ViewCaptureTraceType[] = [TraceType.VIEW_CAPTURE];
 
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
@@ -102,7 +102,7 @@ export class ViewerViewCapture implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
+  getDependencies(): ViewCaptureTraceType[] {
     return ViewerViewCapture.DEPENDENCIES;
   }
 
@@ -119,24 +119,28 @@ export class ViewerViewCapture implements Viewer {
 }
 
 export class ViewerViewCaptureLauncherActivity extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY];
-  override getDependencies(): TraceType[] {
+  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
+    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+  ];
+  override getDependencies(): ViewCaptureTraceType[] {
     return ViewerViewCaptureLauncherActivity.DEPENDENCIES;
   }
 }
 
 export class ViewerViewCaptureTaskbarDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER];
-  override getDependencies(): TraceType[] {
+  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
+    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+  ];
+  override getDependencies(): ViewCaptureTraceType[] {
     return ViewerViewCaptureTaskbarDragLayer.DEPENDENCIES;
   }
 }
 
 export class ViewerViewCaptureTaskbarOverlayDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: TraceType[] = [
+  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
     TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
   ];
-  override getDependencies(): TraceType[] {
+  override getDependencies(): ViewCaptureTraceType[] {
     return ViewerViewCaptureTaskbarOverlayDragLayer.DEPENDENCIES;
   }
 }
