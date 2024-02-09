@@ -28,66 +28,63 @@ import {UiData} from './ui_data';
         <div class="filters">
           <div class="time"></div>
           <div class="id">
-            <mat-form-field appearance="fill">
-              <mat-label>TX ID</mat-label>
-              <input matInput [(ngModel)]="idString" (input)="onIdSearchStringChanged()" />
-            </mat-form-field>
+            <select-with-filter
+              label="TX ID"
+              [options]="uiData.allTransactionIds"
+              outerFilterWidth="125"
+              innerFilterWidth="125"
+              (selectChange)="onTransactionIdFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="vsyncid">
-            <mat-form-field appearance="fill">
-              <mat-label>VSYNC ID</mat-label>
-              <mat-select (selectionChange)="onVSyncIdFilterChanged($event)" multiple>
-                <mat-option *ngFor="let vsyncId of uiData.allVSyncIds" [value]="vsyncId">
-                  {{ vsyncId }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <select-with-filter
+              label="VSYNC ID"
+              [options]="uiData.allVSyncIds"
+              outerFilterWidth="110"
+              innerFilterWidth="90"
+              (selectChange)="onVSyncIdFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="pid">
-            <mat-form-field appearance="fill">
-              <mat-label>PID</mat-label>
-              <mat-select (selectionChange)="onPidFilterChanged($event)" multiple>
-                <mat-option *ngFor="let pid of uiData.allPids" [value]="pid">
-                  {{ pid }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <select-with-filter
+              label="PID"
+              [options]="uiData.allPids"
+              (selectChange)="onPidFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="uid">
-            <mat-form-field appearance="fill">
-              <mat-label>UID</mat-label>
-              <mat-select (selectionChange)="onUidFilterChanged($event)" multiple>
-                <mat-option *ngFor="let uid of uiData.allUids" [value]="uid">
-                  {{ uid }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <select-with-filter
+              label="UID"
+              [options]="uiData.allUids"
+              (selectChange)="onUidFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="type">
-            <mat-form-field appearance="fill">
-              <mat-label>Type</mat-label>
-              <mat-select (selectionChange)="onTypeFilterChanged($event)" multiple>
-                <mat-option *ngFor="let type of uiData.allTypes" [value]="type">
-                  {{ type }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <select-with-filter
+              label="Type"
+              innerFilterWidth="175"
+              [options]="uiData.allTypes"
+              (selectChange)="onTypeFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="id">
-            <mat-form-field appearance="fill">
-              <mat-label>LAYER/DISP ID</mat-label>
-              <mat-select (selectionChange)="onLayerIdFilterChanged($event)" multiple>
-                <mat-option *ngFor="let id of uiData.allLayerAndDisplayIds" [value]="id">
-                  {{ id }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <select-with-filter
+              label="LAYER/DISP ID"
+              outerFilterWidth="125"
+              innerFilterWidth="100"
+              [options]="uiData.allLayerAndDisplayIds"
+              (selectChange)="onLayerIdFilterChanged($event)">
+            </select-with-filter>
           </div>
           <div class="what">
-            <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
-              <mat-label>Search text</mat-label>
-              <input matInput [(ngModel)]="whatSearchString" (input)="onWhatSearchStringChange()" />
-            </mat-form-field>
+            <select-with-filter
+              label="Search text"
+              outerFilterWidth="250"
+              innerFilterWidth="250"
+              [options]="uiData.allFlags"
+              flex="2 0 250px"
+              (selectChange)="onWhatFilterChanged($event)">
+            </select-with-filter>
           </div>
         </div>
 
@@ -195,17 +192,7 @@ import {UiData} from './ui_data';
         width: 125px;
       }
 
-      .id mat-form-field {
-        flex: none;
-        width: 125px;
-      }
-
       .vsyncid {
-        flex: none;
-        width: 110px;
-      }
-
-      .vsyncid mat-form-field {
         flex: none;
         width: 110px;
       }
@@ -232,10 +219,6 @@ import {UiData} from './ui_data';
         margin-right: 16px;
       }
 
-      .filters .what mat-form-field {
-        width: 250px;
-      }
-
       .entry.current-entry {
         color: white;
         background-color: #365179;
@@ -244,11 +227,6 @@ import {UiData} from './ui_data';
       .entry.selected-entry {
         color: white;
         background-color: #98aecd;
-      }
-
-      mat-form-field {
-        width: 75px;
-        font-size: 12px;
       }
 
       ::ng-deep .mat-select-panel-wrap {
@@ -262,15 +240,10 @@ import {UiData} from './ui_data';
 class ViewerTransactionsComponent {
   objectKeys = Object.keys;
   uiData: UiData = UiData.EMPTY;
-  idString = '';
-  whatSearchString = '';
 
   @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
-  private elementRef: ElementRef;
 
-  constructor(@Inject(ElementRef) elementRef: ElementRef) {
-    this.elementRef = elementRef;
-  }
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   @Input()
   set inputData(data: UiData) {
@@ -300,12 +273,12 @@ class ViewerTransactionsComponent {
     this.emitEvent(Events.LayerIdFilterChanged, event.value);
   }
 
-  onWhatSearchStringChange() {
-    this.emitEvent(Events.WhatSearchStringChanged, this.whatSearchString);
+  onWhatFilterChanged(event: MatSelectChange) {
+    this.emitEvent(Events.WhatFilterChanged, event.value);
   }
 
-  onIdSearchStringChanged() {
-    this.emitEvent(Events.IdFilterChanges, this.idString);
+  onTransactionIdFilterChanged(event: MatSelectChange) {
+    this.emitEvent(Events.TransactionIdFilterChanged, event.value);
   }
 
   onEntryClicked(index: number) {

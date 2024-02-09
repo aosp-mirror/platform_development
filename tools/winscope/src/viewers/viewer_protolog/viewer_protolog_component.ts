@@ -25,34 +25,33 @@ import {UiData} from './ui_data';
     <div class="card-grid container">
       <div class="filters">
         <div class="log-level">
-          <mat-form-field appearance="fill">
-            <mat-label>Log level</mat-label>
-            <mat-select (selectionChange)="onLogLevelsChange($event)" multiple>
-              <mat-option *ngFor="let level of uiData.allLogLevels" [value]="level">
-                {{ level }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Log level"
+            flex="3"
+            [options]="uiData.allLogLevels"
+            outerFilterWidth="225"
+            (selectChange)="onLogLevelsChange($event)">
+          </select-with-filter>
         </div>
         <div class="tag">
-          <mat-form-field appearance="fill">
-            <mat-label>Tags</mat-label>
-            <mat-select (selectionChange)="onTagsChange($event)" multiple>
-              <mat-option *ngFor="let tag of uiData.allTags" [value]="tag">
-                {{ tag }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Tags"
+            flex="2"
+            [options]="uiData.allTags"
+            outerFilterWidth="150"
+            innerFilterWidth="150"
+            (selectChange)="onTagsChange($event)">
+          </select-with-filter>
         </div>
         <div class="source-file">
-          <mat-form-field appearance="fill">
-            <mat-label>Source files</mat-label>
-            <mat-select (selectionChange)="onSourceFilesChange($event)" multiple>
-              <mat-option *ngFor="let file of uiData.allSourceFiles" [value]="file">
-                {{ file }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Source files"
+            flex="4"
+            [options]="uiData.allSourceFiles"
+            outerFilterWidth="300"
+            innerFilterWidth="300"
+            (selectChange)="onSourceFilesChange($event)">
+          </select-with-filter>
         </div>
         <div class="text">
           <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
@@ -154,14 +153,19 @@ import {UiData} from './ui_data';
 
       mat-form-field {
         width: 100%;
+        font-size: 12px;
       }
     `,
   ],
 })
 export class ViewerProtologComponent {
-  constructor(@Inject(ElementRef) elementRef: ElementRef) {
-    this.elementRef = elementRef;
-  }
+  uiData: UiData = UiData.EMPTY;
+
+  private searchString = '';
+
+  @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
+
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   @Input()
   set inputData(data: UiData) {
@@ -198,10 +202,4 @@ export class ViewerProtologComponent {
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
-
-  @ViewChild(CdkVirtualScrollViewport) scrollComponent!: CdkVirtualScrollViewport;
-
-  uiData: UiData = UiData.EMPTY;
-  private searchString = '';
-  private elementRef: ElementRef;
 }
