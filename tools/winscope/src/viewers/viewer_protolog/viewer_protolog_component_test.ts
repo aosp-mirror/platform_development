@@ -85,6 +85,17 @@ describe('ViewerProtologComponent', () => {
       fixture.detectChanges();
       expect(component.uiData.messages.length).toEqual(100);
     });
+
+    it('scrolls to current entry on button click', () => {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      const goToCurrentTimeButton = assertDefined(
+        htmlElement.querySelector('.go-to-current-time')
+      ) as HTMLButtonElement;
+      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      goToCurrentTimeButton.click();
+      expect(spy).toHaveBeenCalledWith(150);
+    });
   });
 
   describe('Scroll component', () => {
@@ -126,6 +137,6 @@ describe('ViewerProtologComponent', () => {
       };
       messages.push(uiDataMessage);
     }
-    return new UiData(allLogLevels, allTags, allSourceFiles, messages, undefined);
+    return new UiData(allLogLevels, allTags, allSourceFiles, messages, 150);
   }
 });

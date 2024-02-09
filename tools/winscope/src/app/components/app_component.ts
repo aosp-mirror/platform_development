@@ -263,6 +263,10 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow-x: hidden;
         max-width: 100%;
       }
+      .upload-new {
+        flex: none;
+        width: fit-content;
+      }
       .viewers {
         height: 0;
         flex-grow: 1;

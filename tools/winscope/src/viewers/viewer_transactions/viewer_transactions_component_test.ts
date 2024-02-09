@@ -75,6 +75,15 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.properties-tree')).toBeTruthy();
     });
 
+    it('scrolls to current entry on button click', () => {
+      const goToCurrentTimeButton = assertDefined(
+        htmlElement.querySelector('.go-to-current-time')
+      ) as HTMLButtonElement;
+      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      goToCurrentTimeButton.click();
+      expect(spy).toHaveBeenCalledWith(1);
+    });
+
     function makeUiData(): UiData {
       const propertiesTree = new PropertyTreeBuilder()
         .setRootId('Transactions')
@@ -117,7 +126,7 @@ describe('ViewerTransactionsComponent', () => {
         ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
         ['flag1', 'flag2', 'flag3', 'flag4'],
         [entry, entry2],
-        0,
+        1,
         0,
         0,
         UiPropertyTreeNode.from(propertiesTree),

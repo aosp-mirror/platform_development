@@ -59,6 +59,14 @@ import {UiData} from './ui_data';
             <input matInput [(ngModel)]="searchString" (input)="onSearchStringChange()" />
           </mat-form-field>
         </div>
+
+        <button
+          color="primary"
+          mat-stroked-button
+          class="go-to-current-time"
+          (click)="onGoToCurrentTimeClick()">
+          Go to Current Time
+        </button>
       </div>
       <cdk-virtual-scroll-viewport
         protologVirtualScroll
@@ -143,6 +151,17 @@ import {UiData} from './ui_data';
         flex: 10;
       }
 
+      .filters .text mat-form-field {
+        width: 80%;
+      }
+
+      .go-to-current-time {
+        margin-top: 4px;
+        font-size: 12px;
+        height: 65%;
+        width: fit-content;
+      }
+
       .filters div {
         margin: 4px;
       }
@@ -189,6 +208,12 @@ export class ViewerProtologComponent {
 
   onSearchStringChange() {
     this.emitEvent(Events.SearchStringFilterChanged, this.searchString);
+  }
+
+  onGoToCurrentTimeClick() {
+    if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
+      this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
+    }
   }
 
   isCurrentMessage(index: number): boolean {

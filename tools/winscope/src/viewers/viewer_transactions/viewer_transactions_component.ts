@@ -86,6 +86,14 @@ import {UiData} from './ui_data';
               (selectChange)="onWhatFilterChanged($event)">
             </select-with-filter>
           </div>
+
+          <button
+            color="primary"
+            mat-stroked-button
+            class="go-to-current-time"
+            (click)="onGoToCurrentTimeClick()">
+            Go to Current Time
+          </button>
         </div>
 
         <cdk-virtual-scroll-viewport
@@ -229,6 +237,14 @@ import {UiData} from './ui_data';
         background-color: #98aecd;
       }
 
+      .go-to-current-time {
+        flex: none;
+        margin-top: 4px;
+        font-size: 12px;
+        height: 65%;
+        width: fit-content;
+      }
+
       ::ng-deep .mat-select-panel-wrap {
         overflow: scroll;
         overflow-x: hidden;
@@ -291,6 +307,12 @@ class ViewerTransactionsComponent {
       detail: {userOptions: this.uiData.propertiesUserOptions},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  onGoToCurrentTimeClick() {
+    if (this.uiData.currentEntryIndex !== undefined && this.scrollComponent) {
+      this.scrollComponent.scrollToIndex(this.uiData.currentEntryIndex);
+    }
   }
 
   isCurrentEntry(index: number): boolean {
