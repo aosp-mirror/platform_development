@@ -17,17 +17,17 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {LogMessage} from 'trace/protolog';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiData, UiDataMessage} from './ui_data';
 
 export class Presenter {
-  private readonly trace: Trace<LogMessage>;
+  private readonly trace: Trace<PropertyTreeNode>;
   private readonly notifyUiDataCallback: (data: UiData) => void;
-  private entry?: TraceEntry<LogMessage>;
+  private entry?: TraceEntry<PropertyTreeNode>;
   private uiData = UiData.EMPTY;
   private originalIndicesOfFilteredOutputMessages: number[] = [];
 
@@ -94,15 +94,15 @@ export class Presenter {
 
     this.allLogLevels = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: LogMessage) => message.level
+      (message: UiDataMessage) => message.level
     );
     this.allTags = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: LogMessage) => message.tag
+      (message: UiDataMessage) => message.tag
     );
     this.allSourceFiles = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: LogMessage) => message.at
+      (message: UiDataMessage) => message.at
     );
 
     this.computeUiData();
@@ -111,16 +111,24 @@ export class Presenter {
   }
 
   private async makeAllUiDataMessages(): Promise<UiDataMessage[]> {
-    const messages: UiDataMessage[] = [];
+    const messages: PropertyTreeNode[] = [];
 
     for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
       const entry = assertDefined(this.trace.getEntry(originalIndex));
       const message = await entry.getValue();
-      (message as UiDataMessage).originalIndex = originalIndex;
-      messages.push(message as UiDataMessage);
+      messages.push(message);
     }
 
-    return messages;
+    return messages.map((messageNode, index) => {
+      return {
+        originalIndex: index,
+        text: assertDefined(messageNode.getChildByName('text')).formattedValue(),
+        time: assertDefined(messageNode.getChildByName('timestamp')).formattedValue(),
+        tag: assertDefined(messageNode.getChildByName('tag')).formattedValue(),
+        level: assertDefined(messageNode.getChildByName('level')).formattedValue(),
+        at: assertDefined(messageNode.getChildByName('at')).formattedValue(),
+      };
+    });
   }
 
   private computeUiData() {
@@ -174,8 +182,8 @@ export class Presenter {
   }
 
   private getUniqueMessageValues(
-    allMessages: LogMessage[],
-    getValue: (message: LogMessage) => string
+    allMessages: UiDataMessage[],
+    getValue: (message: UiDataMessage) => string
   ): string[] {
     const uniqueValues = new Set<string>();
     allMessages.forEach((message) => {

@@ -17,19 +17,21 @@
 import {assertDefined} from 'common/assert_utils';
 import {RealTimestamp} from 'common/time';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {LogMessage} from 'trace/protolog';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {DEFAULT_PROPERTY_FORMATTER, ELAPSED_TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataMessage} from './ui_data';
 
 describe('ViewerProtoLogPresenter', () => {
   let presenter: Presenter;
   let inputMessages: UiDataMessage[];
-  let trace: Trace<LogMessage>;
+  let trace: Trace<PropertyTreeNode>;
   let positionUpdate10: TracePositionUpdate;
   let positionUpdate11: TracePositionUpdate;
   let positionUpdate12: TracePositionUpdate;
@@ -41,16 +43,72 @@ describe('ViewerProtoLogPresenter', () => {
     const time12 = new RealTimestamp(12n);
 
     inputMessages = [
-      new LogMessage('text0', 'time', 'tag0', 'level0', 'sourcefile0', 10n),
-      new LogMessage('text1', 'time', 'tag1', 'level1', 'sourcefile1', 11n),
-      new LogMessage('text2', 'time', 'tag2', 'level2', 'sourcefile2', 12n),
-    ].map((message, index) => {
-      (message as UiDataMessage).originalIndex = index;
-      return message as UiDataMessage;
-    });
+      {
+        originalIndex: 0,
+        text: 'text0',
+        time: '10ns',
+        tag: 'tag0',
+        level: 'level0',
+        at: 'sourcefile0',
+      },
+      {
+        originalIndex: 1,
+        text: 'text1',
+        time: '20ns',
+        tag: 'tag1',
+        level: 'level1',
+        at: 'sourcefile1',
+      },
+      {
+        originalIndex: 2,
+        text: 'text2',
+        time: '30ns',
+        tag: 'tag2',
+        level: 'level2',
+        at: 'sourcefile2',
+      },
+    ];
 
-    trace = new TraceBuilder<LogMessage>()
-      .setEntries(inputMessages)
+    const entries = [
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'timestamp', value: 10n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'tag', value: 'tag0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'level', value: 'level0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'at', value: 'sourcefile0', formatter: DEFAULT_PROPERTY_FORMATTER},
+        ])
+        .build(),
+
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'timestamp', value: 20n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'tag', value: 'tag1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'level', value: 'level1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'at', value: 'sourcefile1', formatter: DEFAULT_PROPERTY_FORMATTER},
+        ])
+        .build(),
+
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'timestamp', value: 30n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'tag', value: 'tag2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'level', value: 'level2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {name: 'at', value: 'sourcefile2', formatter: DEFAULT_PROPERTY_FORMATTER},
+        ])
+        .build(),
+    ];
+
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries(entries)
       .setTimestamps([time10, time11, time12])
       .build();
 
