@@ -64,6 +64,7 @@ class ShareTestActivity : Activity() {
     private lateinit var textSelection: RadioGroup
     private lateinit var mediaTypeSelection: Spinner
     private lateinit var richText: CheckBox
+    private lateinit var albumCheck: CheckBox
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +84,7 @@ class ShareTestActivity : Activity() {
         )
 
         richText = requireViewById(R.id.use_rich_text)
+        albumCheck = requireViewById(R.id.album_text)
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
         mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
@@ -112,7 +114,8 @@ class ShareTestActivity : Activity() {
         }
         requireViewById<RadioGroup>(R.id.image_latency).check(R.id.image_latency_none)
 
-        requireViewById<RadioGroup>(R.id.image_get_type_latency).setOnCheckedChangeListener { _, checkedId ->
+        requireViewById<RadioGroup>(R.id.image_get_type_latency).setOnCheckedChangeListener { _,
+            checkedId ->
             ImageContentProvider.getTypeLatency = when (checkedId) {
                 R.id.image_get_type_latency_50 -> 50
                 R.id.image_get_type_latency_200 -> 200
@@ -120,16 +123,19 @@ class ShareTestActivity : Activity() {
                 else -> 0
             }
         }
-        requireViewById<RadioGroup>(R.id.image_get_type_latency).check(R.id.image_get_type_latency_none)
+        requireViewById<RadioGroup>(R.id.image_get_type_latency).check(
+            R.id.image_get_type_latency_none)
 
-        requireViewById<RadioGroup>(R.id.image_load_failure_rate).setOnCheckedChangeListener { _, checkedId ->
+        requireViewById<RadioGroup>(R.id.image_load_failure_rate).setOnCheckedChangeListener { _,
+            checkedId ->
             ImageContentProvider.openFailureRate = when (checkedId) {
                 R.id.image_load_failure_rate_50 -> .5f
                 R.id.image_load_failure_rate_100 -> 1f
                 else -> 0f
             }
         }
-        requireViewById<RadioGroup>(R.id.image_load_failure_rate).check(R.id.image_load_failure_rate_none)
+        requireViewById<RadioGroup>(R.id.image_load_failure_rate).check(
+            R.id.image_load_failure_rate_none)
     }
 
     private fun updateMediaTypesList(id: Int) {
@@ -238,6 +244,11 @@ class ShareTestActivity : Activity() {
         val chooserIntent =
             Intent.createChooser(share, null, chosenComponentPendingIntent.intentSender)
 
+        if (albumCheck.isChecked) {
+            chooserIntent.putExtra(Intent.EXTRA_CHOOSER_CONTENT_TYPE_HINT,
+                Intent.CHOOSER_CONTENT_TYPE_ALBUM)
+        }
+
         if (requireViewById<CheckBox>(R.id.include_modify_share).isChecked) {
             val pendingIntent = PendingIntent.getBroadcast(
                 this,
@@ -320,7 +331,8 @@ class ShareTestActivity : Activity() {
                         Color.GRAY)
                 for (color in colors) {
                     append("\n")
-                    append(createShortText(), BulletSpan(40, color, 20), Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+                    append(createShortText(), BulletSpan(40, color, 20),
+                        Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
                 }
             }
             .let {

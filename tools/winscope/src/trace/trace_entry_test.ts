@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {RealTimestamp} from 'common/time';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {RealTimestamp} from '../common/time';
 import {Trace} from './trace';
 
 describe('TraceEntry', () => {

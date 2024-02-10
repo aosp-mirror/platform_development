@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp, Timestamp, TimestampType} from '../common/time';
+import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';

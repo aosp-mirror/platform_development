@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import {RealTimestamp} from 'common/time';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {RealTimestamp} from '../common/time';
 import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
@@ -37,8 +37,6 @@ describe('FrameMapper', () => {
   const time6 = new RealTimestamp(6n);
   const time7 = new RealTimestamp(7n);
   const time8 = new RealTimestamp(8n);
-  const time9 = new RealTimestamp(9n);
-  const time10 = new RealTimestamp(10n);
   const time10seconds = new RealTimestamp(10n * 1000000000n);
 
   describe('ProtoLog <-> WindowManager', () => {

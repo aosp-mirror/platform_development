@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from '../common/time';
+import {Timestamp} from 'common/time';
 
 class ScreenRecordingUtils {
   // Video time correction epsilon. Without correction, we could display the previous frame.

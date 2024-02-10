@@ -23,7 +23,7 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
@@ -99,7 +99,7 @@ export abstract class PresenterInputMethod {
   constructor(
     traces: Traces,
     private storage: Storage,
-    dependencies: TraceType[],
+    dependencies: ImeTraceType[],
     notifyViewCallback: NotifyImeViewCallbackType
   ) {
     this.imeTrace = traces.getTrace(dependencies[0]) as Trace<HierarchyTreeNode>;

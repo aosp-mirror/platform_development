@@ -20,7 +20,7 @@ import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
@@ -43,6 +43,8 @@ import {SimplifyNamesVc} from './operations/simplify_names';
 import {UiData} from './ui_data';
 
 export class Presenter {
+  private static readonly DENYLIST_PROPERTY_NAMES = ['children', 'isComputedVisible'];
+
   private readonly traces: Traces;
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private readonly viewCaptureTrace: Trace<HierarchyTreeNode>;
@@ -103,7 +105,7 @@ export class Presenter {
   );
 
   constructor(
-    traceType: TraceType,
+    traceType: ViewCaptureTraceType,
     traces: Traces,
     private readonly storage: Storage,
     private readonly notifyUiDataCallback: (data: UiData) => void
@@ -435,6 +437,4 @@ export class Presenter {
     const copy = Object.assign({}, this.uiData);
     this.notifyUiDataCallback(copy);
   }
-
-  static readonly DENYLIST_PROPERTY_NAMES = ['children', 'isComputedVisible'];
 }

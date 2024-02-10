@@ -15,10 +15,10 @@
  */
 
 import {RealTimestamp, Timestamp} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {ParserMock} from 'trace/parser_mock';
 import {TraceType} from 'trace/trace_type';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from '../../trace/custom_query';
 
 export class ParserBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
