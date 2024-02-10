@@ -130,4 +130,23 @@ describe('StringUtils', () => {
     expect(StringUtils.isUpperCase('0')).toBeFalse();
     expect(StringUtils.isUpperCase('9')).toBeFalse();
   });
+
+  it('isBlank()', () => {
+    expect(StringUtils.isBlank('')).toBeTrue();
+    expect(StringUtils.isBlank(' ')).toBeTrue();
+    expect(StringUtils.isBlank('  ')).toBeTrue();
+    expect(StringUtils.isBlank(' a')).toBeFalse();
+    expect(StringUtils.isBlank('a ')).toBeFalse();
+    expect(StringUtils.isBlank(' a ')).toBeFalse();
+    expect(StringUtils.isBlank('a  a')).toBeFalse();
+  });
+
+  it('isNumeric()', () => {
+    expect(StringUtils.isNumeric('0')).toBeTrue();
+    expect(StringUtils.isNumeric('1')).toBeTrue();
+    expect(StringUtils.isNumeric('0.1')).toBeTrue();
+    expect(StringUtils.isNumeric('')).toBeFalse();
+    expect(StringUtils.isNumeric('a')).toBeFalse();
+    expect(StringUtils.isNumeric('4n')).toBeFalse();
+  });
 });

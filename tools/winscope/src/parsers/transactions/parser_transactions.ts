@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {AbstractParser} from 'parsers/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -31,7 +32,6 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {AbstractParser} from '../abstract_parser';
 import {TranslateChanges} from './operations/translate_changes';
 
 class ParserTransactions extends AbstractParser<PropertyTreeNode> {
@@ -50,7 +50,6 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   ];
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);

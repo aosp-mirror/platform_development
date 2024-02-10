@@ -16,7 +16,7 @@
 
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -45,7 +45,7 @@ abstract class ViewerInputMethod implements Viewer {
     return [this.view];
   }
 
-  abstract getDependencies(): TraceType[];
+  abstract getDependencies(): ImeTraceType[];
 
   protected imeUiCallback = (uiData: ImeUiData) => {
     (this.htmlElement as any).inputData = uiData;

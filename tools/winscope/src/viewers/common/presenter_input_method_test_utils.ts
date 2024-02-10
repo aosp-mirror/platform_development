@@ -22,7 +22,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
@@ -43,7 +43,7 @@ export function executePresenterInputMethodTests(
     | typeof PresenterInputMethodClients
     | typeof PresenterInputMethodService
     | typeof PresenterInputMethodManagerService,
-  imeTraceType: TraceType,
+  imeTraceType: ImeTraceType,
   selectedPropertyTree?: PropertyTreeNode
 ) {
   describe('PresenterInputMethod', () => {

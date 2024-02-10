@@ -131,18 +131,6 @@ export const TRACE_INFO: TraceInfoMap = {
     color: '#D93025',
     downloadArchiveDir: 'ime',
   },
-  [TraceType.TAG]: {
-    name: 'Tag',
-    icon: TAG_ICON,
-    color: '#4575B4',
-    downloadArchiveDir: '',
-  },
-  [TraceType.ERROR]: {
-    name: 'Error',
-    icon: TRACE_ERROR_ICON,
-    color: '#D73027',
-    downloadArchiveDir: '',
-  },
   [TraceType.EVENT_LOG]: {
     name: 'Event Log',
     icon: EVENT_LOG_ICON,

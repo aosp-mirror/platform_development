@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {Cuj} from 'flickerlib/common';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {CujType} from './cuj_type';
 
 describe('ParserCujs', () => {
-  let parser: Parser<Cuj>;
+  let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getTracesParser(['traces/eventlog.winscope']);
+    parser = (await UnitTestUtils.getTracesParser([
+      'traces/eventlog.winscope',
+    ])) as Parser<PropertyTreeNode>;
   });
 
   it('has expected trace type', () => {
@@ -32,7 +37,7 @@ describe('ParserCujs', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
 
     expect(timestamps.length).toEqual(16);
 
@@ -56,5 +61,37 @@ describe('ParserCujs', () => {
     expect(timestamps.length).toEqual(16);
 
     expect(timestamps.slice(0, 3)).toEqual(expected);
+  });
+
+  it('contains parsed CUJ events', async () => {
+    const entry = await parser.getEntry(2, TimestampType.REAL);
+
+    const expected = new PropertyTreeBuilder()
+      .setRootId('CujTrace')
+      .setName('cuj')
+      .setIsRoot(true)
+      .setChildren([
+        {name: 'startCujType', value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS},
+        {
+          name: 'startTimestamp',
+          children: [
+            {name: 'unixNanos', value: 1681207048025580000n},
+            {name: 'elapsedNanos', value: 2661012903966n},
+            {name: 'systemUptimeNanos', value: 2661012904007n},
+          ],
+        },
+        {
+          name: 'endTimestamp',
+          children: [
+            {name: 'unixNanos', value: 1681207048656617000n},
+            {name: 'elapsedNanos', value: 2661643941035n},
+            {name: 'systemUptimeNanos', value: 266164394123n},
+          ],
+        },
+        {name: 'canceled', value: false},
+      ])
+      .build();
+
+    expect(entry).toEqual(expected);
   });
 });
