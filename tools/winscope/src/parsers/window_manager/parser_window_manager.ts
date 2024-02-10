@@ -37,7 +37,6 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-  protected override shouldAddDefaultsToProto = false;
 
   constructor(trace: TraceFile) {
     super(trace);

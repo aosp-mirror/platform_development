@@ -16,7 +16,7 @@
 
 import {Parser} from 'trace/parser';
 import {Traces} from 'trace/traces';
-import {TracesParserCujs} from './traces_parser_cujs';
+import {TracesParserCujs} from './events/traces_parser_cujs';
 import {TracesParserTransitions} from './transitions/traces_parser_transitions';
 
 export class TracesParserFactory {

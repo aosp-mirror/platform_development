@@ -16,11 +16,11 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {AbstractParser} from 'parsers/abstract_parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {AbstractParser} from './abstract_parser';
 
 class ScreenRecordingMetadataEntry {
   constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {}

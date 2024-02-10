@@ -32,6 +32,4 @@ export const TRACE_ICONS: IconMap = {
   [TraceType.INPUT_METHOD_CLIENTS]: IME_ICON,
   [TraceType.INPUT_METHOD_SERVICE]: IME_ICON,
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: IME_ICON,
-  [TraceType.TAG]: TAG_ICON,
-  [TraceType.ERROR]: TRACE_ERROR_ICON,
 };

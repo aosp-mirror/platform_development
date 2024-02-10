@@ -21,8 +21,8 @@ import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
 import {Parser} from 'trace/parser';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
-import {TraceFile} from '../trace/trace_file';
 import {LoadedParsers} from './loaded_parsers';
 
 describe('LoadedParsers', () => {

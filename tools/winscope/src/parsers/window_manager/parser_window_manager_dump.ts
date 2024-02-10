@@ -35,8 +35,6 @@ import {ParserWmUtils} from './parser_window_manager_utils';
 import {WindowManagerServiceField} from './wm_tampered_protos';
 
 class ParserWindowManagerDump extends AbstractParser {
-  protected override shouldAddDefaultsToProto = false;
-
   constructor(trace: TraceFile) {
     super(trace);
   }
