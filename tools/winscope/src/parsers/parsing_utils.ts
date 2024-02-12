@@ -17,7 +17,10 @@
 import {ArrayUtils} from 'common/array_utils';
 
 export class ParsingUtils {
-  static throwIfMagicNumberDoesntMatch(traceBuffer: Uint8Array, magicNumber: number[] | undefined) {
+  static throwIfMagicNumberDoesNotMatch(
+    traceBuffer: Uint8Array,
+    magicNumber: number[] | undefined
+  ) {
     if (magicNumber !== undefined) {
       const bufferContainsMagicNumber = ArrayUtils.equal(
         magicNumber,

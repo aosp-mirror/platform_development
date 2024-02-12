@@ -471,12 +471,12 @@ SF_PERFETTO_FLAGS_MAP = {
     "virtualdisplays": "TRACE_FLAG_VIRTUAL_DISPLAYS",
 }
 
-#Keep up to date with options in DataAdb.vue
+#Keep up to date with options in trace_collection_utils.ts
 CONFIG_SF_SELECTION = [
     "sfbuffersize",
 ]
 
-#Keep up to date with options in DataAdb.vue
+#Keep up to date with options in trace_collection_utils.ts
 CONFIG_WM_SELECTION = [
     "wmbuffersize",
     "tracingtype",
@@ -528,6 +528,11 @@ else
     su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}
 fi
 """
+    ),
+
+    "screenshot": DumpTarget(
+        File("/data/local/tmp/screenshot.png", "screenshot.png"),
+        "screencap -p > /data/local/tmp/screenshot.png"
     ),
 
     "perfetto_dump": DumpTarget(

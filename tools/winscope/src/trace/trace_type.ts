@@ -22,6 +22,7 @@ export enum TraceType {
   WINDOW_MANAGER,
   SURFACE_FLINGER,
   SCREEN_RECORDING,
+  SCREENSHOT,
   TRANSACTIONS,
   TRANSACTIONS_LEGACY,
   WAYLAND,
@@ -58,6 +59,7 @@ export interface TraceEntryTypeMap {
   [TraceType.PROTO_LOG]: PropertyTreeNode;
   [TraceType.SURFACE_FLINGER]: HierarchyTreeNode;
   [TraceType.SCREEN_RECORDING]: ScreenRecordingTraceEntry;
+  [TraceType.SCREENSHOT]: ScreenRecordingTraceEntry;
   [TraceType.SYSTEM_UI]: object;
   [TraceType.TRANSACTIONS]: PropertyTreeNode;
   [TraceType.TRANSACTIONS_LEGACY]: object;

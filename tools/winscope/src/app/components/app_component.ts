@@ -422,6 +422,12 @@ export class AppComponent implements WinscopeEventListener {
           run: true,
           config: undefined,
         },
+        screenshot: {
+          name: 'Screenshot',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
       },
       this.traceConfigStorage
     );

@@ -16,6 +16,7 @@
 
 import {ElapsedTimestamp, TimeRange} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
+import {TraceType} from 'trace/trace_type';
 
 export interface WinscopeError {
   getType(): string;
@@ -73,13 +74,18 @@ export class TraceHasOldData implements WinscopeError {
 }
 
 export class TraceOverridden implements WinscopeError {
-  constructor(private readonly descriptor: string) {}
+  constructor(private readonly descriptor: string, private readonly overridingType?: TraceType) {}
 
   getType(): string {
     return 'trace overridden';
   }
 
   getMessage(): string {
+    if (this.overridingType !== undefined) {
+      return `${this.descriptor}: overridden by another trace of type ${
+        TraceType[this.overridingType]
+      }`;
+    }
     return `${this.descriptor}: overridden by another trace of same type`;
   }
 }
