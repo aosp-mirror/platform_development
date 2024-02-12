@@ -16,8 +16,11 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/transitions/latest/static';
+import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {EnumFormatter, PropertyFormatter, TimestampFormatter} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
@@ -45,6 +48,17 @@ export class ParserTransitionsUtils {
     new AddStatus(),
     new AddRootProperties(),
   ];
+
+  private static readonly TransitionTraceProto = TamperedMessageType.tamper(
+    root.lookupType('com.android.server.wm.shell.TransitionTraceProto')
+  );
+  private static readonly TransitionField =
+    ParserTransitionsUtils.TransitionTraceProto.fields['transitions'];
+  private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
+    ParserTransitionsUtils.TransitionField,
+    ['type']
+  );
+  private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
   private static readonly PERFETTO_TRANSITION_OPERATIONS = [new UpdateAbortTimeNodes()];
   private static readonly TRANSITION_TYPE_FORMATTER = new EnumFormatter(TransitionType);
 
@@ -80,7 +94,7 @@ export class ParserTransitionsUtils {
       .build();
 
     if (!info) {
-      new SetFormatters().apply(tree);
+      ParserTransitionsUtils.SET_FORMATTERS_OPERATION.apply(tree);
       return tree;
     }
 
@@ -107,6 +121,7 @@ export class ParserTransitionsUtils {
 
     const wmDataNode = assertDefined(tree.getChildByName('wmData'));
     new AddRealToElapsedTimeOffsetNs(info.realToElapsedTimeOffsetNs).apply(wmDataNode);
+    ParserTransitionsUtils.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
 
     new SetFormatters(undefined, customFormatters).apply(tree);
     return tree;
@@ -125,7 +140,7 @@ export class ParserTransitionsUtils {
       .build();
 
     if (!info) {
-      new SetFormatters().apply(tree);
+      ParserTransitionsUtils.SET_FORMATTERS_OPERATION.apply(tree);
       return tree;
     }
 
