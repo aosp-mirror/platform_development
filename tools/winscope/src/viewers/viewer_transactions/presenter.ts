@@ -48,14 +48,16 @@ export class Presenter {
   private allTypes: string[] = [];
   private allLayerAndDisplayIds: string[] = [];
   private allTransactionIds: string[] = [];
+  private allFlags: string[] = [];
 
   private vsyncIdFilter: string[] = [];
   private pidFilter: string[] = [];
   private uidFilter: string[] = [];
   private typeFilter: string[] = [];
   private layerIdFilter: string[] = [];
-  private idFilter: string | undefined = undefined;
-  private whatSearchString = '';
+  private whatFilter: string[] = [];
+  private transactionIdFilter: string[] = [];
+
   private currentPropertiesTree: PropertyTreeNode | undefined;
 
   private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
@@ -136,18 +138,14 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onIdFilterChanged(id: string) {
-    if (id === '') {
-      this.idFilter = undefined;
-    } else {
-      this.idFilter = id;
-    }
+  onWhatFilterChanged(flags: string[]) {
+    this.whatFilter = flags;
     this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onWhatSearchStringChanged(searchString: string) {
-    this.whatSearchString = searchString;
+  onTransactionIdFilterChanged(ids: string[]) {
+    this.transactionIdFilter = ids;
     this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
@@ -210,6 +208,9 @@ export class Presenter {
       this.allUiDataEntries,
       (entry: UiDataEntry) => entry.transactionId
     );
+    this.allFlags = this.getUniqueUiDataEntryValues(this.allUiDataEntries, (entry: UiDataEntry) =>
+      entry.what.split('|').map((flag) => flag.trim())
+    );
 
     this.uiData = this.computeUiData();
 
@@ -244,13 +245,18 @@ export class Presenter {
         this.layerIdFilter.includes(entry.layerOrDisplayId)
       );
     }
-    if (this.idFilter !== undefined) {
+
+    if (this.whatFilter.length > 0) {
       filteredEntries = filteredEntries.filter(
-        (entry) => entry.transactionId.toString() === this.idFilter
+        (entry) => this.whatFilter.find((flag) => entry.what.includes(flag)) !== undefined
       );
     }
 
-    filteredEntries = filteredEntries.filter((entry) => entry.what.includes(this.whatSearchString));
+    if (this.transactionIdFilter.length > 0) {
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.transactionIdFilter.includes(entry.transactionId.toString())
+      );
+    }
 
     this.originalIndicesOfUiDataEntries = filteredEntries.map(
       (entry) => entry.originalIndexInTraceEntry
@@ -273,6 +279,7 @@ export class Presenter {
       this.allTypes,
       this.allLayerAndDisplayIds,
       this.allTransactionIds,
+      this.allFlags,
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
@@ -511,11 +518,16 @@ export class Presenter {
 
   private getUniqueUiDataEntryValues<T>(
     entries: UiDataEntry[],
-    getValue: (entry: UiDataEntry) => T
+    getValue: (entry: UiDataEntry) => T | T[]
   ): T[] {
     const uniqueValues = new Set<T>();
     entries.forEach((entry: UiDataEntry) => {
-      uniqueValues.add(getValue(entry));
+      const value = getValue(entry);
+      if (Array.isArray(value)) {
+        value.forEach((val) => uniqueValues.add(val));
+      } else {
+        uniqueValues.add(value);
+      }
     });
 
     const result = [...uniqueValues];

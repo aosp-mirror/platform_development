@@ -47,6 +47,7 @@ import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additiona
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
 import {TreeComponent} from 'viewers/components/tree_component';
@@ -128,6 +129,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     ProtologScrollDirective,
     TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
+    SelectWithFilterComponent,
   ],
   imports: [
     BrowserModule,

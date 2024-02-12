@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {ViewerProtologComponent} from './viewer_protolog_component';
-
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
+import {ViewerProtologComponent} from './viewer_protolog_component';
 
 describe('ViewerProtologComponent', () => {
   describe('Main component', () => {
@@ -66,31 +67,30 @@ describe('ViewerProtologComponent', () => {
     it('renders log messages', () => {
       expect(htmlElement.querySelector('.scroll-messages')).toBeTruthy();
     });
+
+    it('applies text filters correctly', () => {
+      htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
+        component.uiData.messages = component.uiData.messages.filter((message) =>
+          message.text.includes((event as CustomEvent).detail)
+        );
+      });
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
+
+      const textFilterDiv = assertDefined(htmlElement.querySelector('.filters .text'));
+      const inputEl = assertDefined(textFilterDiv.querySelector('input')) as HTMLInputElement;
+      inputEl.value = 'keep';
+      inputEl.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(100);
+    });
   });
 
   describe('Scroll component', () => {
     executeScrollComponentTests('message', setUpTestEnvironment);
-
-    function makeUiDataForScroll(): UiData {
-      const messages = [];
-      const shortMessage = 'test information about message';
-      const longMessage = shortMessage.repeat(10);
-      for (let i = 0; i < 200; i++) {
-        const uiDataMessage: UiDataMessage = {
-          originalIndex: i,
-          text: i % 2 === 0 ? shortMessage : longMessage,
-          time: '2022-11-21T18:05:09.777144978',
-          tag: 'WindowManager',
-          level: 'INFO',
-          at: 'test_source_file.java',
-        };
-        messages.push(uiDataMessage);
-      }
-      return new UiData([], [], [], messages, undefined);
-    }
-
     async function setUpTestEnvironment(): Promise<
-      [ComponentFixture<any>, HTMLElement, CdkVirtualScrollViewport]
+      [ComponentFixture<ViewerProtologComponent>, HTMLElement, CdkVirtualScrollViewport]
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
@@ -101,9 +101,31 @@ describe('ViewerProtologComponent', () => {
       const fixture = TestBed.createComponent(ViewerProtologComponent);
       const protologComponent = fixture.componentInstance;
       const htmlElement = fixture.nativeElement;
-      const viewport = protologComponent.scrollComponent;
-      protologComponent.uiData = makeUiDataForScroll();
+      const viewport = assertDefined(protologComponent.scrollComponent);
+      protologComponent.inputData = makeUiData();
       return [fixture, htmlElement, viewport];
     }
   });
+
+  function makeUiData(): UiData {
+    const allLogLevels = ['INFO', 'ERROR'];
+    const allTags = ['WindowManager', 'INVALID'];
+    const allSourceFiles = ['test_source_file.java', 'other_test_source_file.java'];
+
+    const messages = [];
+    const shortMessage = 'test information about message';
+    const longMessage = shortMessage.repeat(10) + 'keep';
+    for (let i = 0; i < 200; i++) {
+      const uiDataMessage: UiDataMessage = {
+        originalIndex: i,
+        text: i % 2 === 0 ? shortMessage : longMessage,
+        time: '2022-11-21T18:05:09.777144978',
+        tag: i % 2 === 0 ? allTags[0] : allTags[1],
+        level: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
+        at: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
+      };
+      messages.push(uiDataMessage);
+    }
+    return new UiData(allLogLevels, allTags, allSourceFiles, messages, undefined);
+  }
 });
