@@ -18,11 +18,15 @@ import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {ComponentFixture} from '@angular/core/testing';
 import {assertDefined} from 'common/assert_utils';
 import {animationFrameScheduler} from 'rxjs';
+import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
+import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
+
+type ScrollComponent = ViewerProtologComponent | ViewerTransactionsComponent;
 
 export function executeScrollComponentTests(
   itemClassName: string,
   setUpTestEnvironment: () => Promise<
-    [ComponentFixture<any>, HTMLElement, CdkVirtualScrollViewport]
+    [ComponentFixture<ScrollComponent>, HTMLElement, CdkVirtualScrollViewport]
   >
 ) {
   describe('', () => {
