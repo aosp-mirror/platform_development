@@ -15,7 +15,7 @@
  */
 
 import {StringUtils} from 'common/string_utils';
-import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
@@ -45,7 +45,7 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
 
   override getTimestamp(type: TimestampType, entry: Event): undefined | Timestamp {
     if (type === TimestampType.REAL) {
-      return new RealTimestamp(entry.eventTimestamp);
+      return this.timestampFactory.makeRealTimestamp(entry.eventTimestamp);
     }
     return undefined;
   }

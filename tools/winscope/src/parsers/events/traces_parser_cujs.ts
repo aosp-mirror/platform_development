@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -84,10 +85,10 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     const cujTimestamp = assertDefined(cuj.getChildByName('startTimestamp'));
     if (type === TimestampType.ELAPSED) {
       const elapsedNanos = assertDefined(cujTimestamp.getChildByName('elapsedNanos')).getValue();
-      return new Timestamp(type, elapsedNanos);
+      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(elapsedNanos);
     } else if (type === TimestampType.REAL) {
       const unixNanos = assertDefined(cujTimestamp.getChildByName('unixNanos')).getValue();
-      return new Timestamp(type, unixNanos);
+      return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(unixNanos);
     }
     return undefined;
   }

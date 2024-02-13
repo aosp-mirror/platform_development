@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -43,9 +44,9 @@ describe('ParserViewCapture', () => {
 
   it('provides elapsed timestamps', () => {
     const expected = [
-      new Timestamp(TimestampType.ELAPSED, 181114412436130n),
-      new Timestamp(TimestampType.ELAPSED, 181114421012750n),
-      new Timestamp(TimestampType.ELAPSED, 181114429047540n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114421012750n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114429047540n),
     ];
     expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
       expected
@@ -54,11 +55,29 @@ describe('ParserViewCapture', () => {
 
   it('provides real timestamps', () => {
     const expected = [
-      new Timestamp(TimestampType.REAL, 1691692936292808460n),
-      new Timestamp(TimestampType.REAL, 1691692936301385080n),
-      new Timestamp(TimestampType.REAL, 1691692936309419870n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936292808460n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936301385080n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936309419870n),
     ];
     expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
+  });
+
+  it('applies timezone info to real timestamps only', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
+      true
+    )) as Parser<HierarchyTreeNode>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER
+    );
+
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n)
+    );
+
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691626336292808460n)
+    );
   });
 
   it('retrieves trace entry', async () => {

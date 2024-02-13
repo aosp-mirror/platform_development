@@ -37,25 +37,17 @@ describe('Transformer', () => {
     expect(transformer.transform(fromRange.to)).toBe(toRange.to);
 
     expect(
-      transformer.transform(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 2n)
-      )
+      transformer.transform(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 2n))
     ).toBe(toRange.from + (toRange.to - toRange.from) / 2);
     expect(
-      transformer.transform(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 4n)
-      )
+      transformer.transform(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 4n))
     ).toBe(toRange.from + (toRange.to - toRange.from) / 4);
     expect(
-      transformer.transform(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 20n)
-      )
+      transformer.transform(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart + range / 20n))
     ).toBe(toRange.from + (toRange.to - toRange.from) / 20);
 
     expect(
-      transformer.transform(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart - range / 2n)
-      )
+      transformer.transform(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeStart - range / 2n))
     ).toBe(toRange.from - (toRange.to - toRange.from) / 2);
     expect(
       transformer.transform(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(rangeEnd + range / 2n))

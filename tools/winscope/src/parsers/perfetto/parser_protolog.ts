@@ -17,10 +17,8 @@
 import {TimestampType} from 'common/time';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 
 class PerfettoLogMessageTableRow {
@@ -39,10 +37,6 @@ class PerfettoLogMessageTableRow {
 }
 
 export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.PROTO_LOG;
   }
@@ -60,7 +54,8 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       timestampType,
-      this.realToElapsedTimeOffsetNs
+      this.realToElapsedTimeOffsetNs,
+      this.timestampFactory
     );
   }
 

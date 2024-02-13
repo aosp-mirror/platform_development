@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
@@ -42,18 +43,18 @@ describe('ParserCujs', () => {
     expect(timestamps.length).toEqual(16);
 
     const expected = [
-      new Timestamp(TimestampType.ELAPSED, 2661012770462n),
-      new Timestamp(TimestampType.ELAPSED, 2661012874914n),
-      new Timestamp(TimestampType.ELAPSED, 2661012903966n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012770462n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012874914n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012903966n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
   it('provides real timestamps', () => {
     const expected = [
-      new Timestamp(TimestampType.REAL, 1681207048025446000n),
-      new Timestamp(TimestampType.REAL, 1681207048025551000n),
-      new Timestamp(TimestampType.REAL, 1681207048025580000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025446000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025551000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025580000n),
     ];
 
     const timestamps = parser.getTimestamps(TimestampType.REAL)!;

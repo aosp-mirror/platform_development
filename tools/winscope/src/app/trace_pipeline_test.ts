@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {
   CorruptedArchive,
@@ -134,6 +135,34 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.SURFACE_FLINGER)).toBeDefined();
     expect(traces.getTrace(TraceType.WINDOW_MANAGER)).toBeUndefined(); // ignored
     expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
+  });
+
+  it('detects bugreports and extracts timezone info from dumpstate_board.txt', async () => {
+    const bugreportFiles = [
+      await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt'),
+      await UnitTestUtils.getFixtureFile('bugreports/dumpstate_board.txt', 'dumpstate_board.txt'),
+      await UnitTestUtils.getFixtureFile(
+        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
+      ),
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'FS/data/misc/wmtrace/surface_flinger.bp'
+      ),
+    ];
+    const bugreportArchive = new File(
+      [await FileUtils.createZipArchive(bugreportFiles)],
+      'bugreport.zip'
+    );
+
+    await loadFiles([bugreportArchive]);
+    await expectLoadResult(1, []);
+
+    const timestampFactory = tracePipeline.getTimestampFactory();
+    expect(timestampFactory).not.toEqual(NO_TIMEZONE_OFFSET_FACTORY);
+
+    const expectedTimestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n);
+    expect(timestampFactory.makeRealTimestamp(1659107089102062832n)).toEqual(expectedTimestamp);
   });
 
   it('is robust to corrupted archive', async () => {

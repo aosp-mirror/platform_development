@@ -15,6 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
@@ -154,13 +155,13 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED, async (event) => {
       await this.processRemoteFilesReceived([event.bugreport], FilesSource.BUGREPORT);
-      if (event.timestamp !== undefined) {
-        await this.processRemoteToolTimestampReceived(event.timestamp);
+      if (event.timestampNs !== undefined) {
+        await this.processRemoteToolTimestampReceived(event.timestampNs);
       }
     });
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED, async (event) => {
-      await this.processRemoteToolTimestampReceived(event.timestamp);
+      await this.processRemoteToolTimestampReceived(event.timestampNs);
     });
   }
 
@@ -222,7 +223,9 @@ export class Mediator {
     });
   }
 
-  private async processRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private async processRemoteToolTimestampReceived(timestampNs: bigint) {
+    const factory = this.tracePipeline.getTimestampFactory() ?? NO_TIMEZONE_OFFSET_FACTORY;
+    const timestamp = factory.makeRealTimestamp(timestampNs);
     this.lastRemoteToolTimestampReceived = timestamp;
 
     if (!this.areViewersLoaded) {

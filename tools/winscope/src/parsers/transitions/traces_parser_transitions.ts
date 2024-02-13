@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -90,15 +91,27 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     decodedEntry: PropertyTreeNode
   ): undefined | Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-    const realToElapsedTimeOffsetNs = decodedEntry
-      .getChildByName('realToElapsedTimeOffsetNs')
-      ?.getValue();
-    const dispatchTimeLong = decodedEntry
-      .getChildByName('shellData')
+    const shellData = decodedEntry.getChildByName('shellData');
+    const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
       ?.getValue();
-    const timestampNs = dispatchTimeLong ? BigInt(dispatchTimeLong.toString()) : 0n;
-    return Timestamp.from(type, timestampNs, realToElapsedTimeOffsetNs);
+
+    const realToElapsedTimeOffsetNs: bigint =
+      shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue()?.getValueNs() ?? 0n;
+
+    const timestampNs: bigint = dispatchTimestamp
+      ? dispatchTimestamp.getValueNs()
+      : realToElapsedTimeOffsetNs;
+
+    if (type === TimestampType.ELAPSED) {
+      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+        timestampNs - realToElapsedTimeOffsetNs
+      );
+    } else if (type === TimestampType.REAL) {
+      return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(timestampNs);
+    }
+
+    return undefined;
   }
 
   private compressEntries(allTransitions: PropertyTreeNode[]): PropertyTreeNode[] {
@@ -126,20 +139,18 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
   }
 
   private compareByTimestamp(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    const aTimestamp = BigInt(
+    const aNanos =
       assertDefined(a.getChildByName('shellData'))
         .getChildByName('dispatchTimeNs')
         ?.getValue()
-        .toString() ?? 0n
-    );
-    const bTimestamp = BigInt(
+        ?.getValueNs() ?? 0n;
+    const bNanos =
       assertDefined(b.getChildByName('shellData'))
         .getChildByName('dispatchTimeNs')
         ?.getValue()
-        .toString() ?? 0n
-    );
-    if (aTimestamp !== bTimestamp) {
-      return aTimestamp < bTimestamp ? -1 : 1;
+        ?.getValueNs() ?? 0n;
+    if (aNanos !== bNanos) {
+      return aNanos < bNanos ? -1 : 1;
     }
     // if dispatchTimeNs not present for both, fallback to id
     return assertDefined(a.getChildByName('id')).getValue() <

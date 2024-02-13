@@ -110,16 +110,6 @@ export class ParserTransitionsUtils {
       );
     }
 
-    const customFormatters = new Map<string, PropertyFormatter>([
-      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['abortTimeNs', TIMESTAMP_FORMATTER],
-      ['createTimeNs', TIMESTAMP_FORMATTER],
-      ['sendTimeNs', TIMESTAMP_FORMATTER],
-      ['finishTimeNs', TIMESTAMP_FORMATTER],
-      ['startingWindowRemoveTimeNs', TIMESTAMP_FORMATTER],
-    ]);
-
     const realToElapsedTimeOffsetTimestamp =
       info.realToElapsedTimeOffsetNs !== undefined
         ? info.timestampFactory.makeTimestampFromType(
@@ -136,6 +126,16 @@ export class ParserTransitionsUtils {
       ['abortTimeNs', 'createTimeNs', 'sendTimeNs', 'finishTimeNs', 'startingWindowRemoveTimeNs'],
       ParserTransitionsUtils.makeTimestampStrategy(info)
     ).apply(wmDataNode);
+
+    const customFormatters = new Map<string, PropertyFormatter>([
+      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['abortTimeNs', TIMESTAMP_FORMATTER],
+      ['createTimeNs', TIMESTAMP_FORMATTER],
+      ['sendTimeNs', TIMESTAMP_FORMATTER],
+      ['finishTimeNs', TIMESTAMP_FORMATTER],
+      ['startingWindowRemoveTimeNs', TIMESTAMP_FORMATTER],
+    ]);
 
     new SetFormatters(undefined, customFormatters).apply(tree);
     return tree;
@@ -174,19 +174,6 @@ export class ParserTransitionsUtils {
       );
     }
 
-    const customFormatters = new Map<string, PropertyFormatter>([
-      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['dispatchTimeNs', TIMESTAMP_FORMATTER],
-      ['mergeRequestTimeNs', TIMESTAMP_FORMATTER],
-      ['mergeTimeNs', TIMESTAMP_FORMATTER],
-      ['abortTimeNs', TIMESTAMP_FORMATTER],
-    ]);
-
-    if (info.handlerMapping) {
-      customFormatters.set('handler', new EnumFormatter(info.handlerMapping));
-    }
-
     const realToElapsedTimeOffsetTimestamp =
       info.realToElapsedTimeOffsetNs !== undefined
         ? info.timestampFactory.makeTimestampFromType(
@@ -202,6 +189,19 @@ export class ParserTransitionsUtils {
       ['dispatchTimeNs', 'mergeRequestTimeNs', 'mergeTimeNs', 'abortTimeNs'],
       ParserTransitionsUtils.makeTimestampStrategy(info)
     ).apply(shellDataNode);
+
+    const customFormatters = new Map<string, PropertyFormatter>([
+      ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
+      ['dispatchTimeNs', TIMESTAMP_FORMATTER],
+      ['mergeRequestTimeNs', TIMESTAMP_FORMATTER],
+      ['mergeTimeNs', TIMESTAMP_FORMATTER],
+      ['abortTimeNs', TIMESTAMP_FORMATTER],
+    ]);
+
+    if (info.handlerMapping) {
+      customFormatters.set('handler', new EnumFormatter(info.handlerMapping));
+    }
 
     new SetFormatters(undefined, customFormatters).apply(tree);
 

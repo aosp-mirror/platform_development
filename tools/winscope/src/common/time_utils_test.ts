@@ -62,12 +62,12 @@ describe('TimeUtils', () => {
     expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n), false)).toEqual(
       '0ns'
     );
-    expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), true)
-    ).toEqual('0ms');
-    expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), false)
-    ).toEqual('1000ns');
+    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), true)).toEqual(
+      '0ms'
+    );
+    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), false)).toEqual(
+      '1000ns'
+    );
     expect(
       TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND - 1n), true)
     ).toEqual('0ms');
@@ -81,28 +81,22 @@ describe('TimeUtils', () => {
     expect(
       TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND - 1n), true)
     ).toEqual('999ms');
+    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND), true)).toEqual(
+      '1s0ms'
+    );
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND), true)
-    ).toEqual('1s0ms');
-    expect(
-      TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND),
-        true
-      )
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND), true)
     ).toEqual('1s1ms');
     expect(
-      TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND),
-        false
-      )
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND), false)
     ).toEqual('1s1ms0ns');
 
     expect(
       TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE - 1n), true)
     ).toEqual('59s999ms');
-    expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE), true)
-    ).toEqual('1m0s0ms');
+    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE), true)).toEqual(
+      '1m0s0ms'
+    );
     expect(
       TimeUtils.format(
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE + SECOND + MILLISECOND),
@@ -128,9 +122,9 @@ describe('TimeUtils', () => {
     expect(
       TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR - 1n), false)
     ).toEqual('59m59s999ms999999ns');
-    expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR), true)
-    ).toEqual('1h0m0s0ms');
+    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR), true)).toEqual(
+      '1h0m0s0ms'
+    );
     expect(
       TimeUtils.format(
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR + MINUTE + SECOND + MILLISECOND),
@@ -146,9 +140,7 @@ describe('TimeUtils', () => {
     );
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-          DAY + HOUR + MINUTE + SECOND + MILLISECOND
-        ),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + HOUR + MINUTE + SECOND + MILLISECOND),
         true
       )
     ).toEqual('1d1h1m1s1ms');
@@ -339,10 +331,7 @@ describe('TimeUtils', () => {
       '1970-01-01T00:00:00.000000600'
     );
     expect(
-      TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n * MILLISECOND, 500n),
-        true
-      )
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n * MILLISECOND, 500n), true)
     ).toEqual('1970-01-01T00:00:00.100');
   });
 

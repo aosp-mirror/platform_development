@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
 import {UrlUtils} from 'common/url_utils';
 import {ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
@@ -29,6 +30,11 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {TraceBuilder} from './trace_builder';
 
 class UnitTestUtils {
+  static readonly TIMESTAMP_FACTORY_WITH_TIMEZONE = new TimestampFactory({
+    timezone: 'Asia/Kolkata',
+    locale: 'en-US',
+  });
+
   static async getFixtureFile(
     srcFilename: string,
     dstFilename: string = srcFilename
@@ -61,17 +67,25 @@ class UnitTestUtils {
       .build();
   }
 
-  static async getParser(filename: string): Promise<Parser<object>> {
-    const parsers = await UnitTestUtils.getParsers(filename);
+  static async getParser(filename: string, withTimezoneInfo = false): Promise<Parser<object>> {
+    const parsers = await UnitTestUtils.getParsers(filename, withTimezoneInfo);
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
       .toBeGreaterThanOrEqual(1);
     return parsers[0];
   }
 
-  static async getParsers(filename: string): Promise<Array<Parser<object>>> {
+  static async getParsers(
+    filename: string,
+    withTimezoneInfo = false
+  ): Promise<Array<Parser<object>>> {
     const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
-    const fileAndParsers = await new ParserFactory().createParsers([file]);
+    const fileAndParsers = await new ParserFactory().createParsers(
+      [file],
+      withTimezoneInfo ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE : NO_TIMEZONE_OFFSET_FACTORY,
+      undefined,
+      undefined
+    );
     return fileAndParsers.map((fileAndParser) => {
       return fileAndParser.parser;
     });
@@ -79,22 +93,33 @@ class UnitTestUtils {
 
   static async getPerfettoParser<T extends TraceType>(
     traceType: T,
-    fixturePath: string
+    fixturePath: string,
+    withTimezoneInfo = false
   ): Promise<Parser<TraceEntryTypeMap[T]>> {
-    const parsers = await UnitTestUtils.getPerfettoParsers(fixturePath);
+    const parsers = await UnitTestUtils.getPerfettoParsers(fixturePath, withTimezoneInfo);
     const parser = assertDefined(parsers.find((parser) => parser.getTraceType() === traceType));
     return parser as Parser<TraceEntryTypeMap[T]>;
   }
 
-  static async getPerfettoParsers(fixturePath: string): Promise<Array<Parser<object>>> {
+  static async getPerfettoParsers(
+    fixturePath: string,
+    withTimezoneInfo = false
+  ): Promise<Array<Parser<object>>> {
     const file = await UnitTestUtils.getFixtureFile(fixturePath);
     const traceFile = new TraceFile(file);
-    return await new PerfettoParserFactory().createParsers(traceFile);
+    return await new PerfettoParserFactory().createParsers(
+      traceFile,
+      withTimezoneInfo ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE : NO_TIMEZONE_OFFSET_FACTORY,
+      undefined
+    );
   }
 
-  static async getTracesParser(filenames: string[]): Promise<Parser<object>> {
+  static async getTracesParser(
+    filenames: string[],
+    withTimezoneInfo = false
+  ): Promise<Parser<object>> {
     const parsersArray = await Promise.all(
-      filenames.map((filename) => UnitTestUtils.getParser(filename))
+      filenames.map((filename) => UnitTestUtils.getParser(filename, withTimezoneInfo))
     );
 
     const traces = new Traces();

@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimezoneInfo} from 'common/time';
 import {TraceOverridden} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {TraceFile} from 'trace/trace_file';
@@ -22,6 +23,7 @@ import {TraceFile} from 'trace/trace_file';
 export interface FilterResult {
   legacy: TraceFile[];
   perfetto?: TraceFile;
+  timezoneInfo?: TimezoneInfo;
 }
 
 export class TraceFileFilter {
@@ -34,7 +36,11 @@ export class TraceFileFilter {
   ];
 
   async filter(files: TraceFile[], errorListener: WinscopeErrorListener): Promise<FilterResult> {
-    const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
+    const bugreportMainEntry = files.find((file) => file.file.name.endsWith('main_entry.txt'));
+    const bugReportDumpstateBoard = files.find((file) =>
+      file.file.name.endsWith('dumpstate_board.txt')
+    );
+
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
@@ -45,7 +51,39 @@ export class TraceFileFilter {
       };
     }
 
-    return this.filterBugreport(assertDefined(bugreportMainEntry), perfettoFiles, legacyFiles);
+    const timezoneInfo = await this.processDumpstateBoard(bugReportDumpstateBoard);
+
+    return this.filterBugreport(
+      assertDefined(bugreportMainEntry),
+      perfettoFiles,
+      legacyFiles,
+      timezoneInfo
+    );
+  }
+
+  private async processDumpstateBoard(
+    bugReportDumpstateBoard: TraceFile | undefined
+  ): Promise<TimezoneInfo | undefined> {
+    if (!bugReportDumpstateBoard) {
+      return undefined;
+    }
+
+    const traceBuffer = new Uint8Array(await bugReportDumpstateBoard.file.arrayBuffer());
+    const fileData = new TextDecoder().decode(traceBuffer);
+    const startIndex = fileData.indexOf('[persist.sys.locale]');
+
+    if (startIndex === -1) {
+      return undefined;
+    }
+
+    const [localeKey, locale, timezoneKey, timezone] = fileData
+      .slice(startIndex)
+      .split(']', 4)
+      .map((substr) => {
+        const start = substr.lastIndexOf('[');
+        return substr.slice(start + 1);
+      });
+    return {timezone, locale};
   }
 
   private async isBugreport(
@@ -57,18 +95,20 @@ export class TraceFileFilter {
     }
     const bugreportName = (await bugreportMainEntry.file.text()).trim();
     return (
-      files.find(
-        (file) =>
+      files.find((file) => {
+        return (
           file.parentArchive === bugreportMainEntry.parentArchive &&
           file.file.name === bugreportName
-      ) !== undefined
+        );
+      }) !== undefined
     );
   }
 
   private filterBugreport(
     bugreportMainEntry: TraceFile,
     perfettoFiles: TraceFile[],
-    legacyFiles: TraceFile[]
+    legacyFiles: TraceFile[],
+    timezoneInfo?: TimezoneInfo
   ): FilterResult {
     const isFileAllowlisted = (file: TraceFile) => {
       for (const traceDir of TraceFileFilter.BUGREPORT_LEGACY_FILES_ALLOWLIST) {
@@ -89,7 +129,7 @@ export class TraceFileFilter {
     const perfettoFile = perfettoFiles.find(
       (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH
     );
-    return {perfetto: perfettoFile, legacy: legacyFiles};
+    return {perfetto: perfettoFile, legacy: legacyFiles, timezoneInfo};
   }
 
   private isPerfettoFile(file: TraceFile): boolean {

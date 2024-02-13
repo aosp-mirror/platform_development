@@ -33,8 +33,11 @@ export class TimestampFactory {
     return new Timestamp(TimestampType.ELAPSED, valueNs);
   }
 
-  canMakeTimestampFromType(type: TimestampType) {
-    return type === TimestampType.ELAPSED || type === TimestampType.REAL;
+  canMakeTimestampFromType(type: TimestampType, realToElapsedTimeOffsetNs: bigint | undefined) {
+    return (
+      type === TimestampType.ELAPSED ||
+      (type === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined)
+    );
   }
 
   makeTimestampFromType(

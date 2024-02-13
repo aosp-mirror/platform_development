@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -46,9 +47,9 @@ describe('Perfetto ParserSurfaceFlinger', () => {
 
     it('provides elapsed timestamps', () => {
       const expected = [
-        new ElapsedTimestamp(14500282843n),
-        new ElapsedTimestamp(14631249355n),
-        new ElapsedTimestamp(15403446377n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
       ];
       const actual = assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3);
       expect(actual).toEqual(expected);
@@ -56,12 +57,28 @@ describe('Perfetto ParserSurfaceFlinger', () => {
 
     it('provides real timestamps', () => {
       const expected = [
-        new RealTimestamp(1659107089102062832n),
-        new RealTimestamp(1659107089233029344n),
-        new RealTimestamp(1659107090005226366n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089102062832n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
       ];
       const actual = assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3);
       expect(actual).toEqual(expected);
+    });
+
+    it('applies timezone info to real timestamps only', async () => {
+      const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
+        TraceType.SURFACE_FLINGER,
+        'traces/perfetto/layers_trace.perfetto-trace',
+        true
+      );
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+
+      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n)
+      );
+      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n)
+      );
     });
 
     it('provides correct root entry node', async () => {

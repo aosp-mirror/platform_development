@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -45,20 +46,48 @@ describe('ParserSurfaceFlinger', () => {
 
     it('provides elapsed timestamps', () => {
       const expected = [
-        new Timestamp(TimestampType.ELAPSED, 14500282843n),
-        new Timestamp(TimestampType.ELAPSED, 14631249355n),
-        new Timestamp(TimestampType.ELAPSED, 15403446377n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
       ];
-      expect(parser.getTimestamps(TimestampType.ELAPSED)!.slice(0, 3)).toEqual(expected);
+      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
+        expected
+      );
     });
 
     it('provides real timestamps', () => {
       const expected = [
-        new Timestamp(TimestampType.REAL, 1659107089102062832n),
-        new Timestamp(TimestampType.REAL, 1659107089233029344n),
-        new Timestamp(TimestampType.REAL, 1659107090005226366n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089102062832n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
       ];
-      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
+      expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
+    });
+
+    it('applies timezone info to real timestamps only', async () => {
+      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        true
+      )) as Parser<HierarchyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+
+      const expectedElapsed = [
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
+      ];
+      expect(
+        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+      ).toEqual(expectedElapsed);
+
+      const expectedReal = [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889233029344n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126890005226366n),
+      ];
+      expect(
+        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+      ).toEqual(expectedReal);
     });
 
     it('provides correct root entry node', async () => {
@@ -164,13 +193,25 @@ describe('ParserSurfaceFlinger', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      expect(parser.getTimestamps(TimestampType.ELAPSED)![0]).toEqual(
-        new Timestamp(TimestampType.ELAPSED, 850335483446n)
+      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n)
       );
     });
 
     it("doesn't provide real timestamps", () => {
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
+    });
+
+    it('does not apply timezone info', async () => {
+      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/SurfaceFlinger.pb',
+        true
+      )) as Parser<HierarchyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+
+      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n)
+      );
     });
 
     it('provides correct root entry node', async () => {
