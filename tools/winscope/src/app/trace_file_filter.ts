@@ -20,8 +20,8 @@ import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {TraceFile} from 'trace/trace_file';
 
 export interface FilterResult {
-  perfetto?: TraceFile;
   legacy: TraceFile[];
+  perfetto?: TraceFile;
 }
 
 export class TraceFileFilter {
@@ -37,7 +37,6 @@ export class TraceFileFilter {
     const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
-
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
       const perfettoFile = this.pickLargestFile(perfettoFiles, errorListener);
       return {

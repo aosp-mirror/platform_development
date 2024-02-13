@@ -33,6 +33,9 @@ export class TimelineData {
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
   private explicitlySetZoomRange?: TimeRange;
+  private lastReturnedCurrentPosition?: TracePosition;
+  private lastReturnedFullTimeRange?: TimeRange;
+  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
@@ -67,7 +70,6 @@ export class TimelineData {
     }
   }
 
-  private lastReturnedCurrentPosition?: TracePosition;
   getCurrentPosition(): TracePosition | undefined {
     if (this.explicitlySetPosition) {
       return this.explicitlySetPosition;
@@ -138,7 +140,6 @@ export class TimelineData {
     return this.timestampType;
   }
 
-  private lastReturnedFullTimeRange?: TimeRange;
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');
@@ -250,7 +251,6 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
-  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
   findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {
@@ -290,7 +290,10 @@ export class TimelineData {
     this.explicitlySetPosition = undefined;
     this.timestampType = undefined;
     this.explicitlySetSelection = undefined;
+    this.lastReturnedCurrentPosition = undefined;
     this.screenRecordingVideo = undefined;
+    this.lastReturnedFullTimeRange = undefined;
+    this.lastReturnedCurrentEntries.clear();
     this.activeViewTraceTypes = [];
   }
 
