@@ -26,6 +26,7 @@ class UiData {
     public allTypes: string[],
     public allLayerAndDisplayIds: string[],
     public allTransactionIds: string[],
+    public allFlags: string[],
     public entries: UiDataEntry[],
     public currentEntryIndex: undefined | number,
     public selectedEntryIndex: undefined | number,
@@ -35,6 +36,7 @@ class UiData {
   ) {}
 
   static EMPTY = new UiData(
+    [],
     [],
     [],
     [],

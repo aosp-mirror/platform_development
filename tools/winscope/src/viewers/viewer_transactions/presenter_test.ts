@@ -127,10 +127,10 @@ describe('PresenterTransactions', () => {
   });
 
   it('filters entries according to transaction ID filter', () => {
-    presenter.onIdFilterChanged('');
+    presenter.onTransactionIdFilterChanged([]);
     expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onIdFilterChanged('2211908157465');
+    presenter.onTransactionIdFilterChanged(['2211908157465']);
     expect(
       new Set(assertDefined(outputUiData).entries.map((entry) => entry.transactionId))
     ).toEqual(new Set(['2211908157465']));
@@ -242,13 +242,13 @@ describe('PresenterTransactions', () => {
   it('filters entries according to "what" search string', () => {
     expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('');
+    presenter.onWhatFilterChanged([]);
     expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('Crop');
+    presenter.onWhatFilterChanged(['Crop']);
     expect(assertDefined(outputUiData).entries.length).toBeLessThan(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('STRING_WITH_NO_MATCHES');
+    presenter.onWhatFilterChanged(['STRING_WITH_NO_MATCHES']);
     expect(assertDefined(outputUiData).entries.length).toEqual(0);
   });
 

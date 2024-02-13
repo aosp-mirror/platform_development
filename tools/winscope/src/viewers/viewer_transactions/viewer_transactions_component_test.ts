@@ -17,6 +17,7 @@ import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling'
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -42,7 +43,7 @@ describe('ViewerTransactionsComponent', () => {
       component = fixture.componentInstance;
       htmlElement = fixture.nativeElement;
 
-      component.uiData = makeUiData();
+      component.inputData = makeUiData();
       fixture.detectChanges();
     });
 
@@ -60,19 +61,27 @@ describe('ViewerTransactionsComponent', () => {
     it('renders entries', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
-      const entry = htmlElement.querySelector('.scroll .entry');
-      expect(entry).toBeTruthy();
-      expect(entry!.innerHTML).toContain('TIME_VALUE');
-      expect(entry!.innerHTML).toContain('-111');
-      expect(entry!.innerHTML).toContain('PID_VALUE');
-      expect(entry!.innerHTML).toContain('UID_VALUE');
-      expect(entry!.innerHTML).toContain('TYPE_VALUE');
-      expect(entry!.innerHTML).toContain('ID_VALUE');
-      expect(entry!.innerHTML).toContain('flag1 | flag2 | ...');
+      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
+      expect(entry.innerHTML).toContain('TIME_VALUE');
+      expect(entry.innerHTML).toContain('-111');
+      expect(entry.innerHTML).toContain('PID_VALUE');
+      expect(entry.innerHTML).toContain('UID_VALUE');
+      expect(entry.innerHTML).toContain('TYPE_VALUE');
+      expect(entry.innerHTML).toContain('ID_VALUE');
+      expect(entry.innerHTML).toContain('flag1 | flag2');
     });
 
     it('renders properties', () => {
       expect(htmlElement.querySelector('.properties-tree')).toBeTruthy();
+    });
+
+    it('scrolls to current entry on button click', () => {
+      const goToCurrentTimeButton = assertDefined(
+        htmlElement.querySelector('.go-to-current-time')
+      ) as HTMLButtonElement;
+      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      goToCurrentTimeButton.click();
+      expect(spy).toHaveBeenCalledWith(1);
     });
 
     function makeUiData(): UiData {
@@ -91,19 +100,33 @@ describe('ViewerTransactionsComponent', () => {
         'TYPE_VALUE',
         'LAYER_OR_DISPLAY_ID_VALUE',
         'TRANSACTION_ID_VALUE',
-        'flag1 | flag2 | ...',
+        'flag1 | flag2',
+        propertiesTree
+      );
+
+      const entry2 = new UiDataEntry(
+        1,
+        'TIME_VALUE',
+        -222,
+        'PID_VALUE_2',
+        'UID_VALUE_2',
+        'TYPE_VALUE_2',
+        'LAYER_OR_DISPLAY_ID_VALUE_2',
+        'TRANSACTION_ID_VALUE_2',
+        'flag3 | flag4',
         propertiesTree
       );
 
       return new UiData(
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [entry],
-        0,
+        ['-111', '-222'],
+        ['PID_VALUE', 'PID_VALUE_2'],
+        ['UID_VALUE', 'UID_VALUE_2'],
+        ['TYPE_VALUE', 'TYPE_VALUE_2'],
+        ['LAYER_OR_DISPLAY_ID_VALUE', 'LAYER_OR_DISPLAY_ID_VALUE_2'],
+        ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
+        ['flag1', 'flag2', 'flag3', 'flag4'],
+        [entry, entry2],
+        1,
         0,
         0,
         UiPropertyTreeNode.from(propertiesTree),
@@ -122,6 +145,7 @@ describe('ViewerTransactionsComponent', () => {
         .setValue(null)
         .build();
       const uiData = new UiData(
+        [],
         [],
         [],
         [],
@@ -156,7 +180,7 @@ describe('ViewerTransactionsComponent', () => {
     }
 
     async function setUpTestEnvironment(): Promise<
-      [ComponentFixture<any>, HTMLElement, CdkVirtualScrollViewport]
+      [ComponentFixture<ViewerTransactionsComponent>, HTMLElement, CdkVirtualScrollViewport]
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
@@ -167,8 +191,8 @@ describe('ViewerTransactionsComponent', () => {
       const fixture = TestBed.createComponent(ViewerTransactionsComponent);
       const transactionsComponent = fixture.componentInstance;
       const htmlElement = fixture.nativeElement;
-      const viewport = transactionsComponent.scrollComponent!;
-      transactionsComponent.uiData = makeUiDataForScroll();
+      const viewport = assertDefined(transactionsComponent.scrollComponent);
+      transactionsComponent.inputData = makeUiDataForScroll();
       return [fixture, htmlElement, viewport];
     }
   });
