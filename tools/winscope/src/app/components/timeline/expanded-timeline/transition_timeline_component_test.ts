@@ -26,7 +26,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Rect} from 'common/rect';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
@@ -104,9 +104,15 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+      ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -169,9 +175,15 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+      ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -217,9 +229,12 @@ describe('TransitionTimelineComponent', () => {
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n)])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
     component.selectedEntry = component.trace.getEntry(0);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -266,9 +281,12 @@ describe('TransitionTimelineComponent', () => {
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n)])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
@@ -337,9 +355,15 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+      ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -408,9 +432,15 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(35n)])
+      .setTimestamps([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n),
+      ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -466,9 +496,12 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n)])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -509,9 +542,12 @@ describe('TransitionTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n)])
+      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n)])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 

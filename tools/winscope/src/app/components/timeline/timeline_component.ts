@@ -33,7 +33,8 @@ import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {StringUtils} from 'common/string_utils';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TimeUtils} from 'common/time_utils';
 import {TracePositionUpdate, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
@@ -318,12 +319,12 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
 
-  @Input() timelineData!: TimelineData;
+  @Input() timelineData: TimelineData | undefined;
   @Input() availableTraces: TraceType[] = [];
 
   @Output() readonly collapsedTimelineSizeChanged = new EventEmitter<number>();
 
-  @ViewChild('collapsedTimeline') private collapsedTimelineRef!: ElementRef;
+  @ViewChild('collapsedTimeline') private collapsedTimelineRef: ElementRef | undefined;
 
   videoUrl: SafeUrl | undefined;
 
@@ -366,6 +367,9 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   ) {}
 
   ngOnInit() {
+    if (!this.timelineData) {
+      throw Error('timeline data not found');
+    }
     if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
     }
@@ -383,7 +387,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   }
 
   ngAfterViewInit() {
-    const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
+    const height = assertDefined(this.collapsedTimelineRef).nativeElement.offsetHeight;
     this.collapsedTimelineSizeChanged.emit(height);
   }
 
@@ -392,7 +396,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   }
 
   getVideoCurrentTime() {
-    return this.timelineData.searchCorrespondingScreenRecordingTimeSeconds(
+    return assertDefined(this.timelineData).searchCorrespondingScreenRecordingTimeSeconds(
       this.getCurrentTracePosition()
     );
   }
@@ -404,7 +408,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
       return this.seekTracePosition;
     }
 
-    const position = this.timelineData.getCurrentPosition();
+    const position = assertDefined(this.timelineData).getCurrentPosition();
     if (position === undefined) {
       throw Error('A trace position should be available by the time the timeline is loaded');
     }
@@ -428,17 +432,19 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   }
 
   async updatePosition(position: TracePosition) {
-    this.timelineData.setPosition(position);
+    assertDefined(this.timelineData).setPosition(position);
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
   usingRealtime(): boolean {
-    return this.timelineData.getTimestampType() === TimestampType.REAL;
+    return assertDefined(this.timelineData).getTimestampType() === TimestampType.REAL;
   }
 
   updateSeekTimestamp(timestamp: Timestamp | undefined) {
     if (timestamp) {
-      this.seekTracePosition = this.timelineData.makePositionFromActiveTrace(timestamp);
+      this.seekTracePosition = assertDefined(this.timelineData).makePositionFromActiveTrace(
+        timestamp
+      );
     } else {
       this.seekTracePosition = undefined;
     }
@@ -446,14 +452,12 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {
+    const currentNs = this.getCurrentTracePosition().timestamp.getValueNs();
     this.selectedElapsedTimeFormControl.setValue(
-      TimeUtils.format(
-        new ElapsedTimestamp(this.getCurrentTracePosition().timestamp.getValueNs()),
-        false
-      )
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(currentNs), false)
     );
     this.selectedRealTimeFormControl.setValue(
-      TimeUtils.format(new RealTimestamp(this.getCurrentTracePosition().timestamp.getValueNs()))
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(currentNs))
     );
     this.selectedNsFormControl.setValue(
       `${this.getCurrentTracePosition().timestamp.getValueNs()} ns`
@@ -504,7 +508,7 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
-    if (this.isInputFormFocused || !this.timelineData.hasTimestamps()) {
+    if (this.isInputFormFocused || !assertDefined(this.timelineData).hasTimestamps()) {
       return;
     }
     if (event.key === 'ArrowLeft') {
@@ -518,28 +522,35 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
     if (this.internalActiveTrace === undefined) {
       return false;
     }
-    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
+    if (
+      assertDefined(this.timelineData).getTraces().getTrace(this.internalActiveTrace) === undefined
+    ) {
       return false;
     }
-    return this.timelineData.getPreviousEntryFor(this.internalActiveTrace) !== undefined;
+    return (
+      assertDefined(this.timelineData).getPreviousEntryFor(this.internalActiveTrace) !== undefined
+    );
   }
 
   hasNextEntry(): boolean {
     if (this.internalActiveTrace === undefined) {
       return false;
     }
-    if (this.timelineData.getTraces().getTrace(this.internalActiveTrace) === undefined) {
+    if (
+      assertDefined(this.timelineData).getTraces().getTrace(this.internalActiveTrace) === undefined
+    ) {
       return false;
     }
-    return this.timelineData.getNextEntryFor(this.internalActiveTrace) !== undefined;
+    return assertDefined(this.timelineData).getNextEntryFor(this.internalActiveTrace) !== undefined;
   }
 
   async moveToPreviousEntry() {
     if (this.internalActiveTrace === undefined) {
       return;
     }
-    this.timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
-    const position = assertDefined(this.timelineData.getCurrentPosition());
+    const timelineData = assertDefined(this.timelineData);
+    timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
+    const position = assertDefined(timelineData.getCurrentPosition());
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
@@ -547,8 +558,9 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
     if (this.internalActiveTrace === undefined) {
       return;
     }
-    this.timelineData.moveToNextEntryFor(this.internalActiveTrace);
-    const position = assertDefined(this.timelineData.getCurrentPosition());
+    const timelineData = assertDefined(this.timelineData);
+    timelineData.moveToNextEntryFor(this.internalActiveTrace);
+    const position = assertDefined(timelineData.getCurrentPosition());
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
@@ -558,7 +570,9 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
     }
     const target = event.target as HTMLInputElement;
     const timestamp = TimeUtils.parseHumanElapsed(target.value);
-    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
+    await this.updatePosition(
+      assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp)
+    );
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -569,7 +583,9 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
     const target = event.target as HTMLInputElement;
 
     const timestamp = TimeUtils.parseHumanReal(target.value);
-    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
+    await this.updatePosition(
+      assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp)
+    );
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -578,12 +594,14 @@ export class TimelineComponent implements WinscopeEventEmitter, WinscopeEventLis
       return;
     }
     const target = event.target as HTMLInputElement;
+    const timelineData = assertDefined(this.timelineData);
 
-    const timestamp = new Timestamp(
-      this.timelineData.getTimestampType()!,
-      StringUtils.parseBigIntStrippingUnit(target.value)
+    const timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      assertDefined(timelineData.getTimestampType()),
+      StringUtils.parseBigIntStrippingUnit(target.value),
+      0n
     );
-    await this.updatePosition(this.timelineData.makePositionFromActiveTrace(timestamp));
+    await this.updatePosition(timelineData.makePositionFromActiveTrace(timestamp));
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 

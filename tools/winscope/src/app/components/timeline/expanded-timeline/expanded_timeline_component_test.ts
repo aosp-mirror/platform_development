@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
@@ -72,11 +72,15 @@ describe('ExpandedTimelineComponent', () => {
     timelineData = new TimelineData();
     const traces = new TracesBuilder()
       .setEntries(TraceType.SURFACE_FLINGER, [{}])
-      .setTimestamps(TraceType.SURFACE_FLINGER, [new RealTimestamp(10n)])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      ])
       .setEntries(TraceType.WINDOW_MANAGER, [{}])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [new RealTimestamp(11n)])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
+      ])
       .setEntries(TraceType.TRANSACTIONS, [{}])
-      .setTimestamps(TraceType.TRANSACTIONS, [new RealTimestamp(12n)])
+      .setTimestamps(TraceType.TRANSACTIONS, [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n)])
       .setEntries(TraceType.TRANSITION, [
         new PropertyTreeBuilder()
           .setIsRoot(true)
@@ -111,7 +115,10 @@ describe('ExpandedTimelineComponent', () => {
           ])
           .build(),
       ])
-      .setTimestamps(TraceType.TRANSITION, [new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps(TraceType.TRANSITION, [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+      ])
       .setTimestamps(TraceType.PROTO_LOG, [])
       .build();
     timelineData.initialize(traces, undefined);
@@ -155,7 +162,7 @@ describe('ExpandedTimelineComponent', () => {
   it('passes selectedEntry of correct type into each timeline on position change', () => {
     // 3 out of the 5 traces have timestamps before or at 11n
     assertDefined(component.timelineData).setPosition(
-      TracePosition.fromTimestamp(new RealTimestamp(11n))
+      TracePosition.fromTimestamp(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n))
     );
     fixture.detectChanges();
 

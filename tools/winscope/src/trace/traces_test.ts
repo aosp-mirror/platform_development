@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -29,16 +29,16 @@ import {TraceType} from './trace_type';
 describe('Traces', () => {
   let traces: Traces;
 
-  const time1 = new RealTimestamp(1n);
-  const time2 = new RealTimestamp(2n);
-  const time3 = new RealTimestamp(3n);
-  const time4 = new RealTimestamp(4n);
-  const time5 = new RealTimestamp(5n);
-  const time6 = new RealTimestamp(6n);
-  const time7 = new RealTimestamp(7n);
-  const time8 = new RealTimestamp(8n);
-  const time9 = new RealTimestamp(9n);
-  const time10 = new RealTimestamp(10n);
+  const time1 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n);
+  const time2 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n);
+  const time3 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n);
+  const time4 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n);
+  const time5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
+  const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
+  const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
+  const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
+  const time9 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(9n);
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
 
   let extractedEntriesEmpty: Map<TraceType, Array<{}>>;
   let extractedEntriesFull: Map<TraceType, Array<{}>>;
