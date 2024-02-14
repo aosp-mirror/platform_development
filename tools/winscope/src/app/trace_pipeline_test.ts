@@ -20,6 +20,7 @@ import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {
   CorruptedArchive,
   NoInputFiles,
+  TraceOverridden,
   UnsupportedFileFormat,
   WinscopeError,
 } from 'messaging/winscope_error';
@@ -144,23 +145,23 @@ describe('TracePipeline', () => {
   });
 
   it('is robust to invalid trace files', async () => {
-    const invalidFiles = [await UnitTestUtils.getFixtureFile('winscope_homepage.png')];
+    const invalidFiles = [await UnitTestUtils.getFixtureFile('winscope_homepage.jpg')];
 
     await loadFiles(invalidFiles);
 
-    await expectLoadResult(0, [new UnsupportedFileFormat('winscope_homepage.png')]);
+    await expectLoadResult(0, [new UnsupportedFileFormat('winscope_homepage.jpg')]);
   });
 
   it('is robust to mixed valid and invalid trace files', async () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
     const files = [
-      await UnitTestUtils.getFixtureFile('winscope_homepage.png'),
+      await UnitTestUtils.getFixtureFile('winscope_homepage.jpg'),
       await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb'),
     ];
 
     await loadFiles(files);
 
-    await expectLoadResult(1, [new UnsupportedFileFormat('winscope_homepage.png')]);
+    await expectLoadResult(1, [new UnsupportedFileFormat('winscope_homepage.jpg')]);
   });
 
   it('can remove traces', async () => {
@@ -199,6 +200,31 @@ describe('TracePipeline', () => {
     ];
     await loadFiles(files);
     await expectLoadResult(1, []);
+
+    const video = await tracePipeline.getScreenRecordingVideo();
+    expect(video).toBeDefined();
+    expect(video?.size).toBeGreaterThan(0);
+  });
+
+  it('gets screenshot data', async () => {
+    const files = [await UnitTestUtils.getFixtureFile('traces/screenshot.png')];
+    await loadFiles(files);
+    await expectLoadResult(1, []);
+
+    const video = await tracePipeline.getScreenRecordingVideo();
+    expect(video).toBeDefined();
+    expect(video?.size).toBeGreaterThan(0);
+  });
+
+  it('prioritises screenrecording over screenshot data', async () => {
+    const files = [
+      await UnitTestUtils.getFixtureFile('traces/screenshot.png'),
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+      ),
+    ];
+    await loadFiles(files);
+    await expectLoadResult(1, [new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING)]);
 
     const video = await tracePipeline.getScreenRecordingVideo();
     expect(video).toBeDefined();

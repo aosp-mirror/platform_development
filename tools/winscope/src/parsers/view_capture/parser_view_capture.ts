@@ -31,7 +31,7 @@ export class ParserViewCapture {
 
   async parse() {
     const traceBuffer = new Uint8Array(await this.traceFile.file.arrayBuffer());
-    ParsingUtils.throwIfMagicNumberDoesntMatch(traceBuffer, ParserViewCapture.MAGIC_NUMBER);
+    ParsingUtils.throwIfMagicNumberDoesNotMatch(traceBuffer, ParserViewCapture.MAGIC_NUMBER);
 
     const exportedData = ExportedData.decode(
       traceBuffer

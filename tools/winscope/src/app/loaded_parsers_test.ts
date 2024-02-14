@@ -267,6 +267,56 @@ describe('LoadedParsers', () => {
     });
   });
 
+  describe('handles screen recordings and screenshots', () => {
+    const parserScreenRecording = new ParserBuilder<object>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screen_recording.mp4'])
+      .build();
+    const parserScreenshot = new ParserBuilder<object>()
+      .setType(TraceType.SCREENSHOT)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screenshot.png'])
+      .build();
+    const overrideError = new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING);
+
+    it('loads screenshot parser', () => {
+      loadParsers([parserScreenshot], []);
+      expectLoadResult([parserScreenshot], []);
+    });
+
+    it('loads screen recording parser', () => {
+      loadParsers([parserScreenRecording], []);
+      expectLoadResult([parserScreenRecording], []);
+    });
+
+    it('discards screenshot parser in favour of screen recording parser', () => {
+      loadParsers([parserScreenshot, parserScreenRecording], []);
+      expectLoadResult([parserScreenRecording], [overrideError]);
+    });
+
+    it('does not load screenshot parser after loading screen recording parser in same call', () => {
+      loadParsers([parserScreenRecording, parserScreenshot], []);
+      expectLoadResult([parserScreenRecording], [overrideError]);
+    });
+
+    it('does not load screenshot parser after loading screen recording parser in previous call', () => {
+      loadParsers([parserScreenRecording], []);
+      expectLoadResult([parserScreenRecording], []);
+
+      loadParsers([parserScreenshot], []);
+      expectLoadResult([parserScreenRecording], [overrideError]);
+    });
+
+    it('overrides previously loaded screenshot parser with screen recording parser', () => {
+      loadParsers([parserScreenshot], []);
+      expectLoadResult([parserScreenshot], []);
+
+      loadParsers([parserScreenRecording], []);
+      expectLoadResult([parserScreenRecording], [overrideError]);
+    });
+  });
+
   it('can remove parsers', () => {
     loadParsers([parserSf0], [parserWm0]);
     expectLoadResult([parserSf0, parserWm0], []);
