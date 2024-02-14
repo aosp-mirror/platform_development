@@ -41,6 +41,7 @@ export class LoadedParsers {
     }
 
     legacyParsers = this.filterOutLegacyParsersWithOldData(legacyParsers, errorListener);
+    legacyParsers = this.filterScreenshotParsersIfRequired(legacyParsers, errorListener);
 
     this.addLegacyParsers(legacyParsers, errorListener);
   }
@@ -222,6 +223,48 @@ export class LoadedParsers {
 
       return true;
     });
+  }
+
+  private filterScreenshotParsersIfRequired(
+    newLegacyParsers: FileAndParser[],
+    errorListener: WinscopeErrorListener
+  ): FileAndParser[] {
+    const oldScreenRecordingParser = this.legacyParsers.get(TraceType.SCREEN_RECORDING)?.parser;
+    const oldScreenshotParser = this.legacyParsers.get(TraceType.SCREENSHOT)?.parser;
+
+    const newScreenRecordingParsers = newLegacyParsers.filter(
+      (fileAndParser) => fileAndParser.parser.getTraceType() === TraceType.SCREEN_RECORDING
+    );
+    const newScreenshotParsers = newLegacyParsers.filter(
+      (fileAndParser) => fileAndParser.parser.getTraceType() === TraceType.SCREENSHOT
+    );
+
+    if (oldScreenRecordingParser || newScreenRecordingParsers.length > 0) {
+      newScreenshotParsers.forEach((newScreenshotParser) => {
+        errorListener.onError(
+          new TraceOverridden(
+            newScreenshotParser.parser.getDescriptors().join(),
+            TraceType.SCREEN_RECORDING
+          )
+        );
+      });
+
+      if (oldScreenshotParser) {
+        errorListener.onError(
+          new TraceOverridden(
+            oldScreenshotParser.getDescriptors().join(),
+            TraceType.SCREEN_RECORDING
+          )
+        );
+        this.remove(TraceType.SCREENSHOT);
+      }
+
+      return newLegacyParsers.filter(
+        (fileAndParser) => fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT
+      );
+    }
+
+    return newLegacyParsers;
   }
 
   private findLastTimeGapAboveThreshold(ranges: readonly TimeRange[]): TimeRange | undefined {

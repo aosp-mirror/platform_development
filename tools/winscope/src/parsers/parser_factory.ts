@@ -27,6 +27,7 @@ import {ParserInputMethodClients} from './input_method/parser_input_method_clien
 import {ParserInputMethodManagerService} from './input_method/parser_input_method_manager_service';
 import {ParserInputMethodService} from './input_method/parser_input_method_service';
 import {ParserProtoLog} from './protolog/parser_protolog';
+import {ParserScreenshot} from './screen_recording/parser_screenshot';
 import {ParserScreenRecording} from './screen_recording/parser_screen_recording';
 import {ParserScreenRecordingLegacy} from './screen_recording/parser_screen_recording_legacy';
 import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
@@ -51,6 +52,7 @@ export class ParserFactory {
     ParserTransitionsWm,
     ParserTransitionsShell,
     ParserViewCapture,
+    ParserScreenshot,
   ];
 
   async createParsers(
