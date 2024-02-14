@@ -114,7 +114,9 @@ export class TracePipeline {
   }
 
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
-    const screenRecording = this.getTraces().getTrace(TraceType.SCREEN_RECORDING);
+    const traces = this.getTraces();
+    const screenRecording =
+      traces.getTrace(TraceType.SCREEN_RECORDING) ?? traces.getTrace(TraceType.SCREENSHOT);
     if (!screenRecording || screenRecording.lengthEntries === 0) {
       return undefined;
     }
@@ -133,6 +135,7 @@ export class TracePipeline {
     progressListener: ProgressListener | undefined
   ) {
     const filterResult = await this.traceFileFilter.filter(unzippedArchive, errorListener);
+
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
       errorListener.onError(new NoInputFiles());
       return;
