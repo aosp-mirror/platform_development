@@ -334,6 +334,7 @@ export class Presenter {
         ? inputWindowInfo.getChildByName('replaceTouchableRegionWithCrop')?.formattedValue() ??
           'false'
         : 'false',
+      inputConfig: inputWindowInfo?.getChildByName('inputConfig')?.formattedValue() ?? 'null',
       ignoreDestinationFrame:
         (flags.getValue() & LayerFlag.IGNORE_DESTINATION_FRAME) ===
         LayerFlag.IGNORE_DESTINATION_FRAME,
