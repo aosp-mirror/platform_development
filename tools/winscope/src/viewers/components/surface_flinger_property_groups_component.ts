@@ -229,6 +229,11 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
             &ngsp;
             {{ properties.replaceTouchRegionWithCrop }}
           </p>
+          <p class="mat-body-1 input-config">
+            <span class="mat-body-2">Input Config:</span>
+            &ngsp;
+            {{ properties.inputConfig }}
+          </p>
         </div>
       </ng-container>
       <div *ngIf="!properties.hasInputChannel" class="left-column">
