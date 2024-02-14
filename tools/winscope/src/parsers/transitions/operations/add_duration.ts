@@ -15,7 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ELAPSED_TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -24,22 +26,27 @@ export class AddDuration extends AddOperation<PropertyTreeNode> {
   protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
     const wmDataNode = assertDefined(value.getChildByName('wmData'));
 
-    const sendTimeNode = wmDataNode.getChildByName('sendTimeNs');
-    const finishTimeNode = wmDataNode.getChildByName('finishTimeNs');
+    const sendTime: Timestamp | null | undefined = wmDataNode
+      .getChildByName('sendTimeNs')
+      ?.getValue();
+    const finishTime: Timestamp | null | undefined = wmDataNode
+      .getChildByName('finishTimeNs')
+      ?.getValue();
 
-    if (!sendTimeNode || !finishTimeNode) {
+    if (!sendTime || !finishTime) {
       return [];
     }
 
-    const timeDiffNs =
-      BigInt(finishTimeNode.getValue().toString()) - BigInt(sendTimeNode.getValue().toString());
+    const timeDiffNs = finishTime.minus(sendTime).getValueNs();
+
+    const timeDiff = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timeDiffNs);
 
     const durationNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
       value.id,
       'duration',
-      timeDiffNs
+      timeDiff
     );
-    durationNode.setFormatter(ELAPSED_TIMESTAMP_FORMATTER);
+    durationNode.setFormatter(TIMESTAMP_FORMATTER);
 
     return [durationNode];
   }

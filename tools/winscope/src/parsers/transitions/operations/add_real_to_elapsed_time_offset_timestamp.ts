@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class AddRealToElapsedTimeOffsetNs extends AddOperation<PropertyTreeNode> {
-  constructor(private readonly realToElapsedTimeOffsetNs: bigint | undefined) {
+export class AddRealToElapsedTimeOffsetTimestamp extends AddOperation<PropertyTreeNode> {
+  constructor(private readonly realToElapsedTimeOffsetTimestamp: Timestamp | undefined) {
     super();
   }
   protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
     const offsetNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
       value.id,
-      'realToElapsedTimeOffsetNs',
-      this.realToElapsedTimeOffsetNs
+      'realToElapsedTimeOffsetTimestamp',
+      this.realToElapsedTimeOffsetTimestamp
     );
 
     return [offsetNode];

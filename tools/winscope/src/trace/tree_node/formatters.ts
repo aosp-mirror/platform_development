@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
@@ -170,21 +170,15 @@ class FixedStringFormatter implements PropertyFormatter {
 }
 
 class TimestampFormatter implements PropertyFormatter {
-  constructor(
-    private readonly timestampType: TimestampType,
-    private readonly realToElapsedTimeOffsetNs?: bigint
-  ) {}
-
   format(node: PropertyTreeNode): string {
-    const nanos = BigInt(node.getValue().toString());
-    if (nanos !== 0n) {
-      const timestamp = Timestamp.from(this.timestampType, nanos, this.realToElapsedTimeOffsetNs);
+    const timestamp = node.getValue();
+    if (timestamp instanceof Timestamp) {
       return TimeUtils.format(timestamp);
     }
     return 'null';
   }
 }
-const ELAPSED_TIMESTAMP_FORMATTER = new TimestampFormatter(TimestampType.ELAPSED);
+const TIMESTAMP_FORMATTER = new TimestampFormatter();
 
 export {
   EMPTY_OBJ_STRING,
@@ -201,6 +195,5 @@ export {
   REGION_FORMATTER,
   EnumFormatter,
   FixedStringFormatter,
-  TimestampFormatter,
-  ELAPSED_TIMESTAMP_FORMATTER,
+  TIMESTAMP_FORMATTER,
 };

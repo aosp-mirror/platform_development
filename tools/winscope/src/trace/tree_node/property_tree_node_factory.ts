@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class PropertyTreeNodeFactory {
@@ -85,6 +86,7 @@ export class PropertyTreeNodeFactory {
     if (!value) return false;
     if (Array.isArray(value)) return value.length > 0;
     if (this.isLongType(value)) return false;
+    if (value instanceof Timestamp) return false;
     return typeof value === 'object' && Object.keys(value).length > 0;
   }
 

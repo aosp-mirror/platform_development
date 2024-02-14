@@ -41,6 +41,12 @@ describe('ExpandedTimelineComponent', () => {
   let component: ExpandedTimelineComponent;
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+  const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+  const time30 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(30n);
+  const time60 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n);
+  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -72,15 +78,11 @@ describe('ExpandedTimelineComponent', () => {
     timelineData = new TimelineData();
     const traces = new TracesBuilder()
       .setEntries(TraceType.SURFACE_FLINGER, [{}])
-      .setTimestamps(TraceType.SURFACE_FLINGER, [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-      ])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [time10])
       .setEntries(TraceType.WINDOW_MANAGER, [{}])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
-      ])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time11])
       .setEntries(TraceType.TRANSACTIONS, [{}])
-      .setTimestamps(TraceType.TRANSACTIONS, [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n)])
+      .setTimestamps(TraceType.TRANSACTIONS, [time12])
       .setEntries(TraceType.TRANSITION, [
         new PropertyTreeBuilder()
           .setIsRoot(true)
@@ -89,11 +91,11 @@ describe('ExpandedTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 30n}],
+              children: [{name: 'finishTimeNs', value: time30}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 10n}],
+              children: [{name: 'dispatchTimeNs', value: time10}],
             },
             {name: 'aborted', value: false},
           ])
@@ -105,20 +107,17 @@ describe('ExpandedTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 110n}],
+              children: [{name: 'finishTimeNs', value: time110}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 60n}],
+              children: [{name: 'dispatchTimeNs', value: time60}],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps(TraceType.TRANSITION, [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
-      ])
+      .setTimestamps(TraceType.TRANSITION, [time10, time60])
       .setTimestamps(TraceType.PROTO_LOG, [])
       .build();
     timelineData.initialize(traces, undefined);
@@ -161,9 +160,7 @@ describe('ExpandedTimelineComponent', () => {
 
   it('passes selectedEntry of correct type into each timeline on position change', () => {
     // 3 out of the 5 traces have timestamps before or at 11n
-    assertDefined(component.timelineData).setPosition(
-      TracePosition.fromTimestamp(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n))
-    );
+    assertDefined(component.timelineData).setPosition(TracePosition.fromTimestamp(time11));
     fixture.detectChanges();
 
     const singleTimelines = assertDefined(component.singleTimelines);

@@ -115,16 +115,13 @@ export class Presenter {
 
       const transition: Transition = {
         id: assertDefined(transitionNode.getChildByName('id')).getValue(),
-        type: assertDefined(wmDataNode.getChildByName('type')).formattedValue(),
+        type: wmDataNode.getChildByName('type')?.formattedValue() ?? 'NONE',
         sendTime: wmDataNode.getChildByName('sendTimeNs')?.formattedValue(),
         finishTime: wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),
         duration: transitionNode.getChildByName('duration')?.formattedValue(),
         merged: assertDefined(transitionNode.getChildByName('merged')).getValue(),
         aborted: assertDefined(transitionNode.getChildByName('aborted')).getValue(),
         played: assertDefined(transitionNode.getChildByName('played')).getValue(),
-        realToElapsedTimeOffsetNs: assertDefined(
-          transitionNode.getChildByName('realToElapsedTimeOffsetNs')
-        ).getValue(),
         propertiesTree: transitionNode,
       };
       return transition;

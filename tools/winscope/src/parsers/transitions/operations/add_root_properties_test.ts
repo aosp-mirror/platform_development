@@ -33,10 +33,7 @@ describe('AddRootProperties', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
         {name: 'shellData', value: null},
         {name: 'duration', value: 5n, source: PropertySource.CALCULATED},
@@ -50,15 +47,11 @@ describe('AddRootProperties', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
         {name: 'shellData', value: null},
         {name: 'duration', value: 5n, source: PropertySource.CALCULATED},
         {name: 'id', value: 10, source: PropertySource.CALCULATED},
-        {name: 'realToElapsedTimeOffsetNs', value: 20n, source: PropertySource.CALCULATED},
       ])
       .build();
 
@@ -75,10 +68,7 @@ describe('AddRootProperties', () => {
         {name: 'wmData', value: null},
         {
           name: 'shellData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
       ])
       .build();
@@ -91,13 +81,9 @@ describe('AddRootProperties', () => {
         {name: 'wmData', value: null},
         {
           name: 'shellData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
         {name: 'id', value: 10, source: PropertySource.CALCULATED},
-        {name: 'realToElapsedTimeOffsetNs', value: 20n, source: PropertySource.CALCULATED},
       ])
       .build();
 
@@ -113,17 +99,11 @@ describe('AddRootProperties', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 10n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
         {
           name: 'shellData',
-          children: [
-            {name: 'id', value: 20},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 20}],
         },
         {name: 'aborted', value: true, source: PropertySource.CALCULATED},
       ])
@@ -136,21 +116,14 @@ describe('AddRootProperties', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [
-            {name: 'id', value: 10},
-            {name: 'realToElapsedTimeOffsetNs', value: 10n},
-          ],
+          children: [{name: 'id', value: 10}],
         },
         {
           name: 'shellData',
-          children: [
-            {name: 'id', value: 20},
-            {name: 'realToElapsedTimeOffsetNs', value: 20n},
-          ],
+          children: [{name: 'id', value: 20}],
         },
         {name: 'aborted', value: true, source: PropertySource.CALCULATED},
         {name: 'id', value: 10, source: PropertySource.CALCULATED},
-        {name: 'realToElapsedTimeOffsetNs', value: 10n, source: PropertySource.CALCULATED},
       ])
       .build();
 
