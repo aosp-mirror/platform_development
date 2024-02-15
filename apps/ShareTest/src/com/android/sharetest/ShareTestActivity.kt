@@ -63,6 +63,7 @@ class ShareTestActivity : Activity() {
     private lateinit var mediaSelection: RadioGroup
     private lateinit var textSelection: RadioGroup
     private lateinit var mediaTypeSelection: Spinner
+    private lateinit var mediaTypeHeader: View
     private lateinit var richText: CheckBox
     private lateinit var albumCheck: CheckBox
 
@@ -86,6 +87,7 @@ class ShareTestActivity : Activity() {
         richText = requireViewById(R.id.use_rich_text)
         albumCheck = requireViewById(R.id.album_text)
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
+        mediaTypeHeader = requireViewById(R.id.media_type_header)
         mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
@@ -152,7 +154,7 @@ class ShareTestActivity : Activity() {
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        mediaTypeSelection.isEnabled = false
+        setMediaTypeVisibility(false)
     }
 
     private fun setSingleMediaTypeOptions() {
@@ -163,7 +165,7 @@ class ShareTestActivity : Activity() {
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        mediaTypeSelection.isEnabled = true
+        setMediaTypeVisibility(true)
     }
 
     private fun setAllMediaTypeOptions() {
@@ -182,7 +184,13 @@ class ShareTestActivity : Activity() {
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        mediaTypeSelection.isEnabled = true
+        setMediaTypeVisibility(true)
+    }
+
+    private fun setMediaTypeVisibility(visible: Boolean) {
+        val visibility = if (visible) View.VISIBLE else View.GONE
+        mediaTypeHeader.visibility = visibility
+        mediaTypeSelection.visibility = visibility
     }
 
     private fun share(view: View) {
