@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+import {TransformMatrix} from 'common/geometry_types';
+
 export enum ColorType {
   VISIBLE,
   NOT_VISIBLE,
   HIGHLIGHTED,
+  HAS_CONTENT,
 }
 
 export class Distance2D {
@@ -40,17 +43,8 @@ export interface Rect3D {
   darkFactor: number;
   colorType: ColorType;
   isClickable: boolean;
-  transform: Transform3D;
+  transform: TransformMatrix;
   isOversized: boolean;
-}
-
-export interface Transform3D {
-  dsdx: number;
-  dsdy: number;
-  tx: number;
-  dtdx: number;
-  dtdy: number;
-  ty: number;
 }
 
 export interface Point3D {

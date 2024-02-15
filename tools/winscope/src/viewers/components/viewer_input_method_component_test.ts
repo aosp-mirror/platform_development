@@ -17,8 +17,8 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
-import {HierarchyComponent} from 'viewers/components/hierarchy_component';
-import {PropertiesComponent} from 'viewers/components/properties_component';
+import {HierarchyComponent} from './hierarchy_component';
+import {PropertiesComponent} from './properties_component';
 import {ViewerInputMethodComponent} from './viewer_input_method_component';
 
 describe('ViewerInputMethodComponent', () => {

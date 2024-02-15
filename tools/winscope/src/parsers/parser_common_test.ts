@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CommonTestUtils} from 'test/common/utils';
+import {assertDefined} from 'common/assert_utils';
+import {Timestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
-    const trace = new TraceFile(await CommonTestUtils.getFixtureFile('traces/empty.pb'), undefined);
-    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
+    const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
+    const parsers = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
   });
 
@@ -38,10 +38,12 @@ describe('Parser', () => {
   });
 
   describe('real timestamp', () => {
-    let parser: Parser<WindowManagerState>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/WindowManager.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/WindowManager.pb'
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('provides timestamps', () => {
@@ -53,25 +55,26 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
 
-    it('retrieves trace entries', () => {
-      expect(
-        BigInt(parser.getEntry(0, TimestampType.REAL)!.timestamp.unixNanos.toString())
-      ).toEqual(1659107089075566202n);
-      expect(
-        BigInt(
-          parser
-            .getEntry(parser.getLengthEntries() - 1, TimestampType.REAL)!
-            .timestamp.unixNanos.toString()
-        )
-      ).toEqual(1659107091700249187n);
+    it('retrieves trace entries', async () => {
+      let entry = await parser.getEntry(0, TimestampType.REAL);
+      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
+        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      );
+
+      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
+      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
+        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      );
     });
   });
 
   describe('elapsed timestamp', () => {
-    let parser: Parser<WindowManagerState>;
+    let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/WindowManager.pb');
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/WindowManager.pb'
+      )) as Parser<HierarchyTreeNode>;
     });
 
     it('provides timestamps', () => {
@@ -83,17 +86,16 @@ describe('Parser', () => {
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
-    it('retrieves trace entries', () => {
-      expect(
-        BigInt(parser.getEntry(0, TimestampType.ELAPSED)!.timestamp.elapsedNanos.toString())
-      ).toEqual(850254319343n);
-      expect(
-        BigInt(
-          parser
-            .getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED)!
-            .timestamp.elapsedNanos.toString()
-        )
-      ).toEqual(850782750048n);
+    it('retrieves trace entries', async () => {
+      let entry = await parser.getEntry(0, TimestampType.ELAPSED);
+      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
+        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      );
+
+      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
+      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
+        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      );
     });
   });
 });

@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
+import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {TabbedViewSwitched, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
-interface Tab extends View {
+interface Tab {
+  view: View;
   addedToDom: boolean;
 }
 
@@ -47,22 +53,15 @@ interface Tab extends View {
           class="tab">
           <mat-icon
             class="icon"
-            [matTooltip]="TRACE_INFO[tab.traceType].name"
-            [style]="{color: TRACE_INFO[tab.traceType].color, marginRight: '0.5rem'}">
-            {{ TRACE_INFO[tab.traceType].icon }}
+            [matTooltip]="TRACE_INFO[tab.view.traceType].name"
+            [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
+            {{ TRACE_INFO[tab.view.traceType].icon }}
           </mat-icon>
           <p>
-            {{ tab.title }}
+            {{ tab.view.title }}
           </p>
         </a>
       </nav>
-      <button
-        color="primary"
-        mat-button
-        class="save-button"
-        (click)="downloadTracesButtonClick.emit()">
-        Download all traces
-      </button>
     </div>
     <mat-divider></mat-divider>
     <div class="trace-view-content"></div>
@@ -70,7 +69,7 @@ interface Tab extends View {
   styles: [
     `
       .overlay {
-        z-index: 10;
+        z-index: 30;
         position: fixed;
         top: 0px;
         left: 0px;
@@ -102,18 +101,16 @@ interface Tab extends View {
     `,
   ],
 })
-export class TraceViewComponent {
-  @Input() viewers!: Viewer[];
-  @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
-  @Output() activeViewChanged = new EventEmitter<View>();
+export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventListener {
+  @Input() viewers: Viewer[] = [];
+  @Input() store: PersistentStore | undefined;
 
   TRACE_INFO = TRACE_INFO;
+  tabs: Tab[] = [];
 
   private elementRef: ElementRef;
-
-  tabs: Tab[] = [];
   private currentActiveTab: undefined | Tab;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
     this.elementRef = elementRef;
@@ -124,8 +121,25 @@ export class TraceViewComponent {
     this.renderViewsOverlay();
   }
 
-  onTabClick(tab: Tab) {
-    this.showTab(tab);
+  async onTabClick(tab: Tab) {
+    await this.showTab(tab);
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
+      const tab = this.tabs.find((tab) => tab.view.traceType === event.newFocusedViewId);
+      if (tab) {
+        await this.showTab(tab);
+      }
+    });
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  isCurrentActiveTab(tab: Tab) {
+    return tab === this.currentActiveTab;
   }
 
   private renderViewsTab() {
@@ -135,19 +149,15 @@ export class TraceViewComponent {
       .filter((view) => view.type === ViewType.TAB)
       .map((view) => {
         return {
-          type: view.type,
-          htmlElement: view.htmlElement,
-          title: view.title,
+          view,
           addedToDom: false,
-          dependencies: view.dependencies,
-          traceType: view.traceType,
         };
       });
 
     this.tabs.forEach((tab) => {
       // TODO: setting "store" this way is a hack.
       //       Store should be part of View's interface.
-      (tab.htmlElement as any).store = this.store;
+      (tab.view.htmlElement as any).store = this.store;
     });
 
     if (this.tabs.length > 0) {
@@ -172,16 +182,16 @@ export class TraceViewComponent {
 
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
-      const container = this.elementRef.nativeElement.querySelector(
-        '.overlay .draggable-container'
-      )!;
+      const container = assertDefined(
+        this.elementRef.nativeElement.querySelector('.overlay .draggable-container')
+      );
       container.appendChild(view.htmlElement);
     });
   }
 
-  private showTab(tab: Tab) {
+  private async showTab(tab: Tab) {
     if (this.currentActiveTab) {
-      this.currentActiveTab.htmlElement.style.display = 'none';
+      this.currentActiveTab.view.htmlElement.style.display = 'none';
     }
 
     if (!tab.addedToDom) {
@@ -190,18 +200,17 @@ export class TraceViewComponent {
       // (added to the DOM) it has style.display == "". This fixes the
       // initialization/rendering issues with cdk-virtual-scroll-viewport
       // components inside the tab contents.
-      const traceViewContent = this.elementRef.nativeElement.querySelector('.trace-view-content')!;
-      traceViewContent.appendChild(tab.htmlElement);
+      const traceViewContent = assertDefined(
+        this.elementRef.nativeElement.querySelector('.trace-view-content')
+      );
+      traceViewContent.appendChild(tab.view.htmlElement);
       tab.addedToDom = true;
     } else {
-      tab.htmlElement.style.display = '';
+      tab.view.htmlElement.style.display = '';
     }
 
     this.currentActiveTab = tab;
-    this.activeViewChanged.emit(tab);
-  }
 
-  isCurrentActiveTab(tab: Tab) {
-    return tab === this.currentActiveTab;
+    await this.emitAppEvent(new TabbedViewSwitched(tab.view));
   }
 }

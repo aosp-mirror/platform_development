@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   dependencies: TraceType[];
-  rects: Rectangle[] = [];
-  displayIds: number[] = [];
-  highlightedItems: string[] = [];
-  pinnedItems: HierarchyTreeNode[] = [];
+  rects: UiRect[] = [];
+  displays: DisplayIdentifier[] = [];
+  highlightedItem = '';
+  highlightedProperty = '';
+  pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNode | null = null;
-  propertiesTree: PropertiesTreeNode | null = null;
+  tree: UiHierarchyTreeNode | undefined;
+  propertiesTree: UiPropertyTreeNode | undefined;
 
   constructor(dependencies?: TraceType[]) {
     this.dependencies = dependencies ?? [];

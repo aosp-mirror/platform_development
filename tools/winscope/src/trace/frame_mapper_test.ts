@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
+import {RealTimestamp} from 'common/time';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {LayerTraceEntry} from './flickerlib/layers/LayerTraceEntry';
-import {WindowManagerState} from './flickerlib/windows/WindowManagerState';
+import {CustomQueryType} from './custom_query';
 import {FrameMapper} from './frame_mapper';
 import {AbsoluteFrameIndex} from './index_types';
-import {LogMessage} from './protolog';
 import {ScreenRecordingTraceEntry} from './screen_recording';
-import {RealTimestamp} from './timestamp';
 import {Trace} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
+import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 describe('FrameMapper', () => {
   const time0 = new RealTimestamp(0n);
@@ -37,37 +37,35 @@ describe('FrameMapper', () => {
   const time6 = new RealTimestamp(6n);
   const time7 = new RealTimestamp(7n);
   const time8 = new RealTimestamp(8n);
-  const time9 = new RealTimestamp(9n);
-  const time10 = new RealTimestamp(10n);
   const time10seconds = new RealTimestamp(10n * 1000000000n);
 
   describe('ProtoLog <-> WindowManager', () => {
-    let protoLog: Trace<LogMessage>;
-    let windowManager: Trace<WindowManagerState>;
+    let protoLog: Trace<PropertyTreeNode>;
+    let windowManager: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // Frames              F0        F1
       //                 |<------>|  |<->|
       // PROTO_LOG:      0  1  2     3  4  5
       // WINDOW_MANAGER:          0     1
       // Time:           0  1  2  3  4  5  6
-      protoLog = new TraceBuilder<LogMessage>()
+      protoLog = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as LogMessage,
-          'entry-1' as unknown as LogMessage,
-          'entry-2' as unknown as LogMessage,
-          'entry-3' as unknown as LogMessage,
-          'entry-4' as unknown as LogMessage,
-          'entry-5' as unknown as LogMessage,
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
+          'entry-5' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4, time5, time6])
         .build();
 
-      windowManager = new TraceBuilder<WindowManagerState>()
+      windowManager = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as WindowManagerState,
-          'entry-1' as unknown as WindowManagerState,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time3, time5])
         .build();
@@ -75,10 +73,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.PROTO_LOG, protoLog);
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -95,35 +93,35 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
   describe('IME <-> WindowManager', () => {
-    let ime: Trace<object>;
-    let windowManager: Trace<WindowManagerState>;
+    let ime: Trace<HierarchyTreeNode>;
+    let windowManager: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // IME:            0--1--2     3
       //                    |        |
       // WINDOW_MANAGER:    0        1  2
       // Time:           0  1  2  3  4  5
-      ime = new TraceBuilder<object>()
+      ime = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as object,
-          'entry-1' as unknown as object,
-          'entry-2' as unknown as object,
-          'entry-3' as unknown as object,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4])
         .build();
 
-      windowManager = new TraceBuilder<WindowManagerState>()
+      windowManager = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as WindowManagerState,
-          'entry-1' as unknown as WindowManagerState,
-          'entry-2' as unknown as WindowManagerState,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time1, time4, time5])
         .build();
@@ -131,10 +129,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.INPUT_METHOD_CLIENTS, ime);
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -158,41 +156,41 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
   describe('WindowManager <-> Transactions', () => {
-    let windowManager: Trace<WindowManagerState>;
-    let transactions: Trace<object>;
+    let windowManager: Trace<HierarchyTreeNode>;
+    let transactions: Trace<PropertyTreeNode>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // WINDOW_MANAGER:     0  1     2  3
       //                     |  |     |    \
       // TRANSACTIONS:    0  1  2--3  4     5  ... 6  <-- ignored (not connected) because too far
       //                  |  |   |    |     |      |
       // Frames:          0  1   2    3     4  ... 5
       // Time:            0  1  2  3  4  5  6  ... 10s
-      windowManager = new TraceBuilder<LogMessage>()
+      windowManager = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as WindowManagerState,
-          'entry-1' as unknown as WindowManagerState,
-          'entry-2' as unknown as WindowManagerState,
-          'entry-3' as unknown as WindowManagerState,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time1, time2, time4, time5])
         .build();
 
-      transactions = new TraceBuilder<object>()
+      transactions = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as object,
-          'entry-1' as unknown as object,
-          'entry-2' as unknown as object,
-          'entry-3' as unknown as object,
-          'entry-4' as unknown as object,
-          'entry-5' as unknown as object,
-          'entry-6' as unknown as object,
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
+          'entry-5' as unknown as PropertyTreeNode,
+          'entry-6' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time3, time4, time5, time10seconds])
         .setFrame(0, 0)
@@ -207,10 +205,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
       traces.setTrace(TraceType.TRANSACTIONS, transactions);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -255,53 +253,55 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
   describe('Transactions <-> SurfaceFlinger', () => {
-    let transactions: Trace<object>;
-    let surfaceFlinger: Trace<LayerTraceEntry>;
+    let transactions: Trace<PropertyTreeNode>;
+    let surfaceFlinger: Trace<HierarchyTreeNode>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // TRANSACTIONS:   0  1--2        3  4
       //                  \     \        \
       //                   \     \        \
       // SURFACE_FLINGER:   0     1        2
-      transactions = new TraceBuilder<object>()
+      transactions = new TraceBuilder<PropertyTreeNode>()
         .setEntries([
-          {id: 0, vsyncId: createVsyncId(0)},
-          {id: 1, vsyncId: createVsyncId(10)},
-          {id: 2, vsyncId: createVsyncId(10)},
-          {id: 3, vsyncId: createVsyncId(20)},
-          {id: 4, vsyncId: createVsyncId(30)},
+          'entry-0' as unknown as PropertyTreeNode,
+          'entry-1' as unknown as PropertyTreeNode,
+          'entry-2' as unknown as PropertyTreeNode,
+          'entry-3' as unknown as PropertyTreeNode,
+          'entry-4' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time5, time6])
+        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 10n, 20n, 30n])
         .build();
 
-      surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
+      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          {id: 0, vSyncId: createVsyncId(0)} as unknown as LayerTraceEntry,
-          {id: 1, vSyncId: createVsyncId(10)} as unknown as LayerTraceEntry,
-          {id: 2, vSyncId: createVsyncId(20)} as unknown as LayerTraceEntry,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2])
+        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 20n])
         .build();
 
       traces = new Traces();
       traces.setTrace(TraceType.TRANSACTIONS, transactions);
       traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [transactions.getEntry(0).getValue()]],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(0).getValue()]],
+          [TraceType.TRANSACTIONS, [await transactions.getEntry(0).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(0).getValue()]],
         ])
       );
       expectedFrames.set(
@@ -309,43 +309,43 @@ describe('FrameMapper', () => {
         new Map<TraceType, Array<{}>>([
           [
             TraceType.TRANSACTIONS,
-            [transactions.getEntry(1).getValue(), transactions.getEntry(2).getValue()],
+            [await transactions.getEntry(1).getValue(), await transactions.getEntry(2).getValue()],
           ],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(1).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(1).getValue()]],
         ])
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
-          [TraceType.TRANSACTIONS, [transactions.getEntry(3).getValue()]],
-          [TraceType.SURFACE_FLINGER, [surfaceFlinger.getEntry(2).getValue()]],
+          [TraceType.TRANSACTIONS, [await transactions.getEntry(3).getValue()]],
+          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(2).getValue()]],
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
 
   describe('SurfaceFlinger <-> ScreenRecording', () => {
-    let surfaceFlinger: Trace<LayerTraceEntry>;
+    let surfaceFlinger: Trace<HierarchyTreeNode>;
     let screenRecording: Trace<ScreenRecordingTraceEntry>;
     let traces: Traces;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // SURFACE_FLINGER:      0  1  2---  3     4  5  6
       //                              \  \  \        \
       //                               \  \  \        \
       // SCREEN_RECORDING:     0        1  2  3        4 ... 5 <-- ignored (not connected) because too far
       // Time:                 0  1  2  3  4  5  6  7  8     10s
-      surfaceFlinger = new TraceBuilder<LayerTraceEntry>()
+      surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
         .setEntries([
-          'entry-0' as unknown as LayerTraceEntry,
-          'entry-1' as unknown as LayerTraceEntry,
-          'entry-2' as unknown as LayerTraceEntry,
-          'entry-3' as unknown as LayerTraceEntry,
-          'entry-4' as unknown as LayerTraceEntry,
-          'entry-5' as unknown as LayerTraceEntry,
-          'entry-6' as unknown as LayerTraceEntry,
+          'entry-0' as unknown as HierarchyTreeNode,
+          'entry-1' as unknown as HierarchyTreeNode,
+          'entry-2' as unknown as HierarchyTreeNode,
+          'entry-3' as unknown as HierarchyTreeNode,
+          'entry-4' as unknown as HierarchyTreeNode,
+          'entry-5' as unknown as HierarchyTreeNode,
+          'entry-6' as unknown as HierarchyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time4, time6, time7, time8])
         .build();
@@ -365,10 +365,10 @@ describe('FrameMapper', () => {
       traces = new Traces();
       traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
       traces.setTrace(TraceType.SCREEN_RECORDING, screenRecording);
-      new FrameMapper(traces).computeMapping();
+      await new FrameMapper(traces).computeMapping();
     });
 
-    it('associates entries/frames', () => {
+    it('associates entries/frames', async () => {
       const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
       expectedFrames.set(
         0,
@@ -413,15 +413,7 @@ describe('FrameMapper', () => {
         ])
       );
 
-      expect(TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
+      expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
-
-  const createVsyncId = (value: number): object => {
-    return {
-      toString() {
-        return value.toString();
-      },
-    };
-  };
 });

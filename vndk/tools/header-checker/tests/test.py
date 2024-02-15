@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -11,7 +12,8 @@ import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
-from utils import run_abi_diff, run_header_abi_dumper
+from utils import (run_abi_diff, run_and_read_abi_diff, run_header_abi_dumper,
+                   run_header_abi_linker)
 from module import Module
 
 
@@ -78,8 +80,8 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def run_and_compare_abi_diff(self, old_dump, new_dump, lib, arch,
                                  expected_return_code, flags=[]):
-        return_code, output = run_abi_diff(old_dump, new_dump, arch, lib,
-                                           flags)
+        return_code, output = run_and_read_abi_diff(
+            old_dump, new_dump, arch, lib, flags)
         self.assertEqual(return_code, expected_return_code)
         return output
 
@@ -354,6 +356,7 @@ class HeaderCheckerTest(unittest.TestCase):
             'libversion_script_example',
             'libversion_script_example_no_mytag',
             'libversion_script_example_no_private',
+            'libversion_script_example_api_level',
         ]
 
         for module_name in cases:
@@ -487,6 +490,54 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def test_enum_diff(self):
         self.prepare_and_absolute_diff_all_archs("libenum", "libenum")
+
+    def test_io_error(self):
+        cpp_path = os.path.join(self.get_tmp_dir(), "test.cpp")
+        sdump_path = os.path.join(self.get_tmp_dir(), "test.sdump")
+        version_script_path = os.path.join(self.get_tmp_dir(), "map.txt")
+        lsdump_path = os.path.join(self.get_tmp_dir(), "test.lsdump")
+        abidiff_path = os.path.join(self.get_tmp_dir(), "test.abidiff")
+        read_only_path = os.path.join(self.get_tmp_dir(), "read_only.txt")
+
+        with open(cpp_path, "w") as cpp_file:
+            cpp_file.write("void func(int) {}")
+        with open(version_script_path, "w") as version_script_file:
+            pass
+        fd = os.open(read_only_path, flags=(os.O_CREAT | os.O_EXCL),
+                     mode=(stat.S_IROTH | stat.S_IRGRP | stat.S_IRUSR))
+        self.assertGreaterEqual(fd, 0)
+        os.close(fd)
+
+        # Make sure that the commands are valid.
+        dumper_flags = ('-output-format', 'Json')
+        run_header_abi_dumper(cpp_path, sdump_path, flags=dumper_flags)
+        self.assertGreater(os.stat(sdump_path).st_size, 0)
+        linker_flags = ('-input-format', 'Json',
+                        '-output-format', 'ProtobufTextFormat')
+        run_header_abi_linker([sdump_path], lsdump_path, version_script_path,
+                              "current", "x86_64", linker_flags)
+        self.assertGreater(os.stat(lsdump_path).st_size, 0)
+        diff_flags = ('-input-format-old', 'ProtobufTextFormat',
+                      '-input-format-new', 'ProtobufTextFormat')
+        return_code = run_abi_diff(lsdump_path, lsdump_path, abidiff_path,
+                                   'x86_64', 'libtest', diff_flags)
+        self.assertEqual(return_code, 0)
+        self.assertGreater(os.stat(abidiff_path).st_size, 0)
+
+        # Test with output error.
+        with self.assertRaises(subprocess.CalledProcessError) as assertion:
+            run_header_abi_dumper(cpp_path, read_only_path, flags=dumper_flags)
+        self.assertEqual(assertion.exception.returncode, 1)
+
+        with self.assertRaises(subprocess.CalledProcessError) as assertion:
+            run_header_abi_linker([sdump_path], read_only_path,
+                                  version_script_path, "current", "x86_64",
+                                  linker_flags)
+        self.assertEqual(assertion.exception.returncode, 255)
+
+        return_code = run_abi_diff(lsdump_path, lsdump_path, read_only_path,
+                                   'x86_64', 'libtest', diff_flags)
+        self.assertEqual(return_code, 1)
 
 
 if __name__ == '__main__':

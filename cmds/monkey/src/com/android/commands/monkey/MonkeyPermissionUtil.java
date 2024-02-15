@@ -17,6 +17,7 @@
 package com.android.commands.monkey;
 
 import android.Manifest;
+import android.companion.virtual.VirtualDeviceManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
@@ -106,7 +107,9 @@ public class MonkeyPermissionUtil {
     }
 
     private boolean shouldTargetPermission(String pkg, PermissionInfo pi) throws RemoteException {
-        int flags = mPermManager.getPermissionFlags(pkg, pi.name, UserHandle.myUserId());
+        int flags = mPermManager.getPermissionFlags(pkg, pi.name,
+                VirtualDeviceManager.PERSISTENT_DEVICE_ID_DEFAULT,
+                UserHandle.myUserId());
         int fixedPermFlags = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
                 | PackageManager.FLAG_PERMISSION_POLICY_FIXED;
         return pi.group != null && pi.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS

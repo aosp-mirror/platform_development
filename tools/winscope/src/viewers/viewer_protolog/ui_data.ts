@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {LogMessage} from 'trace/protolog';
 
-class UiData {
+export interface UiDataMessage {
+  readonly originalIndex: number;
+  readonly text: string;
+  readonly time: string;
+  readonly tag: string;
+  readonly level: string;
+  readonly at: string;
+}
+
+export class UiData {
   constructor(
     public allLogLevels: string[],
     public allTags: string[],
     public allSourceFiles: string[],
-    public messages: LogMessage[],
+    public messages: UiDataMessage[],
     public currentMessageIndex: undefined | number
   ) {}
 
   static EMPTY = new UiData([], [], [], [], undefined);
 }
-
-export {UiData};

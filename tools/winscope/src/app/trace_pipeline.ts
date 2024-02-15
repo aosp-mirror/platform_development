@@ -14,163 +14,215 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {ParserError, ParserFactory} from 'parsers/parser_factory';
-import {TracesParserCujs} from 'parsers/traces_parser_cujs';
-import {TracesParserTransitions} from 'parsers/traces_parser_transitions';
+import {FileUtils} from 'common/file_utils';
+import {ProgressListener} from 'messaging/progress_listener';
+import {CorruptedArchive, NoCommonTimestampType, NoInputFiles} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {FileAndParsers} from 'parsers/file_and_parsers';
+import {ParserFactory} from 'parsers/parser_factory';
+import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
+import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
-import {LoadedTrace} from 'trace/loaded_trace';
-import {Parser} from 'trace/parser';
-import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {FilesSource} from './files_source';
+import {LoadedParsers} from './loaded_parsers';
+import {TraceFileFilter} from './trace_file_filter';
 
-class TracePipeline {
-  private parserFactory = new ParserFactory();
-  private parsers: Array<Parser<object>> = [];
-  private files = new Map<TraceType, TraceFile>();
-  private traces?: Traces;
-  private commonTimestampType?: TimestampType;
+type UnzippedArchive = TraceFile[];
 
-  async loadTraceFiles(
-    traceFiles: TraceFile[],
-    onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
-  ): Promise<ParserError[]> {
-    traceFiles = await this.filterBugreportFilesIfNeeded(traceFiles);
-    const [parsers, parserErrors] = await this.parserFactory.createParsers(
-      traceFiles,
-      onLoadProgressUpdate
-    );
-    this.parsers = parsers.map((it) => it.parser);
+export class TracePipeline {
+  private loadedParsers = new LoadedParsers();
+  private traceFileFilter = new TraceFileFilter();
+  private tracesParserFactory = new TracesParserFactory();
+  private traces = new Traces();
+  private downloadArchiveFilename?: string;
 
-    const tracesParsers = [
-      new TracesParserTransitions(this.parsers),
-      new TracesParserCujs(this.parsers),
-    ];
-    for (const tracesParser of tracesParsers) {
-      if (tracesParser.canProvideEntries()) {
-        this.parsers.push(tracesParser);
+  async loadFiles(
+    files: File[],
+    source: FilesSource,
+    errorListener: WinscopeErrorListener,
+    progressListener: ProgressListener | undefined
+  ) {
+    this.downloadArchiveFilename = this.makeDownloadArchiveFilename(files, source);
+
+    try {
+      const unzippedArchives = await this.unzipFiles(files, progressListener, errorListener);
+
+      if (unzippedArchives.length === 0) {
+        errorListener.onError(new NoInputFiles());
+        return;
       }
+
+      for (const unzippedArchive of unzippedArchives) {
+        await this.loadUnzippedArchive(unzippedArchive, errorListener, progressListener);
+      }
+
+      this.traces = new Traces();
+
+      const commonTimestampType = this.loadedParsers.findCommonTimestampType();
+      if (commonTimestampType === undefined) {
+        errorListener.onError(new NoCommonTimestampType());
+        return;
+      }
+
+      this.loadedParsers.getParsers().forEach((parser) => {
+        const trace = Trace.fromParser(parser, commonTimestampType);
+        this.traces.setTrace(parser.getTraceType(), trace);
+      });
+
+      const tracesParsers = await this.tracesParserFactory.createParsers(this.traces);
+
+      tracesParsers.forEach((tracesParser) => {
+        const trace = Trace.fromParser(tracesParser, commonTimestampType);
+        this.traces.setTrace(trace.type, trace);
+      });
+
+      const hasTransitionTrace = this.traces
+        .mapTrace((trace) => trace.type)
+        .some((type) => type === TraceType.TRANSITION);
+      if (hasTransitionTrace) {
+        this.traces.deleteTrace(TraceType.WM_TRANSITION);
+        this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
+      }
+    } finally {
+      progressListener?.onOperationFinished();
     }
-
-    for (const parser of parsers) {
-      this.files.set(parser.parser.getTraceType(), parser.file);
-    }
-
-    if (this.parsers.some((it) => it.getTraceType() === TraceType.TRANSITION)) {
-      this.parsers = this.parsers.filter(
-        (it) =>
-          it.getTraceType() !== TraceType.WM_TRANSITION &&
-          it.getTraceType() !== TraceType.SHELL_TRANSITION
-      );
-    }
-
-    return parserErrors;
   }
 
-  removeTraceFile(type: TraceType) {
-    this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== type);
+  removeTrace(trace: Trace<object>) {
+    this.loadedParsers.remove(trace.type);
+    this.traces.deleteTrace(trace.type);
   }
 
-  getLoadedFiles(): Map<TraceType, TraceFile> {
-    return this.files;
+  async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
+    return this.loadedParsers.makeZipArchive();
   }
 
-  getLoadedTraces(): LoadedTrace[] {
-    return this.parsers.map(
-      (parser: Parser<object>) => new LoadedTrace(parser.getDescriptors(), parser.getTraceType())
-    );
-  }
-
-  buildTraces() {
-    const commonTimestampType = this.getCommonTimestampType();
-
-    this.traces = new Traces();
-    this.parsers.forEach((parser) => {
-      const trace = Trace.newUninitializedTrace(parser);
-      trace.init(commonTimestampType);
-      this.traces?.setTrace(parser.getTraceType(), trace);
-    });
-
-    new FrameMapper(this.traces).computeMapping();
+  async buildTraces() {
+    await new FrameMapper(this.traces).computeMapping();
   }
 
   getTraces(): Traces {
-    this.checkTracesWereBuilt();
-    return this.traces!;
+    return this.traces;
   }
 
-  getScreenRecordingVideo(): undefined | Blob {
-    const screenRecording = this.getTraces().getTrace(TraceType.SCREEN_RECORDING);
+  getDownloadArchiveFilename(): string {
+    return this.downloadArchiveFilename ?? 'winscope';
+  }
+
+  async getScreenRecordingVideo(): Promise<undefined | Blob> {
+    const traces = this.getTraces();
+    const screenRecording =
+      traces.getTrace(TraceType.SCREEN_RECORDING) ?? traces.getTrace(TraceType.SCREENSHOT);
     if (!screenRecording || screenRecording.lengthEntries === 0) {
       return undefined;
     }
-    return screenRecording.getEntry(0).getValue().videoData;
+    return (await screenRecording.getEntry(0).getValue()).videoData;
   }
 
   clear() {
-    this.parserFactory = new ParserFactory();
-    this.parsers = [];
-    this.traces = undefined;
-    this.commonTimestampType = undefined;
-    this.files = new Map<TraceType, TraceFile>();
+    this.loadedParsers.clear();
+    this.traces = new Traces();
+    this.downloadArchiveFilename = undefined;
   }
 
-  private async filterBugreportFilesIfNeeded(files: TraceFile[]): Promise<TraceFile[]> {
-    const bugreportMainEntry = files.find((file) => file.file.name === 'main_entry.txt');
-    if (!bugreportMainEntry) {
-      return files;
+  private async loadUnzippedArchive(
+    unzippedArchive: UnzippedArchive,
+    errorListener: WinscopeErrorListener,
+    progressListener: ProgressListener | undefined
+  ) {
+    const filterResult = await this.traceFileFilter.filter(unzippedArchive, errorListener);
+
+    if (!filterResult.perfetto && filterResult.legacy.length === 0) {
+      errorListener.onError(new NoInputFiles());
+      return;
     }
 
-    const bugreportName = (await bugreportMainEntry.file.text()).trim();
-    const isBugreport = files.find((file) => file.file.name === bugreportName) !== undefined;
-    if (!isBugreport) {
-      return files;
-    }
+    const legacyParsers = await new ParserFactory().createParsers(
+      filterResult.legacy,
+      progressListener,
+      errorListener
+    );
 
-    const BUGREPORT_TRACE_DIRS = ['FS/data/misc/wmtrace/', 'FS/data/misc/perfetto-traces/'];
-    const isFileWithinBugreportTraceDir = (file: TraceFile) => {
-      for (const traceDir of BUGREPORT_TRACE_DIRS) {
-        if (file.file.name.startsWith(traceDir)) {
-          return true;
-        }
-      }
-      return false;
-    };
+    let perfettoParsers: FileAndParsers | undefined;
 
-    const fileBelongsToBugreport = (file: TraceFile) =>
-      file.parentArchive === bugreportMainEntry.parentArchive;
-
-    return files.filter((file) => {
-      return isFileWithinBugreportTraceDir(file) || !fileBelongsToBugreport(file);
-    });
-  }
-
-  private getCommonTimestampType(): TimestampType {
-    if (this.commonTimestampType !== undefined) {
-      return this.commonTimestampType;
-    }
-
-    const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
-    for (const type of priorityOrder) {
-      if (this.parsers.every((it) => it.getTimestamps(type) !== undefined)) {
-        this.commonTimestampType = type;
-        return this.commonTimestampType;
-      }
-    }
-
-    throw Error('Failed to find common timestamp type across all traces');
-  }
-
-  private checkTracesWereBuilt() {
-    if (!this.traces) {
-      throw new Error(
-        `Can't access traces before building them. Did you forget to call '${this.buildTraces.name}'?`
+    if (filterResult.perfetto) {
+      const parsers = await new PerfettoParserFactory().createParsers(
+        filterResult.perfetto,
+        progressListener
       );
+      perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
+
+    this.loadedParsers.addParsers(legacyParsers, perfettoParsers, errorListener);
+  }
+
+  private makeDownloadArchiveFilename(files: File[], source: FilesSource): string {
+    // set download archive file name, used to download all traces
+    let filenameWithCurrTime: string;
+    const currTime = new Date().toISOString().slice(0, -5).replace('T', '_');
+    if (!this.downloadArchiveFilename && files.length === 1) {
+      const filenameNoDir = FileUtils.removeDirFromFileName(files[0].name);
+      const filenameNoDirOrExt = FileUtils.removeExtensionFromFilename(filenameNoDir);
+      filenameWithCurrTime = `${filenameNoDirOrExt}_${currTime}`;
+    } else {
+      filenameWithCurrTime = `${source}_${currTime}`;
+    }
+
+    const archiveFilenameNoIllegalChars = filenameWithCurrTime.replace(
+      FileUtils.ILLEGAL_FILENAME_CHARACTERS_REGEX,
+      '_'
+    );
+    if (FileUtils.DOWNLOAD_FILENAME_REGEX.test(archiveFilenameNoIllegalChars)) {
+      return archiveFilenameNoIllegalChars;
+    } else {
+      console.error(
+        "Cannot convert uploaded archive filename to acceptable format for download. Defaulting download filename to 'winscope.zip'."
+      );
+      return 'winscope';
+    }
+  }
+
+  private async unzipFiles(
+    files: File[],
+    progressListener: ProgressListener | undefined,
+    errorListener: WinscopeErrorListener
+  ): Promise<UnzippedArchive[]> {
+    const unzippedArchives: UnzippedArchive[] = [];
+    const progressMessage = 'Unzipping files...';
+
+    progressListener?.onProgressUpdate(progressMessage, 0);
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      const onSubProgressUpdate = (subPercentage: number) => {
+        const totalPercentage = (100 * i) / files.length + subPercentage / files.length;
+        progressListener?.onProgressUpdate(progressMessage, totalPercentage);
+      };
+
+      if (FileUtils.isZipFile(file)) {
+        try {
+          const subFiles = await FileUtils.unzipFile(file, onSubProgressUpdate);
+          const subTraceFiles = subFiles.map((subFile) => {
+            return new TraceFile(subFile, file);
+          });
+          unzippedArchives.push([...subTraceFiles]);
+          onSubProgressUpdate(100);
+        } catch (e) {
+          errorListener.onError(new CorruptedArchive(file));
+        }
+      } else {
+        unzippedArchives.push([new TraceFile(file, undefined)]);
+        onSubProgressUpdate(100);
+      }
+    }
+
+    progressListener?.onProgressUpdate(progressMessage, 100);
+
+    return unzippedArchives;
   }
 }
-
-export {TracePipeline};

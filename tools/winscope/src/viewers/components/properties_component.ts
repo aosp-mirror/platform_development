@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TraceTreeNode} from 'trace/trace_tree_node';
-import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
+import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
+import {CuratedProperties} from 'viewers/common/curated_properties';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'properties-view',
@@ -26,7 +29,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
 
-        <mat-form-field>
+        <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
 
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
@@ -38,34 +41,40 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           *ngFor="let option of objectKeys(userOptions)"
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
-          (ngModelChange)="updateTree()"
+          [disabled]="userOptions[option].isUnavailable ?? false"
+          (ngModelChange)="onUserOptionChange()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
           >{{ userOptions[option].name }}</mat-checkbox
         >
       </div>
 
-      <property-groups
-        *ngIf="itemIsSelected() && displayPropertyGroups"
+      <surface-flinger-property-groups
+        *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedFlickerItem"></property-groups>
+        [properties]="curatedProperties"></surface-flinger-property-groups>
+
+      <view-capture-property-groups
+        *ngIf="showViewCaptureFormat()"
+        class="property-groups"
+        [properties]="curatedProperties"></view-capture-property-groups>
     </div>
 
     <mat-divider></mat-divider>
 
     <div class="properties-content">
-      <h3
-        *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump"
-        class="properties-title mat-subheading-2">
+      <h3 *ngIf="propertiesTree && isProtoDump" class="properties-title mat-subheading-2">
         Properties - Proto Dump
       </h3>
 
       <div class="tree-wrapper">
         <tree-view
-          *ngIf="objectKeys(propertiesTree).length > 0"
-          [item]="propertiesTree"
-          [showNode]="showNode"
-          [isLeaf]="isLeaf"
-          [isAlwaysCollapsed]="true"></tree-view>
+          *ngIf="propertiesTree && !showViewCaptureFormat()"
+          [node]="propertiesTree"
+          [store]="store"
+          [useStoredExpandedState]="true"
+          [itemsClickable]="true"
+          [highlightedItem]="highlightedProperty"
+          (highlightedChange)="onHighlightedPropertyChange($event)"></tree-view>
       </div>
     </div>
   `,
@@ -113,6 +122,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         overflow: auto;
       }
     `,
+    nodeStyles,
   ],
 })
 export class PropertiesComponent {
@@ -120,46 +130,55 @@ export class PropertiesComponent {
   filterString = '';
 
   @Input() userOptions: UserOptions = {};
-  @Input() propertiesTree: PropertiesTreeNode = {};
-  @Input() selectedFlickerItem: TraceTreeNode | null = null;
+  @Input() propertiesTree: UiPropertyTreeNode | undefined;
+  @Input() highlightedProperty = '';
+  @Input() curatedProperties: CuratedProperties | undefined;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
+  @Input() traceType: TraceType | undefined;
+  @Input() store: PersistentStore | undefined;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   filterTree() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+    const event = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  updateTree() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
+  onHighlightedPropertyChange(newId: string) {
+    const event = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
+      bubbles: true,
+      detail: {id: newId},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  onUserOptionChange() {
+    const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  showNode(item: any) {
-    return (
-      !(item instanceof Terminal) &&
-      !(item.name instanceof Terminal) &&
-      !(item.propertyKey instanceof Terminal)
-    );
-  }
-
-  isLeaf(item: any) {
-    return (
-      !item.children ||
-      item.children.length === 0 ||
-      item.children.filter((c: any) => !(c instanceof Terminal)).length === 0
-    );
-  }
-
   itemIsSelected() {
-    return this.selectedFlickerItem && Object.keys(this.selectedFlickerItem).length > 0;
+    return this.curatedProperties && Object.keys(this.curatedProperties).length > 0;
+  }
+
+  showViewCaptureFormat(): boolean {
+    return (
+      this.traceType === TraceType.VIEW_CAPTURE &&
+      this.filterString === '' &&
+      // Todo: Highlight Inline in formatted ViewCapture Properties Component.
+      !this.userOptions['showDiff']?.enabled &&
+      this.curatedProperties !== undefined
+    );
+  }
+
+  isSurfaceFlinger(): boolean {
+    return this.traceType === TraceType.SURFACE_FLINGER;
   }
 }

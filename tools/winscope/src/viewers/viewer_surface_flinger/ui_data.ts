@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Layer} from 'trace/flickerlib/common';
+
 import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {SfCuratedProperties} from 'viewers/common/curated_properties';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   dependencies: TraceType[];
-  rects: Rectangle[] = [];
-  displayIds: number[] = [];
-  highlightedItems: string[] = [];
-  pinnedItems: HierarchyTreeNode[] = [];
+  rects: UiRect[] = [];
+  displays: DisplayIdentifier[] = [];
+  highlightedItem = '';
+  highlightedProperty = '';
+  pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTreeNode | null = null;
-  propertiesTree: PropertiesTreeNode | null = null;
-  selectedLayer: Layer = {};
+  tree: UiHierarchyTreeNode | undefined;
+  propertiesTree: UiPropertyTreeNode | undefined;
+  curatedProperties: SfCuratedProperties | undefined;
   displayPropertyGroups = true;
 
   constructor(dependencies?: TraceType[]) {

@@ -5,7 +5,7 @@ package {
 android_app {
     name: "AutofillKeyboard",
     srcs: ["**/*.java"],
-    min_sdk_version: "29",
+    min_sdk_version: "30",
     target_sdk_version: "30",
     sdk_version: "current",
     static_libs: [

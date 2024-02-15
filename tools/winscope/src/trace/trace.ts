@@ -15,6 +15,14 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {Timestamp, TimestampType} from 'common/time';
+import {
+  CustomQueryParamTypeMap,
+  CustomQueryParserResultTypeMap,
+  CustomQueryResultTypeMap,
+  CustomQueryType,
+  ProcessParserResult,
+} from './custom_query';
 import {FrameMap} from './frame_map';
 import {
   AbsoluteEntryIndex,
@@ -24,8 +32,6 @@ import {
   RelativeEntryIndex,
 } from './index_types';
 import {Parser} from './parser';
-import {Timestamp, TimestampType} from './timestamp';
-import {TraceFile} from './trace_file';
 import {TraceType} from './trace_type';
 
 export {
@@ -36,13 +42,13 @@ export {
   RelativeEntryIndex,
 } from './index_types';
 
-export class TraceEntry<T> {
+export abstract class TraceEntry<T> {
   constructor(
-    private readonly fullTrace: Trace<T>,
-    private readonly parser: Parser<T>,
-    private readonly index: AbsoluteEntryIndex,
-    private readonly timestamp: Timestamp,
-    private readonly framesRange: FramesRange | undefined
+    protected readonly fullTrace: Trace<T>,
+    protected readonly parser: Parser<T>,
+    protected readonly index: AbsoluteEntryIndex,
+    protected readonly timestamp: Timestamp,
+    protected readonly framesRange: FramesRange | undefined
   ) {}
 
   getFullTrace(): Trace<T> {
@@ -66,54 +72,79 @@ export class TraceEntry<T> {
     return this.framesRange;
   }
 
-  getValue(): T {
-    return this.parser.getEntry(this.index, this.timestamp.getType());
+  abstract getValue(): any;
+}
+
+export class TraceEntryLazy<T> extends TraceEntry<T> {
+  constructor(
+    fullTrace: Trace<T>,
+    parser: Parser<T>,
+    index: AbsoluteEntryIndex,
+    timestamp: Timestamp,
+    framesRange: FramesRange | undefined
+  ) {
+    super(fullTrace, parser, index, timestamp, framesRange);
+  }
+
+  override async getValue(): Promise<T> {
+    return await this.parser.getEntry(this.index, this.timestamp.getType());
+  }
+}
+
+export class TraceEntryEager<T, U> extends TraceEntry<T> {
+  private readonly value: U;
+
+  constructor(
+    fullTrace: Trace<T>,
+    parser: Parser<T>,
+    index: AbsoluteEntryIndex,
+    timestamp: Timestamp,
+    framesRange: FramesRange | undefined,
+    value: U
+  ) {
+    super(fullTrace, parser, index, timestamp, framesRange);
+    this.value = value;
+  }
+
+  override getValue(): U {
+    return this.value;
   }
 }
 
 export class Trace<T> {
-  readonly file?: TraceFile;
+  readonly type: TraceType;
   readonly lengthEntries: number;
-  readonly fullTrace: Trace<T>;
 
-  private timestampType: TimestampType | undefined;
+  private readonly parser: Parser<T>;
+  private readonly descriptors: string[];
+  private readonly fullTrace: Trace<T>;
+  private timestampType: TimestampType;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
 
-  static newUninitializedTrace<T>(parser: Parser<T>): Trace<T> {
+  static fromParser<T>(parser: Parser<T>, timestampType: TimestampType): Trace<T> {
     return new Trace(
       parser.getTraceType(),
       parser,
       parser.getDescriptors(),
       undefined,
-      undefined,
+      timestampType,
       undefined
     );
   }
 
-  static newInitializedTrace<T>(
+  constructor(
     type: TraceType,
-    entryProvider: Parser<T>,
+    parser: Parser<T>,
     descriptors: string[],
-    timestampType: TimestampType,
-    entriesRange: EntriesRange
-  ): Trace<T> {
-    return new Trace(type, entryProvider, descriptors, undefined, timestampType, entriesRange);
-  }
-
-  init(timestampType: TimestampType) {
-    this.timestampType = timestampType;
-  }
-
-  private constructor(
-    readonly type: TraceType,
-    readonly parser: Parser<T>,
-    readonly descriptors: string[],
     fullTrace: Trace<T> | undefined,
-    timestampType: TimestampType | undefined,
+    timestampType: TimestampType,
     entriesRange: EntriesRange | undefined
   ) {
+    this.type = type;
+    this.parser = parser;
+    this.descriptors = descriptors;
     this.fullTrace = fullTrace ?? this;
     this.entriesRange = entriesRange ?? {start: 0, end: parser.getLengthEntries()};
     this.lengthEntries = this.entriesRange.end - this.entriesRange.start;
@@ -143,23 +174,41 @@ export class Trace<T> {
     return this.frameMap !== undefined;
   }
 
-  getEntry(index: RelativeEntryIndex): TraceEntry<T> {
-    const entry = this.convertToAbsoluteEntryIndex(index) as AbsoluteEntryIndex;
-    if (entry < this.entriesRange.start || entry >= this.entriesRange.end) {
-      throw new Error(
-        `Trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${this.lengthEntries}.`
-      );
-    }
-    const frames = this.clampFramesRangeToSliceBounds(
-      this.frameMap?.getFramesRange({start: entry, end: entry + 1})
-    );
-    return new TraceEntry<T>(
-      this.fullTrace,
-      this.parser,
-      entry,
-      this.getFullTraceTimestamps()[entry],
-      frames
-    );
+  getEntry(index: RelativeEntryIndex): TraceEntryLazy<T> {
+    return this.getEntryInternal(index, (index, timestamp, frames) => {
+      return new TraceEntryLazy<T>(this.fullTrace, this.parser, index, timestamp, frames);
+    });
+  }
+
+  async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    param?: CustomQueryParamTypeMap[Q]
+  ): Promise<CustomQueryResultTypeMap<T>[Q]> {
+    const makeTraceEntry = <U>(index: RelativeEntryIndex, value: U): TraceEntryEager<T, U> => {
+      return this.getEntryInternal(index, (index, timestamp, frames) => {
+        return new TraceEntryEager<T, U>(
+          this.fullTrace,
+          this.parser,
+          index,
+          timestamp,
+          frames,
+          value
+        );
+      });
+    };
+
+    const processParserResult = ProcessParserResult[type] as (
+      parserResult: CustomQueryParserResultTypeMap[Q],
+      make: typeof makeTraceEntry
+    ) => CustomQueryResultTypeMap<T>[Q];
+
+    const parserResult = (await this.parser.customQuery(
+      type,
+      this.entriesRange,
+      param
+    )) as CustomQueryParserResultTypeMap[Q];
+    const finalResult = processParserResult(parserResult, makeTraceEntry);
+    return Promise.resolve(finalResult);
   }
 
   getFrame(frame: AbsoluteFrameIndex): Trace<T> {
@@ -168,7 +217,7 @@ export class Trace<T> {
     return this.createSlice(entries, {start: frame, end: frame + 1});
   }
 
-  findClosestEntry(time: Timestamp): TraceEntry<T> | undefined {
+  findClosestEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
     this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
@@ -197,7 +246,7 @@ export class Trace<T> {
     return this.getEntry(entry - this.entriesRange.start);
   }
 
-  findFirstGreaterOrEqualEntry(time: Timestamp): TraceEntry<T> | undefined {
+  findFirstGreaterOrEqualEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
     this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
@@ -218,7 +267,7 @@ export class Trace<T> {
     return entry;
   }
 
-  findFirstGreaterEntry(time: Timestamp): TraceEntry<T> | undefined {
+  findFirstGreaterEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
     this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
@@ -239,7 +288,7 @@ export class Trace<T> {
     return entry;
   }
 
-  findLastLowerOrEqualEntry(timestamp: Timestamp): TraceEntry<T> | undefined {
+  findLastLowerOrEqualEntry(timestamp: Timestamp): TraceEntryLazy<T> | undefined {
     if (this.lengthEntries === 0) {
       return undefined;
     }
@@ -253,7 +302,7 @@ export class Trace<T> {
     return this.getEntry(firstGreater.getIndex() - this.entriesRange.start - 1);
   }
 
-  findLastLowerEntry(timestamp: Timestamp): TraceEntry<T> | undefined {
+  findLastLowerEntry(timestamp: Timestamp): TraceEntryLazy<T> | undefined {
     if (this.lengthEntries === 0) {
       return undefined;
     }
@@ -317,10 +366,18 @@ export class Trace<T> {
     return this.createSlice(entries, frames);
   }
 
-  forEachEntry(callback: (pos: TraceEntry<T>, index: RelativeEntryIndex) => void) {
+  forEachEntry(callback: (pos: TraceEntryLazy<T>, index: RelativeEntryIndex) => void) {
     for (let index = 0; index < this.lengthEntries; ++index) {
       callback(this.getEntry(index), index);
     }
+  }
+
+  mapEntry<U>(callback: (entry: TraceEntryLazy<T>, index: RelativeEntryIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachEntry((entry, index) => {
+      result.push(callback(entry, index));
+    });
+    return result;
   }
 
   forEachTimestamp(callback: (timestamp: Timestamp, index: RelativeEntryIndex) => void) {
@@ -340,9 +397,38 @@ export class Trace<T> {
     }
   }
 
+  mapFrame<U>(callback: (frame: Trace<T>, index: AbsoluteFrameIndex) => U): U[] {
+    const result: U[] = [];
+    this.forEachFrame((traces, index) => {
+      result.push(callback(traces, index));
+    });
+    return result;
+  }
+
   getFramesRange(): FramesRange | undefined {
     this.checkTraceCanBeAccessedInFrameDomain();
     return this.framesRange;
+  }
+
+  private getEntryInternal<EntryType extends TraceEntryLazy<T> | TraceEntryEager<T, any>>(
+    index: RelativeEntryIndex,
+    makeEntry: (
+      absoluteIndex: AbsoluteEntryIndex,
+      timestamp: Timestamp,
+      frames: FramesRange | undefined
+    ) => EntryType
+  ): EntryType {
+    const absoluteIndex = this.convertToAbsoluteEntryIndex(index) as AbsoluteEntryIndex;
+    if (absoluteIndex < this.entriesRange.start || absoluteIndex >= this.entriesRange.end) {
+      throw new Error(
+        `Trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${this.lengthEntries}.`
+      );
+    }
+    const timestamp = this.getFullTraceTimestamps()[absoluteIndex];
+    const frames = this.clampFramesRangeToSliceBounds(
+      this.frameMap?.getFramesRange({start: absoluteIndex, end: absoluteIndex + 1})
+    );
+    return makeEntry(absoluteIndex, timestamp, frames);
   }
 
   private getFullTraceTimestamps(): Timestamp[] {

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- LINT.IfChange -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
+
+    <PreferenceCategory
+        android:key="general"
+        android:title="General"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            android:key="@string/pref_device_profile"
+            android:title="Device profile"
+            android:entries="@array/device_profile_labels"
+            android:entryValues="@array/device_profiles"
+            android:defaultValue="@string/app_streaming"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_hide_from_recents"
+            android:title="Hide streamed app from recents"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_cross_device_clipboard"
+            android:title="Enable cross-device clipboard"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="client_capabilities"
+        android:title="Client capabilities"
+        app:iconSpaceReserved="false">
+         <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_sensors"
+            android:title="Enable client sensors"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_camera"
+            android:title="Enable client camera"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_audio"
+            android:title="Enable client audio"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="display"
+        android:title="Displays"
+        app:iconSpaceReserved="false">
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_display_rotation"
+            android:title="Enable display rotation"
+            android:summary="Rotate the remote display instead of letterboxing or pillarboxing"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_always_unlocked_device"
+            android:title="Always unlocked"
+            android:summary="Remote displays remain unlocked even when the host is locked"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_show_pointer_icon"
+            android:title="Show pointer icon"
+            android:summary="Mouse pointer on remote displays is visible"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_custom_home"
+            android:title="Custom home"
+            android:summary="Use a custom home activity instead of the default one on home displays"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="ime"
+        android:title="Input Method"
+        app:iconSpaceReserved="false">
+        <ListPreference
+            android:key="@string/pref_display_ime_policy"
+            android:title="Display IME policy"
+            android:entries="@array/display_ime_policy_labels"
+            android:entryValues="@array/display_ime_policies"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <SwitchPreferenceCompat
+            android:key="@string/pref_enable_client_native_ime"
+            android:title="Use the native client IME"
+            android:summary="Use client's native IME instead of streaming one"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="debug"
+        android:title="Debug"
+        app:iconSpaceReserved="false">
+    <!--
+        When enabled, the encoder output of the host will be stored in:
+        /sdcard/Download/vdmdemo_encoder_output_[displayId].h264
+
+        After pulling this file to your machine this can be played back with:
+        ffplay -f h264 vdmdemo_encoder_output_[displayId].h264
+        -->
+        <SwitchPreferenceCompat
+            android:key="@string/pref_record_encoder_output"
+            android:title="Record encoder output"
+            android:summary="Store the host's media encoder output to a local file"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options) -->

@@ -1,0 +1,36 @@
+rust_ffi_static {
+name: "librustc_demangle_static",
+host_supported: true,
+crate_name: "rustc_demangle",
+cargo_env_compat: true,
+cargo_pkg_version: "0.1.0",
+srcs: ["src/lib.rs"],
+edition: "2015",
+rustlibs: ["librustc_demangle"],
+include_dirs: ["include"],
+apex_available: ["//apex_available:platform", "com.android.runtime", "com.android.art.debug", "com.android.art"],
+native_bridge_supported: true,
+product_available: true,
+recovery_available: true,
+vendor_available: true,
+vendor_ramdisk_available: true,
+ramdisk_available: true,
+min_sdk_version: "S",
+}
+
+rust_test {
+name: "rustc-demangle-capi_test_src_lib",
+host_supported: true,
+crate_name: "rustc_demangle",
+cargo_env_compat: true,
+cargo_pkg_version: "0.1.0",
+srcs: ["src/lib.rs"],
+test_suites: ["general-tests"],
+auto_gen_config: true,
+test_options: {
+unit_test: true,
+},
+edition: "2015",
+rustlibs: ["librustc_demangle"],
+}
+

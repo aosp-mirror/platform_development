@@ -48,6 +48,13 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/text_to_hide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/activity_picture_in_picture_placeholder_text"
+                android:visibility="invisible" />
+
             <Switch
                 android:id="@+id/auto_pip_toggle"
                 android:layout_width="match_parent"

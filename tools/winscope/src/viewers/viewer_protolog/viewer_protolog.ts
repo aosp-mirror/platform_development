@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
@@ -23,6 +23,12 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerProtoLog implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+
   constructor(traces: Traces) {
     this.htmlElement = document.createElement('viewer-protolog');
 
@@ -31,42 +37,42 @@ class ViewerProtoLog implements Viewer {
     });
 
     this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-      return this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
+      this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
-      return this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
+      this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-      return this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
+      this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-      return this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
+      this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'ProtoLog',
+      TraceType.PROTO_LOG
+    );
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent() {
+    // do nothing
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'ProtoLog',
-        TraceType.PROTO_LOG
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerProtoLog.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerProtoLog};

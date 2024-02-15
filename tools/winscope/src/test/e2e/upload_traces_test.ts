@@ -23,10 +23,11 @@ describe('Upload traces', () => {
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_MS;
     await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
+    await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });
 
   beforeEach(async () => {
-    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
+    await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
   it('can process bugreport', async () => {
@@ -55,6 +56,10 @@ describe('Upload traces', () => {
     expect(text).toContain('IME Clients');
     expect(text).toContain('Transactions');
     expect(text).toContain('Transitions');
+
+    // Should be merged into a single Transitions trace
+    expect(text.includes('WM Transitions')).toBeFalsy();
+    expect(text.includes('Shell Transitions')).toBeFalsy();
 
     expect(text).toContain('wm_log.winscope');
     expect(text).toContain('ime_trace_service.winscope');

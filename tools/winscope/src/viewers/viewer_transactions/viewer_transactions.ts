@@ -14,19 +14,26 @@
  * limitations under the License.
  */
 
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerTransactions implements Viewer {
-  constructor(traces: Traces) {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+
+  constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-transactions');
 
-    this.presenter = new Presenter(traces, (data: UiData) => {
+    this.presenter = new Presenter(traces, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
@@ -50,42 +57,50 @@ class ViewerTransactions implements Viewer {
       this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
     });
 
-    this.htmlElement.addEventListener(Events.WhatSearchStringChanged, (event) => {
-      this.presenter.onWhatSearchStringChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(Events.WhatFilterChanged, (event) => {
+      this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
     });
 
-    this.htmlElement.addEventListener(Events.IdFilterChanges, (event) => {
-      this.presenter.onIdFilterChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(Events.TransactionIdFilterChanged, (event) => {
+      this.presenter.onTransactionIdFilterChanged((event as CustomEvent).detail);
     });
 
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.PropertiesUserOptionsChange,
+      async (event) =>
+        await this.presenter.onPropertiesUserOptionsChange(
+          (event as CustomEvent).detail.userOptions
+        )
+    );
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Transactions',
+      TraceType.TRANSACTIONS
+    );
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent() {
+    // do nothing
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Transactions',
-        TraceType.TRANSACTIONS
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerTransactions.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerTransactions};

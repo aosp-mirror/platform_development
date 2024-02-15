@@ -1,0 +1,18 @@
+<resources>
+    <string name="this_device" translatable="false">%s: %s</string>
+    <string name="disconnected" translatable="false">Disconnected</string>
+    <string name="initialized" translatable="false">Looking for devices...</string>
+    <string name="connecting" translatable="false">Connecting to %s...</string>
+    <string name="connected" translatable="false">Connected to %s</string>
+    <string name="error" translatable="false">Error: %s</string>
+
+    <string name="dpad_up" translatable="false">Up</string>
+    <string name="dpad_down" translatable="false">Down</string>
+    <string name="dpad_left" translatable="false">Left</string>
+    <string name="dpad_right" translatable="false">Right</string>
+    <string name="dpad_center" translatable="false">Center</string>
+    <string name="nav_touchpad_move" translatable="false">
+        Swipe to navigate\n\n
+        Tap to select
+    </string>
+</resources>

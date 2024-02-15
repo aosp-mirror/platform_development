@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name" translatable="false">VDM Client</string>
+    <string name="display_title" translatable="false">Display %d. %s</string>
+    <string name="display_back" translatable="false">Back</string>
+    <string name="display_home" translatable="false">Home</string>
+    <string name="display_rotate" translatable="false">Rotate</string>
+    <string name="display_resize" translatable="false">Resize</string>
+    <string name="display_fullscreen" translatable="false">Fullscreen</string>
+    <string name="display_close" translatable="false">Close</string>
+    <string name="input" translatable="false">Input</string>
+</resources>

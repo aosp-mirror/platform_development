@@ -16,98 +16,137 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {TimeUtils} from 'common/time_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {Filter} from 'viewers/common/operations/filter';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
+import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
+type NotifyViewCallbackType = (uiData: UiData) => void;
+
 export class Presenter {
-  private trace: Trace<object>;
-  private entry?: TraceEntry<object>;
+  private readonly trace: Trace<PropertyTreeNode>;
+  private entry?: TraceEntry<PropertyTreeNode>;
   private originalIndicesOfUiDataEntries: number[];
   private uiData = UiData.EMPTY;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-  private static readonly VALUE_NA = 'N/A';
+
+  private isInitialized = false;
+  private allUiDataEntries: UiDataEntry[] = [];
+  private allVSyncIds: string[] = [];
+  private allPids: string[] = [];
+  private allUids: string[] = [];
+  private allTypes: string[] = [];
+  private allLayerAndDisplayIds: string[] = [];
+  private allTransactionIds: string[] = [];
+  private allFlags: string[] = [];
+
   private vsyncIdFilter: string[] = [];
   private pidFilter: string[] = [];
   private uidFilter: string[] = [];
   private typeFilter: string[] = [];
   private layerIdFilter: string[] = [];
-  private idFilter: string | undefined = undefined;
-  private whatSearchString = '';
+  private whatFilter: string[] = [];
+  private transactionIdFilter: string[] = [];
 
-  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
+  private currentPropertiesTree: PropertyTreeNode | undefined;
+
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'TransactionsPropertyOptions',
+    {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    },
+    this.storage
+  );
+
+  private readonly notifyUiDataCallback: NotifyViewCallbackType;
+  private static readonly VALUE_NA = 'N/A';
+
+  constructor(
+    traces: Traces,
+    private readonly storage: Storage,
+    notifyViewCallback: NotifyViewCallbackType
+  ) {
     this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
-    this.notifyUiDataCallback = notifyUiDataCallback;
+    this.notifyUiDataCallback = notifyViewCallback;
     this.originalIndicesOfUiDataEntries = [];
-    this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onTracePositionUpdate(position: TracePosition) {
-    this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+      this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
+      this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
+      this.uiData.selectedEntryIndex = undefined;
+      this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
+      this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+        this.uiData.entries,
+        this.uiData.currentEntryIndex,
+        this.uiData.selectedEntryIndex
+      );
+      this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
 
-    this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-    this.uiData.selectedEntryIndex = undefined;
-    this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex
-    );
-
-    this.notifyUiDataCallback(this.uiData);
+      this.notifyUiDataCallback(this.uiData);
+    });
   }
 
   onVSyncIdFilterChanged(vsyncIds: string[]) {
     this.vsyncIdFilter = vsyncIds;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onPidFilterChanged(pids: string[]) {
     this.pidFilter = pids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onUidFilterChanged(uids: string[]) {
     this.uidFilter = uids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onTypeFilterChanged(types: string[]) {
     this.typeFilter = types;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
   onLayerIdFilterChanged(ids: string[]) {
     this.layerIdFilter = ids;
-    this.computeUiData();
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onIdFilterChanged(id: string) {
-    if (id === '') {
-      this.idFilter = undefined;
-    } else {
-      this.idFilter = id;
-    }
-    this.computeUiData();
+  onWhatFilterChanged(flags: string[]) {
+    this.whatFilter = flags;
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  onWhatSearchStringChanged(searchString: string) {
-    this.whatSearchString = searchString;
-    this.computeUiData();
+  onTransactionIdFilterChanged(ids: string[]) {
+    this.transactionIdFilter = ids;
+    this.uiData = this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -120,32 +159,66 @@ export class Presenter {
 
     this.uiData.scrollToIndex = undefined; // no scrolling
 
-    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       this.uiData.entries,
       this.uiData.currentEntryIndex,
       this.uiData.selectedEntryIndex
     );
 
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private computeUiData() {
-    const entries = this.makeUiDataEntries();
+  onPropertiesUserOptionsChange(userOptions: UserOptions) {
+    this.propertiesUserOptions = userOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+    this.notifyUiDataCallback(this.uiData);
+  }
 
-    const allVSyncIds = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) =>
-      entry.vsyncId.toString()
+  private async initializeIfNeeded() {
+    if (this.isInitialized) {
+      return;
+    }
+
+    this.allUiDataEntries = await this.makeUiDataEntries();
+
+    this.allVSyncIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.vsyncId.toString()
     );
-    const allPids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.pid);
-    const allUids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.uid);
-    const allTypes = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.type);
-    const allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
-      entries,
+    this.allPids = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.pid
+    );
+    this.allUids = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.uid
+    );
+    this.allTypes = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.type
+    );
+    this.allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
       (entry: UiDataEntry) => entry.layerOrDisplayId
     );
-    const allTransactionIds = this.getUniqueUiDataEntryValues(
-      entries,
+    this.allTransactionIds = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
       (entry: UiDataEntry) => entry.transactionId
     );
+    this.allFlags = this.getUniqueUiDataEntryValues(this.allUiDataEntries, (entry: UiDataEntry) =>
+      entry.what.split('|').map((flag) => flag.trim())
+    );
+
+    this.uiData = this.computeUiData();
+
+    this.isInitialized = true;
+  }
+
+  private computeUiData(): UiData {
+    const entries = this.allUiDataEntries;
 
     let filteredEntries = entries;
 
@@ -172,13 +245,18 @@ export class Presenter {
         this.layerIdFilter.includes(entry.layerOrDisplayId)
       );
     }
-    if (this.idFilter !== undefined) {
+
+    if (this.whatFilter.length > 0) {
       filteredEntries = filteredEntries.filter(
-        (entry) => entry.transactionId.toString() === this.idFilter
+        (entry) => this.whatFilter.find((flag) => entry.what.includes(flag)) !== undefined
       );
     }
 
-    filteredEntries = filteredEntries.filter((entry) => entry.what.includes(this.whatSearchString));
+    if (this.transactionIdFilter.length > 0) {
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.transactionIdFilter.includes(entry.transactionId.toString())
+      );
+    }
 
     this.originalIndicesOfUiDataEntries = filteredEntries.map(
       (entry) => entry.originalIndexInTraceEntry
@@ -186,24 +264,28 @@ export class Presenter {
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
     const selectedEntryIndex = undefined;
-    const currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex
     );
 
-    this.uiData = new UiData(
-      allVSyncIds,
-      allPids,
-      allUids,
-      allTypes,
-      allLayerAndDisplayIds,
-      allTransactionIds,
+    const formattedPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+
+    return new UiData(
+      this.allVSyncIds,
+      this.allPids,
+      this.allUids,
+      this.allTypes,
+      this.allLayerAndDisplayIds,
+      this.allTransactionIds,
+      this.allFlags,
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
       currentEntryIndex,
-      currentPropertiesTree
+      formattedPropertiesTree,
+      this.propertiesUserOptions
     );
   }
 
@@ -228,7 +310,7 @@ export class Presenter {
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
     selectedEntryIndex: undefined | number
-  ): undefined | PropertiesTreeNode {
+  ): PropertyTreeNode | undefined {
     if (selectedEntryIndex !== undefined) {
       return entries[selectedEntryIndex].propertiesTree;
     }
@@ -238,177 +320,214 @@ export class Presenter {
     return undefined;
   }
 
-  private makeUiDataEntries(): UiDataEntry[] {
-    const treeGenerator = new PropertiesTreeGenerator();
+  private formatPropertiesTree(
+    propertiesTree: PropertyTreeNode | undefined
+  ): UiPropertyTreeNode | undefined {
+    if (!propertiesTree) return undefined;
+
+    const uiTree = UiPropertyTreeNode.from(propertiesTree);
+    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(uiTree);
+
+    if (!this.propertiesUserOptions['showDefaults']?.enabled) {
+      formatter.addOperation(new Filter([UiTreeUtils.isNotDefault], false));
+    }
+
+    return formatter.addOperation(new SetRootDisplayNames()).format();
+  }
+
+  private async makeUiDataEntries(): Promise<UiDataEntry[]> {
     const entries: UiDataEntry[] = [];
-    const formattingOptions = ObjectFormatter.displayDefaults;
-    ObjectFormatter.displayDefaults = true;
 
-    this.trace.forEachEntry((entry, originalIndex) => {
-      const timestampType = entry.getTimestamp().getType();
-      const entryProto = entry.getValue() as any;
-      const realToElapsedTimeOffsetNs = entryProto.realToElapsedTimeOffsetNs;
+    const entryProtos = await Promise.all(
+      this.trace.mapEntry(async (entry) => {
+        return await entry.getValue();
+      })
+    );
 
-      for (const transactionStateProto of entryProto.transactions) {
-        for (const layerStateProto of transactionStateProto.layerChanges) {
+    for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
+      const entry = this.trace.getEntry(originalIndex);
+      const entryNode = entryProtos[originalIndex];
+      const vsyncId = Number(assertDefined(entryNode.getChildByName('vsyncId')).getValue());
+      const entryTimestamp = TimeUtils.format(entry.getTimestamp());
+
+      for (const transactionState of assertDefined(
+        entryNode.getChildByName('transactions')
+      ).getAllChildren()) {
+        const pid = assertDefined(transactionState.getChildByName('pid')).formattedValue();
+        const uid = assertDefined(transactionState.getChildByName('uid')).formattedValue();
+        const transactionId = assertDefined(
+          transactionState.getChildByName('transactionId')
+        ).formattedValue();
+
+        const layerChanges = assertDefined(
+          transactionState.getChildByName('layerChanges')
+        ).getAllChildren();
+        for (const layerState of layerChanges) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.LAYER_CHANGED,
-              layerStateProto.layerId.toString(),
-              transactionStateProto.transactionId.toString(),
-              layerStateProto.what,
-              treeGenerator.generate('LayerState', ObjectFormatter.format(layerStateProto))
+              assertDefined(layerState.getChildByName('layerId')).formattedValue(),
+              transactionId,
+              assertDefined(layerState.getChildByName('what')).formattedValue(),
+              layerState
             )
           );
         }
 
-        for (const displayStateProto of transactionStateProto.displayChanges) {
+        const displayChanges = assertDefined(
+          transactionState.getChildByName('displayChanges')
+        ).getAllChildren();
+        for (const displayState of displayChanges) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.DISPLAY_CHANGED,
-              displayStateProto.id.toString(),
-              transactionStateProto.transactionId.toString(),
-              displayStateProto.what,
-              treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
+              assertDefined(displayState.getChildByName('id')).formattedValue(),
+              transactionId,
+              assertDefined(displayState.getChildByName('what')).formattedValue(),
+              displayState
             )
           );
         }
 
-        if (
-          transactionStateProto.layerChanges.length === 0 &&
-          transactionStateProto.displayChanges.length === 0
-        ) {
+        if (layerChanges.length === 0 && displayChanges.length === 0) {
           entries.push(
             new UiDataEntry(
               originalIndex,
-              TimeUtils.format(entry.getTimestamp()),
-              Number(entryProto.vsyncId),
-              transactionStateProto.pid.toString(),
-              transactionStateProto.uid.toString(),
+              entryTimestamp,
+              vsyncId,
+              pid,
+              uid,
               UiDataEntryType.NO_OP,
               '',
-              transactionStateProto.transactionId.toString(),
+              transactionId,
               '',
-              {}
+              undefined
             )
           );
         }
       }
 
-      for (const layerCreationArgsProto of entryProto.addedLayers) {
+      for (const layerCreationArgs of assertDefined(
+        entryNode.getChildByName('addedLayers')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_ADDED,
-            layerCreationArgsProto.layerId.toString(),
+            assertDefined(layerCreationArgs.getChildByName('layerId')).formattedValue(),
             '',
             '',
-            treeGenerator.generate(
-              'LayerCreationArgs',
-              ObjectFormatter.format(layerCreationArgsProto)
-            )
+            layerCreationArgs
           )
         );
       }
 
-      for (const destroyedLayerId of entryProto.destroyedLayers) {
+      for (const destroyedLayerId of assertDefined(
+        entryNode.getChildByName('destroyedLayers')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_DESTROYED,
-            destroyedLayerId.toString(),
+            destroyedLayerId.formattedValue(),
             '',
             '',
-            treeGenerator.generate('DestroyedLayerId', ObjectFormatter.format(destroyedLayerId))
+            destroyedLayerId
           )
         );
       }
 
-      for (const displayStateProto of entryProto.addedDisplays) {
+      for (const displayState of assertDefined(
+        entryNode.getChildByName('addedDisplays')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.DISPLAY_ADDED,
-            displayStateProto.id.toString(),
+            assertDefined(displayState.getChildByName('id')).formattedValue(),
             '',
-            displayStateProto.what,
-            treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
+            assertDefined(displayState.getChildByName('what')).formattedValue(),
+            displayState
           )
         );
       }
 
-      for (const removedDisplayId of entryProto.removedDisplays) {
+      for (const removedDisplayId of assertDefined(
+        entryNode.getChildByName('removedDisplays')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.DISPLAY_REMOVED,
-            removedDisplayId.toString(),
+            removedDisplayId.formattedValue(),
             '',
             '',
-            treeGenerator.generate('RemovedDisplayId', ObjectFormatter.format(removedDisplayId))
+            removedDisplayId
           )
         );
       }
 
-      for (const destroyedLayerHandleId of entryProto.destroyedLayerHandles) {
+      for (const destroyedLayerHandleId of assertDefined(
+        entryNode.getChildByName('destroyedLayerHandles')
+      ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
             originalIndex,
-            TimeUtils.format(entry.getTimestamp()),
-            Number(entryProto.vsyncId),
+            entryTimestamp,
+            vsyncId,
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_HANDLE_DESTROYED,
-            destroyedLayerHandleId.toString(),
+            destroyedLayerHandleId.formattedValue(),
             '',
             '',
-            treeGenerator.generate(
-              'DestroyedLayerHandleId',
-              ObjectFormatter.format(destroyedLayerHandleId)
-            )
+            destroyedLayerHandleId
           )
         );
       }
-    });
-
-    ObjectFormatter.displayDefaults = formattingOptions;
+    }
 
     return entries;
   }
 
   private getUniqueUiDataEntryValues<T>(
     entries: UiDataEntry[],
-    getValue: (entry: UiDataEntry) => T
+    getValue: (entry: UiDataEntry) => T | T[]
   ): T[] {
     const uniqueValues = new Set<T>();
     entries.forEach((entry: UiDataEntry) => {
-      uniqueValues.add(getValue(entry));
+      const value = getValue(entry);
+      if (Array.isArray(value)) {
+        value.forEach((val) => uniqueValues.add(val));
+      } else {
+        uniqueValues.add(value);
+      }
     });
 
     const result = [...uniqueValues];

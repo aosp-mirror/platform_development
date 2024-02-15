@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
+import {assertDefined} from 'common/assert_utils';
+import {INVALID_TIME_NS, TimeRange, Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceEntry} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
-import {assertDefined} from '../common/assert_utils';
-
-export type TracePositionCallbackType = (position: TracePosition) => void;
-export interface TimeRange {
-  from: Timestamp;
-  to: Timestamp;
-}
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 
 export class TimelineData {
   private traces = new Traces();
@@ -39,40 +32,68 @@ export class TimelineData {
   private lastEntry?: TraceEntry<{}>;
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
+  private explicitlySetZoomRange?: TimeRange;
+  private lastReturnedCurrentPosition?: TracePosition;
+  private lastReturnedFullTimeRange?: TimeRange;
+  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
-  private onTracePositionUpdate: TracePositionCallbackType = FunctionUtils.DO_NOTHING;
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
     this.clear();
 
-    this.traces = traces;
+    this.traces = new Traces();
+    traces.forEachTrace((trace, type) => {
+      // Filter out dumps with invalid timestamp (would mess up the timeline)
+      const isDump =
+        trace.lengthEntries === 1 &&
+        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
+      if (isDump) {
+        return;
+      }
+
+      this.traces.setTrace(type, trace);
+    });
+
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
     this.timestampType = this.firstEntry?.getTimestamp().getType();
 
-    const position = this.getCurrentPosition();
-    if (position) {
-      this.onTracePositionUpdate(position);
+    const types = traces
+      .mapTrace((trace, type) => type)
+      .filter(
+        (type) => TraceTypeUtils.isTraceTypeWithViewer(type) && type !== TraceType.SCREEN_RECORDING
+      )
+      .sort(TraceTypeUtils.compareByDisplayOrder);
+    if (types.length > 0) {
+      this.setActiveViewTraceTypes([types[0]]);
     }
-  }
-
-  setOnTracePositionUpdate(callback: TracePositionCallbackType) {
-    this.onTracePositionUpdate = callback;
   }
 
   getCurrentPosition(): TracePosition | undefined {
     if (this.explicitlySetPosition) {
       return this.explicitlySetPosition;
     }
+
+    let currentPosition: TracePosition | undefined = undefined;
+    if (this.firstEntry) {
+      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
+    }
+
     const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
     if (firstActiveEntry) {
-      return TracePosition.fromTraceEntry(firstActiveEntry);
+      currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
-    if (this.firstEntry) {
-      return TracePosition.fromTraceEntry(this.firstEntry);
+
+    if (
+      this.lastReturnedCurrentPosition === undefined ||
+      currentPosition === undefined ||
+      !this.lastReturnedCurrentPosition.isEqual(currentPosition)
+    ) {
+      this.lastReturnedCurrentPosition = currentPosition;
     }
-    return undefined;
+
+    return this.lastReturnedCurrentPosition;
   }
 
   setPosition(position: TracePosition | undefined) {
@@ -90,15 +111,29 @@ export class TimelineData {
       }
     }
 
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.explicitlySetPosition = position;
-    });
+    this.explicitlySetPosition = position;
+  }
+
+  makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
+    let trace: Trace<{}> | undefined;
+    if (this.activeViewTraceTypes.length > 0) {
+      trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
+    }
+
+    if (!trace) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    const entry = trace.findClosestEntry(timestamp);
+    if (!entry) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
   setActiveViewTraceTypes(types: TraceType[]) {
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.activeViewTraceTypes = types;
-    });
+    this.activeViewTraceTypes = types;
   }
 
   getTimestampType(): TimestampType | undefined {
@@ -109,10 +144,21 @@ export class TimelineData {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');
     }
-    return {
+
+    const fullTimeRange = {
       from: this.firstEntry.getTimestamp(),
       to: this.lastEntry.getTimestamp(),
     };
+
+    if (
+      this.lastReturnedFullTimeRange === undefined ||
+      this.lastReturnedFullTimeRange.from.getValueNs() !== fullTimeRange.from.getValueNs() ||
+      this.lastReturnedFullTimeRange.to.getValueNs() !== fullTimeRange.to.getValueNs()
+    ) {
+      this.lastReturnedFullTimeRange = fullTimeRange;
+    }
+
+    return this.lastReturnedFullTimeRange;
   }
 
   getSelectionTimeRange(): TimeRange {
@@ -125,6 +171,18 @@ export class TimelineData {
 
   setSelectionTimeRange(selection: TimeRange) {
     this.explicitlySetSelection = selection;
+  }
+
+  getZoomRange(): TimeRange {
+    if (this.explicitlySetZoomRange === undefined) {
+      return this.getFullTimeRange();
+    } else {
+      return this.explicitlySetZoomRange;
+    }
+  }
+
+  setZoom(zoomRange: TimeRange) {
+    this.explicitlySetZoomRange = zoomRange;
   }
 
   getTraces(): Traces {
@@ -162,8 +220,8 @@ export class TimelineData {
   }
 
   getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
@@ -176,8 +234,8 @@ export class TimelineData {
   }
 
   getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
@@ -198,10 +256,17 @@ export class TimelineData {
     if (!position) {
       return undefined;
     }
-    return TraceEntryFinder.findCorrespondingEntry(
+
+    const entry = TraceEntryFinder.findCorrespondingEntry(
       assertDefined(this.traces.getTrace(type)),
       position
     );
+
+    if (this.lastReturnedCurrentEntries.get(type)?.getIndex() !== entry?.getIndex()) {
+      this.lastReturnedCurrentEntries.set(type, entry);
+    }
+
+    return this.lastReturnedCurrentEntries.get(type);
   }
 
   moveToPreviousEntryFor(type: TraceType) {
@@ -219,16 +284,17 @@ export class TimelineData {
   }
 
   clear() {
-    this.applyOperationAndNotifyIfCurrentPositionChanged(() => {
-      this.traces = new Traces();
-      this.firstEntry = undefined;
-      this.lastEntry = undefined;
-      this.explicitlySetPosition = undefined;
-      this.timestampType = undefined;
-      this.explicitlySetSelection = undefined;
-      this.screenRecordingVideo = undefined;
-      this.activeViewTraceTypes = [];
-    });
+    this.traces = new Traces();
+    this.firstEntry = undefined;
+    this.lastEntry = undefined;
+    this.explicitlySetPosition = undefined;
+    this.timestampType = undefined;
+    this.explicitlySetSelection = undefined;
+    this.lastReturnedCurrentPosition = undefined;
+    this.screenRecordingVideo = undefined;
+    this.lastReturnedFullTimeRange = undefined;
+    this.lastReturnedCurrentEntries.clear();
+    this.activeViewTraceTypes = [];
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
@@ -265,6 +331,7 @@ export class TimelineData {
 
   private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
     const activeEntries = this.activeViewTraceTypes
+      .filter((it) => this.traces.getTrace(it) !== undefined)
       .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
       .filter((trace) => trace.lengthEntries > 0)
       .map((trace) => trace.getEntry(0))
@@ -275,14 +342,5 @@ export class TimelineData {
       return undefined;
     }
     return activeEntries[0];
-  }
-
-  private applyOperationAndNotifyIfCurrentPositionChanged(op: () => void) {
-    const prevPosition = this.getCurrentPosition();
-    op();
-    const currentPosition = this.getCurrentPosition();
-    if (currentPosition && (!prevPosition || !currentPosition.isEqual(prevPosition))) {
-      this.onTracePositionUpdate(currentPosition);
-    }
   }
 }

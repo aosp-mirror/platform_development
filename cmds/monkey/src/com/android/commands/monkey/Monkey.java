@@ -550,6 +550,16 @@ public class Monkey {
         commandLineReport(bugreportName + ".txt", "bugreport");
     }
 
+    // UncaughtExceptionHandler set by RuntimeInit will report crash to system_server, which
+    // is not necessary for monkey and even causes deadlock. So we override it.
+    private static class KillSelfHandler implements Thread.UncaughtExceptionHandler {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            Process.killProcess(Process.myPid());
+            System.exit(10);
+        }
+    }
+
     /**
      * Command-line entry point.
      *
@@ -559,6 +569,7 @@ public class Monkey {
         // Set the process name showing in "ps" or "top"
         Process.setArgV0("com.android.commands.monkey");
 
+        Thread.setDefaultUncaughtExceptionHandler(new KillSelfHandler());
         Logger.err.println("args: " + Arrays.toString(args));
         int resultCode = (new Monkey()).run(args);
         System.exit(resultCode);

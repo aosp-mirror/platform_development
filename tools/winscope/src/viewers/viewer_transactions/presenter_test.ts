@@ -14,51 +14,71 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp, TimestampType} from 'common/time';
+import {TracePositionUpdate} from 'messaging/winscope_event';
+import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
 
 describe('PresenterTransactions', () => {
-  let parser: Parser<object>;
-  let trace: Trace<object>;
+  let parser: Parser<PropertyTreeNode>;
+  let trace: Trace<PropertyTreeNode>;
   let traces: Traces;
   let presenter: Presenter;
   let outputUiData: undefined | UiData;
   const TOTAL_OUTPUT_ENTRIES = 1647;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/Transactions.pb');
+    jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+    parser = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/Transactions.pb'
+    )) as Parser<PropertyTreeNode>;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     outputUiData = undefined;
-    setUpTestEnvironment(TimestampType.ELAPSED);
+    await setUpTestEnvironment(TimestampType.ELAPSED);
   });
 
-  it('is robust to empty trace', () => {
+  it('is robust to empty trace', async () => {
     const traces = new TracesBuilder().setEntries(TraceType.TRANSACTIONS, []).build();
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
     expect(outputUiData).toEqual(UiData.EMPTY);
 
-    presenter.onTracePositionUpdate(TracePosition.fromTimestamp(new RealTimestamp(10n)));
+    const expectedUiData = UiData.EMPTY;
+    expectedUiData.propertiesUserOptions = {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    };
+    await presenter.onAppEvent(TracePositionUpdate.fromTimestamp(new RealTimestamp(10n)));
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
 
-  it('processes trace position update and computes output UI data', () => {
-    presenter.onTracePositionUpdate(createTracePosition(0));
+  it('processes trace position update and computes output UI data', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(0));
 
-    expect(outputUiData!.allPids).toEqual([
+    expect(assertDefined(outputUiData).allPids).toEqual([
       'N/A',
       '0',
       '515',
@@ -68,8 +88,15 @@ describe('PresenterTransactions', () => {
       '2463',
       '3300',
     ]);
-    expect(outputUiData!.allUids).toEqual(['N/A', '1000', '1003', '10169', '10235', '10239']);
-    expect(outputUiData!.allTypes).toEqual([
+    expect(assertDefined(outputUiData).allUids).toEqual([
+      'N/A',
+      '1000',
+      '1003',
+      '10169',
+      '10235',
+      '10239',
+    ]);
+    expect(assertDefined(outputUiData).allTypes).toEqual([
       'DISPLAY_CHANGED',
       'LAYER_ADDED',
       'LAYER_CHANGED',
@@ -78,81 +105,89 @@ describe('PresenterTransactions', () => {
       'NO_OP',
     ]);
 
-    expect(outputUiData?.allTransactionIds.length).toEqual(1295);
-    expect(outputUiData?.allLayerAndDisplayIds.length).toEqual(117);
+    expect(assertDefined(outputUiData).allTransactionIds.length).toEqual(1295);
+    expect(assertDefined(outputUiData).allLayerAndDisplayIds.length).toEqual(117);
 
-    expect(outputUiData?.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    expect(outputUiData?.currentEntryIndex).toEqual(0);
-    expect(outputUiData?.selectedEntryIndex).toBeUndefined();
-    expect(outputUiData?.scrollToIndex).toEqual(0);
-    expect(outputUiData?.currentPropertiesTree).toBeDefined();
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
+    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentPropertiesTree).toBeDefined();
   });
 
-  it('processes trace position update and updates current entry and scroll position', () => {
-    presenter.onTracePositionUpdate(createTracePosition(0));
-    expect(outputUiData!.currentEntryIndex).toEqual(0);
-    expect(outputUiData!.scrollToIndex).toEqual(0);
+  it('processes trace position update and updates current entry and scroll position', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(0));
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
 
-    presenter.onTracePositionUpdate(createTracePosition(10));
-    expect(outputUiData!.currentEntryIndex).toEqual(13);
-    expect(outputUiData!.scrollToIndex).toEqual(13);
+    await presenter.onAppEvent(createTracePositionUpdate(10));
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(13);
   });
 
   it('filters entries according to transaction ID filter', () => {
-    presenter.onIdFilterChanged('');
-    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    presenter.onTransactionIdFilterChanged([]);
+    expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onIdFilterChanged('2211908157465');
-    expect(new Set(outputUiData!.entries.map((entry) => entry.transactionId))).toEqual(
-      new Set(['2211908157465'])
-    );
+    presenter.onTransactionIdFilterChanged(['2211908157465']);
+    expect(
+      new Set(assertDefined(outputUiData).entries.map((entry) => entry.transactionId))
+    ).toEqual(new Set(['2211908157465']));
   });
 
   it('filters entries according to VSYNC ID filter', () => {
     presenter.onVSyncIdFilterChanged([]);
-    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
     presenter.onVSyncIdFilterChanged(['1']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.vsyncId))).toEqual(new Set([1]));
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.vsyncId))).toEqual(
+      new Set([1])
+    );
 
     presenter.onVSyncIdFilterChanged(['1', '3', '10']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.vsyncId))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.vsyncId))).toEqual(
       new Set([1, 3, 10])
     );
   });
 
   it('filters entries according to PID filter', () => {
     presenter.onPidFilterChanged([]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.pid))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.pid))).toEqual(
       new Set(['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'])
     );
 
     presenter.onPidFilterChanged(['0']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.pid))).toEqual(new Set(['0']));
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.pid))).toEqual(
+      new Set(['0'])
+    );
 
     presenter.onPidFilterChanged(['0', '515']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.pid))).toEqual(new Set(['0', '515']));
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.pid))).toEqual(
+      new Set(['0', '515'])
+    );
   });
 
   it('filters entries according to UID filter', () => {
     presenter.onUidFilterChanged([]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.uid))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.uid))).toEqual(
       new Set(['N/A', '1000', '1003', '10169', '10235', '10239'])
     );
 
     presenter.onUidFilterChanged(['1000']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.uid))).toEqual(new Set(['1000']));
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.uid))).toEqual(
+      new Set(['1000'])
+    );
 
     presenter.onUidFilterChanged(['1000', '1003']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.uid))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.uid))).toEqual(
       new Set(['1000', '1003'])
     );
   });
 
   it('filters entries according to type filter', () => {
     presenter.onTypeFilterChanged([]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.type))).toEqual(
       new Set([
         UiDataEntryType.DISPLAY_CHANGED,
         UiDataEntryType.LAYER_ADDED,
@@ -164,12 +199,12 @@ describe('PresenterTransactions', () => {
     );
 
     presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.type))).toEqual(
       new Set([UiDataEntryType.LAYER_ADDED])
     );
 
     presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_DESTROYED]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.type))).toEqual(
       new Set([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_DESTROYED])
     );
   });
@@ -177,113 +212,137 @@ describe('PresenterTransactions', () => {
   it('filters entries according to layer or display ID filter', () => {
     presenter.onLayerIdFilterChanged([]);
     expect(
-      new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId)).size
+      new Set(assertDefined(outputUiData).entries.map((entry) => entry.layerOrDisplayId)).size
     ).toBeGreaterThan(20);
 
     presenter.onLayerIdFilterChanged(['1']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
-      new Set(['1'])
-    );
+    expect(
+      new Set(assertDefined(outputUiData).entries.map((entry) => entry.layerOrDisplayId))
+    ).toEqual(new Set(['1']));
 
     presenter.onLayerIdFilterChanged(['1', '3']);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.layerOrDisplayId))).toEqual(
-      new Set(['1', '3'])
-    );
+    expect(
+      new Set(assertDefined(outputUiData).entries.map((entry) => entry.layerOrDisplayId))
+    ).toEqual(new Set(['1', '3']));
   });
 
   it('includes no op transitions', () => {
     presenter.onTypeFilterChanged([UiDataEntryType.NO_OP]);
-    expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
+    expect(new Set(assertDefined(outputUiData).entries.map((entry) => entry.type))).toEqual(
       new Set([UiDataEntryType.NO_OP])
     );
 
-    for (const entry of outputUiData!.entries) {
+    for (const entry of assertDefined(outputUiData).entries) {
       expect(entry.layerOrDisplayId).toEqual('');
       expect(entry.what).toEqual('');
-      expect(entry.propertiesTree).toEqual({});
+      expect(entry.propertiesTree).toEqual(undefined);
     }
   });
 
   it('filters entries according to "what" search string', () => {
-    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('');
-    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+    presenter.onWhatFilterChanged([]);
+    expect(assertDefined(outputUiData).entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('Crop');
-    expect(outputUiData!.entries.length).toBeLessThan(TOTAL_OUTPUT_ENTRIES);
+    presenter.onWhatFilterChanged(['Crop']);
+    expect(assertDefined(outputUiData).entries.length).toBeLessThan(TOTAL_OUTPUT_ENTRIES);
 
-    presenter.onWhatSearchStringChanged('STRING_WITH_NO_MATCHES');
-    expect(outputUiData!.entries.length).toEqual(0);
+    presenter.onWhatFilterChanged(['STRING_WITH_NO_MATCHES']);
+    expect(assertDefined(outputUiData).entries.length).toEqual(0);
   });
 
-  it('updates selected entry and properties tree when entry is clicked', () => {
-    presenter.onTracePositionUpdate(createTracePosition(0));
-    expect(outputUiData!.currentEntryIndex).toEqual(0);
-    expect(outputUiData!.selectedEntryIndex).toBeUndefined();
-    expect(outputUiData!.scrollToIndex).toEqual(0);
-    expect(outputUiData!.currentPropertiesTree).toEqual(outputUiData!.entries[0].propertiesTree);
+  it('updates selected entry and properties tree when entry is clicked', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(0));
+    presenter.onPropertiesUserOptionsChange({
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: true,
+        tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `,
+      },
+    });
+
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
+    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
+    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[0].propertiesTree))
+    );
 
     presenter.onEntryClicked(10);
-    expect(outputUiData!.currentEntryIndex).toEqual(0);
-    expect(outputUiData!.selectedEntryIndex).toEqual(10);
-    expect(outputUiData!.scrollToIndex).toBeUndefined(); // no scrolling
-    expect(outputUiData!.currentPropertiesTree).toEqual(outputUiData!.entries[10].propertiesTree);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
+    expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
+    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
+    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[10].propertiesTree))
+    );
 
     // remove selection when selected entry is clicked again
     presenter.onEntryClicked(10);
-    expect(outputUiData!.currentEntryIndex).toEqual(0);
-    expect(outputUiData!.selectedEntryIndex).toBeUndefined();
-    expect(outputUiData!.scrollToIndex).toBeUndefined(); // no scrolling
-    expect(outputUiData!.currentPropertiesTree).toEqual(outputUiData!.entries[0].propertiesTree);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
+    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
+    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
+    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
+      UiPropertyTreeNode.from(assertDefined(outputUiData?.entries[0].propertiesTree))
+    );
   });
 
-  it('computes current entry index', () => {
-    presenter.onTracePositionUpdate(createTracePosition(0));
-    expect(outputUiData!.currentEntryIndex).toEqual(0);
+  it('computes current entry index', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(0));
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
 
-    presenter.onTracePositionUpdate(createTracePosition(10));
-    expect(outputUiData!.currentEntryIndex).toEqual(13);
+    await presenter.onAppEvent(createTracePositionUpdate(10));
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
   });
 
-  it('updates current entry index when filters change', () => {
-    presenter.onTracePositionUpdate(createTracePosition(10));
+  it('updates current entry index when filters change', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(10));
 
     presenter.onPidFilterChanged([]);
-    expect(outputUiData!.currentEntryIndex).toEqual(13);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
 
     presenter.onPidFilterChanged(['0']);
-    expect(outputUiData!.currentEntryIndex).toEqual(10);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(10);
 
     presenter.onPidFilterChanged(['0', '515']);
-    expect(outputUiData!.currentEntryIndex).toEqual(11);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(11);
 
     presenter.onPidFilterChanged(['0', '515', 'N/A']);
-    expect(outputUiData!.currentEntryIndex).toEqual(13);
+    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
   });
 
-  it('formats real time', () => {
-    setUpTestEnvironment(TimestampType.REAL);
-    expect(outputUiData!.entries[0].time).toEqual('2022-08-03T06:19:01.051480997');
+  it('formats real time', async () => {
+    await setUpTestEnvironment(TimestampType.REAL);
+    expect(assertDefined(outputUiData).entries[0].time).toEqual('2022-08-03T06:19:01.051480997');
   });
 
-  it('formats elapsed time', () => {
-    setUpTestEnvironment(TimestampType.ELAPSED);
-    expect(outputUiData!.entries[0].time).toEqual('2s450ms981445ns');
+  it('formats elapsed time', async () => {
+    await setUpTestEnvironment(TimestampType.ELAPSED);
+    expect(assertDefined(outputUiData).entries[0].time).toEqual('2s450ms981445ns');
   });
 
-  const setUpTestEnvironment = (timestampType: TimestampType) => {
-    trace = new TraceBuilder<object>().setParser(parser).setTimestampType(timestampType).build();
+  const setUpTestEnvironment = async (timestampType: TimestampType) => {
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setParser(parser)
+      .setTimestampType(timestampType)
+      .build();
 
     traces = new Traces();
     traces.setTrace(TraceType.TRANSACTIONS, trace);
 
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
       outputUiData = data;
     });
+
+    await presenter.onAppEvent(createTracePositionUpdate(0)); // trigger initialization
   };
 
-  const createTracePosition = (entryIndex: number): TracePosition => {
-    return TracePosition.fromTraceEntry(trace.getEntry(entryIndex));
+  const createTracePositionUpdate = (entryIndex: number): TracePositionUpdate => {
+    const entry = trace.getEntry(entryIndex);
+    return TracePositionUpdate.fromTraceEntry(entry);
   };
 });
