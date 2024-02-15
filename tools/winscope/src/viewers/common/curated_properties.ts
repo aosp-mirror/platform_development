@@ -42,6 +42,7 @@ export interface SfCuratedProperties {
   focusable: string;
   cropTouchRegionWithItem: string;
   replaceTouchRegionWithCrop: string;
+  inputConfig: string;
   ignoreDestinationFrame: boolean;
   hasInputChannel: boolean;
 }

@@ -136,6 +136,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     expect(assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML).toContain(
       'false'
     );
+    expect(assertDefined(configDiv.querySelector('.input-config')).innerHTML).toContain('null');
   });
 
   @Component({
@@ -183,6 +184,7 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       focusable: 'false',
       cropTouchRegionWithItem: 'none',
       replaceTouchRegionWithCrop: 'false',
+      inputConfig: 'null',
       hasInputChannel: false,
       ignoreDestinationFrame: true,
     };
