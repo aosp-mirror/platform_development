@@ -49,6 +49,13 @@
                 />
             </RadioGroup>
 
+            <CheckBox
+                android:id="@+id/shareousel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enable Shareousel"
+                />
+
             <TextView
                 android:id="@+id/media_type_header"
                 android:layout_width="match_parent"
