@@ -55,7 +55,7 @@ class UiData {
 class UiDataEntry {
   constructor(
     public originalIndexInTraceEntry: number,
-    public time: string,
+    public time: PropertyTreeNode,
     public vsyncId: number,
     public pid: string,
     public uid: string,

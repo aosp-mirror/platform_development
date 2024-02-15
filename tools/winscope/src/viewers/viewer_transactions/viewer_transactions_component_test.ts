@@ -18,9 +18,12 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {Events} from './events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -62,7 +65,7 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
       const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-      expect(entry.innerHTML).toContain('TIME_VALUE');
+      expect(entry.innerHTML).toContain('1ns');
       expect(entry.innerHTML).toContain('-111');
       expect(entry.innerHTML).toContain('PID_VALUE');
       expect(entry.innerHTML).toContain('UID_VALUE');
@@ -84,6 +87,21 @@ describe('ViewerTransactionsComponent', () => {
       expect(spy).toHaveBeenCalledWith(1);
     });
 
+    it('propagates timestamp on click', () => {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      let timestamp = '';
+      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+        timestamp = (event as CustomEvent).detail.formattedValue();
+      });
+      const logTimestampButton = assertDefined(
+        htmlElement.querySelector('.time button')
+      ) as HTMLButtonElement;
+      logTimestampButton.click();
+
+      expect(timestamp).toEqual('1ns');
+    });
+
     function makeUiData(): UiData {
       const propertiesTree = new PropertyTreeBuilder()
         .setRootId('Transactions')
@@ -91,9 +109,16 @@ describe('ViewerTransactionsComponent', () => {
         .setValue(null)
         .build();
 
+      const time = new PropertyTreeBuilder()
+        .setRootId(propertiesTree.id)
+        .setName('timestamp')
+        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
+        .setFormatter(TIMESTAMP_FORMATTER)
+        .build();
+
       const entry = new UiDataEntry(
         0,
-        'TIME_VALUE',
+        time,
         -111,
         'PID_VALUE',
         'UID_VALUE',
@@ -106,7 +131,7 @@ describe('ViewerTransactionsComponent', () => {
 
       const entry2 = new UiDataEntry(
         1,
-        'TIME_VALUE',
+        time,
         -222,
         'PID_VALUE_2',
         'UID_VALUE_2',
@@ -144,6 +169,14 @@ describe('ViewerTransactionsComponent', () => {
         .setName('tree')
         .setValue(null)
         .build();
+
+      const time = new PropertyTreeBuilder()
+        .setRootId(propertiesTree.id)
+        .setName('timestamp')
+        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
+        .setFormatter(TIMESTAMP_FORMATTER)
+        .build();
+
       const uiData = new UiData(
         [],
         [],
@@ -164,7 +197,7 @@ describe('ViewerTransactionsComponent', () => {
       for (let i = 0; i < 200; i++) {
         const entry = new UiDataEntry(
           0,
-          'TIME_VALUE',
+          time,
           -111,
           'PID_VALUE',
           'UID_VALUE',

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -242,6 +243,26 @@ describe('Mediator', () => {
       [viewerStub0, viewerOverlay, timelineComponent, crossToolProtocol],
       expectedPosition,
       POSITION_10
+    );
+  });
+
+  it('propagates trace position update and updates timeline data', async () => {
+    await loadFiles();
+    await loadTraceView();
+
+    // notify position
+    resetSpyCalls();
+    const finalTimestampNs = timelineData.getFullTimeRange().to.getValueNs();
+    const timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(finalTimestampNs);
+    const position = TracePosition.fromTimestamp(timestamp);
+
+    await mediator.onWinscopeEvent(new TracePositionUpdate(position, true));
+    checkTracePositionUpdateEvents(
+      [viewerStub0, viewerOverlay, timelineComponent, crossToolProtocol],
+      position
+    );
+    expect(assertDefined(timelineData.getCurrentPosition()).timestamp.getValueNs()).toEqual(
+      finalTimestampNs
     );
   });
 

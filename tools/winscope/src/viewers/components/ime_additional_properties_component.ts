@@ -22,6 +22,7 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ImeContainerProperties, InputMethodSurfaceProperties} from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {selectedElementStyle} from './styles/selected_element.styles';
 
 @Component({
   selector: 'ime-additional-properties',
@@ -320,10 +321,10 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
       }
 
       .selected {
-        background-color: #87acec;
         color: black;
       }
     `,
+    selectedElementStyle,
   ],
 })
 export class ImeAdditionalPropertiesComponent {

@@ -149,6 +149,9 @@ export class Mediator {
     });
 
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      if (event.updateTimeline) {
+        this.timelineData.setPosition(event.position);
+      }
       await this.propagateTracePosition(event.position, false);
     });
 

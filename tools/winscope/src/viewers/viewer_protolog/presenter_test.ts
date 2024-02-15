@@ -45,33 +45,6 @@ describe('ViewerProtoLogPresenter', () => {
     const elapsedTime20 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
     const elapsedTime30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
 
-    inputMessages = [
-      {
-        originalIndex: 0,
-        text: 'text0',
-        time: '10ns',
-        tag: 'tag0',
-        level: 'level0',
-        at: 'sourcefile0',
-      },
-      {
-        originalIndex: 1,
-        text: 'text1',
-        time: '20ns',
-        tag: 'tag1',
-        level: 'level1',
-        at: 'sourcefile1',
-      },
-      {
-        originalIndex: 2,
-        text: 'text2',
-        time: '30ns',
-        tag: 'tag2',
-        level: 'level2',
-        at: 'sourcefile2',
-      },
-    ];
-
     const entries = [
       new PropertyTreeBuilder()
         .setRootId('ProtologTrace')
@@ -108,6 +81,33 @@ describe('ViewerProtoLogPresenter', () => {
           {name: 'at', value: 'sourcefile2', formatter: DEFAULT_PROPERTY_FORMATTER},
         ])
         .build(),
+    ];
+
+    inputMessages = [
+      {
+        originalIndex: 0,
+        text: 'text0',
+        time: assertDefined(entries[0].getChildByName('timestamp')),
+        tag: 'tag0',
+        level: 'level0',
+        at: 'sourcefile0',
+      },
+      {
+        originalIndex: 1,
+        text: 'text1',
+        time: assertDefined(entries[1].getChildByName('timestamp')),
+        tag: 'tag1',
+        level: 'level1',
+        at: 'sourcefile1',
+      },
+      {
+        originalIndex: 2,
+        text: 'text2',
+        time: assertDefined(entries[2].getChildByName('timestamp')),
+        tag: 'tag2',
+        level: 'level2',
+        at: 'sourcefile2',
+      },
     ];
 
     trace = new TraceBuilder<PropertyTreeNode>()

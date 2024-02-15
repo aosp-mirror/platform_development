@@ -320,12 +320,14 @@ describe('PresenterTransactions', () => {
 
   it('formats real time', async () => {
     await setUpTestEnvironment(TimestampType.REAL);
-    expect(assertDefined(outputUiData).entries[0].time).toEqual('2022-08-03T06:19:01.051480997');
+    expect(assertDefined(outputUiData).entries[0].time.formattedValue()).toEqual(
+      '2022-08-03T06:19:01.051480997'
+    );
   });
 
   it('formats elapsed time', async () => {
     await setUpTestEnvironment(TimestampType.ELAPSED);
-    expect(assertDefined(outputUiData).entries[0].time).toEqual('2s450ms981445ns');
+    expect(assertDefined(outputUiData).entries[0].time.formattedValue()).toEqual('2s450ms981445ns');
   });
 
   const setUpTestEnvironment = async (timestampType: TimestampType) => {

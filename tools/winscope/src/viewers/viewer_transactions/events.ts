@@ -23,6 +23,7 @@ class Events {
   static WhatFilterChanged = 'ViewerTransactionsEvent_WhatFilterChanged';
   static EntryClicked = 'ViewerTransactionsEvent_EntryClicked';
   static TransactionIdFilterChanged = 'ViewerTransactionsEvent_TransactionIdFilterChanged';
+  static TimestampSelected = 'ViewerTransactionsEvent_TimestampSelected';
 }
 
 export {Events};

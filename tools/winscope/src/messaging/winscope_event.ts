@@ -151,20 +151,22 @@ export class TabbedViewSwitchRequest extends WinscopeEvent {
 export class TracePositionUpdate extends WinscopeEvent {
   override readonly type = WinscopeEventType.TRACE_POSITION_UPDATE;
   readonly position: TracePosition;
+  readonly updateTimeline: boolean;
 
-  constructor(position: TracePosition) {
+  constructor(position: TracePosition, updateTimeline = false) {
     super();
     this.position = position;
+    this.updateTimeline = updateTimeline;
   }
 
-  static fromTimestamp(timestamp: Timestamp): TracePositionUpdate {
+  static fromTimestamp(timestamp: Timestamp, updateTimeline = false): TracePositionUpdate {
     const position = TracePosition.fromTimestamp(timestamp);
-    return new TracePositionUpdate(position);
+    return new TracePositionUpdate(position, updateTimeline);
   }
 
-  static fromTraceEntry(entry: TraceEntry<object>): TracePositionUpdate {
+  static fromTraceEntry(entry: TraceEntry<object>, updateTimeline = false): TracePositionUpdate {
     const position = TracePosition.fromTraceEntry(entry);
-    return new TracePositionUpdate(position);
+    return new TracePositionUpdate(position, updateTimeline);
   }
 }
 

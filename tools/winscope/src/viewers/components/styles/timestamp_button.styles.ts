@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-
-export interface Transition {
-  id: number;
-  type: string;
-  sendTime?: PropertyTreeNode;
-  dispatchTime?: PropertyTreeNode;
-  duration?: string;
-  merged: boolean;
-  aborted: boolean;
-  played: boolean;
-  propertiesTree: PropertyTreeNode;
-}
+export const timeButtonStyle = `
+    .time button {
+        padding: 0px;
+        line-height: normal;
+        text-align: left;
+        white-space: normal;
+    }
+`;
