@@ -22,7 +22,9 @@ import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodManagerService extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
-    const inputMethodManagerService = this.entry?.getChildByName('inputMethodManagerService');
+    const inputMethodManagerService = this.entry?.getChildByName(
+      'inputMethodManagerService',
+    );
 
     const curMethodId = inputMethodManagerService
       ?.getEagerPropertyByName('curMethodId')
@@ -34,14 +36,16 @@ export class PresenterInputMethodManagerService extends PresenterInputMethod {
       ?.getEagerPropertyByName('lastImeTargetWindowName')
       ?.formattedValue();
     const inputShown =
-      inputMethodManagerService?.getEagerPropertyByName('inputShown')?.getValue() ?? false;
+      inputMethodManagerService
+        ?.getEagerPropertyByName('inputShown')
+        ?.getValue() ?? false;
 
     return {
       ...new ImManagerServiceTableProperties(
         curMethodId,
         curFocusedWindowName,
         lastImeTargetWindowName,
-        inputShown
+        inputShown,
       ),
     };
   }
@@ -49,11 +53,13 @@ export class PresenterInputMethodManagerService extends PresenterInputMethod {
   protected override getAdditionalProperties(
     wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
-    wmEntryTimestamp: Timestamp | undefined
+    wmEntryTimestamp: Timestamp | undefined,
   ) {
     return new ImeAdditionalProperties(
-      wmEntry ? ImeUtils.processWindowManagerTraceEntry(wmEntry, wmEntryTimestamp) : undefined,
-      undefined
+      wmEntry
+        ? ImeUtils.processWindowManagerTraceEntry(wmEntry, wmEntryTimestamp)
+        : undefined,
+      undefined,
     );
   }
 }
@@ -63,6 +69,6 @@ class ImManagerServiceTableProperties {
     public inputMethodId: string | undefined,
     public curFocusedWindow: string | undefined,
     public lastImeTargetWindow: string | undefined,
-    public inputShown: boolean
+    public inputShown: boolean,
   ) {}
 }

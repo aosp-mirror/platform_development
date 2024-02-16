@@ -51,7 +51,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => entryPropertyTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     expect(() => builder.setRoot(entry).build()).toThrow(noNodesError);
@@ -72,7 +72,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => entryPropertyTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder.setRoot(entry).setChildren([]).build();
@@ -85,8 +85,8 @@ describe('HierarchyTreeBuilderVc', () => {
         async () => entryPropertyTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
 
     expect(root).toEqual(expectedRoot);
@@ -107,7 +107,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => entryPropertyTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const node1Props = new PropertyTreeBuilder()
@@ -124,7 +124,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => node1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder.setRoot(entry).setChildren([node1Provider]).build();
@@ -137,10 +137,12 @@ describe('HierarchyTreeBuilderVc', () => {
         async () => entryPropertyTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    expectedRoot.addOrReplaceChild(new HierarchyTreeNode('1 node1', 'node1', node1Provider));
+    expectedRoot.addOrReplaceChild(
+      new HierarchyTreeNode('1 node1', 'node1', node1Provider),
+    );
 
     expect(root).toEqual(expectedRoot);
   });
@@ -160,7 +162,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => entryPropertyTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const node1Props = new PropertyTreeBuilder()
@@ -177,7 +179,7 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => node1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const node2Props = new PropertyTreeBuilder()
@@ -194,10 +196,13 @@ describe('HierarchyTreeBuilderVc', () => {
       async () => node2Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
-    const root = builder.setRoot(entry).setChildren([node1Provider, node2Provider]).build();
+    const root = builder
+      .setRoot(entry)
+      .setChildren([node1Provider, node2Provider])
+      .build();
 
     const expectedRoot = new HierarchyTreeNode(
       'ViewNode com.android.internal@123456789',
@@ -207,11 +212,19 @@ describe('HierarchyTreeBuilderVc', () => {
         async () => entryPropertyTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    const expectedRootNode = new HierarchyTreeNode('1 node1', 'node1', node1Provider);
-    const expectedNestedNode = new HierarchyTreeNode('2 node2', 'node2', node2Provider);
+    const expectedRootNode = new HierarchyTreeNode(
+      '1 node1',
+      'node1',
+      node1Provider,
+    );
+    const expectedNestedNode = new HierarchyTreeNode(
+      '2 node2',
+      'node2',
+      node2Provider,
+    );
     expectedRootNode.addOrReplaceChild(expectedNestedNode);
     expectedRoot.addOrReplaceChild(expectedRootNode);
 

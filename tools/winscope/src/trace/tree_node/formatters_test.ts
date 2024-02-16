@@ -37,107 +37,127 @@ describe('Formatters', () => {
   describe('PropertyFormatter', () => {
     it('translates simple values correctly', () => {
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, 12345))
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, 12345),
+        ),
       ).toEqual('12345');
       expect(
         DEFAULT_PROPERTY_FORMATTER.format(
-          new PropertyTreeNode('', '', PropertySource.PROTO, 'test_string')
-        )
+          new PropertyTreeNode('', '', PropertySource.PROTO, 'test_string'),
+        ),
       ).toEqual('test_string');
       expect(
         DEFAULT_PROPERTY_FORMATTER.format(
-          new PropertyTreeNode('', '', PropertySource.PROTO, 0.1234)
-        )
+          new PropertyTreeNode('', '', PropertySource.PROTO, 0.1234),
+        ),
       ).toEqual('0.123');
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, 1.5))
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, 1.5),
+        ),
       ).toEqual('1.500');
     });
 
     it('translates values with toString method correctly', () => {
       expect(
         DEFAULT_PROPERTY_FORMATTER.format(
-          new PropertyTreeNode('', '', PropertySource.PROTO, BigInt(123))
-        )
+          new PropertyTreeNode('', '', PropertySource.PROTO, BigInt(123)),
+        ),
       ).toEqual('123');
     });
 
     it('translates default values correctly', () => {
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, []))
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, []),
+        ),
       ).toEqual(EMPTY_ARRAY_STRING);
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, false))
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, false),
+        ),
       ).toEqual('false');
       expect(
-        DEFAULT_PROPERTY_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, null))
+        DEFAULT_PROPERTY_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, null),
+        ),
       ).toEqual('null');
     });
   });
 
   describe('ColorFormatter', () => {
     it('translates empty color to string correctly', () => {
-      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(-1, -1, -1, 1))).toEqual(
-        `${EMPTY_OBJ_STRING}, alpha: 1`
-      );
-      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 1, 1, 0))).toEqual(
-        `${EMPTY_OBJ_STRING}, alpha: 0`
-      );
+      expect(
+        COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(-1, -1, -1, 1)),
+      ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
+      expect(
+        COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 1, 1, 0)),
+      ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 0`);
     });
 
     it('translates non-empty color to string correctly', () => {
-      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 1))).toEqual(
-        '(1, 2, 3, 1)'
-      );
-      expect(COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.608))).toEqual(
-        '(1, 2, 3, 0.608)'
-      );
+      expect(
+        COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 1)),
+      ).toEqual('(1, 2, 3, 1)');
+      expect(
+        COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.608)),
+      ).toEqual('(1, 2, 3, 0.608)');
     });
   });
 
   describe('RectFormatter', () => {
     it('translates empty rect to string correctly', () => {
-      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, -1, -1))).toEqual(
-        EMPTY_OBJ_STRING
-      );
-      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 0, 0))).toEqual(
-        EMPTY_OBJ_STRING
-      );
+      expect(
+        RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, -1, -1)),
+      ).toEqual(EMPTY_OBJ_STRING);
+      expect(
+        RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 0, 0)),
+      ).toEqual(EMPTY_OBJ_STRING);
     });
 
     it('translates non-empty rect to string correctly', () => {
-      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 1, 1))).toEqual(
-        '(0, 0) - (1, 1)'
-      );
-      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 10, 10))).toEqual(
-        '(0, 0) - (10, 10)'
-      );
-      expect(RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 1.6431, 10456.9086, 10))).toEqual(
-        '(0, 1.643) - (10456.909, 10)'
-      );
+      expect(
+        RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 1, 1)),
+      ).toEqual('(0, 0) - (1, 1)');
+      expect(
+        RECT_FORMATTER.format(TreeNodeUtils.makeRectNode(0, 0, 10, 10)),
+      ).toEqual('(0, 0) - (10, 10)');
+      expect(
+        RECT_FORMATTER.format(
+          TreeNodeUtils.makeRectNode(0, 1.6431, 10456.9086, 10),
+        ),
+      ).toEqual('(0, 1.643) - (10456.909, 10)');
     });
   });
 
   describe('BufferFormatter', () => {
     it('translates buffer to string correctly', () => {
       const buffer = TreeNodeUtils.makeBufferNode();
-      expect(BUFFER_FORMATTER.format(buffer)).toEqual('w: 1, h: 0, stride: 0, format: 1');
+      expect(BUFFER_FORMATTER.format(buffer)).toEqual(
+        'w: 1, h: 0, stride: 0, format: 1',
+      );
     });
   });
 
   describe('LayerIdFormatter', () => {
     it('translates -1 id correctly', () => {
       expect(
-        LAYER_ID_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, -1))
+        LAYER_ID_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, -1),
+        ),
       ).toEqual('none');
     });
 
     it('translates valid id correctly', () => {
       expect(
-        LAYER_ID_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, 1))
+        LAYER_ID_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, 1),
+        ),
       ).toEqual('1');
       expect(
-        LAYER_ID_FORMATTER.format(new PropertyTreeNode('', '', PropertySource.PROTO, -10))
+        LAYER_ID_FORMATTER.format(
+          new PropertyTreeNode('', '', PropertySource.PROTO, -10),
+        ),
       ).toEqual('-10');
     });
   });
@@ -145,41 +165,59 @@ describe('Formatters', () => {
   describe('TransformFormatter', () => {
     it('translates type correctly', () => {
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.EMPTY))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.EMPTY),
+        ),
       ).toEqual('IDENTITY');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.TRANSLATE_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.TRANSLATE_VAL),
+        ),
       ).toEqual('TRANSLATE');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.SCALE_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.SCALE_VAL),
+        ),
       ).toEqual('SCALE');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.FLIP_H_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.FLIP_H_VAL),
+        ),
       ).toEqual('IDENTITY|FLIP_H');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.FLIP_V_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.FLIP_V_VAL),
+        ),
       ).toEqual('IDENTITY|FLIP_V');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.ROT_90_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.ROT_90_VAL),
+        ),
       ).toEqual('IDENTITY|ROT_90');
       expect(
-        TRANSFORM_FORMATTER.format(TreeNodeUtils.makeTransformNode(TransformType.ROT_INVALID_VAL))
+        TRANSFORM_FORMATTER.format(
+          TreeNodeUtils.makeTransformNode(TransformType.ROT_INVALID_VAL),
+        ),
       ).toEqual('IDENTITY|ROT_INVALID');
     });
   });
 
   describe('SizeFormatter', () => {
     it('translates size correctly', () => {
-      expect(SIZE_FORMATTER.format(TreeNodeUtils.makeSizeNode(1, 2))).toEqual('1 x 2');
+      expect(SIZE_FORMATTER.format(TreeNodeUtils.makeSizeNode(1, 2))).toEqual(
+        '1 x 2',
+      );
     });
   });
 
   describe('PositionFormatter', () => {
     it('translates position correctly', () => {
-      expect(POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1, 2))).toEqual('x: 1, y: 2');
-      expect(POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1.5, 2.2916))).toEqual(
-        'x: 1.500, y: 2.292'
-      );
+      expect(
+        POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1, 2)),
+      ).toEqual('x: 1, y: 2');
+      expect(
+        POSITION_FORMATTER.format(TreeNodeUtils.makePositionNode(1.5, 2.2916)),
+      ).toEqual('x: 1.500, y: 2.292');
     });
   });
 
@@ -194,7 +232,9 @@ describe('Formatters', () => {
       const rectNode = assertDefined(region.getChildByName('rect'));
       rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, 1080, 2340));
 
-      expect(REGION_FORMATTER.format(region)).toEqual('SkRegion((0, 0, 1080, 2340))');
+      expect(REGION_FORMATTER.format(region)).toEqual(
+        'SkRegion((0, 0, 1080, 2340))',
+      );
     });
   });
 });

@@ -23,7 +23,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddCujProperties extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const data = assertDefined(value.getChildByName('eventData')).getValue();
     const tag = assertDefined(value.getChildByName('tag')).getValue();
     const dataEntries = this.getDataEntries(data, tag);
@@ -37,9 +39,21 @@ export class AddCujProperties extends AddOperation<PropertyTreeNode> {
     };
 
     return [
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(value.id, 'cujType', cujType),
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(value.id, 'cujTimestamp', cujTimestamp),
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(value.id, 'cujTag', cujTag),
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+        value.id,
+        'cujType',
+        cujType,
+      ),
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+        value.id,
+        'cujTimestamp',
+        cujTimestamp,
+      ),
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+        value.id,
+        'cujTag',
+        cujTag,
+      ),
     ];
   }
 
@@ -52,7 +66,10 @@ export class AddCujProperties extends AddOperation<PropertyTreeNode> {
         .replace(']', '')
         .split(',');
     } else {
-      [cujType, unixNs, elapsedNs, uptimeNs] = data.replace('[', '').replace(']', '').split(',');
+      [cujType, unixNs, elapsedNs, uptimeNs] = data
+        .replace('[', '')
+        .replace(']', '')
+        .split(',');
     }
 
     if (
@@ -88,7 +105,10 @@ export class AddCujProperties extends AddOperation<PropertyTreeNode> {
     return BigInt(dataEntries[3]);
   }
 
-  private getCujTagFromData(dataEntries: string[], tag: EventTag): string | null {
+  private getCujTagFromData(
+    dataEntries: string[],
+    tag: EventTag,
+  ): string | null {
     return tag === EventTag.JANK_CUJ_BEGIN_TAG ? dataEntries[4] : null;
   }
 }

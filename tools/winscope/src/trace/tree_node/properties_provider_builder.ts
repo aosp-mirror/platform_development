@@ -18,7 +18,10 @@ import {assertDefined} from 'common/assert_utils';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LazyPropertiesStrategyType, PropertiesProvider} from './properties_provider';
+import {
+  LazyPropertiesStrategyType,
+  PropertiesProvider,
+} from './properties_provider';
 
 export class PropertiesProviderBuilder {
   private eagerProperties: PropertyTreeNode | undefined;
@@ -58,7 +61,7 @@ export class PropertiesProviderBuilder {
       assertDefined(this.lazyPropertiesStrategy),
       this.commonOperations,
       this.eagerOperations,
-      this.lazyOperations
+      this.lazyOperations,
     );
   }
 }

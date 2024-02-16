@@ -39,17 +39,25 @@ class ViewerScreenshot implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'Screenshot',
-      TraceType.SCREENSHOT
+      TraceType.SCREENSHOT,
     );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
-      (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
-        await entry?.getValue();
-      (this.htmlElement as unknown as ViewerScreenRecordingComponent).title = 'Screenshot';
-    });
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        const entry = TraceEntryFinder.findCorrespondingEntry(
+          this.trace,
+          event.position,
+        );
+        (
+          this.htmlElement as unknown as ViewerScreenRecordingComponent
+        ).currentTraceEntry = await entry?.getValue();
+        (this.htmlElement as unknown as ViewerScreenRecordingComponent).title =
+          'Screenshot';
+      },
+    );
   }
 
   setEmitEvent() {

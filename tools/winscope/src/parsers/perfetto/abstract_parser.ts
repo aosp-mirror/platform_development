@@ -39,7 +39,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
   constructor(
     traceFile: TraceFile,
     traceProcessor: WasmEngineProxy,
-    timestampFactory: TimestampFactory
+    timestampFactory: TimestampFactory,
   ) {
     this.traceFile = traceFile;
     this.traceProcessor = traceProcessor;
@@ -51,16 +51,19 @@ export abstract class AbstractParser<T> implements Parser<T> {
     this.lengthEntries = elapsedTimestamps.length;
     assertTrue(
       this.lengthEntries > 0,
-      () => `Trace processor tables don't contain entries of type ${this.getTraceType()}`
+      () =>
+        `Trace processor tables don't contain entries of type ${this.getTraceType()}`,
     );
 
     this.realToElapsedTimeOffsetNs = await this.queryRealToElapsedTimeOffset(
-      assertDefined(elapsedTimestamps.at(-1))
+      assertDefined(elapsedTimestamps.at(-1)),
     );
 
     this.timestamps.set(
       TimestampType.ELAPSED,
-      elapsedTimestamps.map((value) => this.timestampFactory.makeElapsedTimestamp(value))
+      elapsedTimestamps.map((value) =>
+        this.timestampFactory.makeElapsedTimestamp(value),
+      ),
     );
 
     this.timestamps.set(
@@ -68,9 +71,9 @@ export abstract class AbstractParser<T> implements Parser<T> {
       elapsedTimestamps.map((value) =>
         this.timestampFactory.makeRealTimestamp(
           value,
-          assertDefined(this.realToElapsedTimeOffsetNs)
-        )
-      )
+          assertDefined(this.realToElapsedTimeOffsetNs),
+        ),
+      ),
     );
 
     if (this.lengthEntries > 0) {
@@ -89,12 +92,15 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return this.timestamps.get(type);
   }
 
-  abstract getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
+  abstract getEntry(
+    index: AbsoluteEntryIndex,
+    timestampType: TimestampType,
+  ): Promise<T>;
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
     entriesRange: EntriesRange,
-    param?: CustomQueryParamTypeMap[Q]
+    param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
   }
@@ -119,13 +125,18 @@ export abstract class AbstractParser<T> implements Parser<T> {
   // (timestamp parameter).
   // The timestamp parameter must be a timestamp queried/provided by TP,
   // otherwise the TO_REALTIME() SQL function might return invalid values.
-  private async queryRealToElapsedTimeOffset(elapsedTimestamp: bigint): Promise<bigint> {
+  private async queryRealToElapsedTimeOffset(
+    elapsedTimestamp: bigint,
+  ): Promise<bigint> {
     const sql = `
       SELECT TO_REALTIME(${elapsedTimestamp}) as realtime;
     `;
 
     const result = await this.traceProcessor.query(sql).waitAllRows();
-    assertTrue(result.numRows() === 1, () => 'Failed to query realtime timestamp');
+    assertTrue(
+      result.numRows() === 1,
+      () => 'Failed to query realtime timestamp',
+    );
 
     const real = result.iter({}).get('realtime') as bigint;
     return real - elapsedTimestamp;

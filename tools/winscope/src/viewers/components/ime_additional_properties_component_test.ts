@@ -40,10 +40,13 @@ describe('ImeAdditionalPropertiesComponent', () => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    htmlElement.addEventListener(ViewerEvents.HighlightedChange, component.onHighlightedChange);
+    htmlElement.addEventListener(
+      ViewerEvents.HighlightedChange,
+      component.onHighlightedChange,
+    );
     htmlElement.addEventListener(
       ViewerEvents.AdditionalPropertySelected,
-      component.onAdditionalPropertySelectedChange
+      component.onAdditionalPropertySelectedChange,
     );
     fixture.detectChanges();
   });
@@ -58,16 +61,22 @@ describe('ImeAdditionalPropertiesComponent', () => {
   });
 
   it('emits update additional property tree event on wm state button click', () => {
-    const button = assertDefined(htmlElement.querySelector('.wm-state')) as HTMLButtonElement;
+    const button = assertDefined(
+      htmlElement.querySelector('.wm-state'),
+    ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
     fixture.detectChanges();
-    expect(component.additionalPropertieTreeName).toEqual('Window Manager State');
+    expect(component.additionalPropertieTreeName).toEqual(
+      'Window Manager State',
+    );
     expect(button.className).toContain('selected');
   });
 
   it('propagates new ime container layer on button click', () => {
-    const button = assertDefined(htmlElement.querySelector('.ime-container')) as HTMLButtonElement;
+    const button = assertDefined(
+      htmlElement.querySelector('.ime-container'),
+    ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
     fixture.detectChanges();
@@ -77,7 +86,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   it('propagates new input method surface layer on button click', () => {
     const button = assertDefined(
-      htmlElement.querySelector('.input-method-surface')
+      htmlElement.querySelector('.input-method-surface'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
@@ -89,18 +98,22 @@ describe('ImeAdditionalPropertiesComponent', () => {
   it('shows ime manager service wm properties', () => {
     component.isImeManagerService = true;
     fixture.detectChanges();
-    const imeManagerService = assertDefined(htmlElement.querySelector('.ime-manager-service'));
-    expect(assertDefined(imeManagerService.querySelector('.wm-state')).textContent).toContain(
-      '1970-01-01T00:00:00.000000000'
+    const imeManagerService = assertDefined(
+      htmlElement.querySelector('.ime-manager-service'),
     );
-    expect(imeManagerService.querySelector('.ime-control-target')).toBeDefined();
+    expect(
+      assertDefined(imeManagerService.querySelector('.wm-state')).textContent,
+    ).toContain('1970-01-01T00:00:00.000000000');
+    expect(
+      imeManagerService.querySelector('.ime-control-target'),
+    ).toBeDefined();
   });
 
   it('propagates new property tree node window on button click', () => {
     component.isImeManagerService = true;
     fixture.detectChanges();
     const button = assertDefined(
-      htmlElement.querySelector('.ime-control-target')
+      htmlElement.querySelector('.ime-control-target'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
@@ -134,7 +147,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
           imeControlTarget: TreeNodeUtils.makePropertyNode(
             'DisplayContent.inputMethodControlTarget',
             'inputMethodControlTarget',
-            null
+            null,
           ),
           imeInputTarget: undefined,
           imeLayeringTarget: undefined,
@@ -153,7 +166,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
         },
         taskLayerOfImeContainer: undefined,
         taskLayerOfImeSnapshot: undefined,
-      }
+      },
     );
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
@@ -162,8 +175,12 @@ describe('ImeAdditionalPropertiesComponent', () => {
       this.highlightedItem = (event as CustomEvent).detail.id;
     };
     onAdditionalPropertySelectedChange = (event: Event) => {
-      this.highlightedItem = (event as CustomEvent).detail.selectedItem.treeNode.id;
-      this.additionalPropertieTreeName = (event as CustomEvent).detail.selectedItem.name;
+      this.highlightedItem = (
+        event as CustomEvent
+      ).detail.selectedItem.treeNode.id;
+      this.additionalPropertieTreeName = (
+        event as CustomEvent
+      ).detail.selectedItem.name;
     };
   }
 });

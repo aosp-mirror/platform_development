@@ -143,7 +143,7 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
   });
 
@@ -160,13 +160,13 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
     findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
   });
 
@@ -178,7 +178,9 @@ describe('RectsComponent', () => {
     ];
     fixture.detectChanges();
 
-    const tabs = Array.from(htmlElement.querySelectorAll('.grouping-tabs mat-tab'));
+    const tabs = Array.from(
+      htmlElement.querySelectorAll('.grouping-tabs mat-tab'),
+    );
     expect(tabs.length).toEqual(1);
     expect(tabs[0].innerHTML).not.toContain('Stacks');
   });
@@ -193,17 +195,19 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
 
-    const container = assertDefined(htmlElement.querySelector('.display-name-buttons'));
+    const container = assertDefined(
+      htmlElement.querySelector('.display-name-buttons'),
+    );
     const button = Array.from(container.querySelectorAll('button'))[1];
     button.click();
     fixture.detectChanges();
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['secondary', 'primary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
   });
 
@@ -217,21 +221,23 @@ describe('RectsComponent', () => {
     ];
     fixture.detectChanges();
 
-    const container = assertDefined(htmlElement.querySelector('.display-name-buttons'));
+    const container = assertDefined(
+      htmlElement.querySelector('.display-name-buttons'),
+    );
     const button = Array.from(container.querySelectorAll('button'))[1];
     button.click();
     fixture.detectChanges();
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['secondary', 'primary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
 
     findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
   });
 
@@ -248,32 +254,35 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
 
     findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
 
-    const stackButtonContainer = assertDefined(htmlElement.querySelector('.stack-buttons'));
-    const button = Array.from(stackButtonContainer.querySelectorAll('button'))[1];
+    const stackButtonContainer = assertDefined(
+      htmlElement.querySelector('.stack-buttons'),
+    );
+    const button = Array.from(
+      stackButtonContainer.querySelectorAll('button'),
+    )[1];
     button.click();
     fixture.detectChanges();
-
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'primary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
 
     findAndClickTab(0);
     checkButtons(
       ['Display 0', 'Display 1', 'Display 2'],
       ['secondary', 'secondary', 'secondary'],
-      '.display-name-buttons'
+      '.display-name-buttons',
     );
   });
 
@@ -296,7 +305,7 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1'],
       ['secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
   });
 
@@ -315,7 +324,7 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1'],
       ['secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
 
     component.displays = [
@@ -328,7 +337,7 @@ describe('RectsComponent', () => {
     checkButtons(
       ['Stack 2: Display 0', 'Stack 1: Display 1'],
       ['secondary', 'secondary'],
-      '.stack-buttons'
+      '.stack-buttons',
     );
   });
 
@@ -338,14 +347,22 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-    checkButtons(['Display 0', 'Display 1'], ['primary', 'secondary'], '.display-name-buttons');
+    checkButtons(
+      ['Display 0', 'Display 1'],
+      ['primary', 'secondary'],
+      '.display-name-buttons',
+    );
 
     component.displays = [
       {displayId: 20, groupId: 2, name: 'Display 1'},
       {displayId: 10, groupId: 1, name: 'Display 0'},
     ];
     fixture.detectChanges();
-    checkButtons(['Display 1', 'Display 0'], ['secondary', 'primary'], '.display-name-buttons');
+    checkButtons(
+      ['Display 1', 'Display 0'],
+      ['secondary', 'primary'],
+      '.display-name-buttons',
+    );
   });
 
   it('tracks selected display when stack id tracking available but not selected by user', () => {
@@ -356,14 +373,22 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-    checkButtons(['Display 0', 'Display 1'], ['primary', 'secondary'], '.display-name-buttons');
+    checkButtons(
+      ['Display 0', 'Display 1'],
+      ['primary', 'secondary'],
+      '.display-name-buttons',
+    );
 
     component.displays = [
       {displayId: 20, groupId: 2, name: 'Display 1'},
       {displayId: 10, groupId: 1, name: 'Display 0'},
     ];
     fixture.detectChanges();
-    checkButtons(['Display 1', 'Display 0'], ['secondary', 'primary'], '.display-name-buttons');
+    checkButtons(
+      ['Display 1', 'Display 0'],
+      ['secondary', 'primary'],
+      '.display-name-buttons',
+    );
   });
 
   it('uses stored rects view settings', () => {
@@ -384,24 +409,38 @@ describe('RectsComponent', () => {
     expect(newComponent.rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
   });
 
-  function checkButtons(buttonValues: string[], buttonColors: string[], selector: string) {
-    const displayButtonContainer = assertDefined(htmlElement.querySelector(selector));
-    const buttons = Array.from(displayButtonContainer.querySelectorAll('button'));
+  function checkButtons(
+    buttonValues: string[],
+    buttonColors: string[],
+    selector: string,
+  ) {
+    const displayButtonContainer = assertDefined(
+      htmlElement.querySelector(selector),
+    );
+    const buttons = Array.from(
+      displayButtonContainer.querySelectorAll('button'),
+    );
     expect(buttons.map((it) => it.textContent?.trim())).toEqual(buttonValues);
 
     for (let i = 0; i < buttonValues.length; i++) {
-      expect((buttons[i] as HTMLButtonElement).outerHTML).toContain(buttonColors[i]);
+      expect((buttons[i] as HTMLButtonElement).outerHTML).toContain(
+        buttonColors[i],
+      );
     }
   }
 
   function findAndClickCheckbox(selector: string) {
-    const box = assertDefined(htmlElement.querySelector(selector)) as HTMLInputElement;
+    const box = assertDefined(
+      htmlElement.querySelector(selector),
+    ) as HTMLInputElement;
     box.dispatchEvent(new Event('click'));
     fixture.detectChanges();
   }
 
   function findAndClickTab(index: number) {
-    const tabs = Array.from(htmlElement.querySelectorAll('.grouping-tabs mat-tab'));
+    const tabs = Array.from(
+      htmlElement.querySelectorAll('.grouping-tabs mat-tab'),
+    );
     const tab = assertDefined(tabs[index]) as HTMLElement;
     tab.click();
     fixture.detectChanges();

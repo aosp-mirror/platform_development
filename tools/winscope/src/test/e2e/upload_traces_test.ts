@@ -42,7 +42,9 @@ describe('Upload traces', () => {
   });
 
   it("doesn't emit messages for valid trace file", async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb');
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+    );
     expect(await areMessagesEmitted()).toBeFalsy();
   });
 
@@ -92,7 +94,9 @@ describe('Upload traces', () => {
   };
 
   const checkRendersSurfaceFlingerView = async () => {
-    const viewerPresent = await element(by.css('viewer-surface-flinger')).isPresent();
+    const viewerPresent = await element(
+      by.css('viewer-surface-flinger'),
+    ).isPresent();
     expect(viewerPresent).toBeTruthy();
   };
 });

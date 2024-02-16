@@ -50,42 +50,49 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly CUSTOM_FORMATTERS = new Map([
     ['cropLayerId', LAYER_ID_FORMATTER],
     ['zOrderRelativeOf', LAYER_ID_FORMATTER],
-    ['hwcCompositionType', new EnumFormatter(perfetto.protos.HwcCompositionType)],
+    [
+      'hwcCompositionType',
+      new EnumFormatter(perfetto.protos.HwcCompositionType),
+    ],
   ]);
 
   private static readonly LayersTraceFileProto = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.LayersTraceFileProto')
+    root.lookupType('perfetto.protos.LayersTraceFileProto'),
   );
-  private static readonly entryField = ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
+  private static readonly entryField =
+    ParserSurfaceFlinger.LayersTraceFileProto.fields['entry'];
   private static readonly layerField = assertDefined(
-    ParserSurfaceFlinger.entryField.tamperedMessageType?.fields['layers'].tamperedMessageType
+    ParserSurfaceFlinger.entryField.tamperedMessageType?.fields['layers']
+      .tamperedMessageType,
   ).fields['layers'];
 
   private static readonly Operations = {
     SetFormattersLayer: new SetFormatters(
       ParserSurfaceFlinger.layerField,
-      ParserSurfaceFlinger.CUSTOM_FORMATTERS
+      ParserSurfaceFlinger.CUSTOM_FORMATTERS,
     ),
     TranslateIntDefLayer: new TranslateIntDef(ParserSurfaceFlinger.layerField),
     AddDefaultsLayerEager: new AddDefaults(
       ParserSurfaceFlinger.layerField,
-      ParserSfUtils.EAGER_PROPERTIES
+      ParserSfUtils.EAGER_PROPERTIES,
     ),
     AddDefaultsLayerLazy: new AddDefaults(
       ParserSurfaceFlinger.layerField,
       undefined,
-      ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES)
+      ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES),
     ),
     SetFormattersEntry: new SetFormatters(
       ParserSurfaceFlinger.entryField,
-      ParserSurfaceFlinger.CUSTOM_FORMATTERS
+      ParserSurfaceFlinger.CUSTOM_FORMATTERS,
     ),
     TranslateIntDefEntry: new TranslateIntDef(ParserSurfaceFlinger.entryField),
-    AddDefaultsEntryEager: new AddDefaults(ParserSurfaceFlinger.entryField, ['displays']),
+    AddDefaultsEntryEager: new AddDefaults(ParserSurfaceFlinger.entryField, [
+      'displays',
+    ]),
     AddDefaultsEntryLazy: new AddDefaults(
       ParserSurfaceFlinger.entryField,
       undefined,
-      ParserSfUtils.DENYLIST_PROPERTIES
+      ParserSfUtils.DENYLIST_PROPERTIES,
     ),
   };
 
@@ -95,14 +102,14 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   constructor(
     traceFile: TraceFile,
     traceProcessor: WasmEngineProxy,
-    timestampFactory: TimestampFactory
+    timestampFactory: TimestampFactory,
   ) {
     super(traceFile, traceProcessor, timestampFactory);
     this.layersSnapshotProtoTransformer = new FakeProtoTransformer(
-      assertDefined(ParserSurfaceFlinger.entryField.tamperedMessageType)
+      assertDefined(ParserSurfaceFlinger.entryField.tamperedMessageType),
     );
     this.layerProtoTransformer = new FakeProtoTransformer(
-      assertDefined(ParserSurfaceFlinger.layerField.tamperedMessageType)
+      assertDefined(ParserSurfaceFlinger.layerField.tamperedMessageType),
     );
   }
 
@@ -110,11 +117,19 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     return TraceType.SURFACE_FLINGER;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<HierarchyTreeNode> {
-    let snapshotProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
-    snapshotProto = this.layersSnapshotProtoTransformer.transform(snapshotProto);
-    const layerProtos = (await this.querySnapshotLayers(index)).map((layerProto) =>
-      this.layerProtoTransformer.transform(layerProto)
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<HierarchyTreeNode> {
+    let snapshotProto = await Utils.queryEntry(
+      this.traceProcessor,
+      this.getTableName(),
+      index,
+    );
+    snapshotProto =
+      this.layersSnapshotProtoTransformer.transform(snapshotProto);
+    const layerProtos = (await this.querySnapshotLayers(index)).map(
+      (layerProto) => this.layerProtoTransformer.transform(layerProto),
     );
 
     return this.makeHierarchyTree(snapshotProto, layerProtos);
@@ -122,11 +137,15 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   override async customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(this.traceProcessor, this.getTableName(), entriesRange);
+        return Utils.queryVsyncId(
+          this.traceProcessor,
+          this.getTableName(),
+          entriesRange,
+        );
       })
       .visit(CustomQueryType.SF_LAYERS_ID_AND_NAME, async () => {
         const sql = `
@@ -140,11 +159,15 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         GROUP BY id;
       `;
         const querResult = await this.traceProcessor.query(sql).waitAllRows();
-        const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] = [];
+        const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] =
+          [];
         for (const it = querResult.iter({}); it.valid(); it.next()) {
           const idAndName = it.get('id_and_name') as string;
           const indexDelimiter = idAndName.indexOf(',');
-          assertTrue(indexDelimiter > 0, () => `Unexpected value in query result: ${idAndName}`);
+          assertTrue(
+            indexDelimiter > 0,
+            () => `Unexpected value in query result: ${idAndName}`,
+          );
           const id = Number(idAndName.slice(0, indexDelimiter));
           const name = idAndName.slice(indexDelimiter + 1);
           result.push({id, name});
@@ -160,52 +183,64 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   private makeHierarchyTree(
     snapshotProto: perfetto.protos.ILayersSnapshotProto,
-    layerProtos: perfetto.protos.ILayerProto[]
+    layerProtos: perfetto.protos.ILayerProto[],
   ): HierarchyTreeNode {
-    const excludesCompositionState = snapshotProto?.excludesCompositionState ?? false;
+    const excludesCompositionState =
+      snapshotProto?.excludesCompositionState ?? false;
     const addExcludesCompositionState = excludesCompositionState
       ? ParserSfUtils.OPERATIONS.AddExcludesCompositionStateTrue
       : ParserSfUtils.OPERATIONS.AddExcludesCompositionStateFalse;
 
     const processed = new Map<number, number>();
 
-    const layers: PropertiesProvider[] = layerProtos.map((layer: perfetto.protos.ILayerProto) => {
-      const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
-      processed.set(assertDefined(layer.id), duplicateCount + 1);
-      const eagerProperties = ParserSfUtils.makeEagerPropertiesTree(layer, duplicateCount);
-      const lazyPropertiesStrategy = ParserSfUtils.makeLayerLazyPropertiesStrategy(
-        layer,
-        duplicateCount
-      ); //TODO: fetch these lazily instead
+    const layers: PropertiesProvider[] = layerProtos.map(
+      (layer: perfetto.protos.ILayerProto) => {
+        const duplicateCount = processed.get(assertDefined(layer.id)) ?? 0;
+        processed.set(assertDefined(layer.id), duplicateCount + 1);
+        const eagerProperties = ParserSfUtils.makeEagerPropertiesTree(
+          layer,
+          duplicateCount,
+        );
+        const lazyPropertiesStrategy =
+          ParserSfUtils.makeLayerLazyPropertiesStrategy(layer, duplicateCount); //TODO: fetch these lazily instead
 
-      const layerProps = new PropertiesProviderBuilder()
-        .setEagerProperties(eagerProperties)
-        .setLazyPropertiesStrategy(lazyPropertiesStrategy)
-        .setCommonOperations([
-          ParserSurfaceFlinger.Operations.SetFormattersLayer,
-          ParserSurfaceFlinger.Operations.TranslateIntDefLayer,
-        ])
-        .setEagerOperations([
-          ParserSurfaceFlinger.Operations.AddDefaultsLayerEager,
-          ParserSfUtils.OPERATIONS.AddCompositionType,
-          ParserSfUtils.OPERATIONS.UpdateTransforms,
-          ParserSfUtils.OPERATIONS.AddVerboseFlags,
-          addExcludesCompositionState,
-        ])
-        .setLazyOperations([ParserSurfaceFlinger.Operations.AddDefaultsLayerLazy])
-        .build();
-      return layerProps;
-    });
+        const layerProps = new PropertiesProviderBuilder()
+          .setEagerProperties(eagerProperties)
+          .setLazyPropertiesStrategy(lazyPropertiesStrategy)
+          .setCommonOperations([
+            ParserSurfaceFlinger.Operations.SetFormattersLayer,
+            ParserSurfaceFlinger.Operations.TranslateIntDefLayer,
+          ])
+          .setEagerOperations([
+            ParserSurfaceFlinger.Operations.AddDefaultsLayerEager,
+            ParserSfUtils.OPERATIONS.AddCompositionType,
+            ParserSfUtils.OPERATIONS.UpdateTransforms,
+            ParserSfUtils.OPERATIONS.AddVerboseFlags,
+            addExcludesCompositionState,
+          ])
+          .setLazyOperations([
+            ParserSurfaceFlinger.Operations.AddDefaultsLayerLazy,
+          ])
+          .build();
+        return layerProps;
+      },
+    );
 
     const entry = new PropertiesProviderBuilder()
-      .setEagerProperties(ParserSfUtils.makeEntryEagerPropertiesTree(snapshotProto))
-      .setLazyPropertiesStrategy(ParserSfUtils.makeEntryLazyPropertiesStrategy(snapshotProto))
+      .setEagerProperties(
+        ParserSfUtils.makeEntryEagerPropertiesTree(snapshotProto),
+      )
+      .setLazyPropertiesStrategy(
+        ParserSfUtils.makeEntryLazyPropertiesStrategy(snapshotProto),
+      )
       .setCommonOperations([
         ParserSfUtils.OPERATIONS.AddDisplayProperties,
         ParserSurfaceFlinger.Operations.SetFormattersEntry,
         ParserSurfaceFlinger.Operations.TranslateIntDefEntry,
       ])
-      .setEagerOperations([ParserSurfaceFlinger.Operations.AddDefaultsEntryEager])
+      .setEagerOperations([
+        ParserSurfaceFlinger.Operations.AddDefaultsEntryEager,
+      ])
       .setLazyOperations([
         ParserSurfaceFlinger.Operations.AddDefaultsEntryLazy,
         ParserSfUtils.OPERATIONS.AddDisplayProperties,
@@ -223,7 +258,9 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       .build();
   }
 
-  private async querySnapshotLayers(index: number): Promise<perfetto.protos.ILayerProto[]> {
+  private async querySnapshotLayers(
+    index: number,
+  ): Promise<perfetto.protos.ILayerProto[]> {
     const layerIdToBuilder = new Map<number, FakeProtoBuilder>();
     const getBuilder = (layerId: number) => {
       if (!layerIdToBuilder.has(layerId)) {
@@ -255,7 +292,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         it.get('value_type') as string,
         it.get('int_value') as bigint | undefined,
         it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
+        it.get('string_value') as string | undefined,
       );
     }
 

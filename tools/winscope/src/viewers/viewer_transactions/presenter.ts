@@ -61,21 +61,22 @@ export class Presenter {
 
   private currentPropertiesTree: PropertyTreeNode | undefined;
 
-  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'TransactionsPropertyOptions',
-    {
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: false,
-        tooltip: `
+  private propertiesUserOptions: UserOptions =
+    PersistentStoreProxy.new<UserOptions>(
+      'TransactionsPropertyOptions',
+      {
+        showDefaults: {
+          name: 'Show defaults',
+          enabled: false,
+          tooltip: `
                 If checked, shows the value of all properties.
                 Otherwise, hides all properties whose value is
                 the default for its data type.
               `,
+        },
       },
-    },
-    this.storage
-  );
+      this.storage,
+    );
 
   private readonly notifyUiDataCallback: NotifyViewCallbackType;
   private static readonly VALUE_NA = 'N/A';
@@ -83,7 +84,7 @@ export class Presenter {
   constructor(
     traces: Traces,
     private readonly storage: Storage,
-    notifyViewCallback: NotifyViewCallbackType
+    notifyViewCallback: NotifyViewCallbackType,
   ) {
     this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
     this.notifyUiDataCallback = notifyViewCallback;
@@ -92,21 +93,29 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      await this.initializeIfNeeded();
-      this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
-      this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-      this.uiData.selectedEntryIndex = undefined;
-      this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-      this.currentPropertiesTree = this.computeCurrentPropertiesTree(
-        this.uiData.entries,
-        this.uiData.currentEntryIndex,
-        this.uiData.selectedEntryIndex
-      );
-      this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        await this.initializeIfNeeded();
+        this.entry = TraceEntryFinder.findCorrespondingEntry(
+          this.trace,
+          event.position,
+        );
+        this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
+        this.uiData.selectedEntryIndex = undefined;
+        this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
+        this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+          this.uiData.entries,
+          this.uiData.currentEntryIndex,
+          this.uiData.selectedEntryIndex,
+        );
+        this.uiData.currentPropertiesTree = this.formatPropertiesTree(
+          this.currentPropertiesTree,
+        );
 
-      this.notifyUiDataCallback(this.uiData);
-    });
+        this.notifyUiDataCallback(this.uiData);
+      },
+    );
   }
 
   onVSyncIdFilterChanged(vsyncIds: string[]) {
@@ -163,10 +172,12 @@ export class Presenter {
     this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       this.uiData.entries,
       this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex
+      this.uiData.selectedEntryIndex,
     );
 
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
+      this.currentPropertiesTree,
+    );
 
     this.notifyUiDataCallback(this.uiData);
   }
@@ -174,7 +185,9 @@ export class Presenter {
   onPropertiesUserOptionsChange(userOptions: UserOptions) {
     this.propertiesUserOptions = userOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
+      this.currentPropertiesTree,
+    );
     this.notifyUiDataCallback(this.uiData);
   }
 
@@ -187,30 +200,31 @@ export class Presenter {
 
     this.allVSyncIds = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.vsyncId.toString()
+      (entry: UiDataEntry) => entry.vsyncId.toString(),
     );
     this.allPids = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.pid
+      (entry: UiDataEntry) => entry.pid,
     );
     this.allUids = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.uid
+      (entry: UiDataEntry) => entry.uid,
     );
     this.allTypes = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.type
+      (entry: UiDataEntry) => entry.type,
     );
     this.allLayerAndDisplayIds = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.layerOrDisplayId
+      (entry: UiDataEntry) => entry.layerOrDisplayId,
     );
     this.allTransactionIds = this.getUniqueUiDataEntryValues(
       this.allUiDataEntries,
-      (entry: UiDataEntry) => entry.transactionId
+      (entry: UiDataEntry) => entry.transactionId,
     );
-    this.allFlags = this.getUniqueUiDataEntryValues(this.allUiDataEntries, (entry: UiDataEntry) =>
-      entry.what.split('|').map((flag) => flag.trim())
+    this.allFlags = this.getUniqueUiDataEntryValues(
+      this.allUiDataEntries,
+      (entry: UiDataEntry) => entry.what.split('|').map((flag) => flag.trim()),
     );
 
     this.uiData = this.computeUiData();
@@ -225,42 +239,50 @@ export class Presenter {
 
     if (this.vsyncIdFilter.length > 0) {
       filteredEntries = filteredEntries.filter((entry) =>
-        this.vsyncIdFilter.includes(entry.vsyncId.toString())
+        this.vsyncIdFilter.includes(entry.vsyncId.toString()),
       );
     }
 
     if (this.pidFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) => this.pidFilter.includes(entry.pid));
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.pidFilter.includes(entry.pid),
+      );
     }
 
     if (this.uidFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) => this.uidFilter.includes(entry.uid));
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.uidFilter.includes(entry.uid),
+      );
     }
 
     if (this.typeFilter.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) => this.typeFilter.includes(entry.type));
+      filteredEntries = filteredEntries.filter((entry) =>
+        this.typeFilter.includes(entry.type),
+      );
     }
 
     if (this.layerIdFilter.length > 0) {
       filteredEntries = filteredEntries.filter((entry) =>
-        this.layerIdFilter.includes(entry.layerOrDisplayId)
+        this.layerIdFilter.includes(entry.layerOrDisplayId),
       );
     }
 
     if (this.whatFilter.length > 0) {
       filteredEntries = filteredEntries.filter(
-        (entry) => this.whatFilter.find((flag) => entry.what.includes(flag)) !== undefined
+        (entry) =>
+          this.whatFilter.find((flag) => entry.what.includes(flag)) !==
+          undefined,
       );
     }
 
     if (this.transactionIdFilter.length > 0) {
       filteredEntries = filteredEntries.filter((entry) =>
-        this.transactionIdFilter.includes(entry.transactionId.toString())
+        this.transactionIdFilter.includes(entry.transactionId.toString()),
       );
     }
 
     this.originalIndicesOfUiDataEntries = filteredEntries.map(
-      (entry) => entry.originalIndexInTraceEntry
+      (entry) => entry.originalIndexInTraceEntry,
     );
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
@@ -268,10 +290,12 @@ export class Presenter {
     this.currentPropertiesTree = this.computeCurrentPropertiesTree(
       filteredEntries,
       currentEntryIndex,
-      selectedEntryIndex
+      selectedEntryIndex,
     );
 
-    const formattedPropertiesTree = this.formatPropertiesTree(this.currentPropertiesTree);
+    const formattedPropertiesTree = this.formatPropertiesTree(
+      this.currentPropertiesTree,
+    );
 
     return new UiData(
       this.allVSyncIds,
@@ -286,7 +310,7 @@ export class Presenter {
       selectedEntryIndex,
       currentEntryIndex,
       formattedPropertiesTree,
-      this.propertiesUserOptions
+      this.propertiesUserOptions,
     );
   }
 
@@ -302,7 +326,7 @@ export class Presenter {
     return (
       ArrayUtils.binarySearchFirstGreaterOrEqual(
         this.originalIndicesOfUiDataEntries,
-        this.entry.getIndex()
+        this.entry.getIndex(),
       ) ?? this.originalIndicesOfUiDataEntries.length - 1
     );
   }
@@ -310,7 +334,7 @@ export class Presenter {
   private computeCurrentPropertiesTree(
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
-    selectedEntryIndex: undefined | number
+    selectedEntryIndex: undefined | number,
   ): PropertyTreeNode | undefined {
     if (selectedEntryIndex !== undefined) {
       return entries[selectedEntryIndex].propertiesTree;
@@ -322,12 +346,14 @@ export class Presenter {
   }
 
   private formatPropertiesTree(
-    propertiesTree: PropertyTreeNode | undefined
+    propertiesTree: PropertyTreeNode | undefined,
   ): UiPropertyTreeNode | undefined {
     if (!propertiesTree) return undefined;
 
     const uiTree = UiPropertyTreeNode.from(propertiesTree);
-    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(uiTree);
+    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(
+      uiTree,
+    );
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
       formatter.addOperation(new Filter([UiTreeUtils.isNotDefault], false));
@@ -342,32 +368,43 @@ export class Presenter {
     const entryProtos = await Promise.all(
       this.trace.mapEntry(async (entry) => {
         return await entry.getValue();
-      })
+      }),
     );
 
-    for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
+    for (
+      let originalIndex = 0;
+      originalIndex < this.trace.lengthEntries;
+      ++originalIndex
+    ) {
       const entry = this.trace.getEntry(originalIndex);
       const entryNode = entryProtos[originalIndex];
-      const vsyncId = Number(assertDefined(entryNode.getChildByName('vsyncId')).getValue());
-
-      const entryTimestamp = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-        'TransactionsTraceEntry',
-        'timestamp',
-        entry.getTimestamp()
+      const vsyncId = Number(
+        assertDefined(entryNode.getChildByName('vsyncId')).getValue(),
       );
+
+      const entryTimestamp =
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          'TransactionsTraceEntry',
+          'timestamp',
+          entry.getTimestamp(),
+        );
       entryTimestamp.setFormatter(TIMESTAMP_FORMATTER);
 
       for (const transactionState of assertDefined(
-        entryNode.getChildByName('transactions')
+        entryNode.getChildByName('transactions'),
       ).getAllChildren()) {
-        const pid = assertDefined(transactionState.getChildByName('pid')).formattedValue();
-        const uid = assertDefined(transactionState.getChildByName('uid')).formattedValue();
+        const pid = assertDefined(
+          transactionState.getChildByName('pid'),
+        ).formattedValue();
+        const uid = assertDefined(
+          transactionState.getChildByName('uid'),
+        ).formattedValue();
         const transactionId = assertDefined(
-          transactionState.getChildByName('transactionId')
+          transactionState.getChildByName('transactionId'),
         ).formattedValue();
 
         const layerChanges = assertDefined(
-          transactionState.getChildByName('layerChanges')
+          transactionState.getChildByName('layerChanges'),
         ).getAllChildren();
         for (const layerState of layerChanges) {
           entries.push(
@@ -378,16 +415,18 @@ export class Presenter {
               pid,
               uid,
               UiDataEntryType.LAYER_CHANGED,
-              assertDefined(layerState.getChildByName('layerId')).formattedValue(),
+              assertDefined(
+                layerState.getChildByName('layerId'),
+              ).formattedValue(),
               transactionId,
               assertDefined(layerState.getChildByName('what')).formattedValue(),
-              layerState
-            )
+              layerState,
+            ),
           );
         }
 
         const displayChanges = assertDefined(
-          transactionState.getChildByName('displayChanges')
+          transactionState.getChildByName('displayChanges'),
         ).getAllChildren();
         for (const displayState of displayChanges) {
           entries.push(
@@ -400,9 +439,11 @@ export class Presenter {
               UiDataEntryType.DISPLAY_CHANGED,
               assertDefined(displayState.getChildByName('id')).formattedValue(),
               transactionId,
-              assertDefined(displayState.getChildByName('what')).formattedValue(),
-              displayState
-            )
+              assertDefined(
+                displayState.getChildByName('what'),
+              ).formattedValue(),
+              displayState,
+            ),
           );
         }
 
@@ -418,14 +459,14 @@ export class Presenter {
               '',
               transactionId,
               '',
-              undefined
-            )
+              undefined,
+            ),
           );
         }
       }
 
       for (const layerCreationArgs of assertDefined(
-        entryNode.getChildByName('addedLayers')
+        entryNode.getChildByName('addedLayers'),
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
@@ -435,16 +476,18 @@ export class Presenter {
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
             UiDataEntryType.LAYER_ADDED,
-            assertDefined(layerCreationArgs.getChildByName('layerId')).formattedValue(),
+            assertDefined(
+              layerCreationArgs.getChildByName('layerId'),
+            ).formattedValue(),
             '',
             '',
-            layerCreationArgs
-          )
+            layerCreationArgs,
+          ),
         );
       }
 
       for (const destroyedLayerId of assertDefined(
-        entryNode.getChildByName('destroyedLayers')
+        entryNode.getChildByName('destroyedLayers'),
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
@@ -457,13 +500,13 @@ export class Presenter {
             destroyedLayerId.formattedValue(),
             '',
             '',
-            destroyedLayerId
-          )
+            destroyedLayerId,
+          ),
         );
       }
 
       for (const displayState of assertDefined(
-        entryNode.getChildByName('addedDisplays')
+        entryNode.getChildByName('addedDisplays'),
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
@@ -476,13 +519,13 @@ export class Presenter {
             assertDefined(displayState.getChildByName('id')).formattedValue(),
             '',
             assertDefined(displayState.getChildByName('what')).formattedValue(),
-            displayState
-          )
+            displayState,
+          ),
         );
       }
 
       for (const removedDisplayId of assertDefined(
-        entryNode.getChildByName('removedDisplays')
+        entryNode.getChildByName('removedDisplays'),
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
@@ -495,13 +538,13 @@ export class Presenter {
             removedDisplayId.formattedValue(),
             '',
             '',
-            removedDisplayId
-          )
+            removedDisplayId,
+          ),
         );
       }
 
       for (const destroyedLayerHandleId of assertDefined(
-        entryNode.getChildByName('destroyedLayerHandles')
+        entryNode.getChildByName('destroyedLayerHandles'),
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
@@ -514,8 +557,8 @@ export class Presenter {
             destroyedLayerHandleId.formattedValue(),
             '',
             '',
-            destroyedLayerHandleId
-          )
+            destroyedLayerHandleId,
+          ),
         );
       }
     }
@@ -525,7 +568,7 @@ export class Presenter {
 
   private getUniqueUiDataEntryValues<T>(
     entries: UiDataEntry[],
-    getValue: (entry: UiDataEntry) => T | T[]
+    getValue: (entry: UiDataEntry) => T | T[],
   ): T[] {
     const uniqueValues = new Set<T>();
     entries.forEach((entry: UiDataEntry) => {

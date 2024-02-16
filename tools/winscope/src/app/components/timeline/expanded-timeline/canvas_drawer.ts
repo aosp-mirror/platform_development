@@ -62,7 +62,7 @@ export class CanvasDrawer {
       0,
       0,
       this.getScaledCanvasWidth(),
-      this.getScaledCanvasHeight()
+      this.getScaledCanvasHeight(),
     );
   }
 

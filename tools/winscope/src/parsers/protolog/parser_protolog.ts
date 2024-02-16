@@ -27,9 +27,11 @@ import {ParserProtologUtils} from './parser_protolog_utils';
 
 class ParserProtoLog extends AbstractParser {
   private static readonly ProtoLogFileProto = root.lookupType(
-    'com.android.internal.protolog.ProtoLogFileProto'
+    'com.android.internal.protolog.ProtoLogFileProto',
   );
-  private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
+  private static readonly MAGIC_NUMBER = [
+    0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47,
+  ]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = '1.0.0';
 
   private realToElapsedTimeOffsetNs: bigint | undefined;
@@ -42,9 +44,11 @@ class ParserProtoLog extends AbstractParser {
     return ParserProtoLog.MAGIC_NUMBER;
   }
 
-  override decodeTrace(buffer: Uint8Array): com.android.internal.protolog.IProtoLogMessage[] {
+  override decodeTrace(
+    buffer: Uint8Array,
+  ): com.android.internal.protolog.IProtoLogMessage[] {
     const fileProto = ParserProtoLog.ProtoLogFileProto.decode(
-      buffer
+      buffer,
     ) as com.android.internal.protolog.IProtoLogFileProto;
 
     if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
@@ -60,7 +64,9 @@ class ParserProtoLog extends AbstractParser {
     }
 
     this.realToElapsedTimeOffsetNs =
-      BigInt(assertDefined(fileProto.realTimeToElapsedTimeOffsetMillis).toString()) * 1000000n;
+      BigInt(
+        assertDefined(fileProto.realTimeToElapsedTimeOffsetMillis).toString(),
+      ) * 1000000n;
 
     if (!fileProto.log) {
       return [];
@@ -69,10 +75,10 @@ class ParserProtoLog extends AbstractParser {
     fileProto.log.sort(
       (
         a: com.android.internal.protolog.IProtoLogMessage,
-        b: com.android.internal.protolog.IProtoLogMessage
+        b: com.android.internal.protolog.IProtoLogMessage,
       ) => {
         return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
-      }
+      },
     );
 
     return fileProto.log;
@@ -80,14 +86,21 @@ class ParserProtoLog extends AbstractParser {
 
   override getTimestamp(
     type: TimestampType,
-    entry: com.android.internal.protolog.IProtoLogMessage
+    entry: com.android.internal.protolog.IProtoLogMessage,
   ): undefined | Timestamp {
-    const elapsedRealtimeNanos = BigInt(assertDefined(entry.elapsedRealtimeNanos).toString());
-    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+    const elapsedRealtimeNanos = BigInt(
+      assertDefined(entry.elapsedRealtimeNanos).toString(),
+    );
+    if (
+      this.timestampFactory.canMakeTimestampFromType(
+        type,
+        this.realToElapsedTimeOffsetNs,
+      )
+    ) {
       return this.timestampFactory.makeTimestampFromType(
         type,
         elapsedRealtimeNanos,
-        this.realToElapsedTimeOffsetNs
+        this.realToElapsedTimeOffsetNs,
       );
     }
     return undefined;
@@ -96,23 +109,22 @@ class ParserProtoLog extends AbstractParser {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entry: com.android.internal.protolog.IProtoLogMessage
+    entry: com.android.internal.protolog.IProtoLogMessage,
   ): PropertyTreeNode {
-    const message: ConfigMessage | undefined = (configJson as ProtologConfig).messages[
-      assertDefined(entry.messageHash)
-    ];
+    const message: ConfigMessage | undefined = (configJson as ProtologConfig)
+      .messages[assertDefined(entry.messageHash)];
     const logMessage = this.makeLogMessage(entry, message);
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       timestampType,
       this.realToElapsedTimeOffsetNs,
-      this.timestampFactory
+      this.timestampFactory,
     );
   }
 
   private makeLogMessage(
     entry: com.android.internal.protolog.IProtoLogMessage,
-    message: ConfigMessage | undefined
+    message: ConfigMessage | undefined,
   ): LogMessage {
     if (!message) {
       return this.makeLogMessageWithoutFormat(entry);
@@ -129,14 +141,14 @@ class ParserProtoLog extends AbstractParser {
 
   private makeLogMessageWithFormat(
     entry: com.android.internal.protolog.IProtoLogMessage,
-    message: ConfigMessage
+    message: ConfigMessage,
   ): LogMessage {
     let text = '';
 
     const strParams: string[] = assertDefined(entry.strParams);
     let strParamsIdx = 0;
-    const sint64Params: Array<bigint> = assertDefined(entry.sint64Params).map((param) =>
-      BigInt(param.toString())
+    const sint64Params: Array<bigint> = assertDefined(entry.sint64Params).map(
+      (param) => BigInt(param.toString()),
     );
     let sint64ParamsIdx = 0;
     const doubleParams: number[] = assertDefined(entry.doubleParams);
@@ -168,7 +180,10 @@ class ParserProtoLog extends AbstractParser {
             text += this.getParam(doubleParams, doubleParamsIdx++).toFixed(6);
             break;
           case 'e':
-            text += this.getParam(doubleParams, doubleParamsIdx++).toExponential();
+            text += this.getParam(
+              doubleParams,
+              doubleParamsIdx++,
+            ).toExponential();
             break;
           case 'g':
             text += this.getParam(doubleParams, doubleParamsIdx++).toString();
@@ -181,7 +196,9 @@ class ParserProtoLog extends AbstractParser {
             break;
           default:
             // Should never happen - protologtool checks for that
-            throw new Error('Invalid format string conversion: ' + messageFormat[i + 1]);
+            throw new Error(
+              'Invalid format string conversion: ' + messageFormat[i + 1],
+            );
         }
         i += 2;
       } else {
@@ -207,7 +224,7 @@ class ParserProtoLog extends AbstractParser {
   }
 
   private makeLogMessageWithoutFormat(
-    entry: com.android.internal.protolog.IProtoLogMessage
+    entry: com.android.internal.protolog.IProtoLogMessage,
   ): LogMessage {
     const text =
       assertDefined(entry.messageHash).toString() +

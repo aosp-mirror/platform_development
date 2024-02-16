@@ -47,7 +47,9 @@ describe('RectsComputation', () => {
         },
       ])
       .build();
-    displayContent = assertDefined(hierarchyRoot.getChildByName('Test Display'));
+    displayContent = assertDefined(
+      hierarchyRoot.getChildByName('Test Display'),
+    );
     computation = new RectsComputation();
   });
 
@@ -93,7 +95,7 @@ describe('RectsComputation', () => {
         windowFrames: {
           frame: {left: 0, top: 0, right: 2, bottom: 2},
         },
-      } as com.android.server.wm.IWindowStateProto)
+      } as com.android.server.wm.IWindowStateProto),
     );
     displayContent.addOrReplaceChild(state1Node);
 
@@ -134,7 +136,9 @@ describe('RectsComputation', () => {
     const rects: TraceRect[] = [];
     hierarchyRoot.forEachNodeDfs((node) => {
       const nodeRects = node.getRects();
-      if (nodeRects && nodeRects.every((rect) => !rect.isDisplay)) rects.push(...nodeRects);
+      if (nodeRects && nodeRects.every((rect) => !rect.isDisplay)) {
+        rects.push(...nodeRects);
+      }
     });
 
     expect(rects).toEqual(expectedRects);

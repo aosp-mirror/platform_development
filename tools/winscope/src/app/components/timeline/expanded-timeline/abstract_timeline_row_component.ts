@@ -113,7 +113,9 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     if (transitionEntry && transitionEntry !== this.selectedEntry) {
       this.redraw();
       this.selectedEntry = transitionEntry;
-      this.onTracePositionUpdate.emit(TracePosition.fromTraceEntry(transitionEntry));
+      this.onTracePositionUpdate.emit(
+        TracePosition.fromTraceEntry(transitionEntry),
+      );
     }
   }
 
@@ -143,7 +145,9 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   }
 
   abstract drawTimeline(): Promise<void>;
-  protected abstract getEntryAt(mousePoint: Point): Promise<TraceEntry<T> | undefined>;
+  protected abstract getEntryAt(
+    mousePoint: Point,
+  ): Promise<TraceEntry<T> | undefined>;
   protected abstract onHover(mousePoint: Point): void;
   protected abstract handleMouseOut(e: MouseEvent): void;
 }

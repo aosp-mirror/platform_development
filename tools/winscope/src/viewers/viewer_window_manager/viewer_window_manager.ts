@@ -34,50 +34,66 @@ class ViewerWindowManager implements Viewer {
     this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
     });
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.onPinnedItemChange((event as CustomEvent).detail.pinnedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) =>
+        this.presenter.onPinnedItemChange(
+          (event as CustomEvent).detail.pinnedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(
+        `${(event as CustomEvent).detail.id}`,
+      ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedPropertyChange, (event) =>
-      this.presenter.onHighlightedPropertyChange(`${(event as CustomEvent).detail.id}`)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HighlightedPropertyChange,
+      (event) =>
+        this.presenter.onHighlightedPropertyChange(
+          `${(event as CustomEvent).detail.id}`,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyUserOptionsChange,
       async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange((event as CustomEvent).detail.userOptions)
+        await this.presenter.onHierarchyUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
       async (event) =>
-        await this.presenter.onHierarchyFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onHierarchyFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
       async (event) =>
         await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions
-        )
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       async (event) =>
-        await this.presenter.onPropertiesFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onPropertiesFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.SelectedTreeChange,
       async (event) =>
         await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem
-        )
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
     this.view = new View(
       ViewType.TAB,
       this.getDependencies(),
       this.htmlElement,
       'Window Manager',
-      TraceType.WINDOW_MANAGER
+      TraceType.WINDOW_MANAGER,
     );
   }
 

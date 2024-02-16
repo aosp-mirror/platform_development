@@ -30,7 +30,7 @@ describe('ParserTransactions', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/Transactions.pb'
+        'traces/elapsed_and_real_timestamp/Transactions.pb',
       )) as Parser<PropertyTreeNode>;
     });
 
@@ -39,7 +39,9 @@ describe('ParserTransactions', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+      const timestamps = assertDefined(
+        parser.getTimestamps(TimestampType.ELAPSED),
+      );
 
       expect(timestamps.length).toEqual(712);
 
@@ -52,7 +54,9 @@ describe('ParserTransactions', () => {
     });
 
     it('provides real timestamps', () => {
-      const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parser.getTimestamps(TimestampType.REAL),
+      );
 
       expect(timestamps.length).toEqual(712);
 
@@ -67,9 +71,11 @@ describe('ParserTransactions', () => {
     it('applies timezone info to real timestamps only', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/Transactions.pb',
-        true
+        true,
       )) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.TRANSACTIONS);
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.TRANSACTIONS,
+      );
 
       const expectedElapsed = [
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n),
@@ -77,7 +83,9 @@ describe('ParserTransactions', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(4021151449n),
       ];
       expect(
-        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        ).slice(0, 3),
       ).toEqual(expectedElapsed);
 
       const expectedReal = [
@@ -86,7 +94,9 @@ describe('ParserTransactions', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659527342621651001n),
       ];
       expect(
-        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+        ).slice(0, 3),
       ).toEqual(expectedReal);
     });
 
@@ -98,7 +108,9 @@ describe('ParserTransactions', () => {
     it("decodes 'what' field in proto", async () => {
       {
         const entry = await parser.getEntry(0, TimestampType.REAL);
-        const transactions = assertDefined(entry.getChildByName('transactions'));
+        const transactions = assertDefined(
+          entry.getChildByName('transactions'),
+        );
 
         expect(
           transactions
@@ -106,7 +118,7 @@ describe('ParserTransactions', () => {
             ?.getChildByName('layerChanges')
             ?.getChildByName('0')
             ?.getChildByName('what')
-            ?.formattedValue()
+            ?.formattedValue(),
         ).toEqual('eLayerChanged');
 
         expect(
@@ -115,12 +127,14 @@ describe('ParserTransactions', () => {
             ?.getChildByName('layerChanges')
             ?.getChildByName('0')
             ?.getChildByName('what')
-            ?.formattedValue()
+            ?.formattedValue(),
         ).toEqual('eFlagsChanged | eDestinationFrameChanged');
       }
       {
         const entry = await parser.getEntry(222, TimestampType.REAL);
-        const transactions = assertDefined(entry.getChildByName('transactions'));
+        const transactions = assertDefined(
+          entry.getChildByName('transactions'),
+        );
 
         expect(
           transactions
@@ -128,14 +142,21 @@ describe('ParserTransactions', () => {
             ?.getChildByName('displayChanges')
             ?.getChildByName('0')
             ?.getChildByName('what')
-            ?.formattedValue()
-        ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
+            ?.formattedValue(),
+        ).toEqual(
+          'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged',
+        );
       }
     });
 
     it('supports VSYNCID custom query', async () => {
-      const trace = new TraceBuilder().setType(TraceType.TRANSACTIONS).setParser(parser).build();
-      const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+      const trace = new TraceBuilder()
+        .setType(TraceType.TRANSACTIONS)
+        .setParser(parser)
+        .build();
+      const entries = await trace
+        .sliceEntries(0, 3)
+        .customQuery(CustomQueryType.VSYNCID);
       const values = entries.map((entry) => entry.getValue());
       expect(values).toEqual([1n, 2n, 3n]);
     });
@@ -146,7 +167,7 @@ describe('ParserTransactions', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/Transactions.pb'
+        'traces/elapsed_timestamp/Transactions.pb',
       )) as Parser<PropertyTreeNode>;
     });
 
@@ -155,7 +176,9 @@ describe('ParserTransactions', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+      const timestamps = assertDefined(
+        parser.getTimestamps(TimestampType.ELAPSED),
+      );
 
       expect(timestamps.length).toEqual(4997);
 
@@ -170,13 +193,17 @@ describe('ParserTransactions', () => {
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_timestamp/Transactions.pb',
-        true
+        true,
       )) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.TRANSACTIONS);
-
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14862317023n)
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.TRANSACTIONS,
       );
+
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14862317023n));
     });
 
     it("doesn't provide real timestamps", () => {

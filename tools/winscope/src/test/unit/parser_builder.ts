@@ -16,7 +16,10 @@
 
 import {Timestamp} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {ParserMock} from 'trace/parser_mock';
 import {TraceType} from 'trace/trace_type';
@@ -45,7 +48,7 @@ export class ParserBuilder<T> {
 
   setCustomQueryResult<Q extends CustomQueryType>(
     type: Q,
-    result: CustomQueryParserResultTypeMap[Q]
+    result: CustomQueryParserResultTypeMap[Q],
   ): this {
     this.customQueryResult.set(type, result);
     return this;
@@ -58,7 +61,9 @@ export class ParserBuilder<T> {
 
   build(): Parser<T> {
     if (!this.timestamps && !this.entries) {
-      throw new Error(`Either the timestamps or the entries should be specified`);
+      throw new Error(
+        `Either the timestamps or the entries should be specified`,
+      );
     }
 
     if (!this.timestamps) {
@@ -70,7 +75,9 @@ export class ParserBuilder<T> {
     }
 
     if (this.entries.length !== this.timestamps.length) {
-      throw new Error('Entries and timestamps arrays must have the same length');
+      throw new Error(
+        'Entries and timestamps arrays must have the same length',
+      );
     }
 
     return new ParserMock(
@@ -78,7 +85,7 @@ export class ParserBuilder<T> {
       this.timestamps,
       this.entries,
       this.customQueryResult,
-      this.descriptors
+      this.descriptors,
     );
   }
 

@@ -35,11 +35,14 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
 
   protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
-  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
+  protected abstract getTimestamp(
+    type: TimestampType,
+    decodedEntry: any,
+  ): undefined | Timestamp;
   protected abstract processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    decodedEntry: any
+    decodedEntry: any,
   ): any;
 
   constructor(trace: TraceFile, timestampFactory: TimestampFactory) {
@@ -49,7 +52,10 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
 
   async parse() {
     const traceBuffer = new Uint8Array(await this.traceFile.file.arrayBuffer());
-    ParsingUtils.throwIfMagicNumberDoesNotMatch(traceBuffer, this.getMagicNumber());
+    ParsingUtils.throwIfMagicNumberDoesNotMatch(
+      traceBuffer,
+      this.getMagicNumber(),
+    );
     this.decodedEntries = this.decodeTrace(traceBuffer);
     this.timestamps = this.decodeTimestamps();
   }
@@ -66,15 +72,22 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
     return this.timestamps.get(type);
   }
 
-  getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T> {
-    const entry = this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
+  getEntry(
+    index: AbsoluteEntryIndex,
+    timestampType: TimestampType,
+  ): Promise<T> {
+    const entry = this.processDecodedEntry(
+      index,
+      timestampType,
+      this.decodedEntries[index],
+    );
     return Promise.resolve(entry);
   }
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
     entriesRange: EntriesRange,
-    param?: CustomQueryParamTypeMap[Q]
+    param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
   }

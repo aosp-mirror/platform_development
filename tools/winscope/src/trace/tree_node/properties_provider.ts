@@ -16,7 +16,10 @@
 
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from './property_tree_node_factory';
 
 export type LazyPropertiesStrategyType = () => Promise<PropertyTreeNode>;
@@ -31,10 +34,10 @@ export class PropertiesProvider {
     private readonly lazyPropertiesStrategy: LazyPropertiesStrategyType,
     private readonly commonOperations: OperationChain<PropertyTreeNode>,
     private readonly eagerOperations: OperationChain<PropertyTreeNode>,
-    private readonly lazyOperations: OperationChain<PropertyTreeNode>
+    private readonly lazyOperations: OperationChain<PropertyTreeNode>,
   ) {
     this.eagerPropertiesRoot = this.commonOperations.apply(
-      this.eagerOperations.apply(eagerPropertiesRoot)
+      this.eagerOperations.apply(eagerPropertiesRoot),
     );
   }
 
@@ -54,14 +57,14 @@ export class PropertiesProvider {
       this.eagerPropertiesRoot.id,
       this.eagerPropertiesRoot.name,
       PropertySource.PROTO,
-      undefined
+      undefined,
     );
     const children = [...this.eagerPropertiesRoot.getAllChildren()];
 
     // all eager properties have already had operations applied so no need to reapply
     if (!this.lazyPropertiesRoot) {
       this.lazyPropertiesRoot = this.commonOperations.apply(
-        this.lazyOperations.apply(await this.lazyPropertiesStrategy())
+        this.lazyOperations.apply(await this.lazyPropertiesStrategy()),
       );
     }
 

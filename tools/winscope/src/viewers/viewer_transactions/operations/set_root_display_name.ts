@@ -24,7 +24,10 @@ export class SetRootDisplayNames implements Operation<UiPropertyTreeNode> {
       return;
     }
 
-    if (node.id.includes('displayChanges') || node.id.includes('addedDisplays')) {
+    if (
+      node.id.includes('displayChanges') ||
+      node.id.includes('addedDisplays')
+    ) {
       node.setDisplayName('DisplayState');
       return;
     }

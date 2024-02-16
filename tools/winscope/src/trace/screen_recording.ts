@@ -18,7 +18,7 @@ class ScreenRecordingTraceEntry {
   constructor(
     public videoTimeSeconds: number,
     public videoData: Blob,
-    public isImage: boolean = false
+    public isImage: boolean = false,
   ) {}
 }
 

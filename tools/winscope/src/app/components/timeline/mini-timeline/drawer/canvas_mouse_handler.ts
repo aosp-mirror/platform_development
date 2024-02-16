@@ -23,7 +23,7 @@ export interface CanvasMouseHandler {
   registerDraggableObject(
     draggableObject: DraggableCanvasObject,
     onDrag: DragListener,
-    onDrop: DropListener
+    onDrop: DropListener,
   ): void;
 
   notifyDrawnOnTop(draggableObject: DraggableCanvasObject): void;

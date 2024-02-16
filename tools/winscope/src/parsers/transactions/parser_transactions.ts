@@ -34,11 +34,14 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TranslateChanges} from './operations/translate_changes';
 
 class ParserTransactions extends AbstractParser<PropertyTreeNode> {
-  private static readonly MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
+  private static readonly MAGIC_NUMBER = [
+    0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45,
+  ]; // .TNXTRACE
 
-  private static readonly TransactionsTraceFileProto = TamperedMessageType.tamper(
-    root.lookupType('android.surfaceflinger.TransactionTraceFile')
-  );
+  private static readonly TransactionsTraceFileProto =
+    TamperedMessageType.tamper(
+      root.lookupType('android.surfaceflinger.TransactionTraceFile'),
+    );
   private static readonly TransactionsTraceEntryField =
     ParserTransactions.TransactionsTraceFileProto.fields['entry'];
 
@@ -58,12 +61,16 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return ParserTransactions.MAGIC_NUMBER;
   }
 
-  override decodeTrace(buffer: Uint8Array): android.surfaceflinger.proto.ITransactionTraceEntry[] {
+  override decodeTrace(
+    buffer: Uint8Array,
+  ): android.surfaceflinger.proto.ITransactionTraceEntry[] {
     const decodedProto = ParserTransactions.TransactionsTraceFileProto.decode(
-      buffer
+      buffer,
     ) as android.surfaceflinger.proto.ITransactionTraceFile;
 
-    const timeOffset = BigInt(decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0');
+    const timeOffset = BigInt(
+      decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0',
+    );
     this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
 
     return decodedProto.entry ?? [];
@@ -71,14 +78,21 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
 
   override getTimestamp(
     type: TimestampType,
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
   ): undefined | Timestamp {
-    const elapsedRealtimeNanos = BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString());
-    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+    const elapsedRealtimeNanos = BigInt(
+      assertDefined(entryProto.elapsedRealtimeNanos).toString(),
+    );
+    if (
+      this.timestampFactory.canMakeTimestampFromType(
+        type,
+        this.realToElapsedTimeOffsetNs,
+      )
+    ) {
       return this.timestampFactory.makeTimestampFromType(
         type,
         elapsedRealtimeNanos,
-        this.realToElapsedTimeOffsetNs
+        this.realToElapsedTimeOffsetNs,
       );
     }
     return undefined;
@@ -87,26 +101,28 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
   ): PropertyTreeNode {
     return this.makePropertiesTree(entryProto);
   }
 
   override customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return this.decodedEntries.slice(entriesRange.start, entriesRange.end).map((entry) => {
-          return BigInt(entry.vsyncId.toString()); // convert Long to bigint
-        });
+        return this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .map((entry) => {
+            return BigInt(entry.vsyncId.toString()); // convert Long to bigint
+          });
       })
       .getResult();
   }
 
   private makePropertiesTree(
-    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
+    entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(entryProto)

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {com} from 'protos/windowmanager/latest/static';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 
 type WindowsTokenAndTitle =
   CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE];
@@ -24,61 +27,90 @@ export class WmCustomQueryUtils {
 
   static parseWindowsTokenAndTitle(
     rootWindowContainer: com.android.server.wm.IRootWindowContainerProto,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     const token =
-      rootWindowContainer?.windowContainer?.identifier?.hashCode?.toString(16) ??
+      rootWindowContainer?.windowContainer?.identifier?.hashCode?.toString(
+        16,
+      ) ?? WmCustomQueryUtils.NA;
+    const title =
+      rootWindowContainer?.windowContainer?.identifier?.title ??
       WmCustomQueryUtils.NA;
-    const title = rootWindowContainer?.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    WmCustomQueryUtils.parseWindowContainerProto(rootWindowContainer?.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(
+      rootWindowContainer?.windowContainer,
+      result,
+    );
   }
 
   private static parseWindowContainerProto(
     proto: com.android.server.wm.IWindowContainerProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
     }
 
     for (const windowContainerChildProto of proto?.children ?? []) {
-      WmCustomQueryUtils.parseActivityRecordProto(windowContainerChildProto.activity, result);
-      WmCustomQueryUtils.parseDisplayAreaProto(windowContainerChildProto.displayArea, result);
-      WmCustomQueryUtils.parseDisplayContentProto(windowContainerChildProto.displayContent, result);
+      WmCustomQueryUtils.parseActivityRecordProto(
+        windowContainerChildProto.activity,
+        result,
+      );
+      WmCustomQueryUtils.parseDisplayAreaProto(
+        windowContainerChildProto.displayArea,
+        result,
+      );
+      WmCustomQueryUtils.parseDisplayContentProto(
+        windowContainerChildProto.displayContent,
+        result,
+      );
       WmCustomQueryUtils.parseTaskProto(windowContainerChildProto.task, result);
-      WmCustomQueryUtils.parseTaskFragmentProto(windowContainerChildProto.taskFragment, result);
-      WmCustomQueryUtils.parseWindowStateProto(windowContainerChildProto.window, result);
+      WmCustomQueryUtils.parseTaskFragmentProto(
+        windowContainerChildProto.taskFragment,
+        result,
+      );
+      WmCustomQueryUtils.parseWindowStateProto(
+        windowContainerChildProto.window,
+        result,
+      );
       WmCustomQueryUtils.parseWindowContainerProto(
         windowContainerChildProto.windowContainer,
-        result
+        result,
       );
-      WmCustomQueryUtils.parseWindowTokenProto(windowContainerChildProto.windowToken, result);
+      WmCustomQueryUtils.parseWindowTokenProto(
+        windowContainerChildProto.windowToken,
+        result,
+      );
     }
   }
 
   private static parseActivityRecordProto(
     proto: com.android.server.wm.IActivityRecordProto | null | undefined,
-    result: WindowsTokenAndTitle
-  ) {
-    if (!proto) {
-      return;
-    }
-    const token = proto.windowToken?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
-    const title = proto.name ?? WmCustomQueryUtils.NA;
-    result.push({token, title});
-    WmCustomQueryUtils.parseWindowContainerProto(proto.windowToken?.windowContainer, result);
-  }
-
-  private static parseDisplayAreaProto(
-    proto: com.android.server.wm.IDisplayAreaProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
     }
     const token =
-      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
+      proto.windowToken?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
+    const title = proto.name ?? WmCustomQueryUtils.NA;
+    result.push({token, title});
+    WmCustomQueryUtils.parseWindowContainerProto(
+      proto.windowToken?.windowContainer,
+      result,
+    );
+  }
+
+  private static parseDisplayAreaProto(
+    proto: com.android.server.wm.IDisplayAreaProto | null | undefined,
+    result: WindowsTokenAndTitle,
+  ) {
+    if (!proto) {
+      return;
+    }
+    const token =
+      proto.windowContainer?.identifier?.hashCode?.toString(16) ??
+      WmCustomQueryUtils.NA;
     const title = proto.name ?? WmCustomQueryUtils.NA;
     result.push({token, title});
     WmCustomQueryUtils.parseWindowContainerProto(proto.windowContainer, result);
@@ -86,22 +118,26 @@ export class WmCustomQueryUtils {
 
   private static parseDisplayContentProto(
     proto: com.android.server.wm.IDisplayContentProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
     }
     const token =
-      proto.rootDisplayArea?.windowContainer?.identifier?.hashCode?.toString(16) ??
-      WmCustomQueryUtils.NA;
+      proto.rootDisplayArea?.windowContainer?.identifier?.hashCode?.toString(
+        16,
+      ) ?? WmCustomQueryUtils.NA;
     const title = proto.displayInfo?.name ?? WmCustomQueryUtils.NA;
     result.push({token, title});
-    WmCustomQueryUtils.parseWindowContainerProto(proto.rootDisplayArea?.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(
+      proto.rootDisplayArea?.windowContainer,
+      result,
+    );
   }
 
   private static parseTaskProto(
     proto: com.android.server.wm.ITaskProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
@@ -109,7 +145,9 @@ export class WmCustomQueryUtils {
     const token =
       proto.taskFragment?.windowContainer?.identifier?.hashCode?.toString(16) ??
       WmCustomQueryUtils.NA;
-    const title = proto.taskFragment?.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
+    const title =
+      proto.taskFragment?.windowContainer?.identifier?.title ??
+      WmCustomQueryUtils.NA;
     result.push({token, title});
     for (const activity of proto.activities ?? []) {
       WmCustomQueryUtils.parseActivityRecordProto(activity, result);
@@ -119,31 +157,36 @@ export class WmCustomQueryUtils {
 
   private static parseTaskFragmentProto(
     proto: com.android.server.wm.ITaskFragmentProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
     }
-    WmCustomQueryUtils.parseWindowContainerProto(proto?.windowContainer, result);
+    WmCustomQueryUtils.parseWindowContainerProto(
+      proto?.windowContainer,
+      result,
+    );
   }
 
   private static parseWindowStateProto(
     proto: com.android.server.wm.IWindowStateProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;
     }
     const token =
-      proto.windowContainer?.identifier?.hashCode?.toString(16) ?? WmCustomQueryUtils.NA;
-    const title = proto.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
+      proto.windowContainer?.identifier?.hashCode?.toString(16) ??
+      WmCustomQueryUtils.NA;
+    const title =
+      proto.windowContainer?.identifier?.title ?? WmCustomQueryUtils.NA;
     result.push({token, title});
     WmCustomQueryUtils.parseWindowContainerProto(proto.windowContainer, result);
   }
 
   private static parseWindowTokenProto(
     proto: com.android.server.wm.IWindowTokenProto | null | undefined,
-    result: WindowsTokenAndTitle
+    result: WindowsTokenAndTitle,
   ) {
     if (!proto) {
       return;

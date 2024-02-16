@@ -44,7 +44,7 @@ describe('PresenterViewCapture', () => {
 
   beforeAll(async () => {
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
+      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     )) as Parser<HierarchyTreeNode>;
 
     trace = new TraceBuilder<HierarchyTreeNode>()
@@ -61,10 +61,10 @@ describe('PresenterViewCapture', () => {
       assertDefined(
         firstEntryDataTree.findDfs(
           UiTreeUtils.makeIdMatchFilter(
-            'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537'
-          )
-        )
-      )
+            'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
+          ),
+        ),
+      ),
     );
   });
 
@@ -76,12 +76,15 @@ describe('PresenterViewCapture', () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
       .setEntries([])
-      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, 'the_package_name')
+      .setParserCustomQueryResult(
+        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+        'the_package_name',
+      )
       .build();
     const presenter = createPresenter(emptyTrace);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
@@ -133,7 +136,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].name
+      uiData.tree?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
 
     const userOptions: UserOptions = {
@@ -154,7 +157,7 @@ describe('PresenterViewCapture', () => {
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
       // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].name
+      uiData.tree?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
@@ -163,7 +166,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].getDisplayName()
+      uiData.tree?.getAllChildren()[0].getDisplayName(),
     ).toEqual('TaskbarView@80213537');
 
     const userOptions: UserOptions = {
@@ -184,7 +187,7 @@ describe('PresenterViewCapture', () => {
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
       // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].getDisplayName()
+      uiData.tree?.getAllChildren()[0].getDisplayName(),
     ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
   });
 
@@ -209,7 +212,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> BubbleBarView if filter works as expected
-      uiData.tree?.getAllChildren()[0].name
+      uiData.tree?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
@@ -241,16 +244,20 @@ describe('PresenterViewCapture', () => {
 
     await presenter.onAppEvent(update);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('translationY')).getDiff()).toEqual(
-      DiffType.NONE
-    );
+    expect(
+      assertDefined(
+        uiData.propertiesTree?.getChildByName('translationY'),
+      ).getDiff(),
+    ).toEqual(DiffType.NONE);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
 
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('translationY')).getDiff()).toEqual(
-      DiffType.MODIFIED
-    );
+    expect(
+      assertDefined(
+        uiData.propertiesTree?.getChildByName('translationY'),
+      ).getDiff(),
+    ).toEqual(DiffType.MODIFIED);
   });
 
   it('filters properties tree', async () => {
@@ -272,10 +279,14 @@ describe('PresenterViewCapture', () => {
       },
     };
     await presenter.onPropertiesUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(18);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(18);
 
     await presenter.onPropertiesFilterChange('alpha');
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(1);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(1);
   });
 
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
@@ -288,7 +299,7 @@ describe('PresenterViewCapture', () => {
       new MockStorage(),
       (newData: UiData) => {
         uiData = newData;
-      }
+      },
     );
   }
 });

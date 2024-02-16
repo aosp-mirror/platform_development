@@ -40,8 +40,8 @@ export class ZOrderPathsComputation implements Computation {
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           `${node.id}`,
           'zOrderPath',
-          zOrderPath
-        )
+          zOrderPath,
+        ),
       );
     });
   }
@@ -50,11 +50,16 @@ export class ZOrderPathsComputation implements Computation {
     const layerIdToTreeNode = new Map<number, HierarchyTreeNode>();
     root.forEachNodeDfs((node) => {
       if (node.isRoot()) return;
-      layerIdToTreeNode.set(assertDefined(node.getEagerPropertyByName('id')).getValue(), node);
+      layerIdToTreeNode.set(
+        assertDefined(node.getEagerPropertyByName('id')).getValue(),
+        node,
+      );
     });
 
     root.forEachNodeDfs((node) => {
-      const zOrderRelativeOf = root.getEagerPropertyByName('zOrderRelativeOf')?.getValue();
+      const zOrderRelativeOf = root
+        .getEagerPropertyByName('zOrderRelativeOf')
+        ?.getValue();
       if (zOrderRelativeOf && zOrderRelativeOf !== -1) {
         const zParent = layerIdToTreeNode.get(zOrderRelativeOf);
         if (!zParent) {
@@ -62,8 +67,8 @@ export class ZOrderPathsComputation implements Computation {
             DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
               node.id,
               'isMissingZParent',
-              true
-            )
+              true,
+            ),
           );
           return;
         }

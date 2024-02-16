@@ -40,7 +40,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => entryPropertiesTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
   });
 
@@ -65,8 +65,8 @@ describe('HierarchyTreeBuilderWm', () => {
         async () => entryPropertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
 
     expect(root).toEqual(expectedRoot);
@@ -89,7 +89,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => container1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const container2Props = new PropertyTreeBuilder()
@@ -108,7 +108,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => container2Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder
@@ -124,11 +124,15 @@ describe('HierarchyTreeBuilderWm', () => {
         async () => entryPropertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
     expectedRoot.addOrReplaceChild(
-      new HierarchyTreeNode('DisplayContent 7654321 container2', 'container2', container1Provider)
+      new HierarchyTreeNode(
+        'DisplayContent 7654321 container2',
+        'container2',
+        container1Provider,
+      ),
     );
 
     expect(root).toEqual(expectedRoot);
@@ -151,7 +155,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => container1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const container2Props = new PropertyTreeBuilder()
@@ -170,7 +174,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => container2Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const container3Props = new PropertyTreeBuilder()
@@ -189,7 +193,7 @@ describe('HierarchyTreeBuilderWm', () => {
       async () => container3Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder
@@ -205,19 +209,19 @@ describe('HierarchyTreeBuilderWm', () => {
         async () => entryPropertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
     const expectedRootLayer = new HierarchyTreeNode(
       'DisplayContent 7654321 container2',
       'container2',
-      container2Provider
+      container2Provider,
     );
 
     const expectedNestedLayer = new HierarchyTreeNode(
       'DisplayArea 4646464 container3',
       'container3',
-      container2Provider
+      container2Provider,
     );
     expectedRootLayer.addOrReplaceChild(expectedNestedLayer);
     expectedRoot.addOrReplaceChild(expectedRootLayer);

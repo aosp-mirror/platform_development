@@ -75,14 +75,24 @@ describe('AddDuration', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: TIMESTAMP_30}]}])
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: TIMESTAMP_30}],
+        },
+      ])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: TIMESTAMP_30}]}])
+      .setChildren([
+        {
+          name: 'wmData',
+          children: [{name: 'finishTimeNs', value: TIMESTAMP_30}],
+        },
+      ])
       .build();
 
     operation.apply(propertyRoot);
@@ -94,14 +104,18 @@ describe('AddDuration', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]}])
+      .setChildren([
+        {name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]},
+      ])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]}])
+      .setChildren([
+        {name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]},
+      ])
       .build();
 
     operation.apply(propertyRoot);

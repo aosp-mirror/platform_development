@@ -55,11 +55,11 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     }
 
     const wmTransitionEntries: PropertyTreeNode[] = await Promise.all(
-      this.wmTransitionTrace.mapEntry((entry) => entry.getValue())
+      this.wmTransitionTrace.mapEntry((entry) => entry.getValue()),
     );
 
     const shellTransitionEntries: PropertyTreeNode[] = await Promise.all(
-      this.shellTransitionTrace.mapEntry((entry) => entry.getValue())
+      this.shellTransitionTrace.mapEntry((entry) => entry.getValue()),
     );
 
     const allEntries = wmTransitionEntries.concat(shellTransitionEntries);
@@ -73,7 +73,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     return assertDefined(this.decodedEntries).length;
   }
 
-  override getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
+  override getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -88,7 +91,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
   override getTimestamp(
     type: TimestampType,
-    decodedEntry: PropertyTreeNode
+    decodedEntry: PropertyTreeNode,
   ): undefined | Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
     const shellData = decodedEntry.getChildByName('shellData');
@@ -97,7 +100,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       ?.getValue();
 
     const realToElapsedTimeOffsetNs: bigint =
-      shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue()?.getValueNs() ?? 0n;
+      shellData
+        ?.getChildByName('realToElapsedTimeOffsetTimestamp')
+        ?.getValue()
+        ?.getValueNs() ?? 0n;
 
     const timestampNs: bigint = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
@@ -105,7 +111,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
     if (type === TimestampType.ELAPSED) {
       return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-        timestampNs - realToElapsedTimeOffsetNs
+        timestampNs - realToElapsedTimeOffsetNs,
       );
     } else if (type === TimestampType.REAL) {
       return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(timestampNs);
@@ -114,7 +120,9 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     return undefined;
   }
 
-  private compressEntries(allTransitions: PropertyTreeNode[]): PropertyTreeNode[] {
+  private compressEntries(
+    allTransitions: PropertyTreeNode[],
+  ): PropertyTreeNode[] {
     const idToTransition = new Map<number, PropertyTreeNode>();
 
     for (const transition of allTransitions) {
@@ -124,7 +132,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       if (!accumulatedTransition) {
         idToTransition.set(id, transition);
       } else {
-        const mergedTransition = this.mergePartialTransitions(accumulatedTransition, transition);
+        const mergedTransition = this.mergePartialTransitions(
+          accumulatedTransition,
+          transition,
+        );
         idToTransition.set(id, mergedTransition);
       }
     }
@@ -132,7 +143,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     const compressedTransitions = Array.from(idToTransition.values());
     compressedTransitions.forEach((transition) => {
       ParserTransitionsUtils.TRANSITION_OPERATIONS.forEach((operation) =>
-        operation.apply(transition)
+        operation.apply(transition),
       );
     });
     return compressedTransitions.sort(this.compareByTimestamp);
@@ -161,7 +172,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
   private mergePartialTransitions(
     transition1: PropertyTreeNode,
-    transition2: PropertyTreeNode
+    transition2: PropertyTreeNode,
   ): PropertyTreeNode {
     if (
       assertDefined(transition1.getChildByName('id')).getValue() !==
@@ -170,7 +181,11 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       throw Error("Can't merge transitions with mismatching ids");
     }
 
-    const mergedTransition = this.mergeProperties(transition1, transition2, false);
+    const mergedTransition = this.mergeProperties(
+      transition1,
+      transition2,
+      false,
+    );
 
     const wmData1 = assertDefined(transition1.getChildByName('wmData'));
     const wmData2 = assertDefined(transition2.getChildByName('wmData'));
@@ -188,9 +203,14 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
   private mergeProperties(
     node1: PropertyTreeNode,
     node2: PropertyTreeNode,
-    visitNestedChildren = true
+    visitNestedChildren = true,
   ): PropertyTreeNode {
-    const mergedNode = new PropertyTreeNode(node1.id, node1.name, node1.source, undefined);
+    const mergedNode = new PropertyTreeNode(
+      node1.id,
+      node1.name,
+      node1.source,
+      undefined,
+    );
 
     node1.getAllChildren().forEach((property1) => {
       if (!visitNestedChildren && property1.getAllChildren().length > 0) {
@@ -198,7 +218,10 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       }
 
       const property2 = node2.getChildByName(property1.name);
-      if (!property2 || property2.getValue()?.toString() < property1.getValue()?.toString()) {
+      if (
+        !property2 ||
+        property2.getValue()?.toString() < property1.getValue()?.toString()
+      ) {
         mergedNode.addOrReplaceChild(property1);
         return;
       }

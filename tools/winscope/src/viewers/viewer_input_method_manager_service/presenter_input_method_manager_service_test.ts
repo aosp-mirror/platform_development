@@ -27,7 +27,11 @@ describe('PresenterInputMethodManagerService', () => {
       .setId('InputMethodManagerService')
       .setName('entry')
       .setProperties({where: 'location', elapsedNanos: 0})
-      .addChildProperty({name: 'test default property', value: 0, source: PropertySource.DEFAULT})
+      .addChildProperty({
+        name: 'test default property',
+        value: 0,
+        source: PropertySource.DEFAULT,
+      })
       .build();
 
     const selectedPropertyTreeNode = new PropertyTreeBuilder()
@@ -43,7 +47,7 @@ describe('PresenterInputMethodManagerService', () => {
       false,
       PresenterInputMethodManagerService,
       TraceType.INPUT_METHOD_MANAGER_SERVICE,
-      selectedPropertyTreeNode
+      selectedPropertyTreeNode,
     );
   });
 });

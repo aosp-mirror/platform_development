@@ -177,7 +177,9 @@ export class ExpandedTimelineComponent {
     const traces = assertDefined(this.timelineData)
       .getTraces()
       .mapTrace((trace) => trace);
-    return traces.sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type));
+    return traces.sort((a, b) =>
+      TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
+    );
   }
 
   private resizeCanvases() {
@@ -185,7 +187,9 @@ export class ExpandedTimelineComponent {
     // Needs to be done together because otherwise the sizes of each timeline will interfere with
     // each other, since if one timeline is still too big the container will stretch to that size.
     const timelines = [
-      ...(this.transitionTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
+      ...(this.transitionTimelines as QueryList<
+        AbstractTimelineRowComponent<{}>
+      >),
       ...(this.singleTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
     ];
     for (const timeline of timelines) {

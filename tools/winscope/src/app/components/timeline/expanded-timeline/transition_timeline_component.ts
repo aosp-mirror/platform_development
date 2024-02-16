@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
@@ -53,8 +60,12 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
-  @ViewChild('canvas', {static: false}) override canvasRef: ElementRef | undefined;
-  @ViewChild('wrapper', {static: false}) override wrapperRef: ElementRef | undefined;
+  @ViewChild('canvas', {static: false}) override canvasRef:
+    | ElementRef
+    | undefined;
+  @ViewChild('wrapper', {static: false}) override wrapperRef:
+    | ElementRef
+    | undefined;
 
   hoveringEntry?: TraceEntry<PropertyTreeNode>;
   rowsToUse = new Map<number, number>();
@@ -78,7 +89,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
         const timeRange = TimelineUtils.getTimeRangeForTransition(
           transition,
           entry.getTimestamp().getType(),
-          assertDefined(this.selectionRange)
+          assertDefined(this.selectionRange),
         );
 
         if (!timeRange) {
@@ -88,19 +99,21 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
         let rowToUse = 0;
         while (
           (rowAvailableFrom[rowToUse] ?? 0n) >
-          (timeRange?.from.getValueNs() ?? assertDefined(this.selectionRange).from.getValueNs())
+          (timeRange?.from.getValueNs() ??
+            assertDefined(this.selectionRange).from.getValueNs())
         ) {
           rowToUse++;
         }
 
         rowAvailableFrom[rowToUse] =
-          timeRange?.to.getValueNs() ?? assertDefined(this.selectionRange).to.getValueNs();
+          timeRange?.to.getValueNs() ??
+          assertDefined(this.selectionRange).to.getValueNs();
 
         if (rowToUse + 1 > this.maxRowsRequires) {
           this.maxRowsRequires = rowToUse + 1;
         }
         this.rowsToUse.set(index, rowToUse);
-      })
+      }),
     );
   }
 
@@ -143,7 +156,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
       this.hoveringEntry.getTimestamp().getType(),
-      assertDefined(this.selectionRange)
+      assertDefined(this.selectionRange),
     );
 
     if (!timeRange) {
@@ -156,13 +169,15 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
   }
 
   protected override async getEntryAt(
-    mousePoint: Point
+    mousePoint: Point,
   ): Promise<TraceEntry<PropertyTreeNode> | undefined> {
     if (assertDefined(this.trace).type !== TraceType.TRANSITION) {
       return undefined;
     }
 
-    const transitionEntries: Array<Promise<TraceEntry<PropertyTreeNode> | undefined>> = [];
+    const transitionEntries: Array<
+      Promise<TraceEntry<PropertyTreeNode> | undefined>
+    > = [];
     assertDefined(this.trace).forEachEntry((entry) => {
       transitionEntries.push(
         (async () => {
@@ -170,19 +185,23 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
           const timeRange = TimelineUtils.getTimeRangeForTransition(
             transition,
             entry.getTimestamp().getType(),
-            assertDefined(this.selectionRange)
+            assertDefined(this.selectionRange),
           );
 
           if (!timeRange) {
             return undefined;
           }
           const rowToUse = this.getRowToUseFor(entry);
-          const rect = this.getSegmentRect(timeRange.from, timeRange.to, rowToUse);
+          const rect = this.getSegmentRect(
+            timeRange.from,
+            timeRange.to,
+            rowToUse,
+          );
           if (rect.containsPoint(mousePoint)) {
             return entry;
           }
           return undefined;
-        })()
+        })(),
       );
     });
 
@@ -208,22 +227,30 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const start = assertDefined(this.selectionRange).from.getValueNs();
     const end = assertDefined(this.selectionRange).to.getValueNs();
 
-    return Number((BigInt(this.availableWidth) * (entry.getValueNs() - start)) / (end - start));
+    return Number(
+      (BigInt(this.availableWidth) * (entry.getValueNs() - start)) /
+        (end - start),
+    );
   }
 
-  private getSegmentRect(start: Timestamp, end: Timestamp, rowToUse: number): Rect {
+  private getSegmentRect(
+    start: Timestamp,
+    end: Timestamp,
+    rowToUse: number,
+  ): Rect {
     const xPosStart = this.getXPosOf(start);
     const selectionStart = assertDefined(this.selectionRange).from.getValueNs();
     const selectionEnd = assertDefined(this.selectionRange).to.getValueNs();
 
     const width = Number(
       (BigInt(this.availableWidth) * (end.getValueNs() - start.getValueNs())) /
-        (selectionEnd - selectionStart)
+        (selectionEnd - selectionStart),
     );
 
     const borderPadding = 5;
     let totalRowHeight =
-      (this.canvasDrawer.getScaledCanvasHeight() - 2 * borderPadding) / this.maxRowsRequires;
+      (this.canvasDrawer.getScaledCanvasHeight() - 2 * borderPadding) /
+      this.maxRowsRequires;
     if (totalRowHeight < 10) {
       totalRowHeight = 10;
     }
@@ -234,7 +261,12 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const padding = 5;
     const rowHeight = totalRowHeight - padding;
 
-    return new Rect(xPosStart, borderPadding + rowToUse * totalRowHeight, width, rowHeight);
+    return new Rect(
+      xPosStart,
+      borderPadding + rowToUse * totalRowHeight,
+      width,
+      rowHeight,
+    );
   }
 
   override async drawTimeline() {
@@ -244,20 +276,27 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
         const timeRange = TimelineUtils.getTimeRangeForTransition(
           transition,
           entry.getTimestamp().getType(),
-          assertDefined(this.selectionRange)
+          assertDefined(this.selectionRange),
         );
         if (!timeRange) {
           return;
         }
         const rowToUse = this.getRowToUseFor(entry);
-        const aborted = assertDefined(transition.getChildByName('aborted')).getValue();
+        const aborted = assertDefined(
+          transition.getChildByName('aborted'),
+        ).getValue();
         this.drawSegment(timeRange.from, timeRange.to, rowToUse, aborted);
-      })
+      }),
     );
     this.drawSelectedTransitionEntry();
   }
 
-  private drawSegment(start: Timestamp, end: Timestamp, rowToUse: number, aborted: boolean) {
+  private drawSegment(
+    start: Timestamp,
+    end: Timestamp,
+    rowToUse: number,
+    aborted: boolean,
+  ) {
     const rect = this.getSegmentRect(start, end, rowToUse);
     const alpha = aborted ? 0.25 : 1.0;
     this.canvasDrawer.drawRect(rect, this.color, alpha);
@@ -271,7 +310,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
       this.selectedEntry.getTimestamp().getType(),
-      assertDefined(this.selectionRange)
+      assertDefined(this.selectionRange),
     );
     if (!timeRange) {
       return;

@@ -25,7 +25,10 @@ describe('Cross-Tool Protocol', () => {
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
     await browser.manage().timeouts().implicitlyWait(20000);
-    await E2eTestUtils.checkServerIsUp('Remote tool mock', E2eTestUtils.REMOTE_TOOL_MOCK_URL);
+    await E2eTestUtils.checkServerIsUp(
+      'Remote tool mock',
+      E2eTestUtils.REMOTE_TOOL_MOCK_URL,
+    );
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });
 
@@ -63,7 +66,7 @@ describe('Cross-Tool Protocol', () => {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const inputFileElement = element(by.css('.button-upload-bugreport'));
     await inputFileElement.sendKeys(
-      E2eTestUtils.getFixturePath('bugreports/bugreport_stripped.zip')
+      E2eTestUtils.getFixturePath('bugreports/bugreport_stripped.zip'),
     );
   };
 
@@ -90,13 +93,15 @@ describe('Cross-Tool Protocol', () => {
         return handles.length >= 2;
       },
       20000,
-      'The Winscope tab did not open'
+      'The Winscope tab did not open',
     );
   };
 
   const checkWinscopeRenderedSurfaceFlingerView = async () => {
     await browser.switchTo().window(await getWindowHandleWinscope());
-    const viewerPresent = await element(by.css('viewer-surface-flinger')).isPresent();
+    const viewerPresent = await element(
+      by.css('viewer-surface-flinger'),
+    ).isPresent();
     expect(viewerPresent).toBeTruthy();
   };
 
@@ -104,7 +109,9 @@ describe('Cross-Tool Protocol', () => {
     const tabParagraphs = await element.all(by.css('.tabs-navigation-bar a p'));
 
     const actualTabParagraphs = await Promise.all(
-      (tabParagraphs as ElementFinder[]).map(async (paragraph) => await paragraph.getText())
+      (tabParagraphs as ElementFinder[]).map(
+        async (paragraph) => await paragraph.getText(),
+      ),
     );
 
     const expectedTabParagraphs = [
@@ -140,14 +147,20 @@ describe('Cross-Tool Protocol', () => {
     await browser.switchTo().window(await getWindowHandleWinscope());
     const inputElement = element(by.css('input[name="nsTimeInput"]'));
     const valueWithNsSuffix = await inputElement.getAttribute('value');
-    expect(valueWithNsSuffix).toEqual(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE + ' ns');
+    expect(valueWithNsSuffix).toEqual(
+      TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE + ' ns',
+    );
   };
 
   const changeTimestampInWinscope = async () => {
     await browser.switchTo().window(await getWindowHandleWinscope());
     const inputElement = element(by.css('input[name="nsTimeInput"]'));
-    const inputStringStep1 = TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL.slice(0, -1);
-    const inputStringStep2 = TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL.slice(-1) + '\r\n';
+    const inputStringStep1 = TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL.slice(
+      0,
+      -1,
+    );
+    const inputStringStep2 =
+      TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL.slice(-1) + '\r\n';
     const script = `document.querySelector("input[name=\\"nsTimeInput\\"]").value = "${inputStringStep1}"`;
     await browser.executeScript(script);
     await inputElement.sendKeys(inputStringStep2);

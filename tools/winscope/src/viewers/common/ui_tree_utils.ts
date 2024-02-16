@@ -34,17 +34,27 @@ export class UiTreeUtils {
   };
 
   static isNotDefault: TreeNodeFilter = (node: TreeNode) => {
-    return node instanceof UiPropertyTreeNode && node.source !== PropertySource.DEFAULT;
+    return (
+      node instanceof UiPropertyTreeNode &&
+      node.source !== PropertySource.DEFAULT
+    );
   };
 
   static isNotCalculated: TreeNodeFilter = (node: TreeNode) => {
-    return node instanceof UiPropertyTreeNode && node.source !== PropertySource.CALCULATED;
+    return (
+      node instanceof UiPropertyTreeNode &&
+      node.source !== PropertySource.CALCULATED
+    );
   };
 
   static makeNodeFilter(filterString: string): TreeNodeFilter {
     const filter = (node: TreeNode) => {
       const regex = new RegExp(filterString, 'i');
-      return filterString.length === 0 || regex.test(node.name) || regex.test(node.id);
+      return (
+        filterString.length === 0 ||
+        regex.test(node.name) ||
+        regex.test(node.id)
+      );
     };
     return filter;
   }

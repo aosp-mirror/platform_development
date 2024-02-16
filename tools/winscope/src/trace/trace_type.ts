@@ -116,24 +116,33 @@ export class TraceTypeUtils {
   }
 
   static compareByUiPipelineOrder(t: TraceType, u: TraceType) {
-    const tIndex = TraceTypeUtils.findIndexInOrder(t, TraceTypeUtils.UI_PIPELINE_ORDER);
-    const uIndex = TraceTypeUtils.findIndexInOrder(u, TraceTypeUtils.UI_PIPELINE_ORDER);
+    const tIndex = TraceTypeUtils.findIndexInOrder(
+      t,
+      TraceTypeUtils.UI_PIPELINE_ORDER,
+    );
+    const uIndex = TraceTypeUtils.findIndexInOrder(
+      u,
+      TraceTypeUtils.UI_PIPELINE_ORDER,
+    );
     return tIndex >= 0 && uIndex >= 0 && tIndex < uIndex;
   }
 
   static compareByDisplayOrder(t: TraceType, u: TraceType) {
     const tIndex = TraceTypeUtils.findIndexInOrder(
       t,
-      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER
+      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER,
     );
     const uIndex = TraceTypeUtils.findIndexInOrder(
       u,
-      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER
+      TraceTypeUtils.TRACES_WITH_VIEWERS_DISPLAY_ORDER,
     );
     return tIndex - uIndex;
   }
 
-  private static findIndexInOrder(traceType: TraceType, order: TraceType[]): number {
+  private static findIndexInOrder(
+    traceType: TraceType,
+    order: TraceType[],
+  ): number {
     return order.findIndex((type) => {
       return type === traceType;
     });

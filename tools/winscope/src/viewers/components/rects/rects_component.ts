@@ -257,16 +257,22 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const canvasContainer = this.elementRef.nativeElement.querySelector('.canvas-container');
+    const canvasContainer =
+      this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
     this.largeRectsCanvasElement = canvasContainer.querySelector(
-      '.large-rects-canvas'
+      '.large-rects-canvas',
     )! as HTMLCanvasElement;
-    this.largeRectsLabelsElement = canvasContainer.querySelector('.large-rects-labels');
-    this.largeRectsCanvas = new Canvas(this.largeRectsCanvasElement, this.largeRectsLabelsElement!);
+    this.largeRectsLabelsElement = canvasContainer.querySelector(
+      '.large-rects-labels',
+    );
+    this.largeRectsCanvas = new Canvas(
+      this.largeRectsCanvasElement,
+      this.largeRectsLabelsElement!,
+    );
     this.largeRectsCanvasElement.addEventListener('mousedown', (event) =>
-      this.onCanvasMouseDown(event)
+      this.onCanvasMouseDown(event),
     );
 
     if (this.store) {
@@ -279,7 +285,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.drawLargeRectsAndLabels();
 
     this.miniRectsCanvasElement = canvasContainer.querySelector(
-      '.mini-rects-canvas'
+      '.mini-rects-canvas',
     )! as HTMLCanvasElement;
     this.miniRectsCanvas = new Canvas(this.miniRectsCanvasElement);
     if (this.miniRects) {
@@ -289,7 +295,8 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   ngOnChanges(simpleChanges: SimpleChanges) {
     if (simpleChanges['highlightedItem']) {
-      this.internalHighlightedItem = simpleChanges['highlightedItem'].currentValue;
+      this.internalHighlightedItem =
+        simpleChanges['highlightedItem'].currentValue;
       this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
       if (!(simpleChanges['rects'] || simpleChanges['displays'])) {
         this.drawLargeRectsAndLabels();
@@ -304,7 +311,9 @@ export class RectsComponent implements OnInit, OnDestroy {
     if (simpleChanges['displays']) {
       this.onDisplaysChange(simpleChanges['displays'].currentValue);
       if (this.isStackBased) {
-        this.internalGroupIds = new Set(this.internalDisplays.map((display) => display.groupId));
+        this.internalGroupIds = new Set(
+          this.internalDisplays.map((display) => display.groupId),
+        );
       }
     }
     if (simpleChanges['miniRects']) {
@@ -326,7 +335,7 @@ export class RectsComponent implements OnInit, OnDestroy {
 
     if (!this.stackSelected) {
       const curr = this.internalDisplays.find(
-        (display) => display.displayId === this.currentDisplay?.displayId
+        (display) => display.displayId === this.currentDisplay?.displayId,
       );
       if (curr) {
         this.updateCurrentDisplay(curr);
@@ -335,7 +344,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
 
     const firstDisplayWithCurrentGroupId = this.internalDisplays.find(
-      (display) => display.groupId === this.mapper3d.getCurrentGroupId()
+      (display) => display.groupId === this.mapper3d.getCurrentGroupId(),
     );
     if (!firstDisplayWithCurrentGroupId) {
       this.updateCurrentDisplay(this.internalDisplays[0]);
@@ -343,14 +352,16 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
 
     const displayWithCurrentDisplayId = this.internalDisplays.find(
-      (display) => display.displayId === this.currentDisplay?.displayId
+      (display) => display.displayId === this.currentDisplay?.displayId,
     );
     if (!displayWithCurrentDisplayId) {
       this.updateCurrentDisplay(firstDisplayWithCurrentGroupId);
       return;
     }
 
-    if (displayWithCurrentDisplayId.groupId !== this.mapper3d.getCurrentGroupId()) {
+    if (
+      displayWithCurrentDisplayId.groupId !== this.mapper3d.getCurrentGroupId()
+    ) {
       this.updateCurrentDisplay(displayWithCurrentDisplayId);
       return;
     }
@@ -360,10 +371,15 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.storeKeyShowOnlyVisibleState = `rectsView.${this.title}.showOnlyVisibleState`;
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
 
-    if (assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) === 'true') {
+    if (
+      assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) ===
+      'true'
+    ) {
       this.mapper3d.setShowOnlyVisibleMode(true);
     }
-    const storedZSpacingFactor = assertDefined(this.store).get(this.storeKeyZSpacingFactor);
+    const storedZSpacingFactor = assertDefined(this.store).get(
+      this.storeKeyZSpacingFactor,
+    );
     if (storedZSpacingFactor !== undefined) {
       this.mapper3d.setZSpacingFactor(Number(storedZSpacingFactor));
     }
@@ -491,7 +507,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       new CustomEvent(ViewerEvents.RectsDblClick, {
         bubbles: true,
         detail: new RectDblClickDetail(clickedRectId),
-      })
+      }),
     );
   }
 
@@ -499,7 +515,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     event.preventDefault();
 
     this.elementRef.nativeElement.dispatchEvent(
-      new CustomEvent(ViewerEvents.MiniRectsDblClick, {bubbles: true})
+      new CustomEvent(ViewerEvents.MiniRectsDblClick, {bubbles: true}),
     );
   }
 
@@ -523,15 +539,19 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   private getDisplaysWithGroupId(groupId: number): DisplayIdentifier[] {
-    return assertDefined(this.internalDisplays.filter((display) => display.groupId === groupId));
+    return assertDefined(
+      this.internalDisplays.filter((display) => display.groupId === groupId),
+    );
   }
 
   private findClickedRectId(event: MouseEvent): string | undefined {
     const canvas = event.target as Element;
     const canvasOffset = canvas.getBoundingClientRect();
 
-    const x = ((event.clientX - canvasOffset.left) / canvas.clientWidth) * 2 - 1;
-    const y = -((event.clientY - canvasOffset.top) / canvas.clientHeight) * 2 + 1;
+    const x =
+      ((event.clientX - canvasOffset.left) / canvas.clientWidth) * 2 - 1;
+    const y =
+      -((event.clientY - canvasOffset.top) / canvas.clientHeight) * 2 + 1;
     const z = 0;
 
     return this.largeRectsCanvas?.getClickedRectId(x, y, z);

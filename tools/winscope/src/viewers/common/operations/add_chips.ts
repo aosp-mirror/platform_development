@@ -37,7 +37,9 @@ export class AddChips implements Operation<UiHierarchyTreeNode> {
 
   private addAllChipsExceptRelZParent(node: UiHierarchyTreeNode) {
     if (!node.isRoot()) {
-      const compositionType = node.getEagerPropertyByName('compositionType')?.getValue();
+      const compositionType = node
+        .getEagerPropertyByName('compositionType')
+        ?.getValue();
       if (compositionType === LayerCompositionType.GPU) {
         node.addChip(GPU_CHIP);
       } else if (compositionType === LayerCompositionType.HWC) {
@@ -52,7 +54,9 @@ export class AddChips implements Operation<UiHierarchyTreeNode> {
         node.addChip(DUPLICATE_CHIP);
       }
 
-      const zOrderRelativeOfId = node.getEagerPropertyByName('zOrderRelativeOf')?.getValue();
+      const zOrderRelativeOfId = node
+        .getEagerPropertyByName('zOrderRelativeOf')
+        ?.getValue();
       if (zOrderRelativeOfId && zOrderRelativeOfId !== -1) {
         node.addChip(RELATIVE_Z_CHIP);
         this.relZParentIds.push(zOrderRelativeOfId);
@@ -63,7 +67,9 @@ export class AddChips implements Operation<UiHierarchyTreeNode> {
       }
     }
 
-    node.getAllChildren().forEach((child) => this.addAllChipsExceptRelZParent(child));
+    node
+      .getAllChildren()
+      .forEach((child) => this.addAllChipsExceptRelZParent(child));
   }
 
   private addRelZParentChips(node: UiHierarchyTreeNode) {

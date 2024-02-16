@@ -49,22 +49,28 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      await this.initializeIfNeeded();
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        await this.initializeIfNeeded();
 
-      if (this.uiData === UiData.EMPTY) {
-        this.uiData = await this.computeUiData();
-      }
+        if (this.uiData === UiData.EMPTY) {
+          this.uiData = await this.computeUiData();
+        }
 
-      const entry = TraceEntryFinder.findCorrespondingEntry(this.transitionTrace, event.position);
+        const entry = TraceEntryFinder.findCorrespondingEntry(
+          this.transitionTrace,
+          event.position,
+        );
 
-      const transition = await entry?.getValue();
-      if (transition !== undefined) {
-        this.onTransitionSelected(transition);
-      }
+        const transition = await entry?.getValue();
+        if (transition !== undefined) {
+          this.onTransitionSelected(transition);
+        }
 
-      this.notifyUiDataCallback(this.uiData);
-    });
+        this.notifyUiDataCallback(this.uiData);
+      },
+    );
   }
 
   onTransitionSelected(transition: PropertyTreeNode): void {
@@ -79,7 +85,7 @@ export class Presenter {
 
     if (this.surfaceFlingerTrace) {
       const layersIdAndName = await this.surfaceFlingerTrace.customQuery(
-        CustomQueryType.SF_LAYERS_ID_AND_NAME
+        CustomQueryType.SF_LAYERS_ID_AND_NAME,
       );
       layersIdAndName.forEach((value) => {
         this.layerIdToName.set(value.id, value.name);
@@ -88,7 +94,7 @@ export class Presenter {
 
     if (this.windowManagerTrace) {
       const windowsTokenAndTitle = await this.windowManagerTrace.customQuery(
-        CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE
+        CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE,
       );
       windowsTokenAndTitle.forEach((value) => {
         this.windowTokenToTitle.set(value.token, value.title);
@@ -112,7 +118,9 @@ export class Presenter {
   private makeTransitions(entries: PropertyTreeNode[]): Transition[] {
     return entries.map((transitionNode) => {
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
-      const shellDataNode = assertDefined(transitionNode.getChildByName('shellData'));
+      const shellDataNode = assertDefined(
+        transitionNode.getChildByName('shellData'),
+      );
 
       const transition: Transition = {
         id: assertDefined(transitionNode.getChildByName('id')).getValue(),
@@ -120,22 +128,35 @@ export class Presenter {
         sendTime: wmDataNode.getChildByName('sendTimeNs'),
         dispatchTime: shellDataNode.getChildByName('dispatchTimeNs'),
         duration: transitionNode.getChildByName('duration')?.formattedValue(),
-        merged: assertDefined(transitionNode.getChildByName('merged')).getValue(),
-        aborted: assertDefined(transitionNode.getChildByName('aborted')).getValue(),
-        played: assertDefined(transitionNode.getChildByName('played')).getValue(),
+        merged: assertDefined(
+          transitionNode.getChildByName('merged'),
+        ).getValue(),
+        aborted: assertDefined(
+          transitionNode.getChildByName('aborted'),
+        ).getValue(),
+        played: assertDefined(
+          transitionNode.getChildByName('played'),
+        ).getValue(),
         propertiesTree: transitionNode,
       };
       return transition;
     });
   }
 
-  private makeUiPropertiesTree(transitionNode: PropertyTreeNode): UiPropertyTreeNode {
+  private makeUiPropertiesTree(
+    transitionNode: PropertyTreeNode,
+  ): UiPropertyTreeNode {
     const tree = UiPropertyTreeNode.from(transitionNode);
 
     return new UiTreeFormatter<UiPropertyTreeNode>()
       .setUiTree(tree)
       .addOperation(new Filter([UiTreeUtils.isNotCalculated], false))
-      .addOperation(new UpdateTransitionChangesNames(this.layerIdToName, this.windowTokenToTitle))
+      .addOperation(
+        new UpdateTransitionChangesNames(
+          this.layerIdToName,
+          this.windowTokenToTitle,
+        ),
+      )
       .format();
   }
 }

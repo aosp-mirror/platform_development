@@ -49,12 +49,18 @@ export class Presenter {
   }
 
   async onAppEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      await this.initializeIfNeeded();
-      this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
-      this.computeUiDataCurrentMessageIndex();
-      this.notifyUiDataCallback(this.uiData);
-    });
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        await this.initializeIfNeeded();
+        this.entry = TraceEntryFinder.findCorrespondingEntry(
+          this.trace,
+          event.position,
+        );
+        this.computeUiDataCurrentMessageIndex();
+        this.notifyUiDataCallback(this.uiData);
+      },
+    );
   }
 
   onLogLevelsFilterChanged(levels: string[]) {
@@ -94,15 +100,15 @@ export class Presenter {
 
     this.allLogLevels = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: UiDataMessage) => message.level
+      (message: UiDataMessage) => message.level,
     );
     this.allTags = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: UiDataMessage) => message.tag
+      (message: UiDataMessage) => message.tag,
     );
     this.allSourceFiles = this.getUniqueMessageValues(
       this.allUiDataMessages,
-      (message: UiDataMessage) => message.at
+      (message: UiDataMessage) => message.at,
     );
 
     this.computeUiData();
@@ -113,7 +119,11 @@ export class Presenter {
   private async makeAllUiDataMessages(): Promise<UiDataMessage[]> {
     const messages: PropertyTreeNode[] = [];
 
-    for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
+    for (
+      let originalIndex = 0;
+      originalIndex < this.trace.lengthEntries;
+      ++originalIndex
+    ) {
       const entry = assertDefined(this.trace.getEntry(originalIndex));
       const message = await entry.getValue();
       messages.push(message);
@@ -122,10 +132,14 @@ export class Presenter {
     return messages.map((messageNode, index) => {
       return {
         originalIndex: index,
-        text: assertDefined(messageNode.getChildByName('text')).formattedValue(),
+        text: assertDefined(
+          messageNode.getChildByName('text'),
+        ).formattedValue(),
         time: assertDefined(messageNode.getChildByName('timestamp')),
         tag: assertDefined(messageNode.getChildByName('tag')).formattedValue(),
-        level: assertDefined(messageNode.getChildByName('level')).formattedValue(),
+        level: assertDefined(
+          messageNode.getChildByName('level'),
+        ).formattedValue(),
         at: assertDefined(messageNode.getChildByName('at')).formattedValue(),
       };
     });
@@ -136,22 +150,28 @@ export class Presenter {
 
     if (this.levelsFilter.length > 0) {
       filteredMessages = filteredMessages.filter((value) =>
-        this.levelsFilter.includes(value.level)
+        this.levelsFilter.includes(value.level),
       );
     }
 
     if (this.tagsFilter.length > 0) {
-      filteredMessages = filteredMessages.filter((value) => this.tagsFilter.includes(value.tag));
+      filteredMessages = filteredMessages.filter((value) =>
+        this.tagsFilter.includes(value.tag),
+      );
     }
 
     if (this.filesFilter.length > 0) {
-      filteredMessages = filteredMessages.filter((value) => this.filesFilter.includes(value.at));
+      filteredMessages = filteredMessages.filter((value) =>
+        this.filesFilter.includes(value.at),
+      );
     }
 
-    filteredMessages = filteredMessages.filter((value) => value.text.includes(this.searchString));
+    filteredMessages = filteredMessages.filter((value) =>
+      value.text.includes(this.searchString),
+    );
 
     this.originalIndicesOfFilteredOutputMessages = filteredMessages.map(
-      (message) => message.originalIndex
+      (message) => message.originalIndex,
     );
 
     this.uiData = new UiData(
@@ -159,7 +179,7 @@ export class Presenter {
       this.allTags,
       this.allSourceFiles,
       filteredMessages,
-      undefined
+      undefined,
     );
   }
 
@@ -177,13 +197,13 @@ export class Presenter {
     this.uiData.currentMessageIndex =
       ArrayUtils.binarySearchFirstGreaterOrEqual(
         this.originalIndicesOfFilteredOutputMessages,
-        this.entry.getIndex()
+        this.entry.getIndex(),
       ) ?? this.originalIndicesOfFilteredOutputMessages.length - 1;
   }
 
   private getUniqueMessageValues(
     allMessages: UiDataMessage[],
-    getValue: (message: UiDataMessage) => string
+    getValue: (message: UiDataMessage) => string,
   ): string[] {
     const uniqueValues = new Set<string>();
     allMessages.forEach((message) => {

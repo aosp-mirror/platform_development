@@ -21,7 +21,9 @@ import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodManagerService} from './presenter_input_method_manager_service';
 
 class ViewerInputMethodManagerService extends ViewerInputMethod {
-  static readonly DEPENDENCIES: ImeTraceType[] = [TraceType.INPUT_METHOD_MANAGER_SERVICE];
+  static readonly DEPENDENCIES: ImeTraceType[] = [
+    TraceType.INPUT_METHOD_MANAGER_SERVICE,
+  ];
 
   override readonly view: View;
 
@@ -32,7 +34,7 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
       this.getDependencies(),
       this.htmlElement,
       'Input Method Manager Service',
-      TraceType.INPUT_METHOD_MANAGER_SERVICE
+      TraceType.INPUT_METHOD_MANAGER_SERVICE,
     );
   }
 
@@ -45,7 +47,7 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
       traces,
       storage,
       this.getDependencies(),
-      this.imeUiCallback
+      this.imeUiCallback,
     );
   }
 }

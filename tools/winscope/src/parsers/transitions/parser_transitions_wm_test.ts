@@ -28,7 +28,7 @@ describe('WmFileParserTransitions', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
     )) as Parser<PropertyTreeNode>;
   });
 
@@ -37,7 +37,9 @@ describe('WmFileParserTransitions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
     expect(timestamps.length).toEqual(8);
     const expected = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
@@ -46,22 +48,31 @@ describe('WmFileParserTransitions', () => {
   it('provides real timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
     expect(timestamps.length).toEqual(8);
-    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827956652323n);
+    const expected =
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827956652323n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-      true
+      true,
     )) as Parser<PropertyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WM_TRANSITION);
-
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.WM_TRANSITION,
     );
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627956652323n)
+
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n));
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627956652323n),
     );
   });
 });

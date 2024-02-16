@@ -37,7 +37,10 @@ describe('AddCujProperties', () => {
         {name: 'uid', value: 10227},
         {name: 'tid', value: 3604},
         {name: 'tag', value: EventTag.JANK_CUJ_BEGIN_TAG},
-        {name: 'eventData', value: '[66,1681207048025580000,2661012903966,2661012904007,]'},
+        {
+          name: 'eventData',
+          value: '[66,1681207048025580000,2661012903966,2661012904007,]',
+        },
       ])
       .build();
 
@@ -51,7 +54,10 @@ describe('AddCujProperties', () => {
         {name: 'uid', value: 10227},
         {name: 'tid', value: 3604},
         {name: 'tag', value: EventTag.JANK_CUJ_BEGIN_TAG},
-        {name: 'eventData', value: '[66,1681207048025580000,2661012903966,2661012904007,]'},
+        {
+          name: 'eventData',
+          value: '[66,1681207048025580000,2661012903966,2661012904007,]',
+        },
         {name: 'cujType', value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS},
         {
           name: 'cujTimestamp',

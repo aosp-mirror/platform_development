@@ -43,7 +43,9 @@ describe('SimplifyNames', () => {
     operation.apply(hierarchyRoot);
     hierarchyRoot
       .getAllChildren()
-      .forEach((child) => expect(child.getDisplayName()).toEqual('node.child.(...).child'));
+      .forEach((child) =>
+        expect(child.getDisplayName()).toEqual('node.child.(...).child'),
+      );
   });
 
   it('does not change already short names', () => {

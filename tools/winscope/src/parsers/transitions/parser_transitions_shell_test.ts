@@ -28,7 +28,7 @@ describe('ShellFileParserTransitions', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     )) as Parser<PropertyTreeNode>;
   });
 
@@ -37,7 +37,9 @@ describe('ShellFileParserTransitions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
     const expected = [
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57649649922341n),
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
@@ -65,16 +67,24 @@ describe('ShellFileParserTransitions', () => {
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-      true
+      true,
     )) as Parser<PropertyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SHELL_TRANSITION);
-
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57649649922341n)
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.SHELL_TRANSITION,
     );
 
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683208277607285317n)
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57649649922341n));
+
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683208277607285317n),
     );
   });
 });
