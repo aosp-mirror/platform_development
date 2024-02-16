@@ -162,11 +162,25 @@ describe('RectsComponent', () => {
       ['primary', 'secondary', 'secondary'],
       '.display-name-buttons'
     );
+    findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
       '.stack-buttons'
     );
+  });
+
+  it('only displays stack tab when stack buttons present', () => {
+    component.displays = [
+      {displayId: 0, groupId: 0, name: 'Display 0'},
+      {displayId: 1, groupId: 1, name: 'Display 1'},
+      {displayId: 2, groupId: 2, name: 'Display 2'},
+    ];
+    fixture.detectChanges();
+
+    const tabs = Array.from(htmlElement.querySelectorAll('.grouping-tabs mat-tab'));
+    expect(tabs.length).toEqual(1);
+    expect(tabs[0].innerHTML).not.toContain('Stacks');
   });
 
   it('handles display button click when stack buttons are not present', () => {
@@ -212,6 +226,8 @@ describe('RectsComponent', () => {
       ['secondary', 'primary', 'secondary'],
       '.display-name-buttons'
     );
+
+    findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
@@ -234,6 +250,8 @@ describe('RectsComponent', () => {
       ['primary', 'secondary', 'secondary'],
       '.display-name-buttons'
     );
+
+    findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'secondary', 'secondary'],
@@ -244,15 +262,18 @@ describe('RectsComponent', () => {
     const button = Array.from(stackButtonContainer.querySelectorAll('button'))[1];
     button.click();
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['secondary', 'secondary', 'secondary'],
-      '.display-name-buttons'
-    );
+
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1', 'Stack 2: Display 2'],
       ['secondary', 'primary', 'secondary'],
       '.stack-buttons'
+    );
+
+    findAndClickTab(0);
+    checkButtons(
+      ['Display 0', 'Display 1', 'Display 2'],
+      ['secondary', 'secondary', 'secondary'],
+      '.display-name-buttons'
     );
   });
 
@@ -263,6 +284,8 @@ describe('RectsComponent', () => {
 
     component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
     fixture.detectChanges();
+
+    findAndClickTab(1);
     checkButtons(['Stack 0: Display 0'], ['secondary'], '.stack-buttons');
 
     component.displays = [
@@ -287,6 +310,8 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
+
+    findAndClickTab(1);
     checkButtons(
       ['Stack 0: Display 0', 'Stack 1: Display 1'],
       ['secondary', 'secondary'],
@@ -298,6 +323,8 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
+
+    findAndClickTab(1);
     checkButtons(
       ['Stack 2: Display 0', 'Stack 1: Display 1'],
       ['secondary', 'secondary'],
@@ -370,6 +397,13 @@ describe('RectsComponent', () => {
   function findAndClickCheckbox(selector: string) {
     const box = assertDefined(htmlElement.querySelector(selector)) as HTMLInputElement;
     box.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+  }
+
+  function findAndClickTab(index: number) {
+    const tabs = Array.from(htmlElement.querySelectorAll('.grouping-tabs mat-tab'));
+    const tab = assertDefined(tabs[index]) as HTMLElement;
+    tab.click();
     fixture.detectChanges();
   }
 

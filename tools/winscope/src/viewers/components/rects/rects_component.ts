@@ -103,29 +103,36 @@ import {Distance2D} from './types3d';
           (dblclick)="onMiniRectDblClick($event)"
           oncontextmenu="return false"></canvas>
       </div>
-      <div
+
+      <mat-tab-group
+        class="grouping-tabs"
+        mat-align-tabs="start"
         *ngIf="internalDisplays.length > 0"
-        class="display-button-container display-name-buttons">
-        <button
-          *ngFor="let display of internalDisplays"
-          [color]="getDisplayButtonColor(display.groupId)"
-          mat-raised-button
-          (click)="onDisplayIdChange(display)">
-          {{ display.name }}
-        </button>
-      </div>
-      <div
-        *ngIf="isStackBased && internalGroupIds.size > 0"
-        class="display-button-container stack-buttons">
-        <button
-          *ngFor="let groupId of internalGroupIds"
-          [color]="getStackButtonColor(groupId)"
-          [matTooltip]="getStackButtonTooltip(groupId)"
-          mat-raised-button
-          (click)="onGroupIdChange(groupId)">
-          {{ getStackButtonLabel(groupId) }}
-        </button>
-      </div>
+        dynamicHeight>
+        <mat-tab label="Displays">
+          <div class="display-button-container display-name-buttons">
+            <button
+              *ngFor="let display of internalDisplays"
+              [color]="getDisplayButtonColor(display.groupId)"
+              mat-raised-button
+              (click)="onDisplayIdChange(display)">
+              {{ display.name }}
+            </button>
+          </div>
+        </mat-tab>
+        <mat-tab *ngIf="isStackBased" label="Stacks">
+          <div class="display-button-container stack-buttons">
+            <button
+              *ngFor="let groupId of internalGroupIds"
+              [color]="getStackButtonColor(groupId)"
+              [matTooltip]="getStackButtonTooltip(groupId)"
+              mat-raised-button
+              (click)="onGroupIdChange(groupId)">
+              {{ getStackButtonLabel(groupId) }}
+            </button>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
   `,
   styles: [
@@ -183,12 +190,23 @@ import {Distance2D} from './types3d';
         height: 100%;
         pointer-events: none;
       }
+      .grouping-tabs {
+        max-height: 120px;
+      }
       .display-button-container {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         column-gap: 10px;
         padding-bottom: 5px;
+        max-height: 72px;
+        overflow-y: auto;
+      }
+      .display-button-container button {
+        font-size: 12px;
+        line-height: normal;
+        height: 28px;
+        margin-top: 5px;
       }
       .mini-rects-canvas {
         cursor: pointer;
@@ -370,10 +388,12 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   @HostListener('wheel', ['$event'])
   onScroll(event: WheelEvent) {
-    if (event.deltaY > 0) {
-      this.doZoomOut();
-    } else {
-      this.doZoomIn();
+    if ((event.target as HTMLElement).className === 'large-rects-canvas') {
+      if (event.deltaY > 0) {
+        this.doZoomOut();
+      } else {
+        this.doZoomIn();
+      }
     }
   }
 
