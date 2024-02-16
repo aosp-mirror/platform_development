@@ -60,4 +60,53 @@ describe('TimestampFactory', () => {
       expect(() => factory.makeTimestampFromType(TimestampType.REAL, 100n)).toThrow();
     });
   });
+
+  describe('with timezone info', () => {
+    const factory = new TimestampFactory({timezone: 'Asia/Kolkata', locale: 'en-US'});
+    it('can create real timestamp', () => {
+      const timestamp = factory.makeRealTimestamp(100n);
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(19800000000100n);
+      expect(timestamp.toUTC().getValueNs()).toBe(100n);
+    });
+
+    it('can create real timestamp with offset', () => {
+      const timestamp = factory.makeRealTimestamp(100n, 500n);
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(19800000000600n);
+      expect(timestamp.toUTC().getValueNs()).toBe(600n);
+    });
+
+    it('can create elapsed timestamp', () => {
+      const timestamp = factory.makeElapsedTimestamp(100n);
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(100n);
+      expect(timestamp.toUTC().getValueNs()).toBe(100n);
+    });
+
+    it('can create real timestamp from type', () => {
+      const timestamp = factory.makeTimestampFromType(TimestampType.REAL, 100n, 500n);
+      expect(timestamp.getType()).toBe(TimestampType.REAL);
+      expect(timestamp.getValueNs()).toBe(19800000000600n);
+      expect(timestamp.toUTC().getValueNs()).toBe(600n);
+    });
+
+    it('can create elapsed timestamp from type', () => {
+      const timestamp = factory.makeTimestampFromType(TimestampType.ELAPSED, 100n);
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(100n);
+      expect(timestamp.toUTC().getValueNs()).toBe(100n);
+    });
+
+    it('can create elapsed timestamp from type ignoring offset', () => {
+      const timestamp = factory.makeTimestampFromType(TimestampType.ELAPSED, 100n, 500n);
+      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
+      expect(timestamp.getValueNs()).toBe(100n);
+      expect(timestamp.toUTC().getValueNs()).toBe(100n);
+    });
+
+    it('throws error if creating real timestamp from type without offset', () => {
+      expect(() => factory.makeTimestampFromType(TimestampType.REAL, 100n)).toThrow();
+    });
+  });
 });

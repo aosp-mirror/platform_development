@@ -26,6 +26,7 @@ describe('ShellFileParserTransitions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
     )) as Parser<PropertyTreeNode>;

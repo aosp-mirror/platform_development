@@ -18,7 +18,7 @@ import {Timestamp, TimestampType, TimezoneInfo} from './time';
 import {TimeUtils} from './time_utils';
 
 export class TimestampFactory {
-  constructor(private timezoneInfo: TimezoneInfo = {timezone: 'UTC', locale: 'en-US'}) {}
+  constructor(public timezoneInfo: TimezoneInfo = {timezone: 'UTC', locale: 'en-US'}) {}
 
   makeRealTimestamp(valueNs: bigint, realToElapsedTimeOffsetNs?: bigint): Timestamp {
     const valueWithRealtimeOffset = valueNs + (realToElapsedTimeOffsetNs ?? 0n);
@@ -26,7 +26,7 @@ export class TimestampFactory {
       this.timezoneInfo.timezone !== 'UTC'
         ? TimeUtils.addTimezoneOffset(this.timezoneInfo, valueWithRealtimeOffset)
         : valueWithRealtimeOffset;
-    return new Timestamp(TimestampType.REAL, localNs);
+    return new Timestamp(TimestampType.REAL, localNs, localNs - valueWithRealtimeOffset);
   }
 
   makeElapsedTimestamp(valueNs: bigint): Timestamp {

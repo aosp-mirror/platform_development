@@ -21,11 +21,12 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
-describe('ParserInputMethodlClients', () => {
+describe('ParserInputMethodClients', () => {
   describe('trace with elapsed + real timestamp', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/InputMethodClients.pb'
       )) as Parser<HierarchyTreeNode>;
@@ -94,6 +95,7 @@ describe('ParserInputMethodlClients', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_timestamp/InputMethodClients.pb'
       )) as Parser<HierarchyTreeNode>;

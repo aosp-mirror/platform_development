@@ -26,6 +26,7 @@ describe('Perfetto ParserTransitions', () => {
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
         'traces/perfetto/shell_transitions_trace.perfetto-trace'

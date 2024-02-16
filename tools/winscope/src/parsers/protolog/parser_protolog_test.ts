@@ -26,6 +26,7 @@ describe('ParserProtoLog', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/ProtoLog.pb'
     )) as Parser<PropertyTreeNode>;

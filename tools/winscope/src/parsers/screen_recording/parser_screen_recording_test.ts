@@ -25,6 +25,7 @@ describe('ParserScreenRecording', () => {
   let parser: Parser<ScreenRecordingTraceEntry>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
     )) as Parser<ScreenRecordingTraceEntry>;

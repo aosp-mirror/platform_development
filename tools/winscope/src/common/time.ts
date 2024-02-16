@@ -33,10 +33,12 @@ export interface TimezoneInfo {
 export class Timestamp {
   private readonly type: TimestampType;
   private readonly valueNs: bigint;
+  private readonly timezoneOffset: bigint;
 
-  constructor(type: TimestampType, valueNs: bigint) {
+  constructor(type: TimestampType, valueNs: bigint, timezoneOffset = 0n) {
     this.type = type;
     this.valueNs = valueNs;
+    this.timezoneOffset = timezoneOffset;
   }
 
   getType(): TimestampType {
@@ -45,6 +47,10 @@ export class Timestamp {
 
   getValueNs(): bigint {
     return this.valueNs;
+  }
+
+  toUTC(): Timestamp {
+    return new Timestamp(this.type, this.valueNs - this.timezoneOffset);
   }
 
   valueOf(): bigint {

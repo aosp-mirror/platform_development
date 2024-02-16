@@ -25,6 +25,7 @@ describe('Perfetto ParserProtolog', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = await UnitTestUtils.getPerfettoParser(
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace'

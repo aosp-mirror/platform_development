@@ -31,6 +31,7 @@ describe('ParserSurfaceFlinger', () => {
     let trace: Trace<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
       )) as Parser<HierarchyTreeNode>;

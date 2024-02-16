@@ -26,6 +26,7 @@ describe('ParserInputMethodService', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/InputMethodService.pb'
       )) as Parser<HierarchyTreeNode>;

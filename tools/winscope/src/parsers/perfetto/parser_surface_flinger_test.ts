@@ -31,6 +31,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
     let trace: Trace<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace'

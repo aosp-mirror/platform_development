@@ -224,6 +224,27 @@ describe('Mediator', () => {
     );
   });
 
+  it('propagates trace position update according to timezone', async () => {
+    const timezoneInfo = {
+      timezone: 'Asia/Kolkata',
+      locale: 'en-US',
+    };
+    const factory = new TimestampFactory(timezoneInfo);
+    spyOn(tracePipeline, 'getTimestampFactory').and.returnValue(factory);
+    await loadFiles();
+    await loadTraceView();
+
+    // notify position
+    resetSpyCalls();
+    const expectedPosition = TracePosition.fromTimestamp(factory.makeRealTimestamp(10n));
+    await mediator.onWinscopeEvent(new TracePositionUpdate(expectedPosition));
+    checkTracePositionUpdateEvents(
+      [viewerStub0, viewerOverlay, timelineComponent, crossToolProtocol],
+      expectedPosition,
+      POSITION_10
+    );
+  });
+
   it("initializes viewers' trace position also when loaded traces have no valid timestamps", async () => {
     const dumpFile = await UnitTestUtils.getFixtureFile('traces/dump_WindowManager.pb');
     await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
@@ -262,9 +283,7 @@ describe('Mediator', () => {
       // receive timestamp
       resetSpyCalls();
 
-      const expectedPosition = TracePosition.fromTimestamp(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(19800000000010n)
-      );
+      const expectedPosition = TracePosition.fromTimestamp(factory.makeRealTimestamp(10n));
       await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(10n));
       checkTracePositionUpdateEvents(
         [viewerStub0, viewerOverlay, timelineComponent],
@@ -395,12 +414,18 @@ describe('Mediator', () => {
 
   function checkTracePositionUpdateEvents(
     listenersToBeNotified: WinscopeEventListener[],
-    position?: TracePosition
+    position?: TracePosition,
+    crossToolProtocolPosition = position
   ) {
+    const event = makeExpectedTracePositionUpdate(position);
+    const crossToolProtocolEvent =
+      crossToolProtocolPosition !== position
+        ? makeExpectedTracePositionUpdate(crossToolProtocolPosition)
+        : event;
     tracePositionUpdateListeners.forEach((listener) => {
       const isVisible = listenersToBeNotified.includes(listener);
       if (isVisible) {
-        const expected = makeExpectedTracePositionUpdate(position);
+        const expected = listener === crossToolProtocol ? crossToolProtocolEvent : event;
         expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
       } else {
         expect(listener.onWinscopeEvent).not.toHaveBeenCalled();

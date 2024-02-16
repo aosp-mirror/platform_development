@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
 import {UrlUtils} from 'common/url_utils';
 import {ParserFactory} from 'parsers/parser_factory';
@@ -191,6 +191,19 @@ class UnitTestUtils {
     entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
 
     return entries;
+  }
+
+  static timestampEqualityTester(first: any, second: any): boolean | undefined {
+    if (first instanceof Timestamp && second instanceof Timestamp) {
+      return UnitTestUtils.testTimestamps(first, second);
+    }
+    return undefined;
+  }
+
+  private static testTimestamps(node: Timestamp, expectedNode: Timestamp): boolean {
+    if (node.getType() !== expectedNode.getType()) return false;
+    if (node.getValueNs() !== expectedNode.getValueNs()) return false;
+    return true;
   }
 
   private static async getTraceEntry<T>(filename: string) {

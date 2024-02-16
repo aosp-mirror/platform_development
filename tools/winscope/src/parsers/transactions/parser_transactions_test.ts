@@ -28,6 +28,7 @@ describe('ParserTransactions', () => {
     let parser: Parser<PropertyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/Transactions.pb'
       )) as Parser<PropertyTreeNode>;

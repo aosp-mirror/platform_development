@@ -26,6 +26,7 @@ describe('WmFileParserTransitions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb'
     )) as Parser<PropertyTreeNode>;

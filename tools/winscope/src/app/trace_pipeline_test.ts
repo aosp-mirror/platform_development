@@ -39,6 +39,7 @@ describe('TracePipeline', () => {
   let tracePipeline: TracePipeline;
 
   beforeEach(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     validSfFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
     );

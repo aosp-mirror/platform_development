@@ -30,6 +30,7 @@ describe('ParserWindowManager', () => {
     let trace: Trace<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/WindowManager.pb'
       )) as Parser<HierarchyTreeNode>;

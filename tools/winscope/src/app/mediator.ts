@@ -15,7 +15,6 @@
  */
 
 import {Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
@@ -191,9 +190,6 @@ export class Mediator {
     const receivers: WinscopeEventListener[] = [...this.viewers].filter((viewer) =>
       this.isViewerVisible(viewer)
     );
-    if (!omitCrossToolProtocol) {
-      receivers.push(this.crossToolProtocol);
-    }
     if (this.timelineComponent) {
       receivers.push(this.timelineComponent);
     }
@@ -201,6 +197,16 @@ export class Mediator {
     const promises = receivers.map((receiver) => {
       return receiver.onWinscopeEvent(event);
     });
+
+    if (!omitCrossToolProtocol) {
+      const utcTimestamp = position.timestamp.toUTC();
+      const utcPosition = position.entry
+        ? TracePosition.fromTraceEntry(position.entry, utcTimestamp)
+        : TracePosition.fromTimestamp(utcTimestamp);
+      const utcEvent = new TracePositionUpdate(utcPosition);
+      promises.push(this.crossToolProtocol.onWinscopeEvent(utcEvent));
+    }
+
     await Promise.all(promises);
   }
 
@@ -224,7 +230,7 @@ export class Mediator {
   }
 
   private async processRemoteToolTimestampReceived(timestampNs: bigint) {
-    const factory = this.tracePipeline.getTimestampFactory() ?? NO_TIMEZONE_OFFSET_FACTORY;
+    const factory = this.tracePipeline.getTimestampFactory();
     const timestamp = factory.makeRealTimestamp(timestampNs);
     this.lastRemoteToolTimestampReceived = timestamp;
 
