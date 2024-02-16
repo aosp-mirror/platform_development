@@ -19,10 +19,9 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include <utility>
-
-#include <llvm/ADT/Optional.h>
 
 
 namespace header_checker {
@@ -76,7 +75,7 @@ std::vector<std::string_view> Split(std::string_view s,
 }
 
 
-llvm::Optional<int> ParseInt(const std::string &s) {
+std::optional<int> ParseInt(const std::string &s) {
   const char *start = s.c_str();
   if (*start == '\0') {
     return {};
