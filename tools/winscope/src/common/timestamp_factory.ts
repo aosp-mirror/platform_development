@@ -24,7 +24,7 @@ export class TimestampFactory {
     const valueWithRealtimeOffset = valueNs + (realToElapsedTimeOffsetNs ?? 0n);
     const localNs =
       this.timezoneInfo.timezone !== 'UTC'
-        ? TimeUtils.addTimezoneOffset(this.timezoneInfo, valueWithRealtimeOffset)
+        ? TimeUtils.addTimezoneOffset(this.timezoneInfo.timezone, valueWithRealtimeOffset)
         : valueWithRealtimeOffset;
     return new Timestamp(TimestampType.REAL, localNs, localNs - valueWithRealtimeOffset);
   }
