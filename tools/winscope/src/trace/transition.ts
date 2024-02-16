@@ -25,6 +25,5 @@ export interface Transition {
   merged: boolean;
   aborted: boolean;
   played: boolean;
-  realToElapsedTimeOffsetNs?: bigint;
   propertiesTree: PropertyTreeNode;
 }

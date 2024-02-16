@@ -128,22 +128,6 @@ export class TraceBuilder<T> {
     return builder.build();
   }
 
-  private createTimestamps(entries: T[]): Timestamp[] {
-    const timestamps = new Array<Timestamp>();
-    for (let i = 0; i < entries.length; ++i) {
-      timestamps[i] = new Timestamp(TimestampType.REAL, BigInt(i));
-    }
-    return timestamps;
-  }
-
-  private createEntries(timestamps: Timestamp[]): T[] {
-    const entries = new Array<T>();
-    for (let i = 0; i < timestamps.length; ++i) {
-      entries.push(`entry-${i}` as unknown as T);
-    }
-    return entries;
-  }
-
   private getFrameMap(): FrameMap | undefined {
     if (this.frameMap && this.frameMapBuilder) {
       throw new Error(

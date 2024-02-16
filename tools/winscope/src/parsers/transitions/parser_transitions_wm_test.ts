@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -37,14 +38,29 @@ describe('WmFileParserTransitions', () => {
   it('provides elapsed timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
     expect(timestamps.length).toEqual(8);
-    const expected = new ElapsedTimestamp(0n);
+    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
   it('provides real timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
     expect(timestamps.length).toEqual(8);
-    const expected = new RealTimestamp(1683130827956652323n);
+    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827956652323n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
+  });
+
+  it('applies timezone info to real timestamps only', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      true
+    )) as Parser<PropertyTreeNode>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WM_TRANSITION);
+
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)
+    );
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627956652323n)
+    );
   });
 });

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';
@@ -23,7 +23,7 @@ import {TraceType} from './trace_type';
 export class ParserMock<T> implements Parser<T> {
   constructor(
     private readonly type: TraceType,
-    private readonly timestamps: RealTimestamp[],
+    private readonly timestamps: Timestamp[],
     private readonly entries: T[],
     private readonly customQueryResult: Map<CustomQueryType, object>,
     private readonly descriptors: string[]

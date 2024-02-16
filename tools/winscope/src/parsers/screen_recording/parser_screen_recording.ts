@@ -15,11 +15,11 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class ScreenRecordingMetadataEntry {
@@ -27,10 +27,6 @@ class ScreenRecordingMetadataEntry {
 }
 
 class ParserScreenRecording extends AbstractParser {
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.SCREEN_RECORDING;
   }
@@ -81,9 +77,9 @@ class ParserScreenRecording extends AbstractParser {
       return undefined;
     }
     if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, decodedEntry.timestampElapsedNs);
+      return this.timestampFactory.makeElapsedTimestamp(decodedEntry.timestampElapsedNs);
     } else if (type === TimestampType.REAL) {
-      return new Timestamp(type, decodedEntry.timestampRealtimeNs);
+      return this.timestampFactory.makeRealTimestamp(decodedEntry.timestampRealtimeNs);
     }
     return undefined;
   }
@@ -93,8 +89,8 @@ class ParserScreenRecording extends AbstractParser {
     timestampType: TimestampType,
     entry: ScreenRecordingMetadataEntry
   ): ScreenRecordingTraceEntry {
-    const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
-    const currentTimestamp = new Timestamp(TimestampType.ELAPSED, entry.timestampElapsedNs);
+    const initialTimestamp = assertDefined(this.getTimestamps(TimestampType.ELAPSED))[0];
+    const currentTimestamp = this.timestampFactory.makeElapsedTimestamp(entry.timestampElapsedNs);
     const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
       initialTimestamp,
       currentTimestamp

@@ -190,7 +190,6 @@ function createMockTransition(
     merged: false,
     aborted: false,
     played: false,
-    realToElapsedTimeOffsetNs: undefined,
     propertiesTree: transitionTree,
   };
 }

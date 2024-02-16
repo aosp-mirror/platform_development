@@ -24,10 +24,8 @@ export class AddStatus extends AddOperation<PropertyTreeNode> {
     const wmDataNode = assertDefined(value.getChildByName('wmData'));
     const shellDataNode = assertDefined(value.getChildByName('shellData'));
 
-    const wmAborted =
-      Number(shellDataNode.getChildByName('abortTimeNs')?.getValue()?.toString()) > 0;
-    const shellAborted =
-      Number(wmDataNode.getChildByName('abortTimeNs')?.getValue()?.toString()) > 0;
+    const wmAborted = wmDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
+    const shellAborted = shellDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
 
     const abortedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
       value.id,
@@ -38,13 +36,13 @@ export class AddStatus extends AddOperation<PropertyTreeNode> {
     const mergedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
       value.id,
       'merged',
-      Number(shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.toString()) > 0
+      shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.getValueNs() > 0n
     );
 
     const playedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
       value.id,
       'played',
-      Number(wmDataNode.getChildByName('finishTimeNs')?.getValue()?.toString()) > 0
+      wmDataNode.getChildByName('finishTimeNs')?.getValue()?.getValueNs() > 0n
     );
 
     return [abortedNode, mergedNode, playedNode];

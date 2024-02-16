@@ -107,6 +107,21 @@ describe('TraceFileFilter', () => {
       expect(result.legacy).toEqual([]);
       expect(errors).toEqual([]);
     });
+
+    it('identifies dumpstate_board.txt file', async () => {
+      const legacyFile = makeTraceFile('proto/window_CRITICAL.proto', bugreportArchive);
+      const bugreportFiles = [
+        await makeBugreportMainEntryTraceFile(),
+        await makeBugreportCodenameTraceFile(),
+        await makeBugreportDumpstateBoardTextFile(),
+        legacyFile,
+      ];
+      const result = await filter.filter(bugreportFiles, errorListener);
+      expect(result.legacy).toEqual([legacyFile]);
+      expect(result.perfetto).toBeUndefined();
+      expect(result.timezoneInfo).toEqual({timezone: 'Asia/Kolkata', locale: 'en-US'});
+      expect(errors).toEqual([]);
+    });
   });
 
   describe('plain input (no bugreport)', () => {
@@ -140,22 +155,30 @@ describe('TraceFileFilter', () => {
     });
   });
 
-  const makeTraceFile = (filename: string, parentArchive?: File, size?: number) => {
+  function makeTraceFile(filename: string, parentArchive?: File, size?: number) {
     size = size ?? 0;
     const file = new File([new ArrayBuffer(size)], filename);
     return new TraceFile(file as unknown as File, parentArchive);
-  };
+  }
 
-  const makeBugreportMainEntryTraceFile = async () => {
+  async function makeBugreportMainEntryTraceFile() {
     const file = await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt');
     return new TraceFile(file, bugreportArchive);
-  };
+  }
 
-  const makeBugreportCodenameTraceFile = async () => {
+  async function makeBugreportDumpstateBoardTextFile() {
+    const file = await UnitTestUtils.getFixtureFile(
+      'bugreports/dumpstate_board.txt',
+      'dumpstate_board.txt'
+    );
+    return new TraceFile(file, bugreportArchive);
+  }
+
+  async function makeBugreportCodenameTraceFile() {
     const file = await UnitTestUtils.getFixtureFile(
       'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
       'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
     );
     return new TraceFile(file, bugreportArchive);
-  };
+  }
 });

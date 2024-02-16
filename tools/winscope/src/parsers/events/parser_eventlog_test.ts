@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
@@ -43,9 +44,9 @@ describe('ParserEventLog', () => {
       expect(timestamps.length).toEqual(184);
 
       const expected = [
-        new RealTimestamp(1681207047981157174n),
-        new RealTimestamp(1681207047991161039n),
-        new RealTimestamp(1681207047991310494n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047981157174n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991161039n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991310494n),
       ];
       expect(timestamps.slice(0, 3)).toEqual(expected);
     });
@@ -73,6 +74,23 @@ describe('ParserEventLog', () => {
 
       expect(entry).toEqual(expected);
     });
+
+    it('applies timezone info to real timestamps', async () => {
+      const parserWithTimezoneInfo = assertDefined(
+        await UnitTestUtils.getParser('traces/eventlog.winscope', true)
+      ) as Parser<PropertyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.EVENT_LOG);
+
+      const timestamps = assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL));
+      expect(timestamps.length).toEqual(184);
+
+      const expected = [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847981157174n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991161039n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991310494n),
+      ];
+      expect(timestamps.slice(0, 3)).toEqual(expected);
+    });
   });
 
   describe('trace with timestamps not monotonically increasing', () => {
@@ -92,9 +110,9 @@ describe('ParserEventLog', () => {
       expect(timestamps.length).toEqual(3);
 
       const expected = [
-        new RealTimestamp(1681207047981157174n),
-        new RealTimestamp(1681207047991161039n),
-        new RealTimestamp(1681207047991310494n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047981157174n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991161039n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991310494n),
       ];
       expect(timestamps).toEqual(expected);
     });
@@ -117,6 +135,26 @@ describe('ParserEventLog', () => {
         .build();
 
       expect(entry).toEqual(expected);
+    });
+
+    it('applies timezone info to real timestamps', async () => {
+      const parserWithTimezoneInfo = assertDefined(
+        await UnitTestUtils.getParser(
+          'traces/eventlog_timestamps_not_monotonically_increasing.winscope',
+          true
+        )
+      ) as Parser<PropertyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.EVENT_LOG);
+
+      const timestamps = assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL));
+      expect(timestamps.length).toEqual(3);
+
+      const expected = [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847981157174n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991161039n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991310494n),
+      ];
+      expect(timestamps).toEqual(expected);
     });
   });
 });

@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp, TimeRange, TimestampType} from 'common/time';
+import {TimeRange, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceHasOldData, TraceOverridden, WinscopeError} from 'messaging/winscope_error';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
@@ -27,17 +28,17 @@ import {LoadedParsers} from './loaded_parsers';
 
 describe('LoadedParsers', () => {
   const oldTimestamps = [
-    new RealTimestamp(0n),
-    new RealTimestamp(1n),
-    new RealTimestamp(2n),
-    new RealTimestamp(3n),
-    new RealTimestamp(4n),
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n),
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n),
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n),
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n),
   ];
 
   const timestamps = [
-    new RealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
-    new RealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
-    new RealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
   ];
 
   const filename = 'filename';
@@ -75,7 +76,7 @@ describe('LoadedParsers', () => {
     .build();
   const parserWm_dump = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setTimestamps([new RealTimestamp(0n)])
+    .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)])
     .setDescriptors([filename])
     .build();
 

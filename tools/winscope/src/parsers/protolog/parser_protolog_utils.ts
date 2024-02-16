@@ -15,8 +15,13 @@
  */
 
 import {TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {SetFormatters} from 'parsers/operations/set_formatters';
-import {ELAPSED_TIMESTAMP_FORMATTER, TimestampFormatter} from 'trace/tree_node/formatters';
+import {
+  MakeTimestampStrategyType,
+  TransformToTimestamp,
+} from 'parsers/operations/transform_to_timestamp';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogMessage} from './log_message';
@@ -25,7 +30,8 @@ export class ParserProtologUtils {
   static makeMessagePropertiesTree(
     logMessage: LogMessage,
     timestampType: TimestampType,
-    realToElapsedTimeOffsetNs: bigint | undefined
+    realToElapsedTimeOffsetNs: bigint | undefined,
+    timestampFactory: TimestampFactory
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(logMessage)
@@ -34,11 +40,18 @@ export class ParserProtologUtils {
       .setVisitPrototype(false)
       .build();
 
-    const timestampFormatter =
-      timestampType === TimestampType.ELAPSED
-        ? ELAPSED_TIMESTAMP_FORMATTER
-        : new TimestampFormatter(timestampType, realToElapsedTimeOffsetNs);
-    const customFormatters = new Map([['timestamp', timestampFormatter]]);
+    const customFormatters = new Map([['timestamp', TIMESTAMP_FORMATTER]]);
+
+    let strategy: MakeTimestampStrategyType | undefined;
+    if (timestampType === TimestampType.REAL) {
+      strategy = (valueNs: bigint) => {
+        return timestampFactory.makeRealTimestamp(valueNs, realToElapsedTimeOffsetNs);
+      };
+    } else {
+      strategy = timestampFactory.makeElapsedTimestamp;
+    }
+
+    new TransformToTimestamp(['timestamp'], strategy).apply(tree);
     new SetFormatters(undefined, customFormatters).apply(tree);
     return tree;
   }

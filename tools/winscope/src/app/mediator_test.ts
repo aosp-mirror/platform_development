@@ -15,7 +15,7 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
@@ -77,8 +77,8 @@ describe('Mediator', () => {
   const viewers = [viewerStub0, viewerStub1, viewerOverlay];
   let tracePositionUpdateListeners: WinscopeEventListener[];
 
-  const TIMESTAMP_10 = new RealTimestamp(10n);
-  const TIMESTAMP_11 = new RealTimestamp(11n);
+  const TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const TIMESTAMP_11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
 
   const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
   const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
@@ -94,6 +94,7 @@ describe('Mediator', () => {
   });
 
   beforeEach(async () => {
+    jasmine.addCustomEqualityTester(tracePositionUpdateEqualityTester);
     userNotificationListener = new UserNotificationListenerStub();
     tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
@@ -239,13 +240,36 @@ describe('Mediator', () => {
 
       // receive timestamp
       resetSpyCalls();
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10));
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()));
       checkTracePositionUpdateEvents([viewerStub0, viewerOverlay, timelineComponent], POSITION_10);
 
       // receive timestamp
       resetSpyCalls();
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_11));
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_11.getValueNs()));
       checkTracePositionUpdateEvents([viewerStub0, viewerOverlay, timelineComponent], POSITION_11);
+    });
+
+    it('propagates trace position update according to timezone', async () => {
+      const timezoneInfo = {
+        timezone: 'Asia/Kolkata',
+        locale: 'en-US',
+      };
+      const factory = new TimestampFactory(timezoneInfo);
+      spyOn(tracePipeline, 'getTimestampFactory').and.returnValue(factory);
+      await loadFiles();
+      await loadTraceView();
+
+      // receive timestamp
+      resetSpyCalls();
+
+      const expectedPosition = TracePosition.fromTimestamp(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(19800000000010n)
+      );
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(10n));
+      checkTracePositionUpdateEvents(
+        [viewerStub0, viewerOverlay, timelineComponent],
+        expectedPosition
+      );
     });
 
     it("doesn't propagate timestamp back to remote tool", async () => {
@@ -254,17 +278,17 @@ describe('Mediator', () => {
 
       // receive timestamp
       resetSpyCalls();
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10));
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()));
       checkTracePositionUpdateEvents([viewerStub0, viewerOverlay, timelineComponent]);
     });
 
     it('defers trace position propagation till traces are loaded and visualized', async () => {
       // keep timestamp for later
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10));
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()));
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // keep timestamp for later (replace previous one)
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_11));
+      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(TIMESTAMP_11.getValueNs()));
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // apply timestamp
@@ -272,7 +296,7 @@ describe('Mediator', () => {
       await loadTraceView();
 
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-        makeExpectedEvent(WinscopeEventType.TRACE_POSITION_UPDATE, POSITION_11)
+        makeExpectedTracePositionUpdate(POSITION_11)
       );
     });
   });
@@ -317,19 +341,23 @@ describe('Mediator', () => {
     // Note: overlay viewer is considered always visible
     resetSpyCalls();
     await mediator.onWinscopeEvent(new TabbedViewSwitched(viewerStub1.getViews()[0]));
-    checkTracePositionUpdateEvents(
-      [viewerStub1, viewerOverlay, timelineComponent, crossToolProtocol],
-      POSITION_10
-    );
+    checkTracePositionUpdateEvents([
+      viewerStub1,
+      viewerOverlay,
+      timelineComponent,
+      crossToolProtocol,
+    ]);
 
     // Position update -> update only visible viewers
     // Note: overlay viewer is considered always visible
     resetSpyCalls();
     await mediator.onWinscopeEvent(new TracePositionUpdate(POSITION_10));
-    checkTracePositionUpdateEvents(
-      [viewerStub1, viewerOverlay, timelineComponent, crossToolProtocol],
-      POSITION_10
-    );
+    checkTracePositionUpdateEvents([
+      viewerStub1,
+      viewerOverlay,
+      timelineComponent,
+      crossToolProtocol,
+    ]);
   });
 
   async function loadFiles() {
@@ -348,9 +376,7 @@ describe('Mediator', () => {
     resetSpyCalls();
     await mediator.onWinscopeEvent(new TabbedViewSwitched(viewerStub0.getViews()[0]));
 
-    expect(viewerStub0.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      makeExpectedEvent(WinscopeEventType.TRACE_POSITION_UPDATE)
-    );
+    expect(viewerStub0.onWinscopeEvent).toHaveBeenCalledOnceWith(makeExpectedTracePositionUpdate());
     expect(viewerStub1.onWinscopeEvent).not.toHaveBeenCalled();
   }
 
@@ -374,9 +400,8 @@ describe('Mediator', () => {
     tracePositionUpdateListeners.forEach((listener) => {
       const isVisible = listenersToBeNotified.includes(listener);
       if (isVisible) {
-        expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(
-          makeExpectedEvent(WinscopeEventType.TRACE_POSITION_UPDATE, position)
-        );
+        const expected = makeExpectedTracePositionUpdate(position);
+        expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
       } else {
         expect(listener.onWinscopeEvent).not.toHaveBeenCalled();
       }
@@ -389,16 +414,35 @@ describe('Mediator', () => {
     });
   }
 
-  function makeExpectedEvent(
-    type: WinscopeEventType,
-    tracePosition?: TracePosition
-  ): jasmine.ObjectContaining<any> {
-    const expectedObject: any = {type};
-    if (tracePosition) {
-      expectedObject.position = tracePosition;
+  function makeExpectedTracePositionUpdate(tracePosition?: TracePosition): WinscopeEvent {
+    if (tracePosition !== undefined) {
+      return new TracePositionUpdate(tracePosition);
     }
-    return jasmine.objectContaining({
-      type,
-    } as WinscopeEvent);
+    return {type: WinscopeEventType.TRACE_POSITION_UPDATE} as WinscopeEvent;
+  }
+
+  function tracePositionUpdateEqualityTester(first: any, second: any): boolean | undefined {
+    if (first instanceof TracePositionUpdate && second instanceof TracePositionUpdate) {
+      return testTracePositionUpdates(first, second);
+    }
+    if (
+      first instanceof TracePositionUpdate &&
+      second.type === WinscopeEventType.TRACE_POSITION_UPDATE
+    ) {
+      return first.type === second.type;
+    }
+    return undefined;
+  }
+
+  function testTracePositionUpdates(
+    event: TracePositionUpdate,
+    expectedEvent: TracePositionUpdate
+  ): boolean {
+    if (event.type !== expectedEvent.type) return false;
+    if (event.position.timestamp.getValueNs() !== expectedEvent.position.timestamp.getValueNs()) {
+      return false;
+    }
+    if (event.position.frame !== expectedEvent.position.frame) return false;
+    return true;
   }
 });

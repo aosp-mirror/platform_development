@@ -15,6 +15,7 @@
  */
 
 import {FileUtils} from 'common/file_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {CorruptedArchive, NoCommonTimestampType, NoInputFiles} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
@@ -39,6 +40,7 @@ export class TracePipeline {
   private tracesParserFactory = new TracesParserFactory();
   private traces = new Traces();
   private downloadArchiveFilename?: string;
+  private timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
 
   async loadFiles(
     files: File[],
@@ -113,6 +115,10 @@ export class TracePipeline {
     return this.downloadArchiveFilename ?? 'winscope';
   }
 
+  getTimestampFactory(): TimestampFactory {
+    return this.timestampFactory;
+  }
+
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
     const traces = this.getTraces();
     const screenRecording =
@@ -126,6 +132,7 @@ export class TracePipeline {
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
+    this.timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
     this.downloadArchiveFilename = undefined;
   }
 
@@ -135,6 +142,9 @@ export class TracePipeline {
     progressListener: ProgressListener | undefined
   ) {
     const filterResult = await this.traceFileFilter.filter(unzippedArchive, errorListener);
+    if (filterResult.timezoneInfo) {
+      this.timestampFactory = new TimestampFactory(filterResult.timezoneInfo);
+    }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
       errorListener.onError(new NoInputFiles());
@@ -143,6 +153,7 @@ export class TracePipeline {
 
     const legacyParsers = await new ParserFactory().createParsers(
       filterResult.legacy,
+      this.timestampFactory,
       progressListener,
       errorListener
     );
@@ -152,6 +163,7 @@ export class TracePipeline {
     if (filterResult.perfetto) {
       const parsers = await new PerfettoParserFactory().createParsers(
         filterResult.perfetto,
+        this.timestampFactory,
         progressListener
       );
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);

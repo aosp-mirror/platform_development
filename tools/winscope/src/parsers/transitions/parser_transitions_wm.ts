@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ParserTransitionsUtils} from './parser_transitions_utils';
@@ -30,10 +28,6 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
   );
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
 
   override getTraceType(): TraceType {
     return TraceType.WM_TRANSITION;
@@ -67,13 +61,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
     entry: com.android.server.wm.shell.ITransition
   ): undefined | Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-    if (type === TimestampType.ELAPSED) {
-      return new ElapsedTimestamp(0n);
-    }
-    if (type === TimestampType.REAL) {
-      return new RealTimestamp(assertDefined(this.realToElapsedTimeOffsetNs));
-    }
-    throw new Error('Timestamp type unsupported');
+    return this.timestampFactory.makeTimestampFromType(type, 0n, this.realToElapsedTimeOffsetNs);
   }
 
   private validateWmTransitionEntry(entry: com.android.server.wm.shell.ITransition) {
@@ -99,6 +87,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
       entry: entryProto,
       realToElapsedTimeOffsetNs: this.realToElapsedTimeOffsetNs,
       timestampType,
+      timestampFactory: this.timestampFactory,
     });
 
     return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);

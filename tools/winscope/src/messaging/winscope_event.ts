@@ -112,7 +112,7 @@ export class BuganizerAttachmentsDownloaded extends WinscopeEvent {
 export class RemoteToolBugreportReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED;
 
-  constructor(readonly bugreport: File, readonly timestamp?: Timestamp) {
+  constructor(readonly bugreport: File, readonly timestampNs?: bigint) {
     super();
   }
 }
@@ -120,7 +120,7 @@ export class RemoteToolBugreportReceived extends WinscopeEvent {
 export class RemoteToolTimestampReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED;
 
-  constructor(readonly timestamp: Timestamp) {
+  constructor(readonly timestampNs: bigint) {
     super();
   }
 }

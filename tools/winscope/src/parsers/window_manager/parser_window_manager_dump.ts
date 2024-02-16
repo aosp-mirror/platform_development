@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {com} from 'protos/windowmanager/latest/static';
 import {
@@ -24,7 +25,6 @@ import {
   VisitableParserCustomQuery,
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/index_types';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -35,10 +35,6 @@ import {ParserWmUtils} from './parser_window_manager_utils';
 import {WindowManagerServiceField} from './wm_tampered_protos';
 
 class ParserWindowManagerDump extends AbstractParser {
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.WINDOW_MANAGER;
   }
@@ -63,10 +59,8 @@ class ParserWindowManagerDump extends AbstractParser {
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(TimestampType.ELAPSED, 0n);
-    } else if (type === TimestampType.REAL) {
-      return new Timestamp(TimestampType.REAL, 0n);
+    if (NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, 0n)) {
+      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
     }
     return undefined;
   }

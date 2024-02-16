@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
@@ -71,7 +72,9 @@ describe('PresenterTransactions', () => {
               `,
       },
     };
-    await presenter.onAppEvent(TracePositionUpdate.fromTimestamp(new RealTimestamp(10n)));
+    await presenter.onAppEvent(
+      TracePositionUpdate.fromTimestamp(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n))
+    );
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
 

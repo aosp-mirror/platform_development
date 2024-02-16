@@ -31,18 +31,6 @@ export class AddRootProperties extends AddOperation<PropertyTreeNode> {
       assertDefined(id).getValue()
     );
 
-    const realToElapsedTimeOffsetNs = value.getChildByName('aborted')
-      ? wmData.getChildByName('realToElapsedTimeOffsetNs') ??
-        shellData.getChildByName('realToElapsedTimeOffsetNs')
-      : shellData.getChildByName('realToElapsedTimeOffsetNs') ??
-        wmData.getChildByName('realToElapsedTimeOffsetNs');
-
-    const realToElapsedTimeOffsetNsNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'realToElapsedTimeOffsetNs',
-      assertDefined(realToElapsedTimeOffsetNs).getValue()
-    );
-
-    return [rootIdNode, realToElapsedTimeOffsetNsNode];
+    return [rootIdNode];
   }
 }

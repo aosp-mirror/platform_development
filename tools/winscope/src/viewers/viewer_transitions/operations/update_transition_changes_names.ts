@@ -30,21 +30,25 @@ export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNod
       .getChildByName('targets')
       ?.getAllChildren()
       .forEach((target) => {
-        const layerId = assertDefined(target.getChildByName('layerId'));
-        const layerIdValue = Number(layerId.getValue());
-        const layerName = this.layerIdToName.get(layerIdValue);
-        if (layerName) {
-          layerId.setFormatter(new FixedStringFormatter(`${layerIdValue} ${layerName}`));
+        const layerId = target.getChildByName('layerId');
+        if (layerId) {
+          const layerIdValue = Number(layerId.getValue());
+          const layerName = this.layerIdToName.get(layerIdValue);
+          if (layerName) {
+            layerId.setFormatter(new FixedStringFormatter(`${layerIdValue} ${layerName}`));
+          }
         }
 
-        const windowId = assertDefined(target.getChildByName('windowId'));
-        const windowIdString = windowId.getValue().toString(16);
-        const windowTitle = this.windowTokenToTitle.get(windowIdString);
-        windowId.setFormatter(
-          new FixedStringFormatter(
-            windowTitle ? `0x${windowIdString} (${windowTitle})` : `0x${windowIdString}`
-          )
-        );
+        const windowId = target.getChildByName('windowId');
+        if (windowId) {
+          const windowIdString = windowId.getValue().toString(16);
+          const windowTitle = this.windowTokenToTitle.get(windowIdString);
+          windowId.setFormatter(
+            new FixedStringFormatter(
+              windowTitle ? `0x${windowIdString} (${windowTitle})` : `0x${windowIdString}`
+            )
+          );
+        }
       });
   }
 }
