@@ -15,10 +15,9 @@
 #ifndef API_LEVEL_H_
 #define API_LEVEL_H_
 
-#include <llvm/ADT/Optional.h>
-
 #include <istream>
 #include <map>
+#include <optional>
 #include <string>
 
 
@@ -37,7 +36,7 @@ class ApiLevelMap {
   // Load a json object and return whether the operation succeeds.
   bool Load(std::istream &stream);
 
-  llvm::Optional<ApiLevel> Parse(const std::string &api) const;
+  std::optional<ApiLevel> Parse(const std::string &api) const;
 
  private:
   std::map<std::string, ApiLevel> codename_to_api_level_;
