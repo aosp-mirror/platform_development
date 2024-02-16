@@ -41,6 +41,7 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Spinner
@@ -66,6 +67,7 @@ class ShareTestActivity : Activity() {
     private lateinit var mediaTypeHeader: View
     private lateinit var richText: CheckBox
     private lateinit var albumCheck: CheckBox
+    private lateinit var metadata: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +94,7 @@ class ShareTestActivity : Activity() {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
         }
+        metadata = requireViewById<EditText>(R.id.metadata)
 
         textSelection = requireViewById<RadioGroup>(R.id.text_selection).apply {
             check(R.id.short_text)
@@ -280,6 +283,10 @@ class ShareTestActivity : Activity() {
             R.id.five_actions -> chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS, getCustomActions(5)
             )
+        }
+
+        if (metadata.text.isNotEmpty()) {
+            chooserIntent.putExtra(Intent.EXTRA_METADATA_TEXT, metadata.text)
         }
 
         startActivity(chooserIntent)

@@ -191,6 +191,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/title"
+                android:text="Metadata"
+                />
+
+            <EditText
+                android:id="@+id/metadata"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/title"
                 android:text="Advanced Options"
             />
 
