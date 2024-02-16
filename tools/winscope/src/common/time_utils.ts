@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType, TimezoneInfo} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from './timestamp_factory';
 
 export class TimeUtils {
@@ -133,10 +133,10 @@ export class TimeUtils {
     return ts1;
   }
 
-  static addTimezoneOffset(timezoneInfo: TimezoneInfo, timestampNs: bigint): bigint {
+  static addTimezoneOffset(timezone: string, timestampNs: bigint): bigint {
     const utcDate = new Date(Number(timestampNs / 1000000n));
-    const timezoneDateFormatted = utcDate.toLocaleString(timezoneInfo.locale, {
-      timeZone: timezoneInfo.timezone,
+    const timezoneDateFormatted = utcDate.toLocaleString('en-US', {
+      timeZone: timezone,
     });
     const timezoneDate = new Date(timezoneDateFormatted);
     const hoursDiff = timezoneDate.getHours() - utcDate.getHours();

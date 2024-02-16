@@ -341,19 +341,39 @@ describe('TimeUtils', () => {
     expect(TimeUtils.format(timestamp)).toEqual('100ms0ns');
   });
 
-  it('addTimezoneOffset', () => {
-    const timestampNs = 1000000000000n;
-    expect(
-      TimeUtils.addTimezoneOffset({timezone: 'Europe/London', locale: 'en-GB'}, timestampNs)
-    ).toEqual(4600000000000n);
-    expect(
-      TimeUtils.addTimezoneOffset({timezone: 'Europe/Zurich', locale: 'en-US'}, timestampNs)
-    ).toEqual(4600000000000n);
-    expect(
-      TimeUtils.addTimezoneOffset({timezone: 'America/Los_Angeles', locale: 'en-US'}, timestampNs)
-    ).toEqual(58600000000000n);
-    expect(
-      TimeUtils.addTimezoneOffset({timezone: 'Asia/Kolkata', locale: 'en-US'}, timestampNs)
-    ).toEqual(20800000000000n);
+  it('addTimezoneOffset for elapsed timestamps', () => {
+    const elapsedTimestampNs = 1000000000000n;
+    expect(TimeUtils.addTimezoneOffset('Europe/London', elapsedTimestampNs)).toEqual(
+      4600000000000n
+    );
+    expect(TimeUtils.addTimezoneOffset('Europe/Zurich', elapsedTimestampNs)).toEqual(
+      4600000000000n
+    );
+    expect(TimeUtils.addTimezoneOffset('America/Los_Angeles', elapsedTimestampNs)).toEqual(
+      58600000000000n
+    );
+    expect(TimeUtils.addTimezoneOffset('Asia/Kolkata', elapsedTimestampNs)).toEqual(
+      20800000000000n
+    );
+  });
+
+  it('addTimezoneOffset for real timestamps', () => {
+    const realTimestampNs = 1706094750112797658n;
+    expect(TimeUtils.addTimezoneOffset('Europe/London', realTimestampNs)).toEqual(
+      1706094750112797658n
+    );
+    expect(TimeUtils.addTimezoneOffset('Europe/Zurich', realTimestampNs)).toEqual(
+      1706098350112797658n
+    );
+    expect(TimeUtils.addTimezoneOffset('America/Los_Angeles', realTimestampNs)).toEqual(
+      1706065950112797658n
+    );
+    expect(TimeUtils.addTimezoneOffset('Asia/Kolkata', realTimestampNs)).toEqual(
+      1706114550112797658n
+    );
+  });
+
+  it('addTimezoneOffset throws for invalid timezone', () => {
+    expect(() => TimeUtils.addTimezoneOffset('Invalid/Timezone', 10n)).toThrow();
   });
 });
