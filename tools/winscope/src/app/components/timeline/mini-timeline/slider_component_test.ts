@@ -26,7 +26,8 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp, TimeRange} from 'common/time';
+import {TimeRange} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {dragElement} from 'test/utils';
 import {TracePosition} from 'trace/trace_position';
 import {MIN_SLIDER_WIDTH, SliderComponent} from './slider_component';
@@ -35,6 +36,12 @@ describe('SliderComponent', () => {
   let fixture: ComponentFixture<SliderComponent>;
   let component: SliderComponent;
   let htmlElement: HTMLElement;
+  const time100 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n);
+  const time125 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(125n);
+  const time126 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(126n);
+  const time150 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(150n);
+  const time175 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(175n);
+  const time200 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(200n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -61,14 +68,14 @@ describe('SliderComponent', () => {
     htmlElement = fixture.nativeElement;
 
     component.fullRange = {
-      from: new RealTimestamp(100n),
-      to: new RealTimestamp(200n),
+      from: time100,
+      to: time200,
     };
     component.zoomRange = {
-      from: new RealTimestamp(125n),
-      to: new RealTimestamp(175n),
+      from: time125,
+      to: time175,
     };
-    component.currentPosition = TracePosition.fromTimestamp(new RealTimestamp(150n));
+    component.currentPosition = TracePosition.fromTimestamp(time150);
 
     fixture.detectChanges();
   });
@@ -96,12 +103,12 @@ describe('SliderComponent', () => {
 
   it('has min width', () => {
     component.fullRange = {
-      from: new RealTimestamp(100n),
-      to: new RealTimestamp(200n),
+      from: time100,
+      to: time200,
     };
     component.zoomRange = {
-      from: new RealTimestamp(125n),
-      to: new RealTimestamp(126n),
+      from: time125,
+      to: time126,
     };
 
     fixture.detectChanges();
@@ -282,8 +289,8 @@ describe('SliderComponent', () => {
 
   it('cannot slide left cropper past right cropper', fakeAsync(() => {
     component.zoomRange = {
-      from: new RealTimestamp(125n),
-      to: new RealTimestamp(125n),
+      from: time125,
+      to: time125,
     };
     fixture.detectChanges();
 
@@ -309,8 +316,8 @@ describe('SliderComponent', () => {
 
   it('cannot slide right cropper past left cropper', fakeAsync(() => {
     component.zoomRange = {
-      from: new RealTimestamp(125n),
-      to: new RealTimestamp(125n),
+      from: time125,
+      to: time125,
     };
     fixture.detectChanges();
 

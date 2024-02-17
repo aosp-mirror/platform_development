@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
@@ -23,7 +23,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {DEFAULT_PROPERTY_FORMATTER, ELAPSED_TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {DEFAULT_PROPERTY_FORMATTER, TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataMessage} from './ui_data';
@@ -38,36 +38,12 @@ describe('ViewerProtoLogPresenter', () => {
   let outputUiData: undefined | UiData;
 
   beforeEach(async () => {
-    const time10 = new RealTimestamp(10n);
-    const time11 = new RealTimestamp(11n);
-    const time12 = new RealTimestamp(12n);
-
-    inputMessages = [
-      {
-        originalIndex: 0,
-        text: 'text0',
-        time: '10ns',
-        tag: 'tag0',
-        level: 'level0',
-        at: 'sourcefile0',
-      },
-      {
-        originalIndex: 1,
-        text: 'text1',
-        time: '20ns',
-        tag: 'tag1',
-        level: 'level1',
-        at: 'sourcefile1',
-      },
-      {
-        originalIndex: 2,
-        text: 'text2',
-        time: '30ns',
-        tag: 'tag2',
-        level: 'level2',
-        at: 'sourcefile2',
-      },
-    ];
+    const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+    const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+    const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+    const elapsedTime10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+    const elapsedTime20 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
+    const elapsedTime30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
 
     const entries = [
       new PropertyTreeBuilder()
@@ -75,7 +51,7 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text0', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: 10n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'timestamp', value: elapsedTime10, formatter: TIMESTAMP_FORMATTER},
           {name: 'tag', value: 'tag0', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'level', value: 'level0', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'at', value: 'sourcefile0', formatter: DEFAULT_PROPERTY_FORMATTER},
@@ -87,7 +63,7 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text1', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: 20n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'timestamp', value: elapsedTime20, formatter: TIMESTAMP_FORMATTER},
           {name: 'tag', value: 'tag1', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'level', value: 'level1', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'at', value: 'sourcefile1', formatter: DEFAULT_PROPERTY_FORMATTER},
@@ -99,12 +75,39 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text2', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: 30n, formatter: ELAPSED_TIMESTAMP_FORMATTER},
+          {name: 'timestamp', value: elapsedTime30, formatter: TIMESTAMP_FORMATTER},
           {name: 'tag', value: 'tag2', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'level', value: 'level2', formatter: DEFAULT_PROPERTY_FORMATTER},
           {name: 'at', value: 'sourcefile2', formatter: DEFAULT_PROPERTY_FORMATTER},
         ])
         .build(),
+    ];
+
+    inputMessages = [
+      {
+        originalIndex: 0,
+        text: 'text0',
+        time: assertDefined(entries[0].getChildByName('timestamp')),
+        tag: 'tag0',
+        level: 'level0',
+        at: 'sourcefile0',
+      },
+      {
+        originalIndex: 1,
+        text: 'text1',
+        time: assertDefined(entries[1].getChildByName('timestamp')),
+        tag: 'tag1',
+        level: 'level1',
+        at: 'sourcefile1',
+      },
+      {
+        originalIndex: 2,
+        text: 'text2',
+        time: assertDefined(entries[2].getChildByName('timestamp')),
+        tag: 'tag2',
+        level: 'level2',
+        at: 'sourcefile2',
+      },
     ];
 
     trace = new TraceBuilder<PropertyTreeNode>()

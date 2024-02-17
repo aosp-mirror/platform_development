@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -26,6 +27,7 @@ describe('Perfetto ParserTransactions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = await UnitTestUtils.getPerfettoParser(
       TraceType.TRANSACTIONS,
       'traces/perfetto/transactions_trace.perfetto-trace'
@@ -42,9 +44,9 @@ describe('Perfetto ParserTransactions', () => {
     expect(timestamps.length).toEqual(712);
 
     const expected = [
-      new ElapsedTimestamp(2450981445n),
-      new ElapsedTimestamp(2517952515n),
-      new ElapsedTimestamp(4021151449n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2517952515n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(4021151449n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
@@ -55,11 +57,27 @@ describe('Perfetto ParserTransactions', () => {
     expect(timestamps.length).toEqual(712);
 
     const expected = [
-      new RealTimestamp(1659507541051480997n),
-      new RealTimestamp(1659507541118452067n),
-      new RealTimestamp(1659507542621651001n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541051480997n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541118452067n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507542621651001n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
+  });
+
+  it('applies timezone info to real timestamps only', async () => {
+    const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
+      TraceType.TRANSACTIONS,
+      'traces/perfetto/transactions_trace.perfetto-trace',
+      true
+    );
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.TRANSACTIONS);
+
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n)
+    );
+    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659527341051480997n)
+    );
   });
 
   it('retrieves trace entry from real timestamp', async () => {

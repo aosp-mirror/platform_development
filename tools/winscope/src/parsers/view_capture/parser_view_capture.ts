@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {ParsingUtils} from 'parsers/parsing_utils';
 import {com} from 'protos/viewcapture/latest/static';
 import {Parser} from 'trace/parser';
@@ -27,7 +28,10 @@ import {ExportedData} from './vc_tampered_protos';
 export class ParserViewCapture {
   private readonly windowParsers: Array<Parser<HierarchyTreeNode>> = [];
 
-  constructor(private readonly traceFile: TraceFile) {}
+  constructor(
+    private readonly traceFile: TraceFile,
+    private readonly timestampFactory: TimestampFactory
+  ) {}
 
   async parse() {
     const traceBuffer = new Uint8Array(await this.traceFile.file.arrayBuffer());
@@ -49,7 +53,8 @@ export class ParserViewCapture {
           ParserViewCapture.toTraceType(windowData),
           realToElapsedTimeOffsetNs,
           assertDefined(exportedData.package),
-          assertDefined(exportedData.classname)
+          assertDefined(exportedData.classname),
+          this.timestampFactory
         )
       )
     );

@@ -16,6 +16,7 @@
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
@@ -91,8 +92,12 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private layersSnapshotProtoTransformer: FakeProtoTransformer;
   private layerProtoTransformer: FakeProtoTransformer;
 
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
+  constructor(
+    traceFile: TraceFile,
+    traceProcessor: WasmEngineProxy,
+    timestampFactory: TimestampFactory
+  ) {
+    super(traceFile, traceProcessor, timestampFactory);
     this.layersSnapshotProtoTransformer = new FakeProtoTransformer(
       assertDefined(ParserSurfaceFlinger.entryField.tamperedMessageType)
     );

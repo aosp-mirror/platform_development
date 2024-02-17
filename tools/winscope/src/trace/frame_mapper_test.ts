@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
@@ -28,16 +28,16 @@ import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 describe('FrameMapper', () => {
-  const time0 = new RealTimestamp(0n);
-  const time1 = new RealTimestamp(1n);
-  const time2 = new RealTimestamp(2n);
-  const time3 = new RealTimestamp(3n);
-  const time4 = new RealTimestamp(4n);
-  const time5 = new RealTimestamp(5n);
-  const time6 = new RealTimestamp(6n);
-  const time7 = new RealTimestamp(7n);
-  const time8 = new RealTimestamp(8n);
-  const time10seconds = new RealTimestamp(10n * 1000000000n);
+  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+  const time1 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n);
+  const time2 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n);
+  const time3 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n);
+  const time4 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n);
+  const time5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
+  const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
+  const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
+  const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
+  const time10seconds = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n * 1000000000n);
 
   describe('ProtoLog <-> WindowManager', () => {
     let protoLog: Trace<PropertyTreeNode>;

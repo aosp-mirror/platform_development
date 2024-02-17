@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+
 export interface UiDataMessage {
   readonly originalIndex: number;
   readonly text: string;
-  readonly time: string;
+  readonly time: PropertyTreeNode;
   readonly tag: string;
   readonly level: string;
   readonly at: string;

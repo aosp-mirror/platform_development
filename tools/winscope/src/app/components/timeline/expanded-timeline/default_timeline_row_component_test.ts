@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
@@ -209,13 +209,16 @@ describe('DefaultTimelineRowComponent', () => {
       .setType(TraceType.TRANSITION)
       .setEntries([{}, {}, {}, {}])
       .setTimestamps([
-        new RealTimestamp(10n),
-        new RealTimestamp(12n),
-        new RealTimestamp(15n),
-        new RealTimestamp(70n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(70n),
       ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(low), to: new RealTimestamp(high)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(low),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(high),
+    };
   }
 
   async function drawCorrectEntryOnClick(

@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceFile} from 'trace/trace_file';
@@ -24,10 +25,11 @@ import {ParserScreenshot} from './parser_screenshot';
 
 describe('ParserScreenshot', () => {
   let parser: ParserScreenshot;
+  let file: File;
 
   beforeAll(async () => {
-    const file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
-    parser = new ParserScreenshot(new TraceFile(file));
+    file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
+    parser = new ParserScreenshot(new TraceFile(file), NO_TIMEZONE_OFFSET_FACTORY);
     await parser.parse();
   });
 
@@ -38,15 +40,33 @@ describe('ParserScreenshot', () => {
   it('provides elapsed timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
 
-    const expected = new Timestamp(TimestampType.ELAPSED, 0n);
+    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
   it('provides real timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
 
-    const expected = new Timestamp(TimestampType.REAL, 0n);
+    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
+  });
+
+  it('does not apply timezone info', async () => {
+    const parserWithTimezoneInfo = new ParserScreenshot(
+      new TraceFile(file),
+      UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE
+    );
+    await parserWithTimezoneInfo.parse();
+
+    const expectedElapsed = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
+    assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).forEach((timestamp) =>
+      expect(timestamp).toEqual(expectedElapsed)
+    );
+
+    const expectedReal = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+    assertDefined(parser.getTimestamps(TimestampType.REAL)).forEach((timestamp) =>
+      expect(timestamp).toEqual(expectedReal)
+    );
   });
 
   it('retrieves entry', async () => {

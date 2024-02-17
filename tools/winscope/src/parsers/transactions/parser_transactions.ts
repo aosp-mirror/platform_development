@@ -28,7 +28,6 @@ import {
   VisitableParserCustomQuery,
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/trace';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -50,11 +49,6 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   ];
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-
-  constructor(trace: TraceFile) {
-    super(trace);
-    this.realToElapsedTimeOffsetNs = undefined;
-  }
 
   override getTraceType(): TraceType {
     return TraceType.TRANSACTIONS;
@@ -79,13 +73,12 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     type: TimestampType,
     entryProto: android.surfaceflinger.proto.ITransactionTraceEntry
   ): undefined | Timestamp {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString()));
-    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(
+    const elapsedRealtimeNanos = BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString());
+    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+      return this.timestampFactory.makeTimestampFromType(
         type,
-        this.realToElapsedTimeOffsetNs +
-          BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString())
+        elapsedRealtimeNanos,
+        this.realToElapsedTimeOffsetNs
       );
     }
     return undefined;

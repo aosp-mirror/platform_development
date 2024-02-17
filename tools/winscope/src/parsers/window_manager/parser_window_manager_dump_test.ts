@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -41,13 +42,28 @@ describe('ParserWindowManagerDump', () => {
   });
 
   it('provides elapsed timestamp (always zero)', () => {
-    const expected = [new Timestamp(TimestampType.ELAPSED, 0n)];
+    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
   });
 
   it('provides real timestamp (always zero)', () => {
-    const expected = [new Timestamp(TimestampType.REAL, 0n)];
+    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
+  });
+
+  it('does not apply timezone info', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/dump_WindowManager.pb',
+      true
+    )) as Parser<HierarchyTreeNode>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+
+    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
+    ]);
+    expect(parser.getTimestamps(TimestampType.REAL)).toEqual([
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+    ]);
   });
 
   it('retrieves trace entry', async () => {

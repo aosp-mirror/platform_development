@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, RealTimestamp, TimeRange, Timestamp, TimestampType} from 'common/time';
+import {TimeRange, Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineUtils {
@@ -23,54 +24,68 @@ export class TimelineUtils {
     timestampType: TimestampType,
     fullTimeRange: TimeRange
   ): TimeRange | undefined {
-    const dispatchTimeLong = transition
-      .getChildByName('shellData')
+    const shellData = transition.getChildByName('shellData');
+    const wmData = transition.getChildByName('wmData');
+
+    const aborted = transition.getChildByName('aborted')?.getValue() ?? false;
+
+    const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
       ?.getValue();
-    const createTimeLong = transition
-      .getChildByName('wmData')
+    const createTimestamp: Timestamp | undefined = wmData
       ?.getChildByName('createTimeNs')
       ?.getValue();
-    const finishOrAbortTimeLong = transition.getChildByName('aborted')?.getValue()
-      ? transition.getChildByName('shellData')?.getChildByName('abortTimeNs')?.getValue()
-      : transition.getChildByName('wmData')?.getChildByName('finishTimeNs')?.getValue();
+    const finishOrAbortTimestamp: Timestamp | undefined = aborted
+      ? shellData?.getChildByName('abortTimeNs')?.getValue()
+      : wmData?.getChildByName('finishTimeNs')?.getValue();
 
     // currently we only render transitions during 'play' stage, so
     // do not render if no dispatch time and no finish/shell abort time
     // or if transition created but never dispatched to shell
     // TODO (b/324056564): visualise transition lifecycle in timeline
-    if ((!dispatchTimeLong && !finishOrAbortTimeLong) || (!dispatchTimeLong && createTimeLong)) {
+    if (
+      (!dispatchTimestamp && !finishOrAbortTimestamp) ||
+      (!dispatchTimestamp && createTimestamp)
+    ) {
       return undefined;
     }
 
-    let startTime: Timestamp;
-    let finishTime: Timestamp;
+    let dispatchTimeNs: bigint | undefined;
+    let finishTimeNs: bigint | undefined;
 
-    if (timestampType === TimestampType.REAL) {
-      const realToElapsedTimeOffsetNs =
-        transition.getChildByName('realToElapsedTimeOffsetNs')?.getValue() ?? 0n;
-      startTime = new RealTimestamp(
-        dispatchTimeLong
-          ? BigInt(dispatchTimeLong.toString()) + realToElapsedTimeOffsetNs
-          : fullTimeRange.from.getValueNs()
-      );
-      finishTime = new RealTimestamp(
-        finishOrAbortTimeLong
-          ? BigInt(finishOrAbortTimeLong.toString()) + realToElapsedTimeOffsetNs
-          : fullTimeRange.to.getValueNs()
-      );
-    } else if (timestampType === TimestampType.ELAPSED) {
-      startTime = new ElapsedTimestamp(
-        dispatchTimeLong ? BigInt(dispatchTimeLong.toString()) : fullTimeRange.from.getValueNs()
-      );
-      finishTime = new ElapsedTimestamp(
-        finishOrAbortTimeLong
-          ? BigInt(finishOrAbortTimeLong.toString())
-          : fullTimeRange.to.getValueNs()
-      );
+    const timeRangeMin = fullTimeRange.from.getValueNs();
+    const timeRangeMax = fullTimeRange.to.getValueNs();
+
+    if (timestampType === TimestampType.ELAPSED) {
+      const startOffset =
+        shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue().getValueNs() ??
+        0n;
+      const finishOffset = aborted
+        ? startOffset
+        : shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue().getValueNs() ??
+          0n;
+
+      dispatchTimeNs = dispatchTimestamp
+        ? dispatchTimestamp.getValueNs() - startOffset
+        : timeRangeMin;
+      finishTimeNs = finishOrAbortTimestamp
+        ? finishOrAbortTimestamp.getValueNs() - finishOffset
+        : timeRangeMax;
     } else {
-      throw new Error('Unsupported timestamp type');
+      dispatchTimeNs = dispatchTimestamp ? dispatchTimestamp.getValueNs() : timeRangeMin;
+      finishTimeNs = finishOrAbortTimestamp ? finishOrAbortTimestamp.getValueNs() : timeRangeMax;
     }
+
+    const startTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      timestampType,
+      dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
+      0n
+    );
+    const finishTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      timestampType,
+      finishTimeNs,
+      0n
+    );
 
     return {
       from: startTime,

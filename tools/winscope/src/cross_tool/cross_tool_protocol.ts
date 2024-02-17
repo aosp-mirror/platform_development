@@ -15,7 +15,7 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
 import {
   RemoteToolBugreportReceived,
   RemoteToolTimestampReceived,
@@ -109,13 +109,10 @@ export class CrossToolProtocol implements WinscopeEventEmitter, WinscopeEventLis
   }
 
   private async onMessageBugreportReceived(message: MessageBugReport) {
-    const timestamp =
-      message.timestampNs !== undefined ? new RealTimestamp(message.timestampNs) : undefined;
-    await this.emitEvent(new RemoteToolBugreportReceived(message.file, timestamp));
+    await this.emitEvent(new RemoteToolBugreportReceived(message.file, message.timestampNs));
   }
 
   private async onMessageTimestampReceived(message: MessageTimestamp) {
-    const timestamp = new RealTimestamp(message.timestampNs);
-    await this.emitEvent(new RemoteToolTimestampReceived(timestamp));
+    await this.emitEvent(new RemoteToolTimestampReceived(message.timestampNs));
   }
 }

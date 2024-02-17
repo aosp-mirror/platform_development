@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
@@ -80,7 +81,8 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     private readonly traceType: TraceType,
     private readonly realToElapsedTimeOffsetNs: bigint,
     private readonly packageName: string,
-    private readonly classNames: string[]
+    private readonly classNames: string[],
+    private readonly timestampFactory: TimestampFactory
   ) {
     /*
       TODO: Enable this once multiple ViewCapture Tabs becomes generic. Right now it doesn't matter since
@@ -130,17 +132,22 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   }
 
   private decodeTimestamps(): Map<TimestampType, Timestamp[]> {
-    const timeStampMap = new Map<TimestampType, Timestamp[]>();
+    const timestampMap = new Map<TimestampType, Timestamp[]>();
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
       const timestamps: Timestamp[] = [];
       let areTimestampsValid = true;
 
       for (const entry of this.frameData) {
-        const timestamp = Timestamp.from(
-          type,
-          BigInt(assertDefined(entry.timestamp).toString()),
-          this.realToElapsedTimeOffsetNs
-        );
+        const timestampNs = BigInt(assertDefined(entry.timestamp).toString());
+
+        let timestamp: Timestamp | undefined;
+        if (this.timestampFactory.canMakeTimestampFromType(type, 0n)) {
+          timestamp = this.timestampFactory.makeTimestampFromType(
+            type,
+            timestampNs,
+            this.realToElapsedTimeOffsetNs
+          );
+        }
         if (timestamp === undefined) {
           areTimestampsValid = false;
           break;
@@ -149,10 +156,10 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
       }
 
       if (areTimestampsValid) {
-        timeStampMap.set(type, timestamps);
+        timestampMap.set(type, timestamps);
       }
     }
-    return timeStampMap;
+    return timestampMap;
   }
 
   private makeHierarchyTree(

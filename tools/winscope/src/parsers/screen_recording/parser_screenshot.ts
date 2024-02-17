@@ -15,17 +15,13 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
   private static readonly MAGIC_NUMBER = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]; // currently only support png files
-
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
 
   override getTraceType(): TraceType {
     return TraceType.SCREENSHOT;
@@ -36,10 +32,8 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
   }
 
   override getTimestamp(type: TimestampType, decodedEntry: number): Timestamp | undefined {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(TimestampType.ELAPSED, 0n);
-    } else if (type === TimestampType.REAL) {
-      return new Timestamp(TimestampType.REAL, 0n);
+    if (NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, 0n)) {
+      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
     }
     return undefined;
   }

@@ -16,6 +16,9 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
+import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -76,9 +79,14 @@ import {UiData} from './ui_data';
           *cdkVirtualFor="let message of uiData.messages; let i = index"
           class="message"
           [attr.item-id]="i"
-          [class.current-message]="isCurrentMessage(i)">
+          [class.current]="isCurrentMessage(i)">
           <div class="time">
-            <span class="mat-body-1">{{ message.time }}</span>
+            <button
+              mat-button
+              [color]="isCurrentMessage(i) ? 'secondary' : 'primary'"
+              (click)="onTimestampClicked(message.time)">
+              {{ message.time.formattedValue() }}
+            </button>
           </div>
           <div class="log-level">
             <span class="mat-body-1">{{ message.level }}</span>
@@ -120,11 +128,6 @@ import {UiData} from './ui_data';
         display: flex;
         flex-direction: row;
         overflow-wrap: anywhere;
-      }
-
-      .message.current-message {
-        background-color: #365179;
-        color: white;
       }
 
       .time {
@@ -175,12 +178,15 @@ import {UiData} from './ui_data';
         font-size: 12px;
       }
     `,
+    currentElementStyle,
+    timeButtonStyle,
   ],
 })
 export class ViewerProtologComponent {
   uiData: UiData = UiData.EMPTY;
 
   private searchString = '';
+  private lastClicked = '';
 
   @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
 
@@ -189,7 +195,12 @@ export class ViewerProtologComponent {
   @Input()
   set inputData(data: UiData) {
     this.uiData = data;
-    if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
+    if (
+      this.uiData.currentMessageIndex !== undefined &&
+      this.scrollComponent &&
+      this.lastClicked !==
+        this.uiData.messages[this.uiData.currentMessageIndex].time.formattedValue()
+    ) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }
   }
@@ -214,6 +225,11 @@ export class ViewerProtologComponent {
     if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }
+  }
+
+  onTimestampClicked(timestamp: PropertyTreeNode) {
+    this.lastClicked = timestamp.formattedValue();
+    this.emitEvent(Events.TimestampSelected, timestamp);
   }
 
   isCurrentMessage(index: number): boolean {

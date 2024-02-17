@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from 'common/time';
+import {assertDefined} from 'common/assert_utils';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -24,6 +26,7 @@ describe('ParserInputMethodService', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
+      jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/InputMethodService.pb'
       )) as Parser<HierarchyTreeNode>;
@@ -34,12 +37,12 @@ describe('ParserInputMethodService', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      const expected = [new Timestamp(TimestampType.ELAPSED, 16578752896n)];
+      const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(16578752896n)];
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
     it('provides real timestamps', () => {
-      const expected = [new Timestamp(TimestampType.REAL, 1659107091180519857n)];
+      const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107091180519857n)];
       expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
     });
 
@@ -47,6 +50,22 @@ describe('ParserInputMethodService', () => {
       const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
       expect(entry.id).toEqual('InputMethodService entry');
+    });
+
+    it('applies timezone info to real timestamps only', async () => {
+      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/InputMethodService.pb',
+        true
+      )) as Parser<HierarchyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
+
+      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).toEqual([
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(16578752896n),
+      ]);
+
+      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).toEqual([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126891180519857n),
+      ]);
     });
   });
 
@@ -64,8 +83,8 @@ describe('ParserInputMethodService', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      expect(parser.getTimestamps(TimestampType.ELAPSED)![0]).toEqual(
-        new Timestamp(TimestampType.ELAPSED, 1149230019887n)
+      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1149230019887n)
       );
     });
 
@@ -77,6 +96,18 @@ describe('ParserInputMethodService', () => {
       const entry = await parser.getEntry(0, TimestampType.ELAPSED);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
       expect(entry.id).toEqual('InputMethodService entry');
+    });
+
+    it('does not apply timezone info to elapsed timestamps', async () => {
+      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+        'traces/elapsed_timestamp/InputMethodService.pb',
+        true
+      )) as Parser<HierarchyTreeNode>;
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
+
+      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1149230019887n)
+      );
     });
   });
 });

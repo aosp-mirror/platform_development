@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UnsupportedFileFormat} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
@@ -57,6 +58,7 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
+    timestampFactory: TimestampFactory,
     progressListener?: ProgressListener,
     errorListener?: WinscopeErrorListener
   ): Promise<FileAndParser[]> {
@@ -69,7 +71,7 @@ export class ParserFactory {
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const p = new ParserType(traceFile);
+          const p = new ParserType(traceFile, timestampFactory);
           await p.parse();
           hasFoundParser = true;
           if (p instanceof ParserViewCapture) {

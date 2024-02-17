@@ -17,6 +17,8 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {Transition} from 'trace/transition';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
+import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -29,6 +31,7 @@ import {UiData} from './ui_data';
           <div class="id mat-body-2">Id</div>
           <div class="type mat-body-2">Type</div>
           <div class="send-time mat-body-2">Send Time</div>
+          <div class="dispatch-time mat-body-2">Dispatch Time</div>
           <div class="duration mat-body-2">Duration</div>
           <div class="status mat-body-2">Status</div>
         </div>
@@ -36,7 +39,7 @@ import {UiData} from './ui_data';
           <div
             *cdkVirtualFor="let transition of uiData.entries; let i = index"
             class="entry table-row"
-            [class.current]="isCurrentTransition(transition)"
+            [class.selected]="isSelectedTransition(transition)"
             (click)="onTransitionClicked(transition)">
             <div class="id">
               <span class="mat-body-1">{{ transition.id }}</span>
@@ -44,9 +47,25 @@ import {UiData} from './ui_data';
             <div class="type">
               <span class="mat-body-1">{{ transition.type }}</span>
             </div>
-            <div class="send-time">
-              <span *ngIf="transition.sendTime" class="mat-body-1">{{ transition.sendTime }}</span>
+            <div class="send-time time">
+              <button
+                mat-button
+                color="primary"
+                *ngIf="transition.sendTime"
+                (click)="onTimestampClicked(transition.sendTime)">
+                {{ transition.sendTime.formattedValue() }}
+              </button>
               <span *ngIf="!transition.sendTime" class="mat-body-1"> n/a </span>
+            </div>
+            <div class="dispatch-time time">
+              <button
+                mat-button
+                color="primary"
+                *ngIf="transition.dispatchTime"
+                (click)="onTimestampClicked(transition.dispatchTime)">
+                {{ transition.dispatchTime.formattedValue() }}
+              </button>
+              <span *ngIf="!transition.dispatchTime" class="mat-body-1"> n/a </span>
             </div>
             <div class="duration">
               <span *ngIf="transition.duration" class="mat-body-1">{{ transition.duration }}</span>
@@ -133,11 +152,6 @@ import {UiData} from './ui_data';
         border-bottom: solid 1px rgba(0, 0, 0, 0.5);
       }
 
-      .scroll .entry.current {
-        color: white;
-        background-color: #365179;
-      }
-
       .table-row > div {
         padding: 16px;
       }
@@ -148,6 +162,10 @@ import {UiData} from './ui_data';
 
       .table-row .type {
         flex: 2;
+      }
+
+      .table-row .dispatch-time {
+        flex: 4;
       }
 
       .table-row .send-time {
@@ -169,7 +187,7 @@ import {UiData} from './ui_data';
         gap: 5px;
       }
 
-      .current .status mat-icon {
+      .selected .status mat-icon {
         color: white !important;
       }
 
@@ -186,13 +204,9 @@ import {UiData} from './ui_data';
         flex-grow: 1;
         padding: 0.5rem;
       }
-
-      .selected-transition {
-        padding: 1rem;
-        border-bottom: solid 1px rgba(0, 0, 0, 0.12);
-        flex-grow: 1;
-      }
     `,
+    selectedElementStyle,
+    timeButtonStyle,
   ],
 })
 export class ViewerTransitionsComponent {
@@ -207,7 +221,7 @@ export class ViewerTransitionsComponent {
     this.emitEvent(Events.TransitionSelected, transition.propertiesTree);
   }
 
-  isCurrentTransition(transition: Transition): boolean {
+  isSelectedTransition(transition: Transition): boolean {
     return (
       transition.id ===
         this.uiData.selectedTransition
@@ -220,6 +234,10 @@ export class ViewerTransitionsComponent {
           ?.getChildByName('id')
           ?.getValue()
     );
+  }
+
+  onTimestampClicked(timestamp: PropertyTreeNode) {
+    this.emitEvent(Events.TimestampSelected, timestamp);
   }
 
   emitEvent(event: string, propertiesTree: PropertyTreeNode) {

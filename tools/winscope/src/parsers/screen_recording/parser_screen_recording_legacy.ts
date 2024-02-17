@@ -15,17 +15,13 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 
 class ParserScreenRecordingLegacy extends AbstractParser {
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.SCREEN_RECORDING;
   }
@@ -53,7 +49,7 @@ class ParserScreenRecordingLegacy extends AbstractParser {
     entry: Timestamp
   ): ScreenRecordingTraceEntry {
     const currentTimestamp = entry;
-    const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
+    const initialTimestamp = assertDefined(this.getTimestamps(TimestampType.ELAPSED))[0];
     const videoTimeSeconds =
       Number(currentTimestamp.getValueNs() - initialTimestamp.getValueNs()) / 1000000000 +
       ParserScreenRecordingLegacy.EPSILON;
@@ -90,7 +86,7 @@ class ParserScreenRecordingLegacy extends AbstractParser {
     for (let i = 0; i < count; ++i) {
       const value = ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8) * 1000n;
       pos += 8;
-      timestamps.push(new Timestamp(TimestampType.ELAPSED, value));
+      timestamps.push(this.timestampFactory.makeElapsedTimestamp(value));
     }
     return timestamps;
   }

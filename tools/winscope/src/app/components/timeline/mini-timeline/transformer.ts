@@ -16,6 +16,7 @@
 
 import {Segment} from 'app/components/timeline/segment';
 import {TimeRange, Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 
 export class Transformer {
   private timestampType: TimestampType;
@@ -49,6 +50,6 @@ export class Transformer {
     x = Math.round(x);
     const valueNs =
       this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
-    return new Timestamp(this.timestampType, valueNs);
+    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(this.timestampType, valueNs, 0n);
   }
 }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
@@ -23,7 +24,6 @@ import {
   VisitableParserCustomQuery,
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/trace';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -37,11 +37,6 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
-
-  constructor(trace: TraceFile) {
-    super(trace);
-    this.realToElapsedTimeOffsetNs = undefined;
-  }
 
   override getTraceType(): TraceType {
     return TraceType.WINDOW_MANAGER;
@@ -64,13 +59,12 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
     type: TimestampType,
     entry: com.android.server.wm.IWindowManagerTraceProto
   ): undefined | Timestamp {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()));
-    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(
+    const elapsedRealtimeNanos = BigInt(assertDefined(entry.elapsedRealtimeNanos).toString());
+    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+      return this.timestampFactory.makeTimestampFromType(
         type,
-        this.realToElapsedTimeOffsetNs +
-          BigInt(assertDefined(entry.elapsedRealtimeNanos).toString())
+        elapsedRealtimeNanos,
+        this.realToElapsedTimeOffsetNs
       );
     }
     return undefined;
