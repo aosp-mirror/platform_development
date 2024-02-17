@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -81,7 +81,7 @@ describe('PresenterViewCapture', () => {
     const presenter = createPresenter(emptyTrace);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      new RealTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();

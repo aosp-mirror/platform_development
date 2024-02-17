@@ -19,6 +19,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -153,7 +154,11 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     const start = assertDefined(this.selectionRange).from.getValueNs();
     const end = assertDefined(this.selectionRange).to.getValueNs();
     const ts = (BigInt(Math.floor(x)) * (end - start)) / BigInt(this.getAvailableWidth()) + start;
-    return new Timestamp(assertDefined(this.selectionRange).from.getType(), ts);
+    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      assertDefined(this.selectionRange).from.getType(),
+      ts,
+      0n
+    );
   }
 
   private drawEntry(entry: Timestamp) {

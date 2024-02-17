@@ -30,6 +30,7 @@ import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {TimeRange, Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 
@@ -224,11 +225,12 @@ export class SliderComponent {
       .untransform(newX + this.sliderWidth / 2)
       .minus(zoomRange.to.minus(zoomRange.from).div(2n));
 
-    const to = new Timestamp(
+    const to = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
       assertDefined(this.zoomRange).to.getType(),
       from.getValueNs() +
         (assertDefined(this.zoomRange).to.getValueNs() -
-          assertDefined(this.zoomRange).from.getValueNs())
+          assertDefined(this.zoomRange).from.getValueNs()),
+      0n
     );
 
     this.onZoomChanged.emit({from, to});

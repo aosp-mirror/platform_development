@@ -34,7 +34,7 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -46,12 +46,12 @@ import {SliderComponent} from './mini-timeline/slider_component';
 import {TimelineComponent} from './timeline_component';
 
 describe('TimelineComponent', () => {
-  const time90 = new RealTimestamp(90n);
-  const time100 = new RealTimestamp(100n);
-  const time101 = new RealTimestamp(101n);
-  const time105 = new RealTimestamp(105n);
-  const time110 = new RealTimestamp(110n);
-  const time112 = new RealTimestamp(112n);
+  const time90 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(90n);
+  const time100 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n);
+  const time101 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(101n);
+  const time105 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(105n);
+  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
+  const time112 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(112n);
 
   const position90 = TracePosition.fromTimestamp(time90);
   const position100 = TracePosition.fromTimestamp(time100);
@@ -108,7 +108,7 @@ describe('TimelineComponent', () => {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .build();
-    component.timelineData.initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(traces, undefined);
     fixture.detectChanges();
 
     const button = assertDefined(htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`));
@@ -130,7 +130,7 @@ describe('TimelineComponent', () => {
 
   it('handles empty traces', () => {
     const traces = new TracesBuilder().setEntries(TraceType.SURFACE_FLINGER, []).build();
-    component.timelineData.initialize(traces, undefined);
+    assertDefined(assertDefined(component.timelineData)).initialize(traces, undefined);
     fixture.detectChanges();
 
     // no expand button
@@ -163,7 +163,7 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.SURFACE_FLINGER, [])
       .setTimestamps(TraceType.WINDOW_MANAGER, [time100])
       .build();
-    component.timelineData.initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(traces, undefined);
     fixture.detectChanges();
   });
 
@@ -311,41 +311,43 @@ describe('TimelineComponent', () => {
 
   it('next button disabled if no next entry', () => {
     loadTraces();
+    const timelineData = assertDefined(component.timelineData);
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
 
     const nextEntryButton = assertDefined(fixture.debugElement.query(By.css('#next_entry_button')));
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
-    component.timelineData.setPosition(position90);
+    timelineData.setPosition(position90);
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
-    component.timelineData.setPosition(position110);
+    timelineData.setPosition(position110);
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
 
-    component.timelineData.setPosition(position112);
+    timelineData.setPosition(position112);
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
   });
 
   it('prev button disabled if no prev entry', () => {
     loadTraces();
+    const timelineData = assertDefined(component.timelineData);
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
     const prevEntryButton = assertDefined(fixture.debugElement.query(By.css('#prev_entry_button')));
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
 
-    component.timelineData.setPosition(position90);
+    timelineData.setPosition(position90);
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
 
-    component.timelineData.setPosition(position110);
+    timelineData.setPosition(position110);
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
-    component.timelineData.setPosition(position112);
+    timelineData.setPosition(position112);
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
   });
@@ -366,7 +368,9 @@ describe('TimelineComponent', () => {
   it('changes timestamp on next entry button press', () => {
     loadTraces();
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(
+      assertDefined(component.timelineData).getCurrentPosition()?.timestamp.getValueNs()
+    ).toEqual(100n);
     const nextEntryButton = assertDefined(fixture.debugElement.query(By.css('#next_entry_button')));
 
     testCurrentTimestampOnButtonClick(nextEntryButton, position105, 110n);
@@ -385,7 +389,9 @@ describe('TimelineComponent', () => {
   it('changes timestamp on previous entry button press', () => {
     loadTraces();
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(
+      assertDefined(component.timelineData).getCurrentPosition()?.timestamp.getValueNs()
+    ).toEqual(100n);
     const prevEntryButton = assertDefined(fixture.debugElement.query(By.css('#prev_entry_button')));
 
     // In this state we are already on the first entry at timestamp 100, so
@@ -437,7 +443,9 @@ describe('TimelineComponent', () => {
   it('updates position based on ns input field', () => {
     loadTraces();
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(
+      assertDefined(component.timelineData).getCurrentPosition()?.timestamp.getValueNs()
+    ).toEqual(100n);
     const timeInputField = assertDefined(fixture.debugElement.query(By.css('.time-input.nano')));
 
     testCurrentTimestampOnTimeInput(timeInputField, position105, '110 ns', 110n);
@@ -456,7 +464,9 @@ describe('TimelineComponent', () => {
   it('updates position based on real time input field', () => {
     loadTraces();
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(100n);
+    expect(
+      assertDefined(component.timelineData).getCurrentPosition()?.timestamp.getValueNs()
+    ).toEqual(100n);
     const timeInputField = assertDefined(fixture.debugElement.query(By.css('.time-input.real')));
 
     testCurrentTimestampOnTimeInput(
@@ -502,9 +512,11 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .setTimestamps(TraceType.WINDOW_MANAGER, [time90, time101, time110, time112])
       .build();
-    component.timelineData.initialize(traces, undefined);
+
+    const timelineData = assertDefined(component.timelineData);
+    timelineData.initialize(traces, undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    component.timelineData.setPosition(position100);
+    timelineData.setPosition(position100);
     fixture.detectChanges();
   }
 
@@ -515,7 +527,7 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();
-    component.timelineData.initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(traces, undefined);
     component.availableTraces = [
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
@@ -531,10 +543,11 @@ describe('TimelineComponent', () => {
     pos: TracePosition,
     expectedNs: bigint
   ) {
-    component.timelineData.setPosition(pos);
+    const timelineData = assertDefined(component.timelineData);
+    timelineData.setPosition(pos);
     fixture.detectChanges();
     button.nativeElement.click();
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
+    expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
   }
 
   function testCurrentTimestampOnTimeInput(
@@ -543,13 +556,14 @@ describe('TimelineComponent', () => {
     textInput: string,
     expectedNs: bigint
   ) {
-    component.timelineData.setPosition(pos);
+    const timelineData = assertDefined(component.timelineData);
+    timelineData.setPosition(pos);
     fixture.detectChanges();
 
     inputField.nativeElement.value = textInput;
     inputField.nativeElement.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    expect(component.timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
+    expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(expectedNs);
   }
 });

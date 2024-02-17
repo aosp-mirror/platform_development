@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -30,6 +31,7 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
   private timestamps = new Map<TimestampType, Timestamp[]>();
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
+  protected timestampFactory: TimestampFactory;
 
   protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
@@ -40,8 +42,9 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
     decodedEntry: any
   ): any;
 
-  constructor(trace: TraceFile) {
+  constructor(trace: TraceFile, timestampFactory: TimestampFactory) {
     this.traceFile = trace;
+    this.timestampFactory = timestampFactory;
   }
 
   async parse() {

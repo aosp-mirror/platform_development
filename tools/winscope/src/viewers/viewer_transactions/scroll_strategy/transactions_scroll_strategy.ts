@@ -24,7 +24,10 @@ export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(entry: UiDataEntry): number {
     const whatHeight = this.subItemHeight(entry.what, this.whatCharsPerRow);
-    const timestampHeight = this.subItemHeight(entry.time, this.timestampCharsPerRow);
+    const timestampHeight = this.subItemHeight(
+      entry.time.formattedValue(),
+      this.timestampCharsPerRow
+    );
     return Math.max(whatHeight, timestampHeight);
   }
 }

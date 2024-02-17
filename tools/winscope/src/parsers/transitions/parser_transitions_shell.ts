@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ParserTransitionsUtils} from './parser_transitions_utils';
@@ -31,10 +30,6 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
   private handlerMapping: undefined | {[key: number]: string};
-
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
 
   override getTraceType(): TraceType {
     return TraceType.SHELL_TRANSITION;
@@ -70,18 +65,25 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   ): undefined | Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
     const decodedEntry = this.processDecodedEntry(0, type, entry);
-    const dispatchTimeLong = decodedEntry
+    const dispatchTimestamp: Timestamp | undefined = decodedEntry
       .getChildByName('shellData')
       ?.getChildByName('dispatchTimeNs')
       ?.getValue();
-    const timestampNs = dispatchTimeLong ? BigInt(dispatchTimeLong.toString()) : 0n;
-    if (type === TimestampType.ELAPSED) {
-      return new ElapsedTimestamp(timestampNs);
-    }
+
     if (type === TimestampType.REAL) {
-      return new RealTimestamp(timestampNs + assertDefined(this.realToElapsedTimeOffsetNs));
+      if (dispatchTimestamp) {
+        return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(dispatchTimestamp.getValueNs());
+      } else {
+        return this.timestampFactory.makeRealTimestamp(this.realToElapsedTimeOffsetNs ?? 0n);
+      }
     }
-    throw Error('Timestamp type unsupported');
+
+    if (type === TimestampType.ELAPSED) {
+      const timestampNs = dispatchTimestamp?.getValueNs() ?? 0n;
+      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timestampNs);
+    }
+
+    return undefined;
   }
 
   protected getMagicNumber(): number[] | undefined {
@@ -119,6 +121,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
       realToElapsedTimeOffsetNs: this.realToElapsedTimeOffsetNs,
       timestampType,
       handlerMapping: this.handlerMapping,
+      timestampFactory: this.timestampFactory,
     });
     const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree();
 

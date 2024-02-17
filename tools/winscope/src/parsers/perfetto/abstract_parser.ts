@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Timestamp, TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -29,13 +31,19 @@ import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 export abstract class AbstractParser<T> implements Parser<T> {
   protected traceProcessor: WasmEngineProxy;
   protected realToElapsedTimeOffsetNs?: bigint;
+  protected timestampFactory: TimestampFactory;
   private timestamps = new Map<TimestampType, Timestamp[]>();
   private lengthEntries = 0;
   private traceFile: TraceFile;
 
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
+  constructor(
+    traceFile: TraceFile,
+    traceProcessor: WasmEngineProxy,
+    timestampFactory: TimestampFactory
+  ) {
     this.traceFile = traceFile;
     this.traceProcessor = traceProcessor;
+    this.timestampFactory = timestampFactory;
   }
 
   async parse() {
@@ -52,13 +60,16 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
     this.timestamps.set(
       TimestampType.ELAPSED,
-      elapsedTimestamps.map((value) => new ElapsedTimestamp(value))
+      elapsedTimestamps.map((value) => this.timestampFactory.makeElapsedTimestamp(value))
     );
 
     this.timestamps.set(
       TimestampType.REAL,
-      elapsedTimestamps.map(
-        (value) => new RealTimestamp(value + assertDefined(this.realToElapsedTimeOffsetNs))
+      elapsedTimestamps.map((value) =>
+        this.timestampFactory.makeRealTimestamp(
+          value,
+          assertDefined(this.realToElapsedTimeOffsetNs)
+        )
       )
     );
 

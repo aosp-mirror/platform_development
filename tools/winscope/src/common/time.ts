@@ -25,31 +25,20 @@ export enum TimestampType {
   REAL = 'REAL',
 }
 
+export interface TimezoneInfo {
+  timezone: string;
+  locale: string;
+}
+
 export class Timestamp {
   private readonly type: TimestampType;
   private readonly valueNs: bigint;
+  private readonly timezoneOffset: bigint;
 
-  constructor(type: TimestampType, valueNs: bigint) {
+  constructor(type: TimestampType, valueNs: bigint, timezoneOffset = 0n) {
     this.type = type;
     this.valueNs = valueNs;
-  }
-
-  static from(
-    timestampType: TimestampType,
-    elapsedTimestamp: bigint,
-    realToElapsedTimeOffsetNs: bigint | undefined = undefined
-  ) {
-    switch (timestampType) {
-      case TimestampType.REAL:
-        if (realToElapsedTimeOffsetNs === undefined) {
-          throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
-        }
-        return new Timestamp(TimestampType.REAL, elapsedTimestamp + realToElapsedTimeOffsetNs);
-      case TimestampType.ELAPSED:
-        return new Timestamp(TimestampType.ELAPSED, elapsedTimestamp);
-      default:
-        throw new Error('Unhandled timestamp type');
-    }
+    this.timezoneOffset = timezoneOffset;
   }
 
   getType(): TimestampType {
@@ -58,6 +47,10 @@ export class Timestamp {
 
   getValueNs(): bigint {
     return this.valueNs;
+  }
+
+  toUTC(): Timestamp {
+    return new Timestamp(this.type, this.valueNs - this.timezoneOffset);
   }
 
   valueOf(): bigint {
@@ -75,7 +68,7 @@ export class Timestamp {
   }
 
   add(nanoseconds: bigint): Timestamp {
-    return new Timestamp(this.type, this.valueNs + nanoseconds);
+    return new Timestamp(this.type, this.getValueNs() + nanoseconds);
   }
 
   plus(timestamp: Timestamp): Timestamp {
@@ -100,17 +93,5 @@ export class Timestamp {
     if (timestamp.type !== this.type) {
       throw new Error('Attemping to do timestamp arithmetic on different timestamp types');
     }
-  }
-}
-
-export class RealTimestamp extends Timestamp {
-  constructor(valueNs: bigint) {
-    super(TimestampType.REAL, valueNs);
-  }
-}
-
-export class ElapsedTimestamp extends Timestamp {
-  constructor(valueNs: bigint) {
-    super(TimestampType.ELAPSED, valueNs);
   }
 }

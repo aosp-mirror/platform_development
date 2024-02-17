@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from 'common/time';
+import {assertDefined} from 'common/assert_utils';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
@@ -33,27 +35,44 @@ describe('ParserScreenRecordingLegacy', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
 
     expect(timestamps.length).toEqual(85);
 
     let expected = [
-      new Timestamp(TimestampType.ELAPSED, 19446131807000n),
-      new Timestamp(TimestampType.ELAPSED, 19446158500000n),
-      new Timestamp(TimestampType.ELAPSED, 19446167117000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446131807000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446158500000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446167117000n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
 
     expected = [
-      new Timestamp(TimestampType.ELAPSED, 19448470076000n),
-      new Timestamp(TimestampType.ELAPSED, 19448487525000n),
-      new Timestamp(TimestampType.ELAPSED, 19448501007000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19448470076000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19448487525000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19448501007000n),
     ];
     expect(timestamps.slice(timestamps.length - 3, timestamps.length)).toEqual(expected);
   });
 
   it("doesn't provide real timestamps", () => {
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
+  });
+
+  it('does not apply timezone info', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/elapsed_timestamp/screen_recording.mp4',
+      true
+    )) as Parser<ScreenRecordingTraceEntry>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SCREEN_RECORDING);
+
+    const expectedElapsed = [
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446131807000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446158500000n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446167117000n),
+    ];
+    expect(
+      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+    ).toEqual(expectedElapsed);
   });
 
   it('retrieves trace entry', async () => {

@@ -17,19 +17,13 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {perfetto} from 'protos/transitions/latest/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 import {FakeProtoBuilder} from './fake_proto_builder';
 
 export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   private handlerIdToName: {[id: number]: string} | undefined = undefined;
-
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
-  }
 
   override getTraceType(): TraceType {
     return TraceType.TRANSITION;
@@ -62,6 +56,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       realToElapsedTimeOffsetNs: assertDefined(this.realToElapsedTimeOffsetNs),
       timestampType,
       handlerMapping: this.handlerIdToName,
+      timestampFactory: this.timestampFactory,
     };
 
     const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(perfettoTransitionInfo, [

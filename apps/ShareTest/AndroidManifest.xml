@@ -35,6 +35,13 @@
             android:name=".ImageContentProvider"
             android:grantUriPermissions="true" />
 
+        <provider
+            android:authorities="com.android.sharetest.additionalcontent"
+            android:name=".AdditionalContentProvider"
+            android:exported="false"
+            android:enabled="true"
+            android:grantUriPermissions="true" />
+
         <receiver android:name=".ChosenComponentBroadcastReceiver" />
     </application>
 </manifest>

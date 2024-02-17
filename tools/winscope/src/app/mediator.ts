@@ -149,18 +149,21 @@ export class Mediator {
     });
 
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      if (event.updateTimeline) {
+        this.timelineData.setPosition(event.position);
+      }
       await this.propagateTracePosition(event.position, false);
     });
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED, async (event) => {
       await this.processRemoteFilesReceived([event.bugreport], FilesSource.BUGREPORT);
-      if (event.timestamp !== undefined) {
-        await this.processRemoteToolTimestampReceived(event.timestamp);
+      if (event.timestampNs !== undefined) {
+        await this.processRemoteToolTimestampReceived(event.timestampNs);
       }
     });
 
     await event.visit(WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED, async (event) => {
-      await this.processRemoteToolTimestampReceived(event.timestamp);
+      await this.processRemoteToolTimestampReceived(event.timestampNs);
     });
   }
 
@@ -190,9 +193,6 @@ export class Mediator {
     const receivers: WinscopeEventListener[] = [...this.viewers].filter((viewer) =>
       this.isViewerVisible(viewer)
     );
-    if (!omitCrossToolProtocol) {
-      receivers.push(this.crossToolProtocol);
-    }
     if (this.timelineComponent) {
       receivers.push(this.timelineComponent);
     }
@@ -200,6 +200,16 @@ export class Mediator {
     const promises = receivers.map((receiver) => {
       return receiver.onWinscopeEvent(event);
     });
+
+    if (!omitCrossToolProtocol) {
+      const utcTimestamp = position.timestamp.toUTC();
+      const utcPosition = position.entry
+        ? TracePosition.fromTraceEntry(position.entry, utcTimestamp)
+        : TracePosition.fromTimestamp(utcTimestamp);
+      const utcEvent = new TracePositionUpdate(utcPosition);
+      promises.push(this.crossToolProtocol.onWinscopeEvent(utcEvent));
+    }
+
     await Promise.all(promises);
   }
 
@@ -222,7 +232,9 @@ export class Mediator {
     });
   }
 
-  private async processRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private async processRemoteToolTimestampReceived(timestampNs: bigint) {
+    const factory = this.tracePipeline.getTimestampFactory();
+    const timestamp = factory.makeRealTimestamp(timestampNs);
     this.lastRemoteToolTimestampReceived = timestamp;
 
     if (!this.areViewersLoaded) {

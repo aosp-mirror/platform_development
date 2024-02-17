@@ -17,13 +17,14 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {TimeUtils} from 'common/time_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {Filter} from 'viewers/common/operations/filter';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
@@ -348,7 +349,13 @@ export class Presenter {
       const entry = this.trace.getEntry(originalIndex);
       const entryNode = entryProtos[originalIndex];
       const vsyncId = Number(assertDefined(entryNode.getChildByName('vsyncId')).getValue());
-      const entryTimestamp = TimeUtils.format(entry.getTimestamp());
+
+      const entryTimestamp = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        'TransactionsTraceEntry',
+        'timestamp',
+        entry.getTimestamp()
+      );
+      entryTimestamp.setFormatter(TIMESTAMP_FORMATTER);
 
       for (const transactionState of assertDefined(
         entryNode.getChildByName('transactions')

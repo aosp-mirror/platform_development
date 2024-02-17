@@ -25,7 +25,10 @@ export class ProtologScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(message: UiDataMessage): number {
     const textHeight = this.subItemHeight(message.text, this.textCharsPerRow);
-    const timestampHeight = this.subItemHeight(message.time, this.timestampCharsPerRow);
+    const timestampHeight = this.subItemHeight(
+      message.time.formattedValue(),
+      this.timestampCharsPerRow
+    );
     const sourceFileHeight = this.subItemHeight(message.at, this.sourceFileCharsPerRow);
     return Math.max(textHeight, timestampHeight, sourceFileHeight);
   }

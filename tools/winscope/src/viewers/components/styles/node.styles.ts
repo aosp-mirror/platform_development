@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const nodeStyles = `
+
+import {selectedElementStyle} from './selected_element.styles';
+
+export const nodeStyles =
+  `
     .node {
         position: relative;
         display: inline-flex;
@@ -52,11 +56,7 @@ export const nodeStyles = `
         padding: 3px;
         color: white;
     }
-
-    .selected {
-        background-color: #87ACEC;
-    }
-`;
+` + selectedElementStyle;
 
 // FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `

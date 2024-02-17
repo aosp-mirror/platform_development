@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
@@ -25,7 +26,7 @@ import {ParserFactory} from './parser_factory';
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
     const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
-    const parsers = await new ParserFactory().createParsers([trace]);
+    const parsers = await new ParserFactory().createParsers([trace], NO_TIMEZONE_OFFSET_FACTORY);
     expect(parsers.length).toEqual(0);
   });
 
@@ -48,9 +49,9 @@ describe('Parser', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        new Timestamp(TimestampType.REAL, 1659107089075566202n),
-        new Timestamp(TimestampType.REAL, 1659107089999048990n),
-        new Timestamp(TimestampType.REAL, 1659107090010194213n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089075566202n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089999048990n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090010194213n),
       ];
       expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
     });
@@ -79,9 +80,9 @@ describe('Parser', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        new Timestamp(TimestampType.ELAPSED, 850254319343n),
-        new Timestamp(TimestampType.ELAPSED, 850763506110n),
-        new Timestamp(TimestampType.ELAPSED, 850782750048n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850254319343n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850763506110n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850782750048n),
       ];
       expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });

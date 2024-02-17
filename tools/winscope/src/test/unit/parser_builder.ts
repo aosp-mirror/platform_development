@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {RealTimestamp, Timestamp} from 'common/time';
+import {Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {ParserMock} from 'trace/parser_mock';
@@ -84,7 +85,7 @@ export class ParserBuilder<T> {
   private createTimestamps(entries: T[]): Timestamp[] {
     const timestamps = new Array<Timestamp>();
     for (let i = 0; i < entries.length; ++i) {
-      timestamps[i] = new RealTimestamp(BigInt(i));
+      timestamps[i] = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(BigInt(i));
     }
     return timestamps;
   }

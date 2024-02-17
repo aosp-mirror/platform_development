@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {ELAPSED_TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AddDuration} from './add_duration';
 
 describe('AddDuration', () => {
   let operation: AddDuration;
+  const TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+  const TIMESTAMP_30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
 
   beforeEach(() => {
     operation = new AddDuration();
@@ -35,8 +38,8 @@ describe('AddDuration', () => {
         {
           name: 'wmData',
           children: [
-            {name: 'sendTimeNs', value: 10n},
-            {name: 'finishTimeNs', value: 30n},
+            {name: 'sendTimeNs', value: TIMESTAMP_10},
+            {name: 'finishTimeNs', value: TIMESTAMP_30},
           ],
         },
       ])
@@ -50,15 +53,15 @@ describe('AddDuration', () => {
         {
           name: 'wmData',
           children: [
-            {name: 'sendTimeNs', value: 10n},
-            {name: 'finishTimeNs', value: 30n},
+            {name: 'sendTimeNs', value: TIMESTAMP_10},
+            {name: 'finishTimeNs', value: TIMESTAMP_30},
           ],
         },
         {
           name: 'duration',
-          value: 20n,
+          value: NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n),
           source: PropertySource.CALCULATED,
-          formatter: ELAPSED_TIMESTAMP_FORMATTER,
+          formatter: TIMESTAMP_FORMATTER,
         },
       ])
       .build();
@@ -72,14 +75,14 @@ describe('AddDuration', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: 30n}]}])
+      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: TIMESTAMP_30}]}])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: 30n}]}])
+      .setChildren([{name: 'wmData', children: [{name: 'finishTimeNs', value: TIMESTAMP_30}]}])
       .build();
 
     operation.apply(propertyRoot);
@@ -91,14 +94,14 @@ describe('AddDuration', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: 10n}]}])
+      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]}])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: 10n}]}])
+      .setChildren([{name: 'wmData', children: [{name: 'sendTimeNs', value: TIMESTAMP_10}]}])
       .build();
 
     operation.apply(propertyRoot);

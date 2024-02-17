@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractParser} from 'parsers/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -29,7 +30,6 @@ import {
   VisitableParserCustomQuery,
 } from 'trace/custom_query';
 import {EntriesRange} from 'trace/trace';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -87,11 +87,6 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
 
-  constructor(trace: TraceFile) {
-    super(trace);
-    this.realToElapsedTimeOffsetNs = undefined;
-  }
-
   override getTraceType(): TraceType {
     return TraceType.SURFACE_FLINGER;
   }
@@ -114,19 +109,24 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     entry: android.surfaceflinger.ILayersTraceProto
   ): undefined | Timestamp {
     const isDump = !Object.prototype.hasOwnProperty.call(entry, 'elapsedRealtimeNanos');
-    if (type === TimestampType.ELAPSED) {
-      return isDump
-        ? new Timestamp(type, 0n)
-        : new Timestamp(type, BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()));
-    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return isDump
-        ? new Timestamp(type, 0n)
-        : new Timestamp(
-            type,
-            this.realToElapsedTimeOffsetNs +
-              BigInt(assertDefined(entry.elapsedRealtimeNanos).toString())
-          );
+    if (
+      isDump &&
+      NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)
+    ) {
+      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
     }
+
+    if (!isDump) {
+      const elapsedRealtimeNanos = BigInt(assertDefined(entry.elapsedRealtimeNanos).toString());
+      if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+        return this.timestampFactory.makeTimestampFromType(
+          type,
+          elapsedRealtimeNanos,
+          this.realToElapsedTimeOffsetNs
+        );
+      }
+    }
+
     return undefined;
   }
 

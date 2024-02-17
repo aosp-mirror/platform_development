@@ -16,7 +16,11 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
+import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
+import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -104,11 +108,16 @@ import {UiData} from './ui_data';
             *cdkVirtualFor="let entry of uiData.entries; let i = index"
             class="entry"
             [attr.item-id]="i"
-            [class.current-entry]="isCurrentEntry(i)"
-            [class.selected-entry]="isSelectedEntry(i)"
+            [class.current]="isCurrentEntry(i)"
+            [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
             <div class="time">
-              <span class="mat-body-1">{{ entry.time }}</span>
+              <button
+                mat-button
+                [color]="isCurrentEntry(i) ? 'secondary' : 'primary'"
+                (click)="onTimestampClicked(entry.time)">
+                {{ entry.time.formattedValue() }}
+              </button>
             </div>
             <div class="id">
               <span class="mat-body-1">{{ entry.transactionId }}</span>
@@ -227,16 +236,6 @@ import {UiData} from './ui_data';
         margin-right: 16px;
       }
 
-      .entry.current-entry {
-        color: white;
-        background-color: #365179;
-      }
-
-      .entry.selected-entry {
-        color: white;
-        background-color: #98aecd;
-      }
-
       .go-to-current-time {
         flex: none;
         margin-top: 4px;
@@ -251,11 +250,15 @@ import {UiData} from './ui_data';
         max-height: 75vh;
       }
     `,
+    selectedElementStyle,
+    currentElementStyle,
+    timeButtonStyle,
   ],
 })
 class ViewerTransactionsComponent {
   objectKeys = Object.keys;
   uiData: UiData = UiData.EMPTY;
+  private lastClicked = '';
 
   @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
 
@@ -264,7 +267,11 @@ class ViewerTransactionsComponent {
   @Input()
   set inputData(data: UiData) {
     this.uiData = data;
-    if (this.uiData.scrollToIndex !== undefined && this.scrollComponent) {
+    if (
+      this.uiData.scrollToIndex !== undefined &&
+      this.scrollComponent &&
+      this.lastClicked !== this.uiData.entries[this.uiData.scrollToIndex].time.formattedValue()
+    ) {
       this.scrollComponent.scrollToIndex(this.uiData.scrollToIndex);
     }
   }
@@ -313,6 +320,11 @@ class ViewerTransactionsComponent {
     if (this.uiData.currentEntryIndex !== undefined && this.scrollComponent) {
       this.scrollComponent.scrollToIndex(this.uiData.currentEntryIndex);
     }
+  }
+
+  onTimestampClicked(timestamp: PropertyTreeNode) {
+    this.lastClicked = timestamp.formattedValue();
+    this.emitEvent(Events.TimestampSelected, timestamp);
   }
 
   isCurrentEntry(index: number): boolean {

@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
 import {AddStatus} from './add_status';
 
 describe('AddStatus', () => {
   let operation: AddStatus;
+  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
 
   beforeEach(() => {
     operation = new AddStatus();
@@ -31,7 +34,7 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'wmData', children: [{name: 'abortTimeNs', value: 10n}]},
+        {name: 'wmData', children: [{name: 'abortTimeNs', value: time10}]},
         {name: 'shellData', value: null},
       ])
       .build();
@@ -41,7 +44,7 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'wmData', children: [{name: 'abortTimeNs', value: 10n}]},
+        {name: 'wmData', children: [{name: 'abortTimeNs', value: time10}]},
         {name: 'shellData', value: null},
         {name: 'aborted', value: true, source: PropertySource.CALCULATED},
         {name: 'merged', value: false, source: PropertySource.CALCULATED},
@@ -59,7 +62,7 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'shellData', children: [{name: 'abortTimeNs', value: 10n}]},
+        {name: 'shellData', children: [{name: 'abortTimeNs', value: time10}]},
         {name: 'wmData', value: null},
       ])
       .build();
@@ -69,7 +72,7 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'shellData', children: [{name: 'abortTimeNs', value: 10n}]},
+        {name: 'shellData', children: [{name: 'abortTimeNs', value: time10}]},
         {name: 'wmData', value: null},
         {name: 'aborted', value: true, source: PropertySource.CALCULATED},
         {name: 'merged', value: false, source: PropertySource.CALCULATED},
@@ -87,8 +90,8 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'wmData', children: [{name: 'abortTimeNs', value: 0n}]},
-        {name: 'shellData', children: [{name: 'abortTimeNs', value: 0n}]},
+        {name: 'wmData', children: [{name: 'abortTimeNs', value: time0}]},
+        {name: 'shellData', children: [{name: 'abortTimeNs', value: time0}]},
       ])
       .build();
 
@@ -97,10 +100,10 @@ describe('AddStatus', () => {
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
       .setChildren([
-        {name: 'wmData', children: [{name: 'abortTimeNs', value: 0n}]},
+        {name: 'wmData', children: [{name: 'abortTimeNs', value: time0}]},
         {
           name: 'shellData',
-          children: [{name: 'abortTimeNs', value: 0n}],
+          children: [{name: 'abortTimeNs', value: time0}],
         },
         {name: 'aborted', value: false, source: PropertySource.CALCULATED},
         {name: 'merged', value: false, source: PropertySource.CALCULATED},
@@ -119,7 +122,7 @@ describe('AddStatus', () => {
       .setName('transition')
       .setChildren([
         {name: 'wmData', value: null},
-        {name: 'shellData', children: [{name: 'mergeTimeNs', value: 10n}]},
+        {name: 'shellData', children: [{name: 'mergeTimeNs', value: time10}]},
       ])
       .build();
 
@@ -131,7 +134,7 @@ describe('AddStatus', () => {
         {name: 'wmData', value: null},
         {
           name: 'shellData',
-          children: [{name: 'mergeTimeNs', value: 10n}],
+          children: [{name: 'mergeTimeNs', value: time10}],
         },
         {name: 'aborted', value: false, source: PropertySource.CALCULATED},
         {name: 'merged', value: true, source: PropertySource.CALCULATED},
@@ -150,7 +153,7 @@ describe('AddStatus', () => {
       .setName('transition')
       .setChildren([
         {name: 'wmData', value: null},
-        {name: 'shellData', children: [{name: 'mergeTimeNs', value: 0n}]},
+        {name: 'shellData', children: [{name: 'mergeTimeNs', value: time0}]},
       ])
       .build();
 
@@ -162,7 +165,7 @@ describe('AddStatus', () => {
         {name: 'wmData', value: null},
         {
           name: 'shellData',
-          children: [{name: 'mergeTimeNs', value: 0n}],
+          children: [{name: 'mergeTimeNs', value: time0}],
         },
         {name: 'aborted', value: false, source: PropertySource.CALCULATED},
         {name: 'merged', value: false, source: PropertySource.CALCULATED},
@@ -182,7 +185,7 @@ describe('AddStatus', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [{name: 'finishTimeNs', value: 10n}],
+          children: [{name: 'finishTimeNs', value: time10}],
         },
         {name: 'shellData', value: null},
       ])
@@ -195,7 +198,7 @@ describe('AddStatus', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [{name: 'finishTimeNs', value: 10n}],
+          children: [{name: 'finishTimeNs', value: time10}],
         },
         {name: 'shellData', value: null},
         {name: 'aborted', value: false, source: PropertySource.CALCULATED},
@@ -215,7 +218,7 @@ describe('AddStatus', () => {
       .setName('transition')
       .setChildren([
         {name: 'wmData', value: null},
-        {name: 'shellData', children: [{name: 'finishTimeNs', value: 0n}]},
+        {name: 'shellData', children: [{name: 'finishTimeNs', value: time0}]},
       ])
       .build();
 
@@ -227,7 +230,7 @@ describe('AddStatus', () => {
         {name: 'wmData', value: null},
         {
           name: 'shellData',
-          children: [{name: 'finishTimeNs', value: 0n}],
+          children: [{name: 'finishTimeNs', value: time0}],
         },
         {name: 'aborted', value: false, source: PropertySource.CALCULATED},
         {name: 'merged', value: false, source: PropertySource.CALCULATED},

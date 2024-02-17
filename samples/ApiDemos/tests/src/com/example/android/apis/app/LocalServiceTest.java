@@ -16,16 +16,12 @@
 
 package com.example.android.apis.app;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
 import android.os.IBinder;
-import android.test.MoreAsserts;
 import android.test.ServiceTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.test.suitebuilder.annotation.SmallTest;
+
+import androidx.test.filters.MediumTest;
+import androidx.test.filters.SmallTest;
 
 /**
  * This is a simple framework for a test of a Service.  See {@link android.test.ServiceTestCase
