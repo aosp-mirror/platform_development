@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, TimeRange} from 'common/time';
+import {TimeRange} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TimeUtils} from 'common/time_utils';
 import {TraceType} from 'trace/trace_type';
 
@@ -63,7 +64,7 @@ export class TraceHasOldData implements WinscopeError {
   }
 
   getMessage(): string {
-    const elapsedTime = new ElapsedTimestamp(
+    const elapsedTime = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
       this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs()
     );
     return `${this.descriptor}: discarded because data is older than ${TimeUtils.format(

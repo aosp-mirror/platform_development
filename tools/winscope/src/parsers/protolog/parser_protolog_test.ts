@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -25,6 +26,7 @@ describe('ParserProtoLog', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/ProtoLog.pb'
     )) as Parser<PropertyTreeNode>;
@@ -43,9 +45,9 @@ describe('ParserProtoLog', () => {
     expect(timestamps.length).toEqual(50);
 
     const expected = [
-      new Timestamp(TimestampType.ELAPSED, 850746266486n),
-      new Timestamp(TimestampType.ELAPSED, 850746336718n),
-      new Timestamp(TimestampType.ELAPSED, 850746350430n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746266486n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746336718n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746350430n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
@@ -55,11 +57,37 @@ describe('ParserProtoLog', () => {
     expect(timestamps.length).toEqual(50);
 
     const expected = [
-      new Timestamp(TimestampType.REAL, 1655727125377266486n),
-      new Timestamp(TimestampType.REAL, 1655727125377336718n),
-      new Timestamp(TimestampType.REAL, 1655727125377350430n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655727125377266486n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655727125377336718n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655727125377350430n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
+  });
+
+  it('applies timezone info to real timestamps only', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/elapsed_and_real_timestamp/ProtoLog.pb',
+      true
+    )) as Parser<PropertyTreeNode>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.PROTO_LOG);
+
+    const expectedElapsed = [
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746266486n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746336718n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746350430n),
+    ];
+    expect(
+      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+    ).toEqual(expectedElapsed);
+
+    const expectedReal = [
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655746925377266486n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655746925377336718n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655746925377350430n),
+    ];
+    expect(
+      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+    ).toEqual(expectedReal);
   });
 
   it('reconstructs human-readable log message (ELAPSED time)', async () => {

@@ -123,7 +123,7 @@ export class Presenter {
       return {
         originalIndex: index,
         text: assertDefined(messageNode.getChildByName('text')).formattedValue(),
-        time: assertDefined(messageNode.getChildByName('timestamp')).formattedValue(),
+        time: assertDefined(messageNode.getChildByName('timestamp')),
         tag: assertDefined(messageNode.getChildByName('tag')).formattedValue(),
         level: assertDefined(messageNode.getChildByName('level')).formattedValue(),
         at: assertDefined(messageNode.getChildByName('at')).formattedValue(),

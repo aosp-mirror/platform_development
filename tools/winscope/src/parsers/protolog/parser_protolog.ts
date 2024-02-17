@@ -19,7 +19,6 @@ import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/abstract_parser';
 import root from 'protos/protolog/latest/json';
 import {com} from 'protos/protolog/latest/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import configJson from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
@@ -34,10 +33,6 @@ class ParserProtoLog extends AbstractParser {
   private static readonly PROTOLOG_VERSION = '1.0.0';
 
   private realToElapsedTimeOffsetNs: bigint | undefined;
-
-  constructor(trace: TraceFile) {
-    super(trace);
-  }
 
   override getTraceType(): TraceType {
     return TraceType.PROTO_LOG;
@@ -87,14 +82,12 @@ class ParserProtoLog extends AbstractParser {
     type: TimestampType,
     entry: com.android.internal.protolog.IProtoLogMessage
   ): undefined | Timestamp {
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()));
-    }
-    if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(
+    const elapsedRealtimeNanos = BigInt(assertDefined(entry.elapsedRealtimeNanos).toString());
+    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+      return this.timestampFactory.makeTimestampFromType(
         type,
-        BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()) +
-          this.realToElapsedTimeOffsetNs
+        elapsedRealtimeNanos,
+        this.realToElapsedTimeOffsetNs
       );
     }
     return undefined;
@@ -112,7 +105,8 @@ class ParserProtoLog extends AbstractParser {
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       timestampType,
-      this.realToElapsedTimeOffsetNs
+      this.realToElapsedTimeOffsetNs,
+      this.timestampFactory
     );
   }
 

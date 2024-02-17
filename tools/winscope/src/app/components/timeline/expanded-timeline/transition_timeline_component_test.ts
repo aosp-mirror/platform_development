@@ -26,7 +26,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Rect} from 'common/rect';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
@@ -37,6 +37,15 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 describe('TransitionTimelineComponent', () => {
   let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
+  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const time20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
+  const time30 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(30n);
+  const time35 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n);
+  const time60 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n);
+  const time85 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(85n);
+  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
+  const time160 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(160n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -77,11 +86,11 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 30n}],
+              children: [{name: 'finishTimeNs', value: time30}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 10n}],
+              children: [{name: 'dispatchTimeNs', value: time10}],
             },
             {name: 'aborted', value: false},
           ])
@@ -94,19 +103,25 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 110n}],
+              children: [{name: 'finishTimeNs', value: time110}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 60n}],
+              children: [{name: 'dispatchTimeNs', value: time60}],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+      ])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -143,11 +158,11 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 20n}],
+              children: [{name: 'finishTimeNs', value: time20}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 0n}],
+              children: [{name: 'dispatchTimeNs', value: time0}],
             },
             {name: 'aborted', value: false},
           ])
@@ -159,19 +174,22 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 160n}],
+              children: [{name: 'finishTimeNs', value: time160}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 60n}],
+              children: [{name: 'dispatchTimeNs', value: time60}],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([time10, time60])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -205,11 +223,11 @@ describe('TransitionTimelineComponent', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [{name: 'finishTimeNs', value: 85n}],
+          children: [{name: 'finishTimeNs', value: time85}],
         },
         {
           name: 'shellData',
-          children: [{name: 'dispatchTimeNs', value: 35n}],
+          children: [{name: 'dispatchTimeNs', value: time35}],
         },
         {name: 'aborted', value: false},
       ])
@@ -217,9 +235,12 @@ describe('TransitionTimelineComponent', () => {
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([time35])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
     component.selectedEntry = component.trace.getEntry(0);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -254,11 +275,11 @@ describe('TransitionTimelineComponent', () => {
       .setChildren([
         {
           name: 'wmData',
-          children: [{name: 'finishTimeNs', value: 85n}],
+          children: [{name: 'finishTimeNs', value: time85}],
         },
         {
           name: 'shellData',
-          children: [{name: 'dispatchTimeNs', value: 35n}],
+          children: [{name: 'dispatchTimeNs', value: time35}],
         },
         {name: 'aborted', value: false},
       ])
@@ -266,9 +287,12 @@ describe('TransitionTimelineComponent', () => {
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries([transition])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([time35])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
@@ -311,11 +335,11 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 85n}],
+              children: [{name: 'finishTimeNs', value: time85}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 10n}],
+              children: [{name: 'dispatchTimeNs', value: time10}],
             },
             {name: 'aborted', value: false},
           ])
@@ -327,19 +351,22 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 110n}],
+              children: [{name: 'finishTimeNs', value: time110}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 60n}],
+              children: [{name: 'dispatchTimeNs', value: time60}],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps([time10, time60])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -382,11 +409,11 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 85n}],
+              children: [{name: 'finishTimeNs', value: time85}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 10n}],
+              children: [{name: 'dispatchTimeNs', value: time10}],
             },
             {name: 'aborted', value: false},
           ])
@@ -398,19 +425,22 @@ describe('TransitionTimelineComponent', () => {
           .setChildren([
             {
               name: 'wmData',
-              children: [{name: 'finishTimeNs', value: 60n}],
+              children: [{name: 'finishTimeNs', value: time60}],
             },
             {
               name: 'shellData',
-              children: [{name: 'dispatchTimeNs', value: 35n}],
+              children: [{name: 'dispatchTimeNs', value: time35}],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n), new RealTimestamp(35n)])
+      .setTimestamps([time10, time35])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -458,17 +488,20 @@ describe('TransitionTimelineComponent', () => {
             {
               name: 'shellData',
               children: [
-                {name: 'dispatchTimeNs', value: 35n},
-                {name: 'abortTimeNs', value: 85n},
+                {name: 'dispatchTimeNs', value: time35},
+                {name: 'abortTimeNs', value: time85},
               ],
             },
             {name: 'aborted', value: true},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(35n)])
+      .setTimestamps([time35])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -501,17 +534,20 @@ describe('TransitionTimelineComponent', () => {
             {
               name: 'wmData',
               children: [
-                {name: 'createTimeNs', value: 10n},
-                {name: 'finishTimeNs', value: 85n},
+                {name: 'createTimeNs', value: time10},
+                {name: 'finishTimeNs', value: time85},
               ],
             },
             {name: 'aborted', value: false},
           ])
           .build(),
       ])
-      .setTimestamps([new RealTimestamp(10n)])
+      .setTimestamps([time10])
       .build();
-    component.selectionRange = {from: new RealTimestamp(10n), to: new RealTimestamp(110n)};
+    component.selectionRange = {
+      from: time10,
+      to: time110,
+    };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 

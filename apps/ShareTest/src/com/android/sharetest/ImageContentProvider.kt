@@ -73,6 +73,7 @@ class ImageContentProvider : ContentProvider() {
         if (shouldFailOpen()) {
             return null
         }
+
         return uri.lastPathSegment?.let{ context?.assets?.openFd(it) }
     }
 
@@ -89,6 +90,14 @@ class ImageContentProvider : ContentProvider() {
     }
 
     companion object {
+        fun makeItemUri(idx: Int, mimeType: String): Uri =
+            Uri.parse("${URI_PREFIX}img$idx.jpg")
+                    .buildUpon()
+                    .appendQueryParameter(PARAM_TYPE, mimeType)
+                    .build()
+
+        const val IMAGE_COUNT = 8
+
         const val URI_PREFIX = "content://com.android.sharetest.provider/"
         const val PARAM_TYPE = "type"
         val ICON_URI: Uri = Uri.parse("${URI_PREFIX}letter_a.png")

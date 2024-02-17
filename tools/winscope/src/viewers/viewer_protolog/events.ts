@@ -18,6 +18,7 @@ class Events {
   static TagsFilterChanged = 'ViewerProtoLogEvent_TagsFilterChanged';
   static SourceFilesFilterChanged = 'ViewerProtoLogEvent_SourceFilesFilterChanged';
   static SearchStringFilterChanged = 'ViewerProtoLogEvent_SearchStringFilterChanged';
+  static TimestampSelected = 'ViewerProtoLogEvent_TimestampSelected';
 }
 
 export {Events};

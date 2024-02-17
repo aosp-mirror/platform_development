@@ -20,6 +20,7 @@ import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/co
 import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -29,6 +30,7 @@ import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
@@ -154,6 +156,19 @@ describe('ViewerTransitionsComponent', () => {
     const textContentWithoutWhitespaces = treeView.textContent?.replace(/(\s|\t|\n)*/g, '');
     expect(textContentWithoutWhitespaces).toContain(`id:${selectedTransitionId}`);
   });
+
+  it('propagates timestamp on click', () => {
+    let timestamp = '';
+    htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+      timestamp = (event as CustomEvent).detail.formattedValue();
+    });
+    const logTimestampButton = assertDefined(
+      htmlElement.querySelector('.time button')
+    ) as HTMLButtonElement;
+    logTimestampButton.click();
+
+    expect(timestamp).toEqual('20ns');
+  });
 });
 
 function makeUiData(): UiData {
@@ -181,16 +196,22 @@ function createMockTransition(
     .setChildren([{name: 'id', value: id}])
     .build();
 
+  const sendTimeNode = new PropertyTreeBuilder()
+    .setRootId(transitionTree.id)
+    .setName('sendTimeNs')
+    .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(BigInt(sendTimeNanos)))
+    .setFormatter(TIMESTAMP_FORMATTER)
+    .build();
+
   return {
     id,
     type: 'TO_FRONT',
-    sendTime: sendTimeNanos.toString() + 'ns',
-    finishTime: finishTimeNanos.toString() + 'ns',
+    sendTime: sendTimeNode,
+    dispatchTime: undefined,
     duration: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
     merged: false,
     aborted: false,
     played: false,
-    realToElapsedTimeOffsetNs: undefined,
     propertiesTree: transitionTree,
   };
 }

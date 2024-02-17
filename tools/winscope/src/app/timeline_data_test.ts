@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -24,9 +24,11 @@ import {TimelineData} from './timeline_data';
 describe('TimelineData', () => {
   let timelineData: TimelineData;
 
-  const timestamp9 = new RealTimestamp(9n);
-  const timestamp10 = new RealTimestamp(10n);
-  const timestamp11 = new RealTimestamp(11n);
+  const timestamp0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+  const timestamp5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
+  const timestamp9 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(9n);
+  const timestamp10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const timestamp11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
 
   const traces = new TracesBuilder()
     .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
@@ -44,7 +46,9 @@ describe('TimelineData', () => {
   const position11 = TracePosition.fromTraceEntry(
     assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER)).getEntry(0)
   );
-  const position1000 = TracePosition.fromTimestamp(new RealTimestamp(1000n));
+  const position1000 = TracePosition.fromTimestamp(
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1000n)
+  );
 
   beforeEach(() => {
     timelineData = new TimelineData();
@@ -60,7 +64,7 @@ describe('TimelineData', () => {
   describe('dumps', () => {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10, timestamp11])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [new Timestamp(TimestampType.REAL, 0n)])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp0])
       .build();
 
     it('drops trace if it is a dump (will not display in timeline UI)', () => {
@@ -178,7 +182,7 @@ describe('TimelineData', () => {
 
   it('makePositionFromActiveTrace()', () => {
     timelineData.initialize(traces, undefined);
-    const time100 = new RealTimestamp(100n);
+    const time100 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n);
 
     {
       timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
@@ -207,8 +211,8 @@ describe('TimelineData', () => {
     expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
 
     timelineData.setSelectionTimeRange({
-      from: new Timestamp(TimestampType.REAL, 0n),
-      to: new Timestamp(TimestampType.REAL, 5n),
+      from: timestamp0,
+      to: timestamp5,
     });
 
     expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
@@ -220,8 +224,8 @@ describe('TimelineData', () => {
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
 
     timelineData.setZoom({
-      from: new Timestamp(TimestampType.REAL, 0n),
-      to: new Timestamp(TimestampType.REAL, 5n),
+      from: timestamp0,
+      to: timestamp5,
     });
 
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());

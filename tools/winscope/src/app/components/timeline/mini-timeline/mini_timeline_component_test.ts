@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {dragElement} from 'test/utils';
 import {TracePosition} from 'trace/trace_position';
@@ -41,11 +41,17 @@ describe('MiniTimelineComponent', () => {
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
 
-  const timestamp10 = new RealTimestamp(10n);
-  const timestamp20 = new RealTimestamp(20n);
-  const timestamp1000 = new RealTimestamp(1000n);
+  const timestamp10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const timestamp15 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n);
+  const timestamp16 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(16n);
+  const timestamp20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
+  const timestamp700 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(700n);
+  const timestamp810 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(810n);
+  const timestamp1000 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1000n);
 
-  const position800 = TracePosition.fromTimestamp(new RealTimestamp(800n));
+  const position800 = TracePosition.fromTimestamp(
+    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(800n)
+  );
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -101,8 +107,8 @@ describe('MiniTimelineComponent', () => {
 
   it('resets zoom on reset zoom button click', () => {
     const expectedZoomRange = {
-      from: new RealTimestamp(15n),
-      to: new RealTimestamp(16n),
+      from: timestamp15,
+      to: timestamp16,
     };
     timelineData.setZoom(expectedZoomRange);
 
@@ -135,8 +141,8 @@ describe('MiniTimelineComponent', () => {
 
   it('shows zoom controls when zoomed in', () => {
     const zoom = {
-      from: new RealTimestamp(15n),
-      to: new RealTimestamp(16n),
+      from: timestamp15,
+      to: timestamp16,
     };
     timelineData.setZoom(zoom);
 
@@ -157,8 +163,8 @@ describe('MiniTimelineComponent', () => {
 
   it('updates timelinedata on zoom changed', () => {
     const zoom = {
-      from: new RealTimestamp(15n),
-      to: new RealTimestamp(16n),
+      from: timestamp15,
+      to: timestamp16,
     };
     component.onZoomChanged(zoom);
     expect(timelineData.getZoomRange()).toBe(zoom);
@@ -197,8 +203,8 @@ describe('MiniTimelineComponent', () => {
 
   it('moving slider around updates zoom', fakeAsync(async () => {
     const initialZoom = {
-      from: new RealTimestamp(15n),
-      to: new RealTimestamp(16n),
+      from: timestamp15,
+      to: timestamp16,
     };
     component.onZoomChanged(initialZoom);
 
@@ -274,8 +280,8 @@ describe('MiniTimelineComponent', () => {
     component.timelineData.initialize(traces, undefined);
 
     let initialZoom = {
-      from: new RealTimestamp(700n),
-      to: new RealTimestamp(810n),
+      from: timestamp700,
+      to: timestamp810,
     };
     component.onZoomChanged(initialZoom);
 
@@ -395,8 +401,8 @@ describe('MiniTimelineComponent', () => {
     component.timelineData.initialize(traces, undefined);
 
     let initialZoom = {
-      from: new RealTimestamp(700n),
-      to: new RealTimestamp(810n),
+      from: timestamp700,
+      to: timestamp810,
     };
     component.onZoomChanged(initialZoom);
 

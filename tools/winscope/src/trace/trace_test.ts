@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
 import {FrameMapBuilder} from './frame_map_builder';
@@ -24,13 +24,13 @@ import {Trace} from './trace';
 describe('Trace', () => {
   let trace: Trace<string>;
 
-  const time9 = new RealTimestamp(9n);
-  const time10 = new RealTimestamp(10n);
-  const time11 = new RealTimestamp(11n);
-  const time12 = new RealTimestamp(12n);
-  const time13 = new RealTimestamp(13n);
-  const time14 = new RealTimestamp(14n);
-  const time15 = new RealTimestamp(15n);
+  const time9 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(9n);
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+  const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+  const time13 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(13n);
+  const time14 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(14n);
+  const time15 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n);
 
   beforeAll(() => {
     // Time:       10    11                 12    13
@@ -710,8 +710,8 @@ describe('Trace', () => {
     ]);
 
     // time
-    const time12 = new RealTimestamp(12n);
-    const time13 = new RealTimestamp(13n);
+    const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+    const time13 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(13n);
     expect(await TraceUtils.extractEntries(trace.sliceTime(time12, time12))).toEqual([]);
     expect(await TraceUtils.extractEntries(trace.sliceTime())).toEqual([
       'entry-0',
@@ -759,8 +759,8 @@ describe('Trace', () => {
     expect(await TraceUtils.extractEntries(empty.sliceEntries(1, 2))).toEqual([]);
 
     // time
-    const time12 = new RealTimestamp(12n);
-    const time13 = new RealTimestamp(13n);
+    const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+    const time13 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(13n);
     expect(await TraceUtils.extractEntries(empty.sliceTime())).toEqual([]);
     expect(await TraceUtils.extractEntries(empty.sliceTime(time12))).toEqual([]);
     expect(await TraceUtils.extractEntries(empty.sliceTime(time12, time13))).toEqual([]);

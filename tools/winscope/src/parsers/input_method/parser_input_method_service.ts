@@ -23,7 +23,6 @@ import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/ime/latest/json';
 import {android} from 'protos/ime/latest/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
@@ -80,11 +79,6 @@ class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
 
-  constructor(trace: TraceFile) {
-    super(trace);
-    this.realToElapsedTimeOffsetNs = undefined;
-  }
-
   override getTraceType(): TraceType {
     return TraceType.INPUT_METHOD_SERVICE;
   }
@@ -109,10 +103,12 @@ class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
     entry: android.view.inputmethod.IInputMethodServiceTraceProto
   ): undefined | Timestamp {
     const elapsedRealtimeNanos = BigInt(assertDefined(entry.elapsedRealtimeNanos).toString());
-    if (type === TimestampType.ELAPSED) {
-      return new Timestamp(type, elapsedRealtimeNanos);
-    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(type, this.realToElapsedTimeOffsetNs + elapsedRealtimeNanos);
+    if (this.timestampFactory.canMakeTimestampFromType(type, this.realToElapsedTimeOffsetNs)) {
+      return this.timestampFactory.makeTimestampFromType(
+        type,
+        elapsedRealtimeNanos,
+        this.realToElapsedTimeOffsetNs
+      );
     }
     return undefined;
   }

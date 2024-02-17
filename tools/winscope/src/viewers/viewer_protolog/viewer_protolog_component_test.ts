@@ -22,6 +22,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
@@ -96,6 +99,21 @@ describe('ViewerProtologComponent', () => {
       goToCurrentTimeButton.click();
       expect(spy).toHaveBeenCalledWith(150);
     });
+
+    it('propagates timestamp on click', () => {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      let timestamp = '';
+      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+        timestamp = (event as CustomEvent).detail.formattedValue();
+      });
+      const logTimestampButton = assertDefined(
+        htmlElement.querySelector('.time button')
+      ) as HTMLButtonElement;
+      logTimestampButton.click();
+
+      expect(timestamp).toEqual('10ns');
+    });
   });
 
   describe('Scroll component', () => {
@@ -123,6 +141,13 @@ describe('ViewerProtologComponent', () => {
     const allTags = ['WindowManager', 'INVALID'];
     const allSourceFiles = ['test_source_file.java', 'other_test_source_file.java'];
 
+    const time = new PropertyTreeBuilder()
+      .setRootId('ProtologMessage')
+      .setName('timestamp')
+      .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n))
+      .setFormatter(TIMESTAMP_FORMATTER)
+      .build();
+
     const messages = [];
     const shortMessage = 'test information about message';
     const longMessage = shortMessage.repeat(10) + 'keep';
@@ -130,7 +155,7 @@ describe('ViewerProtologComponent', () => {
       const uiDataMessage: UiDataMessage = {
         originalIndex: i,
         text: i % 2 === 0 ? shortMessage : longMessage,
-        time: '2022-11-21T18:05:09.777144978',
+        time,
         tag: i % 2 === 0 ? allTags[0] : allTags[1],
         level: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
         at: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
