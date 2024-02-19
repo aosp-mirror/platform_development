@@ -42,7 +42,9 @@ describe('TranslateIntDef', () => {
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
     expect(
-      assertDefined(propertyRoot.getChildByName('layoutParamsFlags')).formattedValue()
+      assertDefined(
+        propertyRoot.getChildByName('layoutParamsFlags'),
+      ).formattedValue(),
     ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
   });
 
@@ -74,34 +76,42 @@ describe('TranslateIntDef', () => {
     operation = new TranslateIntDef(field);
     operation.apply(propertyRoot);
 
-    const params = assertDefined(propertyRoot.getChildByName('windowLayoutParams'));
+    const params = assertDefined(
+      propertyRoot.getChildByName('windowLayoutParams'),
+    );
 
-    expect(assertDefined(params.getChildByName('type')).formattedValue()).toEqual(
-      'TYPE_BASE_APPLICATION'
-    );
-    expect(assertDefined(params.getChildByName('gravity')).formattedValue()).toEqual(
-      'CENTER_HORIZONTAL'
-    );
-    expect(assertDefined(params.getChildByName('softInputMode')).formattedValue()).toEqual(
-      'SOFT_INPUT_STATE_UNCHANGED'
-    );
-    expect(assertDefined(params.getChildByName('inputFeatureFlags')).formattedValue()).toEqual(
-      'INPUT_FEATURE_NO_INPUT_CHANNEL'
-    );
-    expect(assertDefined(params.getChildByName('flags')).formattedValue()).toEqual(
-      'FLAG_ALLOW_LOCK_WHILE_SCREEN_ON'
-    );
     expect(
-      assertDefined(params.getChildByName('systemUiVisibilityFlags')).formattedValue()
+      assertDefined(params.getChildByName('type')).formattedValue(),
+    ).toEqual('TYPE_BASE_APPLICATION');
+    expect(
+      assertDefined(params.getChildByName('gravity')).formattedValue(),
+    ).toEqual('CENTER_HORIZONTAL');
+    expect(
+      assertDefined(params.getChildByName('softInputMode')).formattedValue(),
+    ).toEqual('SOFT_INPUT_STATE_UNCHANGED');
+    expect(
+      assertDefined(
+        params.getChildByName('inputFeatureFlags'),
+      ).formattedValue(),
+    ).toEqual('INPUT_FEATURE_NO_INPUT_CHANNEL');
+    expect(
+      assertDefined(params.getChildByName('flags')).formattedValue(),
+    ).toEqual('FLAG_ALLOW_LOCK_WHILE_SCREEN_ON');
+    expect(
+      assertDefined(
+        params.getChildByName('systemUiVisibilityFlags'),
+      ).formattedValue(),
     ).toEqual('SYSTEM_UI_FLAG_LOW_PROFILE');
     expect(
-      assertDefined(params.getChildByName('subtreeSystemUiVisibilityFlags')).formattedValue()
+      assertDefined(
+        params.getChildByName('subtreeSystemUiVisibilityFlags'),
+      ).formattedValue(),
     ).toEqual('SYSTEM_UI_FLAG_LOW_PROFILE');
-    expect(assertDefined(params.getChildByName('appearance')).formattedValue()).toEqual(
-      'APPEARANCE_OPAQUE_STATUS_BARS'
-    );
-    expect(assertDefined(params.getChildByName('behavior')).formattedValue()).toEqual(
-      'BEHAVIOR_DEFAULT'
-    );
+    expect(
+      assertDefined(params.getChildByName('appearance')).formattedValue(),
+    ).toEqual('APPEARANCE_OPAQUE_STATUS_BARS');
+    expect(
+      assertDefined(params.getChildByName('behavior')).formattedValue(),
+    ).toEqual('BEHAVIOR_DEFAULT');
   });
 });

@@ -27,7 +27,7 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name LayerState', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('layerChanges').setName('0').build()
+      new PropertyTreeBuilder().setRootId('layerChanges').setName('0').build(),
     );
 
     operation.apply(propertyRoot);
@@ -36,7 +36,10 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name DisplayState for change in display', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('displayChanges').setName('0').build()
+      new PropertyTreeBuilder()
+        .setRootId('displayChanges')
+        .setName('0')
+        .build(),
     );
 
     operation.apply(propertyRoot);
@@ -45,7 +48,7 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name DisplayState for added display', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('addedDisplays').setName('0').build()
+      new PropertyTreeBuilder().setRootId('addedDisplays').setName('0').build(),
     );
 
     operation.apply(propertyRoot);
@@ -54,7 +57,7 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name LayerCreationArgs', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('addedLayers').setName('0').build()
+      new PropertyTreeBuilder().setRootId('addedLayers').setName('0').build(),
     );
 
     operation.apply(propertyRoot);
@@ -63,7 +66,10 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name destroyedLayerId', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('destroyedLayers').setName('0').build()
+      new PropertyTreeBuilder()
+        .setRootId('destroyedLayers')
+        .setName('0')
+        .build(),
     );
 
     operation.apply(propertyRoot);
@@ -72,7 +78,10 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name removedDisplayId', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('removedDisplays').setName('0').build()
+      new PropertyTreeBuilder()
+        .setRootId('removedDisplays')
+        .setName('0')
+        .build(),
     );
 
     operation.apply(propertyRoot);
@@ -81,7 +90,10 @@ describe('SetRootDisplayNames', () => {
 
   it('sets display name destroyedLayerHandleId', () => {
     const propertyRoot = UiPropertyTreeNode.from(
-      new PropertyTreeBuilder().setRootId('destroyedLayerHandles').setName('0').build()
+      new PropertyTreeBuilder()
+        .setRootId('destroyedLayerHandles')
+        .setName('0')
+        .build(),
     );
 
     operation.apply(propertyRoot);

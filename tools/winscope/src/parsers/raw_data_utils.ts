@@ -36,26 +36,33 @@ export class RawDataUtils {
 
   static isRect(obj: PropertyTreeNode): boolean {
     return (
-      (obj.getChildByName('right') !== undefined && obj.getChildByName('bottom') !== undefined) ||
-      (obj.getChildByName('left') !== undefined && obj.getChildByName('top') !== undefined)
+      (obj.getChildByName('right') !== undefined &&
+        obj.getChildByName('bottom') !== undefined) ||
+      (obj.getChildByName('left') !== undefined &&
+        obj.getChildByName('top') !== undefined)
     );
   }
 
   static isBuffer(obj: PropertyTreeNode): boolean {
-    return obj.getChildByName('stride') !== undefined && obj.getChildByName('format') !== undefined;
+    return (
+      obj.getChildByName('stride') !== undefined &&
+      obj.getChildByName('format') !== undefined
+    );
   }
 
   static isSize(obj: PropertyTreeNode): boolean {
     return (
       obj.getAllChildren().length <= 2 &&
-      (obj.getChildByName('w') !== undefined || obj.getChildByName('h') !== undefined)
+      (obj.getChildByName('w') !== undefined ||
+        obj.getChildByName('h') !== undefined)
     );
   }
 
   static isPosition(obj: PropertyTreeNode): boolean {
     return (
       obj.getAllChildren().length <= 2 &&
-      (obj.getChildByName('x') !== undefined || obj.getChildByName('y') !== undefined)
+      (obj.getChildByName('x') !== undefined ||
+        obj.getChildByName('y') !== undefined)
     );
   }
 
@@ -63,7 +70,9 @@ export class RawDataUtils {
     const rect = obj.getChildByName('rect');
     return (
       rect !== undefined &&
-      rect.getAllChildren().every((innerRect: PropertyTreeNode) => RawDataUtils.isRect(innerRect))
+      rect
+        .getAllChildren()
+        .every((innerRect: PropertyTreeNode) => RawDataUtils.isRect(innerRect))
     );
   }
 

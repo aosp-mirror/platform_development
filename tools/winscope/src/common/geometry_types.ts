@@ -28,4 +28,11 @@ export interface TransformMatrix {
   ty: number;
 }
 
-export const IDENTITY_MATRIX = {dsdx: 1, dtdx: 0, tx: 0, dsdy: 0, dtdy: 1, ty: 0};
+export const IDENTITY_MATRIX = {
+  dsdx: 1,
+  dtdx: 0,
+  tx: 0,
+  dsdy: 0,
+  dtdy: 1,
+  ty: 0,
+};

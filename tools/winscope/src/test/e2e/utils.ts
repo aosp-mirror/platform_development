@@ -46,14 +46,20 @@ class E2eTestUtils {
 
     // Uploading multiple files is not properly supported but
     // chrome handles file paths joined with new lines
-    await inputFile.sendKeys(paths.map((it) => E2eTestUtils.getFixturePath(it)).join('\n'));
+    await inputFile.sendKeys(
+      paths.map((it) => E2eTestUtils.getFixturePath(it)).join('\n'),
+    );
   }
 
   static getFixturePath(filename: string): string {
     if (path.isAbsolute(filename)) {
       return filename;
     }
-    return path.join(E2eTestUtils.getProjectRootPath(), 'src/test/fixtures', filename);
+    return path.join(
+      E2eTestUtils.getProjectRootPath(),
+      'src/test/fixtures',
+      filename,
+    );
   }
 
   private static getProjectRootPath(): string {

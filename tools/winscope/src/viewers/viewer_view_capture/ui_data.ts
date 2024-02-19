@@ -34,6 +34,6 @@ export class UiData {
     public pinnedItems: UiHierarchyTreeNode[],
     public highlightedItem: string,
     public propertiesTree: UiPropertyTreeNode | undefined,
-    public curatedProperties: VcCuratedProperties | undefined
+    public curatedProperties: VcCuratedProperties | undefined,
   ) {}
 }

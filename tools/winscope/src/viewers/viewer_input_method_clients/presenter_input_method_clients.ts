@@ -33,5 +33,8 @@ export class PresenterInputMethodClients extends PresenterInputMethod {
 }
 
 class ImClientsTableProperties {
-  constructor(public inputMethodId: string | undefined, public packageName: string | undefined) {}
+  constructor(
+    public inputMethodId: string | undefined,
+    public packageName: string | undefined,
+  ) {}
 }

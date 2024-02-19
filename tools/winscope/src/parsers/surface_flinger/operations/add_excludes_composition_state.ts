@@ -23,12 +23,14 @@ export class AddExcludesCompositionState extends AddOperation<PropertyTreeNode> 
     super();
   }
 
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     return [
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         value.id,
         'excludesCompositionState',
-        this.excludesCompositionState
+        this.excludesCompositionState,
       ),
     ];
   }

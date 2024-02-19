@@ -22,7 +22,9 @@ export abstract class TreeNode implements Item {
   constructor(readonly id: string, readonly name: string) {}
 
   addOrReplaceChild(newChild: this): void {
-    const currIndex = this.children.findIndex((child) => child.id === newChild.id);
+    const currIndex = this.children.findIndex(
+      (child) => child.id === newChild.id,
+    );
     if (currIndex !== -1) {
       this.children[currIndex] = newChild;
     } else {
@@ -54,7 +56,9 @@ export abstract class TreeNode implements Item {
         this.children[i].forEachNodeDfs(callback, reverseChildren);
       }
     } else {
-      this.children.forEach((child) => child.forEachNodeDfs(callback, reverseChildren));
+      this.children.forEach((child) =>
+        child.forEachNodeDfs(callback, reverseChildren),
+      );
     }
   }
 
@@ -71,7 +75,10 @@ export abstract class TreeNode implements Item {
     return undefined;
   }
 
-  filterDfs(predicate: (node: this) => boolean, reverseChildren = false): this[] {
+  filterDfs(
+    predicate: (node: this) => boolean,
+    reverseChildren = false,
+  ): this[] {
     const result: this[] = [];
 
     this.forEachNodeDfs((node) => {

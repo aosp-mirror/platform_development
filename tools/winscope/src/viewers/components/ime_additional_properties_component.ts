@@ -20,7 +20,10 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
-import {ImeContainerProperties, InputMethodSurfaceProperties} from 'viewers/common/ime_utils';
+import {
+  ImeContainerProperties,
+  InputMethodSurfaceProperties,
+} from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {selectedElementStyle} from './styles/selected_element.styles';
 
@@ -335,7 +338,11 @@ export class ImeAdditionalPropertiesComponent {
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   isHighlighted(
-    item: TreeNode | ImeContainerProperties | InputMethodSurfaceProperties | undefined
+    item:
+      | TreeNode
+      | ImeContainerProperties
+      | InputMethodSurfaceProperties
+      | undefined,
   ): boolean {
     return item ? item.id === this.highlightedItem : false;
   }
@@ -356,7 +363,8 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   wmRootLabel(): string {
-    const timestamp = this.additionalProperties?.wm?.wmStateProperties.timestamp;
+    const timestamp =
+      this.additionalProperties?.wm?.wmStateProperties.timestamp;
     if (!timestamp) {
       return this.additionalProperties?.wm?.name ?? 'root';
     }
@@ -368,7 +376,8 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   wmInsetsSourceProvider(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider;
+    return this.additionalProperties?.wm?.wmStateProperties
+      .imeInsetsSourceProvider;
   }
 
   wmControlTargetFrame(): PropertyTreeNode | undefined {
@@ -471,11 +480,17 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   sfImeContainerScreenBounds(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.sf?.properties.inputMethodSurface?.screenBounds ?? undefined;
+    return (
+      this.additionalProperties?.sf?.properties.inputMethodSurface
+        ?.screenBounds ?? undefined
+    );
   }
 
   sfImeContainerRect(): PropertyTreeNode | undefined {
-    return this.additionalProperties?.sf?.properties.inputMethodSurface?.rect ?? undefined;
+    return (
+      this.additionalProperties?.sf?.properties.inputMethodSurface?.rect ??
+      undefined
+    );
   }
 
   isAllPropertiesUndefined(): boolean {
@@ -507,10 +522,13 @@ export class ImeAdditionalPropertiesComponent {
       name,
       treeNode: item,
     };
-    const event: CustomEvent = new CustomEvent(ViewerEvents.AdditionalPropertySelected, {
-      bubbles: true,
-      detail: {selectedItem: itemWrapper},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.AdditionalPropertySelected,
+      {
+        bubbles: true,
+        detail: {selectedItem: itemWrapper},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

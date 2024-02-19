@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-import {CdkVirtualScrollViewport, VirtualScrollStrategy} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  VirtualScrollStrategy,
+} from '@angular/cdk/scrolling';
 import {distinctUntilChanged, Observable, Subject} from 'rxjs';
 
-export abstract class VariableHeightScrollStrategy implements VirtualScrollStrategy {
+export abstract class VariableHeightScrollStrategy
+  implements VirtualScrollStrategy
+{
   static readonly HIDDEN_ELEMENTS_TO_RENDER = 20;
   private scrollItems: object[] = [];
   private itemHeightCache = new Map<number, ItemHeight>(); // indexed by scrollIndex
   private wrapper: any = undefined;
   private viewport: CdkVirtualScrollViewport | undefined;
   scrolledIndexChangeSubject = new Subject<number>();
-  scrolledIndexChange: Observable<number> = this.scrolledIndexChangeSubject.pipe(
-    distinctUntilChanged()
-  );
+  scrolledIndexChange: Observable<number> =
+    this.scrolledIndexChangeSubject.pipe(distinctUntilChanged());
 
   attach(viewport: CdkVirtualScrollViewport) {
     this.viewport = viewport;
@@ -86,18 +90,25 @@ export abstract class VariableHeightScrollStrategy implements VirtualScrollStrat
       return;
     }
 
-    const scrollIndex = this.calculateIndexFromOffset(this.viewport.measureScrollOffset());
+    const scrollIndex = this.calculateIndexFromOffset(
+      this.viewport.measureScrollOffset(),
+    );
     const range = {
-      start: Math.max(0, scrollIndex - VariableHeightScrollStrategy.HIDDEN_ELEMENTS_TO_RENDER),
+      start: Math.max(
+        0,
+        scrollIndex - VariableHeightScrollStrategy.HIDDEN_ELEMENTS_TO_RENDER,
+      ),
       end: Math.min(
         this.viewport.getDataLength(),
         scrollIndex +
           this.numberOfItemsInViewport(scrollIndex) +
-          VariableHeightScrollStrategy.HIDDEN_ELEMENTS_TO_RENDER
+          VariableHeightScrollStrategy.HIDDEN_ELEMENTS_TO_RENDER,
       ),
     };
     this.viewport.setRenderedRange(range);
-    this.viewport.setRenderedContentOffset(this.getOffsetByItemIndex(range.start));
+    this.viewport.setRenderedContentOffset(
+      this.getOffsetByItemIndex(range.start),
+    );
     this.scrolledIndexChangeSubject.next(scrollIndex);
 
     this.updateItemHeightCache();
@@ -163,7 +174,7 @@ export abstract class VariableHeightScrollStrategy implements VirtualScrollStrat
 
   private calculateIndexOfFinalRenderedItem(
     start: number,
-    viewportHeight: number
+    viewportHeight: number,
   ): number | undefined {
     let totalItemHeight = 0;
     for (let i = start; i < this.scrollItems.length; i++) {

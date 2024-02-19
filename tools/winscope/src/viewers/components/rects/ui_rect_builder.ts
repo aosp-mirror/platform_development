@@ -177,7 +177,7 @@ export class UiRectBuilder {
       this.cornerRadius,
       this.transform,
       this.depth,
-      this.hasContent
+      this.hasContent,
     );
   }
 }

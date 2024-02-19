@@ -27,9 +27,12 @@ export class ProtologScrollStrategy extends VariableHeightScrollStrategy {
     const textHeight = this.subItemHeight(message.text, this.textCharsPerRow);
     const timestampHeight = this.subItemHeight(
       message.time.formattedValue(),
-      this.timestampCharsPerRow
+      this.timestampCharsPerRow,
     );
-    const sourceFileHeight = this.subItemHeight(message.at, this.sourceFileCharsPerRow);
+    const sourceFileHeight = this.subItemHeight(
+      message.at,
+      this.sourceFileCharsPerRow,
+    );
     return Math.max(textHeight, timestampHeight, sourceFileHeight);
   }
 }

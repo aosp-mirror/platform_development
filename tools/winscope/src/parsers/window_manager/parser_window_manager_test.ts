@@ -32,7 +32,7 @@ describe('ParserWindowManager', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/WindowManager.pb'
+        'traces/elapsed_and_real_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
       trace = new TraceBuilder<HierarchyTreeNode>()
         .setType(TraceType.WINDOW_MANAGER)
@@ -50,9 +50,9 @@ describe('ParserWindowManager', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15398076788n),
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15409222011n),
       ];
-      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
-        expected
-      );
+      expect(
+        assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
+      ).toEqual(expected);
     });
 
     it('provides real timestamps', () => {
@@ -61,21 +61,31 @@ describe('ParserWindowManager', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089999048990n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090010194213n),
       ];
-      expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
+      expect(
+        assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
+      ).toEqual(expected);
     });
 
     it('applies timezone info to real timestamps only', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/WindowManager.pb',
-        true
+        true,
       )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
-
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14474594000n)
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.WINDOW_MANAGER,
       );
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889075566202n)
+
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14474594000n));
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+        )[0],
+      ).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889075566202n),
       );
     });
 
@@ -99,7 +109,7 @@ describe('ParserWindowManager', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/WindowManager.pb'
+        'traces/elapsed_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 
@@ -119,13 +129,17 @@ describe('ParserWindowManager', () => {
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_timestamp/WindowManager.pb',
-        true
+        true,
       )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
-
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850254319343n)
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.WINDOW_MANAGER,
       );
+
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850254319343n));
     });
 
     it('retrieves trace entry', async () => {

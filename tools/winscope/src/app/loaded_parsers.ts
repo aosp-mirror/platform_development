@@ -26,7 +26,8 @@ import {TraceType} from 'trace/trace_type';
 import {TRACE_INFO} from './trace_info';
 
 export class LoadedParsers {
-  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = 5n * 60n * 1000000000n; // 5m
+  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS =
+    5n * 60n * 1000000000n; // 5m
 
   private legacyParsers = new Map<TraceType, FileAndParser>();
   private perfettoParsers = new Map<TraceType, FileAndParser>();
@@ -34,20 +35,29 @@ export class LoadedParsers {
   addParsers(
     legacyParsers: FileAndParser[],
     perfettoParsers: FileAndParsers | undefined,
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ) {
     if (perfettoParsers) {
       this.addPerfettoParsers(perfettoParsers, errorListener);
     }
 
-    legacyParsers = this.filterOutLegacyParsersWithOldData(legacyParsers, errorListener);
-    legacyParsers = this.filterScreenshotParsersIfRequired(legacyParsers, errorListener);
+    legacyParsers = this.filterOutLegacyParsersWithOldData(
+      legacyParsers,
+      errorListener,
+    );
+    legacyParsers = this.filterScreenshotParsersIfRequired(
+      legacyParsers,
+      errorListener,
+    );
 
     this.addLegacyParsers(legacyParsers, errorListener);
   }
 
   getParsers(): Array<Parser<object>> {
-    const fileAndParsers = [...this.legacyParsers.values(), ...this.perfettoParsers.values()];
+    const fileAndParsers = [
+      ...this.legacyParsers.values(),
+      ...this.perfettoParsers.values(),
+    ];
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
   }
 
@@ -76,14 +86,15 @@ export class LoadedParsers {
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
           ? TRACE_INFO[traceType].downloadArchiveDir + '/'
           : '';
-      const filenameInArchive = archiveDir + FileUtils.removeDirFromFileName(file.file.name);
+      const filenameInArchive =
+        archiveDir + FileUtils.removeDirFromFileName(file.file.name);
       const archiveFile = new File([file.file], filenameInArchive);
       archiveFiles.push(archiveFile);
     });
 
     // Remove duplicates because some traces (e.g. view capture) could share the same file
     const uniqueArchiveFiles = archiveFiles.filter(
-      (file, index, fileList) => fileList.indexOf(file) === index
+      (file, index, fileList) => fileList.indexOf(file) === index,
     );
 
     return await FileUtils.createZipArchive(uniqueArchiveFiles);
@@ -93,7 +104,7 @@ export class LoadedParsers {
     return this.findCommonTimestampTypeInternal(this.getParsers());
   }
   private findCommonTimestampTypeInternal(
-    parsers: Array<Parser<object>>
+    parsers: Array<Parser<object>>,
   ): TimestampType | undefined {
     const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
     for (const type of priorityOrder) {
@@ -104,12 +115,21 @@ export class LoadedParsers {
     return undefined;
   }
 
-  private addLegacyParsers(parsers: FileAndParser[], errorListener: WinscopeErrorListener) {
+  private addLegacyParsers(
+    parsers: FileAndParser[],
+    errorListener: WinscopeErrorListener,
+  ) {
     const legacyParsersBeingLoaded = new Map<TraceType, Parser<object>>();
 
     parsers.forEach((fileAndParser) => {
       const {parser} = fileAndParser;
-      if (this.shouldUseLegacyParser(parser, legacyParsersBeingLoaded, errorListener)) {
+      if (
+        this.shouldUseLegacyParser(
+          parser,
+          legacyParsersBeingLoaded,
+          errorListener,
+        )
+      ) {
         legacyParsersBeingLoaded.set(parser.getTraceType(), parser);
         this.legacyParsers.set(parser.getTraceType(), fileAndParser);
       }
@@ -118,21 +138,26 @@ export class LoadedParsers {
 
   private addPerfettoParsers(
     {file, parsers}: FileAndParsers,
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ) {
     // We currently run only one Perfetto TP WebWorker at a time, so Perfetto parsers previously
     // loaded are now invalid and must be removed (previous WebWorker is not running anymore).
     this.perfettoParsers.clear();
 
     parsers.forEach((parser) => {
-      this.perfettoParsers.set(parser.getTraceType(), new FileAndParser(file, parser));
+      this.perfettoParsers.set(
+        parser.getTraceType(),
+        new FileAndParser(file, parser),
+      );
 
       // While transitioning to the Perfetto format, devices might still have old legacy trace files
       // dangling in the disk that get automatically included into bugreports. Hence, Perfetto
       // parsers must always override legacy ones so that dangling legacy files are ignored.
       const legacyParser = this.legacyParsers.get(parser.getTraceType());
       if (legacyParser) {
-        errorListener.onError(new TraceOverridden(legacyParser.parser.getDescriptors().join()));
+        errorListener.onError(
+          new TraceOverridden(legacyParser.parser.getDescriptors().join()),
+        );
         this.legacyParsers.delete(parser.getTraceType());
       }
     });
@@ -141,13 +166,15 @@ export class LoadedParsers {
   private shouldUseLegacyParser(
     newParser: Parser<object>,
     parsersBeingLoaded: Map<TraceType, Parser<object>>,
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ): boolean {
     // While transitioning to the Perfetto format, devices might still have old legacy trace files
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
     if (this.perfettoParsers.get(newParser.getTraceType())) {
-      errorListener.onError(new TraceOverridden(newParser.getDescriptors().join()));
+      errorListener.onError(
+        new TraceOverridden(newParser.getDescriptors().join()),
+      );
       return false;
     }
 
@@ -158,22 +185,31 @@ export class LoadedParsers {
     }
 
     if (oldParser && !currParser) {
-      errorListener.onError(new TraceOverridden(oldParser.getDescriptors().join()));
+      errorListener.onError(
+        new TraceOverridden(oldParser.getDescriptors().join()),
+      );
       return true;
     }
 
-    if (currParser && newParser.getLengthEntries() > currParser.getLengthEntries()) {
-      errorListener.onError(new TraceOverridden(currParser.getDescriptors().join()));
+    if (
+      currParser &&
+      newParser.getLengthEntries() > currParser.getLengthEntries()
+    ) {
+      errorListener.onError(
+        new TraceOverridden(currParser.getDescriptors().join()),
+      );
       return true;
     }
 
-    errorListener.onError(new TraceOverridden(newParser.getDescriptors().join()));
+    errorListener.onError(
+      new TraceOverridden(newParser.getDescriptors().join()),
+    );
     return false;
   }
 
   private filterOutLegacyParsersWithOldData(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ): FileAndParser[] {
     const allParsers = [
       ...newLegacyParsers,
@@ -182,7 +218,7 @@ export class LoadedParsers {
     ];
 
     const commonTimestampType = this.findCommonTimestampTypeInternal(
-      allParsers.map(({parser}) => parser)
+      allParsers.map(({parser}) => parser),
     );
     if (commonTimestampType === undefined) {
       return newLegacyParsers;
@@ -209,7 +245,9 @@ export class LoadedParsers {
         return true;
       }
 
-      const isDump = timestamps.length === 1 && timestamps[0].getValueNs() === INVALID_TIME_NS;
+      const isDump =
+        timestamps.length === 1 &&
+        timestamps[0].getValueNs() === INVALID_TIME_NS;
       if (isDump) {
         return true;
       }
@@ -217,7 +255,9 @@ export class LoadedParsers {
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
       if (isOldData) {
-        errorListener.onError(new TraceHasOldData(file.getDescriptor(), timeGap));
+        errorListener.onError(
+          new TraceHasOldData(file.getDescriptor(), timeGap),
+        );
         return false;
       }
 
@@ -227,16 +267,22 @@ export class LoadedParsers {
 
   private filterScreenshotParsersIfRequired(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ): FileAndParser[] {
-    const oldScreenRecordingParser = this.legacyParsers.get(TraceType.SCREEN_RECORDING)?.parser;
-    const oldScreenshotParser = this.legacyParsers.get(TraceType.SCREENSHOT)?.parser;
+    const oldScreenRecordingParser = this.legacyParsers.get(
+      TraceType.SCREEN_RECORDING,
+    )?.parser;
+    const oldScreenshotParser = this.legacyParsers.get(
+      TraceType.SCREENSHOT,
+    )?.parser;
 
     const newScreenRecordingParsers = newLegacyParsers.filter(
-      (fileAndParser) => fileAndParser.parser.getTraceType() === TraceType.SCREEN_RECORDING
+      (fileAndParser) =>
+        fileAndParser.parser.getTraceType() === TraceType.SCREEN_RECORDING,
     );
     const newScreenshotParsers = newLegacyParsers.filter(
-      (fileAndParser) => fileAndParser.parser.getTraceType() === TraceType.SCREENSHOT
+      (fileAndParser) =>
+        fileAndParser.parser.getTraceType() === TraceType.SCREENSHOT,
     );
 
     if (oldScreenRecordingParser || newScreenRecordingParsers.length > 0) {
@@ -244,8 +290,8 @@ export class LoadedParsers {
         errorListener.onError(
           new TraceOverridden(
             newScreenshotParser.parser.getDescriptors().join(),
-            TraceType.SCREEN_RECORDING
-          )
+            TraceType.SCREEN_RECORDING,
+          ),
         );
       });
 
@@ -253,21 +299,24 @@ export class LoadedParsers {
         errorListener.onError(
           new TraceOverridden(
             oldScreenshotParser.getDescriptors().join(),
-            TraceType.SCREEN_RECORDING
-          )
+            TraceType.SCREEN_RECORDING,
+          ),
         );
         this.remove(TraceType.SCREENSHOT);
       }
 
       return newLegacyParsers.filter(
-        (fileAndParser) => fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT
+        (fileAndParser) =>
+          fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT,
       );
     }
 
     return newLegacyParsers;
   }
 
-  private findLastTimeGapAboveThreshold(ranges: readonly TimeRange[]): TimeRange | undefined {
+  private findLastTimeGapAboveThreshold(
+    ranges: readonly TimeRange[],
+  ): TimeRange | undefined {
     const rangesSortedByEnd = ranges
       .slice()
       .sort((a, b) => (a.to.getValueNs() < b.to.getValueNs() ? -1 : +1));

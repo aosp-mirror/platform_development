@@ -347,7 +347,9 @@ import {LoadProgressComponent} from './load_progress_component';
   ],
   encapsulation: ViewEncapsulation.None,
 })
-export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListener {
+export class CollectTracesComponent
+  implements OnInit, OnDestroy, ProgressListener
+{
   objectKeys = Object.keys;
   isAdbProxy = true;
   connect: Connection | undefined;
@@ -362,21 +364,23 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
 
   @Output() readonly filesCollected = new EventEmitter<File[]>();
 
-  constructor(@Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {}
+  constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     if (this.isAdbProxy) {
       this.connect = new ProxyConnection(
         (newState) => this.changeDetectorRef.detectChanges(),
         (progress) => this.onLoadProgressUpdate(progress),
-        this.setTraceConfigForAvailableTraces
+        this.setTraceConfigForAvailableTraces,
       );
     } else {
       // TODO: change to WebAdbConnection
       this.connect = new ProxyConnection(
         (newState) => this.changeDetectorRef.detectChanges(),
         (progress) => this.onLoadProgressUpdate(progress),
-        this.setTraceConfigForAvailableTraces
+        this.setTraceConfigForAvailableTraces,
       );
     }
   }
@@ -390,7 +394,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
   }
 
   onProgressUpdate(message: string, progressPercentage: number | undefined) {
-    if (!LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)) {
+    if (
+      !LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)
+    ) {
       return;
     }
     this.isExternalOperationInProgress = true;
@@ -407,7 +413,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
   }
 
   isOperationInProgress(): boolean {
-    return assertDefined(this.connect).isLoadDataState() || this.isExternalOperationInProgress;
+    return (
+      assertDefined(this.connect).isLoadDataState() ||
+      this.isExternalOperationInProgress
+    );
   }
 
   async onAddKey(key: string) {
@@ -422,7 +431,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
     this.connect = new ProxyConnection(
       (newState) => this.changeDetectorRef.detectChanges(),
       (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces
+      this.setTraceConfigForAvailableTraces,
     );
   }
 
@@ -432,7 +441,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
     this.connect = new ProxyConnection(
       (newState) => this.changeDetectorRef.detectChanges(),
       (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces
+      this.setTraceConfigForAvailableTraces,
     );
   }
 
@@ -459,14 +468,16 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
       requestedTraces,
       reqEnableConfig,
       reqSelectedSfConfig,
-      reqSelectedWmConfig
+      reqSelectedWmConfig,
     );
   }
 
   async dumpState() {
     console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
-    const dumpSuccessful = await assertDefined(this.connect).dumpState(requestedDumps);
+    const dumpSuccessful = await assertDefined(this.connect).dumpState(
+      requestedDumps,
+    );
     if (dumpSuccessful) {
       this.filesCollected.emit(assertDefined(this.connect).adbData());
     }
@@ -489,7 +500,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
   }
 
   private async onProxyChange(newState: ProxyState) {
-    await assertDefined(this.connect).onConnectChange.bind(this.connect)(newState);
+    await assertDefined(this.connect).onConnectChange.bind(this.connect)(
+      newState,
+    );
   }
 
   private getRequestedTraces() {
@@ -498,11 +511,13 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
     const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
       const traceConfig = tracingConfig[traceKey];
       if (traceConfig.isTraceCollection) {
-        traceConfig.config?.enableConfigs.forEach((innerTrace: EnableConfiguration) => {
-          if (innerTrace.enabled) {
-            tracesFromCollection.push(innerTrace.key);
-          }
-        });
+        traceConfig.config?.enableConfigs.forEach(
+          (innerTrace: EnableConfiguration) => {
+            if (innerTrace.enabled) {
+              tracesFromCollection.push(innerTrace.key);
+            }
+          },
+        );
         return false;
       }
       return traceConfig.run;
@@ -526,7 +541,12 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
     const tracingConfig = assertDefined(this.traceConfig);
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
-      if (!trace.isTraceCollection && trace.run && trace.config && trace.config.enableConfigs) {
+      if (
+        !trace.isTraceCollection &&
+        trace.run &&
+        trace.config &&
+        trace.config.enableConfigs
+      ) {
         trace.config.enableConfigs.forEach((con: EnableConfiguration) => {
           if (con.enabled) {
             req.push(con.key);
@@ -543,9 +563,11 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
       return undefined;
     }
     const selected: ConfigMap = {};
-    tracingConfig[traceType].config?.selectionConfigs.forEach((con: SelectionConfiguration) => {
-      selected[con.key] = con.value;
-    });
+    tracingConfig[traceType].config?.selectionConfigs.forEach(
+      (con: SelectionConfiguration) => {
+        selected[con.key] = con.value;
+      },
+    );
     return selected;
   }
 
@@ -554,10 +576,12 @@ export class CollectTracesComponent implements OnInit, OnDestroy, ProgressListen
     this.changeDetectorRef.detectChanges();
   }
 
-  private setTraceConfigForAvailableTraces = (availableTracesConfig: TraceConfigurationMap) =>
+  private setTraceConfigForAvailableTraces = (
+    availableTracesConfig: TraceConfigurationMap,
+  ) =>
     (this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TraceConfiguration',
       availableTracesConfig,
-      assertDefined(this.storage)
+      assertDefined(this.storage),
     ));
 }

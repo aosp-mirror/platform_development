@@ -31,7 +31,7 @@ export class TreeNodeUtils {
     top: number | undefined,
     right: number | undefined,
     bottom: number | undefined,
-    id = 'test node'
+    id = 'test node',
   ): PropertyTreeNode {
     const children = [];
     if (left !== undefined) children.push({name: 'left', value: left});
@@ -39,14 +39,18 @@ export class TreeNodeUtils {
     if (right !== undefined) children.push({name: 'right', value: right});
     if (bottom !== undefined) children.push({name: 'bottom', value: bottom});
 
-    return new PropertyTreeBuilder().setRootId(id).setName('rect').setChildren(children).build();
+    return new PropertyTreeBuilder()
+      .setRootId(id)
+      .setName('rect')
+      .setChildren(children)
+      .build();
   }
 
   static makeColorNode(
     r: number | undefined,
     g: number | undefined,
     b: number | undefined,
-    a: number | undefined
+    a: number | undefined,
   ): PropertyTreeNode {
     const children = [];
     if (r !== undefined) children.push({name: 'r', value: r});
@@ -82,7 +86,10 @@ export class TreeNodeUtils {
       .build();
   }
 
-  static makeSizeNode(w: number | undefined, h: number | undefined): PropertyTreeNode {
+  static makeSizeNode(
+    w: number | undefined,
+    h: number | undefined,
+  ): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
       .setName('size')
@@ -93,7 +100,10 @@ export class TreeNodeUtils {
       .build();
   }
 
-  static makePositionNode(x: number | undefined, y: number | undefined): PropertyTreeNode {
+  static makePositionNode(
+    x: number | undefined,
+    y: number | undefined,
+  ): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
       .setName('pos')
@@ -104,7 +114,10 @@ export class TreeNodeUtils {
       .build();
   }
 
-  static makeHierarchyNode(proto: any, children: ChildHierarchy[] = []): HierarchyTreeNode {
+  static makeHierarchyNode(
+    proto: any,
+    children: ChildHierarchy[] = [],
+  ): HierarchyTreeNode {
     return new HierarchyTreeBuilder()
       .setId(`${proto.id}`)
       .setName(proto.name)
@@ -113,20 +126,42 @@ export class TreeNodeUtils {
       .build();
   }
 
-  static makePropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
-    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(rootId, name, value);
+  static makePropertyNode(
+    rootId: string,
+    name: string,
+    value: any,
+  ): PropertyTreeNode {
+    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+      rootId,
+      name,
+      value,
+    );
   }
 
-  static makeCalculatedPropertyNode(rootId: string, name: string, value: any): PropertyTreeNode {
-    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(rootId, name, value);
+  static makeCalculatedPropertyNode(
+    rootId: string,
+    name: string,
+    value: any,
+  ): PropertyTreeNode {
+    return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+      rootId,
+      name,
+      value,
+    );
   }
 
   static makeUiHierarchyNode(proto: any): UiHierarchyTreeNode {
     return UiHierarchyTreeNode.from(TreeNodeUtils.makeHierarchyNode(proto));
   }
 
-  static makeUiPropertyNode(rootId: string, name: string, value: any): UiPropertyTreeNode {
-    return UiPropertyTreeNode.from(TreeNodeUtils.makePropertyNode(rootId, name, value));
+  static makeUiPropertyNode(
+    rootId: string,
+    name: string,
+    value: any,
+  ): UiPropertyTreeNode {
+    return UiPropertyTreeNode.from(
+      TreeNodeUtils.makePropertyNode(rootId, name, value),
+    );
   }
 
   static treeNodeEqualityTester(first: any, second: any): boolean | undefined {
@@ -136,12 +171,19 @@ export class TreeNodeUtils {
     return undefined;
   }
 
-  private static testTreeNodes(node: TreeNode, expectedNode: TreeNode): boolean {
+  private static testTreeNodes(
+    node: TreeNode,
+    expectedNode: TreeNode,
+  ): boolean {
     if (node.id !== expectedNode.id) return false;
     if (node.name !== expectedNode.name) return false;
 
     if ((node as DiffNode).getDiff && (expectedNode as DiffNode).getDiff) {
-      if ((node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()) return false;
+      if (
+        (node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()
+      ) {
+        return false;
+      }
     }
 
     const nodeChildren = node.getAllChildren();

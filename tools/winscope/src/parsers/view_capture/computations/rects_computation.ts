@@ -30,20 +30,36 @@ class RectVcFactory {
     scaleY: number,
     newScaleX: number,
     newScaleY: number,
-    depth: number
+    depth: number,
   ): TraceRect {
-    const nodeLeft = assertDefined(node.getEagerPropertyByName('left')).getValue();
-    const nodeTranslationX = assertDefined(node.getEagerPropertyByName('translationX')).getValue();
-    const nodeWidth = assertDefined(node.getEagerPropertyByName('width')).getValue();
+    const nodeLeft = assertDefined(
+      node.getEagerPropertyByName('left'),
+    ).getValue();
+    const nodeTranslationX = assertDefined(
+      node.getEagerPropertyByName('translationX'),
+    ).getValue();
+    const nodeWidth = assertDefined(
+      node.getEagerPropertyByName('width'),
+    ).getValue();
 
-    const nodeTop = assertDefined(node.getEagerPropertyByName('top')).getValue();
-    const nodeTranslationY = assertDefined(node.getEagerPropertyByName('translationY')).getValue();
-    const nodeHeight = assertDefined(node.getEagerPropertyByName('height')).getValue();
+    const nodeTop = assertDefined(
+      node.getEagerPropertyByName('top'),
+    ).getValue();
+    const nodeTranslationY = assertDefined(
+      node.getEagerPropertyByName('translationY'),
+    ).getValue();
+    const nodeHeight = assertDefined(
+      node.getEagerPropertyByName('height'),
+    ).getValue();
 
     const rectLeft =
-      leftShift + (nodeLeft + nodeTranslationX) * scaleX + (nodeWidth * (scaleX - newScaleX)) / 2;
+      leftShift +
+      (nodeLeft + nodeTranslationX) * scaleX +
+      (nodeWidth * (scaleX - newScaleX)) / 2;
     const rectTop =
-      topShift + (nodeTop + nodeTranslationY) * scaleY + (nodeHeight * (scaleY - newScaleY)) / 2;
+      topShift +
+      (nodeTop + nodeTranslationY) * scaleY +
+      (nodeHeight * (scaleY - newScaleY)) / 2;
 
     const rect = new TraceRectBuilder()
       .setX(rectLeft)
@@ -54,7 +70,9 @@ class RectVcFactory {
       .setName(node.name)
       .setCornerRadius(0)
       .setGroupId(0)
-      .setIsVisible(node.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false)
+      .setIsVisible(
+        node.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false,
+      )
       .setIsDisplay(false)
       .setIsVirtual(false)
       .setDepth(depth * RectVcFactory.DEPTH_MAGNIFICATION)
@@ -88,10 +106,12 @@ export class RectsComputation {
     topShift: number,
     scaleX: number,
     scaleY: number,
-    depth: number
+    depth: number,
   ) {
-    const newScaleX = scaleX * assertDefined(node.getEagerPropertyByName('scaleX')).getValue();
-    const newScaleY = scaleY * assertDefined(node.getEagerPropertyByName('scaleY')).getValue();
+    const newScaleX =
+      scaleX * assertDefined(node.getEagerPropertyByName('scaleX')).getValue();
+    const newScaleY =
+      scaleY * assertDefined(node.getEagerPropertyByName('scaleY')).getValue();
 
     const rect = this.rectsFactory.makeNodeRect(
       node,
@@ -101,18 +121,20 @@ export class RectsComputation {
       scaleY,
       newScaleX,
       newScaleY,
-      depth
+      depth,
     );
     node.setRects([rect]);
 
     node.getAllChildren().forEach((child) => {
       this.addRects(
         child,
-        rect.x - assertDefined(node.getEagerPropertyByName('scrollX')).getValue(),
-        rect.y - assertDefined(node.getEagerPropertyByName('scrollY')).getValue(),
+        rect.x -
+          assertDefined(node.getEagerPropertyByName('scrollX')).getValue(),
+        rect.y -
+          assertDefined(node.getEagerPropertyByName('scrollY')).getValue(),
         newScaleX,
         newScaleY,
-        depth + 1
+        depth + 1,
       );
     });
   }

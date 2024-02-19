@@ -78,6 +78,10 @@ export class ViewerInputMethodComponent {
   @Input() active = false;
 
   isImeManagerService(): boolean {
-    return this.inputData?.dependencies.includes(TraceType.INPUT_METHOD_MANAGER_SERVICE) ?? false;
+    return (
+      this.inputData?.dependencies.includes(
+        TraceType.INPUT_METHOD_MANAGER_SERVICE,
+      ) ?? false
+    );
   }
 }

@@ -34,7 +34,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
-        'traces/perfetto/layers_trace.perfetto-trace'
+        'traces/perfetto/layers_trace.perfetto-trace',
       )) as Parser<HierarchyTreeNode>;
       trace = new TraceBuilder<HierarchyTreeNode>()
         .setType(TraceType.SURFACE_FLINGER)
@@ -52,7 +52,9 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
       ];
-      const actual = assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3);
+      const actual = assertDefined(
+        parser.getTimestamps(TimestampType.ELAPSED),
+      ).slice(0, 3);
       expect(actual).toEqual(expected);
     });
 
@@ -62,7 +64,9 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
       ];
-      const actual = assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3);
+      const actual = assertDefined(
+        parser.getTimestamps(TimestampType.REAL),
+      ).slice(0, 3);
       expect(actual).toEqual(expected);
     });
 
@@ -70,15 +74,23 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace.perfetto-trace',
-        true
+        true,
       );
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.SURFACE_FLINGER,
+      );
 
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n)
-      );
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n)
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n));
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+        )[0],
+      ).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n),
       );
     });
 
@@ -92,41 +104,57 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       const entry = await parser.getEntry(0, TimestampType.REAL);
       {
         const layer = assertDefined(
-          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27'))
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27')),
         );
         expect(layer.name).toEqual('Leaf:24:25#27');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('0');
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('0');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('');
       }
       {
-        const layer = assertDefined(entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')));
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')),
+        );
         expect(layer.name).toEqual('Task=4#48');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('1');
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('1');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('HIDDEN (0x1)');
       }
       {
         const layer = assertDefined(
-          entry.findDfs(UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'))
+          entry.findDfs(
+            UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'),
+          ),
         );
         expect(layer.name).toEqual('Wallpaper BBQ wrapper#77');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual(
-          '256'
-        );
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('256');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('ENABLE_BACKPRESSURE (0x100)');
       }
     });
 
     it('supports VSYNCID custom query', async () => {
-      const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+      const entries = await trace
+        .sliceEntries(0, 3)
+        .customQuery(CustomQueryType.VSYNCID);
       const values = entries.map((entry) => entry.getValue());
       expect(values).toEqual([4891n, 5235n, 5748n]);
     });
@@ -135,7 +163,10 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       const idAndNames = await trace
         .sliceEntries(0, 1)
         .customQuery(CustomQueryType.SF_LAYERS_ID_AND_NAME);
-      expect(idAndNames).toContain({id: 4, name: 'WindowedMagnification:0:31#4'});
+      expect(idAndNames).toContain({
+        id: 4,
+        name: 'WindowedMagnification:0:31#4',
+      });
       expect(idAndNames).toContain({id: 5, name: 'HideDisplayCutout:0:14#5'});
     });
   });
@@ -144,7 +175,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
     it('is robust to duplicated layer ids', async () => {
       const parser = await UnitTestUtils.getPerfettoParser(
         TraceType.SURFACE_FLINGER,
-        'traces/perfetto/layers_trace_with_duplicated_ids.perfetto-trace'
+        'traces/perfetto/layers_trace_with_duplicated_ids.perfetto-trace',
       );
       const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeTruthy();
@@ -152,23 +183,25 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       const layer = assertDefined(
         entry.findDfs(
           UiTreeUtils.makeIdMatchFilter(
-            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)'
-          )
-        )
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)',
+          ),
+        ),
       );
-      expect(layer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(layer.name).toEqual(
+        'Input Consumer recents_animation_input_consumer#408(Mirror)',
+      );
       expect(layer.getAllChildren().length).toEqual(0);
 
       const dupLayer = assertDefined(
         entry.findDfs(
           UiTreeUtils.makeIdMatchFilter(
-            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
-          )
-        )
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
+          ),
+        ),
       );
 
       expect(dupLayer.name).toEqual(
-        'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
+        'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
       );
       expect(dupLayer.getAllChildren().length).toEqual(0);
     });

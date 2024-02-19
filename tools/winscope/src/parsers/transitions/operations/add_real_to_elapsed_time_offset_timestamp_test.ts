@@ -67,7 +67,9 @@ describe('AddRealToElapsedTimeOffsetTimestamp', () => {
       ])
       .build();
 
-    const operation = new AddRealToElapsedTimeOffsetTimestamp(realToElapsedTimeOffsetTimestamp);
+    const operation = new AddRealToElapsedTimeOffsetTimestamp(
+      realToElapsedTimeOffsetTimestamp,
+    );
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });

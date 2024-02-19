@@ -27,7 +27,7 @@ export function executeScrollComponentTests(
   itemClassName: string,
   setUpTestEnvironment: () => Promise<
     [ComponentFixture<ScrollComponent>, HTMLElement, CdkVirtualScrollViewport]
-  >
+  >,
 ) {
   describe('', () => {
     let fixture: ComponentFixture<any>;
@@ -52,9 +52,13 @@ export function executeScrollComponentTests(
     });
 
     it('should scroll to index in large jumps', () => {
-      expect(htmlElement.querySelector(`.${itemClassName}[item-id="30"]`)).toBeFalsy();
+      expect(
+        htmlElement.querySelector(`.${itemClassName}[item-id="30"]`),
+      ).toBeFalsy();
       checkScrollToIndex(30);
-      expect(htmlElement.querySelector(`.${itemClassName}[item-id="70"]`)).toBeFalsy();
+      expect(
+        htmlElement.querySelector(`.${itemClassName}[item-id="70"]`),
+      ).toBeFalsy();
       checkScrollToIndex(70);
     });
 
@@ -72,7 +76,9 @@ export function executeScrollComponentTests(
       viewport.elementRef.nativeElement.dispatchEvent(new Event('scroll'));
       animationFrameScheduler.flush();
       fixture.detectChanges();
-      assertDefined(htmlElement.querySelector(`.${itemClassName}[item-id="${i}"]`));
+      assertDefined(
+        htmlElement.querySelector(`.${itemClassName}[item-id="${i}"]`),
+      );
     }
   });
 }

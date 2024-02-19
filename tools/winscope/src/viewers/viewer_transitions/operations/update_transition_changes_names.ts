@@ -19,10 +19,12 @@ import {FixedStringFormatter} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
-export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNode> {
+export class UpdateTransitionChangesNames
+  implements Operation<UiPropertyTreeNode>
+{
   constructor(
     private readonly layerIdToName: Map<number, string>,
-    private readonly windowTokenToTitle: Map<string, string>
+    private readonly windowTokenToTitle: Map<string, string>,
   ) {}
 
   apply(node: UiPropertyTreeNode): void {
@@ -35,7 +37,9 @@ export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNod
           const layerIdValue = Number(layerId.getValue());
           const layerName = this.layerIdToName.get(layerIdValue);
           if (layerName) {
-            layerId.setFormatter(new FixedStringFormatter(`${layerIdValue} ${layerName}`));
+            layerId.setFormatter(
+              new FixedStringFormatter(`${layerIdValue} ${layerName}`),
+            );
           }
         }
 
@@ -45,8 +49,10 @@ export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNod
           const windowTitle = this.windowTokenToTitle.get(windowIdString);
           windowId.setFormatter(
             new FixedStringFormatter(
-              windowTitle ? `0x${windowIdString} (${windowTitle})` : `0x${windowIdString}`
-            )
+              windowTitle
+                ? `0x${windowIdString} (${windowTitle})`
+                : `0x${windowIdString}`,
+            ),
           );
         }
       });

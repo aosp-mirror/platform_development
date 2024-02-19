@@ -61,6 +61,9 @@ export class TransformMatrixComponent {
   @Input() matrix: UiPropertyTreeNode | undefined;
 
   getVal(name: string): string {
-    return assertDefined(this.matrix).getChildByName(name)?.formattedValue() ?? 'null';
+    return (
+      assertDefined(this.matrix).getChildByName(name)?.formattedValue() ??
+      'null'
+    );
   }
 }

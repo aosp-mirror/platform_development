@@ -31,7 +31,7 @@ class ViewerStub implements Viewer {
     title: string,
     viewContent?: string,
     dependencies?: TraceType[],
-    viewType?: ViewType
+    viewType?: ViewType,
   ) {
     this.title = title;
 
@@ -49,7 +49,7 @@ class ViewerStub implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       this.title,
-      this.getDependencies()[0]
+      this.getDependencies()[0],
     );
   }
 

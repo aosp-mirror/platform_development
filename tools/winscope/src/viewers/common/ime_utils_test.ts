@@ -24,55 +24,63 @@ describe('ImeUtils', () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processed = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
-      undefined
+      undefined,
     );
 
     expect(processed.wmStateProperties.focusedApp).toEqual(
-      'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity'
+      'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity',
     );
 
     expect(processed.wmStateProperties.focusedActivity).toEqual(
-      '{9d8c2ef com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity} state=RESUMED visible=true'
+      '{9d8c2ef com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity} state=RESUMED visible=true',
     );
 
     expect(processed.wmStateProperties.focusedWindow).toEqual(
-      '{928b3d com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity EXITING} type=TYPE_BASE_APPLICATION cf={empty} pf=(0, 0) - (1080, 2400)'
+      '{928b3d com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity EXITING} type=TYPE_BASE_APPLICATION cf={empty} pf=(0, 0) - (1080, 2400)',
     );
 
-    const imeControlTarget = assertDefined(processed.wmStateProperties.imeControlTarget);
+    const imeControlTarget = assertDefined(
+      processed.wmStateProperties.imeControlTarget,
+    );
 
     expect(
       imeControlTarget
         .getChildByName('windowContainer')
         ?.getChildByName('identifier')
         ?.getChildByName('title')
-        ?.getValue()
+        ?.getValue(),
     ).toEqual(
-      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
+      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity',
     );
 
-    const imeInputTarget = assertDefined(processed.wmStateProperties.imeInputTarget);
+    const imeInputTarget = assertDefined(
+      processed.wmStateProperties.imeInputTarget,
+    );
     expect(
       imeInputTarget
         .getChildByName('windowContainer')
         ?.getChildByName('identifier')
         ?.getChildByName('title')
-        ?.getValue()
+        ?.getValue(),
     ).toEqual(
-      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
+      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity',
     );
 
     expect(
-      processed.wmStateProperties.imeInsetsSourceProvider?.getChildByName('insetsSourceProvider')
+      processed.wmStateProperties.imeInsetsSourceProvider?.getChildByName(
+        'insetsSourceProvider',
+      ),
     ).toBeDefined();
 
-    const imeLayeringTarget = assertDefined(processed.wmStateProperties.imeLayeringTarget);
+    const imeLayeringTarget = assertDefined(
+      processed.wmStateProperties.imeLayeringTarget,
+    );
     expect(
       imeLayeringTarget
         .getChildByName('windowContainer')
         ?.getChildByName('identifier')
         ?.getChildByName('title')
-        ?.getValue()
+        ?.getValue(),
     ).toEqual('SnapshotStartingWindow for taskId=1393');
 
     expect(processed.wmStateProperties.isInputMethodWindowVisible).toBeFalse();
@@ -82,26 +90,36 @@ describe('ImeUtils', () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
       assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
-      undefined
+      undefined,
     );
     const layers = assertDefined(
       ImeUtils.getImeLayers(
         assertDefined(entries.get(TraceType.SURFACE_FLINGER)),
         processedWindowManagerState,
-        undefined
-      )
+        undefined,
+      ),
     );
 
-    const inputMethodSurface = assertDefined(layers.properties.inputMethodSurface);
+    const inputMethodSurface = assertDefined(
+      layers.properties.inputMethodSurface,
+    );
     const inputMethodSurfaceRect = assertDefined(inputMethodSurface.rect);
     expect(inputMethodSurface.id).toEqual(
-      '280 Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280'
+      '280 Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280',
     );
     expect(inputMethodSurface.isVisible).toEqual(false);
-    expect(inputMethodSurfaceRect.getChildByName('left')?.getValue()).toEqual(-10800);
-    expect(inputMethodSurfaceRect.getChildByName('top')?.getValue()).toEqual(-24136);
-    expect(inputMethodSurfaceRect.getChildByName('right')?.getValue()).toEqual(10800);
-    expect(inputMethodSurfaceRect.getChildByName('bottom')?.getValue()).toEqual(23864);
+    expect(inputMethodSurfaceRect.getChildByName('left')?.getValue()).toEqual(
+      -10800,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('top')?.getValue()).toEqual(
+      -24136,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('right')?.getValue()).toEqual(
+      10800,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('bottom')?.getValue()).toEqual(
+      23864,
+    );
     expect(inputMethodSurface.screenBounds).toBeDefined();
 
     const imeContainer = assertDefined(layers.properties.imeContainer);
@@ -109,11 +127,13 @@ describe('ImeUtils', () => {
     expect(imeContainer.z).toEqual(1);
     expect(imeContainer.zOrderRelativeOfId).toEqual(115);
 
-    expect(assertDefined(layers.properties.focusedWindowColor).formattedValue()).toEqual(
-      `${EMPTY_OBJ_STRING}, alpha: 1`
-    );
+    expect(
+      assertDefined(layers.properties.focusedWindowColor).formattedValue(),
+    ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
 
-    const taskLayerOfImeContainer = assertDefined(layers.taskLayerOfImeContainer);
+    const taskLayerOfImeContainer = assertDefined(
+      layers.taskLayerOfImeContainer,
+    );
     expect(taskLayerOfImeContainer.id).toEqual('114 Task=1391#114');
     expect(taskLayerOfImeContainer.name).toEqual('Task=1391#114');
 

@@ -29,7 +29,7 @@ describe('Perfetto ParserTransitions', () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
-        'traces/perfetto/shell_transitions_trace.perfetto-trace'
+        'traces/perfetto/shell_transitions_trace.perfetto-trace',
       );
     });
 
@@ -43,7 +43,9 @@ describe('Perfetto ParserTransitions', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(480676958445n),
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(487195167758n),
       ];
-      const actual = assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3);
+      const actual = assertDefined(
+        parser.getTimestamps(TimestampType.ELAPSED),
+      ).slice(0, 3);
       expect(actual).toEqual(expected);
     });
 
@@ -53,7 +55,9 @@ describe('Perfetto ParserTransitions', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1700573904176872211n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1700573910695081524n),
       ];
-      const actual = assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3);
+      const actual = assertDefined(
+        parser.getTimestamps(TimestampType.REAL),
+      ).slice(0, 3);
       expect(actual).toEqual(expected);
     });
 
@@ -63,84 +67,119 @@ describe('Perfetto ParserTransitions', () => {
       const shellDataNode = assertDefined(entry.getChildByName('shellData'));
 
       expect(entry.getChildByName('id')?.getValue()).toEqual(32n);
-      expect(wmDataNode.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T13:38:23.083364560'
-      );
+      expect(
+        wmDataNode.getChildByName('createTimeNs')?.formattedValue(),
+      ).toEqual('2023-11-21T13:38:23.083364560');
       expect(wmDataNode.getChildByName('sendTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T13:38:23.096319557'
+        '2023-11-21T13:38:23.096319557',
       );
-      expect(wmDataNode.getChildByName('finishTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T13:38:23.624691628'
-      );
+      expect(
+        wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),
+      ).toEqual('2023-11-21T13:38:23.624691628');
       expect(entry.getChildByName('merged')?.getValue()).toBeFalse();
       expect(entry.getChildByName('played')?.getValue()).toBeTrue();
       expect(entry.getChildByName('aborted')?.getValue()).toBeFalse();
 
       expect(
-        assertDefined(wmDataNode.getChildByName('startingWindowRemoveTimeNs')).formattedValue()
+        assertDefined(
+          wmDataNode.getChildByName('startingWindowRemoveTimeNs'),
+        ).formattedValue(),
       ).toEqual('2023-11-21T13:38:23.219566424');
       expect(
-        assertDefined(wmDataNode.getChildByName('startTransactionId')).formattedValue()
+        assertDefined(
+          wmDataNode.getChildByName('startTransactionId'),
+        ).formattedValue(),
       ).toEqual('5811090758076');
       expect(
-        assertDefined(wmDataNode.getChildByName('finishTransactionId')).formattedValue()
+        assertDefined(
+          wmDataNode.getChildByName('finishTransactionId'),
+        ).formattedValue(),
       ).toEqual('5811090758077');
-      expect(assertDefined(wmDataNode.getChildByName('type')).formattedValue()).toEqual('OPEN');
+      expect(
+        assertDefined(wmDataNode.getChildByName('type')).formattedValue(),
+      ).toEqual('OPEN');
 
-      const targets = assertDefined(wmDataNode.getChildByName('targets')).getAllChildren();
+      const targets = assertDefined(
+        wmDataNode.getChildByName('targets'),
+      ).getAllChildren();
       expect(targets.length).toEqual(2);
-      expect(assertDefined(targets[0].getChildByName('layerId')).formattedValue()).toEqual('398');
-      expect(assertDefined(targets[1].getChildByName('layerId')).formattedValue()).toEqual('47');
-      expect(assertDefined(targets[0].getChildByName('mode')).formattedValue()).toEqual('TO_FRONT');
-      expect(assertDefined(targets[1].getChildByName('mode')).formattedValue()).toEqual('TO_BACK');
+      expect(
+        assertDefined(targets[0].getChildByName('layerId')).formattedValue(),
+      ).toEqual('398');
+      expect(
+        assertDefined(targets[1].getChildByName('layerId')).formattedValue(),
+      ).toEqual('47');
+      expect(
+        assertDefined(targets[0].getChildByName('mode')).formattedValue(),
+      ).toEqual('TO_FRONT');
+      expect(
+        assertDefined(targets[1].getChildByName('mode')).formattedValue(),
+      ).toEqual('TO_BACK');
 
       expect(
-        assertDefined(shellDataNode.getChildByName('dispatchTimeNs')).formattedValue()
+        assertDefined(
+          shellDataNode.getChildByName('dispatchTimeNs'),
+        ).formattedValue(),
       ).toEqual('2023-11-21T13:38:23.102738218');
       expect(shellDataNode.getChildByName('mergeRequestTime')).toBeUndefined();
       expect(shellDataNode.getChildByName('mergeTime')).toBeUndefined();
       expect(shellDataNode.getChildByName('abortTimeNs')).toBeUndefined();
       expect(shellDataNode.getChildByName('mergeTarget')).toBeUndefined();
-      expect(assertDefined(shellDataNode.getChildByName('handler')).formattedValue()).toEqual(
-        'com.android.wm.shell.transition.DefaultMixedHandler'
-      );
+      expect(
+        assertDefined(shellDataNode.getChildByName('handler')).formattedValue(),
+      ).toEqual('com.android.wm.shell.transition.DefaultMixedHandler');
     });
 
     it('applies timezone info to real timestamps only', async () => {
       const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
         TraceType.TRANSITION,
         'traces/perfetto/shell_transitions_trace.perfetto-trace',
-        true
+        true,
       );
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.TRANSITION);
-
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(479602824452n)
-      );
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1700593703102738218n)
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.TRANSITION,
       );
 
-      const entry = await parserWithTimezoneInfo.getEntry(0, TimestampType.REAL);
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(479602824452n));
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+        )[0],
+      ).toEqual(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1700593703102738218n),
+      );
+
+      const entry = await parserWithTimezoneInfo.getEntry(
+        0,
+        TimestampType.REAL,
+      );
       const wmDataNode = assertDefined(entry.getChildByName('wmData'));
       const shellDataNode = assertDefined(entry.getChildByName('shellData'));
 
-      expect(wmDataNode.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T19:08:23.083364560'
-      );
+      expect(
+        wmDataNode.getChildByName('createTimeNs')?.formattedValue(),
+      ).toEqual('2023-11-21T19:08:23.083364560');
       expect(wmDataNode.getChildByName('sendTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T19:08:23.096319557'
+        '2023-11-21T19:08:23.096319557',
       );
-      expect(wmDataNode.getChildByName('finishTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21T19:08:23.624691628'
-      );
+      expect(
+        wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),
+      ).toEqual('2023-11-21T19:08:23.624691628');
 
       expect(
-        assertDefined(wmDataNode.getChildByName('startingWindowRemoveTimeNs')).formattedValue()
+        assertDefined(
+          wmDataNode.getChildByName('startingWindowRemoveTimeNs'),
+        ).formattedValue(),
       ).toEqual('2023-11-21T19:08:23.219566424');
 
       expect(
-        assertDefined(shellDataNode.getChildByName('dispatchTimeNs')).formattedValue()
+        assertDefined(
+          shellDataNode.getChildByName('dispatchTimeNs'),
+        ).formattedValue(),
       ).toEqual('2023-11-21T19:08:23.102738218');
     });
   });

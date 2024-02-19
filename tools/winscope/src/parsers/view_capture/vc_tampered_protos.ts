@@ -19,9 +19,10 @@ import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/viewcapture/latest/json';
 
 export const ExportedData = TamperedMessageType.tamper(
-  root.lookupType('com.android.app.viewcapture.data.ExportedData')
+  root.lookupType('com.android.app.viewcapture.data.ExportedData'),
 );
 
 export const NodeField = assertDefined(
-  ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData'].tamperedMessageType
+  ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData']
+    .tamperedMessageType,
 ).fields['node'];

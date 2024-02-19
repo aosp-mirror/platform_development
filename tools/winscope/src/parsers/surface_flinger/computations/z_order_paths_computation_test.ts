@@ -88,20 +88,36 @@ describe('ZOrderPathsComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const layer1WithPath = assertDefined(hierarchyRoot.getChildByName('layer1'));
-    const layer2WithPath = assertDefined(layer1WithPath.getChildByName('layer2'));
-    const layer3WithPath = assertDefined(layer2WithPath.getChildByName('layer3'));
-    const layer4WithPath = assertDefined(layer1WithPath.getChildByName('layer4'));
+    const layer1WithPath = assertDefined(
+      hierarchyRoot.getChildByName('layer1'),
+    );
+    const layer2WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer2'),
+    );
+    const layer3WithPath = assertDefined(
+      layer2WithPath.getChildByName('layer3'),
+    );
+    const layer4WithPath = assertDefined(
+      layer1WithPath.getChildByName('layer4'),
+    );
 
-    expect(getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([0]);
-    expect(getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([0, 1]);
-    expect(getZOrderPathArray(layer3WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([
-      0, 1, 1,
-    ]);
-    expect(getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath'))).toEqual([0, 2]);
+    expect(
+      getZOrderPathArray(layer1WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0]);
+    expect(
+      getZOrderPathArray(layer2WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1]);
+    expect(
+      getZOrderPathArray(layer3WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 1, 1]);
+    expect(
+      getZOrderPathArray(layer4WithPath.getEagerPropertyByName('zOrderPath')),
+    ).toEqual([0, 2]);
   });
 
-  function getZOrderPathArray(property: PropertyTreeNode | undefined): number[] {
+  function getZOrderPathArray(
+    property: PropertyTreeNode | undefined,
+  ): number[] {
     if (!property) return [];
     return property.getAllChildren().map((child) => Number(child.getValue()));
   }

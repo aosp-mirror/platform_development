@@ -24,7 +24,7 @@ export type MakeTimestampStrategyType = (valueNs: bigint) => Timestamp;
 export class TransformToTimestamp extends AddOperation<PropertyTreeNode> {
   constructor(
     private readonly timestampNames: string[],
-    private readonly makeTimestampStrategy: MakeTimestampStrategyType
+    private readonly makeTimestampStrategy: MakeTimestampStrategyType,
   ) {
     super();
   }
@@ -38,12 +38,15 @@ export class TransformToTimestamp extends AddOperation<PropertyTreeNode> {
         if (nanosLong === undefined || nanosLong === null) {
           return [];
         }
-        const timestamp = this.makeTimestampStrategy(BigInt(nanosLong.toString()));
-        const timestampNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
-          value.id,
-          property.name,
-          timestamp
+        const timestamp = this.makeTimestampStrategy(
+          BigInt(nanosLong.toString()),
         );
+        const timestampNode =
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+            value.id,
+            property.name,
+            timestamp,
+          );
         timestampNodes.push(timestampNode);
       }
     }

@@ -26,7 +26,7 @@ export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
     const whatHeight = this.subItemHeight(entry.what, this.whatCharsPerRow);
     const timestampHeight = this.subItemHeight(
       entry.time.formattedValue(),
-      this.timestampCharsPerRow
+      this.timestampCharsPerRow,
     );
     return Math.max(whatHeight, timestampHeight);
   }

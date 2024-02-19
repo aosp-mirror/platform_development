@@ -15,7 +15,11 @@
  */
 import {CommonModule} from '@angular/common';
 import {Component, ViewChild} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatOptionModule} from '@angular/material/core';
 import {MatFormFieldModule} from '@angular/material/form-field';

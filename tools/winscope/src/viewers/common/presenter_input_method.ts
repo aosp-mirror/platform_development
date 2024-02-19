@@ -29,7 +29,11 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {ImeLayers, ImeUtils, ProcessedWindowManagerState} from 'viewers/common/ime_utils';
+import {
+  ImeLayers,
+  ImeUtils,
+  ProcessedWindowManagerState,
+} from 'viewers/common/ime_utils';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter as PresenterSurfaceFlinger} from 'viewers/viewer_surface_flinger/presenter';
@@ -62,47 +66,51 @@ export abstract class PresenterInputMethod {
   protected uiData: ImeUiData;
   protected highlightedItem = '';
   protected entry: HierarchyTreeNode | undefined;
-  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'ImeHierarchyOptions',
-    {
-      simplifyNames: {
-        name: 'Simplify names',
-        enabled: true,
+  protected hierarchyUserOptions: UserOptions =
+    PersistentStoreProxy.new<UserOptions>(
+      'ImeHierarchyOptions',
+      {
+        simplifyNames: {
+          name: 'Simplify names',
+          enabled: true,
+        },
+        onlyVisible: {
+          name: 'Only visible',
+          enabled: false,
+        },
+        flat: {
+          name: 'Flat',
+          enabled: false,
+        },
       },
-      onlyVisible: {
-        name: 'Only visible',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: false,
-      },
-    },
-    this.storage
-  );
-  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
-    'ImePropertiesOptions',
-    {
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: false,
-        tooltip: `
+      this.storage,
+    );
+  protected propertiesUserOptions: UserOptions =
+    PersistentStoreProxy.new<UserOptions>(
+      'ImePropertiesOptions',
+      {
+        showDefaults: {
+          name: 'Show defaults',
+          enabled: false,
+          tooltip: `
                 If checked, shows the value of all properties.
                 Otherwise, hides all properties whose value is
                 the default for its data type.
               `,
+        },
       },
-    },
-    this.storage
-  );
+      this.storage,
+    );
 
   constructor(
     traces: Traces,
     private storage: Storage,
     dependencies: ImeTraceType[],
-    notifyViewCallback: NotifyImeViewCallbackType
+    notifyViewCallback: NotifyImeViewCallbackType,
   ) {
-    this.imeTrace = traces.getTrace(dependencies[0]) as Trace<HierarchyTreeNode>;
+    this.imeTrace = traces.getTrace(
+      dependencies[0],
+    ) as Trace<HierarchyTreeNode>;
     this.sfTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
 
@@ -113,40 +121,50 @@ export abstract class PresenterInputMethod {
   }
 
   async onAppEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      this.uiData = new ImeUiData(this.dependencies);
-      this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-      this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-      this.selectedHierarchyTree = undefined;
-      this.clearAdditionalPropertyTreeSelection();
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        this.uiData = new ImeUiData(this.dependencies);
+        this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+        this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+        this.selectedHierarchyTree = undefined;
+        this.clearAdditionalPropertyTreeSelection();
 
-      const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(event.position);
-
-      if (imeEntry) {
-        this.entry = await imeEntry.getValue();
-        this.uiData.highlightedItem = this.highlightedItem;
-        this.uiData.additionalProperties = this.getAdditionalProperties(
-          await wmEntry?.getValue(),
-          await sfEntry?.getValue(),
-          sfEntry?.getTimestamp(),
-          wmEntry?.getTimestamp()
+        const [imeEntry, sfEntry, wmEntry] = this.findTraceEntries(
+          event.position,
         );
-        this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
-          assertDefined(this.entry),
-          true
-        );
-        this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
 
-        await this.updateAdditionalPropertyTree(this.uiData.additionalProperties);
-      }
-      this.copyUiDataAndNotifyView();
-    });
+        if (imeEntry) {
+          this.entry = await imeEntry.getValue();
+          this.uiData.highlightedItem = this.highlightedItem;
+          this.uiData.additionalProperties = this.getAdditionalProperties(
+            await wmEntry?.getValue(),
+            await sfEntry?.getValue(),
+            sfEntry?.getTimestamp(),
+            wmEntry?.getTimestamp(),
+          );
+          this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
+            assertDefined(this.entry),
+            true,
+          );
+          this.uiData.hierarchyTableProperties =
+            this.updateHierarchyTableProperties();
+
+          await this.updateAdditionalPropertyTree(
+            this.uiData.additionalProperties,
+          );
+        }
+        this.copyUiDataAndNotifyView();
+      },
+    );
   }
 
   onPinnedItemChange(pinnedItem: UiHierarchyTreeNode) {
     const pinnedId = pinnedItem.id;
     if (this.pinnedItems.map((item) => item.id).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter((pinned) => pinned.id !== pinnedId);
+      this.pinnedItems = this.pinnedItems.filter(
+        (pinned) => pinned.id !== pinnedId,
+      );
     } else {
       this.pinnedItems.push(pinnedItem);
     }
@@ -165,10 +183,12 @@ export abstract class PresenterInputMethod {
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
       assertDefined(this.entry),
-      true
+      true,
     );
     if (this.uiData.additionalProperties?.sf) {
-      this.uiData.sfSubtrees = this.getSfSubtrees(this.uiData.additionalProperties?.sf);
+      this.uiData.sfSubtrees = this.getSfSubtrees(
+        this.uiData.additionalProperties?.sf,
+      );
     }
     this.copyUiDataAndNotifyView();
   }
@@ -177,10 +197,12 @@ export abstract class PresenterInputMethod {
     this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
       assertDefined(this.entry),
-      true
+      true,
     );
     if (this.uiData.additionalProperties?.sf) {
-      this.uiData.sfSubtrees = this.getSfSubtrees(this.uiData.additionalProperties?.sf);
+      this.uiData.sfSubtrees = this.getSfSubtrees(
+        this.uiData.additionalProperties?.sf,
+      );
     }
     this.copyUiDataAndNotifyView();
   }
@@ -204,7 +226,10 @@ export abstract class PresenterInputMethod {
     }
   }
 
-  async onAdditionalPropertySelected(selectedItem: {name: string; treeNode: TreeNode}) {
+  async onAdditionalPropertySelected(selectedItem: {
+    name: string;
+    treeNode: TreeNode;
+  }) {
     this.updateHighlightedItem(selectedItem.treeNode.id);
     if (selectedItem.treeNode instanceof HierarchyTreeNode) {
       this.selectedAdditionalPropertiesTree = undefined;
@@ -222,18 +247,27 @@ export abstract class PresenterInputMethod {
     wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
     sfEntryTimestamp: Timestamp | undefined,
-    wmEntryTimestamp: Timestamp | undefined
+    wmEntryTimestamp: Timestamp | undefined,
   ): ImeAdditionalProperties {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;
 
     if (wmEntry) {
-      wmProperties = ImeUtils.processWindowManagerTraceEntry(wmEntry, wmEntryTimestamp);
+      wmProperties = ImeUtils.processWindowManagerTraceEntry(
+        wmEntry,
+        wmEntryTimestamp,
+      );
 
       if (sfEntry) {
-        sfProperties = ImeUtils.getImeLayers(sfEntry, wmProperties, sfEntryTimestamp);
+        sfProperties = ImeUtils.getImeLayers(
+          sfEntry,
+          wmProperties,
+          sfEntryTimestamp,
+        );
 
-        if (sfProperties) this.uiData.sfSubtrees = this.getSfSubtrees(sfProperties);
+        if (sfProperties) {
+          this.uiData.sfSubtrees = this.getSfSubtrees(sfProperties);
+        }
       }
     }
 
@@ -254,26 +288,32 @@ export abstract class PresenterInputMethod {
     if (sfProperties?.taskLayerOfImeContainer) {
       const formattedTaskLayer = this.formatHierarchyTreeAndUpdatePinnedItems(
         sfProperties.taskLayerOfImeContainer,
-        false
+        false,
       );
       sfSubtrees.push(formattedTaskLayer);
     }
     if (sfProperties?.taskLayerOfImeSnapshot) {
       const formattedTaskLayer = this.formatHierarchyTreeAndUpdatePinnedItems(
         sfProperties.taskLayerOfImeSnapshot,
-        false
+        false,
       );
       sfSubtrees.push(formattedTaskLayer);
     }
-    sfSubtrees.forEach((subtree) => subtree.setDisplayName('SfSubtree - ' + subtree.name));
+    sfSubtrees.forEach((subtree) =>
+      subtree.setDisplayName('SfSubtree - ' + subtree.name),
+    );
     return sfSubtrees;
   }
 
   private async updateSelectedTreeUiData() {
     if (this.selectedHierarchyTree) {
-      this.uiData.propertiesTree = await this.getPropertiesTree(this.selectedHierarchyTree);
+      this.uiData.propertiesTree = await this.getPropertiesTree(
+        this.selectedHierarchyTree,
+      );
     } else if (this.selectedAdditionalPropertiesTree) {
-      this.uiData.propertiesTree = this.formatPropertiesTree(this.selectedAdditionalPropertiesTree);
+      this.uiData.propertiesTree = this.formatPropertiesTree(
+        this.selectedAdditionalPropertiesTree,
+      );
     }
     this.copyUiDataAndNotifyView();
   }
@@ -292,20 +332,23 @@ export abstract class PresenterInputMethod {
   }
 
   private async getPropertiesTree(
-    selectedHierarchyTree: HierarchyTreeNode
+    selectedHierarchyTree: HierarchyTreeNode,
   ): Promise<UiPropertyTreeNode> {
     const propertiesTree = await selectedHierarchyTree.getAllProperties();
     return this.formatPropertiesTree(propertiesTree);
   }
 
   private findTraceEntries(
-    position: TracePosition
+    position: TracePosition,
   ): [
     TraceEntry<HierarchyTreeNode> | undefined,
     TraceEntry<HierarchyTreeNode> | undefined,
-    TraceEntry<HierarchyTreeNode> | undefined
+    TraceEntry<HierarchyTreeNode> | undefined,
   ] {
-    const imeEntry = TraceEntryFinder.findCorrespondingEntry(this.imeTrace, position);
+    const imeEntry = TraceEntryFinder.findCorrespondingEntry(
+      this.imeTrace,
+      position,
+    );
     if (!imeEntry) {
       return [undefined, undefined, undefined];
     }
@@ -322,32 +365,42 @@ export abstract class PresenterInputMethod {
     }
 
     const frame = frames.start;
-    const sfEntry = this.sfTrace?.getFrame(frame)?.findClosestEntry(imeEntry.getTimestamp());
-    const wmEntry = this.wmTrace?.getFrame(frame)?.findClosestEntry(imeEntry.getTimestamp());
+    const sfEntry = this.sfTrace
+      ?.getFrame(frame)
+      ?.findClosestEntry(imeEntry.getTimestamp());
+    const wmEntry = this.wmTrace
+      ?.getFrame(frame)
+      ?.findClosestEntry(imeEntry.getTimestamp());
 
     return [imeEntry, sfEntry, wmEntry];
   }
 
   private formatHierarchyTreeAndUpdatePinnedItems(
     hierarchyTree: HierarchyTreeNode,
-    isImeTree: boolean
+    isImeTree: boolean,
   ): UiHierarchyTreeNode {
     const uiTree = UiHierarchyTreeNode.from(hierarchyTree);
 
     if (isImeTree && this.currentImeEntryTimestamp) {
-      const where = hierarchyTree.getEagerPropertyByName('where')?.formattedValue();
+      const where = hierarchyTree
+        .getEagerPropertyByName('where')
+        ?.formattedValue();
       uiTree.setDisplayName(this.currentImeEntryTimestamp + ' - ' + where);
 
       const client = uiTree.getChildByName('client');
       if (client) {
         const view =
-          client.getEagerPropertyByName('viewRootImpl')?.getChildByName('view')?.formattedValue() ??
-          'null';
+          client
+            .getEagerPropertyByName('viewRootImpl')
+            ?.getChildByName('view')
+            ?.formattedValue() ?? 'null';
         client.setDisplayName(view);
       }
     }
 
-    const formatter = new UiTreeFormatter<UiHierarchyTreeNode>().setUiTree(uiTree);
+    const formatter = new UiTreeFormatter<UiHierarchyTreeNode>().setUiTree(
+      uiTree,
+    );
 
     if (this.hierarchyUserOptions['flat']?.enabled) {
       formatter.addOperation(new FlattenChildren());
@@ -388,11 +441,15 @@ export abstract class PresenterInputMethod {
     return pinnedNodes;
   }
 
-  private formatPropertiesTree(propertiesTree: PropertyTreeNode): UiPropertyTreeNode {
+  private formatPropertiesTree(
+    propertiesTree: PropertyTreeNode,
+  ): UiPropertyTreeNode {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
       UiTreeUtils.isNotCalculated,
-      UiTreeUtils.makeDenyListFilter(PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES),
+      UiTreeUtils.makeDenyListFilter(
+        PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES,
+      ),
     ];
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
@@ -411,7 +468,9 @@ export abstract class PresenterInputMethod {
       .format();
   }
 
-  private async updateAdditionalPropertyTree(additionalProperties: ImeAdditionalProperties) {
+  private async updateAdditionalPropertyTree(
+    additionalProperties: ImeAdditionalProperties,
+  ) {
     if (this.highlightedItem.includes('WindowManagerState')) {
       this.selectedAdditionalPropertiesTree = undefined;
       const wmHierarchyTree = additionalProperties.wm?.hierarchyTree;
@@ -429,19 +488,24 @@ export abstract class PresenterInputMethod {
         : undefined;
     } else if (this.highlightedItem.includes('inputMethodControlTarget')) {
       this.selectedHierarchyTree = undefined;
-      const imeControlTarget = additionalProperties.wm?.wmStateProperties?.imeControlTarget;
+      const imeControlTarget =
+        additionalProperties.wm?.wmStateProperties?.imeControlTarget;
       this.selectedAdditionalPropertiesTree = imeControlTarget;
       this.selectedAdditionalPropertiesTreeName = imeControlTarget
         ? 'Ime Control Target'
         : undefined;
     } else if (this.highlightedItem.includes('inputMethodInputTarget')) {
       this.selectedHierarchyTree = undefined;
-      const imeInputTarget = additionalProperties.wm?.wmStateProperties?.imeInputTarget;
+      const imeInputTarget =
+        additionalProperties.wm?.wmStateProperties?.imeInputTarget;
       this.selectedAdditionalPropertiesTree = imeInputTarget;
-      this.selectedAdditionalPropertiesTreeName = imeInputTarget ? 'Ime Input Target' : undefined;
+      this.selectedAdditionalPropertiesTreeName = imeInputTarget
+        ? 'Ime Input Target'
+        : undefined;
     } else if (this.highlightedItem.includes('inputMethodTarget')) {
       this.selectedHierarchyTree = undefined;
-      const imeLayeringTarget = additionalProperties.wm?.wmStateProperties?.imeLayeringTarget;
+      const imeLayeringTarget =
+        additionalProperties.wm?.wmStateProperties?.imeLayeringTarget;
       this.selectedAdditionalPropertiesTree = imeLayeringTarget;
       this.selectedAdditionalPropertiesTreeName = imeLayeringTarget
         ? 'Ime Layering Target'

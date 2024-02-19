@@ -60,12 +60,15 @@ export class ParserFactory {
     traceFiles: TraceFile[],
     timestampFactory: TimestampFactory,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener
+    errorListener?: WinscopeErrorListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
     for (const [index, traceFile] of traceFiles.entries()) {
-      progressListener?.onProgressUpdate('Parsing proto files', (index / traceFiles.length) * 100);
+      progressListener?.onProgressUpdate(
+        'Parsing proto files',
+        (index / traceFiles.length) * 100,
+      );
 
       let hasFoundParser = false;
 
@@ -76,7 +79,7 @@ export class ParserFactory {
           hasFoundParser = true;
           if (p instanceof ParserViewCapture) {
             p.getWindowParsers().forEach((subParser) =>
-              parsers.push(new FileAndParser(traceFile, subParser))
+              parsers.push(new FileAndParser(traceFile, subParser)),
             );
           } else {
             parsers.push({file: traceFile, parser: p});
@@ -88,7 +91,9 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        errorListener?.onError(new UnsupportedFileFormat(traceFile.getDescriptor()));
+        errorListener?.onError(
+          new UnsupportedFileFormat(traceFile.getDescriptor()),
+        );
       }
     }
     return parsers;

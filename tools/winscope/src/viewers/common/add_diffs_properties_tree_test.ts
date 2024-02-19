@@ -25,9 +25,13 @@ describe('AddDiffsPropertiesTree', () => {
   let oldRoot: UiPropertyTreeNode;
   let expectedRoot: UiPropertyTreeNode;
 
-  const isModified = async (newTree: TreeNode | undefined, oldTree: TreeNode | undefined) => {
+  const isModified = async (
+    newTree: TreeNode | undefined,
+    oldTree: TreeNode | undefined,
+  ) => {
     return (
-      (newTree as UiPropertyTreeNode)?.getValue() !== (oldTree as UiPropertyTreeNode)?.getValue()
+      (newTree as UiPropertyTreeNode)?.getValue() !==
+      (oldTree as UiPropertyTreeNode)?.getValue()
     );
   };
   const addDiffs = new AddDiffsPropertiesTree(isModified);
@@ -37,7 +41,7 @@ describe('AddDiffsPropertiesTree', () => {
       TreeNodeUtils.treeNodeEqualityTester,
       makeRoot,
       makeChildAndAddToRoot,
-      addDiffs
+      addDiffs,
     );
   });
 
@@ -69,7 +73,7 @@ describe('AddDiffsPropertiesTree', () => {
 
   function makeChildAndAddToRoot(
     rootNode: UiPropertyTreeNode,
-    value = 'value'
+    value = 'value',
   ): UiPropertyTreeNode {
     const child = TreeNodeUtils.makeUiPropertyNode('test node', 'child', value);
     rootNode.addOrReplaceChild(child);

@@ -24,7 +24,10 @@ describe('TraceFileFilter', () => {
   const filter = new TraceFileFilter();
 
   // Could be any file, we just need an instance of File to be used as a fake bugreport archive
-  const bugreportArchive = new File([new ArrayBuffer(0)], 'test_bugreport.zip') as unknown as File;
+  const bugreportArchive = new File(
+    [new ArrayBuffer(0)],
+    'test_bugreport.zip',
+  ) as unknown as File;
 
   let errors: WinscopeError[];
   let errorListener: WinscopeErrorListener;
@@ -41,14 +44,17 @@ describe('TraceFileFilter', () => {
   describe('bugreport (detects it is a bugreport)', () => {
     it('ignores non-trace dirs', async () => {
       const pickedBugreportFiles = [
-        makeTraceFile('FS/data/misc/wmtrace/surface_flinger.bp', bugreportArchive),
+        makeTraceFile(
+          'FS/data/misc/wmtrace/surface_flinger.bp',
+          bugreportArchive,
+        ),
         makeTraceFile('FS/data/misc/wmtrace/transactions.bp', bugreportArchive),
         makeTraceFile('proto/window_CRITICAL.proto', bugreportArchive),
       ];
 
       const ignoredBugreportFile = makeTraceFile(
         'FS/data/misc/ignored-dir/wm_transition_trace.bp',
-        bugreportArchive
+        bugreportArchive,
       );
 
       const bugreportFiles = [
@@ -66,10 +72,13 @@ describe('TraceFileFilter', () => {
       // The even weirder corner case where two bugreports are loaded at the same time is
       // currently not properly handled.
       const plainTraceFile = makeTraceFile(
-        'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb'
+        'would-be-ignored-if-was-part-of-bugreport/input_method_clients.pb',
       );
 
-      const result = await filter.filter([...bugreportFiles, plainTraceFile], errorListener);
+      const result = await filter.filter(
+        [...bugreportFiles, plainTraceFile],
+        errorListener,
+      );
       expect(result.perfetto).toBeUndefined();
 
       const expectedLegacy = new Set([...pickedBugreportFiles, plainTraceFile]);
@@ -80,14 +89,20 @@ describe('TraceFileFilter', () => {
     it('picks perfetto systrace.pftrace', async () => {
       const perfettoSystemTrace = makeTraceFile(
         'FS/data/misc/perfetto-traces/bugreport/systrace.pftrace',
-        bugreportArchive
+        bugreportArchive,
       );
       const bugreportFiles = [
         await makeBugreportMainEntryTraceFile(),
         await makeBugreportCodenameTraceFile(),
         perfettoSystemTrace,
-        makeTraceFile('FS/data/misc/perfetto-traces/other.perfetto-trace', bugreportArchive),
-        makeTraceFile('FS/data/misc/perfetto-traces/other.pftrace', bugreportArchive),
+        makeTraceFile(
+          'FS/data/misc/perfetto-traces/other.perfetto-trace',
+          bugreportArchive,
+        ),
+        makeTraceFile(
+          'FS/data/misc/perfetto-traces/other.pftrace',
+          bugreportArchive,
+        ),
       ];
       const result = await filter.filter(bugreportFiles, errorListener);
       expect(result.perfetto).toEqual(perfettoSystemTrace);
@@ -99,8 +114,14 @@ describe('TraceFileFilter', () => {
       const bugreportFiles = [
         await makeBugreportMainEntryTraceFile(),
         await makeBugreportCodenameTraceFile(),
-        makeTraceFile('FS/data/misc/perfetto-traces/other.perfetto-trace', bugreportArchive),
-        makeTraceFile('FS/data/misc/perfetto-traces/other.pftrace', bugreportArchive),
+        makeTraceFile(
+          'FS/data/misc/perfetto-traces/other.perfetto-trace',
+          bugreportArchive,
+        ),
+        makeTraceFile(
+          'FS/data/misc/perfetto-traces/other.pftrace',
+          bugreportArchive,
+        ),
       ];
       const result = await filter.filter(bugreportFiles, errorListener);
       expect(result.perfetto).toBeUndefined();
@@ -109,7 +130,10 @@ describe('TraceFileFilter', () => {
     });
 
     it('identifies dumpstate_board.txt file', async () => {
-      const legacyFile = makeTraceFile('proto/window_CRITICAL.proto', bugreportArchive);
+      const legacyFile = makeTraceFile(
+        'proto/window_CRITICAL.proto',
+        bugreportArchive,
+      );
       const bugreportFiles = [
         await makeBugreportMainEntryTraceFile(),
         await makeBugreportCodenameTraceFile(),
@@ -119,7 +143,10 @@ describe('TraceFileFilter', () => {
       const result = await filter.filter(bugreportFiles, errorListener);
       expect(result.legacy).toEqual([legacyFile]);
       expect(result.perfetto).toBeUndefined();
-      expect(result.timezoneInfo).toEqual({timezone: 'Asia/Kolkata', locale: 'en-US'});
+      expect(result.timezoneInfo).toEqual({
+        timezone: 'Asia/Kolkata',
+        locale: 'en-US',
+      });
       expect(errors).toEqual([]);
     });
   });
@@ -155,21 +182,28 @@ describe('TraceFileFilter', () => {
     });
   });
 
-  function makeTraceFile(filename: string, parentArchive?: File, size?: number) {
+  function makeTraceFile(
+    filename: string,
+    parentArchive?: File,
+    size?: number,
+  ) {
     size = size ?? 0;
     const file = new File([new ArrayBuffer(size)], filename);
     return new TraceFile(file as unknown as File, parentArchive);
   }
 
   async function makeBugreportMainEntryTraceFile() {
-    const file = await UnitTestUtils.getFixtureFile('bugreports/main_entry.txt', 'main_entry.txt');
+    const file = await UnitTestUtils.getFixtureFile(
+      'bugreports/main_entry.txt',
+      'main_entry.txt',
+    );
     return new TraceFile(file, bugreportArchive);
   }
 
   async function makeBugreportDumpstateBoardTextFile() {
     const file = await UnitTestUtils.getFixtureFile(
       'bugreports/dumpstate_board.txt',
-      'dumpstate_board.txt'
+      'dumpstate_board.txt',
     );
     return new TraceFile(file, bugreportArchive);
   }
@@ -177,7 +211,7 @@ describe('TraceFileFilter', () => {
   async function makeBugreportCodenameTraceFile() {
     const file = await UnitTestUtils.getFixtureFile(
       'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt'
+      'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
     );
     return new TraceFile(file, bugreportArchive);
   }

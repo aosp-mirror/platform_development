@@ -18,7 +18,12 @@ import {Point} from 'common/geometry_types';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class Rect {
-  constructor(readonly x: number, readonly y: number, readonly w: number, readonly h: number) {}
+  constructor(
+    readonly x: number,
+    readonly y: number,
+    readonly w: number,
+    readonly h: number,
+  ) {}
 
   static from(node: PropertyTreeNode): Rect {
     const left = node.getChildByName('left')?.getValue() ?? 0;
@@ -86,7 +91,8 @@ export class Rect {
 
   isEmpty(): boolean {
     const [x, y, w, h] = [this.x, this.y, this.w, this.h];
-    const nullValuePresent = x === -1 || y === -1 || x + w === -1 || y + h === -1;
+    const nullValuePresent =
+      x === -1 || y === -1 || x + w === -1 || y + h === -1;
     const nullHeightOrWidth = w <= 0 || h <= 0;
     return nullValuePresent || nullHeightOrWidth;
   }

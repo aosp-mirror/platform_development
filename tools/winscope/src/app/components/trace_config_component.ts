@@ -106,7 +106,8 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
 
   @Input() traceConfig: TraceConfigurationMap | undefined;
-  @Output() readonly traceConfigChange = new EventEmitter<TraceConfigurationMap>();
+  @Output() readonly traceConfigChange =
+    new EventEmitter<TraceConfigurationMap>();
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];
@@ -135,19 +136,26 @@ export class TraceConfigComponent {
   }
 
   someTraces(trace: TraceConfiguration): boolean {
-    return !trace.run && this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0;
+    return (
+      !trace.run &&
+      this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0
+    );
   }
 
   changeRunTrace(run: boolean, trace: TraceConfiguration): void {
     trace.run = run;
     if (trace.isTraceCollection) {
-      this.traceEnableConfigs(trace).forEach((c: EnableConfiguration) => (c.enabled = run));
+      this.traceEnableConfigs(trace).forEach(
+        (c: EnableConfiguration) => (c.enabled = run),
+      );
     }
   }
 
   changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
-      trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
+      trace.run = this.traceEnableConfigs(trace).every(
+        (c: EnableConfiguration) => c.enabled,
+      );
     }
   }
 }

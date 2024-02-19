@@ -49,7 +49,9 @@ describe('PresenterWindowManager', () => {
 
     const firstEntryDataTree = await firstEntry.getValue();
     selectedTree = UiHierarchyTreeNode.from(
-      assertDefined(firstEntryDataTree.findDfs((node) => node.id.includes('2088ac1')))
+      assertDefined(
+        firstEntryDataTree.findDfs((node) => node.id.includes('2088ac1')),
+      ),
     );
   });
 
@@ -58,13 +60,15 @@ describe('PresenterWindowManager', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const emptyTrace = new TraceBuilder<HierarchyTreeNode>().setEntries([]).build();
+    const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
+      .setEntries([])
+      .build();
     const presenter = createPresenter(emptyTrace);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
@@ -199,18 +203,21 @@ describe('PresenterWindowManager', () => {
 
     await presenter.onAppEvent(positionUpdate);
 
-    const longName = 'com.google.android.apps.nexuslauncher/.NexusLauncherActivity';
+    const longName =
+      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity';
     const id = `Activity 64953af ${longName}`;
 
     const nodeWithLongName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
     );
-    expect(nodeWithLongName.getDisplayName()).toEqual('com.google.(...).NexusLauncherActivity');
+    expect(nodeWithLongName.getDisplayName()).toEqual(
+      'com.google.(...).NexusLauncherActivity',
+    );
 
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const nodeWithShortName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
     );
     expect(nodeWithShortName.getDisplayName()).toEqual(longName);
   });
@@ -261,16 +268,20 @@ describe('PresenterWindowManager', () => {
 
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('animator')).getDiff()).toEqual(
-      DiffType.NONE
-    );
+    expect(
+      assertDefined(
+        uiData.propertiesTree?.getChildByName('animator'),
+      ).getDiff(),
+    ).toEqual(DiffType.NONE);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
 
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('animator')).getDiff()).toEqual(
-      DiffType.ADDED
-    );
+    expect(
+      assertDefined(
+        uiData.propertiesTree?.getChildByName('animator'),
+      ).getDiff(),
+    ).toEqual(DiffType.ADDED);
   });
 
   it('shows/hides defaults', async () => {
@@ -287,20 +298,28 @@ describe('PresenterWindowManager', () => {
 
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(21);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(21);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(50);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(50);
   });
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(21);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(21);
 
     await presenter.onPropertiesFilterChange('requested');
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(2);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(2);
   });
 
   const createPresenter = (trace: Trace<HierarchyTreeNode>): Presenter => {
