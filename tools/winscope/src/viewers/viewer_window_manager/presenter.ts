@@ -53,8 +53,8 @@ export class Presenter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
   private readonly trace: Trace<HierarchyTreeNode>;
   private uiData: UiData;
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
   private highlightedItem = '';
   private highlightedProperty = '';
   private pinnedItems: UiHierarchyTreeNode[] = [];
@@ -219,7 +219,7 @@ export class Presenter {
   }
 
   async onHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
     this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
       this.currentHierarchyTree,
     );
@@ -233,7 +233,7 @@ export class Presenter {
   }
 
   async onPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 

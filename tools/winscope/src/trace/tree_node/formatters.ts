@@ -102,6 +102,38 @@ class LayerIdFormatter implements PropertyFormatter {
 }
 const LAYER_ID_FORMATTER = new LayerIdFormatter();
 
+class MatrixFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    const dsdx = formatNumber(node.getChildByName('dsdx')?.getValue() ?? 0);
+    const dtdx = formatNumber(node.getChildByName('dtdx')?.getValue() ?? 0);
+    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
+    const dtdy = formatNumber(node.getChildByName('dtdy')?.getValue() ?? 0);
+    const tx = node.getChildByName('tx');
+    const ty = node.getChildByName('ty');
+    if (
+      dsdx === '0' &&
+      dtdx === '0' &&
+      dsdy === '0' &&
+      dtdy === '0' &&
+      !tx &&
+      !ty
+    ) {
+      return 'null';
+    }
+    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dsdy: ${dsdy}, dtdy: ${dtdy}`;
+    if (!tx && !ty) {
+      return matrix22;
+    }
+    return (
+      matrix22 +
+      `, tx: ${formatNumber(tx?.getValue() ?? 0)}, ty: ${formatNumber(
+        ty?.getValue() ?? 0,
+      )}`
+    );
+  }
+}
+const MATRIX_FORMATTER = new MatrixFormatter();
+
 class TransformFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const type = node.getChildByName('type');
@@ -198,4 +230,5 @@ export {
   EnumFormatter,
   FixedStringFormatter,
   TIMESTAMP_FORMATTER,
+  MATRIX_FORMATTER,
 };

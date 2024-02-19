@@ -25,6 +25,7 @@ import {
   COLOR_FORMATTER,
   DEFAULT_PROPERTY_FORMATTER,
   EnumFormatter,
+  MATRIX_FORMATTER,
   POSITION_FORMATTER,
   PropertyFormatter,
   RECT_FORMATTER,
@@ -84,9 +85,13 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     if (RawDataUtils.isSize(node)) return SIZE_FORMATTER;
     if (RawDataUtils.isRegion(node)) return REGION_FORMATTER;
     if (RawDataUtils.isPosition(node)) return POSITION_FORMATTER;
-    if (SetFormatters.TransformRegExp.test(node.name)) {
+    if (
+      SetFormatters.TransformRegExp.test(node.name) &&
+      node.getChildByName('type')
+    ) {
       return TRANSFORM_FORMATTER;
     }
+    if (RawDataUtils.isMatrix(node)) return MATRIX_FORMATTER;
 
     if (node.getAllChildren().length > 0) return undefined;
 

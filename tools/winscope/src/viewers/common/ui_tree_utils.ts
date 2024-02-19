@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import {PropertySource} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -47,13 +50,21 @@ export class UiTreeUtils {
     );
   };
 
-  static makeNodeFilter(filterString: string): TreeNodeFilter {
+  static makeIdFilter(filterString: string): TreeNodeFilter {
+    const filter = (node: TreeNode) => {
+      const regex = new RegExp(filterString, 'i');
+      return filterString.length === 0 || regex.test(node.id);
+    };
+    return filter;
+  }
+
+  static makePropertyFilter(filterString: string): TreeNodeFilter {
     const filter = (node: TreeNode) => {
       const regex = new RegExp(filterString, 'i');
       return (
         filterString.length === 0 ||
         regex.test(node.name) ||
-        regex.test(node.id)
+        (node instanceof PropertyTreeNode && regex.test(node.formattedValue()))
       );
     };
     return filter;
@@ -61,6 +72,15 @@ export class UiTreeUtils {
 
   static makeIdMatchFilter(targetId: string): TreeNodeFilter {
     return (node: TreeNode) => node.id === targetId;
+  }
+
+  static makePropertyMatchFilter(targetValue: string): TreeNodeFilter {
+    return (node: TreeNode) => {
+      return (
+        node instanceof UiPropertyTreeNode &&
+        node.formattedValue() !== targetValue
+      );
+    };
   }
 
   static makeDenyListFilter(denylist: string[]): TreeNodeFilter {

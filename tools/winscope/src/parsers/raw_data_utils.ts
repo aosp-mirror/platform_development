@@ -76,6 +76,16 @@ export class RawDataUtils {
     );
   }
 
+  static isMatrix(obj: PropertyTreeNode): boolean {
+    return (
+      !obj.getChildByName('type') &&
+      (obj.getChildByName('dsdx') !== undefined ||
+        obj.getChildByName('dtdx') !== undefined ||
+        obj.getChildByName('dsdy') !== undefined ||
+        obj.getChildByName('dtdy') !== undefined)
+    );
+  }
+
   private static isEmptyColor(color: PropertyTreeNode): boolean {
     const [r, g, b, a] = [
       color.getChildByName('r')?.getValue() ?? 0,
