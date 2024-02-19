@@ -54,6 +54,7 @@ export class PresenterInputMethodManagerService extends PresenterInputMethod {
     wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
     wmEntryTimestamp: Timestamp | undefined,
+    sfEntryTimestamp: Timestamp | undefined,
   ) {
     return new ImeAdditionalProperties(
       wmEntry

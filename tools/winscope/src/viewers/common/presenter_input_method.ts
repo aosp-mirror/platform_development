@@ -140,8 +140,8 @@ export abstract class PresenterInputMethod {
           this.uiData.additionalProperties = this.getAdditionalProperties(
             await wmEntry?.getValue(),
             await sfEntry?.getValue(),
-            sfEntry?.getTimestamp(),
             wmEntry?.getTimestamp(),
+            sfEntry?.getTimestamp(),
           );
           this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
             assertDefined(this.entry),
@@ -246,8 +246,8 @@ export abstract class PresenterInputMethod {
   protected getAdditionalProperties(
     wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
-    sfEntryTimestamp: Timestamp | undefined,
     wmEntryTimestamp: Timestamp | undefined,
+    sfEntryTimestamp: Timestamp | undefined,
   ): ImeAdditionalProperties {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;

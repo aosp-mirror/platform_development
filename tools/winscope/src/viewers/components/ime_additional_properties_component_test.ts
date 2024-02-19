@@ -62,7 +62,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   it('emits update additional property tree event on wm state button click', () => {
     const button = assertDefined(
-      htmlElement.querySelector('.wm-state'),
+      htmlElement.querySelector('.wm-state-button'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
@@ -75,7 +75,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   it('propagates new ime container layer on button click', () => {
     const button = assertDefined(
-      htmlElement.querySelector('.ime-container'),
+      htmlElement.querySelector('.ime-container-button'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
@@ -86,7 +86,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   it('propagates new input method surface layer on button click', () => {
     const button = assertDefined(
-      htmlElement.querySelector('.input-method-surface'),
+      htmlElement.querySelector('.input-method-surface-button'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
@@ -105,7 +105,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
       assertDefined(imeManagerService.querySelector('.wm-state')).textContent,
     ).toContain('1970-01-01T00:00:00.000000000');
     expect(
-      imeManagerService.querySelector('.ime-control-target'),
+      imeManagerService.querySelector('.ime-control-target-button'),
     ).toBeDefined();
   });
 
@@ -113,7 +113,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     component.isImeManagerService = true;
     fixture.detectChanges();
     const button = assertDefined(
-      htmlElement.querySelector('.ime-control-target'),
+      htmlElement.querySelector('.ime-control-target-button'),
     ) as HTMLButtonElement;
     expect(button.className).not.toContain('selected');
     button.click();
