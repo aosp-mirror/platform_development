@@ -207,7 +207,9 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
   ): PropertyTreeNode {
     const denyList: string[] = [];
     Object.getOwnPropertyNames(entryProto).forEach((it) => {
-      if (!ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES.includes(it)) {
+      if (
+        !ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES.includes(it)
+      ) {
         denyList.push(it);
       }
     });

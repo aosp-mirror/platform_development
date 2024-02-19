@@ -115,10 +115,6 @@ describe('Cross-Tool Protocol', () => {
     );
 
     const expectedTabParagraphs = [
-      'Input Method Clients',
-      'Input Method Manager Service',
-      'Input Method Service',
-      'ProtoLog',
       'Surface Flinger',
       'Transactions',
       'Transitions',

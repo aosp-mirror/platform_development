@@ -179,7 +179,9 @@ export class TreeNodeUtils {
     if (node.name !== expectedNode.name) return false;
 
     if ((node as DiffNode).getDiff && (expectedNode as DiffNode).getDiff) {
-      if ((node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()) {
+      if (
+        (node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()
+      ) {
         return false;
       }
     }

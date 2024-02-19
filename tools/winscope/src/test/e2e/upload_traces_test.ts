@@ -35,7 +35,7 @@ describe('Upload traces', () => {
     await checkHasLoadedTraces();
     expect(await areMessagesEmitted()).toBeTruthy();
     await checkEmitsUnsupportedFileFormatMessages();
-    await checkEmitsOverriddenTracesMessages();
+    await checkEmitsOldDataMessages();
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
     await checkRendersSurfaceFlingerView();
@@ -48,55 +48,61 @@ describe('Upload traces', () => {
     expect(await areMessagesEmitted()).toBeFalsy();
   });
 
-  const checkHasLoadedTraces = async () => {
+  async function checkHasLoadedTraces() {
+    const el = element(by.css('.uploaded-files'));
     const text = await element(by.css('.uploaded-files')).getText();
-    expect(text).toContain('ProtoLog');
-    expect(text).toContain('IME Service');
-    expect(text).toContain('IME Manager Service');
     expect(text).toContain('Window Manager');
     expect(text).toContain('Surface Flinger');
-    expect(text).toContain('IME Clients');
     expect(text).toContain('Transactions');
     expect(text).toContain('Transitions');
 
     // Should be merged into a single Transitions trace
-    expect(text.includes('WM Transitions')).toBeFalsy();
-    expect(text.includes('Shell Transitions')).toBeFalsy();
+    expect(text).not.toContain('WM Transitions');
+    expect(text).not.toContain('Shell Transitions');
 
-    expect(text).toContain('wm_log.winscope');
-    expect(text).toContain('ime_trace_service.winscope');
-    expect(text).toContain('ime_trace_managerservice.winscope');
-    expect(text).toContain('wm_trace.winscope');
     expect(text).toContain('layers_trace_from_transactions.winscope');
-    expect(text).toContain('ime_trace_clients.winscope');
     expect(text).toContain('transactions_trace.winscope');
     expect(text).toContain('wm_transition_trace.winscope');
     expect(text).toContain('shell_transition_trace.winscope');
-  };
+    expect(text).toContain('window_CRITICAL.proto');
 
-  const checkEmitsUnsupportedFileFormatMessages = async () => {
+    // discards some traces due to old data
+    expect(text).not.toContain('ProtoLog');
+    expect(text).not.toContain('IME Service');
+    expect(text).not.toContain('IME Manager Service');
+    expect(text).not.toContain('IME Clients');
+    expect(text).not.toContain('wm_log.winscope');
+    expect(text).not.toContain('ime_trace_service.winscope');
+    expect(text).not.toContain('ime_trace_managerservice.winscope');
+    expect(text).not.toContain('wm_trace.winscope');
+    expect(text).not.toContain('ime_trace_clients.winscope');
+  }
+
+  async function checkEmitsUnsupportedFileFormatMessages() {
     const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('unsupported file format');
-  };
+    expect(text).toContain('unsupported format');
+  }
 
-  const checkEmitsOverriddenTracesMessages = async () => {
+  async function checkEmitsOldDataMessages() {
     const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('overridden by another trace');
-  };
+    expect(text).toContain(
+      'discarded because data is older than 157d20h8m36s424ms',
+    );
+  }
 
-  const areMessagesEmitted = async (): Promise<boolean> => {
+  async function areMessagesEmitted(): Promise<boolean> {
     // Messages are emitted quickly. There is no Need to wait for the entire
     // default timeout to understand whether the messages where emitted or not.
     await browser.manage().timeouts().implicitlyWait(1000);
     const emitted = await element(by.css('snack-bar')).isPresent();
     await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
     return emitted;
-  };
+  }
 
-  const checkRendersSurfaceFlingerView = async () => {
+  async function checkRendersSurfaceFlingerView() {
     const viewerPresent = await element(
       by.css('viewer-surface-flinger'),
     ).isPresent();
     expect(viewerPresent).toBeTruthy();
-  };
+  }
 });
