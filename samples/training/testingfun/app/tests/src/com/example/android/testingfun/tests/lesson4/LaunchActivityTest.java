@@ -15,14 +15,15 @@
  */
 package com.example.android.testingfun.tests.lesson4;
 
+import android.content.Intent;
+import android.test.ActivityUnitTestCase;
+import android.widget.Button;
+
+import androidx.test.filters.MediumTest;
+
 import com.example.android.testingfun.R;
 import com.example.android.testingfun.lesson4.LaunchActivity;
 import com.example.android.testingfun.lesson4.NextActivity;
-
-import android.content.Intent;
-import android.test.ActivityUnitTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.widget.Button;
 
 /**
  * Tests LaunchActivity in isolation from the system.
