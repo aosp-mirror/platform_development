@@ -51,12 +51,12 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
     </div>
 
     <div class="description">
-      <tree-node-data-view
+      <hierarchy-tree-node-data-view
         *ngIf="node && !isPropertyTreeNode()"
-        [node]="node"></tree-node-data-view>
-      <tree-node-properties-data-view
+        [node]="node"></hierarchy-tree-node-data-view>
+      <property-tree-node-data-view
         *ngIf="isPropertyTreeNode()"
-        [node]="node"></tree-node-properties-data-view>
+        [node]="node"></property-tree-node-data-view>
     </div>
 
     <div *ngIf="!isLeaf && !isExpanded" class="icon-wrapper">

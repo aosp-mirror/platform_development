@@ -17,10 +17,10 @@ import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {Chip} from 'viewers/common/chip';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
+import {hierarchyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
-  selector: 'tree-node-data-view',
+  selector: 'hierarchy-tree-node-data-view',
   template: `
     <span class="mat-body-1" *ngIf="node">
       <span class="mat-body-2" *ngIf="node.heading()">{{ node.heading() }}</span>
@@ -31,9 +31,9 @@ import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_v
       </div>
     </span>
   `,
-  styles: [treeNodeDataViewStyles],
+  styles: [hierarchyTreeNodeDataViewStyles],
 })
-export class TreeNodeDataViewComponent {
+export class HierarchyTreeNodeDataViewComponent {
   @Input() node?: UiHierarchyTreeNode;
 
   nodeTooltip() {
