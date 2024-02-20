@@ -20,29 +20,20 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddRootProperties extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const wmData = assertDefined(value.getChildByName('wmData'));
     const shellData = assertDefined(value.getChildByName('shellData'));
     const id = wmData.getChildByName('id') ?? shellData.getChildByName('id');
 
-    const rootIdNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'id',
-      assertDefined(id).getValue()
-    );
+    const rootIdNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'id',
+        assertDefined(id).getValue(),
+      );
 
-    const realToElapsedTimeOffsetNs = value.getChildByName('aborted')
-      ? wmData.getChildByName('realToElapsedTimeOffsetNs') ??
-        shellData.getChildByName('realToElapsedTimeOffsetNs')
-      : shellData.getChildByName('realToElapsedTimeOffsetNs') ??
-        wmData.getChildByName('realToElapsedTimeOffsetNs');
-
-    const realToElapsedTimeOffsetNsNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'realToElapsedTimeOffsetNs',
-      assertDefined(realToElapsedTimeOffsetNs).getValue()
-    );
-
-    return [rootIdNode, realToElapsedTimeOffsetNsNode];
+    return [rootIdNode];
   }
 }

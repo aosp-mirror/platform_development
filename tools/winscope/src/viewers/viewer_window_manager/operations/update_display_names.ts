@@ -27,6 +27,8 @@ export class UpdateDisplayNames implements Operation<UiHierarchyTreeNode> {
     if (!node.id.startsWith('Task ')) {
       return;
     }
-    node.setDisplayName(`${assertDefined(node.getEagerPropertyByName('id')).getValue()}`);
+    node.setDisplayName(
+      `${assertDefined(node.getEagerPropertyByName('id')).getValue()}`,
+    );
   }
 }

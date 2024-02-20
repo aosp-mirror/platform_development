@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -95,7 +102,8 @@ export class TreeNodeComponent {
     return (
       rect.top >= 0 &&
       rect.left >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.bottom <=
+        (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
@@ -105,7 +113,9 @@ export class TreeNodeComponent {
   }
 
   showPinNodeIcon() {
-    return (this.node instanceof UiHierarchyTreeNode && !this.node.isRoot()) ?? false;
+    return (
+      (this.node instanceof UiHierarchyTreeNode && !this.node.isRoot()) ?? false
+    );
   }
 
   toggleTree(event: MouseEvent) {
@@ -136,7 +146,9 @@ export class TreeNodeComponent {
       return '';
     }
 
-    const childrenDiffClasses = this.getAllDiffTypesOfChildren(assertDefined(this.node));
+    const childrenDiffClasses = this.getAllDiffTypesOfChildren(
+      assertDefined(this.node),
+    );
 
     childrenDiffClasses.delete(DiffType.NONE);
     childrenDiffClasses.delete(undefined);
@@ -151,7 +163,9 @@ export class TreeNodeComponent {
     return DiffType.MODIFIED;
   }
 
-  private getAllDiffTypesOfChildren(node: UiHierarchyTreeNode | UiPropertyTreeNode) {
+  private getAllDiffTypesOfChildren(
+    node: UiHierarchyTreeNode | UiPropertyTreeNode,
+  ) {
     const classes = new Set();
     for (const child of node.getAllChildren().values()) {
       classes.add(child.getDiff());

@@ -65,7 +65,10 @@ export class PropertyTreeBuilderFromProto {
     if (this.rootName === undefined) {
       throw Error('rootName not set');
     }
-    const factory = new PropertyTreeNodeFactory(this.denylistProperties, this.visitProtoType);
+    const factory = new PropertyTreeNodeFactory(
+      this.denylistProperties,
+      this.visitProtoType,
+    );
 
     return factory.makeProtoProperty(this.makeNodeId(), '', this.proto);
   }

@@ -17,31 +17,30 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {perfetto} from 'protos/transitions/latest/static';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 import {FakeProtoBuilder} from './fake_proto_builder';
 
 export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   private handlerIdToName: {[id: number]: string} | undefined = undefined;
 
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.TRANSITION;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
     const transitionProto = await this.queryTransition(index);
 
     if (this.handlerIdToName === undefined) {
       const handlers = await this.queryHandlers();
       this.handlerIdToName = {};
-      handlers.forEach((it) => (assertDefined(this.handlerIdToName)[it.id] = it.name));
+      handlers.forEach(
+        (it) => (assertDefined(this.handlerIdToName)[it.id] = it.name),
+      );
     }
 
     return this.makePropertiesTree(timestampType, transitionProto);
@@ -53,7 +52,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
 
   private makePropertiesTree(
     timestampType: TimestampType,
-    transitionProto: perfetto.protos.ShellTransition
+    transitionProto: perfetto.protos.ShellTransition,
   ): PropertyTreeNode {
     this.validatePerfettoTransition(transitionProto);
 
@@ -62,33 +61,45 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       realToElapsedTimeOffsetNs: assertDefined(this.realToElapsedTimeOffsetNs),
       timestampType,
       handlerMapping: this.handlerIdToName,
+      timestampFactory: this.timestampFactory,
     };
 
-    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(perfettoTransitionInfo, [
-      'createTimeNs',
-      'sendTimeNs',
-      'wmAbortTimeNs',
-      'finishTimeNs',
-      'startTransactionId',
-      'finishTransactionId',
-      'type',
-      'targets',
-      'flags',
-      'startingWindowRemoveTimeNs',
-    ]);
-    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree(perfettoTransitionInfo, [
-      'dispatchTimeNs',
-      'mergeTimeNs',
-      'mergeRequestTimeNs',
-      'shellAbortTimeNs',
-      'handler',
-      'mergeTarget',
-    ]);
+    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(
+      perfettoTransitionInfo,
+      [
+        'createTimeNs',
+        'sendTimeNs',
+        'wmAbortTimeNs',
+        'finishTimeNs',
+        'startTransactionId',
+        'finishTransactionId',
+        'type',
+        'targets',
+        'flags',
+        'startingWindowRemoveTimeNs',
+      ],
+    );
+    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree(
+      perfettoTransitionInfo,
+      [
+        'dispatchTimeNs',
+        'mergeTimeNs',
+        'mergeRequestTimeNs',
+        'shellAbortTimeNs',
+        'handler',
+        'mergeTarget',
+      ],
+    );
 
-    return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(
+      shellEntryTree,
+      wmEntryTree,
+    );
   }
 
-  private async queryTransition(index: number): Promise<perfetto.protos.ShellTransition> {
+  private async queryTransition(
+    index: number,
+  ): Promise<perfetto.protos.ShellTransition> {
     const protoBuilder = new FakeProtoBuilder();
 
     const sql = `
@@ -112,7 +123,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
         it.get('value_type') as string,
         it.get('int_value') as bigint | undefined,
         it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
+        it.get('string_value') as string | undefined,
       );
     }
 
@@ -120,7 +131,8 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   }
 
   private async queryHandlers(): Promise<TransitionHandler[]> {
-    const sql = 'SELECT handler_id, handler_name FROM window_manager_shell_transition_handlers;';
+    const sql =
+      'SELECT handler_id, handler_name FROM window_manager_shell_transition_handlers;';
     const result = await this.traceProcessor.query(sql).waitAllRows();
 
     const handlers: TransitionHandler[] = [];
@@ -134,7 +146,9 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
     return handlers;
   }
 
-  private validatePerfettoTransition(transition: perfetto.protos.IShellTransition) {
+  private validatePerfettoTransition(
+    transition: perfetto.protos.IShellTransition,
+  ) {
     if (transition.id === 0) {
       throw new Error('Entry need a non null id');
     }

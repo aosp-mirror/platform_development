@@ -64,9 +64,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const visibleLayer = assertDefined(hierarchyRoot.getChildByName('layerVisibleRegionNonEmpty'));
+    const visibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerVisibleRegionNonEmpty'),
+    );
     expect(
-      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
   });
 
@@ -107,9 +111,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerHiddenByPolicy'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerHiddenByPolicy'),
+    );
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -182,12 +190,18 @@ describe('VisibilityPropertiesComputation', () => {
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('parent'));
     expect(
-      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
 
-    const hiddenLayer = assertDefined(visibleLayer.getChildByName('childHiddenByParent'));
+    const hiddenLayer = assertDefined(
+      visibleLayer.getChildByName('childHiddenByParent'),
+    );
     expect(
-      assertDefined(hiddenLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        hiddenLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -228,9 +242,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoActiveBuffer'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerNoActiveBuffer'),
+    );
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -273,9 +291,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyBounds'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerEmptyBounds'),
+    );
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -316,9 +338,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerNoVisibleRegion'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerNoVisibleRegion'),
+    );
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -359,9 +385,13 @@ describe('VisibilityPropertiesComputation', () => {
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('layerEmptyVisibleRegion'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('layerEmptyVisibleRegion'),
+    );
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -439,20 +469,33 @@ describe('VisibilityPropertiesComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
 
-    const invisibleLayer = assertDefined(hierarchyRoot.getChildByName('occludedLayer'));
-    const visibleLayer = assertDefined(hierarchyRoot.getChildByName('occludingLayer'));
+    const invisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('occludedLayer'),
+    );
+    const visibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('occludingLayer'),
+    );
 
     expect(
-      assertDefined(invisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        invisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
     expect(
-      invisibleLayer.getEagerPropertyByName('occludedBy')?.getChildByName('0')?.getValue()
+      invisibleLayer
+        .getEagerPropertyByName('occludedBy')
+        ?.getChildByName('0')
+        ?.getValue(),
     ).toEqual(2);
 
     expect(
-      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
-    expect(visibleLayer.getEagerPropertyByName('occludedBy')?.getValue()).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('occludedBy')?.getValue(),
+    ).toEqual([]);
   });
 
   it('adds partiallyOccludedBy layers and updates isVisible', () => {
@@ -530,24 +573,32 @@ describe('VisibilityPropertiesComputation', () => {
     computation.setRoot(hierarchyRoot).executeInPlace();
 
     const partiallyVisibleLayer = assertDefined(
-      hierarchyRoot.getChildByName('partiallyOccludedLayer')
+      hierarchyRoot.getChildByName('partiallyOccludedLayer'),
     );
-    const visibleLayer = assertDefined(hierarchyRoot.getChildByName('partiallyOccludingLayer'));
+    const visibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('partiallyOccludingLayer'),
+    );
 
     expect(
-      assertDefined(partiallyVisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        partiallyVisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
     expect(
       partiallyVisibleLayer
         .getEagerPropertyByName('partiallyOccludedBy')
         ?.getChildByName('0')
-        ?.getValue()
+        ?.getValue(),
     ).toEqual(2);
 
     expect(
-      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
-    expect(visibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue()).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
+    ).toEqual([]);
   });
 
   it('adds coveredByLayers layers and updates isVisible', () => {
@@ -624,19 +675,32 @@ describe('VisibilityPropertiesComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
 
-    const coveredVisibleLayer = assertDefined(hierarchyRoot.getChildByName('coveredLayer'));
-    const visibleLayer = assertDefined(hierarchyRoot.getChildByName('coveringLayer'));
+    const coveredVisibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('coveredLayer'),
+    );
+    const visibleLayer = assertDefined(
+      hierarchyRoot.getChildByName('coveringLayer'),
+    );
 
     expect(
-      assertDefined(coveredVisibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        coveredVisibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
     expect(
-      coveredVisibleLayer.getEagerPropertyByName('coveredBy')?.getChildByName('0')?.getValue()
+      coveredVisibleLayer
+        .getEagerPropertyByName('coveredBy')
+        ?.getChildByName('0')
+        ?.getValue(),
     ).toEqual(2);
 
     expect(
-      assertDefined(visibleLayer.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        visibleLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
-    expect(visibleLayer.getEagerPropertyByName('coveredBy')?.getValue()).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('coveredBy')?.getValue(),
+    ).toEqual([]);
   });
 });

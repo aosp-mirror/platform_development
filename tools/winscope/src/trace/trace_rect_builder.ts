@@ -160,7 +160,7 @@ export class TraceRectBuilder {
       this.isVisible,
       this.isDisplay,
       this.isVirtual,
-      this.depth
+      this.depth,
     );
   }
 }

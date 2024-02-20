@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -26,9 +27,10 @@ describe('Perfetto ParserTransactions', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = await UnitTestUtils.getPerfettoParser(
       TraceType.TRANSACTIONS,
-      'traces/perfetto/transactions_trace.perfetto-trace'
+      'traces/perfetto/transactions_trace.perfetto-trace',
     );
   });
 
@@ -37,14 +39,16 @@ describe('Perfetto ParserTransactions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
 
     expect(timestamps.length).toEqual(712);
 
     const expected = [
-      new ElapsedTimestamp(2450981445n),
-      new ElapsedTimestamp(2517952515n),
-      new ElapsedTimestamp(4021151449n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2517952515n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(4021151449n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
@@ -55,11 +59,35 @@ describe('Perfetto ParserTransactions', () => {
     expect(timestamps.length).toEqual(712);
 
     const expected = [
-      new RealTimestamp(1659507541051480997n),
-      new RealTimestamp(1659507541118452067n),
-      new RealTimestamp(1659507542621651001n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541051480997n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541118452067n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507542621651001n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
+  });
+
+  it('applies timezone info to real timestamps only', async () => {
+    const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
+      TraceType.TRANSACTIONS,
+      'traces/perfetto/transactions_trace.perfetto-trace',
+      true,
+    );
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.TRANSACTIONS,
+    );
+
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n));
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659527341051480997n),
+    );
   });
 
   it('retrieves trace entry from real timestamp', async () => {
@@ -72,20 +100,36 @@ describe('Perfetto ParserTransactions', () => {
     const entry2 = await parser.getEntry(2, TimestampType.REAL);
 
     // Add empty arrays
-    expect(entry0.getChildByName('addedDisplays')?.getAllChildren()).toEqual([]);
-    expect(entry0.getChildByName('destroyedLayers')?.getAllChildren()).toEqual([]);
-    expect(entry0.getChildByName('removedDisplays')?.getAllChildren()).toEqual([]);
-    expect(entry0.getChildByName('destroyedLayerHandles')?.getAllChildren()).toEqual([]);
+    expect(entry0.getChildByName('addedDisplays')?.getAllChildren()).toEqual(
+      [],
+    );
+    expect(entry0.getChildByName('destroyedLayers')?.getAllChildren()).toEqual(
+      [],
+    );
+    expect(entry0.getChildByName('removedDisplays')?.getAllChildren()).toEqual(
+      [],
+    );
+    expect(
+      entry0.getChildByName('destroyedLayerHandles')?.getAllChildren(),
+    ).toEqual([]);
     expect(entry0.getChildByName('displays')?.getAllChildren()).toEqual([]);
 
     // Add default values
     expect(
-      entry0.getChildByName('transactions')?.getChildByName('1')?.getChildByName('pid')?.getValue()
+      entry0
+        .getChildByName('transactions')
+        ?.getChildByName('1')
+        ?.getChildByName('pid')
+        ?.getValue(),
     ).toEqual(0);
 
     // Convert value types (bigint -> number)
     expect(
-      entry0.getChildByName('transactions')?.getChildByName('1')?.getChildByName('uid')?.getValue()
+      entry0
+        .getChildByName('transactions')
+        ?.getChildByName('1')
+        ?.getChildByName('uid')
+        ?.getValue(),
     ).toEqual(1003);
 
     // Decode enum IDs
@@ -96,7 +140,7 @@ describe('Perfetto ParserTransactions', () => {
         ?.getChildByName('layerChanges')
         ?.getChildByName('0')
         ?.getChildByName('dropInputMode')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('NONE');
 
     expect(
@@ -107,7 +151,7 @@ describe('Perfetto ParserTransactions', () => {
         ?.getChildByName('0')
         ?.getChildByName('bufferData')
         ?.getChildByName('pixelFormat')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('PIXEL_FORMAT_RGBA_1010102');
   });
 
@@ -121,7 +165,7 @@ describe('Perfetto ParserTransactions', () => {
           ?.getChildByName('layerChanges')
           ?.getChildByName('0')
           ?.getChildByName('what')
-          ?.formattedValue()
+          ?.formattedValue(),
       ).toEqual('eLayerChanged');
 
       expect(
@@ -130,7 +174,7 @@ describe('Perfetto ParserTransactions', () => {
           ?.getChildByName('layerChanges')
           ?.getChildByName('0')
           ?.getChildByName('what')
-          ?.formattedValue()
+          ?.formattedValue(),
       ).toEqual('eFlagsChanged | eDestinationFrameChanged');
     }
     {
@@ -143,14 +187,21 @@ describe('Perfetto ParserTransactions', () => {
           ?.getChildByName('displayChanges')
           ?.getChildByName('0')
           ?.getChildByName('what')
-          ?.formattedValue()
-      ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
+          ?.formattedValue(),
+      ).toEqual(
+        'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged',
+      );
     }
   });
 
   it('supports VSYNCID custom query', async () => {
-    const trace = new TraceBuilder().setType(TraceType.TRANSACTIONS).setParser(parser).build();
-    const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+    const trace = new TraceBuilder()
+      .setType(TraceType.TRANSACTIONS)
+      .setParser(parser)
+      .build();
+    const entries = await trace
+      .sliceEntries(0, 3)
+      .customQuery(CustomQueryType.VSYNCID);
     const values = entries.map((entry) => entry.getValue());
     expect(values).toEqual([1n, 2n, 3n]);
   });

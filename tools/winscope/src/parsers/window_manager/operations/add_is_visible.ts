@@ -19,7 +19,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddIsVisible extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     // ActivityRecordProto
     const visible = value.getChildByName('visible')?.getValue();
     if (visible !== undefined) {
@@ -27,20 +29,23 @@ export class AddIsVisible extends AddOperation<PropertyTreeNode> {
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           value.id,
           'isComputedVisible',
-          visible
+          visible,
         ),
       ];
     }
 
     // WindowStateProto
     const isVisible = value.getChildByName('isVisible')?.getValue();
-    const alpha = value.getChildByName('attributes')?.getChildByName('alpha')?.getValue();
+    const alpha = value
+      .getChildByName('attributes')
+      ?.getChildByName('alpha')
+      ?.getValue();
     if (alpha !== undefined) {
       return [
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           value.id,
           'isComputedVisible',
-          isVisible && alpha > 0
+          isVisible && alpha > 0,
         ),
       ];
     }

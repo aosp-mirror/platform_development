@@ -42,15 +42,16 @@ export class TamperedMessageType extends protobuf.Type {
     }
 
     try {
-      (field as TamperedProtoField).tamperedMessageType = field.parent?.lookupType(
-        field.type
-      ) as TamperedMessageType;
+      (field as TamperedProtoField).tamperedMessageType =
+        field.parent?.lookupType(field.type) as TamperedMessageType;
     } catch (e) {
       // swallow
     }
 
     try {
-      (field as TamperedProtoField).tamperedEnumType = field.parent?.lookupEnum(field.type);
+      (field as TamperedProtoField).tamperedEnumType = field.parent?.lookupEnum(
+        field.type,
+      );
     } catch (e) {
       // swallow
     }
@@ -60,7 +61,7 @@ export class TamperedMessageType extends protobuf.Type {
     }
 
     TamperedMessageType.tamperTypeDfs(
-      assertDefined((field as TamperedProtoField).tamperedMessageType)
+      assertDefined((field as TamperedProtoField).tamperedMessageType),
     );
   }
 }

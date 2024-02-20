@@ -27,7 +27,7 @@ export class AddDiffsHierarchyTree extends AddDiffs<UiHierarchyTreeNode> {
 
   protected override processModifiedNodes(
     newNode: UiHierarchyTreeNode,
-    oldNode: UiHierarchyTreeNode
+    oldNode: UiHierarchyTreeNode,
   ): void {
     newNode.setDiff(DiffType.MODIFIED);
   }

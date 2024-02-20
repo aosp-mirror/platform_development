@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {Component} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
@@ -50,27 +54,35 @@ describe('ViewCapturePropertyGroupsComponent', () => {
 
   it('displays view section', () => {
     const viewSection = assertDefined(htmlElement.querySelector('.view'));
-    expect(assertDefined(viewSection.querySelector('.class-name')).innerHTML).toContain(
-      'test.package.name'
-    );
-    expect(assertDefined(viewSection.querySelector('.hashcode')).innerHTML).toContain('12345678');
+    expect(
+      assertDefined(viewSection.querySelector('.class-name')).innerHTML,
+    ).toContain('test.package.name');
+    expect(
+      assertDefined(viewSection.querySelector('.hashcode')).innerHTML,
+    ).toContain('12345678');
   });
 
   it('displays geometry coordinates section', () => {
-    const coordinatesSection = assertDefined(htmlElement.querySelector('.geometry .coordinates'));
+    const coordinatesSection = assertDefined(
+      htmlElement.querySelector('.geometry .coordinates'),
+    );
     const left = assertDefined(coordinatesSection.querySelector('.left'));
     expect(left.innerHTML).toContain('Left:');
     expect(left.innerHTML).toContain('0');
     const top = assertDefined(coordinatesSection.querySelector('.top'));
     expect(top.innerHTML).toContain('Top:');
     expect(top.innerHTML).toContain('5');
-    const elevation = assertDefined(coordinatesSection.querySelector('.elevation'));
+    const elevation = assertDefined(
+      coordinatesSection.querySelector('.elevation'),
+    );
     expect(elevation.innerHTML).toContain('Elevation:');
     expect(elevation.innerHTML).toContain('2');
   });
 
   it('displays geometry size section', () => {
-    const sizeSection = assertDefined(htmlElement.querySelector('.geometry .size'));
+    const sizeSection = assertDefined(
+      htmlElement.querySelector('.geometry .size'),
+    );
     const height = assertDefined(sizeSection.querySelector('.height'));
     expect(height.innerHTML).toContain('Height:');
     expect(height.innerHTML).toContain('86');
@@ -80,17 +92,25 @@ describe('ViewCapturePropertyGroupsComponent', () => {
   });
 
   it('displays geometry translation section', () => {
-    const translationSection = assertDefined(htmlElement.querySelector('.geometry .translation'));
-    const translationx = assertDefined(translationSection.querySelector('.translationx'));
+    const translationSection = assertDefined(
+      htmlElement.querySelector('.geometry .translation'),
+    );
+    const translationx = assertDefined(
+      translationSection.querySelector('.translationx'),
+    );
     expect(translationx.innerHTML).toContain('Translation X:');
     expect(translationx.innerHTML).toContain('0');
-    const translationy = assertDefined(translationSection.querySelector('.translationy'));
+    const translationy = assertDefined(
+      translationSection.querySelector('.translationy'),
+    );
     expect(translationy.innerHTML).toContain('Translation Y:');
     expect(translationy.innerHTML).toContain('0');
   });
 
   it('displays geometry scroll section', () => {
-    const scrollSection = assertDefined(htmlElement.querySelector('.geometry .scroll'));
+    const scrollSection = assertDefined(
+      htmlElement.querySelector('.geometry .scroll'),
+    );
     const scrollx = assertDefined(scrollSection.querySelector('.scrollx'));
     expect(scrollx.innerHTML).toContain('Scroll X:');
     expect(scrollx.innerHTML).toContain('1');
@@ -100,7 +120,9 @@ describe('ViewCapturePropertyGroupsComponent', () => {
   });
 
   it('displays geometry scale section', () => {
-    const scaleSection = assertDefined(htmlElement.querySelector('.geometry .scale'));
+    const scaleSection = assertDefined(
+      htmlElement.querySelector('.geometry .scale'),
+    );
     const scalex = assertDefined(scaleSection.querySelector('.scalex'));
     expect(scalex.innerHTML).toContain('Scale X:');
     expect(scalex.innerHTML).toContain('2');
@@ -110,21 +132,31 @@ describe('ViewCapturePropertyGroupsComponent', () => {
   });
 
   it('displays effects translation section', () => {
-    const translationSection = assertDefined(htmlElement.querySelector('.effects .translation'));
-    const visibility = assertDefined(translationSection.querySelector('.visibility'));
+    const translationSection = assertDefined(
+      htmlElement.querySelector('.effects .translation'),
+    );
+    const visibility = assertDefined(
+      translationSection.querySelector('.visibility'),
+    );
     expect(visibility.innerHTML).toContain('Visibility:');
     expect(visibility.innerHTML).toContain('0');
     const alpha = assertDefined(translationSection.querySelector('.alpha'));
     expect(alpha.innerHTML).toContain('Alpha:');
     expect(alpha.innerHTML).toContain('1');
-    const willNotDraw = assertDefined(translationSection.querySelector('.will-not-draw'));
+    const willNotDraw = assertDefined(
+      translationSection.querySelector('.will-not-draw'),
+    );
     expect(willNotDraw.innerHTML).toContain('Will Not Draw:');
     expect(willNotDraw.innerHTML).toContain('true');
   });
 
   it('displays effects misc section', () => {
-    const miscSection = assertDefined(htmlElement.querySelector('.effects .misc'));
-    const clipChildren = assertDefined(miscSection.querySelector('.clip-children'));
+    const miscSection = assertDefined(
+      htmlElement.querySelector('.effects .misc'),
+    );
+    const clipChildren = assertDefined(
+      miscSection.querySelector('.clip-children'),
+    );
     expect(clipChildren.innerHTML).toContain('Clip Children:');
     expect(clipChildren.innerHTML).toContain('false');
   });

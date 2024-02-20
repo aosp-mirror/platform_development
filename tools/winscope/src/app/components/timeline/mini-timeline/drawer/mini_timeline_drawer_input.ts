@@ -33,7 +33,7 @@ export class MiniTimelineDrawerInput {
     public selection: TimeRange,
     public zoomRange: TimeRange,
     public traces: Traces,
-    public timelineData: TimelineData
+    public timelineData: TimelineData,
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
@@ -48,11 +48,13 @@ export class MiniTimelineDrawerInput {
       () => {
         return this.transformTracesTimestamps(transformer);
       },
-      transformer
+      transformer,
     );
   }
 
-  private async transformTracesTimestamps(transformer: Transformer): Promise<TimelineEntries> {
+  private async transformTracesTimestamps(
+    transformer: Transformer,
+  ): Promise<TimelineEntries> {
     const transformedTraceSegments = new Map<
       TraceType,
       {
@@ -66,7 +68,7 @@ export class MiniTimelineDrawerInput {
     await Promise.all(
       this.traces.mapTrace(async (trace, type) => {
         const activeEntry = this.timelineData.findCurrentEntryFor(
-          trace.type
+          trace.type,
         ) as TraceEntry<PropertyTreeNode>;
 
         if (type === TraceType.TRANSITION) {
@@ -75,7 +77,10 @@ export class MiniTimelineDrawerInput {
           transformedTraceSegments.set(trace.type, {
             points: [],
             activePoint: undefined,
-            segments: await this.transformTransitionTraceTimestamps(transformer, transitionTrace),
+            segments: await this.transformTransitionTraceTimestamps(
+              transformer,
+              transitionTrace,
+            ),
             activeSegment: activeEntry
               ? await this.transformTransitionEntry(transformer, activeEntry)
               : undefined,
@@ -90,7 +95,7 @@ export class MiniTimelineDrawerInput {
             activeSegment: undefined,
           });
         }
-      })
+      }),
     );
 
     return transformedTraceSegments;
@@ -98,36 +103,44 @@ export class MiniTimelineDrawerInput {
 
   private async transformTransitionTraceTimestamps(
     transformer: Transformer,
-    trace: Trace<PropertyTreeNode>
+    trace: Trace<PropertyTreeNode>,
   ): Promise<Segment[]> {
     const promises: Array<Promise<Segment | undefined>> = [];
     trace.forEachEntry((entry) => {
       promises.push(this.transformTransitionEntry(transformer, entry));
     });
 
-    return (await Promise.all(promises)).filter((it) => it !== undefined) as Segment[];
+    return (await Promise.all(promises)).filter(
+      (it) => it !== undefined,
+    ) as Segment[];
   }
 
   private async transformTransitionEntry(
     transformer: Transformer,
-    entry: TraceEntry<PropertyTreeNode>
+    entry: TraceEntry<PropertyTreeNode>,
   ): Promise<Segment | undefined> {
     const transition: PropertyTreeNode = await entry.getValue();
 
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
       entry.getTimestamp().getType(),
-      this.selection
+      this.selection,
     );
 
     if (!timeRange) {
       return undefined;
     }
 
-    return {from: transformer.transform(timeRange.from), to: transformer.transform(timeRange.to)};
+    return {
+      from: transformer.transform(timeRange.from),
+      to: transformer.transform(timeRange.to),
+    };
   }
 
-  private transformTraceTimestamps(transformer: Transformer, trace: Trace<{}>): number[] {
+  private transformTraceTimestamps(
+    transformer: Transformer,
+    trace: Trace<{}>,
+  ): number[] {
     const result: number[] = [];
 
     trace.forEachTimestamp((timestamp) => {

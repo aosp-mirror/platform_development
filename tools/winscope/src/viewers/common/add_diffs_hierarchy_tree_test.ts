@@ -26,10 +26,17 @@ describe('AddDiffsHierarchyTree', () => {
   let oldRoot: UiHierarchyTreeNode;
   let expectedRoot: UiHierarchyTreeNode;
 
-  const isModified = async (newTree: TreeNode | undefined, oldTree: TreeNode | undefined) => {
+  const isModified = async (
+    newTree: TreeNode | undefined,
+    oldTree: TreeNode | undefined,
+  ) => {
     return (
-      (newTree as UiHierarchyTreeNode).getEagerPropertyByName('exampleProperty')?.getValue() !==
-      (oldTree as UiHierarchyTreeNode).getEagerPropertyByName('exampleProperty')?.getValue()
+      (newTree as UiHierarchyTreeNode)
+        .getEagerPropertyByName('exampleProperty')
+        ?.getValue() !==
+      (oldTree as UiHierarchyTreeNode)
+        .getEagerPropertyByName('exampleProperty')
+        ?.getValue()
     );
   };
   const addDiffs = new AddDiffsHierarchyTree(isModified);
@@ -39,7 +46,7 @@ describe('AddDiffsHierarchyTree', () => {
       TreeNodeUtils.treeNodeEqualityTester,
       makeRoot,
       makeChildAndAddToRoot,
-      addDiffs
+      addDiffs,
     );
   });
 
@@ -104,7 +111,7 @@ describe('AddDiffsHierarchyTree', () => {
 
   function makeChildAndAddToRoot(
     rootNode: UiHierarchyTreeNode,
-    value = 'value'
+    value = 'value',
   ): UiHierarchyTreeNode {
     const child = TreeNodeUtils.makeUiHierarchyNode({
       id: 'test node',
@@ -116,7 +123,9 @@ describe('AddDiffsHierarchyTree', () => {
     return child;
   }
 
-  function makeParentAndAddToRoot(rootNode: UiHierarchyTreeNode): UiHierarchyTreeNode {
+  function makeParentAndAddToRoot(
+    rootNode: UiHierarchyTreeNode,
+  ): UiHierarchyTreeNode {
     const parent = TreeNodeUtils.makeUiHierarchyNode({
       id: 'test node',
       name: 'parent',

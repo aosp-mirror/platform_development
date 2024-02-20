@@ -13,7 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output, SimpleChanges} from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 
 @Component({
@@ -66,7 +72,9 @@ export class SelectWithFilterComponent {
   }
 
   updateSelectOptions() {
-    this.filteredOptions = this.options.filter((option) => option.includes(this.filterString));
+    this.filteredOptions = this.options.filter((option) =>
+      option.includes(this.filterString),
+    );
   }
 
   onSelectChange(event: MatSelectChange) {

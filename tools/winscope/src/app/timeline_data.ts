@@ -15,7 +15,12 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {INVALID_TIME_NS, TimeRange, Timestamp, TimestampType} from 'common/time';
+import {
+  INVALID_TIME_NS,
+  TimeRange,
+  Timestamp,
+  TimestampType,
+} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -35,7 +40,10 @@ export class TimelineData {
   private explicitlySetZoomRange?: TimeRange;
   private lastReturnedCurrentPosition?: TracePosition;
   private lastReturnedFullTimeRange?: TimeRange;
-  private lastReturnedCurrentEntries = new Map<TraceType, TraceEntry<any> | undefined>();
+  private lastReturnedCurrentEntries = new Map<
+    TraceType,
+    TraceEntry<any> | undefined
+  >();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
@@ -62,7 +70,9 @@ export class TimelineData {
     const types = traces
       .mapTrace((trace, type) => type)
       .filter(
-        (type) => TraceTypeUtils.isTraceTypeWithViewer(type) && type !== TraceType.SCREEN_RECORDING
+        (type) =>
+          TraceTypeUtils.isTraceTypeWithViewer(type) &&
+          type !== TraceType.SCREEN_RECORDING,
       )
       .sort(TraceTypeUtils.compareByDisplayOrder);
     if (types.length > 0) {
@@ -98,16 +108,22 @@ export class TimelineData {
 
   setPosition(position: TracePosition | undefined) {
     if (!this.hasTimestamps()) {
-      console.warn('Attempted to set position on traces with no timestamps/entries...');
+      console.warn(
+        'Attempted to set position on traces with no timestamps/entries...',
+      );
       return;
     }
 
     if (position) {
       if (this.timestampType === undefined) {
-        throw Error('Attempted to set explicit position but no timestamp type is available');
+        throw Error(
+          'Attempted to set explicit position but no timestamp type is available',
+        );
       }
       if (position.timestamp.getType() !== this.timestampType) {
-        throw Error('Attempted to set explicit position with incompatible timestamp type');
+        throw Error(
+          'Attempted to set explicit position with incompatible timestamp type',
+        );
       }
     }
 
@@ -152,8 +168,10 @@ export class TimelineData {
 
     if (
       this.lastReturnedFullTimeRange === undefined ||
-      this.lastReturnedFullTimeRange.from.getValueNs() !== fullTimeRange.from.getValueNs() ||
-      this.lastReturnedFullTimeRange.to.getValueNs() !== fullTimeRange.to.getValueNs()
+      this.lastReturnedFullTimeRange.from.getValueNs() !==
+        fullTimeRange.from.getValueNs() ||
+      this.lastReturnedFullTimeRange.to.getValueNs() !==
+        fullTimeRange.to.getValueNs()
     ) {
       this.lastReturnedFullTimeRange = fullTimeRange;
     }
@@ -193,7 +211,9 @@ export class TimelineData {
     return this.screenRecordingVideo;
   }
 
-  searchCorrespondingScreenRecordingTimeSeconds(position: TracePosition): number | undefined {
+  searchCorrespondingScreenRecordingTimeSeconds(
+    position: TracePosition,
+  ): number | undefined {
     const trace = this.traces.getTrace(TraceType.SCREEN_RECORDING);
     if (!trace || trace.lengthEntries === 0) {
       return undefined;
@@ -205,7 +225,10 @@ export class TimelineData {
       return undefined;
     }
 
-    return ScreenRecordingUtils.timestampToVideoTimeSeconds(firstTimestamp, entry.getTimestamp());
+    return ScreenRecordingUtils.timestampToVideoTimeSeconds(
+      firstTimestamp,
+      entry.getTimestamp(),
+    );
   }
 
   hasTimestamps(): boolean {
@@ -215,7 +238,8 @@ export class TimelineData {
   hasMoreThanOneDistinctTimestamp(): boolean {
     return (
       this.hasTimestamps() &&
-      this.firstEntry?.getTimestamp().getValueNs() !== this.lastEntry?.getTimestamp().getValueNs()
+      this.firstEntry?.getTimestamp().getValueNs() !==
+        this.lastEntry?.getTimestamp().getValueNs()
     );
   }
 
@@ -259,10 +283,13 @@ export class TimelineData {
 
     const entry = TraceEntryFinder.findCorrespondingEntry(
       assertDefined(this.traces.getTrace(type)),
-      position
+      position,
     );
 
-    if (this.lastReturnedCurrentEntries.get(type)?.getIndex() !== entry?.getIndex()) {
+    if (
+      this.lastReturnedCurrentEntries.get(type)?.getIndex() !==
+      entry?.getIndex()
+    ) {
       this.lastReturnedCurrentEntries.set(type, entry);
     }
 

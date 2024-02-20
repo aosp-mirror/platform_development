@@ -25,7 +25,11 @@ describe('PresenterInputMethodService', () => {
       .setId('InputMethodService')
       .setName('entry')
       .setProperties({where: 'location', elapsedNanos: 0})
-      .addChildProperty({name: 'test default property', value: 0, source: PropertySource.DEFAULT})
+      .addChildProperty({
+        name: 'test default property',
+        value: 0,
+        source: PropertySource.DEFAULT,
+      })
       .build();
 
     executePresenterInputMethodTests(
@@ -34,7 +38,7 @@ describe('PresenterInputMethodService', () => {
       [2, 1, 3],
       true,
       PresenterInputMethodService,
-      TraceType.INPUT_METHOD_SERVICE
+      TraceType.INPUT_METHOD_SERVICE,
     );
   });
 });

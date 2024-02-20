@@ -32,7 +32,7 @@ class UiData {
     public selectedEntryIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public currentPropertiesTree: undefined | UiPropertyTreeNode,
-    public propertiesUserOptions: UserOptions
+    public propertiesUserOptions: UserOptions,
   ) {}
 
   static EMPTY = new UiData(
@@ -48,14 +48,14 @@ class UiData {
     undefined,
     undefined,
     undefined,
-    {}
+    {},
   );
 }
 
 class UiDataEntry {
   constructor(
     public originalIndexInTraceEntry: number,
-    public time: string,
+    public time: PropertyTreeNode,
     public vsyncId: number,
     public pid: string,
     public uid: string,
@@ -63,7 +63,7 @@ class UiDataEntry {
     public layerOrDisplayId: string,
     public transactionId: string,
     public what: string,
-    public propertiesTree: PropertyTreeNode | undefined
+    public propertiesTree: PropertyTreeNode | undefined,
   ) {}
 }
 

@@ -30,8 +30,10 @@ describe('UpdateDisplayNames', () => {
       new HierarchyTreeBuilder()
         .setId('test')
         .setName('root')
-        .setChildren([{id: 'Task 1234567', name: 'Task', properties: {id: '8'}}])
-        .build()
+        .setChildren([
+          {id: 'Task 1234567', name: 'Task', properties: {id: '8'}},
+        ])
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
@@ -43,11 +45,19 @@ describe('UpdateDisplayNames', () => {
       new HierarchyTreeBuilder()
         .setId('test')
         .setName('root')
-        .setChildren([{id: 'TaskFragment 1234567', name: 'TaskFragment', properties: {id: '8'}}])
-        .build()
+        .setChildren([
+          {
+            id: 'TaskFragment 1234567',
+            name: 'TaskFragment',
+            properties: {id: '8'},
+          },
+        ])
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(hierarchyRoot.getChildByName('TaskFragment')?.getDisplayName()).toEqual('TaskFragment');
+    expect(
+      hierarchyRoot.getChildByName('TaskFragment')?.getDisplayName(),
+    ).toEqual('TaskFragment');
   });
 });

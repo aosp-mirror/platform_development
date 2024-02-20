@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {Component, ViewChild} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
@@ -51,35 +55,47 @@ describe('TreeNodeComponent', () => {
   });
 
   it('can generate data view component', () => {
-    component.treeNodeComponent.isPropertyTreeNode = jasmine.createSpy().and.returnValue(false);
+    component.treeNodeComponent.isPropertyTreeNode = jasmine
+      .createSpy()
+      .and.returnValue(false);
     fixture.detectChanges();
     const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
     expect(treeNodeDataView).toBeTruthy();
   });
 
   it('can trigger tree toggle on click of chevron', () => {
-    component.treeNodeComponent.showChevron = jasmine.createSpy().and.returnValue(true);
+    component.treeNodeComponent.showChevron = jasmine
+      .createSpy()
+      .and.returnValue(true);
     fixture.detectChanges();
 
     const spy = spyOn(component.treeNodeComponent.toggleTreeChange, 'emit');
-    const toggleButton = assertDefined(htmlElement.querySelector('.toggle-tree-btn'));
+    const toggleButton = assertDefined(
+      htmlElement.querySelector('.toggle-tree-btn'),
+    );
     (toggleButton as HTMLButtonElement).click();
     expect(spy).toHaveBeenCalled();
   });
 
   it('can trigger tree expansion on click of expand tree button', () => {
     const spy = spyOn(component.treeNodeComponent.expandTreeChange, 'emit');
-    const expandButton = assertDefined(htmlElement.querySelector('.expand-tree-btn'));
+    const expandButton = assertDefined(
+      htmlElement.querySelector('.expand-tree-btn'),
+    );
     (expandButton as HTMLButtonElement).click();
     expect(spy).toHaveBeenCalled();
   });
 
   it('can trigger node pin on click of star', () => {
-    component.treeNodeComponent.showPinNodeIcon = jasmine.createSpy().and.returnValue(true);
+    component.treeNodeComponent.showPinNodeIcon = jasmine
+      .createSpy()
+      .and.returnValue(true);
     fixture.detectChanges();
 
     const spy = spyOn(component.treeNodeComponent.pinNodeChange, 'emit');
-    const pinNodeButton = assertDefined(htmlElement.querySelector('.pin-node-btn'));
+    const pinNodeButton = assertDefined(
+      htmlElement.querySelector('.pin-node-btn'),
+    );
     (pinNodeButton as HTMLButtonElement).click();
     expect(spy).toHaveBeenCalledWith(component.node);
   });
@@ -101,7 +117,7 @@ describe('TreeNodeComponent', () => {
         .setId('LayerTraceEntry')
         .setName('4')
         .setChildren([{id: 1, name: 'Child 1'}])
-        .build()
+        .build(),
     );
 
     isSelected = false;

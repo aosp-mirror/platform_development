@@ -15,10 +15,17 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {FrameMap} from 'trace/frame_map';
 import {FrameMapBuilder} from 'trace/frame_map_builder';
-import {AbsoluteEntryIndex, AbsoluteFrameIndex, EntriesRange} from 'trace/index_types';
+import {
+  AbsoluteEntryIndex,
+  AbsoluteFrameIndex,
+  EntriesRange,
+} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
@@ -78,7 +85,7 @@ export class TraceBuilder<T> {
 
   setParserCustomQueryResult<Q extends CustomQueryType>(
     type: Q,
-    result: CustomQueryParserResultTypeMap[Q]
+    result: CustomQueryParserResultTypeMap[Q],
   ): TraceBuilder<T> {
     this.parserCustomQueryResult.set(type, result);
     return this;
@@ -99,7 +106,7 @@ export class TraceBuilder<T> {
       this.descriptors,
       undefined,
       this.timestampType,
-      entriesRange
+      entriesRange,
     );
 
     const frameMap = this.getFrameMap();
@@ -128,26 +135,10 @@ export class TraceBuilder<T> {
     return builder.build();
   }
 
-  private createTimestamps(entries: T[]): Timestamp[] {
-    const timestamps = new Array<Timestamp>();
-    for (let i = 0; i < entries.length; ++i) {
-      timestamps[i] = new Timestamp(TimestampType.REAL, BigInt(i));
-    }
-    return timestamps;
-  }
-
-  private createEntries(timestamps: Timestamp[]): T[] {
-    const entries = new Array<T>();
-    for (let i = 0; i < timestamps.length; ++i) {
-      entries.push(`entry-${i}` as unknown as T);
-    }
-    return entries;
-  }
-
   private getFrameMap(): FrameMap | undefined {
     if (this.frameMap && this.frameMapBuilder) {
       throw new Error(
-        `Cannot set a full frame map as well as individual entry's frames. Pick one of the two options.`
+        `Cannot set a full frame map as well as individual entry's frames. Pick one of the two options.`,
       );
     }
     if (this.frameMap) {

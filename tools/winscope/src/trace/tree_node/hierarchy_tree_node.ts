@@ -23,7 +23,11 @@ export class HierarchyTreeNode extends TreeNode {
   private rects: TraceRect[] | undefined;
   private zParent: this | undefined;
 
-  constructor(id: string, name: string, protected readonly propertiesProvider: PropertiesProvider) {
+  constructor(
+    id: string,
+    name: string,
+    protected readonly propertiesProvider: PropertiesProvider,
+  ) {
     super(id, name);
   }
 

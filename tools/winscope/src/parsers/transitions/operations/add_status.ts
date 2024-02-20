@@ -20,32 +20,40 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddStatus extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const wmDataNode = assertDefined(value.getChildByName('wmData'));
     const shellDataNode = assertDefined(value.getChildByName('shellData'));
 
     const wmAborted =
-      Number(shellDataNode.getChildByName('abortTimeNs')?.getValue()?.toString()) > 0;
+      wmDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
     const shellAborted =
-      Number(wmDataNode.getChildByName('abortTimeNs')?.getValue()?.toString()) > 0;
+      shellDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() >
+      0n;
 
-    const abortedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'aborted',
-      wmAborted || shellAborted
-    );
+    const abortedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'aborted',
+        wmAborted || shellAborted,
+      );
 
-    const mergedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'merged',
-      Number(shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.toString()) > 0
-    );
+    const mergedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'merged',
+        shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.getValueNs() >
+          0n,
+      );
 
-    const playedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'played',
-      Number(wmDataNode.getChildByName('finishTimeNs')?.getValue()?.toString()) > 0
-    );
+    const playedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'played',
+        wmDataNode.getChildByName('finishTimeNs')?.getValue()?.getValueNs() >
+          0n,
+      );
 
     return [abortedNode, mergedNode, playedNode];
   }

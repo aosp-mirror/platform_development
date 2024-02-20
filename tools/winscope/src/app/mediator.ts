@@ -37,7 +37,8 @@ import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
 export class Mediator {
-  private abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
+  private abtChromeExtensionProtocol: WinscopeEventEmitter &
+    WinscopeEventListener;
   private crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener;
   private uploadTracesComponent?: ProgressListener;
   private collectTracesComponent?: ProgressListener;
@@ -62,7 +63,7 @@ export class Mediator {
     crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener,
     appComponent: WinscopeEventListener,
     userNotificationListener: UserNotificationListener,
-    storage: Storage
+    storage: Storage,
   ) {
     this.tracePipeline = tracePipeline;
     this.timelineData = timelineData;
@@ -89,14 +90,18 @@ export class Mediator {
     this.collectTracesComponent = component;
   }
 
-  setTraceViewComponent(component: (WinscopeEventEmitter & WinscopeEventListener) | undefined) {
+  setTraceViewComponent(
+    component: (WinscopeEventEmitter & WinscopeEventListener) | undefined,
+  ) {
     this.traceViewComponent = component;
     this.traceViewComponent?.setEmitEvent(async (event) => {
       await this.onWinscopeEvent(event);
     });
   }
 
-  setTimelineComponent(component: (WinscopeEventEmitter & WinscopeEventListener) | undefined) {
+  setTimelineComponent(
+    component: (WinscopeEventEmitter & WinscopeEventListener) | undefined,
+  ) {
     this.timelineComponent = component;
     this.timelineComponent?.setEmitEvent(async (event) => {
       await this.onWinscopeEvent(event);
@@ -127,41 +132,76 @@ export class Mediator {
       await this.loadViewers();
     });
 
-    await event.visit(WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START, async () => {
-      await this.resetAppToInitialState();
-      this.currentProgressListener = this.uploadTracesComponent;
-      this.currentProgressListener?.onProgressUpdate('Downloading files...', undefined);
-    });
+    await event.visit(
+      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
+      async () => {
+        await this.resetAppToInitialState();
+        this.currentProgressListener = this.uploadTracesComponent;
+        this.currentProgressListener?.onProgressUpdate(
+          'Downloading files...',
+          undefined,
+        );
+      },
+    );
 
-    await event.visit(WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED, async (event) => {
-      await this.processRemoteFilesReceived(event.files, FilesSource.BUGANIZER);
-    });
+    await event.visit(
+      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED,
+      async (event) => {
+        await this.processRemoteFilesReceived(
+          event.files,
+          FilesSource.BUGANIZER,
+        );
+      },
+    );
 
-    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
-      await this.traceViewComponent?.onWinscopeEvent(event);
-    });
+    await event.visit(
+      WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST,
+      async (event) => {
+        await this.traceViewComponent?.onWinscopeEvent(event);
+      },
+    );
 
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
       await this.appComponent.onWinscopeEvent(event);
-      this.timelineData.setActiveViewTraceTypes(event.newFocusedView.dependencies);
+      this.timelineData.setActiveViewTraceTypes(
+        event.newFocusedView.dependencies,
+      );
       this.focusedTabView = event.newFocusedView;
-      await this.propagateTracePosition(this.timelineData.getCurrentPosition(), false);
+      await this.propagateTracePosition(
+        this.timelineData.getCurrentPosition(),
+        false,
+      );
     });
 
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      await this.propagateTracePosition(event.position, false);
-    });
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        if (event.updateTimeline) {
+          this.timelineData.setPosition(event.position);
+        }
+        await this.propagateTracePosition(event.position, false);
+      },
+    );
 
-    await event.visit(WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED, async (event) => {
-      await this.processRemoteFilesReceived([event.bugreport], FilesSource.BUGREPORT);
-      if (event.timestamp !== undefined) {
-        await this.processRemoteToolTimestampReceived(event.timestamp);
-      }
-    });
+    await event.visit(
+      WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED,
+      async (event) => {
+        await this.processRemoteFilesReceived(
+          [event.bugreport],
+          FilesSource.BUGREPORT,
+        );
+        if (event.timestampNs !== undefined) {
+          await this.processRemoteToolTimestampReceived(event.timestampNs);
+        }
+      },
+    );
 
-    await event.visit(WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED, async (event) => {
-      await this.processRemoteToolTimestampReceived(event.timestamp);
-    });
+    await event.visit(
+      WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
+      async (event) => {
+        await this.processRemoteToolTimestampReceived(event.timestampNs);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
@@ -171,7 +211,12 @@ export class Mediator {
         errors.push(error);
       },
     };
-    await this.tracePipeline.loadFiles(files, source, errorListener, this.currentProgressListener);
+    await this.tracePipeline.loadFiles(
+      files,
+      source,
+      errorListener,
+      this.currentProgressListener,
+    );
 
     if (errors.length > 0) {
       this.userNotificationListener.onErrors(errors);
@@ -180,19 +225,16 @@ export class Mediator {
 
   private async propagateTracePosition(
     position: TracePosition | undefined,
-    omitCrossToolProtocol: boolean
+    omitCrossToolProtocol: boolean,
   ) {
     if (!position) {
       return;
     }
 
     const event = new TracePositionUpdate(position);
-    const receivers: WinscopeEventListener[] = [...this.viewers].filter((viewer) =>
-      this.isViewerVisible(viewer)
+    const receivers: WinscopeEventListener[] = [...this.viewers].filter(
+      (viewer) => this.isViewerVisible(viewer),
     );
-    if (!omitCrossToolProtocol) {
-      receivers.push(this.crossToolProtocol);
-    }
     if (this.timelineComponent) {
       receivers.push(this.timelineComponent);
     }
@@ -200,6 +242,16 @@ export class Mediator {
     const promises = receivers.map((receiver) => {
       return receiver.onWinscopeEvent(event);
     });
+
+    if (!omitCrossToolProtocol) {
+      const utcTimestamp = position.timestamp.toUTC();
+      const utcPosition = position.entry
+        ? TracePosition.fromTraceEntry(position.entry, utcTimestamp)
+        : TracePosition.fromTimestamp(utcTimestamp);
+      const utcEvent = new TracePositionUpdate(utcPosition);
+      promises.push(this.crossToolProtocol.onWinscopeEvent(utcEvent));
+    }
+
     await Promise.all(promises);
   }
 
@@ -222,7 +274,9 @@ export class Mediator {
     });
   }
 
-  private async processRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private async processRemoteToolTimestampReceived(timestampNs: bigint) {
+    const factory = this.tracePipeline.getTimestampFactory();
+    const timestamp = factory.makeRealTimestamp(timestampNs);
     this.lastRemoteToolTimestampReceived = timestamp;
 
     if (!this.areViewersLoaded) {
@@ -233,7 +287,7 @@ export class Mediator {
       console.warn(
         'Cannot apply new timestamp received from remote tool.' +
           ` Remote tool notified timestamp type ${timestamp.getType()},` +
-          ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`
+          ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`,
       );
       return;
     }
@@ -241,7 +295,10 @@ export class Mediator {
     const position = this.timelineData.makePositionFromActiveTrace(timestamp);
     this.timelineData.setPosition(position);
 
-    await this.propagateTracePosition(this.timelineData.getCurrentPosition(), true);
+    await this.propagateTracePosition(
+      this.timelineData.getCurrentPosition(),
+      true,
+    );
   }
 
   private async processRemoteFilesReceived(files: File[], source: FilesSource) {
@@ -251,7 +308,10 @@ export class Mediator {
   }
 
   private async loadViewers() {
-    this.currentProgressListener?.onProgressUpdate('Computing frame mapping...', undefined);
+    this.currentProgressListener?.onProgressUpdate(
+      'Computing frame mapping...',
+      undefined,
+    );
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
@@ -260,7 +320,10 @@ export class Mediator {
     await this.tracePipeline.buildTraces();
     this.currentProgressListener?.onOperationFinished();
 
-    this.currentProgressListener?.onProgressUpdate('Initializing UI...', undefined);
+    this.currentProgressListener?.onProgressUpdate(
+      'Initializing UI...',
+      undefined,
+    );
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
@@ -268,14 +331,17 @@ export class Mediator {
 
     this.timelineData.initialize(
       this.tracePipeline.getTraces(),
-      await this.tracePipeline.getScreenRecordingVideo()
+      await this.tracePipeline.getScreenRecordingVideo(),
     );
 
-    this.viewers = new ViewerFactory().createViewers(this.tracePipeline.getTraces(), this.storage);
+    this.viewers = new ViewerFactory().createViewers(
+      this.tracePipeline.getTraces(),
+      this.storage,
+    );
     this.viewers.forEach((viewer) =>
       viewer.setEmitEvent(async (event) => {
         await this.onWinscopeEvent(event);
-      })
+      }),
     );
 
     // Set initial trace position as soon as UI is created
@@ -309,9 +375,12 @@ export class Mediator {
   private getInitialTracePosition(): TracePosition | undefined {
     if (
       this.lastRemoteToolTimestampReceived &&
-      this.timelineData.getTimestampType() === this.lastRemoteToolTimestampReceived.getType()
+      this.timelineData.getTimestampType() ===
+        this.lastRemoteToolTimestampReceived.getType()
     ) {
-      return this.timelineData.makePositionFromActiveTrace(this.lastRemoteToolTimestampReceived);
+      return this.timelineData.makePositionFromActiveTrace(
+        this.lastRemoteToolTimestampReceived,
+      );
     }
 
     const position = this.timelineData.getCurrentPosition();

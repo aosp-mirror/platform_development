@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  ScrollingModule,
+} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
@@ -69,17 +79,24 @@ describe('ViewerProtologComponent', () => {
     });
 
     it('applies text filters correctly', () => {
-      htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-        component.uiData.messages = component.uiData.messages.filter((message) =>
-          message.text.includes((event as CustomEvent).detail)
-        );
-      });
+      htmlElement.addEventListener(
+        Events.SearchStringFilterChanged,
+        (event) => {
+          component.uiData.messages = component.uiData.messages.filter(
+            (message) => message.text.includes((event as CustomEvent).detail),
+          );
+        },
+      );
       component.inputData = makeUiData();
       fixture.detectChanges();
       expect(component.uiData.messages.length).toEqual(200);
 
-      const textFilterDiv = assertDefined(htmlElement.querySelector('.filters .text'));
-      const inputEl = assertDefined(textFilterDiv.querySelector('input')) as HTMLInputElement;
+      const textFilterDiv = assertDefined(
+        htmlElement.querySelector('.filters .text'),
+      );
+      const inputEl = assertDefined(
+        textFilterDiv.querySelector('input'),
+      ) as HTMLInputElement;
       inputEl.value = 'keep';
       inputEl.dispatchEvent(new Event('input'));
       fixture.detectChanges();
@@ -90,18 +107,40 @@ describe('ViewerProtologComponent', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
       const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time')
+        htmlElement.querySelector('.go-to-current-time'),
       ) as HTMLButtonElement;
-      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      const spy = spyOn(
+        assertDefined(component.scrollComponent),
+        'scrollToIndex',
+      );
       goToCurrentTimeButton.click();
       expect(spy).toHaveBeenCalledWith(150);
+    });
+
+    it('propagates timestamp on click', () => {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      let timestamp = '';
+      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+        timestamp = (event as CustomEvent).detail.formattedValue();
+      });
+      const logTimestampButton = assertDefined(
+        htmlElement.querySelector('.time button'),
+      ) as HTMLButtonElement;
+      logTimestampButton.click();
+
+      expect(timestamp).toEqual('10ns');
     });
   });
 
   describe('Scroll component', () => {
     executeScrollComponentTests('message', setUpTestEnvironment);
     async function setUpTestEnvironment(): Promise<
-      [ComponentFixture<ViewerProtologComponent>, HTMLElement, CdkVirtualScrollViewport]
+      [
+        ComponentFixture<ViewerProtologComponent>,
+        HTMLElement,
+        CdkVirtualScrollViewport,
+      ]
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
@@ -121,7 +160,17 @@ describe('ViewerProtologComponent', () => {
   function makeUiData(): UiData {
     const allLogLevels = ['INFO', 'ERROR'];
     const allTags = ['WindowManager', 'INVALID'];
-    const allSourceFiles = ['test_source_file.java', 'other_test_source_file.java'];
+    const allSourceFiles = [
+      'test_source_file.java',
+      'other_test_source_file.java',
+    ];
+
+    const time = new PropertyTreeBuilder()
+      .setRootId('ProtologMessage')
+      .setName('timestamp')
+      .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n))
+      .setFormatter(TIMESTAMP_FORMATTER)
+      .build();
 
     const messages = [];
     const shortMessage = 'test information about message';
@@ -130,7 +179,7 @@ describe('ViewerProtologComponent', () => {
       const uiDataMessage: UiDataMessage = {
         originalIndex: i,
         text: i % 2 === 0 ? shortMessage : longMessage,
-        time: '2022-11-21T18:05:09.777144978',
+        time,
         tag: i % 2 === 0 ? allTags[0] : allTags[1],
         level: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
         at: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],

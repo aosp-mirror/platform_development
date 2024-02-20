@@ -14,37 +14,66 @@
  * limitations under the License.
  */
 
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {Timestamp} from 'common/time';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 
 export class PropertyTreeNodeFactory {
-  constructor(private denylistProperties: string[] = [], private visitPrototype = true) {}
+  constructor(
+    private denylistProperties: string[] = [],
+    private visitPrototype = true,
+  ) {}
 
   makePropertyRoot(
     rootId: string,
     rootName: string,
     source: PropertySource,
-    value: any
+    value: any,
   ): PropertyTreeNode {
     return new PropertyTreeNode(rootId, rootName, source, value);
   }
 
-  makeProtoProperty(rootId: string, name: string, value: any): PropertyTreeNode {
+  makeProtoProperty(
+    rootId: string,
+    name: string,
+    value: any,
+  ): PropertyTreeNode {
     return this.makeProperty(rootId, name, PropertySource.PROTO, value);
   }
 
-  makeDefaultProperty(rootId: string, name: string, defaultValue: any): PropertyTreeNode {
-    return this.makeSimpleChildProperty(rootId, name, defaultValue, PropertySource.DEFAULT);
+  makeDefaultProperty(
+    rootId: string,
+    name: string,
+    defaultValue: any,
+  ): PropertyTreeNode {
+    return this.makeSimpleChildProperty(
+      rootId,
+      name,
+      defaultValue,
+      PropertySource.DEFAULT,
+    );
   }
 
-  makeCalculatedProperty(rootId: string, propertyName: string, value: any): PropertyTreeNode {
-    return this.makeProperty(rootId, propertyName, PropertySource.CALCULATED, value);
+  makeCalculatedProperty(
+    rootId: string,
+    propertyName: string,
+    value: any,
+  ): PropertyTreeNode {
+    return this.makeProperty(
+      rootId,
+      propertyName,
+      PropertySource.CALCULATED,
+      value,
+    );
   }
 
   private makeProperty(
     rootId: string,
     name: string,
     source: PropertySource,
-    value: any
+    value: any,
   ): PropertyTreeNode {
     if (this.hasInnerProperties(value)) {
       return this.makeNestedProperty(rootId, name, source, value);
@@ -57,7 +86,7 @@ export class PropertyTreeNodeFactory {
     rootId: string,
     name: string,
     source: PropertySource,
-    value: object | any[]
+    value: object | any[],
   ): PropertyTreeNode {
     const rootName = rootId.split(' ');
 
@@ -65,7 +94,7 @@ export class PropertyTreeNodeFactory {
       name.length > 0 ? `${rootId}.${name}` : rootId,
       name.length > 0 ? name : rootName.slice(1, rootName.length).join(' '),
       source,
-      undefined
+      undefined,
     );
     this.addInnerProperties(innerRoot, value, source);
 
@@ -76,7 +105,7 @@ export class PropertyTreeNodeFactory {
     rootId: string,
     key: string,
     value: any,
-    source: PropertySource
+    source: PropertySource,
   ): PropertyTreeNode {
     return new PropertyTreeNode(`${rootId}.${key}`, key, source, value);
   }
@@ -85,6 +114,7 @@ export class PropertyTreeNodeFactory {
     if (!value) return false;
     if (Array.isArray(value)) return value.length > 0;
     if (this.isLongType(value)) return false;
+    if (value instanceof Timestamp) return false;
     return typeof value === 'object' && Object.keys(value).length > 0;
   }
 
@@ -94,7 +124,11 @@ export class PropertyTreeNodeFactory {
     return false;
   }
 
-  private addInnerProperties(root: PropertyTreeNode, value: any, source: PropertySource): void {
+  private addInnerProperties(
+    root: PropertyTreeNode,
+    value: any,
+    source: PropertySource,
+  ): void {
     if (Array.isArray(value)) {
       this.addArrayProperties(root, value, source);
     } else {
@@ -102,17 +136,27 @@ export class PropertyTreeNodeFactory {
     }
   }
 
-  private addArrayProperties(root: PropertyTreeNode, value: any, source: PropertySource) {
+  private addArrayProperties(
+    root: PropertyTreeNode,
+    value: any,
+    source: PropertySource,
+  ) {
     for (const [key, val] of Object.entries(value)) {
       root.addOrReplaceChild(this.makeProperty(`${root.id}`, key, source, val));
     }
   }
 
-  private addObjectProperties(root: PropertyTreeNode, value: any, source: PropertySource) {
+  private addObjectProperties(
+    root: PropertyTreeNode,
+    value: any,
+    source: PropertySource,
+  ) {
     const keys = this.getValidPropertyNames(value);
 
     for (const key of keys) {
-      root.addOrReplaceChild(this.makeProperty(`${root.id}`, key, source, value[key]));
+      root.addOrReplaceChild(
+        this.makeProperty(`${root.id}`, key, source, value[key]),
+      );
     }
   }
 
@@ -137,7 +181,10 @@ export class PropertyTreeNodeFactory {
       });
 
       properties.forEach((prop) => {
-        if (typeof objProto[prop] !== 'function' && props.indexOf(prop) === -1) {
+        if (
+          typeof objProto[prop] !== 'function' &&
+          props.indexOf(prop) === -1
+        ) {
           props.push(prop);
         }
       });

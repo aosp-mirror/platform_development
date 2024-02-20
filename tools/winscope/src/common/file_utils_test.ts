@@ -18,28 +18,46 @@ import {FileUtils} from './file_utils';
 
 describe('FileUtils', () => {
   it('extracts file extensions', () => {
-    expect(FileUtils.getFileExtension(new File([], 'winscope.zip'))).toEqual('zip');
-    expect(FileUtils.getFileExtension(new File([], 'win.scope.zip'))).toEqual('zip');
-    expect(FileUtils.getFileExtension(new File([], 'winscopezip'))).toEqual(undefined);
+    expect(FileUtils.getFileExtension(new File([], 'winscope.zip'))).toEqual(
+      'zip',
+    );
+    expect(FileUtils.getFileExtension(new File([], 'win.scope.zip'))).toEqual(
+      'zip',
+    );
+    expect(FileUtils.getFileExtension(new File([], 'winscopezip'))).toEqual(
+      undefined,
+    );
   });
 
   it('removes directory from filename', () => {
-    expect(FileUtils.removeDirFromFileName('test/winscope.zip')).toEqual('winscope.zip');
-    expect(FileUtils.removeDirFromFileName('test/test/winscope.zip')).toEqual('winscope.zip');
+    expect(FileUtils.removeDirFromFileName('test/winscope.zip')).toEqual(
+      'winscope.zip',
+    );
+    expect(FileUtils.removeDirFromFileName('test/test/winscope.zip')).toEqual(
+      'winscope.zip',
+    );
   });
 
   it('removes extension from filename', () => {
-    expect(FileUtils.removeExtensionFromFilename('winscope.zip')).toEqual('winscope');
-    expect(FileUtils.removeExtensionFromFilename('win.scope.zip')).toEqual('win.scope');
+    expect(FileUtils.removeExtensionFromFilename('winscope.zip')).toEqual(
+      'winscope',
+    );
+    expect(FileUtils.removeExtensionFromFilename('win.scope.zip')).toEqual(
+      'win.scope',
+    );
   });
 
   it('creates zip archive', async () => {
-    const zip = await FileUtils.createZipArchive([new File([], 'test_file.txt')]);
+    const zip = await FileUtils.createZipArchive([
+      new File([], 'test_file.txt'),
+    ]);
     expect(zip).toBeInstanceOf(Blob);
   });
 
   it('unzips archive', async () => {
-    const validZipFile = await UnitTestUtils.getFixtureFile('traces/winscope.zip');
+    const validZipFile = await UnitTestUtils.getFixtureFile(
+      'traces/winscope.zip',
+    );
     const unzippedFiles = await FileUtils.unzipFile(validZipFile);
     expect(unzippedFiles.length).toBe(2);
   });

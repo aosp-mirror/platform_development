@@ -16,6 +16,7 @@
 
 class Events {
   static TransitionSelected = 'ViewerTransitionsEvent_TransitionSelected';
+  static TimestampSelected = 'ViewerTransitionsEvent_TimestampSelected';
 }
 
 export {Events};

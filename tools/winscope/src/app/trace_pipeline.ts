@@ -15,8 +15,16 @@
  */
 
 import {FileUtils} from 'common/file_utils';
+import {
+  NO_TIMEZONE_OFFSET_FACTORY,
+  TimestampFactory,
+} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
-import {CorruptedArchive, NoCommonTimestampType, NoInputFiles} from 'messaging/winscope_error';
+import {
+  CorruptedArchive,
+  NoCommonTimestampType,
+  NoInputFiles,
+} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory} from 'parsers/parser_factory';
@@ -39,17 +47,25 @@ export class TracePipeline {
   private tracesParserFactory = new TracesParserFactory();
   private traces = new Traces();
   private downloadArchiveFilename?: string;
+  private timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
 
   async loadFiles(
     files: File[],
     source: FilesSource,
     errorListener: WinscopeErrorListener,
-    progressListener: ProgressListener | undefined
+    progressListener: ProgressListener | undefined,
   ) {
-    this.downloadArchiveFilename = this.makeDownloadArchiveFilename(files, source);
+    this.downloadArchiveFilename = this.makeDownloadArchiveFilename(
+      files,
+      source,
+    );
 
     try {
-      const unzippedArchives = await this.unzipFiles(files, progressListener, errorListener);
+      const unzippedArchives = await this.unzipFiles(
+        files,
+        progressListener,
+        errorListener,
+      );
 
       if (unzippedArchives.length === 0) {
         errorListener.onError(new NoInputFiles());
@@ -57,7 +73,11 @@ export class TracePipeline {
       }
 
       for (const unzippedArchive of unzippedArchives) {
-        await this.loadUnzippedArchive(unzippedArchive, errorListener, progressListener);
+        await this.loadUnzippedArchive(
+          unzippedArchive,
+          errorListener,
+          progressListener,
+        );
       }
 
       this.traces = new Traces();
@@ -73,7 +93,9 @@ export class TracePipeline {
         this.traces.setTrace(parser.getTraceType(), trace);
       });
 
-      const tracesParsers = await this.tracesParserFactory.createParsers(this.traces);
+      const tracesParsers = await this.tracesParserFactory.createParsers(
+        this.traces,
+      );
 
       tracesParsers.forEach((tracesParser) => {
         const trace = Trace.fromParser(tracesParser, commonTimestampType);
@@ -113,10 +135,15 @@ export class TracePipeline {
     return this.downloadArchiveFilename ?? 'winscope';
   }
 
+  getTimestampFactory(): TimestampFactory {
+    return this.timestampFactory;
+  }
+
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
     const traces = this.getTraces();
     const screenRecording =
-      traces.getTrace(TraceType.SCREEN_RECORDING) ?? traces.getTrace(TraceType.SCREENSHOT);
+      traces.getTrace(TraceType.SCREEN_RECORDING) ??
+      traces.getTrace(TraceType.SCREENSHOT);
     if (!screenRecording || screenRecording.lengthEntries === 0) {
       return undefined;
     }
@@ -126,15 +153,22 @@ export class TracePipeline {
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
+    this.timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
     this.downloadArchiveFilename = undefined;
   }
 
   private async loadUnzippedArchive(
     unzippedArchive: UnzippedArchive,
     errorListener: WinscopeErrorListener,
-    progressListener: ProgressListener | undefined
+    progressListener: ProgressListener | undefined,
   ) {
-    const filterResult = await this.traceFileFilter.filter(unzippedArchive, errorListener);
+    const filterResult = await this.traceFileFilter.filter(
+      unzippedArchive,
+      errorListener,
+    );
+    if (filterResult.timezoneInfo) {
+      this.timestampFactory = new TimestampFactory(filterResult.timezoneInfo);
+    }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
       errorListener.onError(new NoInputFiles());
@@ -143,8 +177,9 @@ export class TracePipeline {
 
     const legacyParsers = await new ParserFactory().createParsers(
       filterResult.legacy,
+      this.timestampFactory,
       progressListener,
-      errorListener
+      errorListener,
     );
 
     let perfettoParsers: FileAndParsers | undefined;
@@ -152,21 +187,30 @@ export class TracePipeline {
     if (filterResult.perfetto) {
       const parsers = await new PerfettoParserFactory().createParsers(
         filterResult.perfetto,
-        progressListener
+        this.timestampFactory,
+        progressListener,
       );
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
 
-    this.loadedParsers.addParsers(legacyParsers, perfettoParsers, errorListener);
+    this.loadedParsers.addParsers(
+      legacyParsers,
+      perfettoParsers,
+      errorListener,
+    );
   }
 
-  private makeDownloadArchiveFilename(files: File[], source: FilesSource): string {
+  private makeDownloadArchiveFilename(
+    files: File[],
+    source: FilesSource,
+  ): string {
     // set download archive file name, used to download all traces
     let filenameWithCurrTime: string;
     const currTime = new Date().toISOString().slice(0, -5).replace('T', '_');
     if (!this.downloadArchiveFilename && files.length === 1) {
       const filenameNoDir = FileUtils.removeDirFromFileName(files[0].name);
-      const filenameNoDirOrExt = FileUtils.removeExtensionFromFilename(filenameNoDir);
+      const filenameNoDirOrExt =
+        FileUtils.removeExtensionFromFilename(filenameNoDir);
       filenameWithCurrTime = `${filenameNoDirOrExt}_${currTime}`;
     } else {
       filenameWithCurrTime = `${source}_${currTime}`;
@@ -174,13 +218,13 @@ export class TracePipeline {
 
     const archiveFilenameNoIllegalChars = filenameWithCurrTime.replace(
       FileUtils.ILLEGAL_FILENAME_CHARACTERS_REGEX,
-      '_'
+      '_',
     );
     if (FileUtils.DOWNLOAD_FILENAME_REGEX.test(archiveFilenameNoIllegalChars)) {
       return archiveFilenameNoIllegalChars;
     } else {
       console.error(
-        "Cannot convert uploaded archive filename to acceptable format for download. Defaulting download filename to 'winscope.zip'."
+        "Cannot convert uploaded archive filename to acceptable format for download. Defaulting download filename to 'winscope.zip'.",
       );
       return 'winscope';
     }
@@ -189,7 +233,7 @@ export class TracePipeline {
   private async unzipFiles(
     files: File[],
     progressListener: ProgressListener | undefined,
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ): Promise<UnzippedArchive[]> {
     const unzippedArchives: UnzippedArchive[] = [];
     const progressMessage = 'Unzipping files...';
@@ -200,7 +244,8 @@ export class TracePipeline {
       const file = files[i];
 
       const onSubProgressUpdate = (subPercentage: number) => {
-        const totalPercentage = (100 * i) / files.length + subPercentage / files.length;
+        const totalPercentage =
+          (100 * i) / files.length + subPercentage / files.length;
         progressListener?.onProgressUpdate(progressMessage, totalPercentage);
       };
 

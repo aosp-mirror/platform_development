@@ -22,7 +22,7 @@ export function executeAddDiffsTests<T extends DiffNode>(
   nodeEqualityTester: (first: any, second: any) => boolean | undefined,
   makeRoot: (value?: string) => T,
   makeChildAndAddToRoot: (rootNode: T, value?: string) => T,
-  addDiffs: AddDiffs<T>
+  addDiffs: AddDiffs<T>,
 ) {
   describe('AddDiffs', () => {
     let newRoot: T;

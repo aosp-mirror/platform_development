@@ -17,10 +17,8 @@
 import {TimestampType} from 'common/time';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
-import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
 
 class PerfettoLogMessageTableRow {
@@ -39,15 +37,14 @@ class PerfettoLogMessageTableRow {
 }
 
 export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
-  }
-
   override getTraceType(): TraceType {
     return TraceType.PROTO_LOG;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
     const protologEntry = await this.queryProtoLogEntry(index);
     const logMessage: LogMessage = {
       text: protologEntry.message,
@@ -60,7 +57,8 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       timestampType,
-      this.realToElapsedTimeOffsetNs
+      this.realToElapsedTimeOffsetNs,
+      this.timestampFactory,
     );
   }
 
@@ -68,7 +66,9 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return 'protolog';
   }
 
-  private async queryProtoLogEntry(index: number): Promise<PerfettoLogMessageTableRow> {
+  private async queryProtoLogEntry(
+    index: number,
+  ): Promise<PerfettoLogMessageTableRow> {
     const sql = `
       SELECT
         ts, tag, level, message
@@ -80,7 +80,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
 
     if (result.numRows() !== 1) {
       throw new Error(
-        `Expected exactly 1 protolog message with id ${index} but got ${result.numRows()}`
+        `Expected exactly 1 protolog message with id ${index} but got ${result.numRows()}`,
       );
     }
 
@@ -90,7 +90,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
       entry.get('ts') as bigint,
       entry.get('tag') as string,
       entry.get('level') as string,
-      entry.get('message') as string
+      entry.get('message') as string,
     );
   }
 }

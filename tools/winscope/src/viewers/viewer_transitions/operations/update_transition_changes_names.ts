@@ -19,10 +19,12 @@ import {FixedStringFormatter} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
-export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNode> {
+export class UpdateTransitionChangesNames
+  implements Operation<UiPropertyTreeNode>
+{
   constructor(
     private readonly layerIdToName: Map<number, string>,
-    private readonly windowTokenToTitle: Map<string, string>
+    private readonly windowTokenToTitle: Map<string, string>,
   ) {}
 
   apply(node: UiPropertyTreeNode): void {
@@ -30,21 +32,29 @@ export class UpdateTransitionChangesNames implements Operation<UiPropertyTreeNod
       .getChildByName('targets')
       ?.getAllChildren()
       .forEach((target) => {
-        const layerId = assertDefined(target.getChildByName('layerId'));
-        const layerIdValue = Number(layerId.getValue());
-        const layerName = this.layerIdToName.get(layerIdValue);
-        if (layerName) {
-          layerId.setFormatter(new FixedStringFormatter(`${layerIdValue} ${layerName}`));
+        const layerId = target.getChildByName('layerId');
+        if (layerId) {
+          const layerIdValue = Number(layerId.getValue());
+          const layerName = this.layerIdToName.get(layerIdValue);
+          if (layerName) {
+            layerId.setFormatter(
+              new FixedStringFormatter(`${layerIdValue} ${layerName}`),
+            );
+          }
         }
 
-        const windowId = assertDefined(target.getChildByName('windowId'));
-        const windowIdString = windowId.getValue().toString(16);
-        const windowTitle = this.windowTokenToTitle.get(windowIdString);
-        windowId.setFormatter(
-          new FixedStringFormatter(
-            windowTitle ? `0x${windowIdString} (${windowTitle})` : `0x${windowIdString}`
-          )
-        );
+        const windowId = target.getChildByName('windowId');
+        if (windowId) {
+          const windowIdString = windowId.getValue().toString(16);
+          const windowTitle = this.windowTokenToTitle.get(windowIdString);
+          windowId.setFormatter(
+            new FixedStringFormatter(
+              windowTitle
+                ? `0x${windowIdString} (${windowTitle})`
+                : `0x${windowIdString}`,
+            ),
+          );
+        }
       });
   }
 }

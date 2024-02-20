@@ -34,12 +34,14 @@ describe('SimplifyNames', () => {
         .setChildren(
           Array.from({length: 5}, () => {
             return {id: 'ViewNode', name: 'test.package.name@123456789'};
-          })
+          }),
         )
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    hierarchyRoot.forEachNodeDfs((node) => expect(node.getDisplayName()).toEqual('name@123456789'));
+    hierarchyRoot.forEachNodeDfs((node) =>
+      expect(node.getDisplayName()).toEqual('name@123456789'),
+    );
   });
 });

@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
@@ -30,7 +31,10 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {Operation} from 'trace/tree_node/operations/operation';
-import {LazyPropertiesStrategyType, PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {
+  LazyPropertiesStrategyType,
+  PropertiesProvider,
+} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -63,11 +67,16 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   private static readonly Operations = {
     SetFormattersNode: new SetFormatters(NodeField),
     TranslateIntDefNode: new TranslateIntDef(NodeField),
-    AddDefaultsNodeEager: new AddDefaults(NodeField, ParserViewCaptureWindow.EAGER_PROPERTIES),
+    AddDefaultsNodeEager: new AddDefaults(
+      NodeField,
+      ParserViewCaptureWindow.EAGER_PROPERTIES,
+    ),
     AddDefaultsNodeLazy: new AddDefaults(
       NodeField,
       undefined,
-      ParserViewCaptureWindow.EAGER_PROPERTIES.concat(ParserViewCaptureWindow.DENYLIST_PROPERTIES)
+      ParserViewCaptureWindow.EAGER_PROPERTIES.concat(
+        ParserViewCaptureWindow.DENYLIST_PROPERTIES,
+      ),
     ),
     SetRootTransformProperties: new SetRootTransformProperties(),
   };
@@ -80,7 +89,8 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     private readonly traceType: TraceType,
     private readonly realToElapsedTimeOffsetNs: bigint,
     private readonly packageName: string,
-    private readonly classNames: string[]
+    private readonly classNames: string[],
+    private readonly timestampFactory: TimestampFactory,
   ) {
     /*
       TODO: Enable this once multiple ViewCapture Tabs becomes generic. Right now it doesn't matter since
@@ -116,7 +126,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, async () => {
@@ -130,17 +140,22 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   }
 
   private decodeTimestamps(): Map<TimestampType, Timestamp[]> {
-    const timeStampMap = new Map<TimestampType, Timestamp[]>();
+    const timestampMap = new Map<TimestampType, Timestamp[]>();
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
       const timestamps: Timestamp[] = [];
       let areTimestampsValid = true;
 
       for (const entry of this.frameData) {
-        const timestamp = Timestamp.from(
-          type,
-          BigInt(assertDefined(entry.timestamp).toString()),
-          this.realToElapsedTimeOffsetNs
-        );
+        const timestampNs = BigInt(assertDefined(entry.timestamp).toString());
+
+        let timestamp: Timestamp | undefined;
+        if (this.timestampFactory.canMakeTimestampFromType(type, 0n)) {
+          timestamp = this.timestampFactory.makeTimestampFromType(
+            type,
+            timestampNs,
+            this.realToElapsedTimeOffsetNs,
+          );
+        }
         if (timestamp === undefined) {
           areTimestampsValid = false;
           break;
@@ -149,16 +164,19 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
       }
 
       if (areTimestampsValid) {
-        timeStampMap.set(type, timestamps);
+        timestampMap.set(type, timestamps);
       }
     }
-    return timeStampMap;
+    return timestampMap;
   }
 
   private makeHierarchyTree(
-    frameDataProto: com.android.app.viewcapture.data.IFrameData
+    frameDataProto: com.android.app.viewcapture.data.IFrameData,
   ): HierarchyTreeNode {
-    const nodes = this.makeNodePropertiesProviders(assertDefined(frameDataProto.node), true);
+    const nodes = this.makeNodePropertiesProviders(
+      assertDefined(frameDataProto.node),
+      true,
+    );
     return new HierarchyTreeBuilderVc()
       .setRoot(nodes[0])
       .setChildren(nodes.slice(1))
@@ -168,13 +186,15 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
 
   private makeNodePropertiesProviders(
     node: com.android.app.viewcapture.data.IViewNode,
-    isRoot = false
+    isRoot = false,
   ): PropertiesProvider[] {
     const eagerOperations: Array<Operation<PropertyTreeNode>> = [
       ParserViewCaptureWindow.Operations.AddDefaultsNodeEager,
     ];
     if (isRoot) {
-      eagerOperations.push(ParserViewCaptureWindow.Operations.SetRootTransformProperties);
+      eagerOperations.push(
+        ParserViewCaptureWindow.Operations.SetRootTransformProperties,
+      );
     }
 
     const eagerProperties = this.makeEagerPropertiesTree(node);
@@ -188,20 +208,26 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
         ParserViewCaptureWindow.Operations.TranslateIntDefNode,
       ])
       .setEagerOperations(eagerOperations)
-      .setLazyOperations([ParserViewCaptureWindow.Operations.AddDefaultsNodeLazy])
+      .setLazyOperations([
+        ParserViewCaptureWindow.Operations.AddDefaultsNodeLazy,
+      ])
       .build();
 
     const propertiesProviders: PropertiesProvider[] = [nodeProperties];
 
-    node.children?.forEach((childNode: com.android.app.viewcapture.data.IViewNode) => {
-      propertiesProviders.push(...this.makeNodePropertiesProviders(childNode));
-    });
+    node.children?.forEach(
+      (childNode: com.android.app.viewcapture.data.IViewNode) => {
+        propertiesProviders.push(
+          ...this.makeNodePropertiesProviders(childNode),
+        );
+      },
+    );
 
     return propertiesProviders;
   }
 
   private makeEagerPropertiesTree(
-    node: com.android.app.viewcapture.data.IViewNode
+    node: com.android.app.viewcapture.data.IViewNode,
   ): PropertyTreeNode {
     const denyList: string[] = [];
 
@@ -215,7 +241,9 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
       obj = Object.getPrototypeOf(obj);
     } while (obj);
 
-    const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${node.hashcode}`;
+    const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${
+      node.hashcode
+    }`;
 
     const nodeProperties = new PropertyTreeBuilderFromProto()
       .setData(node)
@@ -228,22 +256,26 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         nodeProperties.id,
         'children',
-        this.mapChildrenToHashcodes(node.children ?? [])
-      )
+        this.mapChildrenToHashcodes(node.children ?? []),
+      ),
     );
 
     return nodeProperties;
   }
 
-  private mapChildrenToHashcodes(children: com.android.app.viewcapture.data.IViewNode[]): number[] {
+  private mapChildrenToHashcodes(
+    children: com.android.app.viewcapture.data.IViewNode[],
+  ): number[] {
     return children.map((child) => assertDefined(child.hashcode));
   }
 
   private makeLazyPropertiesStrategy(
-    node: com.android.app.viewcapture.data.IViewNode
+    node: com.android.app.viewcapture.data.IViewNode,
   ): LazyPropertiesStrategyType {
     return async () => {
-      const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${node.hashcode}`;
+      const id = `${this.classNames[assertDefined(node.classnameIndex)]}@${
+        node.hashcode
+      }`;
       return new PropertyTreeBuilderFromProto()
         .setData(node)
         .setRootId('ViewNode')

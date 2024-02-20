@@ -29,7 +29,10 @@ import {TraceType} from 'trace/trace_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node.styles';
+import {
+  nodeStyles,
+  treeNodeDataViewStyles,
+} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'tree-view',
@@ -108,7 +111,8 @@ export class TreeComponent {
   @Input() showNode = (node: UiPropertyTreeNode | UiHierarchyTreeNode) => true;
 
   @Output() readonly highlightedChange = new EventEmitter<string>();
-  @Output() readonly selectedTreeChange = new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly selectedTreeChange =
+    new EventEmitter<UiHierarchyTreeNode>();
   @Output() readonly pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
   @Output() readonly hoverStart = new EventEmitter<void>();
   @Output() readonly hoverEnd = new EventEmitter<void>();
@@ -121,15 +125,27 @@ export class TreeComponent {
 
   private storeKeyExpandedState = '';
 
-  childTrackById(index: number, child: UiPropertyTreeNode | UiHierarchyTreeNode): string {
+  childTrackById(
+    index: number,
+    child: UiPropertyTreeNode | UiHierarchyTreeNode,
+  ): string {
     return child.id;
   }
 
   constructor(@Inject(ElementRef) public elementRef: ElementRef) {
     this.nodeElement = elementRef.nativeElement.querySelector('.node');
-    this.nodeElement?.addEventListener('mousedown', this.nodeMouseDownEventListener);
-    this.nodeElement?.addEventListener('mouseenter', this.nodeMouseEnterEventListener);
-    this.nodeElement?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.nodeElement?.addEventListener(
+      'mousedown',
+      this.nodeMouseDownEventListener,
+    );
+    this.nodeElement?.addEventListener(
+      'mouseenter',
+      this.nodeMouseEnterEventListener,
+    );
+    this.nodeElement?.addEventListener(
+      'mouseleave',
+      this.nodeMouseLeaveEventListener,
+    );
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -138,7 +154,8 @@ export class TreeComponent {
       if (this.store) {
         this.setExpandedValue(
           true,
-          assertDefined(this.store).get(this.storeKeyExpandedState) === undefined
+          assertDefined(this.store).get(this.storeKeyExpandedState) ===
+            undefined,
         );
       } else {
         this.setExpandedValue(true);
@@ -153,9 +170,18 @@ export class TreeComponent {
   }
 
   ngOnDestroy() {
-    this.nodeElement?.removeEventListener('mousedown', this.nodeMouseDownEventListener);
-    this.nodeElement?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
-    this.nodeElement?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.nodeElement?.removeEventListener(
+      'mousedown',
+      this.nodeMouseDownEventListener,
+    );
+    this.nodeElement?.removeEventListener(
+      'mouseenter',
+      this.nodeMouseEnterEventListener,
+    );
+    this.nodeElement?.removeEventListener(
+      'mouseleave',
+      this.nodeMouseLeaveEventListener,
+    );
   }
 
   isLeaf(node?: UiPropertyTreeNode | UiHierarchyTreeNode): boolean {
@@ -163,7 +189,9 @@ export class TreeComponent {
     if (node instanceof UiHierarchyTreeNode) {
       return node.getAllChildren().length === 0;
     }
-    return node.formattedValue().length > 0 || node.getAllChildren().length === 0;
+    return (
+      node.formattedValue().length > 0 || node.getAllChildren().length === 0
+    );
   }
 
   onNodeClick(event: MouseEvent) {
@@ -227,7 +255,10 @@ export class TreeComponent {
     }
 
     if (this.useStoredExpandedState) {
-      return assertDefined(this.store).get(this.storeKeyExpandedState) === 'true' ?? false;
+      return (
+        assertDefined(this.store).get(this.storeKeyExpandedState) === 'true' ??
+        false
+      );
     }
 
     return this.localExpandedState;
@@ -249,9 +280,15 @@ export class TreeComponent {
     if (this.node) this.highlightedChange.emit(this.node.id);
   }
 
-  private setExpandedValue(isExpanded: boolean, shouldUpdateStoredState = true) {
+  private setExpandedValue(
+    isExpanded: boolean,
+    shouldUpdateStoredState = true,
+  ) {
     if (this.useStoredExpandedState && shouldUpdateStoredState) {
-      assertDefined(this.store).add(this.storeKeyExpandedState, `${isExpanded}`);
+      assertDefined(this.store).add(
+        this.storeKeyExpandedState,
+        `${isExpanded}`,
+      );
     } else {
       this.localExpandedState = isExpanded;
     }

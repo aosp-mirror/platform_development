@@ -38,7 +38,11 @@ describe('AddWindowType', () => {
       .setIsRoot(true)
       .setName(WindowTypePrefix.STARTING)
       .setChildren([
-        {name: 'windowType', value: WindowType.STARTING, source: PropertySource.CALCULATED},
+        {
+          name: 'windowType',
+          value: WindowType.STARTING,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -58,7 +62,11 @@ describe('AddWindowType', () => {
       .setIsRoot(true)
       .setName(WindowTypePrefix.DEBUGGER)
       .setChildren([
-        {name: 'windowType', value: WindowType.STARTING, source: PropertySource.CALCULATED},
+        {
+          name: 'windowType',
+          value: WindowType.STARTING,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -80,7 +88,11 @@ describe('AddWindowType', () => {
       .setName('state')
       .setChildren([
         {name: 'animatingExit', value: null},
-        {name: 'windowType', value: WindowType.EXITING, source: PropertySource.CALCULATED},
+        {
+          name: 'windowType',
+          value: WindowType.EXITING,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -102,7 +114,11 @@ describe('AddWindowType', () => {
       .setName(WindowTypePrefix.DEBUGGER)
       .setChildren([
         {name: 'animatingExit', value: null},
-        {name: 'windowType', value: WindowType.EXITING, source: PropertySource.CALCULATED},
+        {
+          name: 'windowType',
+          value: WindowType.EXITING,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 

@@ -15,7 +15,10 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -29,11 +32,14 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
 
   abstract getTraceType(): TraceType;
 
-  abstract getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
+  abstract getEntry(
+    index: AbsoluteEntryIndex,
+    timestampType: TimestampType,
+  ): Promise<T>;
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     throw new Error('Not implemented');
   }
@@ -65,5 +71,8 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
     }
   }
 
-  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
+  protected abstract getTimestamp(
+    type: TimestampType,
+    decodedEntry: any,
+  ): undefined | Timestamp;
 }

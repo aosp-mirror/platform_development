@@ -18,7 +18,10 @@ import {Transition} from 'trace/transition';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData {
-  constructor(public entries: Transition[], public selectedTransition?: UiPropertyTreeNode) {}
+  constructor(
+    public entries: Transition[],
+    public selectedTransition?: UiPropertyTreeNode,
+  ) {}
 
   static EMPTY = new UiData([], undefined);
 }

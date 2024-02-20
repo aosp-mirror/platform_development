@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, TimeRange} from 'common/time';
+import {TimeRange} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TimeUtils} from 'common/time_utils';
 import {TraceType} from 'trace/trace_type';
 
@@ -56,25 +57,33 @@ export class NoInputFiles implements WinscopeError {
 }
 
 export class TraceHasOldData implements WinscopeError {
-  constructor(private readonly descriptor: string, private readonly timeGap: TimeRange) {}
+  constructor(
+    private readonly descriptor: string,
+    private readonly timeGap: TimeRange,
+  ) {}
 
   getType(): string {
     return 'old trace';
   }
 
   getMessage(): string {
-    const elapsedTime = new ElapsedTimestamp(
-      this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs()
+    const elapsedTime = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+      this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs(),
     );
-    return `${this.descriptor}: discarded because data is older than ${TimeUtils.format(
+    return `${
+      this.descriptor
+    }: discarded because data is older than ${TimeUtils.format(
       elapsedTime,
-      true
+      true,
     )}`;
   }
 }
 
 export class TraceOverridden implements WinscopeError {
-  constructor(private readonly descriptor: string, private readonly overridingType?: TraceType) {}
+  constructor(
+    private readonly descriptor: string,
+    private readonly overridingType?: TraceType,
+  ) {}
 
   getType(): string {
     return 'trace overridden';

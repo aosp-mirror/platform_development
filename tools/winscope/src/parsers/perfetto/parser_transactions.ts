@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -37,9 +39,10 @@ import {FakeProtoTransformer} from './fake_proto_transformer';
 import {Utils} from './utils';
 
 export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
-  private static readonly TransactionsTraceFileProto = TamperedMessageType.tamper(
-    root.lookupType('perfetto.protos.TransactionTraceFile')
-  );
+  private static readonly TransactionsTraceFileProto =
+    TamperedMessageType.tamper(
+      root.lookupType('perfetto.protos.TransactionTraceFile'),
+    );
   private static readonly TransactionsTraceEntryField =
     ParserTransactions.TransactionsTraceFileProto.fields['entry'];
 
@@ -51,11 +54,17 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
 
   private protoTransformer: FakeProtoTransformer;
 
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
+  constructor(
+    traceFile: TraceFile,
+    traceProcessor: WasmEngineProxy,
+    timestampFactory: TimestampFactory,
+  ) {
+    super(traceFile, traceProcessor, timestampFactory);
 
     this.protoTransformer = new FakeProtoTransformer(
-      assertDefined(ParserTransactions.TransactionsTraceEntryField.tamperedMessageType)
+      assertDefined(
+        ParserTransactions.TransactionsTraceEntryField.tamperedMessageType,
+      ),
     );
   }
 
@@ -63,8 +72,15 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return TraceType.TRANSACTIONS;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
-    let entryProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
+    let entryProto = await Utils.queryEntry(
+      this.traceProcessor,
+      this.getTableName(),
+      index,
+    );
     entryProto = this.protoTransformer.transform(entryProto);
     return this.makePropertiesTree(entryProto);
   }
@@ -75,16 +91,22 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
 
   override async customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(this.traceProcessor, this.getTableName(), entriesRange);
+        return Utils.queryVsyncId(
+          this.traceProcessor,
+          this.getTableName(),
+          entriesRange,
+        );
       })
       .getResult();
   }
 
-  private makePropertiesTree(entryProto: perfetto.protos.TransactionTraceEntry): PropertyTreeNode {
+  private makePropertiesTree(
+    entryProto: perfetto.protos.TransactionTraceEntry,
+  ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(entryProto)
       .setRootId('TransactionsTraceEntry')

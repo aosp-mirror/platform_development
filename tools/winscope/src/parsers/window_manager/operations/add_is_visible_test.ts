@@ -37,7 +37,11 @@ describe('AddIsVisible', () => {
       .setName('node')
       .setChildren([
         {name: 'visible', value: true},
-        {name: 'isComputedVisible', value: true, source: PropertySource.CALCULATED},
+        {
+          name: 'isComputedVisible',
+          value: true,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -57,7 +61,11 @@ describe('AddIsVisible', () => {
       .setName('node')
       .setChildren([
         {name: 'visible', value: false},
-        {name: 'isComputedVisible', value: false, source: PropertySource.CALCULATED},
+        {
+          name: 'isComputedVisible',
+          value: false,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -81,7 +89,11 @@ describe('AddIsVisible', () => {
       .setChildren([
         {name: 'isVisible', value: true},
         {name: 'attributes', children: [{name: 'alpha', value: 0}]},
-        {name: 'isComputedVisible', value: false, source: PropertySource.CALCULATED},
+        {
+          name: 'isComputedVisible',
+          value: false,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 
@@ -105,7 +117,11 @@ describe('AddIsVisible', () => {
       .setChildren([
         {name: 'isVisible', value: true},
         {name: 'attributes', children: [{name: 'alpha', value: 1}]},
-        {name: 'isComputedVisible', value: true, source: PropertySource.CALCULATED},
+        {
+          name: 'isComputedVisible',
+          value: true,
+          source: PropertySource.CALCULATED,
+        },
       ])
       .build();
 

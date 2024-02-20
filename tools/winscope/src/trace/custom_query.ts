@@ -24,20 +24,23 @@ export enum CustomQueryType {
 
 export class ProcessParserResult {
   static [CustomQueryType.SF_LAYERS_ID_AND_NAME]<T>(
-    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME]
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME],
   ): CustomQueryResultTypeMap<T>[CustomQueryType.SF_LAYERS_ID_AND_NAME] {
     return parserResult;
   }
 
   static [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]<T>(
-    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME],
   ): CustomQueryResultTypeMap<T>[CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME] {
     return parserResult;
   }
 
   static [CustomQueryType.VSYNCID]<T>(
     parserResult: CustomQueryParserResultTypeMap[CustomQueryType.VSYNCID],
-    makeTraceEntry: (index: RelativeEntryIndex, vsyncId: bigint) => TraceEntryEager<T, bigint>
+    makeTraceEntry: (
+      index: RelativeEntryIndex,
+      vsyncId: bigint,
+    ) => TraceEntryEager<T, bigint>,
   ): CustomQueryResultTypeMap<T>[CustomQueryType.VSYNCID] {
     return parserResult.map((vsyncId, index) => {
       return makeTraceEntry(index, vsyncId);
@@ -45,7 +48,7 @@ export class ProcessParserResult {
   }
 
   static [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]<T>(
-    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]
+    parserResult: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE],
   ): CustomQueryResultTypeMap<T>[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] {
     return parserResult;
   }
@@ -62,14 +65,20 @@ export interface CustomQueryParserResultTypeMap {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
   [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
   [CustomQueryType.VSYNCID]: Array<bigint>;
-  [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{token: string; title: string}>;
+  [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{
+    token: string;
+    title: string;
+  }>;
 }
 
 export interface CustomQueryResultTypeMap<T> {
   [CustomQueryType.SF_LAYERS_ID_AND_NAME]: Array<{id: number; name: string}>;
   [CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME]: string;
   [CustomQueryType.VSYNCID]: Array<TraceEntryEager<T, bigint>>;
-  [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{token: string; title: string}>;
+  [CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE]: Array<{
+    token: string;
+    title: string;
+  }>;
 }
 
 export class VisitableParserCustomQuery<Q extends CustomQueryType> {
@@ -82,7 +91,7 @@ export class VisitableParserCustomQuery<Q extends CustomQueryType> {
 
   visit<R extends CustomQueryType>(
     type: R,
-    visitor: () => Promise<CustomQueryParserResultTypeMap[R]>
+    visitor: () => Promise<CustomQueryParserResultTypeMap[R]>,
   ): VisitableParserCustomQuery<Q> {
     if (type !== this.type) {
       return this;
@@ -94,7 +103,7 @@ export class VisitableParserCustomQuery<Q extends CustomQueryType> {
   getResult(): Promise<CustomQueryParserResultTypeMap[Q]> {
     if (this.result === undefined) {
       throw new Error(
-        `No result available. Looks like custom query (type: ${this.type}) is not implemented!`
+        `No result available. Looks like custom query (type: ${this.type}) is not implemented!`,
       );
     }
     return this.result;

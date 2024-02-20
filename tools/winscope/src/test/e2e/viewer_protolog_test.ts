@@ -24,15 +24,19 @@ describe('Viewer ProtoLog', () => {
   });
 
   it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/ProtoLog.pb');
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/ProtoLog.pb',
+    );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 
-    const isViewerRendered = await element(by.css('viewer-protolog')).isPresent();
+    const isViewerRendered = await element(
+      by.css('viewer-protolog'),
+    ).isPresent();
     expect(isViewerRendered).toBeTruthy();
 
     const isFirstMessageRendered = await element(
-      by.css('viewer-protolog .scroll-messages .message')
+      by.css('viewer-protolog .scroll-messages .message'),
     ).isPresent();
     expect(isFirstMessageRendered).toBeTruthy();
   });

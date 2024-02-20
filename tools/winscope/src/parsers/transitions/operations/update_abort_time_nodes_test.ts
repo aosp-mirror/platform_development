@@ -29,14 +29,18 @@ describe('UpdateAbortTimeNodes', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'wmAbortTimeNs', value: 10n}]}])
+      .setChildren([
+        {name: 'wmData', children: [{name: 'wmAbortTimeNs', value: 10n}]},
+      ])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'wmData', children: [{name: 'abortTimeNs', value: 10n}]}])
+      .setChildren([
+        {name: 'wmData', children: [{name: 'abortTimeNs', value: 10n}]},
+      ])
       .build();
 
     operation.apply(propertyRoot);
@@ -48,14 +52,18 @@ describe('UpdateAbortTimeNodes', () => {
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'shellData', children: [{name: 'shellAbortTimeNs', value: 10n}]}])
+      .setChildren([
+        {name: 'shellData', children: [{name: 'shellAbortTimeNs', value: 10n}]},
+      ])
       .build();
 
     const expectedRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
       .setName('transition')
-      .setChildren([{name: 'shellData', children: [{name: 'abortTimeNs', value: 10n}]}])
+      .setChildren([
+        {name: 'shellData', children: [{name: 'abortTimeNs', value: 10n}]},
+      ])
       .build();
 
     operation.apply(propertyRoot);

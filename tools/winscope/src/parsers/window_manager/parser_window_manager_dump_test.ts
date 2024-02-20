@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from 'common/time';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CustomQueryType} from 'trace/custom_query';
@@ -28,7 +29,7 @@ describe('ParserWindowManagerDump', () => {
 
   beforeAll(async () => {
     parser = (await UnitTestUtils.getParser(
-      'traces/dump_WindowManager.pb'
+      'traces/dump_WindowManager.pb',
     )) as Parser<HierarchyTreeNode>;
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.WINDOW_MANAGER)
@@ -41,25 +42,44 @@ describe('ParserWindowManagerDump', () => {
   });
 
   it('provides elapsed timestamp (always zero)', () => {
-    const expected = [new Timestamp(TimestampType.ELAPSED, 0n)];
+    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
   });
 
   it('provides real timestamp (always zero)', () => {
-    const expected = [new Timestamp(TimestampType.REAL, 0n)];
+    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
     expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
+  });
+
+  it('does not apply timezone info', async () => {
+    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
+      'traces/dump_WindowManager.pb',
+      true,
+    )) as Parser<HierarchyTreeNode>;
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.WINDOW_MANAGER,
+    );
+
+    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
+    ]);
+    expect(parser.getTimestamps(TimestampType.REAL)).toEqual([
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+    ]);
   });
 
   it('retrieves trace entry', async () => {
     const entry = await parser.getEntry(0, TimestampType.ELAPSED);
     expect(entry).toBeInstanceOf(HierarchyTreeNode);
     expect(entry.getEagerPropertyByName('focusedApp')?.getValue()).toEqual(
-      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
     );
   });
 
   it('supports WM_WINDOWS_TOKEN_AND_TITLE custom query', async () => {
-    const tokenAndTitles = await trace.customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
+    const tokenAndTitles = await trace.customQuery(
+      CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE,
+    );
     expect(tokenAndTitles.length).toEqual(73);
     expect(tokenAndTitles).toContain({token: 'cab97a6', title: 'Leaf:36:36'});
   });
