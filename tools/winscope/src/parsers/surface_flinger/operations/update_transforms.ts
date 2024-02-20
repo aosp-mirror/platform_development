@@ -21,24 +21,30 @@ import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_
 
 export class UpdateTransforms implements Operation<PropertyTreeNode> {
   apply(value: PropertyTreeNode): void {
-    this.updateTransform(value.getChildByName('transform'), value.getChildByName('position'));
+    this.updateTransform(
+      value.getChildByName('transform'),
+      value.getChildByName('position'),
+    );
 
     this.updateTransform(
       value.getChildByName('requestedTransform'),
-      value.getChildByName('requestedPosition')
+      value.getChildByName('requestedPosition'),
     );
 
     this.updateTransform(value.getChildByName('bufferTransform'), undefined);
 
     const inputWindowInfo = value.getChildByName('inputWindowInfo');
     if (inputWindowInfo) {
-      this.updateTransform(inputWindowInfo.getChildByName('transform'), undefined);
+      this.updateTransform(
+        inputWindowInfo.getChildByName('transform'),
+        undefined,
+      );
     }
   }
 
   private updateTransform(
     transformNode: PropertyTreeNode | undefined,
-    positionNode: PropertyTreeNode | undefined
+    positionNode: PropertyTreeNode | undefined,
   ) {
     if (!transformNode) return;
     if (transformNode.getChildByName('matrix')) return;
@@ -48,8 +54,8 @@ export class UpdateTransforms implements Operation<PropertyTreeNode> {
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         transformNode.id,
         'matrix',
-        newMatrix
-      )
+        newMatrix,
+      ),
     );
     transformNode.removeChild(`${transformNode.id}.dsdx`);
     transformNode.removeChild(`${transformNode.id}.dtdx`);

@@ -21,17 +21,21 @@ class WindowManagerImeUtils {
   getFocusedActivity(entry: HierarchyTreeNode): HierarchyTreeNode | undefined {
     const focusedDisplay = this.getFocusedDisplay(entry);
     const focusedWindow = this.getFocusedWindow(entry);
-    const resumedActivity = focusedDisplay?.getEagerPropertyByName('resumedActivity');
+    const resumedActivity =
+      focusedDisplay?.getEagerPropertyByName('resumedActivity');
 
     let focusedActivity: HierarchyTreeNode | undefined;
     if (focusedDisplay && resumedActivity) {
       const rootTasks = this.getRootTasks(focusedDisplay);
       focusedActivity = this.getActivityByName(
         assertDefined(resumedActivity.getChildByName('title')).getValue(),
-        rootTasks
+        rootTasks,
       );
     } else if (focusedDisplay && focusedWindow) {
-      focusedActivity = this.getActivitiesForWindowState(focusedWindow, focusedDisplay)?.at(0);
+      focusedActivity = this.getActivitiesForWindowState(
+        focusedWindow,
+        focusedDisplay,
+      )?.at(0);
     }
 
     return focusedActivity;
@@ -42,16 +46,23 @@ class WindowManagerImeUtils {
       .getEagerPropertyByName('focusedWindow')
       ?.getChildByName('title')
       ?.getValue();
-    return this.getVisibleWindows(entry).find((window) => window.name === focusedWindowTitle);
+    return this.getVisibleWindows(entry).find(
+      (window) => window.name === focusedWindowTitle,
+    );
   }
 
-  private getFocusedDisplay(entry: HierarchyTreeNode): HierarchyTreeNode | undefined {
+  private getFocusedDisplay(
+    entry: HierarchyTreeNode,
+  ): HierarchyTreeNode | undefined {
     const focusedDisplayId: number | undefined = entry
       .getEagerPropertyByName('focusedDisplayId')
       ?.getValue();
     return entry
       .getAllChildren()
-      .find((node) => node.getEagerPropertyByName('id')?.getValue() === focusedDisplayId);
+      .find(
+        (node) =>
+          node.getEagerPropertyByName('id')?.getValue() === focusedDisplayId,
+      );
   }
 
   private getVisibleWindows(entry: HierarchyTreeNode): HierarchyTreeNode[] {
@@ -61,7 +72,11 @@ class WindowManagerImeUtils {
     const display = assertDefined(
       entry
         .getAllChildren()
-        .find((node) => node.getEagerPropertyByName('id')?.getValue() === this.defaultDisplayId)
+        .find(
+          (node) =>
+            node.getEagerPropertyByName('id')?.getValue() ===
+            this.defaultDisplayId,
+        ),
     );
 
     return windowStates.filter((state) => {
@@ -70,7 +85,7 @@ class WindowManagerImeUtils {
         state.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false;
       const activityIsVisible =
         activities.find((activity) =>
-          activity.getEagerPropertyByName('isComputedVisible')?.getValue()
+          activity.getEagerPropertyByName('isComputedVisible')?.getValue(),
         ) ?? false;
       return windowIsVisible && (activityIsVisible || activities.length === 0);
     });
@@ -78,11 +93,11 @@ class WindowManagerImeUtils {
 
   private getActivitiesForWindowState(
     windowState: HierarchyTreeNode,
-    display: HierarchyTreeNode
+    display: HierarchyTreeNode,
   ): HierarchyTreeNode[] {
     return this.getRootTasks(display).reduce((activities, stack) => {
       const activity = this.getActivity(stack, (activity) =>
-        this.hasWindowState(activity, windowState)
+        this.hasWindowState(activity, windowState),
       );
       if (activity) {
         activities.push(activity);
@@ -91,10 +106,15 @@ class WindowManagerImeUtils {
     }, new Array<HierarchyTreeNode>());
   }
 
-  private hasWindowState(activity: HierarchyTreeNode, windowState: HierarchyTreeNode): boolean {
+  private hasWindowState(
+    activity: HierarchyTreeNode,
+    windowState: HierarchyTreeNode,
+  ): boolean {
     return (
       activity.filterDfs((node) => {
-        return node.id.startsWith('WindowState ') && node.name === windowState.name;
+        return (
+          node.id.startsWith('WindowState ') && node.name === windowState.name
+        );
       }, true).length > 0
     );
   }
@@ -128,11 +148,12 @@ class WindowManagerImeUtils {
 
   private getActivityByName(
     activityName: string,
-    rootTasks: HierarchyTreeNode[]
+    rootTasks: HierarchyTreeNode[],
   ): HierarchyTreeNode | undefined {
     for (const rootTask of rootTasks) {
-      const activity = this.getActivity(rootTask, (activity: HierarchyTreeNode) =>
-        activity.name.includes(activityName)
+      const activity = this.getActivity(
+        rootTask,
+        (activity: HierarchyTreeNode) => activity.name.includes(activityName),
       );
       if (activity) {
         return activity;
@@ -143,22 +164,28 @@ class WindowManagerImeUtils {
 
   private getActivity(
     task: HierarchyTreeNode,
-    predicate: (activity: HierarchyTreeNode) => boolean
+    predicate: (activity: HierarchyTreeNode) => boolean,
   ): HierarchyTreeNode | undefined {
     const children = task.getAllChildren().slice().reverse();
-    let activity = children.filter((child) => child.id.startsWith('Activity ')).find(predicate);
+    let activity = children
+      .filter((child) => child.id.startsWith('Activity '))
+      .find(predicate);
 
     if (activity) {
       return activity;
     }
 
-    for (const task of children.filter((child) => child.id.startsWith('Task '))) {
+    for (const task of children.filter((child) =>
+      child.id.startsWith('Task '),
+    )) {
       activity = this.getActivity(task, predicate);
       if (activity) {
         return activity;
       }
     }
-    for (const taskFragment of children.filter((child) => child.id.startsWith('TaskFragment '))) {
+    for (const taskFragment of children.filter((child) =>
+      child.id.startsWith('TaskFragment '),
+    )) {
       activity = this.getActivity(taskFragment, predicate);
       if (activity) {
         return activity;

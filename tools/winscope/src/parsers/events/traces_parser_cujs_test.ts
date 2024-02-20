@@ -38,7 +38,9 @@ describe('ParserCujs', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
 
     expect(timestamps.length).toEqual(16);
 
@@ -72,7 +74,10 @@ describe('ParserCujs', () => {
       .setName('cuj')
       .setIsRoot(true)
       .setChildren([
-        {name: 'startCujType', value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS},
+        {
+          name: 'startCujType',
+          value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS,
+        },
         {
           name: 'startTimestamp',
           children: [

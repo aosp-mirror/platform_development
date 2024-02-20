@@ -53,7 +53,7 @@ export class ViewerTransitions implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'Transitions',
-      TraceType.TRANSITION
+      TraceType.TRANSITION,
     );
   }
 

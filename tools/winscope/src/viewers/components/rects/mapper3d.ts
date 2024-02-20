@@ -16,7 +16,15 @@
 
 import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
-import {Box3D, ColorType, Distance2D, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
+import {
+  Box3D,
+  ColorType,
+  Distance2D,
+  Label3D,
+  Point3D,
+  Rect3D,
+  Scene3D,
+} from './types3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
@@ -160,7 +168,8 @@ class Mapper3D {
       // Here we compute a Z-offset to be applied to the rect to guarantee that
       // eventually all rects will have unique Z-values.
       const countOfRectsAtSameDepth = depthToCountOfRects.get(rectDepth) ?? 0;
-      const antiZFightingOffset = countOfRectsAtSameDepth * Mapper3D.Z_FIGHTING_EPSILON;
+      const antiZFightingOffset =
+        countOfRectsAtSameDepth * Mapper3D.Z_FIGHTING_EPSILON;
       depthToCountOfRects.set(rectDepth, countOfRectsAtSameDepth + 1);
       return antiZFightingOffset;
     };
@@ -169,11 +178,13 @@ class Mapper3D {
     const rects3d = rects2d.map((rect2d): Rect3D => {
       z =
         this.zSpacingFactor *
-        (Mapper3D.Z_SPACING_MAX * rect2d.depth + computeAntiZFightingOffset(rect2d.depth));
+        (Mapper3D.Z_SPACING_MAX * rect2d.depth +
+          computeAntiZFightingOffset(rect2d.depth));
 
       const darkFactor = rect2d.isVisible
         ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
-        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) / nonVisibleRectsTotal;
+        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
+          nonVisibleRectsTotal;
 
       const rect = {
         id: rect2d.id,
@@ -220,9 +231,13 @@ class Mapper3D {
     let maxWidth = 0;
     let maxHeight = 0;
     if (displays.length > 0) {
-      maxWidth = Math.max(...displays.map((rect2d): number => Math.abs(rect2d.w)));
+      maxWidth = Math.max(
+        ...displays.map((rect2d): number => Math.abs(rect2d.w)),
+      );
 
-      maxHeight = Math.max(...displays.map((rect2d): number => Math.abs(rect2d.h)));
+      maxHeight = Math.max(
+        ...displays.map((rect2d): number => Math.abs(rect2d.h)),
+      );
     }
     return {
       width: maxWidth,
@@ -261,7 +276,7 @@ class Mapper3D {
       Math.max(
         ...rects3d.map((rect) => {
           return this.matMultiply(rect.transform, rect.bottomRight).y;
-        })
+        }),
       ) + Mapper3D.LABEL_FIRST_Y_OFFSET;
 
     rects2d.forEach((rect2d, index) => {
@@ -302,7 +317,8 @@ class Mapper3D {
         z: lineStart.z,
       };
 
-      const isHighlighted = rect2d.isClickable && this.highlightedRectId === rect2d.id;
+      const isHighlighted =
+        rect2d.isClickable && this.highlightedRectId === rect2d.id;
 
       const label3d: Label3D = {
         circle: {

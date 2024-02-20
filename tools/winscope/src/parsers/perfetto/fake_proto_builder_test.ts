@@ -97,7 +97,7 @@ describe('FakeProtoBuilder', () => {
 
     // Check it matches the snake_case to camelCase conversion performed by protobuf library (within the transformer)
     const transformed = new FakeProtoTransformer(
-      TamperedMessageType.tamper(root.lookupType('Entry'))
+      TamperedMessageType.tamper(root.lookupType('Entry')),
     ).transform(proto);
 
     expect(transformed._case_64bit).toEqual(10n);
@@ -129,7 +129,13 @@ describe('FakeProtoBuilder', () => {
   const buildFakeProto = (args: Arg[]): FakeProto => {
     const builder = new FakeProtoBuilder();
     args.forEach((arg) => {
-      builder.addArg(arg.key, arg.value_type, arg.int_value, arg.real_value, arg.string_value);
+      builder.addArg(
+        arg.key,
+        arg.value_type,
+        arg.int_value,
+        arg.real_value,
+        arg.string_value,
+      );
     });
     return builder.build();
   };

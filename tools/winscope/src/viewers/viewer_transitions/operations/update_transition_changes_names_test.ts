@@ -23,9 +23,14 @@ describe('UpdateTransitionChangesNames', () => {
 
   beforeEach(() => {
     const layerIdToName = new Map<number, string>([[2, 'testLayer']]);
-    const windowTokenToTitle = new Map<string, string>([['97b5518', 'testTitle']]);
+    const windowTokenToTitle = new Map<string, string>([
+      ['97b5518', 'testTitle'],
+    ]);
 
-    operation = new UpdateTransitionChangesNames(layerIdToName, windowTokenToTitle);
+    operation = new UpdateTransitionChangesNames(
+      layerIdToName,
+      windowTokenToTitle,
+    );
   });
 
   it('updates layerId and windowToken display names if in maps', () => {
@@ -53,7 +58,7 @@ describe('UpdateTransitionChangesNames', () => {
             ],
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(propertyRoot);
@@ -63,7 +68,7 @@ describe('UpdateTransitionChangesNames', () => {
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('layerId')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('2 testLayer');
 
     expect(
@@ -72,7 +77,7 @@ describe('UpdateTransitionChangesNames', () => {
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('windowId')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('0x97b5518 (testTitle)');
   });
 
@@ -101,7 +106,7 @@ describe('UpdateTransitionChangesNames', () => {
             ],
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(propertyRoot);
@@ -111,7 +116,7 @@ describe('UpdateTransitionChangesNames', () => {
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('layerId')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('');
 
     expect(
@@ -120,7 +125,7 @@ describe('UpdateTransitionChangesNames', () => {
         ?.getChildByName('targets')
         ?.getChildByName('0')
         ?.getChildByName('windowId')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('0xb887160');
   });
 });

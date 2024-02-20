@@ -31,7 +31,7 @@ describe('ParserViewCapture', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
+      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     )) as Parser<HierarchyTreeNode>;
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
@@ -40,7 +40,9 @@ describe('ParserViewCapture', () => {
   });
 
   it('has expected trace type', () => {
-    expect(parser.getTraceType()).toEqual(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER);
+    expect(parser.getTraceType()).toEqual(
+      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+    );
   });
 
   it('provides elapsed timestamps', () => {
@@ -49,9 +51,9 @@ describe('ParserViewCapture', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114421012750n),
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114429047540n),
     ];
-    expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
-      expected
-    );
+    expect(
+      assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
+    ).toEqual(expected);
   });
 
   it('provides real timestamps', () => {
@@ -60,34 +62,48 @@ describe('ParserViewCapture', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936301385080n),
       NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936309419870n),
     ];
-    expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
+    expect(
+      assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
+    ).toEqual(expected);
   });
 
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-      true
+      true,
     )) as Parser<HierarchyTreeNode>;
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER
+      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
     );
 
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n)
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n),
     );
 
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691626336292808460n)
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691626336292808460n),
     );
   });
 
   it('retrieves trace entry', async () => {
     const entry = await parser.getEntry(1, TimestampType.REAL);
-    expect(entry.id).toEqual('ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962');
+    expect(entry.id).toEqual(
+      'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
+    );
   });
 
   it('supports VIEW_CAPTURE_PACKAGE_NAME custom query', async () => {
-    const packageName = await trace.customQuery(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME);
+    const packageName = await trace.customQuery(
+      CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+    );
     expect(packageName).toEqual('com.google.android.apps.nexuslauncher');
   });
 });

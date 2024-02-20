@@ -24,7 +24,12 @@ describe('RawDataUtils', () => {
     const color = TreeNodeUtils.makeColorNode(0, 0, 0, 1);
     expect(RawDataUtils.isColor(color)).toBeTrue();
 
-    const colorOnlyA = TreeNodeUtils.makeColorNode(undefined, undefined, undefined, 1);
+    const colorOnlyA = TreeNodeUtils.makeColorNode(
+      undefined,
+      undefined,
+      undefined,
+      1,
+    );
     expect(RawDataUtils.isColor(colorOnlyA)).toBeTrue();
   });
 
@@ -35,7 +40,12 @@ describe('RawDataUtils', () => {
     const rectLeftTop = TreeNodeUtils.makeRectNode(0, 0, undefined, undefined);
     expect(RawDataUtils.isRect(rectLeftTop)).toBeTrue();
 
-    const rectRightBottom = TreeNodeUtils.makeRectNode(undefined, undefined, 1, 1);
+    const rectRightBottom = TreeNodeUtils.makeRectNode(
+      undefined,
+      undefined,
+      1,
+      1,
+    );
     expect(RawDataUtils.isRect(rectRightBottom)).toBeTrue();
   });
 
@@ -103,9 +113,15 @@ describe('RawDataUtils', () => {
     expect(RawDataUtils.isRegion(region)).toBeTrue();
 
     const rectNode = assertDefined(region.getChildByName('rect'));
-    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, 1, 1, rectNode.id));
-    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(0, 0, undefined, undefined, rectNode.id));
-    rectNode.addOrReplaceChild(TreeNodeUtils.makeRectNode(undefined, undefined, 1, 1, rectNode.id));
+    rectNode.addOrReplaceChild(
+      TreeNodeUtils.makeRectNode(0, 0, 1, 1, rectNode.id),
+    );
+    rectNode.addOrReplaceChild(
+      TreeNodeUtils.makeRectNode(0, 0, undefined, undefined, rectNode.id),
+    );
+    rectNode.addOrReplaceChild(
+      TreeNodeUtils.makeRectNode(undefined, undefined, 1, 1, rectNode.id),
+    );
     expect(RawDataUtils.isRegion(region)).toBeTrue();
 
     rectNode.addOrReplaceChild(TreeNodeUtils.makeColorNode(0, 0, 0, 0));

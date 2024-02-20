@@ -56,205 +56,303 @@ describe('TimeUtils', () => {
   });
 
   it('nanosecondsToHuman', () => {
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n), true)).toEqual(
-      '0ms'
-    );
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n), false)).toEqual(
-      '0ns'
-    );
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), true)).toEqual(
-      '0ms'
-    );
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n), false)).toEqual(
-      '1000ns'
-    );
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND - 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
+        true,
+      ),
     ).toEqual('0ms');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
+        false,
+      ),
+    ).toEqual('0ns');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n),
+        true,
+      ),
+    ).toEqual('0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n),
+        false,
+      ),
+    ).toEqual('1000ns');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND - 1n),
+        true,
+      ),
+    ).toEqual('0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND),
+        true,
+      ),
     ).toEqual('1ms');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n * MILLISECOND), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n * MILLISECOND),
+        true,
+      ),
     ).toEqual('10ms');
 
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND - 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND - 1n),
+        true,
+      ),
     ).toEqual('999ms');
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND), true)).toEqual(
-      '1s0ms'
-    );
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND),
+        true,
+      ),
+    ).toEqual('1s0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND),
+        true,
+      ),
     ).toEqual('1s1ms');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND), false)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND),
+        false,
+      ),
     ).toEqual('1s1ms0ns');
 
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE - 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE - 1n),
+        true,
+      ),
     ).toEqual('59s999ms');
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE), true)).toEqual(
-      '1m0s0ms'
-    );
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE + SECOND + MILLISECOND),
-        true
-      )
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE),
+        true,
+      ),
+    ).toEqual('1m0s0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+          MINUTE + SECOND + MILLISECOND,
+        ),
+        true,
+      ),
     ).toEqual('1m1s1ms');
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE + SECOND + MILLISECOND + 1n),
-        true
-      )
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+          MINUTE + SECOND + MILLISECOND + 1n,
+        ),
+        true,
+      ),
     ).toEqual('1m1s1ms');
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE + SECOND + MILLISECOND + 1n),
-        false
-      )
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+          MINUTE + SECOND + MILLISECOND + 1n,
+        ),
+        false,
+      ),
     ).toEqual('1m1s1ms1ns');
 
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR - 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR - 1n),
+        true,
+      ),
     ).toEqual('59m59s999ms');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR - 1n), false)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR - 1n),
+        false,
+      ),
     ).toEqual('59m59s999ms999999ns');
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR), true)).toEqual(
-      '1h0m0s0ms'
-    );
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR + MINUTE + SECOND + MILLISECOND),
-        true
-      )
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR),
+        true,
+      ),
+    ).toEqual('1h0m0s0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+          HOUR + MINUTE + SECOND + MILLISECOND,
+        ),
+        true,
+      ),
     ).toEqual('1h1m1s1ms');
 
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY - 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY - 1n),
+        true,
+      ),
     ).toEqual('23h59m59s999ms');
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY), true)).toEqual(
-      '1d0h0m0s0ms'
-    );
     expect(
       TimeUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + HOUR + MINUTE + SECOND + MILLISECOND),
-        true
-      )
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY),
+        true,
+      ),
+    ).toEqual('1d0h0m0s0ms');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+          DAY + HOUR + MINUTE + SECOND + MILLISECOND,
+        ),
+        true,
+      ),
     ).toEqual('1d1h1m1s1ms');
   });
 
   it('humanElapsedToNanoseconds', () => {
     expect(TimeUtils.parseHumanElapsed('0ns')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
     );
     expect(TimeUtils.parseHumanElapsed('1000ns')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1000n),
     );
     expect(TimeUtils.parseHumanElapsed('0ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
     );
     expect(TimeUtils.parseHumanElapsed('1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MILLISECOND),
     );
     expect(TimeUtils.parseHumanElapsed('10ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n * MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n * MILLISECOND),
     );
 
     expect(TimeUtils.parseHumanElapsed('999ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(999n * MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(999n * MILLISECOND),
     );
     expect(TimeUtils.parseHumanElapsed('1s')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND),
     );
     expect(TimeUtils.parseHumanElapsed('1s0ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND),
     );
     expect(TimeUtils.parseHumanElapsed('1s0ms0ns')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND),
     );
     expect(TimeUtils.parseHumanElapsed('1s0ms1ns')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + 1n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + 1n),
     );
     expect(TimeUtils.parseHumanElapsed('0d1s1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(SECOND + MILLISECOND),
     );
 
     expect(TimeUtils.parseHumanElapsed('1m0s0ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE),
     );
     expect(TimeUtils.parseHumanElapsed('1m1s1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(MINUTE + SECOND + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+        MINUTE + SECOND + MILLISECOND,
+      ),
     );
 
     expect(TimeUtils.parseHumanElapsed('1h0m')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR),
     );
     expect(TimeUtils.parseHumanElapsed('1h1m1s1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(HOUR + MINUTE + SECOND + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+        HOUR + MINUTE + SECOND + MILLISECOND,
+      ),
     );
 
     expect(TimeUtils.parseHumanElapsed('1d0s1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + MILLISECOND),
     );
     expect(TimeUtils.parseHumanElapsed('1d1h1m1s1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + HOUR + MINUTE + SECOND + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+        DAY + HOUR + MINUTE + SECOND + MILLISECOND,
+      ),
     );
 
     expect(TimeUtils.parseHumanElapsed('1d')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY),
     );
     expect(TimeUtils.parseHumanElapsed('1d1ms')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + MILLISECOND)
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(DAY + MILLISECOND),
     );
   });
 
   it('humanToNanoseconds throws on invalid input format', () => {
     const invalidFormatError = new Error('Invalid elapsed timestamp format');
-    expect(() => TimeUtils.parseHumanElapsed('1d1h1m1s0ns1ms')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanElapsed('1dns')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanElapsed('100')).toThrow(invalidFormatError);
+    expect(() => TimeUtils.parseHumanElapsed('1d1h1m1s0ns1ms')).toThrow(
+      invalidFormatError,
+    );
+    expect(() => TimeUtils.parseHumanElapsed('1dns')).toThrow(
+      invalidFormatError,
+    );
+    expect(() => TimeUtils.parseHumanElapsed('100')).toThrow(
+      invalidFormatError,
+    );
     expect(() => TimeUtils.parseHumanElapsed('')).toThrow(invalidFormatError);
   });
 
   it('nanosecondsToHumanReal', () => {
     const NOV_10_2022 = 1668038400000n * MILLISECOND;
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n), true)).toEqual(
-      '1970-01-01T00:00:00.000'
-    );
+    expect(
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n), true),
+    ).toEqual('1970-01-01T00:00:00.000');
     expect(
       TimeUtils.format(
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-          NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n
+          NOV_10_2022 +
+            22n * HOUR +
+            4n * MINUTE +
+            54n * SECOND +
+            186n * MILLISECOND +
+            123212n,
         ),
-        true
-      )
+        true,
+      ),
     ).toEqual('2022-11-10T22:04:54.186');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022),
+        true,
+      ),
     ).toEqual('2022-11-10T00:00:00.000');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022 + 1n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022 + 1n),
+        true,
+      ),
     ).toEqual('2022-11-10T00:00:00.000');
 
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n), false)).toEqual(
-      '1970-01-01T00:00:00.000000000'
-    );
+    expect(
+      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n), false),
+    ).toEqual('1970-01-01T00:00:00.000000000');
     expect(
       TimeUtils.format(
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-          NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n
+          NOV_10_2022 +
+            22n * HOUR +
+            4n * MINUTE +
+            54n * SECOND +
+            186n * MILLISECOND +
+            123212n,
         ),
-        false
-      )
+        false,
+      ),
     ).toEqual('2022-11-10T22:04:54.186123212');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022), false)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022),
+        false,
+      ),
     ).toEqual('2022-11-10T00:00:00.000000000');
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022 + 1n), false)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(NOV_10_2022 + 1n),
+        false,
+      ),
     ).toEqual('2022-11-10T00:00:00.000000001');
   });
 
@@ -262,56 +360,72 @@ describe('TimeUtils', () => {
     const NOV_10_2022 = 1668038400000n * MILLISECOND;
     expect(TimeUtils.parseHumanReal('2022-11-10T22:04:54.186123212')).toEqual(
       NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-        NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n
-      )
+        NOV_10_2022 +
+          22n * HOUR +
+          4n * MINUTE +
+          54n * SECOND +
+          186n * MILLISECOND +
+          123212n,
+      ),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T22:04:54.186123212Z')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186123212n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186123212n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T22:04:54.186000212')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186000212n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186000212n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T22:04:54.006000002')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894006000002n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894006000002n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.006000002')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294006000002n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294006000002n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294000000000n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294000000000n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294000000000n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294000000000n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0100')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294010000000n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294010000000n),
     );
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0175328')).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294017532800n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668060294017532800n),
     );
   });
 
   it('canReverseDateFormatting', () => {
-    let timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186123212n);
-    expect(TimeUtils.parseHumanReal(TimeUtils.format(timestamp))).toEqual(timestamp);
+    let timestamp =
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1668117894186123212n);
+    expect(TimeUtils.parseHumanReal(TimeUtils.format(timestamp))).toEqual(
+      timestamp,
+    );
 
     timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-      DAY + HOUR + MINUTE + SECOND + MILLISECOND + 1n
+      DAY + HOUR + MINUTE + SECOND + MILLISECOND + 1n,
     );
-    expect(TimeUtils.parseHumanElapsed(TimeUtils.format(timestamp))).toEqual(timestamp);
+    expect(TimeUtils.parseHumanElapsed(TimeUtils.format(timestamp))).toEqual(
+      timestamp,
+    );
   });
 
   it('humanToNanoseconds throws on invalid input format', () => {
     const invalidFormatError = new Error('Invalid real timestamp format');
-    expect(() => TimeUtils.parseHumanReal('23h59m59s999ms5ns')).toThrow(invalidFormatError);
+    expect(() => TimeUtils.parseHumanReal('23h59m59s999ms5ns')).toThrow(
+      invalidFormatError,
+    );
     expect(() => TimeUtils.parseHumanReal('1d')).toThrow(invalidFormatError);
     expect(() => TimeUtils.parseHumanReal('100')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanReal('06h4m54s, 10 Nov 2022')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanReal('')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanReal('2022-11-10T06:04:54.')).toThrow(invalidFormatError);
-    expect(() => TimeUtils.parseHumanReal('2022-11-10T06:04:54.1234567890')).toThrow(
-      invalidFormatError
+    expect(() => TimeUtils.parseHumanReal('06h4m54s, 10 Nov 2022')).toThrow(
+      invalidFormatError,
     );
+    expect(() => TimeUtils.parseHumanReal('')).toThrow(invalidFormatError);
+    expect(() => TimeUtils.parseHumanReal('2022-11-10T06:04:54.')).toThrow(
+      invalidFormatError,
+    );
+    expect(() =>
+      TimeUtils.parseHumanReal('2022-11-10T06:04:54.1234567890'),
+    ).toThrow(invalidFormatError);
   });
 
   it('nano second regex accept all expected inputs', () => {
@@ -327,53 +441,62 @@ describe('TimeUtils', () => {
   });
 
   it('format real', () => {
-    expect(TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n, 500n))).toEqual(
-      '1970-01-01T00:00:00.000000600'
-    );
     expect(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n * MILLISECOND, 500n), true)
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n, 500n),
+      ),
+    ).toEqual('1970-01-01T00:00:00.000000600');
+    expect(
+      TimeUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n * MILLISECOND, 500n),
+        true,
+      ),
     ).toEqual('1970-01-01T00:00:00.100');
   });
 
   it('format elapsed', () => {
-    const timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(100n * MILLISECOND);
+    const timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
+      100n * MILLISECOND,
+    );
     expect(TimeUtils.format(timestamp, true)).toEqual('100ms');
     expect(TimeUtils.format(timestamp)).toEqual('100ms0ns');
   });
 
   it('addTimezoneOffset for elapsed timestamps', () => {
     const elapsedTimestampNs = 1000000000000n;
-    expect(TimeUtils.addTimezoneOffset('Europe/London', elapsedTimestampNs)).toEqual(
-      4600000000000n
-    );
-    expect(TimeUtils.addTimezoneOffset('Europe/Zurich', elapsedTimestampNs)).toEqual(
-      4600000000000n
-    );
-    expect(TimeUtils.addTimezoneOffset('America/Los_Angeles', elapsedTimestampNs)).toEqual(
-      58600000000000n
-    );
-    expect(TimeUtils.addTimezoneOffset('Asia/Kolkata', elapsedTimestampNs)).toEqual(
-      20800000000000n
-    );
+    expect(
+      TimeUtils.addTimezoneOffset('Europe/London', elapsedTimestampNs),
+    ).toEqual(4600000000000n);
+    expect(
+      TimeUtils.addTimezoneOffset('Europe/Zurich', elapsedTimestampNs),
+    ).toEqual(4600000000000n);
+    expect(
+      TimeUtils.addTimezoneOffset('America/Los_Angeles', elapsedTimestampNs),
+    ).toEqual(58600000000000n);
+    expect(
+      TimeUtils.addTimezoneOffset('Asia/Kolkata', elapsedTimestampNs),
+    ).toEqual(20800000000000n);
   });
 
   it('addTimezoneOffset for real timestamps', () => {
     const realTimestampNs = 1706094750112797658n;
-    expect(TimeUtils.addTimezoneOffset('Europe/London', realTimestampNs)).toEqual(
-      1706094750112797658n
-    );
-    expect(TimeUtils.addTimezoneOffset('Europe/Zurich', realTimestampNs)).toEqual(
-      1706098350112797658n
-    );
-    expect(TimeUtils.addTimezoneOffset('America/Los_Angeles', realTimestampNs)).toEqual(
-      1706065950112797658n
-    );
-    expect(TimeUtils.addTimezoneOffset('Asia/Kolkata', realTimestampNs)).toEqual(
-      1706114550112797658n
-    );
+    expect(
+      TimeUtils.addTimezoneOffset('Europe/London', realTimestampNs),
+    ).toEqual(1706094750112797658n);
+    expect(
+      TimeUtils.addTimezoneOffset('Europe/Zurich', realTimestampNs),
+    ).toEqual(1706098350112797658n);
+    expect(
+      TimeUtils.addTimezoneOffset('America/Los_Angeles', realTimestampNs),
+    ).toEqual(1706065950112797658n);
+    expect(
+      TimeUtils.addTimezoneOffset('Asia/Kolkata', realTimestampNs),
+    ).toEqual(1706114550112797658n);
   });
 
   it('addTimezoneOffset throws for invalid timezone', () => {
-    expect(() => TimeUtils.addTimezoneOffset('Invalid/Timezone', 10n)).toThrow();
+    expect(() =>
+      TimeUtils.addTimezoneOffset('Invalid/Timezone', 10n),
+    ).toThrow();
   });
 });

@@ -27,7 +27,7 @@ export class FakeProtoBuilder {
     valueType: string,
     intValue: bigint | undefined,
     realValue: number | undefined,
-    stringValue: string | undefined
+    stringValue: string | undefined,
   ): FakeProtoBuilder {
     const keyCamelCase = key
       .split('.')
@@ -48,7 +48,7 @@ export class FakeProtoBuilder {
     valueType: string,
     intValue: bigint | undefined,
     realValue: number | undefined,
-    stringValue: string | undefined
+    stringValue: string | undefined,
   ): string | bigint | number | boolean | null | undefined {
     switch (valueType) {
       case 'bool':

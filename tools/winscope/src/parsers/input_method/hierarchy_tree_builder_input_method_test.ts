@@ -40,7 +40,7 @@ describe('HierarchyTreeBuilderInputMethod', () => {
       async () => entryPropertiesTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
   });
 
@@ -65,8 +65,8 @@ describe('HierarchyTreeBuilderInputMethod', () => {
         async () => entryPropertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
 
     expect(root).toEqual(expectedRoot);
@@ -84,7 +84,7 @@ describe('HierarchyTreeBuilderInputMethod', () => {
       async () => childProps,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder.setRoot(entry).setChildren([childProvider]).build();
@@ -97,10 +97,12 @@ describe('HierarchyTreeBuilderInputMethod', () => {
         async () => entryPropertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    expectedRoot.addOrReplaceChild(new HierarchyTreeNode('Service child', 'child', childProvider));
+    expectedRoot.addOrReplaceChild(
+      new HierarchyTreeNode('Service child', 'child', childProvider),
+    );
 
     expect(root).toEqual(expectedRoot);
   });

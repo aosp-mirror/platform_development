@@ -31,7 +31,7 @@ export class ParserProtologUtils {
     logMessage: LogMessage,
     timestampType: TimestampType,
     realToElapsedTimeOffsetNs: bigint | undefined,
-    timestampFactory: TimestampFactory
+    timestampFactory: TimestampFactory,
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(logMessage)
@@ -45,7 +45,10 @@ export class ParserProtologUtils {
     let strategy: MakeTimestampStrategyType | undefined;
     if (timestampType === TimestampType.REAL) {
       strategy = (valueNs: bigint) => {
-        return timestampFactory.makeRealTimestamp(valueNs, realToElapsedTimeOffsetNs);
+        return timestampFactory.makeRealTimestamp(
+          valueNs,
+          realToElapsedTimeOffsetNs,
+        );
       };
     } else {
       strategy = timestampFactory.makeElapsedTimestamp;

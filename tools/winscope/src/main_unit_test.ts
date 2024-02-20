@@ -33,14 +33,17 @@ declare const require: {
   context(
     path: string,
     deep?: boolean,
-    filter?: RegExp
+    filter?: RegExp,
   ): {
     <T>(id: string): T;
     keys(): string[];
   };
 };
 
-TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());
+TestBed.initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting(),
+);
 
 // filter matches all "*_test.ts" files that are not within the /test/e2e/ directory
 const context = require.context('./', true, /(?<!\/test\/e2e\/.*)_test.ts$/);

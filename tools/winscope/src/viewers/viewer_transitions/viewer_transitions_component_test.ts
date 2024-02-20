@@ -16,7 +16,11 @@
 
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
@@ -79,9 +83,9 @@ describe('ViewerTransitionsComponent', () => {
   });
 
   it('shows message when no transition is selected', () => {
-    expect(htmlElement.querySelector('.container-properties')?.innerHTML).toContain(
-      'No selected transition'
-    );
+    expect(
+      htmlElement.querySelector('.container-properties')?.innerHTML,
+    ).toContain('No selected transition');
   });
 
   it('emits TransitionSelected event on transition clicked', () => {
@@ -91,7 +95,7 @@ describe('ViewerTransitionsComponent', () => {
     const entry1 = assertDefined(entries[0]) as HTMLElement;
     const entry2 = assertDefined(entries[1]) as HTMLElement;
     const treeView = assertDefined(
-      htmlElement.querySelector('.container-properties')
+      htmlElement.querySelector('.container-properties'),
     ) as HTMLElement;
     expect(treeView.textContent).toContain('No selected transition');
 
@@ -103,8 +107,13 @@ describe('ViewerTransitionsComponent', () => {
     fixture.detectChanges();
 
     expect(emitEventSpy).toHaveBeenCalled();
-    expect(emitEventSpy).toHaveBeenCalledWith(Events.TransitionSelected, jasmine.any(Object));
-    expect(emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue()).toEqual(0);
+    expect(emitEventSpy).toHaveBeenCalledWith(
+      Events.TransitionSelected,
+      jasmine.any(Object),
+    );
+    expect(
+      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+    ).toEqual(0);
 
     const id1 = assertDefined(entry2.querySelector('.id')).textContent;
     expect(id1).toEqual('1');
@@ -112,8 +121,13 @@ describe('ViewerTransitionsComponent', () => {
     fixture.detectChanges();
 
     expect(emitEventSpy).toHaveBeenCalled();
-    expect(emitEventSpy).toHaveBeenCalledWith(Events.TransitionSelected, jasmine.any(Object));
-    expect(emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue()).toEqual(1);
+    expect(emitEventSpy).toHaveBeenCalledWith(
+      Events.TransitionSelected,
+      jasmine.any(Object),
+    );
+    expect(
+      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+    ).toEqual(1);
   });
 
   it('updates tree view on TracePositionUpdate event', async () => {
@@ -126,7 +140,7 @@ describe('ViewerTransitionsComponent', () => {
     traces.setTrace(TraceType.TRANSITION, trace);
 
     let treeView = assertDefined(
-      htmlElement.querySelector('.container-properties')
+      htmlElement.querySelector('.container-properties'),
     ) as any as HTMLElement;
     expect(treeView.textContent).toContain('No selected transition');
 
@@ -134,27 +148,38 @@ describe('ViewerTransitionsComponent', () => {
       component.inputData = data;
     });
     const selectedTransitionEntry = assertDefined(
-      traces.getTrace(TraceType.TRANSITION)?.getEntry(2)
+      traces.getTrace(TraceType.TRANSITION)?.getEntry(2),
     );
     const selectedTransition = await selectedTransitionEntry.getValue();
-    const selectedTransitionId = assertDefined(selectedTransition.getChildByName('id')).getValue();
+    const selectedTransitionId = assertDefined(
+      selectedTransition.getChildByName('id'),
+    ).getValue();
     await presenter.onAppEvent(
-      new TracePositionUpdate(TracePosition.fromTraceEntry(selectedTransitionEntry))
+      new TracePositionUpdate(
+        TracePosition.fromTraceEntry(selectedTransitionEntry),
+      ),
     );
 
     expect(
       assertDefined(
-        component.uiData.selectedTransition?.getChildByName('wmData')?.getChildByName('id')
-      ).getValue()
+        component.uiData.selectedTransition
+          ?.getChildByName('wmData')
+          ?.getChildByName('id'),
+      ).getValue(),
     ).toEqual(selectedTransitionId);
 
     fixture.detectChanges();
 
     treeView = assertDefined(
-      fixture.nativeElement.querySelector('.container-properties')
+      fixture.nativeElement.querySelector('.container-properties'),
     ) as any as HTMLElement;
-    const textContentWithoutWhitespaces = treeView.textContent?.replace(/(\s|\t|\n)*/g, '');
-    expect(textContentWithoutWhitespaces).toContain(`id:${selectedTransitionId}`);
+    const textContentWithoutWhitespaces = treeView.textContent?.replace(
+      /(\s|\t|\n)*/g,
+      '',
+    );
+    expect(textContentWithoutWhitespaces).toContain(
+      `id:${selectedTransitionId}`,
+    );
   });
 
   it('propagates timestamp on click', () => {
@@ -163,7 +188,7 @@ describe('ViewerTransitionsComponent', () => {
       timestamp = (event as CustomEvent).detail.formattedValue();
     });
     const logTimestampButton = assertDefined(
-      htmlElement.querySelector('.time button')
+      htmlElement.querySelector('.time button'),
     ) as HTMLButtonElement;
     logTimestampButton.click();
 
@@ -187,7 +212,7 @@ function makeUiData(): UiData {
 function createMockTransition(
   sendTimeNanos: number,
   finishTimeNanos: number,
-  id: number
+  id: number,
 ): Transition {
   const transitionTree = new PropertyTreeBuilder()
     .setIsRoot(true)
@@ -199,7 +224,9 @@ function createMockTransition(
   const sendTimeNode = new PropertyTreeBuilder()
     .setRootId(transitionTree.id)
     .setName('sendTimeNs')
-    .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(BigInt(sendTimeNanos)))
+    .setValue(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(BigInt(sendTimeNanos)),
+    )
     .setFormatter(TIMESTAMP_FORMATTER)
     .build();
 

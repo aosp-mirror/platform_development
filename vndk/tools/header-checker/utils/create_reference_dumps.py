@@ -44,11 +44,10 @@ class GetVersionedRefDumpDirStem:
                             self.binder_bitness, arch_str)
 
 
-def make_libs_for_product(libs, build_target, vndk_version, arches,
-                          exclude_tags):
+def make_libs_for_product(libs, build_target, arches, exclude_tags):
     print('making libs for', '-'.join(filter(None, build_target)))
     if libs:
-        make_libraries(build_target, vndk_version, arches, libs, exclude_tags)
+        make_libraries(build_target, arches, libs, exclude_tags)
     else:
         make_tree(build_target)
 
@@ -98,10 +97,10 @@ def create_source_abi_reference_dumps_for_all_products(args):
     for product in args.products:
         build_target = BuildTarget(product, args.release, args.build_variant)
         (
-            platform_vndk_version, release_board_api_level, binder_32_bit,
+            release_board_api_level, binder_32_bit,
             platform_version_codename, platform_sdk_version,
         ) = get_build_vars(
-            ['PLATFORM_VNDK_VERSION', 'RELEASE_BOARD_API_LEVEL', 'BINDER32BIT',
+            ['RELEASE_BOARD_API_LEVEL', 'BINDER32BIT',
              'PLATFORM_VERSION_CODENAME', 'PLATFORM_SDK_VERSION'],
             build_target
         )
@@ -133,12 +132,10 @@ def create_source_abi_reference_dumps_for_all_products(args):
             if not args.no_make_lib:
                 # Build .lsdump for all the specified libs, or build
                 # `findlsdumps` if no libs are specified.
-                make_libs_for_product(args.libs, build_target,
-                                      platform_vndk_version, arches,
+                make_libs_for_product(args.libs, build_target, arches,
                                       exclude_tags)
 
-            lsdump_paths = read_lsdump_paths(build_target,
-                                             platform_vndk_version, arches,
+            lsdump_paths = read_lsdump_paths(build_target, arches,
                                              exclude_tags, build=False)
 
             num_processed += create_source_abi_reference_dumps(
@@ -207,6 +204,9 @@ def main():
 
     # Clear SKIP_ABI_CHECKS as it forbids ABI dumps from being built.
     os.environ.pop('SKIP_ABI_CHECKS', None)
+
+    if os.environ.get('KEEP_VNDK') == 'true':
+        raise RuntimeError('KEEP_VNDK is not supported. Please undefine it.')
 
     start = time.time()
     num_processed = create_source_abi_reference_dumps_for_all_products(args)

@@ -19,12 +19,12 @@ import {ArrayUtils} from 'common/array_utils';
 export class ParsingUtils {
   static throwIfMagicNumberDoesNotMatch(
     traceBuffer: Uint8Array,
-    magicNumber: number[] | undefined
+    magicNumber: number[] | undefined,
   ) {
     if (magicNumber !== undefined) {
       const bufferContainsMagicNumber = ArrayUtils.equal(
         magicNumber,
-        traceBuffer.slice(0, magicNumber.length)
+        traceBuffer.slice(0, magicNumber.length),
       );
       if (!bufferContainsMagicNumber) {
         throw TypeError("buffer doesn't contain expected magic number");

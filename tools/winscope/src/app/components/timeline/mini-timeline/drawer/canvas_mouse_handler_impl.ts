@@ -16,7 +16,11 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
-import {CanvasMouseHandler, DragListener, DropListener} from './canvas_mouse_handler';
+import {
+  CanvasMouseHandler,
+  DragListener,
+  DropListener,
+} from './canvas_mouse_handler';
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 
@@ -35,7 +39,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   constructor(
     private drawer: MiniTimelineDrawer,
     private defaultCursor = 'auto',
-    private onUnhandledMouseDown: (point: Point) => void = (point) => {}
+    private onUnhandledMouseDown: (point: Point) => void = (point) => {},
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {
       this.handleMouseMove(event);
@@ -54,7 +58,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   registerDraggableObject(
     draggableObject: DraggableCanvasObject,
     onDrag: DragListener,
-    onDrop: DropListener
+    onDrop: DropListener,
   ) {
     this.onDrag.set(draggableObject, onDrag);
     this.onDrop.set(draggableObject, onDrop);

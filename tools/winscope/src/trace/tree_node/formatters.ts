@@ -105,7 +105,9 @@ const LAYER_ID_FORMATTER = new LayerIdFormatter();
 class TransformFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const type = node.getChildByName('type');
-    return type !== undefined ? TransformUtils.getTypeFlags(type.getValue() ?? 0) : 'null';
+    return type !== undefined
+      ? TransformUtils.getTypeFlags(type.getValue() ?? 0)
+      : 'null';
   }
 }
 const TRANSFORM_FORMATTER = new TransformFormatter();

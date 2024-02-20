@@ -21,8 +21,10 @@ describe('Timestamp', () => {
   describe('arithmetic', () => {
     const REAL_TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
     const REAL_TIMESTAMP_20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
-    const ELAPSED_TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
-    const ELAPSED_TIMESTAMP_20 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
+    const ELAPSED_TIMESTAMP_10 =
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+    const ELAPSED_TIMESTAMP_20 =
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
 
     it('can add', () => {
       let timestamp = REAL_TIMESTAMP_10.plus(REAL_TIMESTAMP_20);
@@ -55,7 +57,9 @@ describe('Timestamp', () => {
     });
 
     it('fails between different timestamp types', () => {
-      const error = new Error('Attemping to do timestamp arithmetic on different timestamp types');
+      const error = new Error(
+        'Attemping to do timestamp arithmetic on different timestamp types',
+      );
       expect(() => {
         REAL_TIMESTAMP_20.minus(ELAPSED_TIMESTAMP_10);
       }).toThrow(error);

@@ -22,7 +22,9 @@ describe('FakeProtoTransformer', () => {
   let transformer: FakeProtoTransformer;
 
   beforeAll(() => {
-    transformer = new FakeProtoTransformer(TamperedMessageType.tamper(root.lookupType('Entry')));
+    transformer = new FakeProtoTransformer(
+      TamperedMessageType.tamper(root.lookupType('Entry')),
+    );
   });
 
   it('sets default value (empty array) of array fields', () => {

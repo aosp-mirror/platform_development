@@ -22,7 +22,7 @@ export class TimelineUtils {
   static getTimeRangeForTransition(
     transition: PropertyTreeNode,
     timestampType: TimestampType,
-    fullTimeRange: TimeRange
+    fullTimeRange: TimeRange,
   ): TimeRange | undefined {
     const shellData = transition.getChildByName('shellData');
     const wmData = transition.getChildByName('wmData');
@@ -58,12 +58,16 @@ export class TimelineUtils {
 
     if (timestampType === TimestampType.ELAPSED) {
       const startOffset =
-        shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue().getValueNs() ??
-        0n;
+        shellData
+          ?.getChildByName('realToElapsedTimeOffsetTimestamp')
+          ?.getValue()
+          .getValueNs() ?? 0n;
       const finishOffset = aborted
         ? startOffset
-        : shellData?.getChildByName('realToElapsedTimeOffsetTimestamp')?.getValue().getValueNs() ??
-          0n;
+        : shellData
+            ?.getChildByName('realToElapsedTimeOffsetTimestamp')
+            ?.getValue()
+            .getValueNs() ?? 0n;
 
       dispatchTimeNs = dispatchTimestamp
         ? dispatchTimestamp.getValueNs() - startOffset
@@ -72,19 +76,23 @@ export class TimelineUtils {
         ? finishOrAbortTimestamp.getValueNs() - finishOffset
         : timeRangeMax;
     } else {
-      dispatchTimeNs = dispatchTimestamp ? dispatchTimestamp.getValueNs() : timeRangeMin;
-      finishTimeNs = finishOrAbortTimestamp ? finishOrAbortTimestamp.getValueNs() : timeRangeMax;
+      dispatchTimeNs = dispatchTimestamp
+        ? dispatchTimestamp.getValueNs()
+        : timeRangeMin;
+      finishTimeNs = finishOrAbortTimestamp
+        ? finishOrAbortTimestamp.getValueNs()
+        : timeRangeMax;
     }
 
     const startTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
       timestampType,
       dispatchTimeNs > timeRangeMin ? dispatchTimeNs : timeRangeMin,
-      0n
+      0n,
     );
     const finishTime = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
       timestampType,
       finishTimeNs,
-      0n
+      0n,
     );
 
     return {

@@ -63,7 +63,8 @@ export class Timestamp {
     }
 
     return (
-      range.from.getValueNs() <= this.getValueNs() && this.getValueNs() <= range.to.getValueNs()
+      range.from.getValueNs() <= this.getValueNs() &&
+      this.getValueNs() <= range.to.getValueNs()
     );
   }
 
@@ -91,7 +92,9 @@ export class Timestamp {
 
   private validateTimestampArithmetic(timestamp: Timestamp) {
     if (timestamp.type !== this.type) {
-      throw new Error('Attemping to do timestamp arithmetic on different timestamp types');
+      throw new Error(
+        'Attemping to do timestamp arithmetic on different timestamp types',
+      );
     }
   }
 }

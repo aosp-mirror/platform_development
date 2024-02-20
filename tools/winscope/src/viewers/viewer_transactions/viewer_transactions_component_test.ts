@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  ScrollingModule,
+} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {assertDefined} from 'common/assert_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
@@ -38,7 +45,10 @@ describe('ViewerTransactionsComponent', () => {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
         imports: [MatDividerModule, ScrollingModule],
-        declarations: [ViewerTransactionsComponent, TransactionsScrollDirective],
+        declarations: [
+          ViewerTransactionsComponent,
+          TransactionsScrollDirective,
+        ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
       }).compileComponents();
 
@@ -80,9 +90,12 @@ describe('ViewerTransactionsComponent', () => {
 
     it('scrolls to current entry on button click', () => {
       const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time')
+        htmlElement.querySelector('.go-to-current-time'),
       ) as HTMLButtonElement;
-      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      const spy = spyOn(
+        assertDefined(component.scrollComponent),
+        'scrollToIndex',
+      );
       goToCurrentTimeButton.click();
       expect(spy).toHaveBeenCalledWith(1);
     });
@@ -95,7 +108,7 @@ describe('ViewerTransactionsComponent', () => {
         timestamp = (event as CustomEvent).detail.formattedValue();
       });
       const logTimestampButton = assertDefined(
-        htmlElement.querySelector('.time button')
+        htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
@@ -126,7 +139,7 @@ describe('ViewerTransactionsComponent', () => {
         'LAYER_OR_DISPLAY_ID_VALUE',
         'TRANSACTION_ID_VALUE',
         'flag1 | flag2',
-        propertiesTree
+        propertiesTree,
       );
 
       const entry2 = new UiDataEntry(
@@ -139,7 +152,7 @@ describe('ViewerTransactionsComponent', () => {
         'LAYER_OR_DISPLAY_ID_VALUE_2',
         'TRANSACTION_ID_VALUE_2',
         'flag3 | flag4',
-        propertiesTree
+        propertiesTree,
       );
 
       return new UiData(
@@ -155,7 +168,7 @@ describe('ViewerTransactionsComponent', () => {
         0,
         0,
         UiPropertyTreeNode.from(propertiesTree),
-        {}
+        {},
       );
     }
   });
@@ -190,7 +203,7 @@ describe('ViewerTransactionsComponent', () => {
         0,
         0,
         UiPropertyTreeNode.from(propertiesTree),
-        {}
+        {},
       );
       const shortMessage = 'flag1 | flag2';
       const longMessage = shortMessage.repeat(20);
@@ -205,7 +218,7 @@ describe('ViewerTransactionsComponent', () => {
           'LAYER_OR_DISPLAY_ID_VALUE',
           'TRANSACTION_ID_VALUE',
           i % 2 === 0 ? shortMessage : longMessage,
-          propertiesTree
+          propertiesTree,
         );
         uiData.entries.push(entry);
       }
@@ -213,12 +226,19 @@ describe('ViewerTransactionsComponent', () => {
     }
 
     async function setUpTestEnvironment(): Promise<
-      [ComponentFixture<ViewerTransactionsComponent>, HTMLElement, CdkVirtualScrollViewport]
+      [
+        ComponentFixture<ViewerTransactionsComponent>,
+        HTMLElement,
+        CdkVirtualScrollViewport,
+      ]
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
         imports: [ScrollingModule],
-        declarations: [ViewerTransactionsComponent, TransactionsScrollDirective],
+        declarations: [
+          ViewerTransactionsComponent,
+          TransactionsScrollDirective,
+        ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerTransactionsComponent);

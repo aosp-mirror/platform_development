@@ -23,7 +23,7 @@ import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_
 
 export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
   protected override buildIdentifierToChildMap(
-    layers: PropertiesProvider[]
+    layers: PropertiesProvider[],
   ): Map<string | number, PropertiesProvider[]> {
     const map = layers.reduce((map, layer) => {
       const layerProperties = layer.getEagerProperties();
@@ -31,13 +31,15 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
       const curr = map.get(id);
       if (curr) {
         curr.push(layer);
-        console.warn(`Duplicate layer id ${id} found. Adding it as duplicate to the hierarchy`);
+        console.warn(
+          `Duplicate layer id ${id} found. Adding it as duplicate to the hierarchy`,
+        );
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layerProperties.id,
             'isDuplicate',
-            true
-          )
+            true,
+          ),
         );
       } else {
         map.set(id, [layer]);
@@ -49,11 +51,13 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
 
   protected override makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): readonly HierarchyTreeNode[] {
     const rootLayers = children.filter((layer) => {
       const hasParent =
-        assertDefined(layer.getEagerProperties().getChildByName('parent')).getValue() !== -1;
+        assertDefined(
+          layer.getEagerProperties().getChildByName('parent'),
+        ).getValue() !== -1;
       return !hasParent;
     });
 

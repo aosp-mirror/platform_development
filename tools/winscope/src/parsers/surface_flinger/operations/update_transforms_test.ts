@@ -47,69 +47,119 @@ describe('UpdateTransforms', () => {
   });
   it('adds matrix to transform', () => {
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makePropertyNode(propertyRoot.id, 'transform', protoTransform)
+      TreeNodeUtils.makePropertyNode(
+        propertyRoot.id,
+        'transform',
+        protoTransform,
+      ),
     );
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makePropertyNode(propertyRoot.id, 'position', protoPosition)
+      TreeNodeUtils.makePropertyNode(
+        propertyRoot.id,
+        'position',
+        protoPosition,
+      ),
     );
 
     const expectedRoot = makeExpectedMatrixNode(propertyRoot.id, 'transform');
 
     operation.apply(propertyRoot);
-    const transformNode = assertDefined(propertyRoot.getChildByName('transform'));
+    const transformNode = assertDefined(
+      propertyRoot.getChildByName('transform'),
+    );
     expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   it('adds matrix to requested transform', () => {
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makePropertyNode(propertyRoot.id, 'requestedTransform', protoTransform)
+      TreeNodeUtils.makePropertyNode(
+        propertyRoot.id,
+        'requestedTransform',
+        protoTransform,
+      ),
     );
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makePropertyNode(propertyRoot.id, 'requestedPosition', protoPosition)
+      TreeNodeUtils.makePropertyNode(
+        propertyRoot.id,
+        'requestedPosition',
+        protoPosition,
+      ),
     );
 
-    const expectedRoot = makeExpectedMatrixNode(propertyRoot.id, 'requestedTransform');
+    const expectedRoot = makeExpectedMatrixNode(
+      propertyRoot.id,
+      'requestedTransform',
+    );
 
     operation.apply(propertyRoot);
-    const transformNode = assertDefined(propertyRoot.getChildByName('requestedTransform'));
+    const transformNode = assertDefined(
+      propertyRoot.getChildByName('requestedTransform'),
+    );
     expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   it('adds matrix to buffer transform', () => {
     propertyRoot.addOrReplaceChild(
-      TreeNodeUtils.makePropertyNode(propertyRoot.id, 'bufferTransform', protoTransform)
+      TreeNodeUtils.makePropertyNode(
+        propertyRoot.id,
+        'bufferTransform',
+        protoTransform,
+      ),
     );
 
-    const expectedRoot = makeExpectedMatrixNode(propertyRoot.id, 'bufferTransform');
+    const expectedRoot = makeExpectedMatrixNode(
+      propertyRoot.id,
+      'bufferTransform',
+    );
 
     operation.apply(propertyRoot);
-    const transformNode = assertDefined(propertyRoot.getChildByName('bufferTransform'));
+    const transformNode = assertDefined(
+      propertyRoot.getChildByName('bufferTransform'),
+    );
     expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
   it('adds matrix to input window info transform', () => {
-    const inputWindowInfo = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'inputWindowInfo', {
-      transform: protoTransform,
-    });
+    const inputWindowInfo = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'inputWindowInfo',
+      {
+        transform: protoTransform,
+      },
+    );
 
     propertyRoot.addOrReplaceChild(inputWindowInfo);
 
-    const expectedRoot = makeExpectedMatrixNode(inputWindowInfo.id, 'transform');
+    const expectedRoot = makeExpectedMatrixNode(
+      inputWindowInfo.id,
+      'transform',
+    );
 
     operation.apply(propertyRoot);
-    const inputWindowNode = assertDefined(propertyRoot.getChildByName('inputWindowInfo'));
-    const transformNode = assertDefined(inputWindowNode.getChildByName('transform'));
+    const inputWindowNode = assertDefined(
+      propertyRoot.getChildByName('inputWindowInfo'),
+    );
+    const transformNode = assertDefined(
+      inputWindowNode.getChildByName('transform'),
+    );
     expect(transformNode.getChildByName('matrix')).toEqual(expectedRoot);
   });
 
-  function makeExpectedMatrixNode(rootId: string, transformName: string): PropertyTreeNode {
-    return TreeNodeUtils.makeCalculatedPropertyNode(`${rootId}.${transformName}`, 'matrix', {
-      dsdx: 1,
-      dtdx: 0,
-      tx: 0,
-      dsdy: 0,
-      dtdy: 1,
-      ty: 0,
-    });
+  function makeExpectedMatrixNode(
+    rootId: string,
+    transformName: string,
+  ): PropertyTreeNode {
+    return TreeNodeUtils.makeCalculatedPropertyNode(
+      `${rootId}.${transformName}`,
+      'matrix',
+      {
+        dsdx: 1,
+        dtdx: 0,
+        tx: 0,
+        dsdy: 0,
+        dtdy: 1,
+        ty: 0,
+      },
+    );
   }
 });

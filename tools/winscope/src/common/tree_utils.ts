@@ -25,7 +25,7 @@ type FilterType = (node: TreeUtilsNode | undefined | null) => boolean;
 class TreeUtils {
   static findDescendantNode(
     node: TreeUtilsNode,
-    isTargetNode: FilterType
+    isTargetNode: FilterType,
   ): TreeUtilsNode | undefined {
     if (isTargetNode(node)) {
       return node;
@@ -47,7 +47,7 @@ class TreeUtils {
 
   static findAncestorNode(
     node: TreeUtilsNode,
-    isTargetNode: FilterType
+    isTargetNode: FilterType,
   ): TreeUtilsNode | undefined {
     let ancestor = node.parent;
 

@@ -78,7 +78,7 @@ export class ParserSfUtils {
 
   static makeEagerPropertiesTree(
     layer: android.surfaceflinger.ILayerProto | perfetto.protos.ILayerProto,
-    duplicateCount: number
+    duplicateCount: number,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     let obj = layer;
@@ -99,7 +99,9 @@ export class ParserSfUtils {
   }
 
   static makeEntryEagerPropertiesTree(
-    entry: android.surfaceflinger.ILayersTraceProto | perfetto.protos.ILayersSnapshotProto
+    entry:
+      | android.surfaceflinger.ILayersTraceProto
+      | perfetto.protos.ILayersSnapshotProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     let obj = entry;
@@ -120,21 +122,27 @@ export class ParserSfUtils {
 
   static makeLayerLazyPropertiesStrategy(
     layer: android.surfaceflinger.ILayerProto | perfetto.protos.ILayerProto,
-    duplicateCount: number
+    duplicateCount: number,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
         .setData(layer)
         .setRootId(assertDefined(layer.id))
         .setRootName(assertDefined(layer.name))
-        .setDenyList(ParserSfUtils.EAGER_PROPERTIES.concat(ParserSfUtils.DENYLIST_PROPERTIES))
+        .setDenyList(
+          ParserSfUtils.EAGER_PROPERTIES.concat(
+            ParserSfUtils.DENYLIST_PROPERTIES,
+          ),
+        )
         .setDuplicateCount(duplicateCount)
         .build();
     };
   }
 
   static makeEntryLazyPropertiesStrategy(
-    entry: android.surfaceflinger.ILayersTraceProto | perfetto.protos.ILayersSnapshotProto
+    entry:
+      | android.surfaceflinger.ILayersTraceProto
+      | perfetto.protos.ILayersSnapshotProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()

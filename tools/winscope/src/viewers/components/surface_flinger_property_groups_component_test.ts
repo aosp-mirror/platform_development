@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {Component} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
@@ -56,22 +60,26 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   });
 
   it('displays calculated geometry', () => {
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.geometry .left-column'));
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.geometry .left-column'),
+    );
     expect(calculatedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(assertDefined(calculatedDiv.querySelector('.crop')).innerHTML).toContain(
-      EMPTY_OBJ_STRING
-    );
-    expect(assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML).toContain(
-      EMPTY_OBJ_STRING
-    );
+    expect(
+      assertDefined(calculatedDiv.querySelector('.crop')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
+    expect(
+      assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
   });
 
   it('displays requested geometry', () => {
-    const requestedDiv = assertDefined(htmlElement.querySelector('.geometry .right-column'));
-    expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(assertDefined(requestedDiv.querySelector('.crop')).innerHTML).toContain(
-      EMPTY_OBJ_STRING
+    const requestedDiv = assertDefined(
+      htmlElement.querySelector('.geometry .right-column'),
     );
+    expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
+    expect(
+      assertDefined(requestedDiv.querySelector('.crop')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
   });
 
   it('displays buffer info', () => {
@@ -85,36 +93,48 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     expect(assertDefined(destFrameDiv).innerHTML).toContain(EMPTY_OBJ_STRING);
     const ignoreFrameDiv = htmlElement.querySelector('.buffer .ignore-frame');
     expect(assertDefined(ignoreFrameDiv).innerHTML).toContain(
-      'Destination Frame ignored because item has eIgnoreDestinationFrame flag set.'
+      'Destination Frame ignored because item has eIgnoreDestinationFrame flag set.',
     );
   });
 
   it('displays hierarchy info', () => {
     const zDiv = htmlElement.querySelector('.hierarchy-info .z-order');
     expect(assertDefined(zDiv).innerHTML).toContain('0');
-    const relParentDiv = htmlElement.querySelector('.hierarchy-info .rel-parent');
+    const relParentDiv = htmlElement.querySelector(
+      '.hierarchy-info .rel-parent',
+    );
     expect(assertDefined(relParentDiv).innerHTML).toContain('none');
   });
 
   it('displays simple calculated effects', () => {
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.effects .left-column'));
-    expect(assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML).toContain('1 px');
-    expect(assertDefined(calculatedDiv.querySelector('.blur')).innerHTML).toContain('1 px');
-    expect(assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML).toContain(
-      '1 px'
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.effects .left-column'),
     );
+    expect(
+      assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML,
+    ).toContain('1 px');
+    expect(
+      assertDefined(calculatedDiv.querySelector('.blur')).innerHTML,
+    ).toContain('1 px');
+    expect(
+      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
+    ).toContain('1 px');
   });
 
   it('displays simple requested effects', () => {
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.effects .right-column'));
-    expect(assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML).toContain(
-      '1 px'
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.effects .right-column'),
     );
+    expect(
+      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
+    ).toContain('1 px');
   });
 
   it('displays color and alpha value in effects', () => {
     const colorDiv = htmlElement.querySelector('.color');
-    expect(assertDefined(colorDiv).innerHTML).toContain(`${EMPTY_OBJ_STRING}, alpha: 1`);
+    expect(assertDefined(colorDiv).innerHTML).toContain(
+      `${EMPTY_OBJ_STRING}, alpha: 1`,
+    );
   });
 
   it('displays not set message if no inputs present', () => {
@@ -126,17 +146,25 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     component.properties.hasInputChannel = true;
     fixture.detectChanges();
 
-    expect(htmlElement.querySelector('.inputs .left-column transform-matrix')).toBeTruthy();
+    expect(
+      htmlElement.querySelector('.inputs .left-column transform-matrix'),
+    ).toBeTruthy();
 
-    const configDiv = assertDefined(htmlElement.querySelector('.inputs .right-column'));
-    expect(assertDefined(configDiv.querySelector('.focusable')).innerHTML).toContain('false');
-    expect(assertDefined(configDiv.querySelector('.crop-touch-region')).innerHTML).toContain(
-      'none'
+    const configDiv = assertDefined(
+      htmlElement.querySelector('.inputs .right-column'),
     );
-    expect(assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML).toContain(
-      'false'
-    );
-    expect(assertDefined(configDiv.querySelector('.input-config')).innerHTML).toContain('null');
+    expect(
+      assertDefined(configDiv.querySelector('.focusable')).innerHTML,
+    ).toContain('false');
+    expect(
+      assertDefined(configDiv.querySelector('.crop-touch-region')).innerHTML,
+    ).toContain('none');
+    expect(
+      assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML,
+    ).toContain('false');
+    expect(
+      assertDefined(configDiv.querySelector('.input-config')).innerHTML,
+    ).toContain('null');
   });
 
   @Component({

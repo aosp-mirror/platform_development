@@ -35,10 +35,15 @@ export class TraceFileFilter {
     'proto/window_CRITICAL.proto',
   ];
 
-  async filter(files: TraceFile[], errorListener: WinscopeErrorListener): Promise<FilterResult> {
-    const bugreportMainEntry = files.find((file) => file.file.name.endsWith('main_entry.txt'));
+  async filter(
+    files: TraceFile[],
+    errorListener: WinscopeErrorListener,
+  ): Promise<FilterResult> {
+    const bugreportMainEntry = files.find((file) =>
+      file.file.name.endsWith('main_entry.txt'),
+    );
     const bugReportDumpstateBoard = files.find((file) =>
-      file.file.name.endsWith('dumpstate_board.txt')
+      file.file.name.endsWith('dumpstate_board.txt'),
     );
 
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
@@ -51,24 +56,28 @@ export class TraceFileFilter {
       };
     }
 
-    const timezoneInfo = await this.processDumpstateBoard(bugReportDumpstateBoard);
+    const timezoneInfo = await this.processDumpstateBoard(
+      bugReportDumpstateBoard,
+    );
 
     return this.filterBugreport(
       assertDefined(bugreportMainEntry),
       perfettoFiles,
       legacyFiles,
-      timezoneInfo
+      timezoneInfo,
     );
   }
 
   private async processDumpstateBoard(
-    bugReportDumpstateBoard: TraceFile | undefined
+    bugReportDumpstateBoard: TraceFile | undefined,
   ): Promise<TimezoneInfo | undefined> {
     if (!bugReportDumpstateBoard) {
       return undefined;
     }
 
-    const traceBuffer = new Uint8Array(await bugReportDumpstateBoard.file.arrayBuffer());
+    const traceBuffer = new Uint8Array(
+      await bugReportDumpstateBoard.file.arrayBuffer(),
+    );
     const fileData = new TextDecoder().decode(traceBuffer);
     const startIndex = fileData.indexOf('[persist.sys.locale]');
 
@@ -88,7 +97,7 @@ export class TraceFileFilter {
 
   private async isBugreport(
     bugreportMainEntry: TraceFile | undefined,
-    files: TraceFile[]
+    files: TraceFile[],
   ): Promise<boolean> {
     if (!bugreportMainEntry) {
       return false;
@@ -108,7 +117,7 @@ export class TraceFileFilter {
     bugreportMainEntry: TraceFile,
     perfettoFiles: TraceFile[],
     legacyFiles: TraceFile[],
-    timezoneInfo?: TimezoneInfo
+    timezoneInfo?: TimezoneInfo,
   ): FilterResult {
     const isFileAllowlisted = (file: TraceFile) => {
       for (const traceDir of TraceFileFilter.BUGREPORT_LEGACY_FILES_ALLOWLIST) {
@@ -127,25 +136,30 @@ export class TraceFileFilter {
     });
 
     const perfettoFile = perfettoFiles.find(
-      (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH
+      (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH,
     );
     return {perfetto: perfettoFile, legacy: legacyFiles, timezoneInfo};
   }
 
   private isPerfettoFile(file: TraceFile): boolean {
-    return file.file.name.endsWith('.pftrace') || file.file.name.endsWith('.perfetto-trace');
+    return (
+      file.file.name.endsWith('.pftrace') ||
+      file.file.name.endsWith('.perfetto-trace')
+    );
   }
 
   private pickLargestFile(
     files: TraceFile[],
-    errorListener: WinscopeErrorListener
+    errorListener: WinscopeErrorListener,
   ): TraceFile | undefined {
     if (files.length === 0) {
       return undefined;
     }
     return files.reduce((largestSoFar, file) => {
       const [largest, overridden] =
-        largestSoFar.file.size > file.file.size ? [largestSoFar, file] : [file, largestSoFar];
+        largestSoFar.file.size > file.file.size
+          ? [largestSoFar, file]
+          : [file, largestSoFar];
       errorListener.onError(new TraceOverridden(overridden.getDescriptor()));
       return largest;
     });

@@ -26,7 +26,11 @@ describe('PresenterInputMethodClients', () => {
       .setId('InputMethodClients')
       .setName('entry')
       .setProperties({where: 'location', elapsedNanos: 0})
-      .addChildProperty({name: 'test default property', value: 0, source: PropertySource.DEFAULT})
+      .addChildProperty({
+        name: 'test default property',
+        value: 0,
+        source: PropertySource.DEFAULT,
+      })
       .build();
 
     executePresenterInputMethodTests(
@@ -35,7 +39,7 @@ describe('PresenterInputMethodClients', () => {
       [2, 1, 3],
       true,
       PresenterInputMethodClients,
-      TraceType.INPUT_METHOD_CLIENTS
+      TraceType.INPUT_METHOD_CLIENTS,
     );
   });
 });

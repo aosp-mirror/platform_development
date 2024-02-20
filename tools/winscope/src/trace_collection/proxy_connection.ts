@@ -24,20 +24,32 @@ import {
   ProxyState,
 } from 'trace_collection/proxy_client';
 import {Connection} from './connection';
-import {ConfigMap, TraceConfigurationMap, TRACES} from './trace_collection_utils';
+import {
+  ConfigMap,
+  TraceConfigurationMap,
+  TRACES,
+} from './trace_collection_utils';
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
   keep_alive_worker: any = null;
-  notConnected = [ProxyState.NO_PROXY, ProxyState.UNAUTH, ProxyState.INVALID_VERSION];
+  notConnected = [
+    ProxyState.NO_PROXY,
+    ProxyState.UNAUTH,
+    ProxyState.INVALID_VERSION,
+  ];
 
   constructor(
     private proxyStateChangeCallback: (state: ProxyState) => void,
     private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING,
-    private traceConfigChangeCallback: (availableTracesConfig: TraceConfigurationMap) => void
+    private traceConfigChangeCallback: (
+      availableTracesConfig: TraceConfigurationMap,
+    ) => void,
   ) {
     this.proxy.setState(ProxyState.CONNECTING);
-    this.proxy.onProxyChange(async (newState) => await this.onConnectChange(newState));
+    this.proxy.onProxyChange(
+      async (newState) => await this.onConnectChange(newState),
+    );
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
       this.proxy.proxyKey = assertDefined(urlParams.get('token'));
@@ -130,7 +142,7 @@ export class ProxyConnection implements Connection {
     requestedTraces: string[],
     reqEnableConfig?: string[],
     reqSelectedSfConfig?: ConfigMap,
-    reqSelectedWmConfig?: ConfigMap
+    reqSelectedWmConfig?: ConfigMap,
   ) {
     if (reqEnableConfig) {
       proxyRequest.setEnabledConfig(this, reqEnableConfig);
@@ -139,14 +151,14 @@ export class ProxyConnection implements Connection {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_SF_CONFIG_TRACE,
         this,
-        reqSelectedSfConfig
+        reqSelectedSfConfig,
       );
     }
     if (reqSelectedWmConfig) {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_WM_CONFIG_TRACE,
         this,
-        reqSelectedWmConfig
+        reqSelectedWmConfig,
       );
     }
     await proxyClient.setState(ProxyState.END_TRACE);
@@ -173,9 +185,13 @@ export class ProxyConnection implements Connection {
 
   isWaylandAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      proxyRequest.call('GET', ProxyEndpoint.CHECK_WAYLAND, (request: XMLHttpRequest) => {
-        resolve(request.responseText === 'true');
-      });
+      proxyRequest.call(
+        'GET',
+        ProxyEndpoint.CHECK_WAYLAND,
+        (request: XMLHttpRequest) => {
+          resolve(request.responseText === 'true');
+        },
+      );
     });
   }
 

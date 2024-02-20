@@ -17,7 +17,11 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TraceHasOldData, TraceOverridden, WinscopeError} from 'messaging/winscope_error';
+import {
+  TraceHasOldData,
+  TraceOverridden,
+  WinscopeError,
+} from 'messaging/winscope_error';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
@@ -121,9 +125,11 @@ describe('LoadedParsers', () => {
 
   describe('drops legacy parser with old data (dangling old trace file)', () => {
     const timeGapFrom = assertDefined(
-      parserSf_longButOldData.getTimestamps(TimestampType.REAL)?.at(-1)
+      parserSf_longButOldData.getTimestamps(TimestampType.REAL)?.at(-1),
     );
-    const timeGapTo = assertDefined(parserWm0.getTimestamps(TimestampType.REAL)?.at(0));
+    const timeGapTo = assertDefined(
+      parserWm0.getTimestamps(TimestampType.REAL)?.at(0),
+    );
     const timeGap = new TimeRange(timeGapFrom, timeGapTo);
 
     it('taking into account other legacy parsers', () => {
@@ -152,9 +158,14 @@ describe('LoadedParsers', () => {
 
     it('is robust to traces with time range overlap', () => {
       const parser = parserSf0;
-      const timestamps = assertDefined(parserSf0.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parserSf0.getTimestamps(TimestampType.REAL),
+      );
 
-      const timestampsOverlappingFront = [timestamps[0].add(-1n), timestamps[0].add(1n)];
+      const timestampsOverlappingFront = [
+        timestamps[0].add(-1n),
+        timestamps[0].add(1n),
+      ];
       const parserOverlappingFront = new ParserBuilder<object>()
         .setType(TraceType.TRANSACTIONS)
         .setTimestamps(timestampsOverlappingFront)
@@ -181,7 +192,10 @@ describe('LoadedParsers', () => {
         .setDescriptors([filename])
         .build();
 
-      const timestampsOverlappingExactly = [timestamps[0], timestamps[timestamps.length - 1]];
+      const timestampsOverlappingExactly = [
+        timestamps[0],
+        timestamps[timestamps.length - 1],
+      ];
       const parserOverlappingExactly = new ParserBuilder<object>()
         .setType(TraceType.WINDOW_MANAGER)
         .setTimestamps(timestampsOverlappingExactly)
@@ -196,7 +210,7 @@ describe('LoadedParsers', () => {
           parserOverlappingEntirely,
           parserOverlappingExactly,
         ],
-        []
+        [],
       );
       expectLoadResult(
         [
@@ -206,7 +220,7 @@ describe('LoadedParsers', () => {
           parserOverlappingEntirely,
           parserOverlappingExactly,
         ],
-        []
+        [],
       );
     });
   });
@@ -252,7 +266,10 @@ describe('LoadedParsers', () => {
 
     it('legacy + perfetto parsers', () => {
       loadParsers([parserSf0, parserSf0], [parserSf1]);
-      expectLoadResult([parserSf1], [new TraceOverridden(filename), new TraceOverridden(filename)]);
+      expectLoadResult(
+        [parserSf1],
+        [new TraceOverridden(filename), new TraceOverridden(filename)],
+      );
     });
   });
 
@@ -279,7 +296,10 @@ describe('LoadedParsers', () => {
       .setTimestamps(timestamps)
       .setDescriptors(['screenshot.png'])
       .build();
-    const overrideError = new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING);
+    const overrideError = new TraceOverridden(
+      'screenshot.png',
+      TraceType.SCREEN_RECORDING,
+    );
 
     it('loads screenshot parser', () => {
       loadParsers([parserScreenshot], []);
@@ -341,8 +361,13 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0, parserWm0], []);
   });
 
-  function loadParsers(legacy: Array<Parser<object>>, perfetto: Array<Parser<object>>) {
-    const legacyFileAndParsers = legacy.map((parser) => new FileAndParser(file, parser));
+  function loadParsers(
+    legacy: Array<Parser<object>>,
+    perfetto: Array<Parser<object>>,
+  ) {
+    const legacyFileAndParsers = legacy.map(
+      (parser) => new FileAndParser(file, parser),
+    );
     const perfettoFileAndParsers =
       perfetto.length > 0 ? new FileAndParsers(file, perfetto) : undefined;
 
@@ -353,19 +378,27 @@ describe('LoadedParsers', () => {
       },
     };
 
-    loadedParsers.addParsers(legacyFileAndParsers, perfettoFileAndParsers, errorListener);
+    loadedParsers.addParsers(
+      legacyFileAndParsers,
+      perfettoFileAndParsers,
+      errorListener,
+    );
   }
 
   function expectLoadResult(
     expectedParsers: Array<Parser<object>>,
-    expectedErrors: WinscopeError[]
+    expectedErrors: WinscopeError[],
   ) {
     expectedParsers.sort((a, b) => a.getTraceType() - b.getTraceType());
     const actualParsers = loadedParsers
       .getParsers()
       .sort((a, b) => a.getTraceType() - b.getTraceType());
 
-    for (let i = 0; i < Math.max(expectedParsers.length, actualParsers.length); ++i) {
+    for (
+      let i = 0;
+      i < Math.max(expectedParsers.length, actualParsers.length);
+      ++i
+    ) {
       expect(actualParsers[i]).toBe(expectedParsers[i]);
     }
 

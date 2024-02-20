@@ -50,7 +50,10 @@ export abstract class HierarchyTreeBuilder {
     }
 
     const identifierToChild = this.buildIdentifierToChildMap(this.children);
-    const rootChildren = this.makeRootChildren(this.children, identifierToChild);
+    const rootChildren = this.makeRootChildren(
+      this.children,
+      identifierToChild,
+    );
 
     const rootProperties = this.root.getEagerProperties();
 
@@ -58,17 +61,19 @@ export abstract class HierarchyTreeBuilder {
       rootProperties.id,
       rootProperties.name,
       rootChildren,
-      this.root
+      this.root,
     );
 
-    this.computations.forEach((computation) => computation.setRoot(root).executeInPlace());
+    this.computations.forEach((computation) =>
+      computation.setRoot(root).executeInPlace(),
+    );
 
     return root;
   }
 
   protected buildSubtree(
     child: PropertiesProvider,
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): HierarchyTreeNode {
     const childProperties = child.getEagerProperties();
     const subChildren: HierarchyTreeNode[] =
@@ -86,7 +91,7 @@ export abstract class HierarchyTreeBuilder {
       childProperties.id,
       this.getSubtreeName(childProperties.name),
       subChildren,
-      child
+      child,
     );
   }
 
@@ -94,7 +99,7 @@ export abstract class HierarchyTreeBuilder {
     id: string,
     name: string,
     children: readonly HierarchyTreeNode[],
-    propertiesProvider: PropertiesProvider
+    propertiesProvider: PropertiesProvider,
   ): HierarchyTreeNode {
     const node = new HierarchyTreeNode(id, name, propertiesProvider);
     children.forEach((child) => {
@@ -105,14 +110,16 @@ export abstract class HierarchyTreeBuilder {
   }
 
   protected abstract buildIdentifierToChildMap(
-    nodes: PropertiesProvider[]
+    nodes: PropertiesProvider[],
   ): Map<string | number, PropertiesProvider[]>;
 
   protected abstract makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): readonly HierarchyTreeNode[];
 
-  protected abstract getIdentifierValue(identifier: PropertyTreeNode): string | number;
+  protected abstract getIdentifierValue(
+    identifier: PropertyTreeNode,
+  ): string | number;
   protected abstract getSubtreeName(propertyTreeName: string): string;
 }

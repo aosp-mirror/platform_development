@@ -124,7 +124,9 @@ describe('SliderComponent', () => {
 
     const sliderWidth = component.sliderBox.nativeElement.offsetWidth;
     expect(component.sliderWidth).toBe(MIN_SLIDER_WIDTH);
-    expect(component.dragPosition.x).toBe(sliderWidth / 4 - MIN_SLIDER_WIDTH / 2);
+    expect(component.dragPosition.x).toBe(
+      sliderWidth / 4 - MIN_SLIDER_WIDTH / 2,
+    );
   });
 
   it('repositions slider on resize', () => {
@@ -136,7 +138,11 @@ describe('SliderComponent', () => {
     const initialSliderXPos = slider.getBoundingClientRect().left;
     const initialCursorXPos = cursor.getBoundingClientRect().left;
 
-    spyOnProperty(component.sliderBox.nativeElement, 'offsetWidth', 'get').and.returnValue(100);
+    spyOnProperty(
+      component.sliderBox.nativeElement,
+      'offsetWidth',
+      'get',
+    ).and.returnValue(100);
     expect(component.sliderBox.nativeElement.offsetWidth).toBe(100);
 
     htmlElement.style.width = '587px';
@@ -159,11 +165,13 @@ describe('SliderComponent', () => {
     });
     fixture.detectChanges();
 
-    const sliderBox = assertDefined(htmlElement.querySelector('#timeline-slider-box'));
+    const sliderBox = assertDefined(
+      htmlElement.querySelector('#timeline-slider-box'),
+    );
     const cursor = assertDefined(htmlElement.querySelector('.cursor'));
     const sliderBoxRect = sliderBox.getBoundingClientRect();
     expect(cursor.getBoundingClientRect().left).toBe(
-      (sliderBoxRect.left + sliderBoxRect.right) / 2
+      (sliderBoxRect.left + sliderBoxRect.right) / 2,
     );
   });
 
@@ -173,13 +181,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const slider = htmlElement.querySelector('.slider .handle');
     expect(slider).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(slider)).visibility).toBe('visible');
+    expect(window.getComputedStyle(assertDefined(slider)).visibility).toBe(
+      'visible',
+    );
 
     dragElement(fixture, assertDefined(slider), 100, 8);
 
@@ -189,7 +201,7 @@ describe('SliderComponent', () => {
     expect(finalZoom.from).not.toBe(initialZoom.from);
     expect(finalZoom.to).not.toBe(initialZoom.to);
     expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBe(
-      initialZoom.to.minus(initialZoom.from).getValueNs()
+      initialZoom.to.minus(initialZoom.from).getValueNs(),
     );
   }));
 
@@ -199,13 +211,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const leftCropper = htmlElement.querySelector('.slider .cropper.left');
     expect(leftCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe('visible');
+    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe(
+      'visible',
+    );
 
     dragElement(fixture, assertDefined(leftCropper), 5, 0);
 
@@ -222,13 +238,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const rightCropper = htmlElement.querySelector('.slider .cropper.right');
     expect(rightCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(rightCropper)).visibility).toBe('visible');
+    expect(
+      window.getComputedStyle(assertDefined(rightCropper)).visibility,
+    ).toBe('visible');
 
     dragElement(fixture, assertDefined(rightCropper), 5, 0);
 
@@ -246,13 +266,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const leftCropper = htmlElement.querySelector('.slider .cropper.left');
     expect(leftCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe('visible');
+    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe(
+      'visible',
+    );
 
     dragElement(fixture, assertDefined(leftCropper), -5, 0);
 
@@ -270,13 +294,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const rightCropper = htmlElement.querySelector('.slider .cropper.right');
     expect(rightCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(rightCropper)).visibility).toBe('visible');
+    expect(
+      window.getComputedStyle(assertDefined(rightCropper)).visibility,
+    ).toBe('visible');
 
     dragElement(fixture, assertDefined(rightCropper), 5, 0);
 
@@ -297,13 +325,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const leftCropper = htmlElement.querySelector('.slider .cropper.left');
     expect(leftCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe('visible');
+    expect(window.getComputedStyle(assertDefined(leftCropper)).visibility).toBe(
+      'visible',
+    );
 
     dragElement(fixture, assertDefined(leftCropper), 100, 0);
 
@@ -324,13 +356,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const rightCropper = htmlElement.querySelector('.slider .cropper.right');
     expect(rightCropper).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(rightCropper)).visibility).toBe('visible');
+    expect(
+      window.getComputedStyle(assertDefined(rightCropper)).visibility,
+    ).toBe('visible');
 
     dragElement(fixture, assertDefined(rightCropper), -100, 0);
 
@@ -348,13 +384,17 @@ describe('SliderComponent', () => {
     const initialZoom = assertDefined(component.zoomRange);
 
     let lastZoomUpdate: TimeRange | undefined = undefined;
-    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake((zoom) => {
-      lastZoomUpdate = zoom;
-    });
+    const zoomChangedSpy = spyOn(component.onZoomChanged, 'emit').and.callFake(
+      (zoom) => {
+        lastZoomUpdate = zoom;
+      },
+    );
 
     const slider = htmlElement.querySelector('.slider .handle');
     expect(slider).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(slider)).visibility).toBe('visible');
+    expect(window.getComputedStyle(assertDefined(slider)).visibility).toBe(
+      'visible',
+    );
 
     dragElement(fixture, assertDefined(slider), 100, 8);
 

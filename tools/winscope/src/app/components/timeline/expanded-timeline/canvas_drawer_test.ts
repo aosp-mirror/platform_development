@@ -113,7 +113,10 @@ function createCanvas(width: number, height: number): HTMLCanvasElement {
   return canvas;
 }
 
-function pixelsAllMatch(canvasA: HTMLCanvasElement, canvasB: HTMLCanvasElement): boolean {
+function pixelsAllMatch(
+  canvasA: HTMLCanvasElement,
+  canvasB: HTMLCanvasElement,
+): boolean {
   if (canvasA.width !== canvasB.width || canvasA.height !== canvasB.height) {
     return false;
   }
@@ -122,13 +125,13 @@ function pixelsAllMatch(canvasA: HTMLCanvasElement, canvasB: HTMLCanvasElement):
     0,
     0,
     canvasA.width,
-    canvasA.height
+    canvasA.height,
   ).data;
   const imgB = assertDefined(canvasB.getContext('2d')).getImageData(
     0,
     0,
     canvasB.width,
-    canvasB.height
+    canvasB.height,
   ).data;
 
   for (let i = 0; i < imgA.length; i++) {

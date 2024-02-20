@@ -27,7 +27,11 @@ import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {perfetto} from 'protos/transitions/latest/static';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
-import {EnumFormatter, PropertyFormatter, TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {
+  EnumFormatter,
+  PropertyFormatter,
+  TIMESTAMP_FORMATTER,
+} from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AddDuration} from './operations/add_duration';
@@ -56,40 +60,48 @@ export class ParserTransitionsUtils {
   ];
 
   private static readonly TransitionTraceProto = TamperedMessageType.tamper(
-    root.lookupType('com.android.server.wm.shell.TransitionTraceProto')
+    root.lookupType('com.android.server.wm.shell.TransitionTraceProto'),
   );
   private static readonly TransitionField =
     ParserTransitionsUtils.TransitionTraceProto.fields['transitions'];
   private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
     ParserTransitionsUtils.TransitionField,
-    ['type']
+    ['type'],
   );
   private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
-  private static readonly PERFETTO_TRANSITION_OPERATIONS = [new UpdateAbortTimeNodes()];
-  private static readonly TRANSITION_TYPE_FORMATTER = new EnumFormatter(TransitionType);
+  private static readonly PERFETTO_TRANSITION_OPERATIONS = [
+    new UpdateAbortTimeNodes(),
+  ];
+  private static readonly TRANSITION_TYPE_FORMATTER = new EnumFormatter(
+    TransitionType,
+  );
 
   static makeTransitionPropertiesTree(
     shellEntryTree: PropertyTreeNode,
-    wmEntryTree: PropertyTreeNode
+    wmEntryTree: PropertyTreeNode,
   ): PropertyTreeNode {
     const transitionTree = new PropertyTreeNode(
       wmEntryTree.id,
       wmEntryTree.name,
       wmEntryTree.source,
-      undefined
+      undefined,
     );
 
-    transitionTree.addOrReplaceChild(assertDefined(shellEntryTree.getChildByName('shellData')));
-    transitionTree.addOrReplaceChild(assertDefined(wmEntryTree.getChildByName('wmData')));
+    transitionTree.addOrReplaceChild(
+      assertDefined(shellEntryTree.getChildByName('shellData')),
+    );
+    transitionTree.addOrReplaceChild(
+      assertDefined(wmEntryTree.getChildByName('wmData')),
+    );
     ParserTransitionsUtils.TRANSITION_OPERATIONS.forEach((operation) =>
-      operation.apply(transitionTree)
+      operation.apply(transitionTree),
     );
     return transitionTree;
   }
 
   static makeWmPropertiesTree(
     info?: TransitionInfo,
-    denylistProperties: string[] = []
+    denylistProperties: string[] = [],
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData({wmData: info?.entry ?? null})
@@ -105,8 +117,8 @@ export class ParserTransitionsUtils {
     }
 
     if (denylistProperties.length > 0) {
-      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach((operation) =>
-        operation.apply(tree)
+      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach(
+        (operation) => operation.apply(tree),
       );
     }
 
@@ -115,16 +127,24 @@ export class ParserTransitionsUtils {
         ? info.timestampFactory.makeTimestampFromType(
             info.timestampType,
             info.realToElapsedTimeOffsetNs,
-            0n
+            0n,
           )
         : undefined;
 
     const wmDataNode = assertDefined(tree.getChildByName('wmData'));
-    new AddRealToElapsedTimeOffsetTimestamp(realToElapsedTimeOffsetTimestamp).apply(wmDataNode);
+    new AddRealToElapsedTimeOffsetTimestamp(
+      realToElapsedTimeOffsetTimestamp,
+    ).apply(wmDataNode);
     ParserTransitionsUtils.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
     new TransformToTimestamp(
-      ['abortTimeNs', 'createTimeNs', 'sendTimeNs', 'finishTimeNs', 'startingWindowRemoveTimeNs'],
-      ParserTransitionsUtils.makeTimestampStrategy(info)
+      [
+        'abortTimeNs',
+        'createTimeNs',
+        'sendTimeNs',
+        'finishTimeNs',
+        'startingWindowRemoveTimeNs',
+      ],
+      ParserTransitionsUtils.makeTimestampStrategy(info),
     ).apply(wmDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([
@@ -141,10 +161,15 @@ export class ParserTransitionsUtils {
     return tree;
   }
 
-  private static makeTimestampStrategy(info: TransitionInfo): MakeTimestampStrategyType {
+  private static makeTimestampStrategy(
+    info: TransitionInfo,
+  ): MakeTimestampStrategyType {
     if (info.timestampType === TimestampType.REAL) {
       return (valueNs: bigint) => {
-        return info.timestampFactory.makeRealTimestamp(valueNs, info.realToElapsedTimeOffsetNs);
+        return info.timestampFactory.makeRealTimestamp(
+          valueNs,
+          info.realToElapsedTimeOffsetNs,
+        );
       };
     } else {
       return info.timestampFactory.makeElapsedTimestamp;
@@ -153,7 +178,7 @@ export class ParserTransitionsUtils {
 
   static makeShellPropertiesTree(
     info?: TransitionInfo,
-    denylistProperties: string[] = []
+    denylistProperties: string[] = [],
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData({shellData: info?.entry ?? null})
@@ -169,8 +194,8 @@ export class ParserTransitionsUtils {
     }
 
     if (denylistProperties.length > 0) {
-      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach((operation) =>
-        operation.apply(tree)
+      ParserTransitionsUtils.PERFETTO_TRANSITION_OPERATIONS.forEach(
+        (operation) => operation.apply(tree),
       );
     }
 
@@ -179,15 +204,17 @@ export class ParserTransitionsUtils {
         ? info.timestampFactory.makeTimestampFromType(
             info.timestampType,
             info.realToElapsedTimeOffsetNs,
-            0n
+            0n,
           )
         : undefined;
 
     const shellDataNode = assertDefined(tree.getChildByName('shellData'));
-    new AddRealToElapsedTimeOffsetTimestamp(realToElapsedTimeOffsetTimestamp).apply(shellDataNode);
+    new AddRealToElapsedTimeOffsetTimestamp(
+      realToElapsedTimeOffsetTimestamp,
+    ).apply(shellDataNode);
     new TransformToTimestamp(
       ['dispatchTimeNs', 'mergeRequestTimeNs', 'mergeTimeNs', 'abortTimeNs'],
-      ParserTransitionsUtils.makeTimestampStrategy(info)
+      ParserTransitionsUtils.makeTimestampStrategy(info),
     ).apply(shellDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([

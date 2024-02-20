@@ -34,7 +34,9 @@ describe('VisibilityComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     expect(
-      assertDefined(hierarchyRoot.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        hierarchyRoot.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeTrue();
   });
 
@@ -44,13 +46,21 @@ describe('VisibilityComputation', () => {
       .setName('test.package.name@123456789')
       .setProperties({visibility: 0})
       .setChildren([
-        {id: 'ViewNode', name: 'test.package.name@987654321', properties: {visibility: 0}},
+        {
+          id: 'ViewNode',
+          name: 'test.package.name@987654321',
+          properties: {visibility: 0},
+        },
       ])
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     hierarchyRoot.forEachNodeDfs((node) =>
-      expect(assertDefined(node.getEagerPropertyByName('isComputedVisible')).getValue()).toBeTrue()
+      expect(
+        assertDefined(
+          node.getEagerPropertyByName('isComputedVisible'),
+        ).getValue(),
+      ).toBeTrue(),
     );
   });
 
@@ -63,7 +73,9 @@ describe('VisibilityComputation', () => {
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     expect(
-      assertDefined(hierarchyRoot.getEagerPropertyByName('isComputedVisible')).getValue()
+      assertDefined(
+        hierarchyRoot.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
     ).toBeFalse();
   });
 
@@ -73,13 +85,21 @@ describe('VisibilityComputation', () => {
       .setName('test.package.name@123456789')
       .setProperties({visibility: 4})
       .setChildren([
-        {id: 'ViewNode', name: 'test.package.name@987654321', properties: {visibility: 0}},
+        {
+          id: 'ViewNode',
+          name: 'test.package.name@987654321',
+          properties: {visibility: 0},
+        },
       ])
       .build();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     hierarchyRoot.forEachNodeDfs((node) =>
-      expect(assertDefined(node.getEagerPropertyByName('isComputedVisible')).getValue()).toBeFalse()
+      expect(
+        assertDefined(
+          node.getEagerPropertyByName('isComputedVisible'),
+        ).getValue(),
+      ).toBeFalse(),
     );
   });
 });

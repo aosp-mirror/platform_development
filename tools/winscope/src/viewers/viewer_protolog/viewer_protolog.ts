@@ -41,18 +41,31 @@ class ViewerProtoLog implements Viewer {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-      this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      Events.LogLevelsFilterChanged,
+      (event) => {
+        this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
+      },
+    );
     this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
       this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-      this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-      this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      Events.SourceFilesFilterChanged,
+      (event) => {
+        this.presenter.onSourceFilesFilterChanged(
+          (event as CustomEvent).detail,
+        );
+      },
+    );
+    this.htmlElement.addEventListener(
+      Events.SearchStringFilterChanged,
+      (event) => {
+        this.presenter.onSearchStringFilterChanged(
+          (event as CustomEvent).detail,
+        );
+      },
+    );
     this.htmlElement.addEventListener(Events.TimestampSelected, (event) => {
       this.propagateTimestamp((event as CustomEvent).detail);
     });
@@ -62,7 +75,7 @@ class ViewerProtoLog implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'ProtoLog',
-      TraceType.PROTO_LOG
+      TraceType.PROTO_LOG,
     );
   }
 

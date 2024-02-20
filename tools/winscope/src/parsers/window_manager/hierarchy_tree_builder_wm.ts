@@ -22,11 +22,13 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderWm extends HierarchyTreeBuilder {
   protected override buildIdentifierToChildMap(
-    containers: PropertiesProvider[]
+    containers: PropertiesProvider[],
   ): Map<string, PropertiesProvider[]> {
     const map = containers.reduce((map, container) => {
       const containerProperties = container.getEagerProperties();
-      const token = assertDefined(containerProperties.getChildByName('token')).getValue();
+      const token = assertDefined(
+        containerProperties.getChildByName('token'),
+      ).getValue();
       map.set(token, [container]);
       return map;
     }, new Map<string, PropertiesProvider[]>());
@@ -35,7 +37,7 @@ export class HierarchyTreeBuilderWm extends HierarchyTreeBuilder {
 
   protected override makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): readonly HierarchyTreeNode[] {
     if (children.length === 0) return [];
     return this.buildSubtree(children[0], identifierToChild).getAllChildren();
