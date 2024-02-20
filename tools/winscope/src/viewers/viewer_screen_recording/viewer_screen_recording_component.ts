@@ -123,7 +123,7 @@ class ViewerScreenRecordingComponent {
 
     if (this.safeUrl === undefined) {
       this.safeUrl = this.sanitizer.bypassSecurityTrustUrl(
-        URL.createObjectURL(this.currentTraceEntry.videoData)
+        URL.createObjectURL(this.currentTraceEntry.videoData),
       );
     }
   }
@@ -134,7 +134,8 @@ class ViewerScreenRecordingComponent {
 
   hasFrameToShow() {
     return (
-      !this.currentTraceEntry?.isImage && this.currentTraceEntry?.videoTimeSeconds !== undefined
+      !this.currentTraceEntry?.isImage &&
+      this.currentTraceEntry?.videoTimeSeconds !== undefined
     );
   }
 

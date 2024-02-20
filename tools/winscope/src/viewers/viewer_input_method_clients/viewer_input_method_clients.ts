@@ -21,7 +21,9 @@ import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
 class ViewerInputMethodClients extends ViewerInputMethod {
-  static readonly DEPENDENCIES: ImeTraceType[] = [TraceType.INPUT_METHOD_CLIENTS];
+  static readonly DEPENDENCIES: ImeTraceType[] = [
+    TraceType.INPUT_METHOD_CLIENTS,
+  ];
 
   override readonly view: View;
 
@@ -32,7 +34,7 @@ class ViewerInputMethodClients extends ViewerInputMethod {
       this.getDependencies(),
       this.htmlElement,
       'Input Method Clients',
-      TraceType.INPUT_METHOD_CLIENTS
+      TraceType.INPUT_METHOD_CLIENTS,
     );
   }
 
@@ -40,12 +42,15 @@ class ViewerInputMethodClients extends ViewerInputMethod {
     return ViewerInputMethodClients.DEPENDENCIES;
   }
 
-  override initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethodClients {
+  override initialisePresenter(
+    traces: Traces,
+    storage: Storage,
+  ): PresenterInputMethodClients {
     return new PresenterInputMethodClients(
       traces,
       storage,
       this.getDependencies(),
-      this.imeUiCallback
+      this.imeUiCallback,
     );
   }
 }

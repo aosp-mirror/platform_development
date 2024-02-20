@@ -29,14 +29,18 @@ import {UiData} from './ui_data';
 
 describe('PresenterTransitions', () => {
   it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder().setEntries(TraceType.TRANSITION, []).build();
+    const traces = new TracesBuilder()
+      .setEntries(TraceType.TRANSITION, [])
+      .build();
     let outputUiData: UiData | undefined;
     const presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
 
     await presenter.onAppEvent(
-      TracePositionUpdate.fromTimestamp(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n))
+      TracePositionUpdate.fromTimestamp(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      ),
     );
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
@@ -44,7 +48,7 @@ describe('PresenterTransitions', () => {
   it('updates selected transition', async () => {
     const parser = await UnitTestUtils.getPerfettoParser(
       TraceType.TRANSITION,
-      'traces/perfetto/shell_transitions_trace.perfetto-trace'
+      'traces/perfetto/shell_transitions_trace.perfetto-trace',
     );
 
     const trace = new TraceBuilder<PropertyTreeNode>()
@@ -70,7 +74,7 @@ describe('PresenterTransitions', () => {
     expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21T13:38:23.083364560'
+      '2023-11-21T13:38:23.083364560',
     );
   });
 });

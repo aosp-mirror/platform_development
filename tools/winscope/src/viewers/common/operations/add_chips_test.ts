@@ -49,11 +49,13 @@ describe('AddChips', () => {
             properties: {compositionType: LayerCompositionType.GPU},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([GPU_CHIP]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([GPU_CHIP]);
   });
 
   it('adds HWC_CHIP', () => {
@@ -68,11 +70,13 @@ describe('AddChips', () => {
             properties: {compositionType: LayerCompositionType.HWC},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([HWC_CHIP]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([HWC_CHIP]);
   });
 
   it('adds VISIBLE_CHIP', () => {
@@ -87,11 +91,13 @@ describe('AddChips', () => {
             properties: {isComputedVisible: true},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([VISIBLE_CHIP]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([VISIBLE_CHIP]);
   });
 
   it('adds DUPLICATE_CHIP', () => {
@@ -106,13 +112,13 @@ describe('AddChips', () => {
             properties: {isDuplicate: true},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
-      DUPLICATE_CHIP,
-    ]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([DUPLICATE_CHIP]);
   });
 
   it('adds RELATIVE_Z_CHIP', () => {
@@ -127,13 +133,13 @@ describe('AddChips', () => {
             properties: {zOrderRelativeOf: 2},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
-      RELATIVE_Z_CHIP,
-    ]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([RELATIVE_Z_CHIP]);
   });
 
   it('adds MISSING_Z_PARENT_CHIP', () => {
@@ -148,14 +154,13 @@ describe('AddChips', () => {
             properties: {zOrderRelativeOf: 2, isMissingZParent: true},
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    expect(assertDefined(hierarchyRoot.getChildByName('node')).getChips()).toEqual([
-      RELATIVE_Z_CHIP,
-      MISSING_Z_PARENT_CHIP,
-    ]);
+    expect(
+      assertDefined(hierarchyRoot.getChildByName('node')).getChips(),
+    ).toEqual([RELATIVE_Z_CHIP, MISSING_Z_PARENT_CHIP]);
   });
 
   it('adds RELATIVE_Z_PARENT_CHIP', () => {
@@ -177,14 +182,16 @@ describe('AddChips', () => {
             ],
           },
         ])
-        .build()
+        .build(),
     );
 
     operation.apply(hierarchyRoot);
-    const parentWithChips = assertDefined(hierarchyRoot.getChildByName('parentNode'));
+    const parentWithChips = assertDefined(
+      hierarchyRoot.getChildByName('parentNode'),
+    );
     expect(parentWithChips.getChips()).toEqual([RELATIVE_Z_PARENT_CHIP]);
-    expect(assertDefined(parentWithChips.getChildByName('node')).getChips()).toEqual([
-      RELATIVE_Z_CHIP,
-    ]);
+    expect(
+      assertDefined(parentWithChips.getChildByName('node')).getChips(),
+    ).toEqual([RELATIVE_Z_CHIP]);
   });
 });

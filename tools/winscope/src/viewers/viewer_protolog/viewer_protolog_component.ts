@@ -188,7 +188,8 @@ export class ViewerProtologComponent {
   private searchString = '';
   private lastClicked = '';
 
-  @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
+  @ViewChild(CdkVirtualScrollViewport)
+  scrollComponent?: CdkVirtualScrollViewport;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -199,7 +200,9 @@ export class ViewerProtologComponent {
       this.uiData.currentMessageIndex !== undefined &&
       this.scrollComponent &&
       this.lastClicked !==
-        this.uiData.messages[this.uiData.currentMessageIndex].time.formattedValue()
+        this.uiData.messages[
+          this.uiData.currentMessageIndex
+        ].time.formattedValue()
     ) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }

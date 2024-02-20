@@ -25,13 +25,21 @@ import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
-    const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
-    const parsers = await new ParserFactory().createParsers([trace], NO_TIMEZONE_OFFSET_FACTORY);
+    const trace = new TraceFile(
+      await UnitTestUtils.getFixtureFile('traces/empty.pb'),
+      undefined,
+    );
+    const parsers = await new ParserFactory().createParsers(
+      [trace],
+      NO_TIMEZONE_OFFSET_FACTORY,
+    );
     expect(parsers.length).toEqual(0);
   });
 
   it('is robust to trace with no entries', async () => {
-    const parser = await UnitTestUtils.getParser('traces/no_entries_InputMethodClients.pb');
+    const parser = await UnitTestUtils.getParser(
+      'traces/no_entries_InputMethodClients.pb',
+    );
 
     expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_CLIENTS);
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([]);
@@ -43,7 +51,7 @@ describe('Parser', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/WindowManager.pb'
+        'traces/elapsed_and_real_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 
@@ -53,19 +61,24 @@ describe('Parser', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089999048990n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090010194213n),
       ];
-      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(expected);
+      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3)).toEqual(
+        expected,
+      );
     });
 
     it('retrieves trace entries', async () => {
       let entry = await parser.getEntry(0, TimestampType.REAL);
-      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
-        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
-      );
+      expect(
+        assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue(),
+      ).toEqual('com.google.android.apps.nexuslauncher/.NexusLauncherActivity');
 
-      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
-      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
-        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      entry = await parser.getEntry(
+        parser.getLengthEntries() - 1,
+        TimestampType.REAL,
       );
+      expect(
+        assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue(),
+      ).toEqual('com.google.android.apps.nexuslauncher/.NexusLauncherActivity');
     });
   });
 
@@ -74,7 +87,7 @@ describe('Parser', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/WindowManager.pb'
+        'traces/elapsed_timestamp/WindowManager.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 
@@ -89,14 +102,17 @@ describe('Parser', () => {
 
     it('retrieves trace entries', async () => {
       let entry = await parser.getEntry(0, TimestampType.ELAPSED);
-      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
-        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
-      );
+      expect(
+        assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue(),
+      ).toEqual('com.google.android.apps.nexuslauncher/.NexusLauncherActivity');
 
-      entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
-      expect(assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue()).toEqual(
-        'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      entry = await parser.getEntry(
+        parser.getLengthEntries() - 1,
+        TimestampType.ELAPSED,
       );
+      expect(
+        assertDefined(entry.getEagerPropertyByName('focusedApp')).getValue(),
+      ).toEqual('com.google.android.apps.nexuslauncher/.NexusLauncherActivity');
     });
   });
 });

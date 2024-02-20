@@ -21,7 +21,9 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceType} from 'trace/trace_type';
 
 class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
-  private static readonly MAGIC_NUMBER = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]; // currently only support png files
+  private static readonly MAGIC_NUMBER = [
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ]; // currently only support png files
 
   override getTraceType(): TraceType {
     return TraceType.SCREENSHOT;
@@ -31,7 +33,10 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
     return ParserScreenshot.MAGIC_NUMBER;
   }
 
-  override getTimestamp(type: TimestampType, decodedEntry: number): Timestamp | undefined {
+  override getTimestamp(
+    type: TimestampType,
+    decodedEntry: number,
+  ): Timestamp | undefined {
     if (NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, 0n)) {
       return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
     }
@@ -45,7 +50,7 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entry: number
+    entry: number,
   ): ScreenRecordingTraceEntry {
     const screenshotData = this.traceFile.file;
     return new ScreenRecordingTraceEntry(0, screenshotData, true);

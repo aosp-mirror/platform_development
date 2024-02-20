@@ -44,7 +44,7 @@ export function executePresenterInputMethodTests(
     | typeof PresenterInputMethodService
     | typeof PresenterInputMethodManagerService,
   imeTraceType: ImeTraceType,
-  selectedPropertyTree?: PropertyTreeNode
+  selectedPropertyTree?: PropertyTreeNode,
 ) {
   describe('PresenterInputMethod', () => {
     let presenter: PresenterInputMethod;
@@ -151,15 +151,23 @@ export function executePresenterInputMethodTests(
       };
 
       await presenter.onAppEvent(positionUpdate);
-      uiData.sfSubtrees?.forEach((tree) => expect(tree.getAllChildren().length).toEqual(1));
+      uiData.sfSubtrees?.forEach((tree) =>
+        expect(tree.getAllChildren().length).toEqual(1),
+      );
 
       presenter.onHierarchyUserOptionsChange(userOptions);
       expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-      uiData.sfSubtrees?.forEach((tree) => expect(tree.getAllChildren().length).toEqual(10));
+      uiData.sfSubtrees?.forEach((tree) =>
+        expect(tree.getAllChildren().length).toEqual(10),
+      );
     });
 
     it('can filter hierarchy tree', async () => {
-      setUpPresenter([imeTraceType, TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
+      setUpPresenter([
+        imeTraceType,
+        TraceType.SURFACE_FLINGER,
+        TraceType.WINDOW_MANAGER,
+      ]);
       const userOptions: UserOptions = {
         onlyVisible: {
           name: 'Only visible',
@@ -179,16 +187,22 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       presenter.onHierarchyUserOptionsChange(userOptions);
       let subtreeChildren = 0;
-      uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
-      expect(assertDefined(uiData.tree).getAllChildren().length + subtreeChildren).toEqual(
-        expectedChildren
+      uiData.sfSubtrees.forEach(
+        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
       );
+      expect(
+        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
+      ).toEqual(expectedChildren);
 
       // Filter out all children
       presenter.onHierarchyFilterChange('Reject all');
       subtreeChildren = 0;
-      uiData.sfSubtrees.forEach((subtree) => (subtreeChildren += subtree.getAllChildren().length));
-      expect(assertDefined(uiData.tree).getAllChildren().length + subtreeChildren).toEqual(0);
+      uiData.sfSubtrees.forEach(
+        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
+      );
+      expect(
+        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
+      ).toEqual(0);
     });
 
     it('can set new properties tree and associated ui data', async () => {
@@ -204,39 +218,42 @@ export function executePresenterInputMethodTests(
       setUpPresenter([imeTraceType]);
       await presenter.onAppEvent(positionUpdate);
       await presenter.onSelectedHierarchyTreeChange(selectedTree);
-      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
-        expectedChildren[0]
-      );
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[0]);
       await presenter.onPropertiesUserOptionsChange({
         showDefaults: {
           name: 'Show defaults',
           enabled: true,
         },
       });
-      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
-        expectedChildren[2]
-      );
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[2]);
     });
 
     it('can filter properties tree', async () => {
       setUpPresenter([imeTraceType]);
       await presenter.onAppEvent(positionUpdate);
       await presenter.onSelectedHierarchyTreeChange(selectedTree);
-      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
-        expectedChildren[0]
-      );
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[0]);
       await presenter.onPropertiesFilterChange(propertiesTreeFilterString);
 
-      expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(
-        expectedChildren[1]
-      );
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[1]);
     });
 
     it('can set new additional properties tree and associated ui data from hierarchy tree node', async () => {
       setUpPresenter([imeTraceType]);
       expect(uiData.propertiesTree).toBeUndefined();
       await presenter.onAppEvent(positionUpdate);
-      await presenter.onAdditionalPropertySelected({name: 'Test Tree', treeNode: selectedTree});
+      await presenter.onAdditionalPropertySelected({
+        name: 'Test Tree',
+        treeNode: selectedTree,
+      });
       const propertiesTree = assertDefined(uiData.propertiesTree);
       expect(propertiesTree.getDisplayName()).toEqual('Test Tree');
       expect(uiData.highlightedItem).toEqual(selectedTree.id);
@@ -254,8 +271,12 @@ export function executePresenterInputMethodTests(
         treeNode: selectedPropertyTree,
       });
       const propertiesTree = assertDefined(uiData.propertiesTree);
-      expect(propertiesTree.getDisplayName()).toEqual('Additional Properties Tree');
-      expect(propertiesTree).toEqual(UiPropertyTreeNode.from(selectedPropertyTree));
+      expect(propertiesTree.getDisplayName()).toEqual(
+        'Additional Properties Tree',
+      );
+      expect(propertiesTree).toEqual(
+        UiPropertyTreeNode.from(selectedPropertyTree),
+      );
       expect(uiData.highlightedItem).toEqual(selectedPropertyTree.id);
     });
 
@@ -287,7 +308,7 @@ export function executePresenterInputMethodTests(
         [imeTraceType],
         (newData: ImeUiData) => {
           uiData = newData;
-        }
+        },
       );
     }
   });

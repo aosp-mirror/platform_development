@@ -66,9 +66,14 @@ class ViewerTransactions implements Viewer {
       this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
     });
 
-    this.htmlElement.addEventListener(Events.TransactionIdFilterChanged, (event) => {
-      this.presenter.onTransactionIdFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      Events.TransactionIdFilterChanged,
+      (event) => {
+        this.presenter.onTransactionIdFilterChanged(
+          (event as CustomEvent).detail,
+        );
+      },
+    );
 
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
@@ -77,8 +82,12 @@ class ViewerTransactions implements Viewer {
       this.propagateTimestamp((event as CustomEvent).detail);
     });
 
-    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) =>
-      this.presenter.onPropertiesUserOptionsChange((event as CustomEvent).detail.userOptions)
+    this.htmlElement.addEventListener(
+      ViewerEvents.PropertiesUserOptionsChange,
+      (event) =>
+        this.presenter.onPropertiesUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
 
     this.view = new View(
@@ -86,7 +95,7 @@ class ViewerTransactions implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'Transactions',
-      TraceType.TRANSACTIONS
+      TraceType.TRANSACTIONS,
     );
   }
 

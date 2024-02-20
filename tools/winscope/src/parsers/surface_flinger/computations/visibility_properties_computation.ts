@@ -18,7 +18,10 @@ import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
-import {Transform, TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {
+  Transform,
+  TransformUtils,
+} from 'parsers/surface_flinger/transform_utils';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -41,7 +44,9 @@ export class VisibilityPropertiesComputation implements Computation {
       throw Error('root not set');
     }
 
-    this.displays = this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ?? [];
+    this.displays =
+      this.root.getEagerPropertyByName('displays')?.getAllChildren().slice() ??
+      [];
 
     const sortedLayers = this.rootLayers.sort(this.sortLayerZ);
 
@@ -61,15 +66,15 @@ export class VisibilityPropertiesComputation implements Computation {
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
             'isComputedVisible',
-            isVisible
-          )
+            isVisible,
+          ),
         );
         layer.addEagerProperty(
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
             'visibilityReason',
-            this.getVisibilityReasons(layer)
-          )
+            this.getVisibilityReasons(layer),
+          ),
         );
         continue;
       }
@@ -79,18 +84,22 @@ export class VisibilityPropertiesComputation implements Computation {
       const occludedBy = opaqueLayers
         .filter((other) => {
           if (
-            this.getDefinedValue(other, 'layerStack') !== this.getDefinedValue(layer, 'layerStack')
+            this.getDefinedValue(other, 'layerStack') !==
+            this.getDefinedValue(layer, 'layerStack')
           ) {
             return false;
           }
           if (!this.layerContains(layer, other, displaySize)) {
             return false;
           }
-          const cornerRadiusOther = other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
+          const cornerRadiusOther =
+            other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
 
           return (
             cornerRadiusOther <= 0 ||
-            (cornerRadiusOther === layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0)
+            (cornerRadiusOther ===
+              layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
+              0)
           );
         })
         .map((other) => this.getDefinedValue(other, 'id'));
@@ -103,21 +112,22 @@ export class VisibilityPropertiesComputation implements Computation {
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           layer.id,
           'isComputedVisible',
-          isVisible
-        )
+          isVisible,
+        ),
       );
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           layer.id,
           'occludedBy',
-          occludedBy
-        )
+          occludedBy,
+        ),
       );
 
       const partiallyOccludedBy = opaqueLayers
         .filter((other) => {
           if (
-            this.getDefinedValue(other, 'layerStack') !== this.getDefinedValue(layer, 'layerStack')
+            this.getDefinedValue(other, 'layerStack') !==
+            this.getDefinedValue(layer, 'layerStack')
           ) {
             return false;
           }
@@ -132,14 +142,15 @@ export class VisibilityPropertiesComputation implements Computation {
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           layer.id,
           'partiallyOccludedBy',
-          partiallyOccludedBy
-        )
+          partiallyOccludedBy,
+        ),
       );
 
       const coveredBy = transparentLayers
         .filter((other) => {
           if (
-            this.getDefinedValue(other, 'layerStack') !== this.getDefinedValue(layer, 'layerStack')
+            this.getDefinedValue(other, 'layerStack') !==
+            this.getDefinedValue(layer, 'layerStack')
           ) {
             return false;
           }
@@ -148,7 +159,11 @@ export class VisibilityPropertiesComputation implements Computation {
         .map((other) => this.getDefinedValue(other, 'id'));
 
       layer.addEagerProperty(
-        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(layer.id, 'coveredBy', coveredBy)
+        DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+          layer.id,
+          'coveredBy',
+          coveredBy,
+        ),
       );
 
       this.getDefinedValue(layer, 'isOpaque')
@@ -160,8 +175,8 @@ export class VisibilityPropertiesComputation implements Computation {
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             layer.id,
             'visibilityReason',
-            this.getVisibilityReasons(layer)
-          )
+            this.getVisibilityReasons(layer),
+          ),
         );
       }
     }
@@ -186,10 +201,14 @@ export class VisibilityPropertiesComputation implements Computation {
       // Doesn't include state sent during composition like visible region and
       // composition type, so we fallback on the bounds as the visible region
       const bounds = layer.getEagerPropertyByName('bounds');
-      hasVisibleRegion = bounds !== undefined && !RawDataUtils.isEmptyObj(bounds);
+      hasVisibleRegion =
+        bounds !== undefined && !RawDataUtils.isEmptyObj(bounds);
     } else {
       const visibleRegion = layer.getEagerPropertyByName('visibleRegion');
-      if (visibleRegion === undefined || visibleRegion.getAllChildren().length === 0) {
+      if (
+        visibleRegion === undefined ||
+        visibleRegion.getAllChildren().length === 0
+      ) {
         hasVisibleRegion = false;
       } else {
         hasVisibleRegion = !this.hasValidEmptyVisibleRegion(visibleRegion);
@@ -217,25 +236,41 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push(`hidden by parent ${this.getDefinedValue(layer, 'parent')}`);
     }
 
-    if (this.isActiveBufferEmpty(layer.getEagerPropertyByName('activeBuffer'))) {
+    if (
+      this.isActiveBufferEmpty(layer.getEagerPropertyByName('activeBuffer'))
+    ) {
       reasons.push('buffer is empty');
     }
 
     const color = this.getColor(layer);
-    if (color && this.getDefinedValue(color, 'a') === 0) reasons.push('alpha is 0');
+    if (color && this.getDefinedValue(color, 'a') === 0) {
+      reasons.push('alpha is 0');
+    }
 
     const bounds = layer.getEagerPropertyByName('bounds');
-    if (bounds && RawDataUtils.isEmptyObj(bounds)) reasons.push('bounds is 0x0');
+    if (bounds && RawDataUtils.isEmptyObj(bounds)) {
+      reasons.push('bounds is 0x0');
+    }
 
-    if (color && bounds && RawDataUtils.isEmptyObj(bounds) && RawDataUtils.isEmptyObj(color)) {
+    if (
+      color &&
+      bounds &&
+      RawDataUtils.isEmptyObj(bounds) &&
+      RawDataUtils.isEmptyObj(color)
+    ) {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (transform && !TransformUtils.isValidTransform(Transform.from(transform))) {
+    if (
+      transform &&
+      !TransformUtils.isValidTransform(Transform.from(transform))
+    ) {
       reasons.push('transform is invalid');
     }
 
-    const zOrderRelativeOf = layer.getEagerPropertyByName('isRelativeOf')?.getValue();
+    const zOrderRelativeOf = layer
+      .getEagerPropertyByName('isRelativeOf')
+      ?.getValue();
     if (zOrderRelativeOf === -1) {
       reasons.push('relativeOf layer has been removed');
     }
@@ -249,7 +284,10 @@ export class VisibilityPropertiesComputation implements Computation {
     }
 
     const visibleRegionNode = layer.getEagerPropertyByName('visibleRegion');
-    if (visibleRegionNode && this.hasValidEmptyVisibleRegion(visibleRegionNode)) {
+    if (
+      visibleRegionNode &&
+      this.hasValidEmptyVisibleRegion(visibleRegionNode)
+    ) {
       reasons.push('visible region calculated by Composition Engine is empty');
     }
 
@@ -259,7 +297,9 @@ export class VisibilityPropertiesComputation implements Computation {
 
   private layerTopDownTraversal(layer: HierarchyTreeNode): HierarchyTreeNode[] {
     const traverseList: HierarchyTreeNode[] = [layer];
-    const children: HierarchyTreeNode[] = [...layer.getAllChildren().values()].slice();
+    const children: HierarchyTreeNode[] = [
+      ...layer.getAllChildren().values(),
+    ].slice();
     children.sort(this.sortLayerZ).forEach((child) => {
       traverseList.push(...this.layerTopDownTraversal(child));
     });
@@ -281,10 +321,13 @@ export class VisibilityPropertiesComputation implements Computation {
     const displaySize = new Rect(0, 0, 0, 0);
     const matchingDisplay = this.displays.find(
       (display) =>
-        this.getDefinedValue(display, 'layerStack') === this.getDefinedValue(layer, 'layerStack')
+        this.getDefinedValue(display, 'layerStack') ===
+        this.getDefinedValue(layer, 'layerStack'),
     );
     if (matchingDisplay) {
-      const rectNode = assertDefined(matchingDisplay.getChildByName('layerStackSpaceRect'));
+      const rectNode = assertDefined(
+        matchingDisplay.getChildByName('layerStackSpaceRect'),
+      );
       return this.getRect(rectNode) ?? displaySize;
     }
     return displaySize;
@@ -293,40 +336,49 @@ export class VisibilityPropertiesComputation implements Computation {
   private layerContains(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0)
+    crop = new Rect(0, 0, 0, 0),
   ): boolean {
     if (
       !TransformUtils.isSimpleRotation(
         assertDefined(layer.getEagerPropertyByName('transform'))
           .getChildByName('type')
-          ?.getValue() ?? 0
+          ?.getValue() ?? 0,
       ) ||
       !TransformUtils.isSimpleRotation(
         assertDefined(other.getEagerPropertyByName('transform'))
           .getChildByName('type')
-          ?.getValue() ?? 0
+          ?.getValue() ?? 0,
       )
     ) {
       return false;
     } else {
       const layerBounds = this.getCroppedScreenBounds(layer, crop);
       const otherBounds = this.getCroppedScreenBounds(other, crop);
-      return layerBounds && otherBounds ? layerBounds.containsRect(otherBounds) : false;
+      return layerBounds && otherBounds
+        ? layerBounds.containsRect(otherBounds)
+        : false;
     }
   }
 
   private layerOverlaps(
     layer: HierarchyTreeNode,
     other: HierarchyTreeNode,
-    crop = new Rect(0, 0, 0, 0)
+    crop = new Rect(0, 0, 0, 0),
   ): boolean {
     const layerBounds = this.getCroppedScreenBounds(layer, crop);
     const otherBounds = this.getCroppedScreenBounds(other, crop);
-    return layerBounds && otherBounds ? layerBounds.intersectsRect(otherBounds) : false;
+    return layerBounds && otherBounds
+      ? layerBounds.intersectsRect(otherBounds)
+      : false;
   }
 
-  private getCroppedScreenBounds(layer: HierarchyTreeNode, crop: Rect): Rect | undefined {
-    const layerScreenBoundsNode = assertDefined(layer.getEagerPropertyByName('screenBounds'));
+  private getCroppedScreenBounds(
+    layer: HierarchyTreeNode,
+    crop: Rect,
+  ): Rect | undefined {
+    const layerScreenBoundsNode = assertDefined(
+      layer.getEagerPropertyByName('screenBounds'),
+    );
     const layerScreenBounds = this.getRect(layerScreenBoundsNode);
 
     if (layerScreenBounds && !crop.isEmpty()) {
@@ -347,7 +399,8 @@ export class VisibilityPropertiesComputation implements Computation {
   private isHiddenByPolicy(layer: HierarchyTreeNode): boolean {
     return (
       (this.getDefinedValue(layer, 'flags') & LayerFlag.HIDDEN) !== 0x0 ||
-      this.getDefinedValue(layer, 'id') === VisibilityPropertiesComputation.OFFSCREEN_LAYER_ROOT_ID
+      this.getDefinedValue(layer, 'id') ===
+        VisibilityPropertiesComputation.OFFSCREEN_LAYER_ROOT_ID
     );
   }
 
@@ -371,16 +424,23 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private hasBlur(layer: HierarchyTreeNode): boolean {
-    return (layer.getEagerPropertyByName('backgroundBlurRadius')?.getValue() ?? 0) > 0;
+    return (
+      (layer.getEagerPropertyByName('backgroundBlurRadius')?.getValue() ?? 0) >
+      0
+    );
   }
 
   private sortLayerZ(a: HierarchyTreeNode, b: HierarchyTreeNode): number {
-    return a.getEagerPropertyByName('z')?.getValue() < b.getEagerPropertyByName('z')?.getValue()
+    return a.getEagerPropertyByName('z')?.getValue() <
+      b.getEagerPropertyByName('z')?.getValue()
       ? -1
       : 1;
   }
 
-  private getDefinedValue(node: HierarchyTreeNode | PropertyTreeNode, name: string): any {
+  private getDefinedValue(
+    node: HierarchyTreeNode | PropertyTreeNode,
+    name: string,
+  ): any {
     if (node instanceof HierarchyTreeNode) {
       return assertDefined(node.getEagerPropertyByName(name)).getValue();
     } else {

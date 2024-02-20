@@ -15,7 +15,10 @@
  */
 
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {AddVerboseFlags} from './add_verbose_flags';
 
 describe('AddVerboseFlags', () => {
@@ -25,8 +28,18 @@ describe('AddVerboseFlags', () => {
 
   beforeEach(() => {
     operation = new AddVerboseFlags();
-    propertyRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
-    expectedRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
+    propertyRoot = new PropertyTreeNode(
+      'test node',
+      'node',
+      PropertySource.PROTO,
+      undefined,
+    );
+    expectedRoot = new PropertyTreeNode(
+      'test node',
+      'node',
+      PropertySource.PROTO,
+      undefined,
+    );
   });
 
   it('adds no verbose flags', () => {
@@ -35,7 +48,7 @@ describe('AddVerboseFlags', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      ''
+      '',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -50,7 +63,7 @@ describe('AddVerboseFlags', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'HIDDEN (0x1)'
+      'HIDDEN (0x1)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -64,7 +77,7 @@ describe('AddVerboseFlags', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'OPAQUE (0x2)'
+      'OPAQUE (0x2)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -73,12 +86,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds SKIP_SCREENSHOT', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x40);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x40,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'SKIP_SCREENSHOT (0x40)'
+      'SKIP_SCREENSHOT (0x40)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -87,12 +104,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds SECURE', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x80);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x80,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'SECURE (0x80)'
+      'SECURE (0x80)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -101,12 +122,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds ENABLE_BACKPRESSURE', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x100);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x100,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'ENABLE_BACKPRESSURE (0x100)'
+      'ENABLE_BACKPRESSURE (0x100)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -115,12 +140,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds DISPLAY_DECORATION', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x200);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x200,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'DISPLAY_DECORATION (0x200)'
+      'DISPLAY_DECORATION (0x200)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -129,12 +158,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds IGNORE_DESTINATION_FRAME', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x400);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x400,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'IGNORE_DESTINATION_FRAME (0x400)'
+      'IGNORE_DESTINATION_FRAME (0x400)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);
@@ -143,12 +176,16 @@ describe('AddVerboseFlags', () => {
   });
 
   it('adds multiple flags depending on bits set', () => {
-    const flags = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'flags', 0x101);
+    const flags = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'flags',
+      0x101,
+    );
     propertyRoot.addOrReplaceChild(flags);
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'verboseFlags',
-      'HIDDEN|ENABLE_BACKPRESSURE (0x101)'
+      'HIDDEN|ENABLE_BACKPRESSURE (0x101)',
     );
     expectedRoot.addOrReplaceChild(flags);
     expectedRoot.addOrReplaceChild(expectedResult);

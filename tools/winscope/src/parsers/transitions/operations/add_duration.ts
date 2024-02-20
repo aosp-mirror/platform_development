@@ -23,7 +23,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddDuration extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const wmDataNode = assertDefined(value.getChildByName('wmData'));
 
     const sendTime: Timestamp | null | undefined = wmDataNode
@@ -39,13 +41,15 @@ export class AddDuration extends AddOperation<PropertyTreeNode> {
 
     const timeDiffNs = finishTime.minus(sendTime).getValueNs();
 
-    const timeDiff = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timeDiffNs);
+    const timeDiff =
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timeDiffNs);
 
-    const durationNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'duration',
-      timeDiff
-    );
+    const durationNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'duration',
+        timeDiff,
+      );
     durationNode.setFormatter(TIMESTAMP_FORMATTER);
 
     return [durationNode];

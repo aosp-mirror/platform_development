@@ -24,7 +24,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 class ParserEventLog extends AbstractParser<PropertyTreeNode> {
   private static readonly MAGIC_NUMBER_STRING = 'EventLog';
   private static readonly MAGIC_NUMBER: number[] = Array.from(
-    new TextEncoder().encode(ParserEventLog.MAGIC_NUMBER_STRING)
+    new TextEncoder().encode(ParserEventLog.MAGIC_NUMBER_STRING),
   );
 
   override getTraceType(): TraceType {
@@ -43,7 +43,10 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
     });
   }
 
-  override getTimestamp(type: TimestampType, entry: Event): undefined | Timestamp {
+  override getTimestamp(
+    type: TimestampType,
+    entry: Event,
+  ): undefined | Timestamp {
     if (type === TimestampType.REAL) {
       return this.timestampFactory.makeRealTimestamp(entry.eventTimestamp);
     }
@@ -53,7 +56,7 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entry: Event
+    entry: Event,
   ): PropertyTreeNode {
     return new PropertyTreeBuilderFromProto()
       .setData(entry)
@@ -75,7 +78,9 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
     });
 
     const lastIndexOfEventLogTrace = splitLogs.findIndex((substring, index) => {
-      return index > firstIndexOfEventLogTrace && StringUtils.isBlank(substring);
+      return (
+        index > firstIndexOfEventLogTrace && StringUtils.isBlank(substring)
+      );
     });
 
     if (lastIndexOfEventLogTrace === -1) {
@@ -86,7 +91,9 @@ class ParserEventLog extends AbstractParser<PropertyTreeNode> {
 
   private parseLogs(input: string[]): Event[] {
     return input.map((log) => {
-      const [metaData, eventData] = log.split(':', 2).map((string) => string.trim());
+      const [metaData, eventData] = log
+        .split(':', 2)
+        .map((string) => string.trim());
       const [rawTimestamp, uid, pid, tid, priority, tag] = metaData
         .split(' ')
         .filter((substring) => substring.length > 0);

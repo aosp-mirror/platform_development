@@ -60,7 +60,7 @@ export abstract class WinscopeEvent {
 
   async visit<T extends WinscopeEventType>(
     type: T,
-    callback: (event: TypeMap[T]) => Promise<void>
+    callback: (event: TypeMap[T]) => Promise<void>,
   ) {
     if (this.type === type) {
       const event = this as unknown as TypeMap[T];
@@ -98,7 +98,8 @@ export class AppTraceViewRequest extends WinscopeEvent {
 }
 
 export class BuganizerAttachmentsDownloadStart extends WinscopeEvent {
-  override readonly type = WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START;
+  override readonly type =
+    WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START;
 }
 
 export class BuganizerAttachmentsDownloaded extends WinscopeEvent {
@@ -159,12 +160,18 @@ export class TracePositionUpdate extends WinscopeEvent {
     this.updateTimeline = updateTimeline;
   }
 
-  static fromTimestamp(timestamp: Timestamp, updateTimeline = false): TracePositionUpdate {
+  static fromTimestamp(
+    timestamp: Timestamp,
+    updateTimeline = false,
+  ): TracePositionUpdate {
     const position = TracePosition.fromTimestamp(timestamp);
     return new TracePositionUpdate(position, updateTimeline);
   }
 
-  static fromTraceEntry(entry: TraceEntry<object>, updateTimeline = false): TracePositionUpdate {
+  static fromTraceEntry(
+    entry: TraceEntry<object>,
+    updateTimeline = false,
+  ): TracePositionUpdate {
     const position = TracePosition.fromTraceEntry(entry);
     return new TracePositionUpdate(position, updateTimeline);
   }

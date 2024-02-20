@@ -38,7 +38,10 @@ export class ObjectUtils {
         if ((obj as any)[key.key] === undefined) {
           return;
         }
-        assertTrue(Array.isArray((obj as any)[key.key]), () => 'Expected to be array');
+        assertTrue(
+          Array.isArray((obj as any)[key.key]),
+          () => 'Expected to be array',
+        );
         obj = (obj as any)[key.key][assertDefined(key.index)];
       } else {
         obj = (obj as any)[key.key];
@@ -83,7 +86,10 @@ export class ObjectUtils {
     if ((obj as any)[key] === undefined) {
       (obj as any)[key] = {};
     }
-    assertTrue(typeof (obj as any)[key] === 'object', () => 'Expected to be object');
+    assertTrue(
+      typeof (obj as any)[key] === 'object',
+      () => 'Expected to be object',
+    );
   }
 
   private static initializePropertyArrayIfNeeded(obj: object, key: Key) {
@@ -93,6 +99,9 @@ export class ObjectUtils {
     if ((obj as any)[key.key][assertDefined(key.index)] === undefined) {
       (obj as any)[key.key][assertDefined(key.index)] = {};
     }
-    assertTrue(Array.isArray((obj as any)[key.key]), () => 'Expected to be array');
+    assertTrue(
+      Array.isArray((obj as any)[key.key]),
+      () => 'Expected to be array',
+    );
   }
 }

@@ -33,7 +33,9 @@ export class TraceUtils {
     return timestamps;
   }
 
-  static async extractFrames<T>(trace: Trace<T>): Promise<Map<AbsoluteFrameIndex, T[]>> {
+  static async extractFrames<T>(
+    trace: Trace<T>,
+  ): Promise<Map<AbsoluteFrameIndex, T[]>> {
     const frames = new Map<AbsoluteFrameIndex, T[]>();
     const promises = trace.mapFrame(async (frame, index) => {
       frames.set(index, await TraceUtils.extractEntries(frame));

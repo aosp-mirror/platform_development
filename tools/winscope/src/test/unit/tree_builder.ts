@@ -39,7 +39,9 @@ export abstract class TreeBuilder<T, U> {
 
     const rootNode = this.makeRootNode();
 
-    this.children.forEach((child) => this.addOrReplaceChildNode(rootNode, child));
+    this.children.forEach((child) =>
+      this.addOrReplaceChildNode(rootNode, child),
+    );
 
     return rootNode;
   }

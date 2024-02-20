@@ -190,15 +190,20 @@ export class UploadTracesComponent implements ProgressListener {
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(NgZone) private ngZone: NgZone
+    @Inject(NgZone) private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
     this.tracePipeline.clear();
   }
 
-  onProgressUpdate(message: string | undefined, progressPercentage: number | undefined) {
-    if (!LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)) {
+  onProgressUpdate(
+    message: string | undefined,
+    progressPercentage: number | undefined,
+  ) {
+    if (
+      !LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)
+    ) {
       return;
     }
     this.isLoadingFiles = true;

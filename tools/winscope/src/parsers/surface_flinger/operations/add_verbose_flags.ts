@@ -20,13 +20,19 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddVerboseFlags extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const flags = value.getChildByName('flags')?.getValue();
     if (value.getChildByName('verboseFlags') || flags === undefined) return [];
 
     const tokens: Array<string | LayerFlag> = [];
-    const verboseFlags = Object.keys(LayerFlag).filter((flag) => isNaN(Number(flag)));
-    const intFlags = Object.keys(LayerFlag).filter((flag) => !isNaN(Number(flag)));
+    const verboseFlags = Object.keys(LayerFlag).filter((flag) =>
+      isNaN(Number(flag)),
+    );
+    const intFlags = Object.keys(LayerFlag).filter(
+      (flag) => !isNaN(Number(flag)),
+    );
 
     intFlags.forEach((intFlag, index) => {
       if ((Number(intFlag) & flags) !== 0) {
@@ -43,7 +49,7 @@ export class AddVerboseFlags extends AddOperation<PropertyTreeNode> {
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         value.id,
         'verboseFlags',
-        verboseFlagsStr
+        verboseFlagsStr,
       ),
     ];
   }

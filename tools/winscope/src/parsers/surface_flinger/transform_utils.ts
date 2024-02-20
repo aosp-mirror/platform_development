@@ -34,7 +34,10 @@ export class Transform {
 
   constructor(public type: TransformType, public matrix: TransformMatrix) {}
 
-  static from(transformNode: PropertyTreeNode, position?: PropertyTreeNode): Transform {
+  static from(
+    transformNode: PropertyTreeNode,
+    position?: PropertyTreeNode,
+  ): Transform {
     if (transformNode.getAllChildren().length === 0) return Transform.EMPTY;
 
     const transformType = transformNode.getChildByName('type')?.getValue() ?? 0;
@@ -78,7 +81,9 @@ export class TransformUtils {
   }
 
   static isSimpleRotation(type: TransformType | undefined): boolean {
-    return !(type ? TransformUtils.isFlagSet(type, TransformType.ROT_INVALID_VAL) : false);
+    return !(type
+      ? TransformUtils.isFlagSet(type, TransformType.ROT_INVALID_VAL)
+      : false);
   }
 
   static getTypeFlags(type: TransformType): string {
@@ -87,7 +92,9 @@ export class TransformUtils {
     if (
       TransformUtils.isFlagClear(
         type,
-        TransformType.SCALE_VAL | TransformType.ROTATE_VAL | TransformType.TRANSLATE_VAL
+        TransformType.SCALE_VAL |
+          TransformType.ROTATE_VAL |
+          TransformType.TRANSLATE_VAL,
       )
     ) {
       typeFlags.push('IDENTITY');
@@ -106,12 +113,17 @@ export class TransformUtils {
     } else if (
       TransformUtils.isFlagSet(
         type,
-        TransformType.ROT_90_VAL | TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL
+        TransformType.ROT_90_VAL |
+          TransformType.FLIP_V_VAL |
+          TransformType.FLIP_H_VAL,
       )
     ) {
       typeFlags.push('ROT_270');
     } else if (
-      TransformUtils.isFlagSet(type, TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL)
+      TransformUtils.isFlagSet(
+        type,
+        TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL,
+      )
     ) {
       typeFlags.push('ROT_180');
     } else {
@@ -132,35 +144,86 @@ export class TransformUtils {
     return typeFlags.join('|');
   }
 
-  static getDefaultTransform(type: TransformType, x: number, y: number): Transform {
+  static getDefaultTransform(
+    type: TransformType,
+    x: number,
+    y: number,
+  ): Transform {
     // IDENTITY
     if (!type) {
-      return new Transform(type, {dsdx: 1, dtdx: 0, tx: x, dsdy: 0, dtdy: 1, ty: y});
+      return new Transform(type, {
+        dsdx: 1,
+        dtdx: 0,
+        tx: x,
+        dsdy: 0,
+        dtdy: 1,
+        ty: y,
+      });
     }
 
     // ROT_270 = ROT_90|FLIP_H|FLIP_V
     if (
       TransformUtils.isFlagSet(
         type,
-        TransformType.ROT_90_VAL | TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL
+        TransformType.ROT_90_VAL |
+          TransformType.FLIP_V_VAL |
+          TransformType.FLIP_H_VAL,
       )
     ) {
-      return new Transform(type, {dsdx: 0, dtdx: -1, tx: x, dsdy: 1, dtdy: 0, ty: y});
+      return new Transform(type, {
+        dsdx: 0,
+        dtdx: -1,
+        tx: x,
+        dsdy: 1,
+        dtdy: 0,
+        ty: y,
+      });
     }
 
     // ROT_180 = FLIP_H|FLIP_V
-    if (TransformUtils.isFlagSet(type, TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL)) {
-      return new Transform(type, {dsdx: -1, dtdx: 0, tx: x, dsdy: 0, dtdy: -1, ty: y});
+    if (
+      TransformUtils.isFlagSet(
+        type,
+        TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL,
+      )
+    ) {
+      return new Transform(type, {
+        dsdx: -1,
+        dtdx: 0,
+        tx: x,
+        dsdy: 0,
+        dtdy: -1,
+        ty: y,
+      });
     }
 
     // ROT_90
     if (TransformUtils.isFlagSet(type, TransformType.ROT_90_VAL)) {
-      return new Transform(type, {dsdx: 0, dtdx: 1, tx: x, dsdy: -1, dtdy: 0, ty: y});
+      return new Transform(type, {
+        dsdx: 0,
+        dtdx: 1,
+        tx: x,
+        dsdy: -1,
+        dtdy: 0,
+        ty: y,
+      });
     }
 
     // IDENTITY
-    if (TransformUtils.isFlagClear(type, TransformType.SCALE_VAL | TransformType.ROTATE_VAL)) {
-      return new Transform(type, {dsdx: 1, dtdx: 0, tx: x, dsdy: 0, dtdy: 1, ty: y});
+    if (
+      TransformUtils.isFlagClear(
+        type,
+        TransformType.SCALE_VAL | TransformType.ROTATE_VAL,
+      )
+    ) {
+      return new Transform(type, {
+        dsdx: 1,
+        dtdx: 0,
+        tx: x,
+        dsdy: 0,
+        dtdy: 1,
+        ty: y,
+      });
     }
 
     throw new Error(`Unknown transform type ${type}`);
@@ -169,7 +232,7 @@ export class TransformUtils {
   static isSimpleTransform(type: TransformType): boolean {
     return TransformUtils.isFlagClear(
       type,
-      TransformType.ROT_INVALID_VAL | TransformType.SCALE_VAL
+      TransformType.ROT_INVALID_VAL | TransformType.SCALE_VAL,
     );
   }
 

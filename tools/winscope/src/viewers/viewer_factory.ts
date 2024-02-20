@@ -58,8 +58,8 @@ class ViewerFactory {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
-        activeTraceTypes.has(traceType)
+      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every(
+        (traceType: TraceType) => activeTraceTypes.has(traceType),
       );
 
       if (areViewerDepsSatisfied) {

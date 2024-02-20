@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
@@ -62,8 +66,13 @@ describe('HierarchyComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    const tree = TreeNodeUtils.makeUiHierarchyNode({id: 'RootNode1', name: 'Root node'});
-    tree.addOrReplaceChild(TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}));
+    const tree = TreeNodeUtils.makeUiHierarchyNode({
+      id: 'RootNode1',
+      name: 'Root node',
+    });
+    tree.addOrReplaceChild(
+      TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}),
+    );
     component.tree = tree;
 
     component.store = new PersistentStore();

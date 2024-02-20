@@ -28,7 +28,7 @@ describe('ParserProtoLog', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/ProtoLog.pb'
+      'traces/elapsed_and_real_timestamp/ProtoLog.pb',
     )) as Parser<PropertyTreeNode>;
   });
 
@@ -67,7 +67,7 @@ describe('ParserProtoLog', () => {
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/ProtoLog.pb',
-      true
+      true,
     )) as Parser<PropertyTreeNode>;
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.PROTO_LOG);
 
@@ -77,7 +77,9 @@ describe('ParserProtoLog', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850746350430n),
     ];
     expect(
-      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      ).slice(0, 3),
     ).toEqual(expectedElapsed);
 
     const expectedReal = [
@@ -86,39 +88,53 @@ describe('ParserProtoLog', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1655746925377350430n),
     ];
     expect(
-      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      ).slice(0, 3),
     ).toEqual(expectedReal);
   });
 
   it('reconstructs human-readable log message (ELAPSED time)', async () => {
     const message = await parser.getEntry(0, TimestampType.ELAPSED);
 
-    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
-      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false'
+    expect(
+      assertDefined(message.getChildByName('text')).formattedValue(),
+    ).toEqual(
+      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
     );
-    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
-      '14m10s746ms266486ns'
-    );
-    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
-    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('DEBUG');
-    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual(
-      'com/android/server/wm/InsetsSourceProvider.java'
-    );
+    expect(
+      assertDefined(message.getChildByName('timestamp')).formattedValue(),
+    ).toEqual('14m10s746ms266486ns');
+    expect(
+      assertDefined(message.getChildByName('tag')).formattedValue(),
+    ).toEqual('WindowManager');
+    expect(
+      assertDefined(message.getChildByName('level')).formattedValue(),
+    ).toEqual('DEBUG');
+    expect(
+      assertDefined(message.getChildByName('at')).formattedValue(),
+    ).toEqual('com/android/server/wm/InsetsSourceProvider.java');
   });
 
   it('reconstructs human-readable log message (REAL time)', async () => {
     const message = await parser.getEntry(0, TimestampType.REAL);
 
-    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
-      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false'
+    expect(
+      assertDefined(message.getChildByName('text')).formattedValue(),
+    ).toEqual(
+      'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
     );
-    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
-      '2022-06-20T12:12:05.377266486'
-    );
-    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
-    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('DEBUG');
-    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual(
-      'com/android/server/wm/InsetsSourceProvider.java'
-    );
+    expect(
+      assertDefined(message.getChildByName('timestamp')).formattedValue(),
+    ).toEqual('2022-06-20T12:12:05.377266486');
+    expect(
+      assertDefined(message.getChildByName('tag')).formattedValue(),
+    ).toEqual('WindowManager');
+    expect(
+      assertDefined(message.getChildByName('level')).formattedValue(),
+    ).toEqual('DEBUG');
+    expect(
+      assertDefined(message.getChildByName('at')).formattedValue(),
+    ).toEqual('com/android/server/wm/InsetsSourceProvider.java');
   });
 });

@@ -25,78 +25,106 @@ describe('AddDisplayProperties', () => {
 
   beforeEach(() => {
     operation = new AddDisplayProperties();
-    propertyRoot = TreeNodeUtils.makePropertyNode('LayerTraceEntry', 'root', null);
+    propertyRoot = TreeNodeUtils.makePropertyNode(
+      'LayerTraceEntry',
+      'root',
+      null,
+    );
   });
 
   it('adds isLargeScreen true', () => {
-    const displays = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'displays', [
-      {
-        dpiX: 0,
-        dpiY: 0,
-        size: {w: 1080, h: 2340},
-        layerStack: 0,
-      },
-    ]);
+    const displays = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'displays',
+      [
+        {
+          dpiX: 0,
+          dpiY: 0,
+          size: {w: 1080, h: 2340},
+          layerStack: 0,
+        },
+      ],
+    );
     propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      propertyRoot.getChildByName('displays')
+      propertyRoot.getChildByName('displays'),
     ).getAllChildren()[0];
-    expect(displayWithProperties.getChildByName('isLargeScreen')?.getValue()).toEqual(true);
+    expect(
+      displayWithProperties.getChildByName('isLargeScreen')?.getValue(),
+    ).toEqual(true);
   });
 
   it('adds isLargeScreen false', () => {
-    const displays = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'displays', [
-      {
-        dpiX: 0,
-        dpiY: 0,
-        size: {w: 0, h: 0},
-        layerStack: 0,
-      },
-    ]);
+    const displays = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'displays',
+      [
+        {
+          dpiX: 0,
+          dpiY: 0,
+          size: {w: 0, h: 0},
+          layerStack: 0,
+        },
+      ],
+    );
     propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      propertyRoot.getChildByName('displays')
+      propertyRoot.getChildByName('displays'),
     ).getAllChildren()[0];
-    expect(displayWithProperties.getChildByName('isLargeScreen')?.getValue()).toEqual(false);
+    expect(
+      displayWithProperties.getChildByName('isLargeScreen')?.getValue(),
+    ).toEqual(false);
   });
 
   it('adds isOn true', () => {
-    const displays = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'displays', [
-      {
-        dpiX: 0,
-        dpiY: 0,
-        size: {w: 1080, h: 2340},
-        layerStack: 0,
-      },
-    ]);
+    const displays = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'displays',
+      [
+        {
+          dpiX: 0,
+          dpiY: 0,
+          size: {w: 1080, h: 2340},
+          layerStack: 0,
+        },
+      ],
+    );
     propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      propertyRoot.getChildByName('displays')
+      propertyRoot.getChildByName('displays'),
     ).getAllChildren()[0];
-    expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(true);
+    expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(
+      true,
+    );
   });
 
   it('adds isOn false', () => {
-    const displays = TreeNodeUtils.makePropertyNode(propertyRoot.id, 'displays', [
-      {
-        dpiX: 0,
-        dpiY: 0,
-        size: {w: 1080, h: 2340},
-        layerStack: 4294967295,
-      },
-    ]);
+    const displays = TreeNodeUtils.makePropertyNode(
+      propertyRoot.id,
+      'displays',
+      [
+        {
+          dpiX: 0,
+          dpiY: 0,
+          size: {w: 1080, h: 2340},
+          layerStack: 4294967295,
+        },
+      ],
+    );
     propertyRoot.addOrReplaceChild(displays);
 
     operation.apply(propertyRoot);
     const displayWithProperties = assertDefined(
-      propertyRoot.getChildByName('displays')
+      propertyRoot.getChildByName('displays'),
     ).getAllChildren()[0];
-    expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(false);
+    expect(displayWithProperties.getChildByName('isOn')?.getValue()).toEqual(
+      false,
+    );
   });
 });

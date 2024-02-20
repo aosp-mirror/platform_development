@@ -15,7 +15,11 @@
  */
 
 import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -46,7 +50,9 @@ describe('ViewerScreenRecordingComponent', () => {
   });
 
   it('renders title correctly', () => {
-    const title = assertDefined(htmlElement.querySelector('.header')) as HTMLElement;
+    const title = assertDefined(
+      htmlElement.querySelector('.header'),
+    ) as HTMLElement;
     expect(title.innerHTML).toContain('Screen recording');
 
     component.title = 'Screenshot';
@@ -56,10 +62,10 @@ describe('ViewerScreenRecordingComponent', () => {
 
   it('can be minimized and maximized', () => {
     const buttonMinimize = assertDefined(
-      htmlElement.querySelector('.button-minimize')
+      htmlElement.querySelector('.button-minimize'),
     ) as HTMLButtonElement;
     const videoContainer = assertDefined(
-      htmlElement.querySelector('.video-container')
+      htmlElement.querySelector('.video-container'),
     ) as HTMLElement;
     expect(videoContainer.style.height).toEqual('');
 
@@ -74,22 +80,26 @@ describe('ViewerScreenRecordingComponent', () => {
 
   it('shows video', async () => {
     const videoFile = await UnitTestUtils.getFixtureFile(
-      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
     component.currentTraceEntry = new ScreenRecordingTraceEntry(1, videoFile);
     fixture.detectChanges();
     const videoContainer = assertDefined(
-      htmlElement.querySelector('.video-container')
+      htmlElement.querySelector('.video-container'),
     ) as HTMLElement;
     expect(videoContainer.querySelector('video')).toBeTruthy();
     expect(videoContainer.querySelector('img')).toBeNull();
   });
 
   it('shows screenshot image', () => {
-    component.currentTraceEntry = new ScreenRecordingTraceEntry(0, new Blob(), true);
+    component.currentTraceEntry = new ScreenRecordingTraceEntry(
+      0,
+      new Blob(),
+      true,
+    );
     fixture.detectChanges();
     const videoContainer = assertDefined(
-      htmlElement.querySelector('.video-container')
+      htmlElement.querySelector('.video-container'),
     ) as HTMLElement;
     expect(videoContainer.querySelector('img')).toBeTruthy();
     expect(videoContainer.querySelector('video')).toBeNull();
@@ -97,8 +107,10 @@ describe('ViewerScreenRecordingComponent', () => {
 
   it('shows no frame message', () => {
     const videoContainer = assertDefined(
-      htmlElement.querySelector('.video-container')
+      htmlElement.querySelector('.video-container'),
     ) as HTMLElement;
-    expect(videoContainer.innerHTML).toContain('No screen recording frame to show');
+    expect(videoContainer.innerHTML).toContain(
+      'No screen recording frame to show',
+    );
   });
 });

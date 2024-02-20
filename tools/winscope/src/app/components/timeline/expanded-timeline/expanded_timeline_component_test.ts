@@ -131,10 +131,14 @@ describe('ExpandedTimelineComponent', () => {
   it('renders all timelines', () => {
     fixture.detectChanges();
 
-    const timelineElements = htmlElement.querySelectorAll('.timeline.row single-timeline');
+    const timelineElements = htmlElement.querySelectorAll(
+      '.timeline.row single-timeline',
+    );
     expect(timelineElements.length).toEqual(4);
 
-    const transitionElement = htmlElement.querySelectorAll('.timeline.row transition-timeline');
+    const transitionElement = htmlElement.querySelectorAll(
+      '.timeline.row transition-timeline',
+    );
     expect(transitionElement.length).toEqual(1);
   });
 
@@ -154,13 +158,17 @@ describe('ExpandedTimelineComponent', () => {
       }
     });
 
-    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    const transitionTimeline = assertDefined(
+      component.transitionTimelines,
+    ).first;
     assertDefined(transitionTimeline.selectedEntry);
   });
 
   it('passes selectedEntry of correct type into each timeline on position change', () => {
     // 3 out of the 5 traces have timestamps before or at 11n
-    assertDefined(component.timelineData).setPosition(TracePosition.fromTimestamp(time11));
+    assertDefined(component.timelineData).setPosition(
+      TracePosition.fromTimestamp(time11),
+    );
     fixture.detectChanges();
 
     const singleTimelines = assertDefined(component.singleTimelines);
@@ -175,13 +183,19 @@ describe('ExpandedTimelineComponent', () => {
         expect(timeline.selectedEntry).toBeUndefined();
       } else {
         const selectedEntry = assertDefined(timeline.selectedEntry);
-        expect(selectedEntry.getFullTrace().type).toEqual(assertDefined(timeline.trace).type);
+        expect(selectedEntry.getFullTrace().type).toEqual(
+          assertDefined(timeline.trace).type,
+        );
       }
     });
 
-    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    const transitionTimeline = assertDefined(
+      component.transitionTimelines,
+    ).first;
     const selectedEntry = assertDefined(transitionTimeline.selectedEntry);
-    expect(selectedEntry.getFullTrace().type).toEqual(assertDefined(transitionTimeline.trace).type);
+    expect(selectedEntry.getFullTrace().type).toEqual(
+      assertDefined(transitionTimeline.trace).type,
+    );
   });
 
   it('getAllLoadedTraces causes timelines to render in correct order', () => {
@@ -189,7 +203,7 @@ describe('ExpandedTimelineComponent', () => {
     expect(
       assertDefined(component.timelineData)
         .getTraces()
-        .mapTrace((trace) => trace.type)
+        .mapTrace((trace) => trace.type),
     ).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
@@ -199,7 +213,9 @@ describe('ExpandedTimelineComponent', () => {
     ]);
 
     // getAllLoadedTraces returns traces in enum order
-    expect(component.getTracesSortedByDisplayOrder().map((trace) => trace.type)).toEqual([
+    expect(
+      component.getTracesSortedByDisplayOrder().map((trace) => trace.type),
+    ).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
       TraceType.TRANSACTIONS,

@@ -37,7 +37,9 @@ describe('FrameMapper', () => {
   const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
   const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
   const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
-  const time10seconds = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n * 1000000000n);
+  const time10seconds = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
+    10n * 1000000000n,
+  );
 
   describe('ProtoLog <-> WindowManager', () => {
     let protoLog: Trace<PropertyTreeNode>;
@@ -77,20 +79,23 @@ describe('FrameMapper', () => {
     });
 
     it('associates entries/frames', async () => {
-      const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
           [TraceType.PROTO_LOG, ['entry-0', 'entry-1', 'entry-2']],
           [TraceType.WINDOW_MANAGER, ['entry-0']],
-        ])
+        ]),
       );
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
           [TraceType.PROTO_LOG, ['entry-3', 'entry-4']],
           [TraceType.WINDOW_MANAGER, ['entry-1']],
-        ])
+        ]),
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
@@ -133,27 +138,30 @@ describe('FrameMapper', () => {
     });
 
     it('associates entries/frames', async () => {
-      const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
           [TraceType.INPUT_METHOD_CLIENTS, ['entry-0', 'entry-1', 'entry-2']],
           [TraceType.WINDOW_MANAGER, ['entry-0']],
-        ])
+        ]),
       );
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
           [TraceType.INPUT_METHOD_CLIENTS, ['entry-3']],
           [TraceType.WINDOW_MANAGER, ['entry-1']],
-        ])
+        ]),
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
           [TraceType.INPUT_METHOD_CLIENTS, []],
           [TraceType.WINDOW_MANAGER, ['entry-2']],
-        ])
+        ]),
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
@@ -192,7 +200,15 @@ describe('FrameMapper', () => {
           'entry-5' as unknown as PropertyTreeNode,
           'entry-6' as unknown as PropertyTreeNode,
         ])
-        .setTimestamps([time0, time1, time2, time3, time4, time5, time10seconds])
+        .setTimestamps([
+          time0,
+          time1,
+          time2,
+          time3,
+          time4,
+          time5,
+          time10seconds,
+        ])
         .setFrame(0, 0)
         .setFrame(1, 1)
         .setFrame(2, 2)
@@ -209,48 +225,51 @@ describe('FrameMapper', () => {
     });
 
     it('associates entries/frames', async () => {
-      const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, []],
           [TraceType.TRANSACTIONS, ['entry-0']],
-        ])
+        ]),
       );
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, ['entry-0']],
           [TraceType.TRANSACTIONS, ['entry-1']],
-        ])
+        ]),
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, ['entry-1']],
           [TraceType.TRANSACTIONS, ['entry-2', 'entry-3']],
-        ])
+        ]),
       );
       expectedFrames.set(
         3,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, ['entry-2']],
           [TraceType.TRANSACTIONS, ['entry-4']],
-        ])
+        ]),
       );
       expectedFrames.set(
         4,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, ['entry-3']],
           [TraceType.TRANSACTIONS, ['entry-5']],
-        ])
+        ]),
       );
       expectedFrames.set(
         5,
         new Map<TraceType, Array<{}>>([
           [TraceType.WINDOW_MANAGER, []],
           [TraceType.TRANSACTIONS, ['entry-6']],
-        ])
+        ]),
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
@@ -276,7 +295,13 @@ describe('FrameMapper', () => {
           'entry-4' as unknown as PropertyTreeNode,
         ])
         .setTimestamps([time0, time1, time2, time5, time6])
-        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [0n, 10n, 10n, 20n, 30n])
+        .setParserCustomQueryResult(CustomQueryType.VSYNCID, [
+          0n,
+          10n,
+          10n,
+          20n,
+          30n,
+        ])
         .build();
 
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
@@ -296,30 +321,45 @@ describe('FrameMapper', () => {
     });
 
     it('associates entries/frames', async () => {
-      const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
           [TraceType.TRANSACTIONS, [await transactions.getEntry(0).getValue()]],
-          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(0).getValue()]],
-        ])
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(0).getValue()],
+          ],
+        ]),
       );
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
           [
             TraceType.TRANSACTIONS,
-            [await transactions.getEntry(1).getValue(), await transactions.getEntry(2).getValue()],
+            [
+              await transactions.getEntry(1).getValue(),
+              await transactions.getEntry(2).getValue(),
+            ],
           ],
-          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(1).getValue()]],
-        ])
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(1).getValue()],
+          ],
+        ]),
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
           [TraceType.TRANSACTIONS, [await transactions.getEntry(3).getValue()]],
-          [TraceType.SURFACE_FLINGER, [await surfaceFlinger.getEntry(2).getValue()]],
-        ])
+          [
+            TraceType.SURFACE_FLINGER,
+            [await surfaceFlinger.getEntry(2).getValue()],
+          ],
+        ]),
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
@@ -369,48 +409,51 @@ describe('FrameMapper', () => {
     });
 
     it('associates entries/frames', async () => {
-      const expectedFrames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
+      const expectedFrames = new Map<
+        AbsoluteFrameIndex,
+        Map<TraceType, Array<{}>>
+      >();
       expectedFrames.set(
         0,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, []],
           [TraceType.SCREEN_RECORDING, ['entry-0']],
-        ])
+        ]),
       );
       expectedFrames.set(
         1,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, ['entry-2']],
           [TraceType.SCREEN_RECORDING, ['entry-1']],
-        ])
+        ]),
       );
       expectedFrames.set(
         2,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, ['entry-2']],
           [TraceType.SCREEN_RECORDING, ['entry-2']],
-        ])
+        ]),
       );
       expectedFrames.set(
         3,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, ['entry-3']],
           [TraceType.SCREEN_RECORDING, ['entry-3']],
-        ])
+        ]),
       );
       expectedFrames.set(
         4,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, ['entry-5']],
           [TraceType.SCREEN_RECORDING, ['entry-4']],
-        ])
+        ]),
       );
       expectedFrames.set(
         5,
         new Map<TraceType, Array<{}>>([
           [TraceType.SURFACE_FLINGER, []],
           [TraceType.SCREEN_RECORDING, ['entry-5']],
-        ])
+        ]),
       );
 
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);

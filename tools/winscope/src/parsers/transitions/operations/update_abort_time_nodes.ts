@@ -25,14 +25,21 @@ export class UpdateAbortTimeNodes implements Operation<PropertyTreeNode> {
 
     const existingWmAbortTime = wmDataNode?.getChildByName('wmAbortTimeNs');
     if (wmDataNode && existingWmAbortTime) {
-      const newAbortTimeNode = this.makeNewAbortTimeNode(wmDataNode.id, existingWmAbortTime);
+      const newAbortTimeNode = this.makeNewAbortTimeNode(
+        wmDataNode.id,
+        existingWmAbortTime,
+      );
       wmDataNode.addOrReplaceChild(newAbortTimeNode);
       wmDataNode.removeChild(existingWmAbortTime.id);
     }
 
-    const existingShellAbortTime = shellDataNode?.getChildByName('shellAbortTimeNs');
+    const existingShellAbortTime =
+      shellDataNode?.getChildByName('shellAbortTimeNs');
     if (shellDataNode && existingShellAbortTime) {
-      const newAbortTimeNode = this.makeNewAbortTimeNode(shellDataNode.id, existingShellAbortTime);
+      const newAbortTimeNode = this.makeNewAbortTimeNode(
+        shellDataNode.id,
+        existingShellAbortTime,
+      );
       shellDataNode.addOrReplaceChild(newAbortTimeNode);
       shellDataNode.removeChild(existingShellAbortTime.id);
     }
@@ -42,7 +49,7 @@ export class UpdateAbortTimeNodes implements Operation<PropertyTreeNode> {
     return DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
       rootId,
       'abortTimeNs',
-      existingNode.getValue()
+      existingNode.getValue(),
     );
   }
 }

@@ -51,14 +51,22 @@ describe('PresenterSurfaceFlinger', () => {
 
     const firstEntry = trace.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
-    positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(trace.getEntry(1));
+    positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(
+      trace.getEntry(1),
+    );
 
     const firstEntryDataTree = await firstEntry.getValue();
     const layer = assertDefined(
-      firstEntryDataTree.findDfs(UiTreeUtils.makeIdMatchFilter('53 Dim layer#53'))
+      firstEntryDataTree.findDfs(
+        UiTreeUtils.makeIdMatchFilter('53 Dim layer#53'),
+      ),
     );
-    const selectedTreeParent = UiHierarchyTreeNode.from(assertDefined(layer.getZParent()));
-    selectedTree = assertDefined(selectedTreeParent.getChildByName('Dim layer#53'));
+    const selectedTreeParent = UiHierarchyTreeNode.from(
+      assertDefined(layer.getZParent()),
+    );
+    selectedTree = assertDefined(
+      selectedTreeParent.getChildByName('Dim layer#53'),
+    );
   });
 
   beforeEach(() => {
@@ -66,11 +74,13 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const emptyTrace = new TraceBuilder<HierarchyTreeNode>().setEntries([]).build();
+    const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
+      .setEntries([])
+      .build();
     const presenter = createPresenter(emptyTrace);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
@@ -82,7 +92,9 @@ describe('PresenterSurfaceFlinger', () => {
 
     expect(uiData.rects.length).toBeGreaterThan(0);
     expect(uiData.highlightedItem?.length).toEqual(0);
-    expect(Array.from(uiData.displays.map((display) => display.groupId))).toContain(0);
+    expect(
+      Array.from(uiData.displays.map((display) => display.groupId)),
+    ).toContain(0);
     const hierarchyOpts = uiData.hierarchyUserOptions
       ? Object.keys(uiData.hierarchyUserOptions)
       : null;
@@ -205,16 +217,16 @@ describe('PresenterSurfaceFlinger', () => {
       'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
     const id = `96 ${longName}`;
     const nodeWithLongName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
     );
     expect(nodeWithLongName.getDisplayName()).toEqual(
-      'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96'
+      'ActivityRecord{64953af u0 com.google.(...).NexusLauncherActivity#96',
     );
 
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const nodeWithShortName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id))
+      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
     );
     expect(nodeWithShortName.getDisplayName()).toEqual(longName);
   });
@@ -265,15 +277,15 @@ describe('PresenterSurfaceFlinger', () => {
 
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
-      DiffType.NONE
-    );
+    expect(
+      assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff(),
+    ).toEqual(DiffType.NONE);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff()).toEqual(
-      DiffType.ADDED
-    );
+    expect(
+      assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff(),
+    ).toEqual(DiffType.ADDED);
   });
 
   it('shows/hides defaults', async () => {
@@ -290,20 +302,28 @@ describe('PresenterSurfaceFlinger', () => {
 
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(24);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(56);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(56);
   });
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(24);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(24);
 
     await presenter.onPropertiesFilterChange('bound');
-    expect(assertDefined(uiData.propertiesTree).getAllChildren().length).toEqual(3);
+    expect(
+      assertDefined(uiData.propertiesTree).getAllChildren().length,
+    ).toEqual(3);
   });
 
   it('handles displays with no visible layers', async () => {
@@ -311,7 +331,11 @@ describe('PresenterSurfaceFlinger', () => {
     expect(uiData.displays.length).toEqual(5);
     // we want the displays to be sorted by name
     expect(uiData.displays).toEqual([
-      {displayId: '11529215046312967684', groupId: 5, name: 'ClusterOsDouble-VD'},
+      {
+        displayId: '11529215046312967684',
+        groupId: 5,
+        name: 'ClusterOsDouble-VD',
+      },
       {displayId: '4619827259835644672', groupId: 0, name: 'EMU_display_0'},
       {displayId: '4619827551948147201', groupId: 2, name: 'EMU_display_1'},
       {displayId: '4619827124781842690', groupId: 3, name: 'EMU_display_2'},
@@ -324,15 +348,19 @@ describe('PresenterSurfaceFlinger', () => {
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
       .setParserCustomQueryResult(
         CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'com.google.android.apps.nexuslauncher'
+        'com.google.android.apps.nexuslauncher',
       )
       .build();
     const traces = new Traces();
     traces.setTrace(TraceType.SURFACE_FLINGER, trace);
     traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, vcTrace);
-    const presenter = new Presenter(traces, new MockStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    const presenter = new Presenter(
+      traces,
+      new MockStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      },
+    );
 
     const firstEntry = trace.getEntry(0);
     const positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);

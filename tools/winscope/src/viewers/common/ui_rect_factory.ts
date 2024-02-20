@@ -21,7 +21,10 @@ import {UiRect} from 'viewers/components/rects/types2d';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 
 class UiRectFactory {
-  makeUiRects(hierarchyRoot: HierarchyTreeNode, viewCapturePackageNames: string[] = []): UiRect[] {
+  makeUiRects(
+    hierarchyRoot: HierarchyTreeNode,
+    viewCapturePackageNames: string[] = [],
+  ): UiRect[] {
     const traceRects = this.extractRects(hierarchyRoot);
     return traceRects.map((traceRect) => {
       return new UiRectBuilder()
@@ -39,7 +42,9 @@ class UiRectFactory {
         .setIsClickable(!traceRect.isDisplay)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(
-          viewCapturePackageNames.includes(traceRect.name.substring(0, traceRect.name.indexOf('/')))
+          viewCapturePackageNames.includes(
+            traceRect.name.substring(0, traceRect.name.indexOf('/')),
+          ),
         )
         .setDepth(traceRect.depth)
         .build();

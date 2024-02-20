@@ -41,7 +41,10 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return TraceType.PROTO_LOG;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<PropertyTreeNode> {
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
     const protologEntry = await this.queryProtoLogEntry(index);
     const logMessage: LogMessage = {
       text: protologEntry.message,
@@ -55,7 +58,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
       logMessage,
       timestampType,
       this.realToElapsedTimeOffsetNs,
-      this.timestampFactory
+      this.timestampFactory,
     );
   }
 
@@ -63,7 +66,9 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return 'protolog';
   }
 
-  private async queryProtoLogEntry(index: number): Promise<PerfettoLogMessageTableRow> {
+  private async queryProtoLogEntry(
+    index: number,
+  ): Promise<PerfettoLogMessageTableRow> {
     const sql = `
       SELECT
         ts, tag, level, message
@@ -75,7 +80,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
 
     if (result.numRows() !== 1) {
       throw new Error(
-        `Expected exactly 1 protolog message with id ${index} but got ${result.numRows()}`
+        `Expected exactly 1 protolog message with id ${index} but got ${result.numRows()}`,
       );
     }
 
@@ -85,7 +90,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
       entry.get('ts') as bigint,
       entry.get('tag') as string,
       entry.get('level') as string,
-      entry.get('message') as string
+      entry.get('message') as string,
     );
   }
 }

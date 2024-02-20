@@ -39,16 +39,23 @@ class ViewerScreenRecording implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'ScreenRecording',
-      TraceType.SCREEN_RECORDING
+      TraceType.SCREEN_RECORDING,
     );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
-      const entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
-      (this.htmlElement as unknown as ViewerScreenRecordingComponent).currentTraceEntry =
-        await entry?.getValue();
-    });
+    await event.visit(
+      WinscopeEventType.TRACE_POSITION_UPDATE,
+      async (event) => {
+        const entry = TraceEntryFinder.findCorrespondingEntry(
+          this.trace,
+          event.position,
+        );
+        (
+          this.htmlElement as unknown as ViewerScreenRecordingComponent
+        ).currentTraceEntry = await entry?.getValue();
+      },
+    );
   }
 
   setEmitEvent() {

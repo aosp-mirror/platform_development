@@ -21,7 +21,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderInputMethod extends HierarchyTreeBuilder {
   protected override buildIdentifierToChildMap(
-    children: PropertiesProvider[]
+    children: PropertiesProvider[],
   ): Map<string | number, PropertiesProvider[]> {
     // only ever one child (client, service, manager service) so map unnecessary
     return new Map<string | number, PropertiesProvider[]>();
@@ -29,7 +29,7 @@ export class HierarchyTreeBuilderInputMethod extends HierarchyTreeBuilder {
 
   protected override makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): readonly HierarchyTreeNode[] {
     if (children.length === 0) return [];
     return [this.buildSubtree(children[0], identifierToChild)];

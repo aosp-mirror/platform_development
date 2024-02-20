@@ -19,8 +19,15 @@ import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {TabbedViewSwitched, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {
+  TabbedViewSwitched,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
@@ -101,7 +108,9 @@ interface Tab {
     `,
   ],
 })
-export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventListener {
+export class TraceViewComponent
+  implements WinscopeEventEmitter, WinscopeEventListener
+{
   @Input() viewers: Viewer[] = [];
   @Input() store: PersistentStore | undefined;
 
@@ -126,12 +135,17 @@ export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventLi
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
-      const tab = this.tabs.find((tab) => tab.view.traceType === event.newFocusedViewId);
-      if (tab) {
-        await this.showTab(tab);
-      }
-    });
+    await event.visit(
+      WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST,
+      async (event) => {
+        const tab = this.tabs.find(
+          (tab) => tab.view.traceType === event.newFocusedViewId,
+        );
+        if (tab) {
+          await this.showTab(tab);
+        }
+      },
+    );
   }
 
   setEmitEvent(callback: EmitEvent) {
@@ -176,14 +190,16 @@ export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventLi
         'Only one overlay view is supported. To allow more overlay views, either create more than' +
           ' one draggable containers in this component or move the cdkDrag directives into the' +
           " overlay view when the new Angular's directive composition API is available" +
-          ' (https://github.com/angular/angular/issues/8785).'
+          ' (https://github.com/angular/angular/issues/8785).',
       );
     }
 
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
       const container = assertDefined(
-        this.elementRef.nativeElement.querySelector('.overlay .draggable-container')
+        this.elementRef.nativeElement.querySelector(
+          '.overlay .draggable-container',
+        ),
       );
       container.appendChild(view.htmlElement);
     });
@@ -201,7 +217,7 @@ export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventLi
       // initialization/rendering issues with cdk-virtual-scroll-viewport
       // components inside the tab contents.
       const traceViewContent = assertDefined(
-        this.elementRef.nativeElement.querySelector('.trace-view-content')
+        this.elementRef.nativeElement.querySelector('.trace-view-content'),
       );
       traceViewContent.appendChild(tab.view.htmlElement);
       tab.addedToDom = true;

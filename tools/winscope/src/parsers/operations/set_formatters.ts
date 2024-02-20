@@ -15,7 +15,10 @@
  */
 
 import {RawDataUtils} from 'parsers/raw_data_utils';
-import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
+import {
+  TamperedMessageType,
+  TamperedProtoField,
+} from 'parsers/tampered_message_type';
 import * as protobuf from 'protobufjs';
 import {
   BUFFER_FORMATTER,
@@ -37,7 +40,7 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
 
   constructor(
     private readonly rootField?: TamperedProtoField,
-    private readonly customFormatters?: Map<string, PropertyFormatter>
+    private readonly customFormatters?: Map<string, PropertyFormatter>,
   ) {}
 
   apply(value: PropertyTreeNode, parentField = this.rootField): void {
@@ -45,7 +48,8 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     let enumType: protobuf.Enum | undefined;
 
     if (parentField) {
-      const protoType: TamperedMessageType | undefined = parentField.tamperedMessageType;
+      const protoType: TamperedMessageType | undefined =
+        parentField.tamperedMessageType;
 
       field = parentField;
       if (protoType && field.name !== value.name) {
@@ -66,9 +70,11 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
 
   private getFormatter(
     node: PropertyTreeNode,
-    valuesById: {[key: number]: string} | undefined
+    valuesById: {[key: number]: string} | undefined,
   ): PropertyFormatter | undefined {
-    if (this.customFormatters?.get(node.name)) return this.customFormatters.get(node.name);
+    if (this.customFormatters?.get(node.name)) {
+      return this.customFormatters.get(node.name);
+    }
 
     if (valuesById) return new EnumFormatter(valuesById);
 
@@ -78,7 +84,9 @@ export class SetFormatters implements Operation<PropertyTreeNode> {
     if (RawDataUtils.isSize(node)) return SIZE_FORMATTER;
     if (RawDataUtils.isRegion(node)) return REGION_FORMATTER;
     if (RawDataUtils.isPosition(node)) return POSITION_FORMATTER;
-    if (SetFormatters.TransformRegExp.test(node.name)) return TRANSFORM_FORMATTER;
+    if (SetFormatters.TransformRegExp.test(node.name)) {
+      return TRANSFORM_FORMATTER;
+    }
 
     if (node.getAllChildren().length > 0) return undefined;
 

@@ -21,7 +21,11 @@ const commonEagerProperties = ['identifier', 'id', 'name'];
 export const WM_EAGER_PROPERTIES = new Map<WmProtoType, string[]>([
   [
     WmProtoType.WindowManagerService,
-    commonEagerProperties.concat(['focusedApp', 'focusedWindow', 'focusedDisplayId']),
+    commonEagerProperties.concat([
+      'focusedApp',
+      'focusedWindow',
+      'focusedDisplayId',
+    ]),
   ],
   [WmProtoType.RootWindowContainer, commonEagerProperties],
   [WmProtoType.WindowContainer, commonEagerProperties.concat(['visible'])],
@@ -40,7 +44,11 @@ export const WM_EAGER_PROPERTIES = new Map<WmProtoType, string[]>([
   [WmProtoType.DisplayArea, commonEagerProperties],
   [
     WmProtoType.Task,
-    commonEagerProperties.concat(['displayId', 'rootTaskId', 'createdByOrganizer']),
+    commonEagerProperties.concat([
+      'displayId',
+      'rootTaskId',
+      'createdByOrganizer',
+    ]),
   ],
   [WmProtoType.Activity, commonEagerProperties.concat(['state', 'visible'])],
   [WmProtoType.WindowToken, commonEagerProperties],

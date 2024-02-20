@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 import {WinscopeEvent} from 'messaging/winscope_event';
-import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceType} from 'trace/trace_type';
 
@@ -29,7 +32,7 @@ class View {
     public dependencies: TraceType[],
     public htmlElement: HTMLElement,
     public title: string,
-    public traceType: TraceType
+    public traceType: TraceType,
   ) {}
 }
 

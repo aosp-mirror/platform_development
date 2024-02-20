@@ -25,7 +25,7 @@ import {SnackBarComponent} from './snack_bar_component';
 export class SnackBarOpener implements UserNotificationListener {
   constructor(
     @Inject(NgZone) private ngZone: NgZone,
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
   ) {}
 
   onErrors(errors: WinscopeError[]) {
@@ -59,7 +59,9 @@ export class SnackBarOpener implements UserNotificationListener {
       });
 
       if (countCropped > 0) {
-        messages.push(`... (cropped ${countCropped} '${groupedErrors[0].getType()}' messages)`);
+        messages.push(
+          `... (cropped ${countCropped} '${groupedErrors[0].getType()}' messages)`,
+        );
       }
     }
 

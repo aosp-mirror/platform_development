@@ -23,7 +23,10 @@ import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factor
 import {ChildProperty, PropertyTreeBuilder} from './property_tree_builder';
 import {TreeBuilder} from './tree_builder';
 
-export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHierarchy> {
+export class HierarchyTreeBuilder extends TreeBuilder<
+  HierarchyTreeNode,
+  ChildHierarchy
+> {
   private properties: any;
   private additionalProperties: ChildProperty[] = [];
 
@@ -48,7 +51,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
     const propertiesTree = new PropertyTreeNodeFactory().makeProtoProperty(
       rootId,
       assertDefined(this.name),
-      this.properties
+      this.properties,
     );
     this.additionalProperties.forEach((property) => {
       const childNode = new PropertyTreeBuilder()
@@ -65,7 +68,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
       async () => propertiesTree,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     return new HierarchyTreeNode(rootId, assertDefined(this.name), provider);
@@ -73,7 +76,7 @@ export class HierarchyTreeBuilder extends TreeBuilder<HierarchyTreeNode, ChildHi
 
   protected override addOrReplaceChildNode(
     rootNode: HierarchyTreeNode,
-    child: ChildHierarchy
+    child: ChildHierarchy,
   ): void {
     const childNode = new HierarchyTreeBuilder()
       .setId(child.id)

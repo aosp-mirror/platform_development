@@ -26,11 +26,14 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
   private isOldNodeInternal = false;
   private showHeading = true;
 
-  static from(node: HierarchyTreeNode, parent?: UiHierarchyTreeNode): UiHierarchyTreeNode {
+  static from(
+    node: HierarchyTreeNode,
+    parent?: UiHierarchyTreeNode,
+  ): UiHierarchyTreeNode {
     const displayNode = new UiHierarchyTreeNode(
       node.id,
       node.name,
-      (node as any).propertiesProvider
+      (node as any).propertiesProvider,
     );
     const rects = node.getRects();
     if (rects) displayNode.setRects(rects);
@@ -38,7 +41,9 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
     if (parent) displayNode.setZParent(parent);
 
     node.getAllChildren().forEach((child) => {
-      displayNode.addOrReplaceChild(UiHierarchyTreeNode.from(child, displayNode));
+      displayNode.addOrReplaceChild(
+        UiHierarchyTreeNode.from(child, displayNode),
+      );
     });
     return displayNode;
   }

@@ -30,7 +30,8 @@ export class Transformer {
   constructor(private fromRange: TimeRange, private toRange: Segment) {
     this.timestampType = fromRange.from.getType();
 
-    this.fromWidth = this.fromRange.to.getValueNs() - this.fromRange.from.getValueNs();
+    this.fromWidth =
+      this.fromRange.to.getValueNs() - this.fromRange.from.getValueNs();
     // Needs to be a whole number to be compatible with bigints
     this.targetWidth = Math.round(this.toRange.to - this.toRange.from);
 
@@ -42,14 +43,20 @@ export class Transformer {
   transform(x: Timestamp): number {
     return (
       this.toOffset +
-      (this.targetWidth * Number(x.getValueNs() - this.fromOffset)) / Number(this.fromWidth)
+      (this.targetWidth * Number(x.getValueNs() - this.fromOffset)) /
+        Number(this.fromWidth)
     );
   }
 
   untransform(x: number): Timestamp {
     x = Math.round(x);
     const valueNs =
-      this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
-    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(this.timestampType, valueNs, 0n);
+      this.fromOffset +
+      (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth);
+    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      this.timestampType,
+      valueNs,
+      0n,
+    );
   }
 }

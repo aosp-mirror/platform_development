@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CdkVirtualScrollViewport, ScrollingModule} from '@angular/cdk/scrolling';
+import {
+  CdkVirtualScrollViewport,
+  ScrollingModule,
+} from '@angular/cdk/scrolling';
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
@@ -72,17 +79,24 @@ describe('ViewerProtologComponent', () => {
     });
 
     it('applies text filters correctly', () => {
-      htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-        component.uiData.messages = component.uiData.messages.filter((message) =>
-          message.text.includes((event as CustomEvent).detail)
-        );
-      });
+      htmlElement.addEventListener(
+        Events.SearchStringFilterChanged,
+        (event) => {
+          component.uiData.messages = component.uiData.messages.filter(
+            (message) => message.text.includes((event as CustomEvent).detail),
+          );
+        },
+      );
       component.inputData = makeUiData();
       fixture.detectChanges();
       expect(component.uiData.messages.length).toEqual(200);
 
-      const textFilterDiv = assertDefined(htmlElement.querySelector('.filters .text'));
-      const inputEl = assertDefined(textFilterDiv.querySelector('input')) as HTMLInputElement;
+      const textFilterDiv = assertDefined(
+        htmlElement.querySelector('.filters .text'),
+      );
+      const inputEl = assertDefined(
+        textFilterDiv.querySelector('input'),
+      ) as HTMLInputElement;
       inputEl.value = 'keep';
       inputEl.dispatchEvent(new Event('input'));
       fixture.detectChanges();
@@ -93,9 +107,12 @@ describe('ViewerProtologComponent', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
       const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time')
+        htmlElement.querySelector('.go-to-current-time'),
       ) as HTMLButtonElement;
-      const spy = spyOn(assertDefined(component.scrollComponent), 'scrollToIndex');
+      const spy = spyOn(
+        assertDefined(component.scrollComponent),
+        'scrollToIndex',
+      );
       goToCurrentTimeButton.click();
       expect(spy).toHaveBeenCalledWith(150);
     });
@@ -108,7 +125,7 @@ describe('ViewerProtologComponent', () => {
         timestamp = (event as CustomEvent).detail.formattedValue();
       });
       const logTimestampButton = assertDefined(
-        htmlElement.querySelector('.time button')
+        htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
@@ -119,7 +136,11 @@ describe('ViewerProtologComponent', () => {
   describe('Scroll component', () => {
     executeScrollComponentTests('message', setUpTestEnvironment);
     async function setUpTestEnvironment(): Promise<
-      [ComponentFixture<ViewerProtologComponent>, HTMLElement, CdkVirtualScrollViewport]
+      [
+        ComponentFixture<ViewerProtologComponent>,
+        HTMLElement,
+        CdkVirtualScrollViewport,
+      ]
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
@@ -139,7 +160,10 @@ describe('ViewerProtologComponent', () => {
   function makeUiData(): UiData {
     const allLogLevels = ['INFO', 'ERROR'];
     const allTags = ['WindowManager', 'INVALID'];
-    const allSourceFiles = ['test_source_file.java', 'other_test_source_file.java'];
+    const allSourceFiles = [
+      'test_source_file.java',
+      'other_test_source_file.java',
+    ];
 
     const time = new PropertyTreeBuilder()
       .setRootId('ProtologMessage')

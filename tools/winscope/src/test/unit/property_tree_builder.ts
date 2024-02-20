@@ -16,10 +16,16 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PropertyFormatter} from 'trace/tree_node/formatters';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {TreeBuilder} from './tree_builder';
 
-export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProperty> {
+export class PropertyTreeBuilder extends TreeBuilder<
+  PropertyTreeNode,
+  ChildProperty
+> {
   isRoot: boolean = false;
   source = PropertySource.PROTO;
   value: any;
@@ -55,13 +61,16 @@ export class PropertyTreeBuilder extends TreeBuilder<PropertyTreeNode, ChildProp
       this.isRoot ? this.makeRootId() : this.makePropertyNodeId(),
       assertDefined(this.name),
       this.source,
-      this.value
+      this.value,
     );
     if (this.formatter) node.setFormatter(this.formatter);
     return node;
   }
 
-  protected override addOrReplaceChildNode(rootNode: PropertyTreeNode, child: ChildProperty): void {
+  protected override addOrReplaceChildNode(
+    rootNode: PropertyTreeNode,
+    child: ChildProperty,
+  ): void {
     const childNode = new PropertyTreeBuilder()
       .setRootId(rootNode.id)
       .setName(child.name)

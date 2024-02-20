@@ -25,7 +25,9 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
-  static readonly DEPENDENCIES: ViewCaptureTraceType[] = [TraceType.VIEW_CAPTURE];
+  static readonly DEPENDENCIES: ViewCaptureTraceType[] = [
+    TraceType.VIEW_CAPTURE,
+  ];
 
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
@@ -34,55 +36,75 @@ export class ViewerViewCapture implements Viewer {
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
-    this.presenter = new Presenter(this.getDependencies()[0], traces, storage, (data: UiData) => {
-      (this.htmlElement as any).inputData = data;
-    });
+    this.presenter = new Presenter(
+      this.getDependencies()[0],
+      traces,
+      storage,
+      (data: UiData) => {
+        (this.htmlElement as any).inputData = data;
+      },
+    );
 
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.onPinnedItemChange((event as CustomEvent).detail.pinnedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) =>
+        this.presenter.onPinnedItemChange(
+          (event as CustomEvent).detail.pinnedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(
+        `${(event as CustomEvent).detail.id}`,
+      ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyUserOptionsChange,
       async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange((event as CustomEvent).detail.userOptions)
+        await this.presenter.onHierarchyUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
       async (event) =>
-        await this.presenter.onHierarchyFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onHierarchyFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
       async (event) =>
         await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions
-        )
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       async (event) =>
-        await this.presenter.onPropertiesFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onPropertiesFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.SelectedTreeChange,
       async (event) =>
         await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem
-        )
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.MiniRectsDblClick, (event) => {
-      this.switchToSurfaceFlingerView();
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.MiniRectsDblClick,
+      (event) => {
+        this.switchToSurfaceFlingerView();
+      },
+    );
 
     this.view = new View(
       ViewType.TAB,
       this.getDependencies(),
       this.htmlElement,
       this.getTitle(),
-      this.getDependencies()[0]
+      this.getDependencies()[0],
     );
   }
 
@@ -95,7 +117,9 @@ export class ViewerViewCapture implements Viewer {
   }
 
   async switchToSurfaceFlingerView() {
-    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
+    await this.emitAppEvent(
+      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
+    );
   }
 
   getViews(): View[] {

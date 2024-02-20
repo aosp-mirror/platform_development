@@ -31,7 +31,14 @@ describe('TraceEntry', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(14n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n),
       ])
-      .setEntries(['entry-0', 'entry-1', 'entry-2', 'entry-3', 'entry-4', 'entry-5'])
+      .setEntries([
+        'entry-0',
+        'entry-1',
+        'entry-2',
+        'entry-3',
+        'entry-4',
+        'entry-5',
+      ])
       .setFrame(0, 0)
       .setFrame(0, 1)
       .setFrame(1, 1)
@@ -54,10 +61,10 @@ describe('TraceEntry', () => {
 
   it('getTimestamp()', () => {
     expect(trace.getEntry(0).getTimestamp()).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
     );
     expect(trace.getEntry(1).getTimestamp()).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n)
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
     );
   });
 

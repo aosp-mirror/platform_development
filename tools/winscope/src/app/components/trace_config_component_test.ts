@@ -94,31 +94,42 @@ describe('TraceConfigComponent', () => {
   });
 
   it('check that advanced configs show', () => {
-    const enable_config_opt = assertDefined(htmlElement.querySelector('.enable-config-opt'));
+    const enable_config_opt = assertDefined(
+      htmlElement.querySelector('.enable-config-opt'),
+    );
     expect(enable_config_opt.innerHTML).toContain('trace buffers');
     expect(enable_config_opt.innerHTML).not.toContain('tracing level');
 
-    const selection_config_opt = assertDefined(htmlElement.querySelector('.selection-config-opt'));
+    const selection_config_opt = assertDefined(
+      htmlElement.querySelector('.selection-config-opt'),
+    );
     expect(selection_config_opt.innerHTML).not.toContain('trace buffers');
     expect(selection_config_opt.innerHTML).toContain('tracing level');
   });
 
   it('check that changing enable config causes box to change', async () => {
-    assertDefined(component.traceConfig)['layers_trace'].config!.enableConfigs[0].enabled = false;
+    assertDefined(component.traceConfig)[
+      'layers_trace'
+    ].config!.enableConfigs[0].enabled = false;
     fixture.detectChanges();
     await fixture.whenStable();
     expect(htmlElement.querySelector('.enable-config')?.innerHTML).toContain(
-      'aria-checked="false"'
+      'aria-checked="false"',
     );
   });
 
   it('check that changing selected config causes select to change', async () => {
     fixture.detectChanges();
-    expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain('value="debug"');
-    assertDefined(component.traceConfig)['layers_trace'].config!.selectionConfigs[0].value =
-      'verbose';
+    expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain(
+      'value="debug"',
+    );
+    assertDefined(component.traceConfig)[
+      'layers_trace'
+    ].config!.selectionConfigs[0].value = 'verbose';
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain('value="verbose"');
+    expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain(
+      'value="verbose"',
+    );
   });
 });

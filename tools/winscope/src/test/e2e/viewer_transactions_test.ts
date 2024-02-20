@@ -24,29 +24,37 @@ describe('Viewer Transactions', () => {
   });
 
   it('processes perfetto trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/perfetto/transactions_trace.perfetto-trace');
+    await E2eTestUtils.uploadFixture(
+      'traces/perfetto/transactions_trace.perfetto-trace',
+    );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 
-    const isViewerRendered = await element(by.css('viewer-transactions')).isPresent();
+    const isViewerRendered = await element(
+      by.css('viewer-transactions'),
+    ).isPresent();
     expect(isViewerRendered).toBeTruthy();
 
     const isFirstEntryRendered = await element(
-      by.css('viewer-transactions .scroll .entry')
+      by.css('viewer-transactions .scroll .entry'),
     ).isPresent();
     expect(isFirstEntryRendered).toBeTruthy();
   });
 
   it('processes legacy trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/Transactions.pb');
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/Transactions.pb',
+    );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 
-    const isViewerRendered = await element(by.css('viewer-transactions')).isPresent();
+    const isViewerRendered = await element(
+      by.css('viewer-transactions'),
+    ).isPresent();
     expect(isViewerRendered).toBeTruthy();
 
     const isFirstEntryRendered = await element(
-      by.css('viewer-transactions .scroll .entry')
+      by.css('viewer-transactions .scroll .entry'),
     ).isPresent();
     expect(isFirstEntryRendered).toBeTruthy();
   });

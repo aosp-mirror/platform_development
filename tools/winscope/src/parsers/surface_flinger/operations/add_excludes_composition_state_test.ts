@@ -15,7 +15,10 @@
  */
 
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {AddExcludesCompositionState} from './add_excludes_composition_state';
 
 describe('AddExcludesCompositionState', () => {
@@ -24,8 +27,18 @@ describe('AddExcludesCompositionState', () => {
   let operation: AddExcludesCompositionState;
 
   beforeEach(() => {
-    propertyRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
-    expectedRoot = new PropertyTreeNode('test node', 'node', PropertySource.PROTO, undefined);
+    propertyRoot = new PropertyTreeNode(
+      'test node',
+      'node',
+      PropertySource.PROTO,
+      undefined,
+    );
+    expectedRoot = new PropertyTreeNode(
+      'test node',
+      'node',
+      PropertySource.PROTO,
+      undefined,
+    );
   });
 
   it('creates excludesCompositionState node with true value', () => {
@@ -33,7 +46,7 @@ describe('AddExcludesCompositionState', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'excludesCompositionState',
-      true
+      true,
     );
     expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
@@ -45,7 +58,7 @@ describe('AddExcludesCompositionState', () => {
     const expectedResult = TreeNodeUtils.makeCalculatedPropertyNode(
       expectedRoot.id,
       'excludesCompositionState',
-      false
+      false,
     );
     expectedRoot.addOrReplaceChild(expectedResult);
     operation.apply(propertyRoot);
