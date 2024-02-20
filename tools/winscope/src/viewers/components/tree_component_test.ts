@@ -13,8 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, CUSTOM_ELEMENTS_SCHEMA, QueryList, ViewChildren} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
@@ -70,7 +79,9 @@ describe('TreeComponent', () => {
     const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
     const spy = spyOn(component.treeComponents.first.highlightedChange, 'emit');
-    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 1}));
+    (treeNode as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', {detail: 1}),
+    );
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
@@ -78,15 +89,22 @@ describe('TreeComponent', () => {
   it('toggles tree upon node double click', () => {
     const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
-    const currLocalExpandedState = component.treeComponents.first.localExpandedState;
-    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 2}));
+    const currLocalExpandedState =
+      component.treeComponents.first.localExpandedState;
+    (treeNode as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', {detail: 2}),
+    );
     fixture.detectChanges();
-    expect(!currLocalExpandedState).toBe(component.treeComponents.first.localExpandedState);
+    expect(!currLocalExpandedState).toBe(
+      component.treeComponents.first.localExpandedState,
+    );
   });
 
   it('scrolls selected node only if not in view', () => {
     const tree = assertDefined(component.treeComponents.get(0));
-    const treeNode = assertDefined(tree.elementRef.nativeElement.querySelector(`#nodeChild79`));
+    const treeNode = assertDefined(
+      tree.elementRef.nativeElement.querySelector(`#nodeChild79`),
+    );
     const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
     component.highlightedItem = '79 Child79';
     fixture.detectChanges();
@@ -158,7 +176,7 @@ describe('TreeComponent', () => {
         .setId('RootNode2')
         .setName('Root node')
         .setChildren([{id: 0, name: 'Child0'}])
-        .build()
+        .build(),
     );
 
     itemWithStoredExpandedState = this.tree1;
@@ -177,7 +195,7 @@ describe('TreeComponent', () => {
           .setId('RootNode')
           .setName('Root node')
           .setChildren(children)
-          .build()
+          .build(),
       );
     }
 

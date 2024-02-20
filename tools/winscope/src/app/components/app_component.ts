@@ -51,7 +51,10 @@ import {MockStorage} from 'test/unit/mock_storage';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
-import {TraceConfigurationMap, TRACES} from 'trace_collection/trace_collection_utils';
+import {
+  TraceConfigurationMap,
+  TRACES,
+} from 'trace_collection/trace_collection_utils';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {View, Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
@@ -320,14 +323,19 @@ export class AppComponent implements WinscopeEventListener {
   activeTrace?: Trace<object>;
   filenameFormControl = new FormControl(
     'winscope',
-    Validators.compose([Validators.required, Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX)])
+    Validators.compose([
+      Validators.required,
+      Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
+    ]),
   );
   traceConfig: TraceConfigurationMap;
   dumpConfig: TraceConfigurationMap;
   traceConfigStorage: Storage;
 
-  @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
-  @ViewChild(CollectTracesComponent) collectTracesComponent?: UploadTracesComponent;
+  @ViewChild(UploadTracesComponent)
+  uploadTracesComponent?: UploadTracesComponent;
+  @ViewChild(CollectTracesComponent)
+  collectTracesComponent?: UploadTracesComponent;
   @ViewChild(TraceViewComponent) traceViewComponent?: TraceViewComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
@@ -336,7 +344,7 @@ export class AppComponent implements WinscopeEventListener {
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
     @Inject(SnackBarOpener) snackBar: SnackBarOpener,
     @Inject(Title) private pageTitle: Title,
-    @Inject(NgZone) private ngZone: NgZone
+    @Inject(NgZone) private ngZone: NgZone,
   ) {
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
@@ -348,68 +356,73 @@ export class AppComponent implements WinscopeEventListener {
       this.crossToolProtocol,
       this,
       this.snackbarOpener,
-      localStorage
+      localStorage,
     );
 
     const storeDarkMode = this.store.get('dark-mode');
-    const prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
-    this.setDarkMode(storeDarkMode ? storeDarkMode === 'true' : prefersDarkQuery.matches);
+    const prefersDarkQuery = window.matchMedia?.(
+      '(prefers-color-scheme: dark)',
+    );
+    this.setDarkMode(
+      storeDarkMode ? storeDarkMode === 'true' : prefersDarkQuery.matches,
+    );
 
     if (!customElements.get('viewer-input-method')) {
       customElements.define(
         'viewer-input-method',
-        createCustomElement(ViewerInputMethodComponent, {injector})
+        createCustomElement(ViewerInputMethodComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-protolog')) {
       customElements.define(
         'viewer-protolog',
-        createCustomElement(ViewerProtologComponent, {injector})
+        createCustomElement(ViewerProtologComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-screen-recording')) {
       customElements.define(
         'viewer-screen-recording',
-        createCustomElement(ViewerScreenRecordingComponent, {injector})
+        createCustomElement(ViewerScreenRecordingComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-surface-flinger')) {
       customElements.define(
         'viewer-surface-flinger',
-        createCustomElement(ViewerSurfaceFlingerComponent, {injector})
+        createCustomElement(ViewerSurfaceFlingerComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-transactions')) {
       customElements.define(
         'viewer-transactions',
-        createCustomElement(ViewerTransactionsComponent, {injector})
+        createCustomElement(ViewerTransactionsComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-window-manager')) {
       customElements.define(
         'viewer-window-manager',
-        createCustomElement(ViewerWindowManagerComponent, {injector})
+        createCustomElement(ViewerWindowManagerComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-transitions')) {
       customElements.define(
         'viewer-transitions',
-        createCustomElement(ViewerTransitionsComponent, {injector})
+        createCustomElement(ViewerTransitionsComponent, {injector}),
       );
     }
     if (!customElements.get('viewer-view-capture')) {
       customElements.define(
         'viewer-view-capture',
-        createCustomElement(ViewerViewCaptureComponent, {injector})
+        createCustomElement(ViewerViewCaptureComponent, {injector}),
       );
     }
 
-    this.traceConfigStorage = globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+    this.traceConfigStorage =
+      globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
 
     this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
       TRACES['default'],
-      this.traceConfigStorage
+      this.traceConfigStorage,
     );
     this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'DumpSettings',
@@ -433,7 +446,7 @@ export class AppComponent implements WinscopeEventListener {
           config: undefined,
         },
       },
-      this.traceConfigStorage
+      this.traceConfigStorage,
     );
   }
 
@@ -500,7 +513,8 @@ export class AppComponent implements WinscopeEventListener {
   }
 
   async downloadTraces() {
-    const archiveBlob = await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
+    const archiveBlob =
+      await this.tracePipeline.makeZipArchiveWithLoadedTraceFiles();
     const archiveFilename = `${this.filenameFormControl.value}.zip`;
 
     const a = document.createElement('a');
@@ -517,12 +531,16 @@ export class AppComponent implements WinscopeEventListener {
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
       this.activeView = event.newFocusedView;
       this.activeTrace = this.getActiveTrace(event.newFocusedView);
-      this.activeTraceFileInfo = this.makeActiveTraceFileInfo(event.newFocusedView);
+      this.activeTraceFileInfo = this.makeActiveTraceFileInfo(
+        event.newFocusedView,
+      );
     });
 
     await event.visit(WinscopeEventType.VIEWERS_LOADED, async (event) => {
       this.viewers = event.viewers;
-      this.filenameFormControl.setValue(this.tracePipeline.getDownloadArchiveFilename());
+      this.filenameFormControl.setValue(
+        this.tracePipeline.getDownloadArchiveFilename(),
+      );
       this.pageTitle.setTitle(`Winscope | ${this.filenameFormControl.value}`);
       this.isEditingFilename = false;
 

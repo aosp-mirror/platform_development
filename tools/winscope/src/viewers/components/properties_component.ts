@@ -165,7 +165,9 @@ export class PropertiesComponent {
   }
 
   itemIsSelected() {
-    return this.curatedProperties && Object.keys(this.curatedProperties).length > 0;
+    return (
+      this.curatedProperties && Object.keys(this.curatedProperties).length > 0
+    );
   }
 
   showViewCaptureFormat(): boolean {

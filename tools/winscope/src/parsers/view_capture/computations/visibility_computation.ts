@@ -39,14 +39,17 @@ export class VisibilityComputation implements Computation {
         assertDefined(node.getEagerPropertyByName('visibility')).getValue() ===
           VisibilityComputation.VISIBLE &&
         (node.isRoot() ||
-          node.getZParent()?.getEagerPropertyByName('isComputedVisible')?.getValue());
+          node
+            .getZParent()
+            ?.getEagerPropertyByName('isComputedVisible')
+            ?.getValue());
 
       node.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           node.id,
           'isComputedVisible',
-          isVisible
-        )
+          isVisible,
+        ),
       );
     });
   }

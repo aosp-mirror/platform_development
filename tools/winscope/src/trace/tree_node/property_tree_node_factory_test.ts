@@ -15,7 +15,10 @@
  */
 
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {PropertySource, PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {PropertyTreeNodeFactory} from './property_tree_node_factory';
 
 describe('PropertyTreeNodeFactory', () => {
@@ -30,13 +33,13 @@ describe('PropertyTreeNodeFactory', () => {
       '1 rootName',
       'rootName',
       PropertySource.PROTO,
-      undefined
+      undefined,
     );
     const expectedNode = new PropertyTreeNode(
       '1 rootName',
       'rootName',
       PropertySource.PROTO,
-      undefined
+      undefined,
     );
     expect(node).toEqual(expectedNode);
   });
@@ -81,7 +84,11 @@ describe('PropertyTreeNodeFactory', () => {
   });
 
   it('makes node with bigint value', () => {
-    const node = factory.makeProtoProperty('1 rootName', 'bigIntProp', BigInt(123));
+    const node = factory.makeProtoProperty(
+      '1 rootName',
+      'bigIntProp',
+      BigInt(123),
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -95,7 +102,11 @@ describe('PropertyTreeNodeFactory', () => {
 
   it('makes simple properties nested in object', () => {
     const nestedProperty = {size: 3, isPresent: false};
-    const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
+    const node = factory.makeProtoProperty(
+      '1 rootName',
+      'nestedProperty',
+      nestedProperty,
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -112,7 +123,11 @@ describe('PropertyTreeNodeFactory', () => {
 
   it('makes simple properties nested in array', () => {
     const nestedProperty = [1, 2, 3];
-    const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
+    const node = factory.makeProtoProperty(
+      '1 rootName',
+      'nestedProperty',
+      nestedProperty,
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -130,7 +145,11 @@ describe('PropertyTreeNodeFactory', () => {
 
   it('makes object properties nested in array', () => {
     const nestedProperty = [{width: 4, height: 8}];
-    const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
+    const node = factory.makeProtoProperty(
+      '1 rootName',
+      'nestedProperty',
+      nestedProperty,
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -153,7 +172,11 @@ describe('PropertyTreeNodeFactory', () => {
 
   it('makes array properties nested in array', () => {
     const nestedProperty = [[44, 88]];
-    const node = factory.makeProtoProperty('1 rootName', 'nestedProperty', nestedProperty);
+    const node = factory.makeProtoProperty(
+      '1 rootName',
+      'nestedProperty',
+      nestedProperty,
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -175,7 +198,11 @@ describe('PropertyTreeNodeFactory', () => {
   });
 
   it('makes simple calculated property', () => {
-    const node = factory.makeCalculatedProperty('1 rootName', 'isVisible', true);
+    const node = factory.makeCalculatedProperty(
+      '1 rootName',
+      'isVisible',
+      true,
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')
@@ -188,7 +215,11 @@ describe('PropertyTreeNodeFactory', () => {
   });
 
   it('makes nested calculated property', () => {
-    const node = factory.makeCalculatedProperty('1 rootName', 'zOrderPath', [0, 1, 2]);
+    const node = factory.makeCalculatedProperty(
+      '1 rootName',
+      'zOrderPath',
+      [0, 1, 2],
+    );
 
     const expectedNode = new PropertyTreeBuilder()
       .setRootId('1 rootName')

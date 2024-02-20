@@ -23,8 +23,10 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 class RectWmFactory {
   makeDisplayRect(display: HierarchyTreeNode, absoluteZ: number): TraceRect {
     const displayInfo = display.getEagerPropertyByName('displayInfo');
-    const displayRectWidth = displayInfo?.getChildByName('logicalWidth')?.getValue() ?? 0;
-    const displayRectHeight = displayInfo?.getChildByName('logicalHeight')?.getValue() ?? 0;
+    const displayRectWidth =
+      displayInfo?.getChildByName('logicalWidth')?.getValue() ?? 0;
+    const displayRectHeight =
+      displayInfo?.getChildByName('logicalHeight')?.getValue() ?? 0;
 
     return new TraceRectBuilder()
       .setX(0)
@@ -34,7 +36,9 @@ class RectWmFactory {
       .setId(display.id)
       .setName(`Display - ${display.name}`)
       .setCornerRadius(0)
-      .setGroupId(assertDefined(display.getEagerPropertyByName('id')).getValue())
+      .setGroupId(
+        assertDefined(display.getEagerPropertyByName('id')).getValue(),
+      )
       .setIsVisible(false)
       .setIsDisplay(true)
       .setIsVirtual(false)
@@ -42,15 +46,22 @@ class RectWmFactory {
       .build();
   }
 
-  makeWindowStateRect(container: HierarchyTreeNode, absoluteZ: number): TraceRect | undefined {
+  makeWindowStateRect(
+    container: HierarchyTreeNode,
+    absoluteZ: number,
+  ): TraceRect | undefined {
     const displayId = container.getEagerPropertyByName('displayId')?.getValue();
     if (displayId === undefined) {
       return undefined;
     }
 
-    const isVisible = container.getEagerPropertyByName('isComputedVisible')?.getValue() ?? false;
+    const isVisible =
+      container.getEagerPropertyByName('isComputedVisible')?.getValue() ??
+      false;
 
-    const frame = container.getEagerPropertyByName('windowFrames')?.getChildByName('frame');
+    const frame = container
+      .getEagerPropertyByName('windowFrames')
+      ?.getChildByName('frame');
     if (frame === undefined || frame.getAllChildren().length === 0) {
       return undefined;
     }
@@ -100,7 +111,10 @@ export class RectsComputation implements Computation {
         child.forEachNodeDfs((container) => {
           if (!container.id.startsWith('WindowState ')) return;
 
-          const rect = this.rectsFactory.makeWindowStateRect(container, absoluteZ);
+          const rect = this.rectsFactory.makeWindowStateRect(
+            container,
+            absoluteZ,
+          );
           if (!rect) {
             return;
           }

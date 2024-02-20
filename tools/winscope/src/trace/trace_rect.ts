@@ -32,7 +32,7 @@ export class TraceRect extends Rect implements Item {
     readonly isVisible: boolean,
     readonly isDisplay: boolean,
     readonly isVirtual: boolean,
-    readonly depth: number
+    readonly depth: number,
   ) {
     super(x, y, w, h);
   }

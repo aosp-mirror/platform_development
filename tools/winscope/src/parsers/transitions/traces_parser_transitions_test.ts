@@ -38,7 +38,9 @@ describe('ParserTransitions', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
     const expected = [
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
@@ -65,15 +67,21 @@ describe('ParserTransitions', () => {
         'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
         'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
       ],
-      true
+      true,
     )) as Parser<PropertyTreeNode>;
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.TRANSITION);
 
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)
-    );
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627957362976n)
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n));
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627957362976n),
     );
   });
 });

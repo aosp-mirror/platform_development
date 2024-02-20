@@ -26,7 +26,7 @@ describe('ParserSurfaceFlingerDump', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb'
+        'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 
@@ -47,14 +47,20 @@ describe('ParserSurfaceFlingerDump', () => {
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
-        true
+        true,
       )) as Parser<HierarchyTreeNode>;
 
-      const expectedElapsed = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
-      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).toEqual(expectedElapsed);
+      const expectedElapsed = [
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
+      ];
+      expect(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      ).toEqual(expectedElapsed);
 
       const expectedReal = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
-      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).toEqual(expectedReal);
+      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).toEqual(
+        expectedReal,
+      );
     });
 
     it('retrieves trace entry', async () => {
@@ -68,7 +74,7 @@ describe('ParserSurfaceFlingerDump', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/dump_SurfaceFlinger.pb'
+        'traces/elapsed_timestamp/dump_SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 

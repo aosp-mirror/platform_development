@@ -23,7 +23,10 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {DEFAULT_PROPERTY_FORMATTER, TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {
+  DEFAULT_PROPERTY_FORMATTER,
+  TIMESTAMP_FORMATTER,
+} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataMessage} from './ui_data';
@@ -51,10 +54,22 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text0', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: elapsedTime10, formatter: TIMESTAMP_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime10,
+            formatter: TIMESTAMP_FORMATTER,
+          },
           {name: 'tag', value: 'tag0', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'level', value: 'level0', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'at', value: 'sourcefile0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level0',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile0',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
         ])
         .build(),
 
@@ -63,10 +78,22 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text1', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: elapsedTime20, formatter: TIMESTAMP_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime20,
+            formatter: TIMESTAMP_FORMATTER,
+          },
           {name: 'tag', value: 'tag1', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'level', value: 'level1', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'at', value: 'sourcefile1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level1',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile1',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
         ])
         .build(),
 
@@ -75,10 +102,22 @@ describe('ViewerProtoLogPresenter', () => {
         .setName('message')
         .setChildren([
           {name: 'text', value: 'text2', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'timestamp', value: elapsedTime30, formatter: TIMESTAMP_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime30,
+            formatter: TIMESTAMP_FORMATTER,
+          },
           {name: 'tag', value: 'tag2', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'level', value: 'level2', formatter: DEFAULT_PROPERTY_FORMATTER},
-          {name: 'at', value: 'sourcefile2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level2',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile2',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
         ])
         .build(),
     ];
@@ -130,7 +169,9 @@ describe('ViewerProtoLogPresenter', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder().setEntries(TraceType.PROTO_LOG, []).build();
+    const traces = new TracesBuilder()
+      .setEntries(TraceType.PROTO_LOG, [])
+      .build();
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
@@ -146,8 +187,16 @@ describe('ViewerProtoLogPresenter', () => {
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate10);
 
-    expect(assertDefined(outputUiData).allLogLevels).toEqual(['level0', 'level1', 'level2']);
-    expect(assertDefined(outputUiData).allTags).toEqual(['tag0', 'tag1', 'tag2']);
+    expect(assertDefined(outputUiData).allLogLevels).toEqual([
+      'level0',
+      'level1',
+      'level2',
+    ]);
+    expect(assertDefined(outputUiData).allTags).toEqual([
+      'tag0',
+      'tag1',
+      'tag2',
+    ]);
     expect(assertDefined(outputUiData).allSourceFiles).toEqual([
       'sourcefile0',
       'sourcefile1',
@@ -192,7 +241,11 @@ describe('ViewerProtoLogPresenter', () => {
     presenter.onSourceFilesFilterChanged(['sourcefile1']);
     expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
 
-    presenter.onSourceFilesFilterChanged(['sourcefile0', 'sourcefile1', 'sourcefile2']);
+    presenter.onSourceFilesFilterChanged([
+      'sourcefile0',
+      'sourcefile1',
+      'sourcefile2',
+    ]);
     expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
   });
 

@@ -27,7 +27,9 @@ class RectSfFactory {
     const nameCounts = new Map<string, number>();
     return displays.map((display, index) => {
       const size = display.getChildByName('size');
-      const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
+      const layerStack = assertDefined(
+        display.getChildByName('layerStack'),
+      ).getValue();
       let displayName = display.getChildByName('name')?.getValue() ?? '';
       const id = assertDefined(display.getChildByName('id')).getValue();
 
@@ -57,26 +59,45 @@ class RectSfFactory {
     });
   }
 
-  makeLayerRect(layer: HierarchyTreeNode, layerStack: number, absoluteZ: number): TraceRect {
-    const isVisible = assertDefined(layer.getEagerPropertyByName('isComputedVisible')).getValue();
+  makeLayerRect(
+    layer: HierarchyTreeNode,
+    layerStack: number,
+    absoluteZ: number,
+  ): TraceRect {
+    const isVisible = assertDefined(
+      layer.getEagerPropertyByName('isComputedVisible'),
+    ).getValue();
 
     const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
 
     const name = assertDefined(layer.getEagerPropertyByName('name')).getValue();
     const boundsLeft = assertDefined(bounds.getChildByName('left')).getValue();
     const boundsTop = assertDefined(bounds.getChildByName('top')).getValue();
-    const boundsRight = assertDefined(bounds.getChildByName('right')).getValue();
-    const boundsBottom = assertDefined(bounds.getChildByName('bottom')).getValue();
+    const boundsRight = assertDefined(
+      bounds.getChildByName('right'),
+    ).getValue();
+    const boundsBottom = assertDefined(
+      bounds.getChildByName('bottom'),
+    ).getValue();
 
     return new TraceRectBuilder()
       .setX(boundsLeft)
       .setY(boundsTop)
       .setWidth(boundsRight - boundsLeft)
       .setHeight(boundsBottom - boundsTop)
-      .setId(`${assertDefined(layer.getEagerPropertyByName('id')).getValue()} ${name}`)
+      .setId(
+        `${assertDefined(
+          layer.getEagerPropertyByName('id'),
+        ).getValue()} ${name}`,
+      )
       .setName(name)
-      .setCornerRadius(layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0)
-      .setTransform(Transform.from(assertDefined(layer.getEagerPropertyByName('transform'))).matrix)
+      .setCornerRadius(
+        layer.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0,
+      )
+      .setTransform(
+        Transform.from(assertDefined(layer.getEagerPropertyByName('transform')))
+          .matrix,
+      )
       .setGroupId(layerStack)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
@@ -101,39 +122,55 @@ export class RectsComputation implements Computation {
     }
     const groupIdToAbsoluteZ = new Map<number, number>();
 
-    const displays = this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
+    const displays =
+      this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
     const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
 
-    displayRects.forEach((displayRect) => groupIdToAbsoluteZ.set(displayRect.groupId, 1));
+    displayRects.forEach((displayRect) =>
+      groupIdToAbsoluteZ.set(displayRect.groupId, 1),
+    );
 
     const layersWithRects = this.extractLayersWithRects(this.root);
     layersWithRects.sort(this.compareLayerZ);
 
     for (let i = layersWithRects.length - 1; i > -1; i--) {
       const layer = layersWithRects[i];
-      const layerStack = assertDefined(layer.getEagerPropertyByName('layerStack')).getValue();
+      const layerStack = assertDefined(
+        layer.getEagerPropertyByName('layerStack'),
+      ).getValue();
       const absoluteZ = groupIdToAbsoluteZ.get(layerStack) ?? 0;
-      const rect = this.rectsFactory.makeLayerRect(layer, layerStack, absoluteZ);
+      const rect = this.rectsFactory.makeLayerRect(
+        layer,
+        layerStack,
+        absoluteZ,
+      );
       layer.setRects([rect]);
       groupIdToAbsoluteZ.set(layerStack, absoluteZ + 1);
     }
   }
 
-  private extractLayersWithRects(hierarchyRoot: HierarchyTreeNode): HierarchyTreeNode[] {
+  private extractLayersWithRects(
+    hierarchyRoot: HierarchyTreeNode,
+  ): HierarchyTreeNode[] {
     return hierarchyRoot.filterDfs(this.hasLayerRect);
   }
 
   private hasLayerRect(node: HierarchyTreeNode): boolean {
     if (node.isRoot()) return false;
 
-    const isVisible = node.getEagerPropertyByName('isComputedVisible')?.getValue();
+    const isVisible = node
+      .getEagerPropertyByName('isComputedVisible')
+      ?.getValue();
     if (isVisible === undefined) {
       throw Error('Visibility has not been computed');
     }
 
     const occludedBy = node.getEagerPropertyByName('occludedBy');
-    if (!isVisible && (occludedBy === undefined || occludedBy.getAllChildren().length === 0)) {
+    if (
+      !isVisible &&
+      (occludedBy === undefined || occludedBy.getAllChildren().length === 0)
+    ) {
       return false;
     }
 
@@ -144,10 +181,14 @@ export class RectsComputation implements Computation {
   }
 
   private compareLayerZ(a: HierarchyTreeNode, b: HierarchyTreeNode): number {
-    const aZOrderPath: number[] = assertDefined(a.getEagerPropertyByName('zOrderPath'))
+    const aZOrderPath: number[] = assertDefined(
+      a.getEagerPropertyByName('zOrderPath'),
+    )
       .getAllChildren()
       .map((child) => child.getValue());
-    const bZOrderPath: number[] = assertDefined(b.getEagerPropertyByName('zOrderPath'))
+    const bZOrderPath: number[] = assertDefined(
+      b.getEagerPropertyByName('zOrderPath'),
+    )
       .getAllChildren()
       .map((child) => child.getValue());
 

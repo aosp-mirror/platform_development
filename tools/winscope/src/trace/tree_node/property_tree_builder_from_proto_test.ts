@@ -22,7 +22,9 @@ describe('PropertyTreeBuilderFromProto', () => {
   let builder: PropertyTreeBuilderFromProto;
 
   beforeEach(() => {
-    builder = new PropertyTreeBuilderFromProto().setRootId(1).setRootName('rootName');
+    builder = new PropertyTreeBuilderFromProto()
+      .setRootId(1)
+      .setRootName('rootName');
   });
 
   it('handle string and integer properties correctly', () => {
@@ -226,7 +228,10 @@ describe('PropertyTreeBuilderFromProto', () => {
       timestamp: BigInt(123),
     };
 
-    const tree = builder.setData(proto).setDenyList(['children', 'timestamp']).build();
+    const tree = builder
+      .setData(proto)
+      .setDenyList(['children', 'timestamp'])
+      .build();
     expect(tree.getAllChildren().length).toEqual(2);
 
     expect(tree.getChildByName('id')).toBeDefined();

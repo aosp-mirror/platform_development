@@ -21,8 +21,12 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddCompositionType extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
-    const hwcCompositionType = value.getChildByName('hwcCompositionType')?.getValue();
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
+    const hwcCompositionType = value
+      .getChildByName('hwcCompositionType')
+      ?.getValue();
     let compositionType: LayerCompositionType | undefined;
 
     // must check both enum and string values due to SF perfetto dumps giving translated proto values
@@ -38,20 +42,26 @@ export class AddCompositionType extends AddOperation<PropertyTreeNode> {
           DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
             value.id,
             'compositionType',
-            compositionType
+            compositionType,
           ),
         ];
   }
 
   private readonly gpuLayerCompositionTypes = [
     perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT,
-    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT],
+    perfetto.protos.HwcCompositionType[
+      perfetto.protos.HwcCompositionType.HWC_TYPE_CLIENT
+    ],
   ];
 
   private readonly hwcLayerCompositionTypes = [
     perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE,
-    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE],
+    perfetto.protos.HwcCompositionType[
+      perfetto.protos.HwcCompositionType.HWC_TYPE_DEVICE
+    ],
     perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR,
-    perfetto.protos.HwcCompositionType[perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR],
+    perfetto.protos.HwcCompositionType[
+      perfetto.protos.HwcCompositionType.HWC_TYPE_SOLID_COLOR
+    ],
   ];
 }

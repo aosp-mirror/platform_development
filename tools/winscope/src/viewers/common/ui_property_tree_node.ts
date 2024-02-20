@@ -29,15 +29,19 @@ export class UiPropertyTreeNode extends PropertyTreeNode implements DiffNode {
       node.id,
       node.name,
       node.source,
-      (node as UiPropertyTreeNode).value
+      (node as UiPropertyTreeNode).value,
     );
     if ((node as UiPropertyTreeNode).formatter) {
-      displayNode.setFormatter(assertDefined((node as UiPropertyTreeNode).formatter));
+      displayNode.setFormatter(
+        assertDefined((node as UiPropertyTreeNode).formatter),
+      );
     }
 
     displayNode.setIsRoot(node.isRoot());
 
-    const children = [...node.getAllChildren()].sort((a, b) => (a.name < b.name ? -1 : 1));
+    const children = [...node.getAllChildren()].sort((a, b) =>
+      a.name < b.name ? -1 : 1,
+    );
 
     children.forEach((child) => {
       displayNode.addOrReplaceChild(UiPropertyTreeNode.from(child));

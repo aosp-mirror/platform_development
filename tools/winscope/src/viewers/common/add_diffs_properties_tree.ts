@@ -27,9 +27,11 @@ export class AddDiffsPropertiesTree extends AddDiffs<UiPropertyTreeNode> {
 
   protected override processModifiedNodes(
     newNode: UiPropertyTreeNode,
-    oldNode: UiPropertyTreeNode
+    oldNode: UiPropertyTreeNode,
   ): void {
     newNode.setDiff(DiffType.MODIFIED);
-    newNode.setOldValue(oldNode.formattedValue() !== '' ? oldNode.formattedValue() : 'null');
+    newNode.setOldValue(
+      oldNode.formattedValue() !== '' ? oldNode.formattedValue() : 'null',
+    );
   }
 }

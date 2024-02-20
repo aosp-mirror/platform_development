@@ -33,7 +33,7 @@ describe('ParserSurfaceFlinger', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
       trace = new TraceBuilder<HierarchyTreeNode>()
         .setType(TraceType.SURFACE_FLINGER)
@@ -51,9 +51,9 @@ describe('ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
       ];
-      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)).toEqual(
-        expected
-      );
+      expect(
+        assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
+      ).toEqual(expected);
     });
 
     it('provides real timestamps', () => {
@@ -62,15 +62,19 @@ describe('ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
       ];
-      expect(assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3)).toEqual(expected);
+      expect(
+        assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
+      ).toEqual(expected);
     });
 
     it('applies timezone info to real timestamps only', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        true
+        true,
       )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.SURFACE_FLINGER,
+      );
 
       const expectedElapsed = [
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
@@ -78,7 +82,9 @@ describe('ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
       ];
       expect(
-        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        ).slice(0, 3),
       ).toEqual(expectedElapsed);
 
       const expectedReal = [
@@ -87,7 +93,9 @@ describe('ParserSurfaceFlinger', () => {
         NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126890005226366n),
       ];
       expect(
-        assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+        ).slice(0, 3),
       ).toEqual(expectedReal);
     });
 
@@ -101,41 +109,57 @@ describe('ParserSurfaceFlinger', () => {
       const entry = await parser.getEntry(0, TimestampType.REAL);
       {
         const layer = assertDefined(
-          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27'))
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27')),
         );
         expect(layer.name).toEqual('Leaf:24:25#27');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('0');
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('0');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('');
       }
       {
-        const layer = assertDefined(entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')));
+        const layer = assertDefined(
+          entry.findDfs(UiTreeUtils.makeIdMatchFilter('48 Task=4#48')),
+        );
         expect(layer.name).toEqual('Task=4#48');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual('1');
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('1');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('HIDDEN (0x1)');
       }
       {
         const layer = assertDefined(
-          entry.findDfs(UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'))
+          entry.findDfs(
+            UiTreeUtils.makeIdMatchFilter('77 Wallpaper BBQ wrapper#77'),
+          ),
         );
         expect(layer.name).toEqual('Wallpaper BBQ wrapper#77');
 
-        expect(assertDefined(layer.getEagerPropertyByName('flags')).formattedValue()).toEqual(
-          '256'
-        );
         expect(
-          assertDefined(layer.getEagerPropertyByName('verboseFlags')).formattedValue()
+          assertDefined(layer.getEagerPropertyByName('flags')).formattedValue(),
+        ).toEqual('256');
+        expect(
+          assertDefined(
+            layer.getEagerPropertyByName('verboseFlags'),
+          ).formattedValue(),
         ).toEqual('ENABLE_BACKPRESSURE (0x100)');
       }
     });
 
     it('supports VSYNCID custom query', async () => {
-      const entries = await trace.sliceEntries(0, 3).customQuery(CustomQueryType.VSYNCID);
+      const entries = await trace
+        .sliceEntries(0, 3)
+        .customQuery(CustomQueryType.VSYNCID);
       const values = entries.map((entry) => entry.getValue());
       expect(values).toEqual([4891n, 5235n, 5748n]);
     });
@@ -144,13 +168,16 @@ describe('ParserSurfaceFlinger', () => {
       const idAndNames = await trace
         .sliceEntries(0, 1)
         .customQuery(CustomQueryType.SF_LAYERS_ID_AND_NAME);
-      expect(idAndNames).toContain({id: 4, name: 'WindowedMagnification:0:31#4'});
+      expect(idAndNames).toContain({
+        id: 4,
+        name: 'WindowedMagnification:0:31#4',
+      });
       expect(idAndNames).toContain({id: 5, name: 'HideDisplayCutout:0:14#5'});
     });
 
     it('is robust to duplicated layer ids', async () => {
       const parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb'
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
       )) as Parser<HierarchyTreeNode>;
       const entry = await parser.getEntry(0, TimestampType.REAL);
       expect(entry).toBeTruthy();
@@ -158,23 +185,25 @@ describe('ParserSurfaceFlinger', () => {
       const layer = assertDefined(
         entry.findDfs(
           UiTreeUtils.makeIdMatchFilter(
-            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)'
-          )
-        )
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror)',
+          ),
+        ),
       );
-      expect(layer.name).toEqual('Input Consumer recents_animation_input_consumer#408(Mirror)');
+      expect(layer.name).toEqual(
+        'Input Consumer recents_animation_input_consumer#408(Mirror)',
+      );
       expect(layer.getAllChildren().length).toEqual(0);
 
       const dupLayer = assertDefined(
         entry.findDfs(
           UiTreeUtils.makeIdMatchFilter(
-            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
-          )
-        )
+            '-2147483595 Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
+          ),
+        ),
       );
 
       expect(dupLayer.name).toEqual(
-        'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)'
+        'Input Consumer recents_animation_input_consumer#408(Mirror) duplicate(1)',
       );
       expect(dupLayer.getAllChildren().length).toEqual(0);
     });
@@ -185,7 +214,7 @@ describe('ParserSurfaceFlinger', () => {
 
     beforeAll(async () => {
       parser = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/SurfaceFlinger.pb'
+        'traces/elapsed_timestamp/SurfaceFlinger.pb',
       )) as Parser<HierarchyTreeNode>;
     });
 
@@ -194,9 +223,9 @@ describe('ParserSurfaceFlinger', () => {
     });
 
     it('provides elapsed timestamps', () => {
-      expect(assertDefined(parser.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n)
-      );
+      expect(
+        assertDefined(parser.getTimestamps(TimestampType.ELAPSED))[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n));
     });
 
     it("doesn't provide real timestamps", () => {
@@ -206,13 +235,17 @@ describe('ParserSurfaceFlinger', () => {
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_timestamp/SurfaceFlinger.pb',
-        true
+        true,
       )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
-
-      expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n)
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.SURFACE_FLINGER,
       );
+
+      expect(
+        assertDefined(
+          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+        )[0],
+      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n));
     });
 
     it('provides correct root entry node', async () => {

@@ -68,7 +68,10 @@ describe('DefaultTimelineRowComponent', () => {
   it('can draw entries', async () => {
     setTraceAndSelectionRange(10n, 110n);
 
-    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect').and.callThrough();
+    const drawRectSpy = spyOn(
+      component.canvasDrawer,
+      'drawRect',
+    ).and.callThrough();
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
@@ -82,21 +85,25 @@ describe('DefaultTimelineRowComponent', () => {
     const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(4);
-    expect(drawRectSpy).toHaveBeenCalledWith(new Rect(0, 0, width, height), component.color, alpha);
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      new Rect(0, 0, width, height),
+      component.color,
+      alpha,
+    );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(Math.floor((canvasWidth * 2) / 100), 0, width, height),
       component.color,
-      alpha
+      alpha,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(Math.floor((canvasWidth * 5) / 100), 0, width, height),
       component.color,
-      alpha
+      alpha,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(Math.floor((canvasWidth * 60) / 100), 0, width, height),
       component.color,
-      alpha
+      alpha,
     );
   });
 
@@ -120,7 +127,7 @@ describe('DefaultTimelineRowComponent', () => {
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(Math.floor((canvasWidth * 10) / 25), 0, width, height),
       component.color,
-      alpha
+      alpha,
     );
   });
 
@@ -130,10 +137,19 @@ describe('DefaultTimelineRowComponent', () => {
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect').and.callThrough();
-    const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder').and.callThrough();
+    const drawRectSpy = spyOn(
+      component.canvasDrawer,
+      'drawRect',
+    ).and.callThrough();
+    const drawRectBorderSpy = spyOn(
+      component.canvasDrawer,
+      'drawRectBorder',
+    ).and.callThrough();
 
-    const waitPromises = [waitToBeCalled(drawRectBorderSpy, 1), waitToBeCalled(drawRectSpy, 1)];
+    const waitPromises = [
+      waitToBeCalled(drawRectBorderSpy, 1),
+      waitToBeCalled(drawRectSpy, 1),
+    ];
 
     component.handleMouseMove({
       offsetX: 5,
@@ -149,7 +165,11 @@ describe('DefaultTimelineRowComponent', () => {
 
     expect(assertDefined(component.hoveringEntry).getValueNs()).toBe(10n);
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(new Rect(0, 0, 32, 32), component.color, 1.0);
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      new Rect(0, 0, 32, 32),
+      component.color,
+      1.0,
+    );
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
     expect(drawRectBorderSpy).toHaveBeenCalledWith(new Rect(0, 0, 32, 32));
@@ -171,7 +191,9 @@ describe('DefaultTimelineRowComponent', () => {
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const canvasWidth = Math.floor(
+      component.canvasDrawer.getScaledCanvasWidth() - 32,
+    );
     const entryPos = Math.floor((canvasWidth * 5) / 100);
 
     // 9 rect draws - 4 entry rects present + 4 for redraw + 1 for selected entry
@@ -184,7 +206,9 @@ describe('DefaultTimelineRowComponent', () => {
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const canvasWidth = Math.floor(
+      component.canvasDrawer.getScaledCanvasWidth() - 32,
+    );
     const entryPos = Math.floor((canvasWidth * 2) / 5);
 
     // 5 rect draws - 2 entry rects present + 2 for redraw + 1 for selected entry
@@ -197,7 +221,9 @@ describe('DefaultTimelineRowComponent', () => {
     fixture.detectChanges();
     await fixture.whenRenderingDone();
 
-    const canvasWidth = Math.floor(component.canvasDrawer.getScaledCanvasWidth() - 32);
+    const canvasWidth = Math.floor(
+      component.canvasDrawer.getScaledCanvasWidth() - 32,
+    );
     const entryPos = Math.floor((canvasWidth * 10) / 20);
 
     // 3 rect draws - 1 entry rects present + 1 for redraw + 1 for selected entry
@@ -224,10 +250,16 @@ describe('DefaultTimelineRowComponent', () => {
   async function drawCorrectEntryOnClick(
     xPos: number,
     expectedTimestampNs: bigint,
-    rectSpyCalls: number
+    rectSpyCalls: number,
   ) {
-    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect').and.callThrough();
-    const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder').and.callThrough();
+    const drawRectSpy = spyOn(
+      component.canvasDrawer,
+      'drawRect',
+    ).and.callThrough();
+    const drawRectBorderSpy = spyOn(
+      component.canvasDrawer,
+      'drawRectBorder',
+    ).and.callThrough();
 
     const waitPromises = [
       waitToBeCalled(drawRectSpy, rectSpyCalls),
@@ -246,14 +278,18 @@ describe('DefaultTimelineRowComponent', () => {
 
     await Promise.all(waitPromises);
 
-    expect(assertDefined(component.selectedEntry).getTimestamp().getValueNs()).toBe(
-      expectedTimestampNs
-    );
+    expect(
+      assertDefined(component.selectedEntry).getTimestamp().getValueNs(),
+    ).toBe(expectedTimestampNs);
 
     const expectedRect = new Rect(xPos + 1, 1, 30, 30);
 
     expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
-    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1.0);
+    expect(drawRectSpy).toHaveBeenCalledWith(
+      expectedRect,
+      component.color,
+      1.0,
+    );
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
     expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);

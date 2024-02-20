@@ -25,7 +25,7 @@ export class PropertyTreeNode extends TreeNode {
     id: string,
     name: string,
     readonly source: PropertySource,
-    protected readonly value: any
+    protected readonly value: any,
   ) {
     super(id, name);
   }

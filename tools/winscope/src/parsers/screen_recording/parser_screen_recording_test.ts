@@ -27,7 +27,7 @@ describe('ParserScreenRecording', () => {
   beforeAll(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     )) as Parser<ScreenRecordingTraceEntry>;
   });
 
@@ -36,7 +36,9 @@ describe('ParserScreenRecording', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
 
     expect(timestamps.length).toEqual(123);
 
@@ -64,9 +66,11 @@ describe('ParserScreenRecording', () => {
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
-      true
+      true,
     )) as Parser<ScreenRecordingTraceEntry>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SCREEN_RECORDING);
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.SCREEN_RECORDING,
+    );
 
     const expectedElapsed = [
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(211827840430n),
@@ -74,7 +78,9 @@ describe('ParserScreenRecording', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(211862172430n),
     ];
     expect(
-      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      ).slice(0, 3),
     ).toEqual(expectedElapsed);
 
     const expectedReal = [
@@ -83,7 +89,9 @@ describe('ParserScreenRecording', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1666380848827119045n),
     ];
     expect(
-      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).slice(0, 3)
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      ).slice(0, 3),
     ).toEqual(expectedReal);
   });
 
@@ -94,7 +102,10 @@ describe('ParserScreenRecording', () => {
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
     {
-      const entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.REAL);
+      const entry = await parser.getEntry(
+        parser.getLengthEntries() - 1,
+        TimestampType.REAL,
+      );
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(1.371077, 0.001);
     }

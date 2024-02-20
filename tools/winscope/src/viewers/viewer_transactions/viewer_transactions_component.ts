@@ -260,7 +260,8 @@ class ViewerTransactionsComponent {
   uiData: UiData = UiData.EMPTY;
   private lastClicked = '';
 
-  @ViewChild(CdkVirtualScrollViewport) scrollComponent?: CdkVirtualScrollViewport;
+  @ViewChild(CdkVirtualScrollViewport)
+  scrollComponent?: CdkVirtualScrollViewport;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -270,7 +271,8 @@ class ViewerTransactionsComponent {
     if (
       this.uiData.scrollToIndex !== undefined &&
       this.scrollComponent &&
-      this.lastClicked !== this.uiData.entries[this.uiData.scrollToIndex].time.formattedValue()
+      this.lastClicked !==
+        this.uiData.entries[this.uiData.scrollToIndex].time.formattedValue()
     ) {
       this.scrollComponent.scrollToIndex(this.uiData.scrollToIndex);
     }
@@ -309,10 +311,13 @@ class ViewerTransactionsComponent {
   }
 
   onUserOptionChange() {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.uiData.propertiesUserOptions},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.PropertiesUserOptionsChange,
+      {
+        bubbles: true,
+        detail: {userOptions: this.uiData.propertiesUserOptions},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 

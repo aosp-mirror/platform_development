@@ -81,7 +81,10 @@ describe('UI_RECT_FACTORY', () => {
       .setDepth(1)
       .build();
 
-    const expectedRects: UiRect[] = [expectedlayer1UiRect, expectedLayer2UiRect];
+    const expectedRects: UiRect[] = [
+      expectedlayer1UiRect,
+      expectedLayer2UiRect,
+    ];
 
     expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
   });
@@ -126,11 +129,17 @@ describe('UI_RECT_FACTORY', () => {
       .setDepth(0)
       .build();
 
-    const expectedRects: UiRect[] = [expectedlayer1UiRect, expectedLayer2UiRect];
+    const expectedRects: UiRect[] = [
+      expectedlayer1UiRect,
+      expectedLayer2UiRect,
+    ];
     expect(UI_RECT_FACTORY.makeUiRects(hierarchyRoot)).toEqual(expectedRects);
   });
 
-  function buildRectAndSetToLayerNode(layerNode: HierarchyTreeNode, depth: number) {
+  function buildRectAndSetToLayerNode(
+    layerNode: HierarchyTreeNode,
+    depth: number,
+  ) {
     const rect = new TraceRectBuilder()
       .setX(0)
       .setY(0)

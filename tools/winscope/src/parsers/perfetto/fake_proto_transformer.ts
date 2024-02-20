@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import {TamperedMessageType, TamperedProtoField} from 'parsers/tampered_message_type';
+import {
+  TamperedMessageType,
+  TamperedProtoField,
+} from 'parsers/tampered_message_type';
 import {FakeProto} from './fake_proto_builder';
 
 export class FakeProtoTransformer {
@@ -24,7 +27,10 @@ export class FakeProtoTransformer {
     return this.transformMessageRec(proto, this.rootMessageType);
   }
 
-  private transformFieldRec(proto: FakeProto, field: TamperedProtoField): FakeProto {
+  private transformFieldRec(
+    proto: FakeProto,
+    field: TamperedProtoField,
+  ): FakeProto {
     // Leaf (primitive type)
     if (this.shouldCheckIfPrimitiveLeaf(proto, field)) {
       switch (field.type) {
@@ -82,16 +88,24 @@ export class FakeProtoTransformer {
     return this.transformMessageRec(proto, field.tamperedMessageType);
   }
 
-  private transformMessageRec(proto: FakeProto, messageType: TamperedMessageType): FakeProto {
+  private transformMessageRec(
+    proto: FakeProto,
+    messageType: TamperedMessageType,
+  ): FakeProto {
     for (const childName in messageType.fields) {
-      if (!Object.prototype.hasOwnProperty.call(messageType.fields, childName)) {
+      if (
+        !Object.prototype.hasOwnProperty.call(messageType.fields, childName)
+      ) {
         continue;
       }
       const childField = messageType.fields[childName];
 
       if (Array.isArray(proto[childName])) {
         for (let i = 0; i < proto[childName].length; ++i) {
-          proto[childName][i] = this.transformFieldRec(proto[childName][i], childField);
+          proto[childName][i] = this.transformFieldRec(
+            proto[childName][i],
+            childField,
+          );
         }
       } else {
         proto[childName] = this.transformFieldRec(proto[childName], childField);
@@ -101,7 +115,10 @@ export class FakeProtoTransformer {
     return proto;
   }
 
-  private shouldCheckIfPrimitiveLeaf(proto: FakeProto, field: TamperedProtoField): boolean {
+  private shouldCheckIfPrimitiveLeaf(
+    proto: FakeProto,
+    field: TamperedProtoField,
+  ): boolean {
     return !field.repeated && proto !== null && proto !== undefined;
   }
 

@@ -20,30 +20,40 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
 export class AddStatus extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(value: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    value: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     const wmDataNode = assertDefined(value.getChildByName('wmData'));
     const shellDataNode = assertDefined(value.getChildByName('shellData'));
 
-    const wmAborted = wmDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
-    const shellAborted = shellDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
+    const wmAborted =
+      wmDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() > 0n;
+    const shellAborted =
+      shellDataNode.getChildByName('abortTimeNs')?.getValue()?.getValueNs() >
+      0n;
 
-    const abortedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'aborted',
-      wmAborted || shellAborted
-    );
+    const abortedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'aborted',
+        wmAborted || shellAborted,
+      );
 
-    const mergedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'merged',
-      shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.getValueNs() > 0n
-    );
+    const mergedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'merged',
+        shellDataNode.getChildByName('mergeTimeNs')?.getValue()?.getValueNs() >
+          0n,
+      );
 
-    const playedNode = DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-      value.id,
-      'played',
-      wmDataNode.getChildByName('finishTimeNs')?.getValue()?.getValueNs() > 0n
-    );
+    const playedNode =
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'played',
+        wmDataNode.getChildByName('finishTimeNs')?.getValue()?.getValueNs() >
+          0n,
+      );
 
     return [abortedNode, mergedNode, playedNode];
   }

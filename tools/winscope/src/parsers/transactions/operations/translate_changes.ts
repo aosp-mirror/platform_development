@@ -59,26 +59,26 @@ export class TranslateChanges implements Operation<PropertyTreeNode> {
       translation = this.concatBitsetTokens(
         this.decodeBitset32(
           originalValue.low,
-          android.surfaceflinger.proto.LayerState.ChangesLsb
+          android.surfaceflinger.proto.LayerState.ChangesLsb,
         ).concat(
           this.decodeBitset32(
             originalValue.high,
-            android.surfaceflinger.proto.LayerState.ChangesMsb
-          )
-        )
+            android.surfaceflinger.proto.LayerState.ChangesMsb,
+          ),
+        ),
       );
     } else {
       const bigintValue = BigInt(originalValue?.toString() ?? 0n);
       translation = this.concatBitsetTokens(
         this.decodeBitset32(
           Number(bigintValue),
-          android.surfaceflinger.proto.LayerState.ChangesLsb
+          android.surfaceflinger.proto.LayerState.ChangesLsb,
         ).concat(
           this.decodeBitset32(
             Number(bigintValue >> 32n),
-            android.surfaceflinger.proto.LayerState.ChangesMsb
-          )
-        )
+            android.surfaceflinger.proto.LayerState.ChangesMsb,
+          ),
+        ),
       );
     }
 
@@ -90,13 +90,19 @@ export class TranslateChanges implements Operation<PropertyTreeNode> {
     const originalValue = what.getValue();
 
     const translation = this.concatBitsetTokens(
-      this.decodeBitset32(Number(originalValue), android.surfaceflinger.proto.DisplayState.Changes)
+      this.decodeBitset32(
+        Number(originalValue),
+        android.surfaceflinger.proto.DisplayState.Changes,
+      ),
     );
 
     what.setFormatter(new FixedStringFormatter(translation));
   }
 
-  private decodeBitset32(bitset: number, EnumProto: {[key: number]: string}): string[] {
+  private decodeBitset32(
+    bitset: number,
+    EnumProto: {[key: number]: string},
+  ): string[] {
     const changes = Object.values(EnumProto)
       .filter((key) => {
         if (Number.isNaN(Number(key))) {

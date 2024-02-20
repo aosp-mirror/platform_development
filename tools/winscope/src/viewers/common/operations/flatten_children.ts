@@ -28,7 +28,9 @@ export class FlattenChildren implements Operation<UiHierarchyTreeNode> {
     });
   }
 
-  private extractFlattenedChildren(node: UiHierarchyTreeNode): UiHierarchyTreeNode[] {
+  private extractFlattenedChildren(
+    node: UiHierarchyTreeNode,
+  ): UiHierarchyTreeNode[] {
     const children: UiHierarchyTreeNode[] = [];
     node.getAllChildren().forEach((child) => {
       children.push(child);

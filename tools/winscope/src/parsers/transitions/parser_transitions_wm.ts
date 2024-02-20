@@ -24,7 +24,7 @@ import {ParserTransitionsUtils} from './parser_transitions_utils';
 
 export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
   private static readonly TransitionTraceProto = root.lookupType(
-    'com.android.server.wm.shell.TransitionTraceProto'
+    'com.android.server.wm.shell.TransitionTraceProto',
   );
 
   private realToElapsedTimeOffsetNs: undefined | bigint;
@@ -36,17 +36,21 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
   override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entryProto: com.android.server.wm.shell.ITransition
+    entryProto: com.android.server.wm.shell.ITransition,
   ): PropertyTreeNode {
     return this.makePropertiesTree(timestampType, entryProto);
   }
 
-  override decodeTrace(buffer: Uint8Array): com.android.server.wm.shell.ITransition[] {
+  override decodeTrace(
+    buffer: Uint8Array,
+  ): com.android.server.wm.shell.ITransition[] {
     const decodedProto = ParserTransitionsWm.TransitionTraceProto.decode(
-      buffer
+      buffer,
     ) as unknown as com.android.server.wm.shell.ITransitionTraceProto;
 
-    const timeOffset = BigInt(decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0');
+    const timeOffset = BigInt(
+      decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0',
+    );
     this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
 
     return decodedProto.transitions ?? [];
@@ -58,17 +62,28 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
 
   override getTimestamp(
     type: TimestampType,
-    entry: com.android.server.wm.shell.ITransition
+    entry: com.android.server.wm.shell.ITransition,
   ): undefined | Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-    return this.timestampFactory.makeTimestampFromType(type, 0n, this.realToElapsedTimeOffsetNs);
+    return this.timestampFactory.makeTimestampFromType(
+      type,
+      0n,
+      this.realToElapsedTimeOffsetNs,
+    );
   }
 
-  private validateWmTransitionEntry(entry: com.android.server.wm.shell.ITransition) {
+  private validateWmTransitionEntry(
+    entry: com.android.server.wm.shell.ITransition,
+  ) {
     if (entry.id === 0) {
       throw new Error('Entry need a non null id');
     }
-    if (!entry.createTimeNs && !entry.sendTimeNs && !entry.abortTimeNs && !entry.finishTimeNs) {
+    if (
+      !entry.createTimeNs &&
+      !entry.sendTimeNs &&
+      !entry.abortTimeNs &&
+      !entry.finishTimeNs
+    ) {
       throw new Error('Requires at least one non-null timestamp');
     }
     if (this.realToElapsedTimeOffsetNs === undefined) {
@@ -78,7 +93,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
 
   private makePropertiesTree(
     timestampType: TimestampType,
-    entryProto: com.android.server.wm.shell.ITransition
+    entryProto: com.android.server.wm.shell.ITransition,
   ): PropertyTreeNode {
     this.validateWmTransitionEntry(entryProto);
 
@@ -90,6 +105,9 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
       timestampFactory: this.timestampFactory,
     });
 
-    return ParserTransitionsUtils.makeTransitionPropertiesTree(shellEntryTree, wmEntryTree);
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(
+      shellEntryTree,
+      wmEntryTree,
+    );
   }
 }

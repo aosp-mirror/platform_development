@@ -26,7 +26,7 @@ describe('ParserScreenRecordingLegacy', () => {
 
   beforeAll(async () => {
     parser = (await UnitTestUtils.getParser(
-      'traces/elapsed_timestamp/screen_recording.mp4'
+      'traces/elapsed_timestamp/screen_recording.mp4',
     )) as Parser<ScreenRecordingTraceEntry>;
   });
 
@@ -35,7 +35,9 @@ describe('ParserScreenRecordingLegacy', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
 
     expect(timestamps.length).toEqual(85);
 
@@ -51,7 +53,9 @@ describe('ParserScreenRecordingLegacy', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19448487525000n),
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19448501007000n),
     ];
-    expect(timestamps.slice(timestamps.length - 3, timestamps.length)).toEqual(expected);
+    expect(timestamps.slice(timestamps.length - 3, timestamps.length)).toEqual(
+      expected,
+    );
   });
 
   it("doesn't provide real timestamps", () => {
@@ -61,9 +65,11 @@ describe('ParserScreenRecordingLegacy', () => {
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/elapsed_timestamp/screen_recording.mp4',
-      true
+      true,
     )) as Parser<ScreenRecordingTraceEntry>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.SCREEN_RECORDING);
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.SCREEN_RECORDING,
+    );
 
     const expectedElapsed = [
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446131807000n),
@@ -71,7 +77,9 @@ describe('ParserScreenRecordingLegacy', () => {
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(19446167117000n),
     ];
     expect(
-      assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED)).slice(0, 3)
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      ).slice(0, 3),
     ).toEqual(expectedElapsed);
   });
 
@@ -82,7 +90,10 @@ describe('ParserScreenRecordingLegacy', () => {
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
     {
-      const entry = await parser.getEntry(parser.getLengthEntries() - 1, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(
+        parser.getLengthEntries() - 1,
+        TimestampType.ELAPSED,
+      );
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }

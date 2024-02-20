@@ -29,7 +29,7 @@ describe('ParserWindowManagerDump', () => {
 
   beforeAll(async () => {
     parser = (await UnitTestUtils.getParser(
-      'traces/dump_WindowManager.pb'
+      'traces/dump_WindowManager.pb',
     )) as Parser<HierarchyTreeNode>;
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.WINDOW_MANAGER)
@@ -54,9 +54,11 @@ describe('ParserWindowManagerDump', () => {
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/dump_WindowManager.pb',
-      true
+      true,
     )) as Parser<HierarchyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+      TraceType.WINDOW_MANAGER,
+    );
 
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([
       NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
@@ -70,12 +72,14 @@ describe('ParserWindowManagerDump', () => {
     const entry = await parser.getEntry(0, TimestampType.ELAPSED);
     expect(entry).toBeInstanceOf(HierarchyTreeNode);
     expect(entry.getEagerPropertyByName('focusedApp')?.getValue()).toEqual(
-      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity'
+      'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
     );
   });
 
   it('supports WM_WINDOWS_TOKEN_AND_TITLE custom query', async () => {
-    const tokenAndTitles = await trace.customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
+    const tokenAndTitles = await trace.customQuery(
+      CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE,
+    );
     expect(tokenAndTitles.length).toEqual(73);
     expect(tokenAndTitles).toContain({token: 'cab97a6', title: 'Leaf:36:36'});
   });

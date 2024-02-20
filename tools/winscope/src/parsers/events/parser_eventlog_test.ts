@@ -31,7 +31,7 @@ describe('ParserEventLog', () => {
     beforeAll(async () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = assertDefined(
-        await UnitTestUtils.getParser('traces/eventlog.winscope')
+        await UnitTestUtils.getParser('traces/eventlog.winscope'),
       ) as Parser<PropertyTreeNode>;
     });
 
@@ -40,7 +40,9 @@ describe('ParserEventLog', () => {
     });
 
     it('has expected timestamps', () => {
-      const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parser.getTimestamps(TimestampType.REAL),
+      );
 
       expect(timestamps.length).toEqual(184);
 
@@ -69,7 +71,10 @@ describe('ParserEventLog', () => {
           {name: 'uid', value: 10227},
           {name: 'tid', value: 3604},
           {name: 'tag', value: EventTag.JANK_CUJ_BEGIN_TAG},
-          {name: 'eventData', value: '[66,1681207048025580000,2661012903966,2661012904007,]'},
+          {
+            name: 'eventData',
+            value: '[66,1681207048025580000,2661012903966,2661012904007,]',
+          },
         ])
         .build();
 
@@ -78,11 +83,15 @@ describe('ParserEventLog', () => {
 
     it('applies timezone info to real timestamps', async () => {
       const parserWithTimezoneInfo = assertDefined(
-        await UnitTestUtils.getParser('traces/eventlog.winscope', true)
+        await UnitTestUtils.getParser('traces/eventlog.winscope', true),
       ) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.EVENT_LOG);
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.EVENT_LOG,
+      );
 
-      const timestamps = assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      );
       expect(timestamps.length).toEqual(184);
 
       const expected = [
@@ -101,13 +110,15 @@ describe('ParserEventLog', () => {
       jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
       parser = assertDefined(
         await UnitTestUtils.getParser(
-          'traces/eventlog_timestamps_not_monotonically_increasing.winscope'
-        )
+          'traces/eventlog_timestamps_not_monotonically_increasing.winscope',
+        ),
       ) as Parser<PropertyTreeNode>;
     });
 
     it('sorts entries to make timestamps monotonically increasing', () => {
-      const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parser.getTimestamps(TimestampType.REAL),
+      );
 
       expect(timestamps.length).toEqual(3);
 
@@ -143,12 +154,16 @@ describe('ParserEventLog', () => {
       const parserWithTimezoneInfo = assertDefined(
         await UnitTestUtils.getParser(
           'traces/eventlog_timestamps_not_monotonically_increasing.winscope',
-          true
-        )
+          true,
+        ),
       ) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.EVENT_LOG);
+      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
+        TraceType.EVENT_LOG,
+      );
 
-      const timestamps = assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL));
+      const timestamps = assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      );
       expect(timestamps.length).toEqual(3);
 
       const expected = [

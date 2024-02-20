@@ -45,7 +45,9 @@ export class TimeUtils {
 
   static compareFn(a: Timestamp, b: Timestamp): number {
     if (a.getType() !== b.getType()) {
-      throw new Error('Attempted to compare two timestamps with different type');
+      throw new Error(
+        'Attempted to compare two timestamps with different type',
+      );
     }
     return Number(a.getValueNs() - b.getValueNs());
   }
@@ -53,7 +55,10 @@ export class TimeUtils {
   static format(timestamp: Timestamp, hideNs = false): string {
     switch (timestamp.getType()) {
       case TimestampType.ELAPSED: {
-        return TimeUtils.nanosecondsToHumanElapsed(timestamp.getValueNs(), hideNs);
+        return TimeUtils.nanosecondsToHumanElapsed(
+          timestamp.getValueNs(),
+          hideNs,
+        );
       }
       case TimestampType.REAL: {
         return TimeUtils.nanosecondsToHumanReal(timestamp.getValueNs(), hideNs);
@@ -107,7 +112,8 @@ export class TimeUtils {
     }
 
     return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-      BigInt(Date.parse(timestampHuman)) * BigInt(TimeUtils.TO_NANO['ms']) + BigInt(nanoSeconds)
+      BigInt(Date.parse(timestampHuman)) * BigInt(TimeUtils.TO_NANO['ms']) +
+        BigInt(nanoSeconds),
     );
   }
 
@@ -141,10 +147,15 @@ export class TimeUtils {
     const timezoneDate = new Date(timezoneDateFormatted);
     const hoursDiff = timezoneDate.getHours() - utcDate.getHours();
     const minutesDiff = timezoneDate.getMinutes() - utcDate.getMinutes();
-    return timestampNs + BigInt(hoursDiff * 3.6e12) + BigInt(minutesDiff * 6e10);
+    return (
+      timestampNs + BigInt(hoursDiff * 3.6e12) + BigInt(minutesDiff * 6e10)
+    );
   }
 
-  private static nanosecondsToHumanElapsed(timestampNanos: number | bigint, hideNs = true): string {
+  private static nanosecondsToHumanElapsed(
+    timestampNanos: number | bigint,
+    hideNs = true,
+  ): string {
     timestampNanos = BigInt(timestampNanos);
     const units = TimeUtils.units;
 
@@ -173,11 +184,16 @@ export class TimeUtils {
     return parts.map((part) => `${part.value}${part.unit}`).join('');
   }
 
-  private static nanosecondsToHumanReal(timestampNanos: number | bigint, hideNs = true): string {
+  private static nanosecondsToHumanReal(
+    timestampNanos: number | bigint,
+    hideNs = true,
+  ): string {
     timestampNanos = BigInt(timestampNanos);
     const ms = timestampNanos / 1000000n;
     const extraNanos = timestampNanos % 1000000n;
-    const formattedTimestamp = new Date(Number(ms)).toISOString().replace('Z', '');
+    const formattedTimestamp = new Date(Number(ms))
+      .toISOString()
+      .replace('Z', '');
 
     if (hideNs) {
       return formattedTimestamp;

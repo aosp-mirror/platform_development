@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
@@ -117,7 +121,11 @@ describe('PropertiesComponent', () => {
   });
 
   it('renders tree in proto dump upon selected item', () => {
-    component.propertiesTree = TreeNodeUtils.makeUiPropertyNode('selectedItem', 'property', null);
+    component.propertiesTree = TreeNodeUtils.makeUiPropertyNode(
+      'selectedItem',
+      'property',
+      null,
+    );
     fixture.detectChanges();
     const treeEl = htmlElement.querySelector('tree-view');
     expect(treeEl).toBeTruthy();

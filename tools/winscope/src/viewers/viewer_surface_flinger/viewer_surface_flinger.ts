@@ -40,48 +40,64 @@ class ViewerSurfaceFlinger implements Viewer {
       (this.htmlElement as any).inputData = uiData;
     });
 
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.onPinnedItemChange((event as CustomEvent).detail.pinnedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) =>
+        this.presenter.onPinnedItemChange(
+          (event as CustomEvent).detail.pinnedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(
+        `${(event as CustomEvent).detail.id}`,
+      ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedPropertyChange, (event) =>
-      this.presenter.onHighlightedPropertyChange(`${(event as CustomEvent).detail.id}`)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HighlightedPropertyChange,
+      (event) =>
+        this.presenter.onHighlightedPropertyChange(
+          `${(event as CustomEvent).detail.id}`,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyUserOptionsChange,
       async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange((event as CustomEvent).detail.userOptions)
+        await this.presenter.onHierarchyUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyFilterChange,
       async (event) =>
-        await this.presenter.onHierarchyFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onHierarchyFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
       async (event) =>
         await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions
-        )
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       async (event) =>
-        await this.presenter.onPropertiesFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onPropertiesFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.SelectedTreeChange,
       async (event) =>
         await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem
-        )
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
       if (
         (event as CustomEvent).detail.clickedRectId.includes(
-          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME
+          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME,
         )
       ) {
         this.switchToNexusLauncherViewer();
@@ -93,7 +109,7 @@ class ViewerSurfaceFlinger implements Viewer {
       this.getDependencies(),
       this.htmlElement,
       'Surface Flinger',
-      TraceType.SURFACE_FLINGER
+      TraceType.SURFACE_FLINGER,
     );
   }
 
@@ -107,7 +123,9 @@ class ViewerSurfaceFlinger implements Viewer {
 
   // TODO: Make this generic by package name once TraceType is not explicitly defined
   async switchToNexusLauncherViewer() {
-    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY));
+    await this.emitAppEvent(
+      new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+    );
   }
 
   getViews(): View[] {

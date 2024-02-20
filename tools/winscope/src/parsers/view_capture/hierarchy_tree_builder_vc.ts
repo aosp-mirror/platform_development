@@ -22,11 +22,13 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
   protected override buildIdentifierToChildMap(
-    nodes: PropertiesProvider[]
+    nodes: PropertiesProvider[],
   ): Map<string | number, PropertiesProvider[]> {
     const map = nodes.reduce((map, node) => {
       const nodeProperties = node.getEagerProperties();
-      const hashcode = assertDefined(nodeProperties.getChildByName('hashcode')).getValue();
+      const hashcode = assertDefined(
+        nodeProperties.getChildByName('hashcode'),
+      ).getValue();
       map.set(hashcode, [node]);
       return map;
     }, new Map<string, PropertiesProvider[]>());
@@ -35,17 +37,19 @@ export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
 
   protected override makeRootChildren(
     children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>
+    identifierToChild: Map<string | number, PropertiesProvider[]>,
   ): readonly HierarchyTreeNode[] {
     const rootChildrenHashcodes = assertDefined(
-      assertDefined(this.root).getEagerProperties().getChildByName('children')
+      assertDefined(this.root).getEagerProperties().getChildByName('children'),
     )
       .getAllChildren()
       .map((child) => child.getValue());
 
     const rootNodes = children.filter((node) => {
       return rootChildrenHashcodes.includes(
-        assertDefined(node.getEagerProperties().getChildByName('hashcode')).getValue()
+        assertDefined(
+          node.getEagerProperties().getChildByName('hashcode'),
+        ).getValue(),
       );
     });
     return rootNodes.map((layer) => {

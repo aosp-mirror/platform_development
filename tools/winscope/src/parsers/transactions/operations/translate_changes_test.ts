@@ -45,9 +45,15 @@ describe('TranslateChanges', () => {
                   name: 'layerChanges',
                   children: [
                     {name: '0', children: [{name: 'what', value: 2}]},
-                    {name: '1', children: [{name: 'what', value: new Long(2, 0)}]},
+                    {
+                      name: '1',
+                      children: [{name: 'what', value: new Long(2, 0)}],
+                    },
                     {name: '2', children: [{name: 'what', value: 4294967360}]},
-                    {name: '3', children: [{name: 'what', value: new Long(64, 1)}]},
+                    {
+                      name: '3',
+                      children: [{name: 'what', value: new Long(64, 1)}],
+                    },
                   ],
                 },
               ],
@@ -63,24 +69,36 @@ describe('TranslateChanges', () => {
       propertyRoot
         .getChildByName('transactions')
         ?.getChildByName('0')
-        ?.getChildByName('layerChanges')
+        ?.getChildByName('layerChanges'),
     );
 
-    expect(layerChanges?.getChildByName('0')?.getChildByName('what')?.formattedValue()).toEqual(
-      'eLayerChanged'
-    );
+    expect(
+      layerChanges
+        ?.getChildByName('0')
+        ?.getChildByName('what')
+        ?.formattedValue(),
+    ).toEqual('eLayerChanged');
 
-    expect(layerChanges?.getChildByName('1')?.getChildByName('what')?.formattedValue()).toEqual(
-      'eLayerChanged'
-    );
+    expect(
+      layerChanges
+        ?.getChildByName('1')
+        ?.getChildByName('what')
+        ?.formattedValue(),
+    ).toEqual('eLayerChanged');
 
-    expect(layerChanges?.getChildByName('2')?.getChildByName('what')?.formattedValue()).toEqual(
-      'eFlagsChanged | eDestinationFrameChanged'
-    );
+    expect(
+      layerChanges
+        ?.getChildByName('2')
+        ?.getChildByName('what')
+        ?.formattedValue(),
+    ).toEqual('eFlagsChanged | eDestinationFrameChanged');
 
-    expect(layerChanges?.getChildByName('3')?.getChildByName('what')?.formattedValue()).toEqual(
-      'eFlagsChanged | eDestinationFrameChanged'
-    );
+    expect(
+      layerChanges
+        ?.getChildByName('3')
+        ?.getChildByName('what')
+        ?.formattedValue(),
+    ).toEqual('eFlagsChanged | eDestinationFrameChanged');
   });
 
   it("decodes 'what' field in DisplayState from displayChanges", async () => {
@@ -97,7 +115,9 @@ describe('TranslateChanges', () => {
               children: [
                 {
                   name: 'displayChanges',
-                  children: [{name: '0', children: [{name: 'what', value: 22}]}],
+                  children: [
+                    {name: '0', children: [{name: 'what', value: 22}]},
+                  ],
                 },
               ],
             },
@@ -112,12 +132,15 @@ describe('TranslateChanges', () => {
       propertyRoot
         .getChildByName('transactions')
         ?.getChildByName('0')
-        ?.getChildByName('displayChanges')
+        ?.getChildByName('displayChanges'),
     );
 
-    expect(displayChanges?.getChildByName('0')?.getChildByName('what')?.formattedValue()).toEqual(
-      'eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged'
-    );
+    expect(
+      displayChanges
+        ?.getChildByName('0')
+        ?.getChildByName('what')
+        ?.formattedValue(),
+    ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
   });
 
   it("decodes 'what' field in DisplayState from addedDisplays", async () => {
@@ -140,7 +163,7 @@ describe('TranslateChanges', () => {
         .getChildByName('addedDisplays')
         ?.getChildByName('0')
         ?.getChildByName('what')
-        ?.formattedValue()
+        ?.formattedValue(),
     ).toEqual('eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged');
   });
 });

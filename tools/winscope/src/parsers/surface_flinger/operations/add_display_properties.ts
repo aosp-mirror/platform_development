@@ -35,29 +35,35 @@ export class AddDisplayProperties implements Operation<PropertyTreeNode> {
       const size = assertDefined(display.getChildByName('size'));
       const width = assertDefined(size.getChildByName('w')).getValue();
       const height = assertDefined(size.getChildByName('h')).getValue();
-      const smallestWidth = this.dpiFromPx(Math.min(width, height), Number(dpiX.getValue()));
+      const smallestWidth = this.dpiFromPx(
+        Math.min(width, height),
+        Number(dpiX.getValue()),
+      );
 
       display.addOrReplaceChild(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           display.id,
           'isLargeScreen',
-          smallestWidth >= AddDisplayProperties.TABLET_MIN_DPS
-        )
+          smallestWidth >= AddDisplayProperties.TABLET_MIN_DPS,
+        ),
       );
 
-      const layerStack = assertDefined(display.getChildByName('layerStack')).getValue();
+      const layerStack = assertDefined(
+        display.getChildByName('layerStack'),
+      ).getValue();
 
       assertTrue(
         layerStack !== -1 && layerStack !== -1n,
-        () => 'layerStack = -1; false assumption that layerStack is always unsigned'
+        () =>
+          'layerStack = -1; false assumption that layerStack is always unsigned',
       );
 
       display.addOrReplaceChild(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
           display.id,
           'isOn',
-          layerStack !== DisplayLayerStack.INVALID_LAYER_STACK
-        )
+          layerStack !== DisplayLayerStack.INVALID_LAYER_STACK,
+        ),
       );
     }
   }

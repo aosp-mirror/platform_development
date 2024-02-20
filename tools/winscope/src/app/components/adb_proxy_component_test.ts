@@ -56,16 +56,16 @@ describe('AdbProxyComponent', () => {
   it('check correct icon and message displays if no proxy', async () => {
     await component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    expect(htmlElement.querySelector('.further-adb-info-text')?.innerHTML).toContain(
-      'Launch the Winscope ADB Connect proxy'
-    );
+    expect(
+      htmlElement.querySelector('.further-adb-info-text')?.innerHTML,
+    ).toContain('Launch the Winscope ADB Connect proxy');
   });
 
   it('check correct icon and message displays if invalid proxy', async () => {
     await component.proxy.setState(ProxyState.INVALID_VERSION);
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
-      'Your local proxy version is incompatible with Winscope.'
+      'Your local proxy version is incompatible with Winscope.',
     );
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('update');
   });
@@ -73,7 +73,9 @@ describe('AdbProxyComponent', () => {
   it('check correct icon and message displays if unauthorised proxy', async () => {
     await component.proxy.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
-    expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe('Proxy authorisation required.');
+    expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
+      'Proxy authorisation required.',
+    );
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('lock');
   });
 
@@ -81,7 +83,9 @@ describe('AdbProxyComponent', () => {
     await component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
     const spy = spyOn(window, 'open');
-    const button: HTMLButtonElement | null = htmlElement.querySelector('.download-proxy-btn');
+    const button: HTMLButtonElement | null = htmlElement.querySelector(
+      '.download-proxy-btn',
+    );
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
@@ -91,7 +95,8 @@ describe('AdbProxyComponent', () => {
   it('check retry button if no proxy trys to reconnect proxy', async () => {
     await component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    const button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
+    const button: HTMLButtonElement | null =
+      htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
@@ -122,14 +127,16 @@ describe('AdbProxyComponent', () => {
     await component.proxy.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
     const proxyKeyInputField = assertDefined(
-      htmlElement.querySelector('.proxy-key-input-field')
+      htmlElement.querySelector('.proxy-key-input-field'),
     ) as HTMLInputElement;
     const proxyKeyInput = assertDefined(
-      proxyKeyInputField.querySelector('input')
+      proxyKeyInputField.querySelector('input'),
     ) as HTMLInputElement;
 
     proxyKeyInput.value = '12345';
-    proxyKeyInputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+    proxyKeyInputField.dispatchEvent(
+      new KeyboardEvent('keydown', {key: 'Enter'}),
+    );
     fixture.detectChanges();
     await fixture.whenStable();
     expect(spy).toHaveBeenCalled();

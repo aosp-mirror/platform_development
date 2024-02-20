@@ -30,7 +30,8 @@ class StringUtils {
     let prevChar: string | undefined;
     for (const currChar of s) {
       const prevCharCouldBeWordEnd =
-        prevChar && (StringUtils.isDigit(prevChar) || StringUtils.isLowerCase(prevChar));
+        prevChar &&
+        (StringUtils.isDigit(prevChar) || StringUtils.isLowerCase(prevChar));
       const currCharCouldBeWordStart = StringUtils.isUpperCase(currChar);
       if (prevCharCouldBeWordEnd && currCharCouldBeWordStart) {
         result.push('_');

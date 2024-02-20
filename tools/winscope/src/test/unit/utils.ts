@@ -16,7 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY, TimestampFactory} from 'common/timestamp_factory';
+import {
+  NO_TIMEZONE_OFFSET_FACTORY,
+  TimestampFactory,
+} from 'common/timestamp_factory';
 import {UrlUtils} from 'common/url_utils';
 import {ParserFactory} from 'parsers/parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
@@ -37,7 +40,7 @@ class UnitTestUtils {
 
   static async getFixtureFile(
     srcFilename: string,
-    dstFilename: string = srcFilename
+    dstFilename: string = srcFilename,
   ): Promise<File> {
     const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
     const response = await fetch(url);
@@ -47,7 +50,10 @@ class UnitTestUtils {
     return file;
   }
 
-  static async getTrace<T extends TraceType>(type: T, filename: string): Promise<Trace<T>> {
+  static async getTrace<T extends TraceType>(
+    type: T,
+    filename: string,
+  ): Promise<Trace<T>> {
     const legacyParsers = await UnitTestUtils.getParsers(filename);
     expect(legacyParsers.length).toBeLessThanOrEqual(1);
     if (legacyParsers.length === 1) {
@@ -67,7 +73,10 @@ class UnitTestUtils {
       .build();
   }
 
-  static async getParser(filename: string, withTimezoneInfo = false): Promise<Parser<object>> {
+  static async getParser(
+    filename: string,
+    withTimezoneInfo = false,
+  ): Promise<Parser<object>> {
     const parsers = await UnitTestUtils.getParsers(filename, withTimezoneInfo);
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
@@ -77,14 +86,19 @@ class UnitTestUtils {
 
   static async getParsers(
     filename: string,
-    withTimezoneInfo = false
+    withTimezoneInfo = false,
   ): Promise<Array<Parser<object>>> {
-    const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
+    const file = new TraceFile(
+      await UnitTestUtils.getFixtureFile(filename),
+      undefined,
+    );
     const fileAndParsers = await new ParserFactory().createParsers(
       [file],
-      withTimezoneInfo ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE : NO_TIMEZONE_OFFSET_FACTORY,
+      withTimezoneInfo
+        ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE
+        : NO_TIMEZONE_OFFSET_FACTORY,
       undefined,
-      undefined
+      undefined,
     );
     return fileAndParsers.map((fileAndParser) => {
       return fileAndParser.parser;
@@ -94,32 +108,41 @@ class UnitTestUtils {
   static async getPerfettoParser<T extends TraceType>(
     traceType: T,
     fixturePath: string,
-    withTimezoneInfo = false
+    withTimezoneInfo = false,
   ): Promise<Parser<TraceEntryTypeMap[T]>> {
-    const parsers = await UnitTestUtils.getPerfettoParsers(fixturePath, withTimezoneInfo);
-    const parser = assertDefined(parsers.find((parser) => parser.getTraceType() === traceType));
+    const parsers = await UnitTestUtils.getPerfettoParsers(
+      fixturePath,
+      withTimezoneInfo,
+    );
+    const parser = assertDefined(
+      parsers.find((parser) => parser.getTraceType() === traceType),
+    );
     return parser as Parser<TraceEntryTypeMap[T]>;
   }
 
   static async getPerfettoParsers(
     fixturePath: string,
-    withTimezoneInfo = false
+    withTimezoneInfo = false,
   ): Promise<Array<Parser<object>>> {
     const file = await UnitTestUtils.getFixtureFile(fixturePath);
     const traceFile = new TraceFile(file);
     return await new PerfettoParserFactory().createParsers(
       traceFile,
-      withTimezoneInfo ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE : NO_TIMEZONE_OFFSET_FACTORY,
-      undefined
+      withTimezoneInfo
+        ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE
+        : NO_TIMEZONE_OFFSET_FACTORY,
+      undefined,
     );
   }
 
   static async getTracesParser(
     filenames: string[],
-    withTimezoneInfo = false
+    withTimezoneInfo = false,
   ): Promise<Parser<object>> {
     const parsersArray = await Promise.all(
-      filenames.map((filename) => UnitTestUtils.getParser(filename, withTimezoneInfo))
+      filenames.map((filename) =>
+        UnitTestUtils.getParser(filename, withTimezoneInfo),
+      ),
     );
 
     const traces = new Traces();
@@ -130,38 +153,44 @@ class UnitTestUtils {
 
     const tracesParsers = await new TracesParserFactory().createParsers(traces);
     expect(tracesParsers.length)
-      .withContext(`Should have been able to create a traces parser for [${filenames.join()}]`)
+      .withContext(
+        `Should have been able to create a traces parser for [${filenames.join()}]`,
+      )
       .toEqual(1);
     return tracesParsers[0];
   }
 
   static async getWindowManagerState(): Promise<HierarchyTreeNode> {
-    return UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/WindowManager.pb');
+    return UnitTestUtils.getTraceEntry(
+      'traces/elapsed_timestamp/WindowManager.pb',
+    );
   }
 
   static async getLayerTraceEntry(): Promise<HierarchyTreeNode> {
     return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
-      'traces/elapsed_timestamp/SurfaceFlinger.pb'
+      'traces/elapsed_timestamp/SurfaceFlinger.pb',
     );
   }
 
   static async getViewCaptureEntry(): Promise<HierarchyTreeNode> {
     return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
+      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     );
   }
 
   static async getMultiDisplayLayerTraceEntry(): Promise<HierarchyTreeNode> {
     return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
-      'traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb'
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb',
     );
   }
 
-  static async getImeTraceEntries(): Promise<Map<TraceType, HierarchyTreeNode>> {
+  static async getImeTraceEntries(): Promise<
+    Map<TraceType, HierarchyTreeNode>
+  > {
     let surfaceFlingerEntry: HierarchyTreeNode | undefined;
     {
       const parser = (await UnitTestUtils.getParser(
-        'traces/ime/SurfaceFlinger_with_IME.pb'
+        'traces/ime/SurfaceFlinger_with_IME.pb',
       )) as Parser<HierarchyTreeNode>;
       surfaceFlingerEntry = await parser.getEntry(5, TimestampType.ELAPSED);
     }
@@ -169,7 +198,7 @@ class UnitTestUtils {
     let windowManagerEntry: HierarchyTreeNode | undefined;
     {
       const parser = (await UnitTestUtils.getParser(
-        'traces/ime/WindowManager_with_IME.pb'
+        'traces/ime/WindowManager_with_IME.pb',
       )) as Parser<HierarchyTreeNode>;
       windowManagerEntry = await parser.getEntry(2, TimestampType.ELAPSED);
     }
@@ -177,15 +206,17 @@ class UnitTestUtils {
     const entries = new Map<TraceType, HierarchyTreeNode>();
     entries.set(
       TraceType.INPUT_METHOD_CLIENTS,
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb')
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb'),
     );
     entries.set(
       TraceType.INPUT_METHOD_MANAGER_SERVICE,
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodManagerService.pb')
+      await UnitTestUtils.getTraceEntry(
+        'traces/ime/InputMethodManagerService.pb',
+      ),
     );
     entries.set(
       TraceType.INPUT_METHOD_SERVICE,
-      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodService.pb')
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodService.pb'),
     );
     entries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
     entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
@@ -200,7 +231,10 @@ class UnitTestUtils {
     return undefined;
   }
 
-  private static testTimestamps(node: Timestamp, expectedNode: Timestamp): boolean {
+  private static testTimestamps(
+    node: Timestamp,
+    expectedNode: Timestamp,
+  ): boolean {
     if (node.getType() !== expectedNode.getType()) return false;
     if (node.getValueNs() !== expectedNode.getValueNs()) return false;
     return true;

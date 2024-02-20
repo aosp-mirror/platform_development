@@ -52,47 +52,66 @@ abstract class ViewerInputMethod implements Viewer {
   };
 
   protected addViewerEventListeners() {
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.onPinnedItemChange((event as CustomEvent).detail.pinnedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) =>
+        this.presenter.onPinnedItemChange(
+          (event as CustomEvent).detail.pinnedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(
+        `${(event as CustomEvent).detail.id}`,
+      ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
-      this.presenter.onHierarchyUserOptionsChange((event as CustomEvent).detail.userOptions)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyUserOptionsChange,
+      (event) =>
+        this.presenter.onHierarchyUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) =>
-      this.presenter.onHierarchyFilterChange((event as CustomEvent).detail.filterString)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyFilterChange,
+      (event) =>
+        this.presenter.onHierarchyFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
       async (event) =>
         await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions
-        )
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesFilterChange,
       async (event) =>
-        await this.presenter.onPropertiesFilterChange((event as CustomEvent).detail.filterString)
+        await this.presenter.onPropertiesFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.SelectedTreeChange,
       async (event) =>
         await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem
-        )
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.AdditionalPropertySelected,
       async (event) =>
         await this.presenter.onAdditionalPropertySelected(
-          (event as CustomEvent).detail.selectedItem
-        )
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
   }
 
-  protected abstract initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethod;
+  protected abstract initialisePresenter(
+    traces: Traces,
+    storage: Storage,
+  ): PresenterInputMethod;
 }
 
 export {ViewerInputMethod};

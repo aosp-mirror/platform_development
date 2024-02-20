@@ -21,16 +21,32 @@ import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_
 export class SetRootTransformProperties implements Operation<PropertyTreeNode> {
   apply(value: PropertyTreeNode): void {
     value.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(value.id, 'scaleX', 1)
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'scaleX',
+        1,
+      ),
     );
     value.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(value.id, 'scaleY', 1)
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'scaleY',
+        1,
+      ),
     );
     value.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(value.id, 'translationX', 0)
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'translationX',
+        0,
+      ),
     );
     value.addOrReplaceChild(
-      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(value.id, 'translationY', 0)
+      DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+        value.id,
+        'translationY',
+        0,
+      ),
     );
   }
 }

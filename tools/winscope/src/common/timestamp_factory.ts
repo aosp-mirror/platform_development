@@ -18,22 +18,37 @@ import {Timestamp, TimestampType, TimezoneInfo} from './time';
 import {TimeUtils} from './time_utils';
 
 export class TimestampFactory {
-  constructor(public timezoneInfo: TimezoneInfo = {timezone: 'UTC', locale: 'en-US'}) {}
+  constructor(
+    public timezoneInfo: TimezoneInfo = {timezone: 'UTC', locale: 'en-US'},
+  ) {}
 
-  makeRealTimestamp(valueNs: bigint, realToElapsedTimeOffsetNs?: bigint): Timestamp {
+  makeRealTimestamp(
+    valueNs: bigint,
+    realToElapsedTimeOffsetNs?: bigint,
+  ): Timestamp {
     const valueWithRealtimeOffset = valueNs + (realToElapsedTimeOffsetNs ?? 0n);
     const localNs =
       this.timezoneInfo.timezone !== 'UTC'
-        ? TimeUtils.addTimezoneOffset(this.timezoneInfo.timezone, valueWithRealtimeOffset)
+        ? TimeUtils.addTimezoneOffset(
+            this.timezoneInfo.timezone,
+            valueWithRealtimeOffset,
+          )
         : valueWithRealtimeOffset;
-    return new Timestamp(TimestampType.REAL, localNs, localNs - valueWithRealtimeOffset);
+    return new Timestamp(
+      TimestampType.REAL,
+      localNs,
+      localNs - valueWithRealtimeOffset,
+    );
   }
 
   makeElapsedTimestamp(valueNs: bigint): Timestamp {
     return new Timestamp(TimestampType.ELAPSED, valueNs);
   }
 
-  canMakeTimestampFromType(type: TimestampType, realToElapsedTimeOffsetNs: bigint | undefined) {
+  canMakeTimestampFromType(
+    type: TimestampType,
+    realToElapsedTimeOffsetNs: bigint | undefined,
+  ) {
     return (
       type === TimestampType.ELAPSED ||
       (type === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined)
@@ -43,12 +58,14 @@ export class TimestampFactory {
   makeTimestampFromType(
     type: TimestampType,
     valueNs: bigint,
-    realToElapsedTimeOffsetNs?: bigint
+    realToElapsedTimeOffsetNs?: bigint,
   ): Timestamp {
     switch (type) {
       case TimestampType.REAL:
         if (realToElapsedTimeOffsetNs === undefined) {
-          throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
+          throw new Error(
+            "realToElapsedTimeOffsetNs can't be undefined to use real timestamp",
+          );
         }
         return this.makeRealTimestamp(valueNs, realToElapsedTimeOffsetNs);
       case TimestampType.ELAPSED:

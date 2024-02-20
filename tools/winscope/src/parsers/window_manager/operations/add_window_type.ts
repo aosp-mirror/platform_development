@@ -20,7 +20,9 @@ import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_
 import {WindowType, WindowTypePrefix} from 'trace/window_type';
 
 export class AddWindowType extends AddOperation<PropertyTreeNode> {
-  protected override makeProperties(windowState: PropertyTreeNode): PropertyTreeNode[] {
+  protected override makeProperties(
+    windowState: PropertyTreeNode,
+  ): PropertyTreeNode[] {
     let windowType = WindowType.UNKNOWN;
 
     if (windowState.name.startsWith(WindowTypePrefix.STARTING)) {
@@ -35,7 +37,7 @@ export class AddWindowType extends AddOperation<PropertyTreeNode> {
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         windowState.id,
         'windowType',
-        windowType
+        windowType,
       ),
     ];
   }

@@ -28,7 +28,7 @@ describe('Perfetto ParserProtolog', () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = await UnitTestUtils.getPerfettoParser(
       TraceType.PROTO_LOG,
-      'traces/perfetto/protolog.perfetto-trace'
+      'traces/perfetto/protolog.perfetto-trace',
     );
   });
 
@@ -37,7 +37,9 @@ describe('Perfetto ParserProtolog', () => {
   });
 
   it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.ELAPSED));
+    const timestamps = assertDefined(
+      parser.getTimestamps(TimestampType.ELAPSED),
+    );
 
     expect(timestamps.length).toEqual(75);
 
@@ -67,44 +69,62 @@ describe('Perfetto ParserProtolog', () => {
   it('reconstructs human-readable log message (ELAPSED time)', async () => {
     const message = await parser.getEntry(0, TimestampType.ELAPSED);
 
-    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
-      'Sent Transition (#11) createdAt=01-29 17:54:23.793'
-    );
-    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
-      '1h38m59s2ms349294ns'
-    );
-    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
-    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('VERBOSE');
-    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual('<NO_LOC>');
+    expect(
+      assertDefined(message.getChildByName('text')).formattedValue(),
+    ).toEqual('Sent Transition (#11) createdAt=01-29 17:54:23.793');
+    expect(
+      assertDefined(message.getChildByName('timestamp')).formattedValue(),
+    ).toEqual('1h38m59s2ms349294ns');
+    expect(
+      assertDefined(message.getChildByName('tag')).formattedValue(),
+    ).toEqual('WindowManager');
+    expect(
+      assertDefined(message.getChildByName('level')).formattedValue(),
+    ).toEqual('VERBOSE');
+    expect(
+      assertDefined(message.getChildByName('at')).formattedValue(),
+    ).toEqual('<NO_LOC>');
   });
 
   it('reconstructs human-readable log message (REAL time)', async () => {
     const message = await parser.getEntry(0, TimestampType.REAL);
 
-    expect(assertDefined(message.getChildByName('text')).formattedValue()).toEqual(
-      'Sent Transition (#11) createdAt=01-29 17:54:23.793'
-    );
-    expect(assertDefined(message.getChildByName('timestamp')).formattedValue()).toEqual(
-      '2024-01-29T16:54:24.827624563'
-    );
-    expect(assertDefined(message.getChildByName('tag')).formattedValue()).toEqual('WindowManager');
-    expect(assertDefined(message.getChildByName('level')).formattedValue()).toEqual('VERBOSE');
-    expect(assertDefined(message.getChildByName('at')).formattedValue()).toEqual('<NO_LOC>');
+    expect(
+      assertDefined(message.getChildByName('text')).formattedValue(),
+    ).toEqual('Sent Transition (#11) createdAt=01-29 17:54:23.793');
+    expect(
+      assertDefined(message.getChildByName('timestamp')).formattedValue(),
+    ).toEqual('2024-01-29T16:54:24.827624563');
+    expect(
+      assertDefined(message.getChildByName('tag')).formattedValue(),
+    ).toEqual('WindowManager');
+    expect(
+      assertDefined(message.getChildByName('level')).formattedValue(),
+    ).toEqual('VERBOSE');
+    expect(
+      assertDefined(message.getChildByName('at')).formattedValue(),
+    ).toEqual('<NO_LOC>');
   });
 
   it('applies timezone info to real timestamps only', async () => {
     const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
       TraceType.PROTO_LOG,
       'traces/perfetto/protolog.perfetto-trace',
-      true
+      true,
     );
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(TraceType.PROTO_LOG);
 
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(5939002349294n)
-    );
-    expect(assertDefined(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL))[0]).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1706567064827624563n)
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
+      )[0],
+    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(5939002349294n));
+    expect(
+      assertDefined(
+        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
+      )[0],
+    ).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1706567064827624563n),
     );
   });
 });

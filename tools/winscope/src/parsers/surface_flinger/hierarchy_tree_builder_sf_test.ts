@@ -40,7 +40,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => testPropertyNode,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
   });
 
@@ -71,8 +71,8 @@ describe('HierarchyTreeBuilderSf', () => {
         async () => propertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
 
     expect(root).toEqual(expectedRoot);
@@ -97,7 +97,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder.setRoot(entry).setChildren([layer1Provider]).build();
@@ -116,10 +116,12 @@ describe('HierarchyTreeBuilderSf', () => {
         async () => propertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    expectedRoot.addOrReplaceChild(new HierarchyTreeNode('1 layer1', 'layer1', layer1Provider));
+    expectedRoot.addOrReplaceChild(
+      new HierarchyTreeNode('1 layer1', 'layer1', layer1Provider),
+    );
 
     expect(root).toEqual(expectedRoot);
   });
@@ -151,7 +153,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const layer2Props = new PropertyTreeBuilder()
@@ -171,10 +173,13 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer2Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
-    const root = builder.setRoot(entry).setChildren([layer1Provider, layer2Provider]).build();
+    const root = builder
+      .setRoot(entry)
+      .setChildren([layer1Provider, layer2Provider])
+      .build();
 
     const propertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -190,11 +195,19 @@ describe('HierarchyTreeBuilderSf', () => {
         async () => propertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    const expectedRootLayer = new HierarchyTreeNode('1 layer1', 'layer1', layer1Provider);
-    const expectedNestedLayer = new HierarchyTreeNode('2 layer2', 'layer2', layer2Provider);
+    const expectedRootLayer = new HierarchyTreeNode(
+      '1 layer1',
+      'layer1',
+      layer1Provider,
+    );
+    const expectedNestedLayer = new HierarchyTreeNode(
+      '2 layer2',
+      'layer2',
+      layer2Provider,
+    );
     expectedRootLayer.addOrReplaceChild(expectedNestedLayer);
     expectedRoot.addOrReplaceChild(expectedRootLayer);
 
@@ -228,7 +241,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer1Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const layer2Props = new PropertyTreeBuilder()
@@ -248,7 +261,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer2Props,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const layer2DupProps = new PropertyTreeBuilder()
@@ -268,7 +281,7 @@ describe('HierarchyTreeBuilderSf', () => {
       async () => layer2DupProps,
       OperationChain.emptyChain<PropertyTreeNode>(),
       OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>()
+      OperationChain.emptyChain<PropertyTreeNode>(),
     );
 
     const root = builder
@@ -290,15 +303,23 @@ describe('HierarchyTreeBuilderSf', () => {
         async () => propertiesTree,
         OperationChain.emptyChain<PropertyTreeNode>(),
         OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>()
-      )
+        OperationChain.emptyChain<PropertyTreeNode>(),
+      ),
     );
-    const expectedRootLayer = new HierarchyTreeNode('1 layer1', 'layer1', layer1Provider);
-    const expectedNestedLayer = new HierarchyTreeNode('2 layer2', 'layer2', layer2Provider);
+    const expectedRootLayer = new HierarchyTreeNode(
+      '1 layer1',
+      'layer1',
+      layer1Provider,
+    );
+    const expectedNestedLayer = new HierarchyTreeNode(
+      '2 layer2',
+      'layer2',
+      layer2Provider,
+    );
     const expectedDupNestedLayer = new HierarchyTreeNode(
       '2 layer2 duplicate(1)',
       'layer2 duplicate(1)',
-      layer2Provider
+      layer2Provider,
     );
     expectedRootLayer.addOrReplaceChild(expectedNestedLayer);
     expectedRootLayer.addOrReplaceChild(expectedDupNestedLayer);

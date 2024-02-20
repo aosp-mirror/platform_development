@@ -22,7 +22,7 @@ describe('WmCustomQueryUtils', () =>
     it('parseWindowsTokenAndTitle()', async () => {
       const trace = await UnitTestUtils.getTrace(
         TraceType.WINDOW_MANAGER,
-        'traces/elapsed_and_real_timestamp/WindowManager.pb'
+        'traces/elapsed_and_real_timestamp/WindowManager.pb',
       );
       const tokenAndTitles = await trace
         .sliceEntries(0, 1)
@@ -31,15 +31,24 @@ describe('WmCustomQueryUtils', () =>
       expect(tokenAndTitles.length).toEqual(69);
 
       // RootWindowContainerProto
-      expect(tokenAndTitles).toContain({token: '478edff', title: 'WindowContainer'});
+      expect(tokenAndTitles).toContain({
+        token: '478edff',
+        title: 'WindowContainer',
+      });
       // DisplayContentProto
-      expect(tokenAndTitles).toContain({token: '1f3454e', title: 'Built-in Screen'});
+      expect(tokenAndTitles).toContain({
+        token: '1f3454e',
+        title: 'Built-in Screen',
+      });
       // DisplayAreaProto
       expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'});
       // WindowTokenProto
       expect(tokenAndTitles).toContain({token: '509ad2f', title: '509ad2f'});
       // WindowStateProto
-      expect(tokenAndTitles).toContain({token: 'b3b210d', title: 'ScreenDecorOverlay'});
+      expect(tokenAndTitles).toContain({
+        token: 'b3b210d',
+        title: 'ScreenDecorOverlay',
+      });
       // TaskProto
       expect(tokenAndTitles).toContain({token: '7493986', title: 'Task'});
       // ActivityRecordProto
