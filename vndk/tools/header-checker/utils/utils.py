@@ -165,14 +165,9 @@ def make_targets(build_target, args):
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
-def make_tree(build_target):
-    """Build all lsdump files."""
-    return make_targets(build_target, ['findlsdumps'])
-
-
-def make_libraries(build_target, arches, libs, exclude_tags):
+def make_libraries(build_target, arches, libs, lsdump_filter):
     """Build lsdump files for specific libs."""
-    lsdump_paths = read_lsdump_paths(build_target, arches, exclude_tags,
+    lsdump_paths = read_lsdump_paths(build_target, arches, lsdump_filter,
                                      build=True)
     make_target_paths = []
     for name in libs:
@@ -211,7 +206,7 @@ def _get_module_variant_dir_name(tag, arch_cpu_str):
     raise ValueError(tag + ' is not a known tag.')
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, arches, exclude_tags):
+def _read_lsdump_paths(lsdump_paths_file_path, arches, lsdump_filter):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
     This function returns a dictionary, {lib_name: {arch_cpu: {tag: path}}}.
@@ -231,14 +226,16 @@ def _read_lsdump_paths(lsdump_paths_file_path, arches, exclude_tags):
 
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
-            tag, path = (x.strip() for x in line.split(':', 1))
-            if not path or tag in exclude_tags:
+            if not line.strip():
                 continue
+            tag, path = (x.strip() for x in line.split(':', 1))
             dir_path, filename = os.path.split(path)
             if not filename.endswith(SOURCE_ABI_DUMP_EXT):
                 continue
             libname = filename[:-len(SOURCE_ABI_DUMP_EXT)]
             if not libname:
+                continue
+            if not lsdump_filter(tag, libname):
                 continue
             # dir_path may contain soong config hash.
             # For example, the following dir_paths are valid.
@@ -266,7 +263,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, arches, exclude_tags):
     return lsdump_paths
 
 
-def read_lsdump_paths(build_target, arches, exclude_tags, build):
+def read_lsdump_paths(build_target, arches, lsdump_filter, build):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(build_target)
     lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
@@ -274,7 +271,7 @@ def read_lsdump_paths(build_target, arches, exclude_tags, build):
         if os.path.lexists(lsdump_paths_file_abspath):
             os.unlink(lsdump_paths_file_abspath)
         make_targets(build_target, [lsdump_paths_file_path])
-    return _read_lsdump_paths(lsdump_paths_file_abspath, arches, exclude_tags)
+    return _read_lsdump_paths(lsdump_paths_file_abspath, arches, lsdump_filter)
 
 
 def find_lib_lsdumps(lsdump_paths, libs, arch):
