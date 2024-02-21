@@ -21,6 +21,7 @@ class Events {
   static SearchStringFilterChanged =
     'ViewerProtoLogEvent_SearchStringFilterChanged';
   static TimestampSelected = 'ViewerProtoLogEvent_TimestampSelected';
+  static MessageClicked = 'ViewerProtoLogEvent_MessageClicked';
 }
 
 export {Events};

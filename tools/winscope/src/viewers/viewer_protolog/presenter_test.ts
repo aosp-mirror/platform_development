@@ -176,34 +176,30 @@ describe('ViewerProtoLogPresenter', () => {
       outputUiData = data;
     });
 
-    expect(assertDefined(outputUiData).messages).toEqual([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.messages).toEqual([]);
+    expect(uiData.currentMessageIndex).toBeUndefined();
 
     await presenter.onAppEvent(positionUpdate10);
-    expect(assertDefined(outputUiData).messages).toEqual([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
+
+    const newUiData = assertDefined(outputUiData);
+    expect(newUiData.messages).toEqual([]);
+    expect(newUiData.currentMessageIndex).toBeUndefined();
   });
 
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate10);
 
-    expect(assertDefined(outputUiData).allLogLevels).toEqual([
-      'level0',
-      'level1',
-      'level2',
-    ]);
-    expect(assertDefined(outputUiData).allTags).toEqual([
-      'tag0',
-      'tag1',
-      'tag2',
-    ]);
-    expect(assertDefined(outputUiData).allSourceFiles).toEqual([
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.allLogLevels).toEqual(['level0', 'level1', 'level2']);
+    expect(uiData.allTags).toEqual(['tag0', 'tag1', 'tag2']);
+    expect(uiData.allSourceFiles).toEqual([
       'sourcefile0',
       'sourcefile1',
       'sourcefile2',
     ]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
+    expect(uiData.messages).toEqual(inputMessages);
+    expect(uiData.currentMessageIndex).toEqual(0);
   });
 
   it('updates displayed messages according to log levels filter', () => {
@@ -295,5 +291,11 @@ describe('ViewerProtoLogPresenter', () => {
     await presenter.onAppEvent(positionUpdate12);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(2);
+  });
+
+  it('updates selected message index', () => {
+    expect(assertDefined(outputUiData).selectedMessageIndex).toBeUndefined();
+    presenter.onMessageClicked(3);
+    expect(assertDefined(outputUiData).selectedMessageIndex).toEqual(3);
   });
 });

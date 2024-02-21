@@ -18,6 +18,7 @@ import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
+import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
@@ -79,7 +80,9 @@ import {UiData} from './ui_data';
           *cdkVirtualFor="let message of uiData.messages; let i = index"
           class="message"
           [attr.item-id]="i"
-          [class.current]="isCurrentMessage(i)">
+          [class.current]="isCurrentMessage(i)"
+          [class.selected]="isSelectedMessage(i)"
+          (click)="onMessageClicked(i)">
           <div class="time">
             <button
               mat-button
@@ -178,6 +181,7 @@ import {UiData} from './ui_data';
         font-size: 12px;
       }
     `,
+    selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
   ],
@@ -187,6 +191,7 @@ export class ViewerProtologComponent {
 
   private searchString = '';
   private lastClicked = '';
+  private lastSelectedMessage: undefined | number;
 
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;
@@ -197,6 +202,7 @@ export class ViewerProtologComponent {
   set inputData(data: UiData) {
     this.uiData = data;
     if (
+      this.lastSelectedMessage === undefined &&
       this.uiData.currentMessageIndex !== undefined &&
       this.scrollComponent &&
       this.lastClicked !==
@@ -206,6 +212,8 @@ export class ViewerProtologComponent {
     ) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }
+
+    this.lastSelectedMessage = undefined;
   }
 
   onLogLevelsChange(event: MatSelectChange) {
@@ -235,8 +243,17 @@ export class ViewerProtologComponent {
     this.emitEvent(Events.TimestampSelected, timestamp);
   }
 
+  onMessageClicked(index: number) {
+    this.lastSelectedMessage = index;
+    this.emitEvent(Events.MessageClicked, index);
+  }
+
   isCurrentMessage(index: number): boolean {
     return index === this.uiData.currentMessageIndex;
+  }
+
+  isSelectedMessage(index: number): boolean {
+    return index === this.uiData.selectedMessageIndex;
   }
 
   private emitEvent(event: string, data: any) {

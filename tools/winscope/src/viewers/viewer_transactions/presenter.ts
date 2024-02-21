@@ -162,7 +162,7 @@ export class Presenter {
 
   onEntryClicked(index: number) {
     if (this.uiData.selectedEntryIndex === index) {
-      this.uiData.selectedEntryIndex = undefined; // remove selection when clicked again
+      return;
     } else {
       this.uiData.selectedEntryIndex = index;
     }
