@@ -161,7 +161,7 @@ import {UiData} from './ui_data';
         </div>
         <tree-view
           *ngIf="uiData.currentPropertiesTree"
-          class="properties-tree"
+          class="properties-tree tree-wrapper"
           [node]="uiData.currentPropertiesTree"></tree-view>
       </div>
     </div>

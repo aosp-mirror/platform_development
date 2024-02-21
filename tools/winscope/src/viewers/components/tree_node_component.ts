@@ -85,9 +85,14 @@ export class TreeNodeComponent {
 
   collapseDiffClass = '';
   private el: HTMLElement;
+  private treeWrapper: HTMLElement | undefined;
 
   constructor(@Inject(ElementRef) public elementRef: ElementRef) {
     this.el = elementRef.nativeElement;
+  }
+
+  ngAfterViewInit() {
+    this.treeWrapper = this.getTreeWrapper();
   }
 
   ngOnChanges() {
@@ -98,14 +103,26 @@ export class TreeNodeComponent {
   }
 
   isNodeInView() {
+    if (!this.treeWrapper) {
+      return false;
+    }
     const rect = this.el.getBoundingClientRect();
-    return (
-      rect.top >= 0 &&
-      rect.left >= 0 &&
-      rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
-      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
+    const parentRect = this.treeWrapper.getBoundingClientRect();
+    return rect.top >= parentRect.top && rect.bottom <= parentRect.bottom;
+  }
+
+  getTreeWrapper(): HTMLElement | undefined {
+    let parent = this.el;
+    while (
+      !parent.className.includes('tree-wrapper') &&
+      parent?.parentElement
+    ) {
+      parent = parent.parentElement;
+    }
+    if (!parent.className.includes('tree-wrapper')) {
+      return undefined;
+    }
+    return parent;
   }
 
   isPropertyTreeNode() {
