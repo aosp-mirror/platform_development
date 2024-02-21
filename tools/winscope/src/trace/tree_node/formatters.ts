@@ -54,15 +54,22 @@ const DEFAULT_PROPERTY_FORMATTER = new DefaultPropertyFormatter();
 
 class ColorFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    const alpha = formatNumber(node.getChildByName('a')?.getValue() ?? 0);
+    const rNode = node.getChildByName('r');
+    const gNode = node.getChildByName('g');
+    const bNode = node.getChildByName('b');
+    const alphaNode = node.getChildByName('a');
+
+    const r = formatNumber(rNode?.getValue() ?? 0);
+    const g = formatNumber(gNode?.getValue() ?? 0);
+    const b = formatNumber(bNode?.getValue() ?? 0);
+    if (rNode && gNode && bNode && !alphaNode) {
+      return `(${r}, ${g}, ${b})`;
+    }
+
+    const alpha = formatNumber(alphaNode?.getValue() ?? 0);
     if (RawDataUtils.isEmptyObj(node)) {
       return `${EMPTY_OBJ_STRING}, alpha: ${alpha}`;
     }
-
-    const r = formatNumber(node.getChildByName('r')?.getValue() ?? 0);
-    const g = formatNumber(node.getChildByName('g')?.getValue() ?? 0);
-    const b = formatNumber(node.getChildByName('b')?.getValue() ?? 0);
-
     return `(${r}, ${g}, ${b}, ${alpha})`;
   }
 }

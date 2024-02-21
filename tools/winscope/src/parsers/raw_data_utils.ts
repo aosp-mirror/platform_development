@@ -31,7 +31,12 @@ export class RawDataUtils {
   }
 
   static isColor(obj: PropertyTreeNode): boolean {
-    return obj.getChildByName('a') !== undefined;
+    return (
+      (obj.getChildByName('r') !== undefined &&
+        obj.getChildByName('g') !== undefined &&
+        obj.getChildByName('b') !== undefined) ||
+      obj.getChildByName('a') !== undefined
+    );
   }
 
   static isRect(obj: PropertyTreeNode): boolean {
