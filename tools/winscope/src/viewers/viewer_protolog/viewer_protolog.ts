@@ -66,6 +66,9 @@ class ViewerProtoLog implements Viewer {
         );
       },
     );
+    this.htmlElement.addEventListener(Events.MessageClicked, (event) => {
+      this.presenter.onMessageClicked((event as CustomEvent).detail);
+    });
     this.htmlElement.addEventListener(Events.TimestampSelected, (event) => {
       this.propagateTimestamp((event as CustomEvent).detail);
     });
