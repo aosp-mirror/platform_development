@@ -58,8 +58,8 @@ export class Presenter {
   private readonly trace: Trace<HierarchyTreeNode>;
   private viewCapturePackageNames: string[] = [];
   private uiData: UiData;
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
   private highlightedItem = '';
   private highlightedProperty = '';
   private pinnedItems: UiHierarchyTreeNode[] = [];
@@ -228,7 +228,7 @@ export class Presenter {
   }
 
   async onHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
     this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
       this.currentHierarchyTree,
     );
@@ -242,7 +242,7 @@ export class Presenter {
   }
 
   async onPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 
@@ -564,6 +564,9 @@ export class Presenter {
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
+      predicatesDiscardingChildren.push(
+        UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+      );
     }
 
     if (!isHierarchyTreeRoot) {

@@ -304,7 +304,7 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
-    ).toEqual(24);
+    ).toEqual(22);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
@@ -318,7 +318,7 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onSelectedHierarchyTreeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
-    ).toEqual(24);
+    ).toEqual(22);
 
     await presenter.onPropertiesFilterChange('bound');
     expect(

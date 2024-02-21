@@ -65,8 +65,8 @@ export class Presenter {
 
   private highlightedItem: string = '';
 
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
 
   private hierarchyUserOptions: UserOptions =
     PersistentStoreProxy.new<UserOptions>(
@@ -340,7 +340,7 @@ export class Presenter {
   }
 
   async onHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
     assertDefined(this.uiData).tree =
       await this.formatHierarchyTreeAndUpdatePinnedItems(
         this.currentHierarchyTree,
@@ -356,7 +356,7 @@ export class Presenter {
   }
 
   async onPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 
