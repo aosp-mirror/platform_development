@@ -18,25 +18,65 @@ import {
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {MatButtonModule} from '@angular/material/button';
+import {assertDefined} from 'common/assert_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 
 describe('PropertyTreeNodeDataViewComponent', () => {
   let fixture: ComponentFixture<PropertyTreeNodeDataViewComponent>;
   let component: PropertyTreeNodeDataViewComponent;
+  let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [PropertyTreeNodeDataViewComponent],
+      imports: [MatButtonModule],
     }).compileComponents();
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
+    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('can emit timestamp', () => {
+    let timestamp: PropertyTreeNode | undefined;
+    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
+      timestamp = (event as CustomEvent).detail;
+    });
+    const node = UiPropertyTreeNode.from(
+      new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('timestamp')
+        .setValue(
+          NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102158832n),
+        )
+        .setFormatter(TIMESTAMP_FORMATTER)
+        .build(),
+    );
+    component.node = node;
+    fixture.detectChanges();
+
+    const timestampButton = assertDefined(
+      htmlElement.querySelector('.time button'),
+    ) as HTMLButtonElement;
+    timestampButton.click();
+    fixture.detectChanges();
+
+    expect(assertDefined(timestamp).formattedValue()).toEqual(
+      '2022-07-29T20:34:49.102158832',
+    );
   });
 });

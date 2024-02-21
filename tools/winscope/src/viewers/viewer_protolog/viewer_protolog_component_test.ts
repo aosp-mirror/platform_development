@@ -33,6 +33,7 @@ import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
@@ -146,7 +147,7 @@ describe('ViewerProtologComponent', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
       let timestamp = '';
-      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
         timestamp = (event as CustomEvent).detail.formattedValue();
       });
       const logTimestampButton = assertDefined(

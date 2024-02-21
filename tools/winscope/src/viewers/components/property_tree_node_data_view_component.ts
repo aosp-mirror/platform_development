@@ -13,33 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input} from '@angular/core';
+import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
+import {Timestamp} from 'common/time';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {propertyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
+import {timeButtonStyle} from './styles/timestamp_button.styles';
 
 @Component({
   selector: 'property-tree-node-data-view',
   template: `
     <div class="mat-body-1 node-property" *ngIf="node">
     <span class="property-key"> {{ getKey(node) }} </span>
-    <div *ngIf="getValue()" class="property-value">
-      <a [class]="[valueClass()]" class="value new">{{ getValue() }}</a>
-      <s *ngIf="isModified()" class="old-value">{{ getOldValue() }}</s>
+    <div *ngIf="node?.formattedValue()" class="property-value" [class]="[timeClass()]">
+      <button
+        *ngIf="isTimestamp()"
+        mat-button
+        color="primary"
+        (click)="onTimestampClicked(node)">
+        {{ node.formattedValue() }}
+      </button>
+      <a *ngIf="!isTimestamp()" [class]="[valueClass()]" class="value new">{{ node.formattedValue() }}</a>
+      <s *ngIf="isModified()" class="old-value">{{ node.getOldValue() }}</s>
     </div>
     </div>
   `,
-  styles: [propertyTreeNodeDataViewStyles],
+  styles: [
+    `
+      .property-value button {
+        white-space: normal;
+      }
+    `,
+    propertyTreeNodeDataViewStyles,
+    timeButtonStyle,
+  ],
 })
 export class PropertyTreeNodeDataViewComponent {
   @Input() node?: UiPropertyTreeNode;
 
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
+
   getKey(node: UiPropertyTreeNode) {
-    if (!this.getValue()) {
+    if (!this.node?.formattedValue()) {
       return node.getDisplayName();
     }
     return node.getDisplayName() + ': ';
+  }
+
+  isTimestamp() {
+    return this.node?.getValue() instanceof Timestamp;
+  }
+
+  onTimestampClicked(timestamp: UiPropertyTreeNode) {
+    const customEvent = new CustomEvent(ViewerEvents.TimestampClick, {
+      bubbles: true,
+      detail: timestamp,
+    });
+    this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
 
   valueClass() {
@@ -67,15 +99,15 @@ export class PropertyTreeNodeDataViewComponent {
     return null;
   }
 
-  getValue() {
-    return assertDefined(this.node).formattedValue();
+  timeClass() {
+    if (this.isTimestamp()) {
+      return 'time';
+    }
+
+    return null;
   }
 
   isModified() {
     return assertDefined(this.node).getDiff() === DiffType.MODIFIED;
-  }
-
-  getOldValue() {
-    return assertDefined(this.node).getOldValue();
   }
 }
