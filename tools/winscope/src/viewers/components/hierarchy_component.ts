@@ -68,7 +68,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       </div>
     </div>
     <mat-divider></mat-divider>
-    <div class="hierarchy-content">
+    <div class="hierarchy-content tree-wrapper">
       <tree-view
         *ngIf="tree"
         [isFlattened]="isFlattened()"

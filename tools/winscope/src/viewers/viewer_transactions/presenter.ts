@@ -356,7 +356,15 @@ export class Presenter {
     );
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      formatter.addOperation(new Filter([UiTreeUtils.isNotDefault], false));
+      formatter.addOperation(
+        new Filter(
+          [
+            UiTreeUtils.isNotDefault,
+            UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+          ],
+          false,
+        ),
+      );
     }
 
     return formatter.addOperation(new SetRootDisplayNames()).format();

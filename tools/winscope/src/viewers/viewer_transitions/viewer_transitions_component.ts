@@ -106,7 +106,7 @@ import {UiData} from './ui_data';
 
       <div class="container-properties">
         <h3 class="properties-title mat-title">Selected Transition</h3>
-        <tree-view [node]="uiData.selectedTransition"></tree-view>
+        <tree-view class="tree-wrapper" [node]="uiData.selectedTransition"></tree-view>
         <div *ngIf="!uiData.selectedTransition" class="mat-body-1">No selected transition.</div>
       </div>
     </div>

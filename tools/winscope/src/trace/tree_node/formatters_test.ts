@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {IDENTITY_MATRIX} from 'common/geometry_types';
 import {TransformType} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -25,6 +26,7 @@ import {
   EMPTY_ARRAY_STRING,
   EMPTY_OBJ_STRING,
   LAYER_ID_FORMATTER,
+  MATRIX_FORMATTER,
   POSITION_FORMATTER,
   RECT_FORMATTER,
   REGION_FORMATTER,
@@ -159,6 +161,41 @@ describe('Formatters', () => {
           new PropertyTreeNode('', '', PropertySource.PROTO, -10),
         ),
       ).toEqual('-10');
+    });
+  });
+
+  describe('MatrixFormatter', () => {
+    it('translates matrix correctly', () => {
+      expect(
+        MATRIX_FORMATTER.format(
+          TreeNodeUtils.makeMatrixNode(
+            IDENTITY_MATRIX.dsdx,
+            IDENTITY_MATRIX.dtdx,
+            IDENTITY_MATRIX.dsdy,
+            IDENTITY_MATRIX.dtdy,
+          ),
+        ),
+      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1');
+      expect(
+        MATRIX_FORMATTER.format(
+          TreeNodeUtils.makeMatrixNode(0.4, 100, 1, 0.1232),
+        ),
+      ).toEqual('dsdx: 0.400, dtdx: 100, dsdy: 1, dtdy: 0.123');
+      expect(
+        MATRIX_FORMATTER.format(TreeNodeUtils.makeMatrixNode(0, 0, 0, 0)),
+      ).toEqual('null');
+      expect(
+        MATRIX_FORMATTER.format(
+          TreeNodeUtils.makePropertyNode('test node', 'transform', {
+            dsdx: 1,
+            dtdx: 0,
+            dsdy: 0,
+            dtdy: 1,
+            tx: 5,
+            ty: 10,
+          }),
+        ),
+      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1, tx: 5, ty: 10');
     });
   });
 
