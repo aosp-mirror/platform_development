@@ -13,7 +13,7 @@ from utils import (
 PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
-PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform')
+PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
 NON_AOSP_TAGS = {'VENDOR', 'PRODUCT'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
@@ -28,8 +28,9 @@ class GetRefDumpDirStem:
 
 
 class GetVersionedRefDumpDirStem:
-    def __init__(self, chosen_platform_version,
+    def __init__(self, board_api_level, chosen_platform_version,
                  binder_bitness):
+        self.board_api_level = board_api_level
         self.chosen_platform_version = chosen_platform_version
         self.binder_bitness = binder_bitness
 
@@ -37,16 +38,16 @@ class GetVersionedRefDumpDirStem:
         if subdir not in PREBUILTS_ABI_DUMPS_SUBDIRS:
             raise ValueError(f'"{subdir}" is not a valid dump directory under '
                              f'{PREBUILTS_ABI_DUMPS_DIR}.')
-        return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir,
-                            self.chosen_platform_version,
+        version_stem = (self.board_api_level if subdir == 'vndk' else
+                        self.chosen_platform_version)
+        return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir, version_stem,
                             self.binder_bitness, arch_str)
 
 
-def make_libs_for_product(libs, build_target, vndk_version, arches,
-                          exclude_tags):
+def make_libs_for_product(libs, build_target, arches, exclude_tags):
     print('making libs for', '-'.join(filter(None, build_target)))
     if libs:
-        make_libraries(build_target, vndk_version, arches, libs, exclude_tags)
+        make_libraries(build_target, arches, libs, exclude_tags)
     else:
         make_tree(build_target)
 
@@ -56,8 +57,10 @@ def tag_to_dir_name(tag):
         return ''
     if tag == 'NDK':
         return 'ndk'
-    if tag in ('PLATFORM', 'LLNDK'):
+    if tag == 'PLATFORM':
         return 'platform'
+    if tag == 'LLNDK':
+        return 'vndk'
     raise ValueError(tag + ' is not a known tag.')
 
 
@@ -94,10 +97,10 @@ def create_source_abi_reference_dumps_for_all_products(args):
     for product in args.products:
         build_target = BuildTarget(product, args.release, args.build_variant)
         (
-            platform_vndk_version, binder_32_bit,
-            platform_version_codename, platform_sdk_version
-        ) = build_vars = get_build_vars(
-            ['PLATFORM_VNDK_VERSION', 'BINDER32BIT',
+            release_board_api_level, binder_32_bit,
+            platform_version_codename, platform_sdk_version,
+        ) = get_build_vars(
+            ['RELEASE_BOARD_API_LEVEL', 'BINDER32BIT',
              'PLATFORM_VERSION_CODENAME', 'PLATFORM_SDK_VERSION'],
             build_target
         )
@@ -121,7 +124,7 @@ def create_source_abi_reference_dumps_for_all_products(args):
             exclude_tags = ()
         else:
             get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
-                chosen_platform_version,
+                release_board_api_level, chosen_platform_version,
                 binder_bitness)
             exclude_tags = NON_AOSP_TAGS
 
@@ -129,12 +132,10 @@ def create_source_abi_reference_dumps_for_all_products(args):
             if not args.no_make_lib:
                 # Build .lsdump for all the specified libs, or build
                 # `findlsdumps` if no libs are specified.
-                make_libs_for_product(args.libs, build_target,
-                                      platform_vndk_version, arches,
+                make_libs_for_product(args.libs, build_target, arches,
                                       exclude_tags)
 
-            lsdump_paths = read_lsdump_paths(build_target,
-                                             platform_vndk_version, arches,
+            lsdump_paths = read_lsdump_paths(build_target, arches,
                                              exclude_tags, build=False)
 
             num_processed += create_source_abi_reference_dumps(
@@ -203,6 +204,9 @@ def main():
 
     # Clear SKIP_ABI_CHECKS as it forbids ABI dumps from being built.
     os.environ.pop('SKIP_ABI_CHECKS', None)
+
+    if os.environ.get('KEEP_VNDK') == 'true':
+        raise RuntimeError('KEEP_VNDK is not supported. Please undefine it.')
 
     start = time.time()
     num_processed = create_source_abi_reference_dumps_for_all_products(args)
