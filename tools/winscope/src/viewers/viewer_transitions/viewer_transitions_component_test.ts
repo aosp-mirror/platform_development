@@ -36,9 +36,9 @@ import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
 import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -57,7 +57,7 @@ describe('ViewerTransitionsComponent', () => {
         ViewerTransitionsComponent,
         TreeComponent,
         TreeNodeComponent,
-        TreeNodePropertiesDataViewComponent,
+        PropertyTreeNodeDataViewComponent,
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();

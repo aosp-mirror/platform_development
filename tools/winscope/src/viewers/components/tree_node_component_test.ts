@@ -24,9 +24,9 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
+import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {TreeNodeComponent} from './tree_node_component';
-import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
-import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
 
 describe('TreeNodeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -38,8 +38,8 @@ describe('TreeNodeComponent', () => {
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [
         TreeNodeComponent,
-        TreeNodeDataViewComponent,
-        TreeNodePropertiesDataViewComponent,
+        HierarchyTreeNodeDataViewComponent,
+        PropertyTreeNodeDataViewComponent,
         TestHostComponent,
       ],
       imports: [MatIconModule, MatTooltipModule],
@@ -59,7 +59,9 @@ describe('TreeNodeComponent', () => {
       .createSpy()
       .and.returnValue(false);
     fixture.detectChanges();
-    const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
+    const treeNodeDataView = htmlElement.querySelector(
+      'hierarchy-tree-node-data-view',
+    );
     expect(treeNodeDataView).toBeTruthy();
   });
 

@@ -18,21 +18,21 @@ import {
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
-import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
+import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 
-describe('TreeNodePropertiesDataViewComponent', () => {
-  let fixture: ComponentFixture<TreeNodePropertiesDataViewComponent>;
-  let component: TreeNodePropertiesDataViewComponent;
+describe('PropertyTreeNodeDataViewComponent', () => {
+  let fixture: ComponentFixture<PropertyTreeNodeDataViewComponent>;
+  let component: PropertyTreeNodeDataViewComponent;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodePropertiesDataViewComponent],
+      declarations: [PropertyTreeNodeDataViewComponent],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeNodePropertiesDataViewComponent);
+    fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
   });
 

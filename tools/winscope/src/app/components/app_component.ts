@@ -74,7 +74,7 @@ import {UploadTracesComponent} from './upload_traces_component';
   selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
-      <div class="horizontal-align vertical-align">
+      <div class="horizontal-align vertical-align fixed">
         <span class="app-title">Winscope</span>
         <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
           <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
@@ -119,19 +119,23 @@ import {UploadTracesComponent} from './upload_traces_component';
       </div>
 
       <div class="horizontal-align vertical-align active" *ngIf="showDataLoadedElements">
-        <mat-icon
+        <button
           *ngIf="activeTrace"
-          class="icon"
-          [matTooltip]="TRACE_INFO[activeTrace.type].name"
-          [style]="{color: TRACE_INFO[activeTrace.type].color, marginRight: '0.5rem'}">
-          {{ TRACE_INFO[activeTrace.type].icon }}
-        </mat-icon>
+          mat-icon-button
+          [disabled]="true">
+          <mat-icon
+            class="icon"
+            [matTooltip]="TRACE_INFO[activeTrace.type].name"
+            [style]="{color: TRACE_INFO[activeTrace.type].color}">
+            {{ TRACE_INFO[activeTrace.type].icon }}
+          </mat-icon>
+        </button>
         <span class="trace-file-info mat-body-2" [matTooltip]="activeTraceFileInfo">
           {{ activeTraceFileInfo }}
         </span>
       </div>
 
-      <div class="horizontal-align vertical-align">
+      <div class="horizontal-align vertical-align fixed">
         <button
           *ngIf="showDataLoadedElements"
           color="primary"
@@ -222,6 +226,7 @@ import {UploadTracesComponent} from './upload_traces_component';
       .toolbar {
         gap: 10px;
         justify-content: space-between;
+        min-height: 64px;
       }
       .welcome-info {
         margin: 16px 0 6px 0;
@@ -248,6 +253,9 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow-x: hidden;
         display: flex;
       }
+      .fixed {
+        min-width: fit-content;
+      }
       .download-file-info {
         text-overflow: ellipsis;
         overflow-x: hidden;
@@ -265,10 +273,6 @@ import {UploadTracesComponent} from './upload_traces_component';
         text-overflow: ellipsis;
         overflow-x: hidden;
         max-width: 100%;
-      }
-      .upload-new {
-        flex: none;
-        width: fit-content;
       }
       .viewers {
         height: 0;

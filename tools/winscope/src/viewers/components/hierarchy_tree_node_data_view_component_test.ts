@@ -19,22 +19,22 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
+import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 
-describe('TreeNodeDataViewComponent', () => {
-  let fixture: ComponentFixture<TreeNodeDataViewComponent>;
-  let component: TreeNodeDataViewComponent;
+describe('HierarchyTreeNodeDataViewComponent', () => {
+  let fixture: ComponentFixture<HierarchyTreeNodeDataViewComponent>;
+  let component: HierarchyTreeNodeDataViewComponent;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodeDataViewComponent],
+      declarations: [HierarchyTreeNodeDataViewComponent],
       imports: [MatTooltipModule],
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeNodeDataViewComponent);
+    fixture = TestBed.createComponent(HierarchyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
   });
 

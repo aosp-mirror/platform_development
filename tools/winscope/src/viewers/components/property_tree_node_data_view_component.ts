@@ -17,26 +17,30 @@ import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
+import {propertyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
-  selector: 'tree-node-properties-data-view',
+  selector: 'property-tree-node-data-view',
   template: `
-    <div class="mat-body-1" *ngIf="node">
-      {{ node.getDisplayName() }}
-      <div *ngIf="value()" class="node-property">
-        <span> :&ngsp; </span>
-        <div class="property-info">
-          <a [class]="[valueClass()]" class="value new">{{ value() }}</a>
-          <s *ngIf="isModified()" class="old-value">{{ oldValue() }}</s>
-        </div>
-      </div>
+    <div class="mat-body-1 node-property" *ngIf="node">
+    <span class="property-key"> {{ getKey(node) }} </span>
+    <div *ngIf="getValue()" class="property-value">
+      <a [class]="[valueClass()]" class="value new">{{ getValue() }}</a>
+      <s *ngIf="isModified()" class="old-value">{{ getOldValue() }}</s>
+    </div>
     </div>
   `,
-  styles: [treeNodePropertiesDataViewStyles],
+  styles: [propertyTreeNodeDataViewStyles],
 })
-export class TreeNodePropertiesDataViewComponent {
+export class PropertyTreeNodeDataViewComponent {
   @Input() node?: UiPropertyTreeNode;
+
+  getKey(node: UiPropertyTreeNode) {
+    if (!this.getValue()) {
+      return node.getDisplayName();
+    }
+    return node.getDisplayName() + ': ';
+  }
 
   valueClass() {
     const property = assertDefined(this.node).formattedValue();
@@ -63,7 +67,7 @@ export class TreeNodePropertiesDataViewComponent {
     return null;
   }
 
-  value() {
+  getValue() {
     return assertDefined(this.node).formattedValue();
   }
 
@@ -71,7 +75,7 @@ export class TreeNodePropertiesDataViewComponent {
     return assertDefined(this.node).getDiff() === DiffType.MODIFIED;
   }
 
-  oldValue() {
+  getOldValue() {
     return assertDefined(this.node).getOldValue();
   }
 }
