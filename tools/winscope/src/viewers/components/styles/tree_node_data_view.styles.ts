@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const treeNodeDataViewStyles = `
+export const hierarchyTreeNodeDataViewStyles = `
     .tree-view-internal-chip {
         display: inline-block;
     }
@@ -43,12 +43,18 @@ export const treeNodeDataViewStyles = `
     }
 `;
 
-export const treeNodePropertiesDataViewStyles = `
+export const propertyTreeNodeDataViewStyles = `
     .node-property {
+        display: flex;
+        flex-direction: row;
+    }
+    .property-key {
         position: relative;
         display: inline-block;
+        padding-right: 2px;
+        word-break: keep-all;
     }
-    .property-info {
+    .property-value {
         position: relative;
         display: inline-block;
         vertical-align: top;

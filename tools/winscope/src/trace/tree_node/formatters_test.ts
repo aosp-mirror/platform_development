@@ -105,6 +105,17 @@ describe('Formatters', () => {
         COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.608)),
       ).toEqual('(1, 2, 3, 0.608)');
     });
+
+    it('translates rgb color without alpha to string correctly (transactions)', () => {
+      expect(
+        COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, undefined)),
+      ).toEqual('(1, 2, 3)');
+      expect(
+        COLOR_FORMATTER.format(
+          TreeNodeUtils.makeColorNode(0.106, 0.203, 0.313, undefined),
+        ),
+      ).toEqual('(0.106, 0.203, 0.313)');
+    });
   });
 
   describe('RectFormatter', () => {

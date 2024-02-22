@@ -324,24 +324,23 @@ describe('PresenterTransactions', () => {
     );
 
     presenter.onEntryClicked(10);
+    const expectedTree = UiPropertyTreeNode.from(
+      assertDefined(outputUiData?.entries[10].propertiesTree),
+    );
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
     expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
     expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
     expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      UiPropertyTreeNode.from(
-        assertDefined(outputUiData?.entries[10].propertiesTree),
-      ),
+      expectedTree,
     );
 
-    // remove selection when selected entry is clicked again
+    // does not remove selection when entry clicked again
     presenter.onEntryClicked(10);
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
-    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
+    expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
+    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined();
     expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      UiPropertyTreeNode.from(
-        assertDefined(outputUiData?.entries[0].propertiesTree),
-      ),
+      expectedTree,
     );
   });
 

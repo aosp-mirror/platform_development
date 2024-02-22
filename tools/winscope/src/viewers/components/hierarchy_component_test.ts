@@ -30,9 +30,9 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
 import {HierarchyComponent} from './hierarchy_component';
 
 describe('HierarchyComponent', () => {
@@ -47,7 +47,7 @@ describe('HierarchyComponent', () => {
         HierarchyComponent,
         TreeComponent,
         TreeNodeComponent,
-        TreeNodeDataViewComponent,
+        HierarchyTreeNodeDataViewComponent,
       ],
       imports: [
         CommonModule,

@@ -91,6 +91,15 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
+  onMessageClicked(index: number) {
+    if (this.uiData.selectedMessageIndex === index) {
+      this.uiData.selectedMessageIndex = undefined;
+    } else {
+      this.uiData.selectedMessageIndex = index;
+    }
+    this.notifyUiDataCallback(this.uiData);
+  }
+
   private async initializeIfNeeded() {
     if (this.isInitialized) {
       return;
@@ -179,6 +188,7 @@ export class Presenter {
       this.allTags,
       this.allSourceFiles,
       filteredMessages,
+      undefined,
       undefined,
     );
   }
