@@ -16,9 +16,8 @@
 
 export const timeButtonStyle = `
     .time button {
-        padding: 0px;
-        line-height: normal;
-        text-align: left;
-        white-space: normal;
+      padding: 0px;
+      line-height: normal;
+      text-align: left;
     }
 `;

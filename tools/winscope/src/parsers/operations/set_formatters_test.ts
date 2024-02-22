@@ -70,6 +70,24 @@ describe('SetFormatters', () => {
     ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
   });
 
+  it('adds correct formatter for color3 node', () => {
+    propertyRoot = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('test')
+      .setName('node')
+      .build();
+    propertyRoot.addOrReplaceChild(
+      TreeNodeUtils.makeColorNode(0, 0, 0, undefined),
+    );
+    operation = new SetFormatters();
+    operation.apply(propertyRoot);
+
+    expect(propertyRoot.formattedValue()).toEqual('');
+    expect(
+      assertDefined(propertyRoot.getChildByName('color')).formattedValue(),
+    ).toEqual(`(0, 0, 0)`);
+  });
+
   it('adds correct formatter for rect node', () => {
     propertyRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
