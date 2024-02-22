@@ -329,7 +329,7 @@ class ViewerTransactionsComponent {
 
   onTimestampClicked(timestamp: PropertyTreeNode) {
     this.lastClicked = timestamp.formattedValue();
-    this.emitEvent(Events.TimestampSelected, timestamp);
+    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
   }
 
   isCurrentEntry(index: number): boolean {

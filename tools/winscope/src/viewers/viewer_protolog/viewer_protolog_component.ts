@@ -17,6 +17,7 @@ import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
@@ -240,7 +241,7 @@ export class ViewerProtologComponent {
 
   onTimestampClicked(timestamp: PropertyTreeNode) {
     this.lastClicked = timestamp.formattedValue();
-    this.emitEvent(Events.TimestampSelected, timestamp);
+    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
   }
 
   onMessageClicked(index: number) {

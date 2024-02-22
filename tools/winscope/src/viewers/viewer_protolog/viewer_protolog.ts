@@ -21,6 +21,7 @@ import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
 import {Presenter} from './presenter';
@@ -69,7 +70,7 @@ class ViewerProtoLog implements Viewer {
     this.htmlElement.addEventListener(Events.MessageClicked, (event) => {
       this.presenter.onMessageClicked((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
       this.propagateTimestamp((event as CustomEvent).detail);
     });
 

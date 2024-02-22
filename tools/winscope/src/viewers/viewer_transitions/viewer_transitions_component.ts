@@ -17,6 +17,7 @@
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {Transition} from 'trace/transition';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
@@ -237,7 +238,7 @@ export class ViewerTransitionsComponent {
   }
 
   onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.emitEvent(Events.TimestampSelected, timestamp);
+    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
   }
 
   emitEvent(event: string, propertiesTree: PropertyTreeNode) {

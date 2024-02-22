@@ -36,6 +36,7 @@ import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
@@ -184,7 +185,7 @@ describe('ViewerTransitionsComponent', () => {
 
   it('propagates timestamp on click', () => {
     let timestamp = '';
-    htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
       timestamp = (event as CustomEvent).detail.formattedValue();
     });
     const logTimestampButton = assertDefined(

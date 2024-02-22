@@ -20,7 +20,6 @@ class Events {
     'ViewerProtoLogEvent_SourceFilesFilterChanged';
   static SearchStringFilterChanged =
     'ViewerProtoLogEvent_SearchStringFilterChanged';
-  static TimestampSelected = 'ViewerProtoLogEvent_TimestampSelected';
   static MessageClicked = 'ViewerProtoLogEvent_MessageClicked';
 }
 
