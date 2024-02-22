@@ -117,6 +117,31 @@ describe('ViewerProtologComponent', () => {
       expect(spy).toHaveBeenCalledWith(150);
     });
 
+    it('changes css class on message click and does not scroll', () => {
+      const uiData = makeUiData();
+      component.inputData = uiData;
+      fixture.detectChanges();
+
+      htmlElement.addEventListener(Events.MessageClicked, (event) => {
+        const index = (event as CustomEvent).detail;
+        uiData.selectedMessageIndex = index;
+        component.inputData = uiData;
+        fixture.detectChanges();
+      });
+
+      const message = assertDefined(
+        htmlElement.querySelector('.message[item-id="3"]'),
+      ) as HTMLButtonElement;
+      expect(message.className).not.toContain('selected');
+      const spy = spyOn(
+        assertDefined(component.scrollComponent),
+        'scrollToIndex',
+      );
+      message.click();
+      expect(spy).not.toHaveBeenCalled();
+      expect(message.className).toContain('selected');
+    });
+
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
@@ -186,6 +211,13 @@ describe('ViewerProtologComponent', () => {
       };
       messages.push(uiDataMessage);
     }
-    return new UiData(allLogLevels, allTags, allSourceFiles, messages, 150);
+    return new UiData(
+      allLogLevels,
+      allTags,
+      allSourceFiles,
+      messages,
+      150,
+      undefined,
+    );
   }
 });

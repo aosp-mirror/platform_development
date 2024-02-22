@@ -60,7 +60,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="wmInsetsSourceProvider()" class="group">
+        <div *ngIf="wmInsetsSourceProvider()" class="group insets-source-provider">
           <button
             color="primary"
             mat-button
@@ -100,11 +100,11 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeControlTarget()" class="group">
+        <div *ngIf="wmImeControlTarget()" class="group ime-control-target">
           <button
             color="primary"
             mat-button
-            class="group-header ime-control-target"
+            class="group-header ime-control-target-button"
             [class]="{selected: isHighlighted(wmImeControlTarget())}"
             (click)="onClickShowInPropertiesPanelWm(wmImeControlTarget(), 'Ime Control Target')">
             IME Control Target
@@ -117,7 +117,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeInputTarget()" class="group">
+        <div *ngIf="wmImeInputTarget()" class="group ime-input-target">
           <button
             color="primary"
             mat-button
@@ -134,7 +134,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeLayeringTarget()" class="group">
+        <div *ngIf="wmImeLayeringTarget()" class="group ime-layering-target">
           <button
             color="primary"
             mat-button
@@ -160,13 +160,13 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
-            class="group-header wm-state"
+            class="group-header wm-state-button"
             [class]="{selected: isHighlighted(wmHierarchyTree())}"
             (click)="onClickShowInPropertiesPanelWm(wmHierarchyTree(), 'Window Manager State')">
             WMState
           </button>
           <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
-          <div class="left-column">
+          <div class="left-column wm-state">
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               {{ wmRootLabel() }}
             </p>
@@ -177,7 +177,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div class="group">
           <h3 class="group-header mat-subheading-2">SFLayer</h3>
-          <div class="left-column">
+          <div class="left-column sf-state">
             <p *ngIf="additionalProperties?.sf" class="mat-body-1">
               {{ sfRootLabel() }}
             </p>
@@ -186,7 +186,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties?.wm" class="group">
+        <div *ngIf="additionalProperties?.wm" class="group focus">
           <h3 class="group-header mat-subheading-2">Focus</h3>
           <div class="left-column">
             <p class="mat-body-1">
@@ -213,7 +213,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             <coordinates-table [coordinates]="wmControlTargetFrame()"></coordinates-table>
           </div>
         </div>
-        <div class="group">
+        <div class="group visibility">
           <h3 class="group-header mat-subheading-2">Visibility</h3>
           <div class="left-column">
             <p *ngIf="additionalProperties?.wm" class="mat-body-1">
@@ -228,11 +228,11 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties?.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group ime-container">
           <button
             color="primary"
             mat-button
-            class="group-header ime-container"
+            class="group-header ime-container-button"
             [class]="{selected: isHighlighted(additionalProperties.sf.properties.imeContainer)}"
             (click)="
               onClickShowInPropertiesPanelSf(additionalProperties.sf.properties.imeContainer)
@@ -252,11 +252,11 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties?.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group input-method-surface">
           <button
             color="primary"
             mat-button
-            class="group-header input-method-surface"
+            class="group-header input-method-surface-button"
             [class]="{
               selected: isHighlighted(additionalProperties.sf.properties.inputMethodSurface)
             }"

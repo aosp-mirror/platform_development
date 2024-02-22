@@ -32,7 +32,8 @@ export class UiData {
     public allSourceFiles: string[],
     public messages: UiDataMessage[],
     public currentMessageIndex: undefined | number,
+    public selectedMessageIndex: undefined | number,
   ) {}
 
-  static EMPTY = new UiData([], [], [], [], undefined);
+  static EMPTY = new UiData([], [], [], [], undefined, undefined);
 }

@@ -85,7 +85,7 @@ describe('ViewerTransactionsComponent', () => {
     });
 
     it('renders properties', () => {
-      expect(htmlElement.querySelector('.properties-tree')).toBeTruthy();
+      expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
     });
 
     it('scrolls to current entry on button click', () => {

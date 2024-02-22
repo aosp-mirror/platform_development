@@ -119,7 +119,7 @@ import {UiData} from './ui_data';
                 {{ entry.time.formattedValue() }}
               </button>
             </div>
-            <div class="id">
+            <div class="id transaction-id">
               <span class="mat-body-1">{{ entry.transactionId }}</span>
             </div>
             <div class="vsyncid">
@@ -134,7 +134,7 @@ import {UiData} from './ui_data';
             <div class="type">
               <span class="mat-body-1">{{ entry.type }}</span>
             </div>
-            <div class="id">
+            <div class="id layer-or-display-id">
               <span class="mat-body-1">{{ entry.layerOrDisplayId }}</span>
             </div>
             <div class="what">
@@ -161,7 +161,7 @@ import {UiData} from './ui_data';
         </div>
         <tree-view
           *ngIf="uiData.currentPropertiesTree"
-          class="properties-tree tree-wrapper"
+          class="properties-view tree-wrapper"
           [node]="uiData.currentPropertiesTree"></tree-view>
       </div>
     </div>
