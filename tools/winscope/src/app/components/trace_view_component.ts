@@ -56,7 +56,9 @@ interface Tab {
           *ngFor="let tab of tabs"
           mat-tab-link
           [active]="isCurrentActiveTab(tab)"
+          [class.active]="isCurrentActiveTab(tab)"
           (click)="onTabClick(tab)"
+          (focus)="$event.target.blur()"
           class="tab">
           <mat-icon
             class="icon"
@@ -75,6 +77,10 @@ interface Tab {
   `,
   styles: [
     `
+      .tab.active {
+        opacity: 100%;
+      }
+
       .overlay {
         z-index: 30;
         position: fixed;
