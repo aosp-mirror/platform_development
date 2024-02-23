@@ -205,7 +205,7 @@ class ShareTestActivity : Activity() {
         val mimeTypes = getSelectedContentTypes()
 
         val imageUris = ArrayList(
-            (1..ImageContentProvider.IMAGE_COUNT).map{ idx ->
+            (1..ImageContentProvider.IMAGE_COUNT).map { idx ->
                 ImageContentProvider.makeItemUri(idx, mimeTypes[idx % mimeTypes.size])
             })
 
@@ -293,12 +293,19 @@ class ShareTestActivity : Activity() {
             chooserIntent.putExtra(Intent.EXTRA_METADATA_TEXT, metadata.text)
         }
         if (shareouselCheck.isChecked) {
-            chooserIntent.putExtra(Intent.EXTRA_CHOOSER_ADDITIONAL_CONTENT_URI,
-                AdditionalContentProvider.ADDITIONAL_CONTENT_URI)
+            chooserIntent.putExtra(
+                Intent.EXTRA_CHOOSER_ADDITIONAL_CONTENT_URI,
+                AdditionalContentProvider.ADDITIONAL_CONTENT_URI,
+            )
             chooserIntent.putExtra(Intent.EXTRA_CHOOSER_FOCUSED_ITEM_POSITION, 0)
             chooserIntent.clipData?.addItem(
                 ClipData.Item(AdditionalContentProvider.ADDITIONAL_CONTENT_URI))
-            chooserIntent.putExtra(AdditionalContentProvider.CURSOR_START_POSITION, 0)
+            if (mediaSelection.checkedRadioButtonId == R.id.one_image) {
+                chooserIntent.putExtra(
+                    AdditionalContentProvider.CURSOR_START_POSITION,
+                    imageIndex,
+                )
+            }
         }
 
         startActivity(chooserIntent)
