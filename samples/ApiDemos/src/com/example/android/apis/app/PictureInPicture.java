@@ -231,7 +231,7 @@ public class PictureInPicture extends Activity {
 
     @Override
     public void onPictureInPictureUiStateChanged(PictureInPictureUiState pipState) {
-        if (pipState.isEnteringPip()) {
+        if (pipState.isTransitioningToPip()) {
             findViewById(R.id.text_to_hide).setVisibility(View.INVISIBLE);
         }
     }

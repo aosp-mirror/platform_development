@@ -78,7 +78,7 @@ class ViewerTransactions implements Viewer {
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
       this.propagateTimestamp((event as CustomEvent).detail);
     });
 

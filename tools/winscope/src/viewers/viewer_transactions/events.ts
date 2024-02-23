@@ -24,7 +24,6 @@ class Events {
   static EntryClicked = 'ViewerTransactionsEvent_EntryClicked';
   static TransactionIdFilterChanged =
     'ViewerTransactionsEvent_TransactionIdFilterChanged';
-  static TimestampSelected = 'ViewerTransactionsEvent_TimestampSelected';
 }
 
 export {Events};
