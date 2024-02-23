@@ -152,7 +152,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           (click)="
             goToLink('https://source.android.com/docs/core/graphics/tracing-win-transitions')
           ">
-          <mat-icon>help</mat-icon>
+          <mat-icon>menu_book</mat-icon>
         </button>
 
         <button
