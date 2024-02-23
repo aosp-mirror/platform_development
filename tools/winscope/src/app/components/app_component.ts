@@ -74,12 +74,33 @@ import {UploadTracesComponent} from './upload_traces_component';
   selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
+      <div class="horizontal-align vertical-align">
+        <span class="app-title fixed">Winscope</span>
+        <div class="horizontal-align vertical-align active" *ngIf="showDataLoadedElements">
+          <button
+            *ngIf="activeTrace"
+            mat-icon-button
+            [disabled]="true">
+            <mat-icon
+              class="icon"
+              [matTooltip]="TRACE_INFO[activeTrace.type].name"
+              [style]="{color: TRACE_INFO[activeTrace.type].color}">
+              {{ TRACE_INFO[activeTrace.type].icon }}
+            </mat-icon>
+          </button>
+          <span class="trace-file-info mat-body-1" [matTooltip]="activeTraceFileInfo">
+            {{ activeTraceFileInfo }}
+          </span>
+        </div>
+      </div>
+
       <div class="horizontal-align vertical-align fixed">
-        <span class="app-title">Winscope</span>
+        <mat-icon class="material-symbols-outlined" *ngIf="showDataLoadedElements">description</mat-icon>
         <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
           <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
-            {{ filenameFormControl.value }}.zip
+            {{ filenameFormControl.value }}
           </span>
+          <span *ngIf="!isEditingFilename" class="download-file-ext mat-body-2">.zip</span>
           <mat-form-field
             class="file-name-input-field"
             *ngIf="isEditingFilename"
@@ -113,36 +134,19 @@ import {UploadTracesComponent} from './upload_traces_component';
             matTooltip="Download all traces"
             class="save-button"
             (click)="onDownloadTracesButtonClick()">
-            <mat-icon>download</mat-icon>
+            <mat-icon class="material-symbols-outlined">download</mat-icon>
           </button>
         </div>
-      </div>
 
-      <div class="horizontal-align vertical-align active" *ngIf="showDataLoadedElements">
-        <button
-          *ngIf="activeTrace"
-          mat-icon-button
-          [disabled]="true">
-          <mat-icon
-            class="icon"
-            [matTooltip]="TRACE_INFO[activeTrace.type].name"
-            [style]="{color: TRACE_INFO[activeTrace.type].color}">
-            {{ TRACE_INFO[activeTrace.type].icon }}
-          </mat-icon>
-        </button>
-        <span class="trace-file-info mat-body-2" [matTooltip]="activeTraceFileInfo">
-          {{ activeTraceFileInfo }}
-        </span>
-      </div>
-
-      <div class="horizontal-align vertical-align fixed">
+        <div *ngIf="showDataLoadedElements" class="icon-divider"></div>
         <button
           *ngIf="showDataLoadedElements"
           color="primary"
-          mat-stroked-button
+          mat-icon-button
+          matTooltip="Upload or collect new trace"
           class="upload-new"
           (click)="onUploadNewButtonClick()">
-          Upload New
+          <mat-icon class="material-symbols-outlined">upload</mat-icon>
         </button>
 
         <button
@@ -239,10 +243,12 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow: auto;
         height: 820px;
       }
-      .file-descriptor {
-        font-size: 14px;
-        padding-left: 10px;
-        width: 350px;
+      .trace-file-info {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+        max-width: 100%;
+        padding-top: 3px;
+        color: #063C8C;
       }
       .horizontal-align {
         justify-content: center;
@@ -256,9 +262,18 @@ import {UploadTracesComponent} from './upload_traces_component';
       .fixed {
         min-width: fit-content;
       }
+      .file-descriptor {
+        font-size: 14px;
+        padding-left: 10px;
+        width: 350px;
+      }
       .download-file-info {
         text-overflow: ellipsis;
         overflow-x: hidden;
+        padding-top: 3px;
+        max-width: 300px;
+      }
+      .download-file-ext {
         padding-top: 3px;
         max-width: 300px;
       }
@@ -269,10 +284,12 @@ import {UploadTracesComponent} from './upload_traces_component';
         padding-bottom: 10px;
         width: 300px;
       }
-      .trace-file-info {
-        text-overflow: ellipsis;
-        overflow-x: hidden;
-        max-width: 100%;
+      .icon-divider {
+        width: 1px;
+        background-color: #C4C0C0;
+        margin-right: 6px;
+        margin-left: 6px;
+        height: 20px;
       }
       .viewers {
         height: 0;
