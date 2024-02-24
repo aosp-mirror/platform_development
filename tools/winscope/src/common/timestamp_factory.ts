@@ -15,7 +15,6 @@
  */
 
 import {Timestamp, TimestampType, TimezoneInfo} from './time';
-import {TimeUtils} from './time_utils';
 
 export class TimestampFactory {
   constructor(
@@ -29,7 +28,7 @@ export class TimestampFactory {
     const valueWithRealtimeOffset = valueNs + (realToElapsedTimeOffsetNs ?? 0n);
     const localNs =
       this.timezoneInfo.timezone !== 'UTC'
-        ? TimeUtils.addTimezoneOffset(
+        ? this.addTimezoneOffset(
             this.timezoneInfo.timezone,
             valueWithRealtimeOffset,
           )
@@ -73,6 +72,19 @@ export class TimestampFactory {
       default:
         throw new Error('Unhandled timestamp type');
     }
+  }
+
+  private addTimezoneOffset(timezone: string, timestampNs: bigint): bigint {
+    const utcDate = new Date(Number(timestampNs / 1000000n));
+    const timezoneDateFormatted = utcDate.toLocaleString('en-US', {
+      timeZone: timezone,
+    });
+    const timezoneDate = new Date(timezoneDateFormatted);
+    const hoursDiff = timezoneDate.getHours() - utcDate.getHours();
+    const minutesDiff = timezoneDate.getMinutes() - utcDate.getMinutes();
+    return (
+      timestampNs + BigInt(hoursDiff * 3.6e12) + BigInt(minutesDiff * 6e10)
+    );
   }
 }
 

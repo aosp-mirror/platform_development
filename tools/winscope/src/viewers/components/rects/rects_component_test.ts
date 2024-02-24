@@ -133,6 +133,20 @@ describe('RectsComponent', () => {
     expect(Canvas.prototype.draw).toHaveBeenCalledTimes(1);
   });
 
+  it('unfocuses spacing slider on click', () => {
+    const spacingSlider = assertDefined(
+      htmlElement.querySelector('.slider-spacing'),
+    );
+    checkSliderUnfocusesOnClick(spacingSlider, 0.02);
+  });
+
+  it('unfocuses rotation slider on click', () => {
+    const rotationSlider = assertDefined(
+      htmlElement.querySelector('.slider-rotation'),
+    );
+    checkSliderUnfocusesOnClick(rotationSlider, 1);
+  });
+
   it('draws display buttons', () => {
     component.displays = [
       {displayId: 0, groupId: 0, name: 'Display 0'},
@@ -444,6 +458,17 @@ describe('RectsComponent', () => {
     const tab = assertDefined(tabs[index]) as HTMLElement;
     tab.click();
     fixture.detectChanges();
+  }
+
+  function checkSliderUnfocusesOnClick(slider: Element, expectedValue: number) {
+    slider.dispatchEvent(new MouseEvent('mousedown'));
+    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+    htmlElement.dispatchEvent(
+      new KeyboardEvent('keydown', {key: 'ArrowRight'}),
+    );
+    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+    htmlElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
+    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
   }
 
   @Component({
