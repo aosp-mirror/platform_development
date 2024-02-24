@@ -138,4 +138,39 @@ describe('TimestampFactory', () => {
       ).toThrow();
     });
   });
+
+  describe('adds correct offset for different timezones', () => {
+    it('creates correct real timestamps for different timezones', () => {
+      const realTimestampNs = 1706094750112797658n;
+      expect(
+        new TimestampFactory({timezone: 'Europe/London', locale: 'en-US'})
+          .makeRealTimestamp(realTimestampNs)
+          .getValueNs(),
+      ).toEqual(1706094750112797658n);
+      expect(
+        new TimestampFactory({timezone: 'Europe/Zurich', locale: 'en-US'})
+          .makeRealTimestamp(realTimestampNs)
+          .getValueNs(),
+      ).toEqual(1706098350112797658n);
+      expect(
+        new TimestampFactory({timezone: 'America/Los_Angeles', locale: 'en-US'})
+          .makeRealTimestamp(realTimestampNs)
+          .getValueNs(),
+      ).toEqual(1706065950112797658n);
+      expect(
+        new TimestampFactory({timezone: 'Asia/Kolkata', locale: 'en-US'})
+          .makeRealTimestamp(realTimestampNs)
+          .getValueNs(),
+      ).toEqual(1706114550112797658n);
+    });
+
+    it('throws error for invalid timezone', () => {
+      expect(() =>
+        new TimestampFactory({
+          timezone: 'Invalid/Timezone',
+          locale: 'en-US',
+        }).makeRealTimestamp(10n),
+      ).toThrow();
+    });
+  });
 });

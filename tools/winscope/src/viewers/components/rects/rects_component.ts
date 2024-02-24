@@ -73,6 +73,7 @@ import {Distance2D} from './types3d';
             aria-label="units"
             [value]="mapper3d.getCameraRotationFactor()"
             (input)="onRotationSliderChange($event.value!)"
+            (focus)="$event.target.blur()"
             color="primary"></mat-slider>
         </div>
         <div class="slider-container">
@@ -85,6 +86,7 @@ import {Distance2D} from './types3d';
             aria-label="units"
             [value]="getZSpacingFactor()"
             (input)="onSeparationSliderChange($event.value!)"
+            (focus)="$event.target.blur()"
             color="primary"></mat-slider>
         </div>
       </div>
