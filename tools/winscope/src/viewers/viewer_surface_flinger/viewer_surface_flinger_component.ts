@@ -16,6 +16,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
 @Component({
@@ -50,22 +51,11 @@ import {UiData} from './ui_data';
         [traceType]="${TraceType.SURFACE_FLINGER}"
         [store]="store"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
-        [isProtoDump]="true"></properties-view>
+        [isProtoDump]="true"
+        placeholderText="No selected entry or layer."></properties-view>
     </div>
   `,
-  styles: [
-    `
-      .rects-view,
-      .hierarchy-view,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
-    `,
-  ],
+  styles: [viewerCardStyle],
 })
 export class ViewerSurfaceFlingerComponent {
   @Input() inputData: UiData | undefined;

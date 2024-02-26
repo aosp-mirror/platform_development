@@ -17,6 +17,7 @@ import {Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {viewerCardStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'viewer-input-method',
@@ -59,17 +60,8 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
         display: flex;
         flex-direction: column;
       }
-
-      .hierarchy-view,
-      .ime-additional-properties,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
     `,
+    viewerCardStyle,
   ],
 })
 export class ViewerInputMethodComponent {
