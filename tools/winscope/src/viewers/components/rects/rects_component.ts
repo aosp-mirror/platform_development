@@ -36,16 +36,9 @@ import {Distance2D} from './types3d';
 @Component({
   selector: 'rects-view',
   template: `
-    <div class="view-controls">
-      <h2 class="mat-title">{{ title }}</h2>
-      <div class="top-view-controls">
-        <mat-checkbox
-          color="primary"
-          class="show-only-visible"
-          [checked]="getShowOnlyVisibleMode()"
-          (change)="onShowOnlyVisibleModeChange($event.checked!)"
-          >Only visible
-        </mat-checkbox>
+    <div class="view-controls view-header">
+      <div class="title-zoom">
+        <h2 class="mat-title">{{ title.toUpperCase() }}</h2>
         <div class="right-btn-container">
           <button color="primary" mat-icon-button (click)="onZoomInClick()">
             <mat-icon aria-hidden="true"> zoom_in </mat-icon>
@@ -62,32 +55,41 @@ import {Distance2D} from './types3d';
           </button>
         </div>
       </div>
-      <div class="slider-view-controls">
-        <div class="slider-container">
-          <p class="slider-label mat-body-2">Rotation</p>
-          <mat-slider
-            class="slider-rotation"
-            step="0.02"
-            min="0"
-            max="1"
-            aria-label="units"
-            [value]="mapper3d.getCameraRotationFactor()"
-            (input)="onRotationSliderChange($event.value!)"
-            (focus)="$event.target.blur()"
-            color="primary"></mat-slider>
-        </div>
-        <div class="slider-container">
-          <p class="slider-label mat-body-2">Spacing</p>
-          <mat-slider
-            class="slider-spacing"
-            step="0.02"
-            min="0.02"
-            max="1"
-            aria-label="units"
-            [value]="getZSpacingFactor()"
-            (input)="onSeparationSliderChange($event.value!)"
-            (focus)="$event.target.blur()"
-            color="primary"></mat-slider>
+      <div class="top-view-controls">
+        <mat-checkbox
+          color="primary"
+          class="show-only-visible"
+          [checked]="getShowOnlyVisibleMode()"
+          (change)="onShowOnlyVisibleModeChange($event.checked!)"
+          >Only visible
+        </mat-checkbox>
+        <div class="slider-view-controls">
+          <div class="slider-container">
+            <p class="slider-label mat-body-1">Rotation</p>
+            <mat-slider
+              class="slider-rotation"
+              step="0.02"
+              min="0"
+              max="1"
+              aria-label="units"
+              [value]="mapper3d.getCameraRotationFactor()"
+              (input)="onRotationSliderChange($event.value)"
+              (focus)="$event.target.blur()"
+              color="primary"></mat-slider>
+          </div>
+          <div class="slider-container">
+            <p class="slider-label mat-body-1">Spacing</p>
+            <mat-slider
+              class="slider-spacing"
+              step="0.02"
+              min="0.02"
+              max="1"
+              aria-label="units"
+              [value]="getZSpacingFactor()"
+              (input)="onSeparationSliderChange($event.value)"
+              (focus)="$event.target.blur()"
+              color="primary"></mat-slider>
+          </div>
         </div>
       </div>
     </div>
@@ -139,24 +141,32 @@ import {Distance2D} from './types3d';
   `,
   styles: [
     `
+      .mat-title {
+        padding-top: 16px;
+      }
+      .title-zoom {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
       .view-controls {
         display: flex;
         flex-direction: column;
+      }
+      .right-btn-container {
+        padding-top: 8px;
       }
       .top-view-controls,
       .slider-view-controls {
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        align-items: center;
-        margin-bottom: 12px;
+        align-items: baseline;
       }
-      .right-btn-container {
-        margin-left: auto;
+      .top-view-controls {
+        justify-content: space-between;
       }
       .slider-view-controls {
-        justify-content: space-between;
+        column-gap: 10px;
       }
       .slider-container {
         position: relative;

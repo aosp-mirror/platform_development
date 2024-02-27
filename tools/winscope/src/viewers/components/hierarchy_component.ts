@@ -28,7 +28,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   template: `
     <div class="view-header">
       <div class="title-filter">
-        <h2 class="hierarchy-title mat-title">Hierarchy</h2>
+        <h2 class="hierarchy-title mat-title">HIERARCHY</h2>
         <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
           <input
@@ -104,6 +104,10 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   `,
   styles: [
     `
+      .mat-title {
+        padding-top: 16px;
+      }
+
       .view-header {
         display: flex;
         flex-direction: column;

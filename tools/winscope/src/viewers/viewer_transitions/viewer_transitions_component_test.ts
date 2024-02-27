@@ -15,13 +15,13 @@
  */
 
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
@@ -37,6 +37,7 @@ import {Transition} from 'trace/transition';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
@@ -53,14 +54,15 @@ describe('ViewerTransitionsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, ScrollingModule],
+      imports: [MatDividerModule, ScrollingModule, MatIconModule],
       declarations: [
         ViewerTransitionsComponent,
         TreeComponent,
         TreeNodeComponent,
         PropertyTreeNodeDataViewComponent,
+        PropertiesComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+      schemas: [],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerTransitionsComponent);
@@ -85,7 +87,8 @@ describe('ViewerTransitionsComponent', () => {
 
   it('shows message when no transition is selected', () => {
     expect(
-      htmlElement.querySelector('.container-properties')?.innerHTML,
+      htmlElement.querySelector('.properties-view .placeholder-text')
+        ?.innerHTML,
     ).toContain('No selected transition');
   });
 
@@ -96,9 +99,11 @@ describe('ViewerTransitionsComponent', () => {
     const entry1 = assertDefined(entries[0]) as HTMLElement;
     const entry2 = assertDefined(entries[1]) as HTMLElement;
     const treeView = assertDefined(
-      htmlElement.querySelector('.container-properties'),
+      htmlElement.querySelector('.properties-view'),
     ) as HTMLElement;
-    expect(treeView.textContent).toContain('No selected transition');
+    expect(
+      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
+    ).toContain('No selected transition');
 
     expect(emitEventSpy).not.toHaveBeenCalled();
 
@@ -141,9 +146,11 @@ describe('ViewerTransitionsComponent', () => {
     traces.setTrace(TraceType.TRANSITION, trace);
 
     let treeView = assertDefined(
-      htmlElement.querySelector('.container-properties'),
+      htmlElement.querySelector('.properties-view'),
     ) as any as HTMLElement;
-    expect(treeView.textContent).toContain('No selected transition');
+    expect(
+      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
+    ).toContain('No selected transition');
 
     const presenter = new Presenter(traces, (data) => {
       component.inputData = data;
@@ -172,7 +179,7 @@ describe('ViewerTransitionsComponent', () => {
     fixture.detectChanges();
 
     treeView = assertDefined(
-      fixture.nativeElement.querySelector('.container-properties'),
+      fixture.nativeElement.querySelector('.properties-view'),
     ) as any as HTMLElement;
     const textContentWithoutWhitespaces = treeView.textContent?.replace(
       /(\s|\t|\n)*/g,

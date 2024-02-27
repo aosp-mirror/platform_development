@@ -16,6 +16,7 @@
 import {Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
 @Component({
@@ -46,22 +47,11 @@ import {UiData} from './ui_data';
         [traceType]="${TraceType.WINDOW_MANAGER}"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
         [store]="store"
-        [isProtoDump]="true"></properties-view>
+        [isProtoDump]="false"
+        placeholderText="No selected item."></properties-view>
     </div>
   `,
-  styles: [
-    `
-      .rects-view,
-      .hierarchy-view,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
-    `,
-  ],
+  styles: [viewerCardStyle],
 })
 export class ViewerWindowManagerComponent {
   @Input() inputData: UiData | undefined;
