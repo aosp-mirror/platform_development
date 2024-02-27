@@ -156,18 +156,13 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       !transition.createTimeNs &&
       !transition.sendTimeNs &&
       !transition.wmAbortTimeNs &&
-      !transition.finishTimeNs
-    ) {
-      throw new Error('Requires at least one non-null wm data timestamp');
-    }
-
-    if (
+      !transition.finishTimeNs &&
       !transition.dispatchTimeNs &&
       !transition.mergeRequestTimeNs &&
       !transition.mergeTimeNs &&
       !transition.shellAbortTimeNs
     ) {
-      throw new Error('Requires at least one non-null shell data timestamp');
+      throw new Error('Requires at least one non-null timestamp');
     }
   }
 }
