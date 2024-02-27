@@ -19,6 +19,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -37,7 +38,7 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [PropertyTreeNodeDataViewComponent],
-      imports: [MatButtonModule],
+      imports: [MatButtonModule, BrowserAnimationsModule],
     }).compileComponents();
   });
 
