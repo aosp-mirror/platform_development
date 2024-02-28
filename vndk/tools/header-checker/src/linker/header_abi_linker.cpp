@@ -21,7 +21,6 @@
 #include "utils/command_line_utils.h"
 #include "utils/source_path_utils.h"
 
-#include <llvm/ADT/Optional.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -29,6 +28,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -429,7 +429,7 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  llvm::Optional<utils::ApiLevel> api_level = api_level_map_.Parse(api_);
+  std::optional<utils::ApiLevel> api_level = api_level_map_.Parse(api_);
   if (!api_level) {
     llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
     return false;
