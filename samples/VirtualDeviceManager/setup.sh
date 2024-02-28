@@ -23,6 +23,16 @@ function run_cmd_or_die() {
   "${@}" > /dev/null || die "Command failed: ${*}"
 }
 
+function run_cmd_with_retries() {
+  echo "Executing ${@}..."
+  while true; do
+    "${@}" && break || {
+      echo "  Retrying ${@}"
+      sleep 10;
+    }
+  done
+}
+
 function select_device() {
   while :; do
     read -r -p "Select a device to install the ${1} app (0-${DEVICE_COUNT}): " INDEX
@@ -31,7 +41,7 @@ function select_device() {
 }
 
 function install_app() {
-  if ! adb -s "${1}" install -r -d -g "${2}" > /dev/null 2>&1; then
+  if ! adb -s "${1}" install -r -d -g "${2}" > /dev/null; then
     adb -s "${1}" uninstall "com.example.android.vdmdemo.${3}" > /dev/null 2>&1
     run_cmd_or_die adb -s "${1}" install -r -d -g "${2}"
   fi
@@ -65,21 +75,30 @@ function privileged_install() {
   local APK_FILENAME="${4}"
   local PERM_SRC="${5}"
   local PERM_DST="${6}"
+  local PKG_NAME="com.example.android.vdmdemo.${7}"
 
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" root
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" remount -R
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device
-  sleep 3  # Even after wait-for-device returns, the device may not be ready so give it some time.
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" root
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" remount
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device root
+  if ! adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell touch /system/test_verity > /dev/null; then
+    echo "Disabling verity..."
+    run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device disable-verity
+    run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device reboot
+    run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device root
+  else
+    run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell rm /system/test_verity
+    echo "Verity is already disabled"
+  fi
+
+  adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device uninstall "${PKG_NAME}" > /dev/null 2>&1
+
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device remount -R
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell stop
+  echo 'Copying privileged permissions and apk...'
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell mkdir -p "${APK_DIR}"
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device push "${OUT}/${APK_DIR}/${APK_FILENAME}" "${APK_DIR}"
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device push "${PERM_SRC}" "${PERM_DST}"
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell start
   echo "Installing ${APK_FILENAME} as a privileged app to ${TARGET_DEVICE_NAME}..."
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" shell mkdir -p "${APK_DIR}"
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" push "${OUT}/${APK_DIR}/${APK_FILENAME}" "${APK_DIR}"
-  echo 'Copying privileged permissions...'
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" push "${PERM_SRC}" "${PERM_DST}"
-  echo 'Rebooting device...'
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" reboot
-  run_cmd_or_die adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device
+  run_cmd_with_retries adb -s "${TARGET_DEVICE_SERIAL}" wait-for-device shell pm install -r -g -d "${APK_DIR}/${APK_FILENAME}"
   echo
 }
 
@@ -212,12 +231,12 @@ if [[ -n "${HOST_SERIAL}" ]]; then
     echo
   else
     privileged_install "${HOST_SERIAL}" "${HOST_NAME}" "${HOST_APK_DIR}" \
-                       "VdmHost.apk" "${HOST_PERM_SRC}" "${HOST_PERM_DST}"
+                       "VdmHost.apk" "${HOST_PERM_SRC}" "${HOST_PERM_DST}" host
   fi
 fi
 
 if [[ -n "${CAMERA_DEMO_SERIAL}" ]]; then
-
+  echo
   readonly CAMERA_PERM_BASENAME=com.example.android.vdmdemo.virtualcamera.xml
   readonly CAMERA_PERM_SRC="${ANDROID_BUILD_TOP}/development/samples/VirtualDeviceManager/virtualcamera/${CAMERA_PERM_BASENAME}"
   readonly CAMERA_PERM_DST="/system/etc/permissions/${CAMERA_PERM_BASENAME}"
@@ -232,11 +251,10 @@ if [[ -n "${CAMERA_DEMO_SERIAL}" ]]; then
     echo "A privileged installation already found, installed VirtualCameraDemo.apk to ${CAMERA_DEMO_NAME}"
     echo
   else
-    privileged_install "${CAMERA_DEMO_SERIAL}" "${CAMERA_DEMO_NAME}" "${CAMERA_DEMO_APK_DIR}" "VirtualCameraDemo.apk" "${CAMERA_PERM_SRC}" "${CAMERA_PERM_DST}"
+    privileged_install "${CAMERA_DEMO_SERIAL}" "${CAMERA_DEMO_NAME}" "${CAMERA_DEMO_APK_DIR}" \
+                       "VirtualCameraDemo.apk" "${CAMERA_PERM_SRC}" "${CAMERA_PERM_DST}" virtualcamera
   fi
 fi
-
-# TODO: the script doesn't work on U - the permissions aren't there. pat's script works though.
 
 echo
 echo 'Success!'
