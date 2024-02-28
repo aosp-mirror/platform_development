@@ -37,6 +37,7 @@ LINUX_SOONG_BINARIES=(
     "header-abi-linker"
     "header-abi-dumper"
     "header-abi-diff"
+    "ide_query_cc_analyzer"
     "proto_metadata_plugin"
     "protoc_extractor"
     "versioner"
