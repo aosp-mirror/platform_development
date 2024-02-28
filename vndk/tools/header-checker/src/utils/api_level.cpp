@@ -46,7 +46,7 @@ bool ApiLevelMap::Load(std::istream &stream) {
   return true;
 }
 
-llvm::Optional<ApiLevel> ApiLevelMap::Parse(const std::string &api) const {
+std::optional<ApiLevel> ApiLevelMap::Parse(const std::string &api) const {
   auto it = codename_to_api_level_.find(api);
   if (it != codename_to_api_level_.end()) {
     return it->second;

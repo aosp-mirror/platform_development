@@ -165,15 +165,10 @@ def make_targets(build_target, args):
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
-def make_tree(build_target):
-    """Build all lsdump files."""
-    return make_targets(build_target, ['findlsdumps'])
-
-
-def make_libraries(build_target, vndk_version, arches, libs, exclude_tags):
+def make_libraries(build_target, arches, libs, lsdump_filter):
     """Build lsdump files for specific libs."""
-    lsdump_paths = read_lsdump_paths(build_target, vndk_version, arches,
-                                     exclude_tags, build=True)
+    lsdump_paths = read_lsdump_paths(build_target, arches, lsdump_filter,
+                                     build=True)
     make_target_paths = []
     for name in libs:
         if not (name in lsdump_paths and lsdump_paths[name]):
@@ -197,7 +192,7 @@ def _get_module_variant_sort_key(suffix):
     return (-1, suffix)
 
 
-def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
+def _get_module_variant_dir_name(tag, arch_cpu_str):
     """Return the module variant directory name.
 
     For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
@@ -205,14 +200,13 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
     if tag in ('LLNDK', 'NDK', 'PLATFORM'):
         return f'android_{arch_cpu_str}_shared'
     if tag == 'VENDOR':
-        return f'android_vendor.{vndk_version}_{arch_cpu_str}_shared'
+        return f'android_vendor_{arch_cpu_str}_shared'
     if tag == 'PRODUCT':
-        return f'android_product.{vndk_version}_{arch_cpu_str}_shared'
+        return f'android_product_{arch_cpu_str}_shared'
     raise ValueError(tag + ' is not a known tag.')
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
-                       exclude_tags):
+def _read_lsdump_paths(lsdump_paths_file_path, arches, lsdump_filter):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
     This function returns a dictionary, {lib_name: {arch_cpu: {tag: path}}}.
@@ -232,14 +226,16 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
 
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
-            tag, path = (x.strip() for x in line.split(':', 1))
-            if not path or tag in exclude_tags:
+            if not line.strip():
                 continue
+            tag, path = (x.strip() for x in line.split(':', 1))
             dir_path, filename = os.path.split(path)
             if not filename.endswith(SOURCE_ABI_DUMP_EXT):
                 continue
             libname = filename[:-len(SOURCE_ABI_DUMP_EXT)]
             if not libname:
+                continue
+            if not lsdump_filter(tag, libname):
                 continue
             # dir_path may contain soong config hash.
             # For example, the following dir_paths are valid.
@@ -252,8 +248,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
             dirnames.append(dirname)
             for arch in arches:
                 arch_cpu = arch.get_arch_cpu_str()
-                prefix = _get_module_variant_dir_name(tag, vndk_version,
-                                                      arch_cpu)
+                prefix = _get_module_variant_dir_name(tag, arch_cpu)
                 variant = next((d for d in dirnames if d.startswith(prefix)),
                                None)
                 if not variant:
@@ -268,8 +263,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, arches,
     return lsdump_paths
 
 
-def read_lsdump_paths(build_target, vndk_version, arches, exclude_tags,
-                      build):
+def read_lsdump_paths(build_target, arches, lsdump_filter, build):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(build_target)
     lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
@@ -277,8 +271,7 @@ def read_lsdump_paths(build_target, vndk_version, arches, exclude_tags,
         if os.path.lexists(lsdump_paths_file_abspath):
             os.unlink(lsdump_paths_file_abspath)
         make_targets(build_target, [lsdump_paths_file_path])
-    return _read_lsdump_paths(lsdump_paths_file_abspath, vndk_version,
-                              arches, exclude_tags)
+    return _read_lsdump_paths(lsdump_paths_file_abspath, arches, lsdump_filter)
 
 
 def find_lib_lsdumps(lsdump_paths, libs, arch):
