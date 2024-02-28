@@ -79,20 +79,26 @@ export class TraceFileFilter {
       await bugReportDumpstateBoard.file.arrayBuffer(),
     );
     const fileData = new TextDecoder().decode(traceBuffer);
-    const startIndex = fileData.indexOf('[persist.sys.locale]');
+    const localeStartIndex = fileData.indexOf('[persist.sys.locale]');
+    const timezoneStartIndex = fileData.indexOf('[persist.sys.timezone]');
 
-    if (startIndex === -1) {
+    if (localeStartIndex === -1 || timezoneStartIndex === -1) {
       return undefined;
     }
 
-    const [localeKey, locale, timezoneKey, timezone] = fileData
-      .slice(startIndex)
-      .split(']', 4)
-      .map((substr) => {
-        const start = substr.lastIndexOf('[');
-        return substr.slice(start + 1);
-      });
+    const locale = this.extractValueFromDumpstateBoard(fileData, localeStartIndex);
+    const timezone = this.extractValueFromDumpstateBoard(fileData, timezoneStartIndex);
     return {timezone, locale};
+  }
+
+  private extractValueFromDumpstateBoard(fileData: string, startIndex: number): string {
+    return fileData
+    .slice(startIndex)
+    .split(']', 2)
+    .map((substr) => {
+      const start = substr.lastIndexOf('[');
+      return substr.slice(start + 1);
+    })[1];
   }
 
   private async isBugreport(
