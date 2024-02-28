@@ -40,6 +40,7 @@ describe('PresenterViewCapture', () => {
   let uiData: UiData;
   let presenter: Presenter;
   let positionUpdate: TracePositionUpdate;
+  let secondPositionUpdate: TracePositionUpdate;
   let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
@@ -54,6 +55,9 @@ describe('PresenterViewCapture', () => {
 
     const firstEntry = trace.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+    secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
+      trace.getEntry(23),
+    );
 
     const firstEntryDataTree = await firstEntry.getValue();
 
@@ -120,15 +124,6 @@ describe('PresenterViewCapture', () => {
     await presenter.onAppEvent(positionUpdate);
     presenter.onPinnedItemChange(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
-  });
-
-  it('updates highlighted item', async () => {
-    await presenter.onAppEvent(positionUpdate);
-    expect(uiData.highlightedItem).toEqual('');
-
-    const id = '4';
-    presenter.onHighlightedItemChange(id);
-    expect(uiData.highlightedItem).toBe(id);
   });
 
   it('shows only visible in hierarchy tree', async () => {
@@ -216,10 +211,81 @@ describe('PresenterViewCapture', () => {
     ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
-  it('sets properties tree and associated ui data', async () => {
+  it('sets properties tree and associated ui data from tree node', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    expect(uiData.propertiesTree).toBeTruthy();
+    await presenter.onHighlightedNodeChange(selectedTree);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual(
+      'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
+    );
+    expect(propertiesTree.getAllChildren().length).toEqual(15);
+    expect(assertDefined(uiData.curatedProperties).translationY).toEqual(
+      '-0.633',
+    );
+  });
+
+  it('sets properties tree and associated ui data from rect', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    expect(assertDefined(uiData.propertiesTree).id).toEqual(
+      'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
+    );
+    const rect = assertDefined(uiData.rects.at(5));
+    await presenter.onHighlightedIdChange(rect.id);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual(
+      'ViewNode com.android.launcher3.views.DoubleShadowBubbleTextView@124683434',
+    );
+    expect(propertiesTree.getAllChildren().length).toEqual(14);
+    expect(assertDefined(uiData.curatedProperties).translationX).toEqual(
+      '19.143',
+    );
+  });
+
+  it('after highlighting a node, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    const selectedTree = assertDefined(
+      assertDefined(uiData.tree).findDfs(
+        UiTreeUtils.makeIdMatchFilter(
+          'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
+        ),
+      ),
+    );
+    await presenter.onHighlightedNodeChange(selectedTree);
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('-0.633');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('-9');
+  });
+
+  it('after highlighting a rect, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHighlightedIdChange(
+      'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
+    );
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('-0.633');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree.getChildByName('translationY'),
+      ).formattedValue(),
+    ).toEqual('-9');
   });
 
   it('updates properties tree', async () => {
@@ -243,7 +309,7 @@ describe('PresenterViewCapture', () => {
     const update = TracePositionUpdate.fromTraceEntry(entry);
 
     await presenter.onAppEvent(update);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(
         uiData.propertiesTree?.getChildByName('translationY'),

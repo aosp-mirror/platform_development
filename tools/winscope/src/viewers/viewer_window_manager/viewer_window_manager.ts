@@ -43,8 +43,8 @@ class ViewerWindowManager implements Viewer {
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HighlightedIdChange,
-      (event) =>
-        this.presenter.onHighlightedItemChange(
+      async (event) =>
+        await this.presenter.onHighlightedIdChange(
           (event as CustomEvent).detail.id,
         ),
     );
@@ -86,8 +86,8 @@ class ViewerWindowManager implements Viewer {
     this.htmlElement.addEventListener(
       ViewerEvents.HighlightedNodeChange,
       async (event) =>
-        await this.presenter.onSelectedHierarchyTreeChange(
-          (event as CustomEvent).detail.selectedItem,
+        await this.presenter.onHighlightedNodeChange(
+          (event as CustomEvent).detail.node,
         ),
     );
     this.view = new View(

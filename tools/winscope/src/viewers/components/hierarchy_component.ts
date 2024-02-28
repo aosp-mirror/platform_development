@@ -179,8 +179,7 @@ export class HierarchyComponent {
     if (window.getSelection()?.type === 'range') {
       return;
     }
-    this.onHighlightedItemChange(pinnedItem.id);
-    this.onSelectedTreeChange(pinnedItem);
+    this.onHighlightedItemChange(pinnedItem);
   }
 
   onUserOptionChange() {
@@ -199,18 +198,10 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onHighlightedItemChange(newId: string) {
-    const event = new CustomEvent(ViewerEvents.HighlightedIdChange, {
-      bubbles: true,
-      detail: {id: newId},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  onSelectedTreeChange(item: UiHierarchyTreeNode) {
+  onHighlightedItemChange(node: UiHierarchyTreeNode) {
     const event = new CustomEvent(ViewerEvents.HighlightedNodeChange, {
       bubbles: true,
-      detail: {selectedItem: item},
+      detail: {node},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

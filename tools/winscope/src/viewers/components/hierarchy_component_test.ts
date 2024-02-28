@@ -148,11 +148,9 @@ describe('HierarchyComponent', () => {
     const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
     expect(pinnedNodeEl).toBeTruthy();
 
-    const propertyTreeChangeSpy = spyOn(component, 'onSelectedTreeChange');
     const highlightedChangeSpy = spyOn(component, 'onHighlightedItemChange');
     (pinnedNodeEl as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(propertyTreeChangeSpy).toHaveBeenCalled();
     expect(highlightedChangeSpy).toHaveBeenCalled();
   });
 

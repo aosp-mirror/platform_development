@@ -41,8 +41,12 @@ describe('ImeAdditionalPropertiesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     htmlElement.addEventListener(
+      ViewerEvents.HighlightedNodeChange,
+      component.onHighlightedNodeChange,
+    );
+    htmlElement.addEventListener(
       ViewerEvents.HighlightedIdChange,
-      component.onHighlightedChange,
+      component.onHighlightedIdChange,
     );
     htmlElement.addEventListener(
       ViewerEvents.AdditionalPropertySelected,
@@ -159,8 +163,15 @@ describe('ImeAdditionalPropertiesComponent', () => {
         id: 'ime',
         name: 'imeLayers',
         properties: {
-          imeContainer: {id: '123', zOrderRelativeOfId: -1, z: 0},
-          inputMethodSurface: {id: '456', isVisible: false},
+          imeContainer: {
+            id: '123',
+            zOrderRelativeOfId: -1,
+            z: 0,
+          },
+          inputMethodSurface: {
+            id: '456',
+            isVisible: false,
+          },
           focusedWindowColor: undefined,
           root: undefined,
         },
@@ -171,7 +182,10 @@ describe('ImeAdditionalPropertiesComponent', () => {
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
 
-    onHighlightedChange = (event: Event) => {
+    onHighlightedNodeChange = (event: Event) => {
+      this.highlightedItem = (event as CustomEvent).detail.node.id;
+    };
+    onHighlightedIdChange = (event: Event) => {
       this.highlightedItem = (event as CustomEvent).detail.id;
     };
     onAdditionalPropertySelectedChange = (event: Event) => {
