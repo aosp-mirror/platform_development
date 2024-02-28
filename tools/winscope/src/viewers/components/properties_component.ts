@@ -25,11 +25,11 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
 @Component({
   selector: 'properties-view',
   template: `
-    <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
+    <div class="view-header">
       <div class="title-filter">
-        <h2 class="properties-title mat-title">Properties</h2>
+        <h2 class="properties-title mat-title" [class.padded-title]="hasUserOptions()">{{title.toUpperCase()}}</h2>
 
-        <mat-form-field (keydown.enter)="$event.target.blur()">
+        <mat-form-field *ngIf="showFilter" (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
 
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
@@ -47,9 +47,13 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           >{{ userOptions[option].name }}</mat-checkbox
         >
       </div>
+    </div>
 
+    <mat-divider></mat-divider>
+
+    <ng-container *ngIf="showSurfaceFlingerPropertyGroups() || showViewCaptureFormat()">
       <surface-flinger-property-groups
-        *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
+        *ngIf="showSurfaceFlingerPropertyGroups()"
         class="property-groups"
         [properties]="curatedProperties"></surface-flinger-property-groups>
 
@@ -57,38 +61,34 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         *ngIf="showViewCaptureFormat()"
         class="property-groups"
         [properties]="curatedProperties"></view-capture-property-groups>
-    </div>
 
-    <mat-divider></mat-divider>
+      <mat-divider *ngIf="showPropertiesTree()"></mat-divider>
+    </ng-container>
 
-    <div class="properties-content">
-      <h3 *ngIf="propertiesTree && isProtoDump" class="properties-title mat-subheading-2">
-        Properties - Proto Dump
+    <div *ngIf="showPropertiesTree()" class="properties-content">
+      <h3 *ngIf="isProtoDump" class="properties-dump-title mat-title">
+        PROTO DUMP
       </h3>
 
       <div class="tree-wrapper">
         <tree-view
-          *ngIf="propertiesTree && !showViewCaptureFormat()"
           [node]="propertiesTree"
           [store]="store"
-          [useStoredExpandedState]="true"
+          [useStoredExpandedState]="!!store"
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"
           (highlightedChange)="onHighlightedPropertyChange($event)"></tree-view>
       </div>
     </div>
+
+    <span class="mat-body-1 placeholder-text" *ngIf="!showPropertiesTree() && placeholderText"> {{ placeholderText }} </span>
   `,
   styles: [
     `
       .view-header {
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
         margin-bottom: 12px;
-      }
-
-      .view-header-with-property-groups {
-        flex: 3;
       }
 
       .title-filter {
@@ -98,12 +98,19 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         justify-content: space-between;
       }
 
+      .mat-title {
+        padding-top: 16px;
+      }
+
+      .padded-title {
+        padding-bottom: 16px;
+      }
+
       .view-controls {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         column-gap: 10px;
-        margin-bottom: 16px;
       }
 
       .properties-content {
@@ -114,12 +121,16 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       }
 
       .property-groups {
-        height: 100%;
+        flex: 2;
         overflow-y: auto;
       }
 
       .tree-wrapper {
         overflow: auto;
+      }
+
+      .placeholder-text {
+        padding-top: 4px;
       }
     `,
     nodeStyles,
@@ -129,7 +140,10 @@ export class PropertiesComponent {
   objectKeys = Object.keys;
   filterString = '';
 
+  @Input() title = 'PROPERTIES';
+  @Input() showFilter = true;
   @Input() userOptions: UserOptions = {};
+  @Input() placeholderText = '';
   @Input() propertiesTree: UiPropertyTreeNode | undefined;
   @Input() highlightedProperty = '';
   @Input() curatedProperties: CuratedProperties | undefined;
@@ -164,10 +178,8 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  itemIsSelected() {
-    return (
-      this.curatedProperties && Object.keys(this.curatedProperties).length > 0
-    );
+  hasUserOptions() {
+    return this.objectKeys(this.userOptions).length > 0;
   }
 
   showViewCaptureFormat(): boolean {
@@ -180,7 +192,15 @@ export class PropertiesComponent {
     );
   }
 
-  isSurfaceFlinger(): boolean {
-    return this.traceType === TraceType.SURFACE_FLINGER;
+  showSurfaceFlingerPropertyGroups(): boolean {
+    return (
+      !!this.curatedProperties &&
+      this.traceType === TraceType.SURFACE_FLINGER &&
+      this.displayPropertyGroups
+    );
+  }
+
+  showPropertiesTree(): boolean {
+    return !!this.propertiesTree && !this.showViewCaptureFormat();
   }
 }
