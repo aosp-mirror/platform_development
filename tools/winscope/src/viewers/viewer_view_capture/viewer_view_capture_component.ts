@@ -17,6 +17,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
 /**
@@ -57,19 +58,7 @@ import {UiData} from './ui_data';
       </properties-view>
     </div>
   `,
-  styles: [
-    `
-      .rects-view,
-      .hierarchy-view,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
-    `,
-  ],
+  styles: [viewerCardStyle],
 })
 export class ViewerViewCaptureComponent {
   @Input() inputData: UiData | undefined;

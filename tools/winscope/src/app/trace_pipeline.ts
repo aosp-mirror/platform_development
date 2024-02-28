@@ -189,6 +189,7 @@ export class TracePipeline {
         filterResult.perfetto,
         this.timestampFactory,
         progressListener,
+        errorListener,
       );
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
