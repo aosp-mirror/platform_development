@@ -16,11 +16,13 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -146,24 +148,15 @@ import {UiData} from './ui_data';
 
       <mat-divider [vertical]="true"></mat-divider>
 
-      <div class="container-properties">
-        <h3 class="properties-title mat-title">Properties - Proto Dump</h3>
-        <div class="view-controls">
-          <mat-checkbox
-            *ngFor="let option of objectKeys(uiData.propertiesUserOptions)"
-            color="primary"
-            [(ngModel)]="uiData.propertiesUserOptions[option].enabled"
-            [disabled]="uiData.propertiesUserOptions[option].isUnavailable ?? false"
-            (ngModelChange)="onUserOptionChange()"
-            [matTooltip]="uiData.propertiesUserOptions[option].tooltip ?? ''"
-            >{{ uiData.propertiesUserOptions[option].name }}</mat-checkbox
-          >
-        </div>
-        <tree-view
-          *ngIf="uiData.currentPropertiesTree"
-          class="properties-view tree-wrapper"
-          [node]="uiData.currentPropertiesTree"></tree-view>
-      </div>
+      <properties-view
+        *ngIf="uiData.currentPropertiesTree"
+        class="properties-view"
+        title="PROPERTIES - PROTO DUMP"
+        [showFilter]="false"
+        [userOptions]="uiData.propertiesUserOptions"
+        [propertiesTree]="uiData.currentPropertiesTree"
+        [traceType]="${TraceType.TRANSACTIONS}"
+        [isProtoDump]="false"></properties-view>
     </div>
   `,
   styles: [
@@ -175,9 +168,8 @@ import {UiData} from './ui_data';
         padding: 16px;
       }
 
-      .container-properties {
+      .properties-view {
         flex: 1;
-        padding: 16px;
       }
 
       .entries .filters {
@@ -253,6 +245,7 @@ import {UiData} from './ui_data';
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
+    viewerCardStyle,
   ],
 })
 class ViewerTransactionsComponent {

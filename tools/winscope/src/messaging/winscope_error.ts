@@ -110,3 +110,18 @@ export class UnsupportedFileFormat implements WinscopeError {
     return `${this.descriptor}: unsupported format`;
   }
 }
+
+export class InvalidPerfettoTrace implements WinscopeError {
+  constructor(
+    private readonly descriptor: string,
+    private readonly parserErrorMessages: string[],
+  ) {}
+
+  getType(): string {
+    return 'invalid perfetto trace';
+  }
+
+  getMessage(): string {
+    return `${this.descriptor}: ${this.parserErrorMessages.join(', ')}`;
+  }
+}

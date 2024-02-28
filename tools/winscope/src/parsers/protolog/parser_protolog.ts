@@ -111,8 +111,10 @@ class ParserProtoLog extends AbstractParser {
     timestampType: TimestampType,
     entry: com.android.internal.protolog.IProtoLogMessage,
   ): PropertyTreeNode {
+    const messageHash = Number(assertDefined(entry.messageHash).toString());
+    const messageHashLegacy = assertDefined(entry.messageHashLegacy);
     const message: ConfigMessage | undefined = (configJson as ProtologConfig)
-      .messages[assertDefined(entry.messageHash)];
+      .messages[messageHash !== 0 ? messageHash : messageHashLegacy];
     const logMessage = this.makeLogMessage(entry, message);
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
