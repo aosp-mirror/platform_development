@@ -18,7 +18,6 @@
 <permissions>
     <privapp-permissions package="com.example.android.vdmdemo.host">
         <permission name="android.permission.MODIFY_AUDIO_ROUTING" />
-        <permission name="android.permission.QUERY_AUDIO_STATE" />
         <permission name="android.permission.REQUEST_COMPANION_SELF_MANAGED" />
         <permission name="android.permission.REQUEST_COMPANION_PROFILE_APP_STREAMING" />
         <permission name="android.permission.REQUEST_COMPANION_PROFILE_NEARBY_DEVICE_STREAMING" />

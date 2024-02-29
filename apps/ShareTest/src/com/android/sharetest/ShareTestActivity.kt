@@ -213,8 +213,9 @@ class ShareTestActivity : Activity() {
 
         when (mediaSelection.checkedRadioButtonId) {
             R.id.one_image -> share.apply {
-                putExtra(Intent.EXTRA_STREAM, imageUris[imageIndex])
-                clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(imageUris[0]))
+                val sharedUri = imageUris[imageIndex]
+                putExtra(Intent.EXTRA_STREAM, sharedUri)
+                clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(sharedUri))
                 type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
             }
             R.id.many_images -> share.apply {
