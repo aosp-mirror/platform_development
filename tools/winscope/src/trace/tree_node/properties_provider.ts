@@ -76,8 +76,4 @@ export class PropertiesProvider {
     this.allPropertiesRoot = root;
     return this.allPropertiesRoot;
   }
-
-  private sortChildren(a: PropertyTreeNode, b: PropertyTreeNode): number {
-    return a.name < b.name ? -1 : 1;
-  }
 }

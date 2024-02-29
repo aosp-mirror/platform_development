@@ -269,16 +269,15 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const canvasContainer =
+    const canvasContainer: HTMLElement =
       this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
     this.largeRectsCanvasElement = canvasContainer.querySelector(
       '.large-rects-canvas',
     )! as HTMLCanvasElement;
-    this.largeRectsLabelsElement = canvasContainer.querySelector(
-      '.large-rects-labels',
-    );
+    this.largeRectsLabelsElement =
+      canvasContainer.querySelector('.large-rects-labels') ?? undefined;
     this.largeRectsCanvas = new Canvas(
       this.largeRectsCanvasElement,
       this.largeRectsLabelsElement!,
@@ -608,10 +607,13 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   private notifyHighlightedItem(id: string) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
-      bubbles: true,
-      detail: {id},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.HighlightedIdChange,
+      {
+        bubbles: true,
+        detail: {id},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

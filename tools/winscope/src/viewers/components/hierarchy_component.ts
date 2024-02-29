@@ -200,7 +200,7 @@ export class HierarchyComponent {
   }
 
   onHighlightedItemChange(newId: string) {
-    const event = new CustomEvent(ViewerEvents.HighlightedChange, {
+    const event = new CustomEvent(ViewerEvents.HighlightedIdChange, {
       bubbles: true,
       detail: {id: newId},
     });
@@ -208,7 +208,7 @@ export class HierarchyComponent {
   }
 
   onSelectedTreeChange(item: UiHierarchyTreeNode) {
-    const event = new CustomEvent(ViewerEvents.SelectedTreeChange, {
+    const event = new CustomEvent(ViewerEvents.HighlightedNodeChange, {
       bubbles: true,
       detail: {selectedItem: item},
     });

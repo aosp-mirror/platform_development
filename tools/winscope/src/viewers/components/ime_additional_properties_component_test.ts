@@ -41,7 +41,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     htmlElement.addEventListener(
-      ViewerEvents.HighlightedChange,
+      ViewerEvents.HighlightedIdChange,
       component.onHighlightedChange,
     );
     htmlElement.addEventListener(

@@ -41,16 +41,18 @@ class ViewerWindowManager implements Viewer {
           (event as CustomEvent).detail.pinnedItem,
         ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.onHighlightedItemChange(
-        `${(event as CustomEvent).detail.id}`,
-      ),
+    this.htmlElement.addEventListener(
+      ViewerEvents.HighlightedIdChange,
+      (event) =>
+        this.presenter.onHighlightedItemChange(
+          (event as CustomEvent).detail.id,
+        ),
     );
     this.htmlElement.addEventListener(
       ViewerEvents.HighlightedPropertyChange,
       (event) =>
         this.presenter.onHighlightedPropertyChange(
-          `${(event as CustomEvent).detail.id}`,
+          (event as CustomEvent).detail.id,
         ),
     );
     this.htmlElement.addEventListener(
@@ -82,7 +84,7 @@ class ViewerWindowManager implements Viewer {
         ),
     );
     this.htmlElement.addEventListener(
-      ViewerEvents.SelectedTreeChange,
+      ViewerEvents.HighlightedNodeChange,
       async (event) =>
         await this.presenter.onSelectedHierarchyTreeChange(
           (event as CustomEvent).detail.selectedItem,
