@@ -8,8 +8,6 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIc",
    "name" : "char",
-   "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIc",
    "size" : 1
   },
   {
@@ -18,8 +16,6 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIj",
    "name" : "unsigned int",
-   "referenced_type" : "_ZTIj",
-   "self_type" : "_ZTIj",
    "size" : 4
   }
  ],
@@ -38,8 +34,6 @@
    ],
    "linker_set_key" : "_ZTI2$A",
    "name" : "(unnamed)",
-   "referenced_type" : "_ZTI2$A",
-   "self_type" : "_ZTI2$A",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
    "underlying_type" : "_ZTIc"
@@ -55,8 +49,6 @@
    ],
    "linker_set_key" : "_ZTI2$B",
    "name" : "(unnamed)",
-   "referenced_type" : "_ZTI2$B",
-   "self_type" : "_ZTI2$B",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
    "underlying_type" : "_ZTIc"
@@ -72,8 +64,6 @@
    ],
    "linker_set_key" : "_ZTI21$FIRST_ANONYMOUS_ENUM",
    "name" : "(unnamed)",
-   "referenced_type" : "_ZTI21$FIRST_ANONYMOUS_ENUM",
-   "self_type" : "_ZTI21$FIRST_ANONYMOUS_ENUM",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/include_golden.h",
    "underlying_type" : "_ZTIj"
@@ -93,8 +83,6 @@
    ],
    "linker_set_key" : "_ZTIN3$_22$BE",
    "name" : "(unnamed)::(unnamed)",
-   "referenced_type" : "_ZTIN3$_22$BE",
-   "self_type" : "_ZTIN3$_22$BE",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
    "underlying_type" : "_ZTIj"
@@ -114,8 +102,6 @@
    ],
    "linker_set_key" : "_ZTIN3$_32$BE",
    "name" : "(unnamed)::(unnamed)",
-   "referenced_type" : "_ZTIN3$_32$BE",
-   "self_type" : "_ZTIN3$_32$BE",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
    "underlying_type" : "_ZTIj"
@@ -141,8 +127,6 @@
    "is_anonymous" : true,
    "linker_set_key" : "_ZTI3$_2",
    "name" : "(unnamed)",
-   "referenced_type" : "_ZTI3$_2",
-   "self_type" : "_ZTI3$_2",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h"
   },
@@ -158,8 +142,6 @@
    "is_anonymous" : true,
    "linker_set_key" : "_ZTI3$_3",
    "name" : "(unnamed)",
-   "referenced_type" : "_ZTI3$_3",
-   "self_type" : "_ZTI3$_3",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h"
   }

@@ -7,8 +7,6 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIa",
    "name" : "signed char",
-   "referenced_type" : "_ZTIa",
-   "self_type" : "_ZTIa",
    "size" : 1
   },
   {
@@ -17,8 +15,6 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIh",
    "name" : "unsigned char",
-   "referenced_type" : "_ZTIh",
-   "self_type" : "_ZTIh",
    "size" : 1
   },
   {
@@ -26,8 +22,6 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIl",
    "name" : "long",
-   "referenced_type" : "_ZTIl",
-   "self_type" : "_ZTIl",
    "size" : 8
   },
   {
@@ -36,15 +30,11 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIm",
    "name" : "unsigned long",
-   "referenced_type" : "_ZTIm",
-   "self_type" : "_ZTIm",
    "size" : 8
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -71,8 +61,6 @@
    ],
    "linker_set_key" : "_ZTI4Int8",
    "name" : "Int8",
-   "referenced_type" : "_ZTI4Int8",
-   "self_type" : "_ZTI4Int8",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
    "underlying_type" : "_ZTIa"
@@ -92,8 +80,6 @@
    ],
    "linker_set_key" : "_ZTI5Int64",
    "name" : "Int64",
-   "referenced_type" : "_ZTI5Int64",
-   "self_type" : "_ZTI5Int64",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
    "underlying_type" : "_ZTIl"
@@ -109,8 +95,6 @@
    ],
    "linker_set_key" : "_ZTI5Uint8",
    "name" : "Uint8",
-   "referenced_type" : "_ZTI5Uint8",
-   "self_type" : "_ZTI5Uint8",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
    "underlying_type" : "_ZTIh"
@@ -126,8 +110,6 @@
    ],
    "linker_set_key" : "_ZTI6Uint64",
    "name" : "Uint64",
-   "referenced_type" : "_ZTI6Uint64",
-   "self_type" : "_ZTI6Uint64",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/enum/include/base.h",
    "underlying_type" : "_ZTIm"

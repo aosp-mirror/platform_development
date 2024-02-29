@@ -81,13 +81,23 @@ void IRToJsonConverter::AddTemplateInfo(
 
 void IRToJsonConverter::AddTypeInfo(JsonObject &type_decl,
                                     const TypeIR *type_ir) {
-  type_decl.Set("linker_set_key", type_ir->GetLinkerSetKey());
+  // LinkableMessageIR
   type_decl.Set("source_file", type_ir->GetSourceFile());
+  const std::string &linker_set_key = type_ir->GetLinkerSetKey();
+  type_decl.Set("linker_set_key", linker_set_key);
+  // TypeIR
   type_decl.Set("name", type_ir->GetName());
   type_decl.Set("size", (uint64_t)type_ir->GetSize());
   type_decl.Set("alignment", (uint64_t)type_ir->GetAlignment());
-  type_decl.Set("referenced_type", type_ir->GetReferencedType());
-  type_decl.Set("self_type", type_ir->GetSelfType());
+  const std::string &self_type = type_ir->GetSelfType();
+  if (self_type != linker_set_key) {
+    type_decl.Set("self_type", self_type);
+  }
+  // ReferencesOtherType
+  const std::string &referenced_type = type_ir->GetReferencedType();
+  if (referenced_type != self_type) {
+    type_decl.Set("referenced_type", referenced_type);
+  }
 }
 
 static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
@@ -233,11 +243,18 @@ JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
 JsonObject
 IRToJsonConverter::ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   JsonObject global_var;
-  global_var.Set("referenced_type", global_varp->GetReferencedType());
-  global_var.Set("source_file", global_varp->GetSourceFile());
+  // GlobalVarIR
   global_var.Set("name", global_varp->GetName());
-  global_var.Set("linker_set_key", global_varp->GetLinkerSetKey());
   AddAccess(global_var, global_varp->GetAccess());
+  // LinkableMessageIR
+  global_var.Set("source_file", global_varp->GetSourceFile());
+  const std::string &linker_set_key = global_varp->GetLinkerSetKey();
+  global_var.Set("linker_set_key", linker_set_key);
+  // ReferencesOtherType
+  const std::string &referenced_type = global_varp->GetReferencedType();
+  if (linker_set_key != referenced_type) {
+    global_var.Set("referenced_type", referenced_type);
+  }
   return global_var;
 }
 
