@@ -52,6 +52,9 @@ class JsonObjectRef {
   // Default to "".
   std::string GetString(const std::string &key) const;
 
+  std::string GetString(const std::string &key,
+                        const std::string &default_value) const;
+
   // Default to {}.
   JsonObjectRef GetObject(const std::string &key) const;
 
