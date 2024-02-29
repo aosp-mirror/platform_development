@@ -109,7 +109,7 @@ class ImeAdditionalPropertiesUtils {
     processedWindowManagerState: ProcessedWindowManagerState,
     sfEntryTimestamp: Timestamp | undefined,
   ): ImeLayers | undefined {
-    const isImeContainer = UiTreeUtils.makeNodeFilter('ImeContainer');
+    const isImeContainer = UiTreeUtils.makeIdFilter('ImeContainer');
     const imeContainerLayer = entryTree.findDfs(isImeContainer);
 
     if (!imeContainerLayer) {
@@ -126,7 +126,7 @@ class ImeAdditionalPropertiesUtils {
       ).getValue(),
     };
 
-    const isInputMethodSurface = UiTreeUtils.makeNodeFilter('InputMethod');
+    const isInputMethodSurface = UiTreeUtils.makeIdFilter('InputMethod');
     const inputMethodSurfaceLayer =
       imeContainerLayer.findDfs(isInputMethodSurface);
 
@@ -150,7 +150,7 @@ class ImeAdditionalPropertiesUtils {
         ?.split(' ')[0]
         .slice(1);
     if (focusedWindowToken) {
-      const isFocusedWindow = UiTreeUtils.makeNodeFilter(focusedWindowToken);
+      const isFocusedWindow = UiTreeUtils.makeIdFilter(focusedWindowToken);
       focusedWindowLayer = entryTree.findDfs(isFocusedWindow);
     }
 
@@ -162,12 +162,12 @@ class ImeAdditionalPropertiesUtils {
     // cases where both exist
     const taskLayerOfImeContainer = this.findAncestorTaskLayerOfImeLayer(
       entryTree,
-      UiTreeUtils.makeNodeFilter('ImeContainer'),
+      UiTreeUtils.makeIdFilter('ImeContainer'),
     );
 
     const taskLayerOfImeSnapshot = this.findAncestorTaskLayerOfImeLayer(
       entryTree,
-      UiTreeUtils.makeNodeFilter('IME-snapshot'),
+      UiTreeUtils.makeIdFilter('IME-snapshot'),
     );
 
     const rootProperties = sfEntryTimestamp
@@ -263,7 +263,7 @@ class ImeAdditionalPropertiesUtils {
       return undefined;
     }
 
-    const isTaskLayer = UiTreeUtils.makeNodeFilter('Task|ImePlaceholder');
+    const isTaskLayer = UiTreeUtils.makeIdFilter('Task|ImePlaceholder');
     const taskLayer = imeLayer.findAncestor(isTaskLayer);
     if (!taskLayer) {
       return undefined;
@@ -291,7 +291,7 @@ class ImeAdditionalPropertiesUtils {
   }
 
   private isInputMethodVisible(displayContent: HierarchyTreeNode): boolean {
-    const isInputMethod = UiTreeUtils.makeNodeFilter('InputMethod');
+    const isInputMethod = UiTreeUtils.makeIdFilter('InputMethod');
     const inputMethodWindowOrLayer = displayContent.findDfs(isInputMethod);
     return inputMethodWindowOrLayer
       ?.getEagerPropertyByName('isComputedVisible')

@@ -230,6 +230,23 @@ describe('Filter', () => {
       operation.apply(hierarchyRoot);
       expect(hierarchyRoot).toEqual(expectedRoot);
     });
+
+    it('applies filter to children even if root matches', () => {
+      hierarchyRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('test')
+          .setName('keep')
+          .setChildren([{id: 'node', name: 'discard'}])
+          .build(),
+      );
+
+      const expectedRoot = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder().setId('test').setName('keep').build(),
+      );
+
+      operation.apply(hierarchyRoot);
+      expect(hierarchyRoot).toEqual(expectedRoot);
+    });
   });
 
   describe('without keeping parents and children', () => {

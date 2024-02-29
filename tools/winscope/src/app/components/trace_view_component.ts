@@ -53,10 +53,13 @@ interface Tab {
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
         <a
-          *ngFor="let tab of tabs"
+          *ngFor="let tab of tabs; last as isLast"
           mat-tab-link
           [active]="isCurrentActiveTab(tab)"
+          [class.active]="isCurrentActiveTab(tab)"
           (click)="onTabClick(tab)"
+          (focus)="$event.target.blur()"
+          [class.last]="isLast"
           class="tab">
           <mat-icon
             class="icon"
@@ -64,9 +67,9 @@ interface Tab {
             [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
             {{ TRACE_INFO[tab.view.traceType].icon }}
           </mat-icon>
-          <p>
+          <span>
             {{ tab.view.title }}
-          </p>
+          </span>
         </a>
       </nav>
     </div>
@@ -75,6 +78,10 @@ interface Tab {
   `,
   styles: [
     `
+      .tab.active {
+        opacity: 100%;
+      }
+
       .overlay {
         z-index: 30;
         position: fixed;
@@ -99,11 +106,26 @@ interface Tab {
 
       .tabs-navigation-bar {
         height: 100%;
+        border-bottom: 0px;
       }
 
       .trace-view-content {
         height: 100%;
         overflow: auto;
+      }
+
+      .tab {
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .tab:not(.last):after {
+        content: '';
+        position: absolute;
+        right: 0;
+        height: 60%;
+        width: 1px;
+        background-color: #C4C0C0;
       }
     `,
   ],

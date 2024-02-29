@@ -15,10 +15,13 @@
  */
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -104,11 +107,14 @@ import {UiData} from './ui_data';
 
       <mat-divider [vertical]="true"></mat-divider>
 
-      <div class="container-properties">
-        <h3 class="properties-title mat-title">Selected Transition</h3>
-        <tree-view [node]="uiData.selectedTransition"></tree-view>
-        <div *ngIf="!uiData.selectedTransition" class="mat-body-1">No selected transition.</div>
-      </div>
+      <properties-view
+        class="properties-view"
+        title="SELECTED TRANSITION"
+        [showFilter]="false"
+        [propertiesTree]="uiData.selectedTransition"
+        [traceType]="${TraceType.TRANSITION}"
+        [isProtoDump]="false"
+        placeholderText="No selected transition."></properties-view>
     </div>
   `,
   styles: [
@@ -124,12 +130,6 @@ import {UiData} from './ui_data';
         display: flex;
         flex-direction: column;
         padding: 16px;
-      }
-
-      .container-properties {
-        flex: 1;
-        padding: 16px;
-        overflow-y: scroll;
       }
 
       .entries .scroll {
@@ -204,9 +204,13 @@ import {UiData} from './ui_data';
         flex-grow: 1;
         padding: 0.5rem;
       }
+      .properties-view {
+        flex: 1;
+      }
     `,
     selectedElementStyle,
     timeButtonStyle,
+    viewerCardStyle,
   ],
 })
 export class ViewerTransitionsComponent {
@@ -237,7 +241,7 @@ export class ViewerTransitionsComponent {
   }
 
   onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.emitEvent(Events.TimestampSelected, timestamp);
+    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
   }
 
   emitEvent(event: string, propertiesTree: PropertyTreeNode) {

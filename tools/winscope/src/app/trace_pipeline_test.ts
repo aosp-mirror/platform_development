@@ -20,6 +20,7 @@ import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {
   CorruptedArchive,
+  InvalidPerfettoTrace,
   NoInputFiles,
   TraceOverridden,
   UnsupportedFileFormat,
@@ -210,6 +211,25 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new UnsupportedFileFormat('winscope_homepage.jpg'),
+    ]);
+  });
+
+  it('is robust to invalid perfetto trace files', async () => {
+    const invalidFiles = [
+      await UnitTestUtils.getFixtureFile(
+        'traces/perfetto/invalid_protolog.perfetto-trace',
+      ),
+    ];
+
+    await loadFiles(invalidFiles);
+
+    await expectLoadResult(0, [
+      new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
+        "Trace processor tables don't contain entries of type 1",
+        "Trace processor tables don't contain entries of type 4",
+        "Trace processor tables don't contain entries of type 16",
+        "Trace processor tables don't contain entries of type 8",
+      ]),
     ]);
   });
 

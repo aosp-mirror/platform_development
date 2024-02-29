@@ -52,8 +52,8 @@ export abstract class PresenterInputMethod {
   private readonly imeTrace: Trace<HierarchyTreeNode>;
   private readonly wmTrace?: Trace<HierarchyTreeNode>;
   private readonly sfTrace?: Trace<HierarchyTreeNode>;
-  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
-  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makeNodeFilter('');
+  private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
+  private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | undefined;
@@ -140,8 +140,8 @@ export abstract class PresenterInputMethod {
           this.uiData.additionalProperties = this.getAdditionalProperties(
             await wmEntry?.getValue(),
             await sfEntry?.getValue(),
-            sfEntry?.getTimestamp(),
             wmEntry?.getTimestamp(),
+            sfEntry?.getTimestamp(),
           );
           this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
             assertDefined(this.entry),
@@ -194,7 +194,7 @@ export abstract class PresenterInputMethod {
   }
 
   onHierarchyFilterChange(filterString: string) {
-    this.hierarchyFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
     this.uiData.tree = this.formatHierarchyTreeAndUpdatePinnedItems(
       assertDefined(this.entry),
       true,
@@ -214,7 +214,7 @@ export abstract class PresenterInputMethod {
   }
 
   async onPropertiesFilterChange(filterString: string) {
-    this.propertiesFilter = UiTreeUtils.makeNodeFilter(filterString);
+    this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
   }
 
@@ -246,8 +246,8 @@ export abstract class PresenterInputMethod {
   protected getAdditionalProperties(
     wmEntry: HierarchyTreeNode | undefined,
     sfEntry: HierarchyTreeNode | undefined,
-    sfEntryTimestamp: Timestamp | undefined,
     wmEntryTimestamp: Timestamp | undefined,
+    sfEntryTimestamp: Timestamp | undefined,
   ): ImeAdditionalProperties {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;
@@ -453,6 +453,9 @@ export abstract class PresenterInputMethod {
     ];
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
+      predicatesDiscardingChildren.push(
+        UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+      );
     }
 
     const uiTree = UiPropertyTreeNode.from(propertiesTree);

@@ -162,7 +162,7 @@ export class Presenter {
 
   onEntryClicked(index: number) {
     if (this.uiData.selectedEntryIndex === index) {
-      this.uiData.selectedEntryIndex = undefined; // remove selection when clicked again
+      return;
     } else {
       this.uiData.selectedEntryIndex = index;
     }
@@ -356,7 +356,15 @@ export class Presenter {
     );
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {
-      formatter.addOperation(new Filter([UiTreeUtils.isNotDefault], false));
+      formatter.addOperation(
+        new Filter(
+          [
+            UiTreeUtils.isNotDefault,
+            UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+          ],
+          false,
+        ),
+      );
     }
 
     return formatter.addOperation(new SetRootDisplayNames()).format();

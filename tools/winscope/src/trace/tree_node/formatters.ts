@@ -54,15 +54,22 @@ const DEFAULT_PROPERTY_FORMATTER = new DefaultPropertyFormatter();
 
 class ColorFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
-    const alpha = formatNumber(node.getChildByName('a')?.getValue() ?? 0);
+    const rNode = node.getChildByName('r');
+    const gNode = node.getChildByName('g');
+    const bNode = node.getChildByName('b');
+    const alphaNode = node.getChildByName('a');
+
+    const r = formatNumber(rNode?.getValue() ?? 0);
+    const g = formatNumber(gNode?.getValue() ?? 0);
+    const b = formatNumber(bNode?.getValue() ?? 0);
+    if (rNode && gNode && bNode && !alphaNode) {
+      return `(${r}, ${g}, ${b})`;
+    }
+
+    const alpha = formatNumber(alphaNode?.getValue() ?? 0);
     if (RawDataUtils.isEmptyObj(node)) {
       return `${EMPTY_OBJ_STRING}, alpha: ${alpha}`;
     }
-
-    const r = formatNumber(node.getChildByName('r')?.getValue() ?? 0);
-    const g = formatNumber(node.getChildByName('g')?.getValue() ?? 0);
-    const b = formatNumber(node.getChildByName('b')?.getValue() ?? 0);
-
     return `(${r}, ${g}, ${b}, ${alpha})`;
   }
 }
@@ -101,6 +108,38 @@ class LayerIdFormatter implements PropertyFormatter {
   }
 }
 const LAYER_ID_FORMATTER = new LayerIdFormatter();
+
+class MatrixFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    const dsdx = formatNumber(node.getChildByName('dsdx')?.getValue() ?? 0);
+    const dtdx = formatNumber(node.getChildByName('dtdx')?.getValue() ?? 0);
+    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
+    const dtdy = formatNumber(node.getChildByName('dtdy')?.getValue() ?? 0);
+    const tx = node.getChildByName('tx');
+    const ty = node.getChildByName('ty');
+    if (
+      dsdx === '0' &&
+      dtdx === '0' &&
+      dsdy === '0' &&
+      dtdy === '0' &&
+      !tx &&
+      !ty
+    ) {
+      return 'null';
+    }
+    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dsdy: ${dsdy}, dtdy: ${dtdy}`;
+    if (!tx && !ty) {
+      return matrix22;
+    }
+    return (
+      matrix22 +
+      `, tx: ${formatNumber(tx?.getValue() ?? 0)}, ty: ${formatNumber(
+        ty?.getValue() ?? 0,
+      )}`
+    );
+  }
+}
+const MATRIX_FORMATTER = new MatrixFormatter();
 
 class TransformFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
@@ -198,4 +237,5 @@ export {
   EnumFormatter,
   FixedStringFormatter,
   TIMESTAMP_FORMATTER,
+  MATRIX_FORMATTER,
 };

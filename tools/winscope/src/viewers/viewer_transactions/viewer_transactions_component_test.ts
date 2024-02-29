@@ -30,7 +30,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {Events} from './events';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -85,7 +85,7 @@ describe('ViewerTransactionsComponent', () => {
     });
 
     it('renders properties', () => {
-      expect(htmlElement.querySelector('.properties-tree')).toBeTruthy();
+      expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
     });
 
     it('scrolls to current entry on button click', () => {
@@ -104,7 +104,7 @@ describe('ViewerTransactionsComponent', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
       let timestamp = '';
-      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
         timestamp = (event as CustomEvent).detail.formattedValue();
       });
       const logTimestampButton = assertDefined(

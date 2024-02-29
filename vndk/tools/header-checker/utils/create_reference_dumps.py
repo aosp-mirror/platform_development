@@ -7,13 +7,14 @@ import time
 from utils import (
     AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, BuildTarget, Arch,
     copy_reference_dump, find_lib_lsdumps, get_build_vars,
-    make_libraries, make_tree, read_lsdump_paths)
+    make_libraries, make_targets, read_lsdump_paths)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
 PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
+KNOWN_TAGS = {'LLNDK', 'NDK', 'PLATFORM', 'VENDOR', 'PRODUCT'}
 NON_AOSP_TAGS = {'VENDOR', 'PRODUCT'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
@@ -44,12 +45,24 @@ class GetVersionedRefDumpDirStem:
                             self.binder_bitness, arch_str)
 
 
-def make_libs_for_product(libs, build_target, arches, exclude_tags):
-    print('making libs for', '-'.join(filter(None, build_target)))
-    if libs:
-        make_libraries(build_target, arches, libs, exclude_tags)
-    else:
-        make_tree(build_target)
+class LsdumpFilter:
+    def __init__(self, include_names, include_tags, exclude_tags):
+        self.include_names = include_names
+        self.include_tags = include_tags
+        self.exclude_tags = exclude_tags
+
+    def __call__(self, tag, lib_name):
+        """Determine whether to dump the library.
+
+        lib_name does not contain '.so'.
+        """
+        if self.include_names and lib_name not in self.include_names:
+            return False
+        if self.include_tags and tag not in self.include_tags:
+            return False
+        if tag in self.exclude_tags:
+            return False
+        return True
 
 
 def tag_to_dir_name(tag):
@@ -121,29 +134,38 @@ def create_source_abi_reference_dumps_for_all_products(args):
 
         if args.ref_dump_dir:
             get_ref_dump_dir_stem = GetRefDumpDirStem(args.ref_dump_dir)
-            exclude_tags = ()
+            exclude_tags = set()
         else:
             get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
                 release_board_api_level, chosen_platform_version,
                 binder_bitness)
             exclude_tags = NON_AOSP_TAGS
 
+        lsdump_filter = LsdumpFilter(args.libs, args.include_tags,
+                                     exclude_tags)
+
         try:
             if not args.no_make_lib:
-                # Build .lsdump for all the specified libs, or build
-                # `findlsdumps` if no libs are specified.
-                make_libs_for_product(args.libs, build_target, arches,
-                                      exclude_tags)
+                print('making libs for', '-'.join(filter(None, build_target)))
+                if args.libs:
+                    make_libraries(build_target, arches, args.libs,
+                                   lsdump_filter)
+                elif args.include_tags:
+                    make_targets(
+                        build_target,
+                        ['findlsdumps_' + tag for tag in args.include_tags])
+                else:
+                    make_targets(build_target, ['findlsdumps'])
 
             lsdump_paths = read_lsdump_paths(build_target, arches,
-                                             exclude_tags, build=False)
+                                             lsdump_filter, build=False)
 
             num_processed += create_source_abi_reference_dumps(
                 args, get_ref_dump_dir_stem, lsdump_paths, arches)
         except KeyError as e:
             if args.libs or not args.ref_dump_dir:
-                raise RuntimeError('Please check the lib name or specify '
-                                   '-ref-dump-dir if you are updating '
+                raise RuntimeError('Please check the lib name, --lib-variant '
+                                   'and -ref-dump-dir if you are updating '
                                    'reference dumps for product or vendor '
                                    'libraries.') from e
             raise
@@ -167,6 +189,9 @@ def _parse_args():
                              'e.g., trunk_staging, next.')
     parser.add_argument('--build-variant', default='userdebug',
                         help='build variant to create references for')
+    parser.add_argument('--lib-variant', action='append', dest='include_tags',
+                        default=[], choices=KNOWN_TAGS,
+                        help='library variant to create references for.')
     parser.add_argument('--compress', action='store_true',
                         help=argparse.SUPPRESS)
     parser.add_argument('-ref-dump-dir',
@@ -188,8 +213,16 @@ def _parse_args():
             parser.error('-libs should be followed by a base name without '
                          'file extension.')
 
+    if NON_AOSP_TAGS.intersection(args.include_tags) and not args.libs:
+        parser.error('-libs must be given if --lib-variant is any of ' +
+                     str(NON_AOSP_TAGS))
+
     if args.ref_dump_dir and not args.libs:
         parser.error('-libs must be given if -ref-dump-dir is given.')
+
+    if args.ref_dump_dir and len(args.include_tags) != 1:
+        print('WARNING: Exactly one --lib-variant should be specified if '
+              '-ref-dump-dir is given.')
 
     if args.products is None:
         # If `args.products` is unspecified, generate reference ABI dumps for

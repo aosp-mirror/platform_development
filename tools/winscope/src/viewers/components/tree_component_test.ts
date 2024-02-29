@@ -30,10 +30,10 @@ import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
+import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
-import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
-import {TreeNodePropertiesDataViewComponent} from './tree_node_properties_data_view_component';
 
 describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -47,8 +47,8 @@ describe('TreeComponent', () => {
         TreeComponent,
         TestHostComponent,
         TreeNodeComponent,
-        TreeNodeDataViewComponent,
-        TreeNodePropertiesDataViewComponent,
+        HierarchyTreeNodeDataViewComponent,
+        PropertyTreeNodeDataViewComponent,
       ],
       imports: [MatTooltipModule, MatIconModule],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -105,16 +105,16 @@ describe('TreeComponent', () => {
     const treeNode = assertDefined(
       tree.elementRef.nativeElement.querySelector(`#nodeChild79`),
     );
+
+    component.highlightedItem = 'Root node';
+    fixture.detectChanges();
+
     const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
     component.highlightedItem = '79 Child79';
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
 
-    component.highlightedItem = '';
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
-
-    component.highlightedItem = '79 Child79';
+    component.highlightedItem = '78 Child78';
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
   });
@@ -150,6 +150,7 @@ describe('TreeComponent', () => {
   @Component({
     selector: 'host-component',
     template: `
+    <div class="tree-wrapper">
       <tree-view
         [node]="tree0"
         [store]="store"
@@ -157,7 +158,9 @@ describe('TreeComponent', () => {
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [itemsClickable]="true"></tree-view>
+    </div>
 
+    <div class="tree-wrapper">
       <tree-view
         [node]="itemWithStoredExpandedState"
         [store]="store"
@@ -166,7 +169,16 @@ describe('TreeComponent', () => {
         [highlightedItem]="highlightedItem"
         [useStoredExpandedState]="true"
         [itemsClickable]="true"></tree-view>
+    </div>
     `,
+    styles: [
+      `
+      .tree-wrapper {
+        height: 500px;
+        overflow: auto;
+      }
+    `,
+    ],
   })
   class TestHostComponent {
     tree0: UiHierarchyTreeNode;

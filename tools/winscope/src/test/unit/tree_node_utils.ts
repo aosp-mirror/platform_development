@@ -78,6 +78,24 @@ export class TreeNodeUtils {
       .build();
   }
 
+  static makeMatrixNode(
+    dsdx: number,
+    dtdx: number,
+    dsdy: number,
+    dtdy: number,
+  ): PropertyTreeNode {
+    return new PropertyTreeBuilder()
+      .setRootId('test node')
+      .setName('matrix')
+      .setChildren([
+        {name: 'dsdx', value: dsdx},
+        {name: 'dtdx', value: dtdx},
+        {name: 'dsdy', value: dsdy},
+        {name: 'dtdy', value: dtdy},
+      ])
+      .build();
+  }
+
   static makeTransformNode(type: TransformType): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')

@@ -33,6 +33,7 @@ import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
@@ -117,11 +118,36 @@ describe('ViewerProtologComponent', () => {
       expect(spy).toHaveBeenCalledWith(150);
     });
 
+    it('changes css class on message click and does not scroll', () => {
+      const uiData = makeUiData();
+      component.inputData = uiData;
+      fixture.detectChanges();
+
+      htmlElement.addEventListener(Events.MessageClicked, (event) => {
+        const index = (event as CustomEvent).detail;
+        uiData.selectedMessageIndex = index;
+        component.inputData = uiData;
+        fixture.detectChanges();
+      });
+
+      const message = assertDefined(
+        htmlElement.querySelector('.message[item-id="3"]'),
+      ) as HTMLButtonElement;
+      expect(message.className).not.toContain('selected');
+      const spy = spyOn(
+        assertDefined(component.scrollComponent),
+        'scrollToIndex',
+      );
+      message.click();
+      expect(spy).not.toHaveBeenCalled();
+      expect(message.className).toContain('selected');
+    });
+
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
       let timestamp = '';
-      htmlElement.addEventListener(Events.TimestampSelected, (event) => {
+      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
         timestamp = (event as CustomEvent).detail.formattedValue();
       });
       const logTimestampButton = assertDefined(
@@ -186,6 +212,13 @@ describe('ViewerProtologComponent', () => {
       };
       messages.push(uiDataMessage);
     }
-    return new UiData(allLogLevels, allTags, allSourceFiles, messages, 150);
+    return new UiData(
+      allLogLevels,
+      allTags,
+      allSourceFiles,
+      messages,
+      150,
+      undefined,
+    );
   }
 });

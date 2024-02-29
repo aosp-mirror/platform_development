@@ -18,6 +18,8 @@ import {globalConfig} from 'common/global_config';
 import {TimestampFactory} from 'common/timestamp_factory';
 import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
+import {InvalidPerfettoTrace} from 'messaging/winscope_error';
+import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {
@@ -44,6 +46,7 @@ export class ParserFactory {
     traceFile: TraceFile,
     timestampFactory: TimestampFactory,
     progressListener?: ProgressListener,
+    errorListener?: WinscopeErrorListener,
   ): Promise<Array<Parser<object>>> {
     const traceProcessor = await this.initializeTraceProcessor();
     for (
@@ -73,6 +76,10 @@ export class ParserFactory {
       undefined,
     );
     const parsers: Array<Parser<object>> = [];
+
+    let hasFoundParser = false;
+
+    const errors: string[] = [];
     for (const ParserType of ParserFactory.PARSERS) {
       try {
         const parser = new ParserType(
@@ -82,9 +89,17 @@ export class ParserFactory {
         );
         await parser.parse();
         parsers.push(parser);
+        hasFoundParser = true;
       } catch (error) {
         // skip current parser
+        errors.push((error as Error).message);
       }
+    }
+
+    if (!hasFoundParser) {
+      errorListener?.onError(
+        new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
+      );
     }
 
     return parsers;

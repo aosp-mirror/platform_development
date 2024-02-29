@@ -139,19 +139,6 @@ export class TimeUtils {
     return ts1;
   }
 
-  static addTimezoneOffset(timezone: string, timestampNs: bigint): bigint {
-    const utcDate = new Date(Number(timestampNs / 1000000n));
-    const timezoneDateFormatted = utcDate.toLocaleString('en-US', {
-      timeZone: timezone,
-    });
-    const timezoneDate = new Date(timezoneDateFormatted);
-    const hoursDiff = timezoneDate.getHours() - utcDate.getHours();
-    const minutesDiff = timezoneDate.getMinutes() - utcDate.getMinutes();
-    return (
-      timestampNs + BigInt(hoursDiff * 3.6e12) + BigInt(minutesDiff * 6e10)
-    );
-  }
-
   private static nanosecondsToHumanElapsed(
     timestampNanos: number | bigint,
     hideNs = true,
