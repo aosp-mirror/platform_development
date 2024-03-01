@@ -92,6 +92,12 @@ std::string JsonObjectRef::GetString(const std::string &key) const {
   return Get(key, json_empty_string, &Json::Value::isString).asString();
 }
 
+std::string JsonObjectRef::GetString(const std::string &key,
+                                     const std::string &default_value) const {
+  return Get(key, Json::Value(default_value), &Json::Value::isString)
+      .asString();
+}
+
 JsonObjectRef JsonObjectRef::GetObject(const std::string &key) const {
   return JsonObjectRef(Get(key, json_empty_object, &Json::Value::isObject),
                        ok_);
@@ -207,13 +213,18 @@ void JsonIRReader::ReadTemplateInfo(const JsonObjectRef &type_decl,
 
 void JsonIRReader::ReadTypeInfo(const JsonObjectRef &type_decl,
                                 TypeIR *type_ir) {
-  type_ir->SetLinkerSetKey(type_decl.GetString("linker_set_key"));
+  // LinkableMessageIR
   type_ir->SetSourceFile(type_decl.GetString("source_file"));
+  type_ir->SetLinkerSetKey(type_decl.GetString("linker_set_key"));
+  // TypeIR
   type_ir->SetName(type_decl.GetString("name"));
-  type_ir->SetReferencedType(type_decl.GetString("referenced_type"));
-  type_ir->SetSelfType(type_decl.GetString("self_type"));
   type_ir->SetSize(type_decl.GetUint("size"));
   type_ir->SetAlignment(type_decl.GetUint("alignment"));
+  type_ir->SetSelfType(
+      type_decl.GetString("self_type", type_ir->GetLinkerSetKey()));
+  // ReferencesOtherType
+  type_ir->SetReferencedType(
+      type_decl.GetString("referenced_type", type_ir->GetSelfType()));
 }
 
 void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
@@ -319,13 +330,16 @@ EnumTypeIR JsonIRReader::EnumTypeJsonToIR(const JsonObjectRef &enum_type) {
 void JsonIRReader::ReadGlobalVariables(const JsonObjectRef &tu) {
   for (auto &&global_variable : tu.GetObjects("global_vars")) {
     GlobalVarIR global_variable_ir;
+    // GlobalVarIR
     global_variable_ir.SetName(global_variable.GetString("name"));
     global_variable_ir.SetAccess(GetAccess(global_variable));
+    // LinkableMessageIR
     global_variable_ir.SetSourceFile(global_variable.GetString("source_file"));
-    global_variable_ir.SetReferencedType(
-        global_variable.GetString("referenced_type"));
     global_variable_ir.SetLinkerSetKey(
         global_variable.GetString("linker_set_key"));
+    // ReferencesOtherType
+    global_variable_ir.SetReferencedType(global_variable.GetString(
+        "referenced_type", global_variable_ir.GetLinkerSetKey()));
     module_->AddGlobalVariable(std::move(global_variable_ir));
   }
 }
