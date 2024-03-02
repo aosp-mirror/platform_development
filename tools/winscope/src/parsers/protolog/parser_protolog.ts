@@ -21,7 +21,8 @@ import root from 'protos/protolog/latest/json';
 import {com} from 'protos/protolog/latest/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import configJson from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
+import configJson64 from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
+import configJson32 from '../../../configs/services.core.protolog.json';
 import {LogMessage} from './log_message';
 import {ParserProtologUtils} from './parser_protolog_utils';
 
@@ -32,7 +33,8 @@ class ParserProtoLog extends AbstractParser {
   private static readonly MAGIC_NUMBER = [
     0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47,
   ]; // .PROTOLOG
-  private static readonly PROTOLOG_VERSION = '1.0.0';
+  private static readonly PROTOLOG_32_BIT_VERSION = '1.0.0';
+  private static readonly PROTOLOG_64_BIT_VERSION = '2.0.0';
 
   private realToElapsedTimeOffsetNs: bigint | undefined;
 
@@ -51,14 +53,20 @@ class ParserProtoLog extends AbstractParser {
       buffer,
     ) as com.android.internal.protolog.IProtoLogFileProto;
 
-    if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
+    if (fileProto.version === ParserProtoLog.PROTOLOG_32_BIT_VERSION) {
+      if (configJson32.version !== ParserProtoLog.PROTOLOG_32_BIT_VERSION) {
+        const message = `Unsupported ProtoLog JSON config version ${configJson32.version} expected ${ParserProtoLog.PROTOLOG_32_BIT_VERSION}`;
+        console.log(message);
+        throw new TypeError(message);
+      }
+    } else if (fileProto.version === ParserProtoLog.PROTOLOG_64_BIT_VERSION) {
+      if (configJson64.version !== ParserProtoLog.PROTOLOG_64_BIT_VERSION) {
+        const message = `Unsupported ProtoLog JSON config version ${configJson64.version} expected ${ParserProtoLog.PROTOLOG_64_BIT_VERSION}`;
+        console.log(message);
+        throw new TypeError(message);
+      }
+    } else {
       const message = 'Unsupported ProtoLog trace version';
-      console.log(message);
-      throw new TypeError(message);
-    }
-
-    if (configJson.version !== ParserProtoLog.PROTOLOG_VERSION) {
-      const message = 'Unsupported ProtoLog JSON config version';
       console.log(message);
       throw new TypeError(message);
     }
@@ -111,11 +119,19 @@ class ParserProtoLog extends AbstractParser {
     timestampType: TimestampType,
     entry: com.android.internal.protolog.IProtoLogMessage,
   ): PropertyTreeNode {
-    const messageHash = Number(assertDefined(entry.messageHash).toString());
-    const messageHashLegacy = assertDefined(entry.messageHashLegacy);
-    const message: ConfigMessage | undefined = (configJson as ProtologConfig)
-      .messages[messageHash !== 0 ? messageHash : messageHashLegacy];
-    const logMessage = this.makeLogMessage(entry, message);
+    let messageHash = assertDefined(entry.messageHash).toString();
+    let config: ProtologConfig | undefined = undefined;
+    if (messageHash !== null && messageHash !== '0') {
+      config = assertDefined(configJson64) as ProtologConfig;
+    } else {
+      messageHash = assertDefined(entry.messageHashLegacy).toString();
+      config = assertDefined(configJson32) as ProtologConfig;
+    }
+
+    const message: ConfigMessage = config.messages[messageHash];
+    const tag: string = config.groups[message.group].tag;
+
+    const logMessage = this.makeLogMessage(entry, message, tag);
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
       timestampType,
@@ -127,12 +143,13 @@ class ParserProtoLog extends AbstractParser {
   private makeLogMessage(
     entry: com.android.internal.protolog.IProtoLogMessage,
     message: ConfigMessage | undefined,
+    tag: string,
   ): LogMessage {
     if (!message) {
       return this.makeLogMessageWithoutFormat(entry);
     }
     try {
-      return this.makeLogMessageWithFormat(entry, message);
+      return this.makeLogMessageWithFormat(entry, message, tag);
     } catch (error) {
       if (error instanceof FormatStringMismatchError) {
         return this.makeLogMessageWithoutFormat(entry);
@@ -144,6 +161,7 @@ class ParserProtoLog extends AbstractParser {
   private makeLogMessageWithFormat(
     entry: com.android.internal.protolog.IProtoLogMessage,
     message: ConfigMessage,
+    tag: string,
   ): LogMessage {
     let text = '';
 
@@ -211,7 +229,7 @@ class ParserProtoLog extends AbstractParser {
 
     return {
       text,
-      tag: (configJson as ProtologConfig).groups[message.group].tag,
+      tag,
       level: message.level,
       at: message.at,
       timestamp: BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
@@ -257,7 +275,8 @@ class FormatStringMismatchError extends Error {
 }
 
 interface ProtologConfig {
-  messages: {[key: number]: ConfigMessage};
+  version: string;
+  messages: {[key: string]: ConfigMessage};
   groups: {[key: string]: {tag: string}};
 }
 
