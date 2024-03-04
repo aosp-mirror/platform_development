@@ -7,8 +7,6 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
@@ -16,15 +14,11 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIs",
    "name" : "short",
-   "referenced_type" : "_ZTIs",
-   "self_type" : "_ZTIs",
    "size" : 2
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -62,7 +56,6 @@
    "linker_set_key" : "_ZTIR7Struct1",
    "name" : "Struct1 &",
    "referenced_type" : "_ZTI7Struct1",
-   "self_type" : "_ZTIR7Struct1",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -71,7 +64,6 @@
    "linker_set_key" : "_ZTIR7Struct2",
    "name" : "Struct2 &",
    "referenced_type" : "_ZTI7Struct2",
-   "self_type" : "_ZTIR7Struct2",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -80,7 +72,6 @@
    "linker_set_key" : "_ZTIR7Vtable3",
    "name" : "Vtable3 &",
    "referenced_type" : "_ZTI7Vtable3",
-   "self_type" : "_ZTIR7Vtable3",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   }
@@ -92,7 +83,6 @@
    "linker_set_key" : "_ZTIP7Vtable1",
    "name" : "Vtable1 *",
    "referenced_type" : "_ZTI7Vtable1",
-   "self_type" : "_ZTIP7Vtable1",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -101,7 +91,6 @@
    "linker_set_key" : "_ZTIP7Vtable2",
    "name" : "Vtable2 *",
    "referenced_type" : "_ZTI7Vtable2",
-   "self_type" : "_ZTIP7Vtable2",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -110,7 +99,6 @@
    "linker_set_key" : "_ZTIP7Vtable3",
    "name" : "Vtable3 *",
    "referenced_type" : "_ZTI7Vtable3",
-   "self_type" : "_ZTIP7Vtable3",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   }
@@ -136,8 +124,6 @@
    ],
    "linker_set_key" : "_ZTI7Struct1",
    "name" : "Struct1",
-   "referenced_type" : "_ZTI7Struct1",
-   "self_type" : "_ZTI7Struct1",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -153,8 +139,6 @@
    ],
    "linker_set_key" : "_ZTI7Struct2",
    "name" : "Struct2",
-   "referenced_type" : "_ZTI7Struct2",
-   "self_type" : "_ZTI7Struct2",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   },
@@ -170,8 +154,6 @@
    ],
    "linker_set_key" : "_ZTI7Vtable1",
    "name" : "Vtable1",
-   "referenced_type" : "_ZTI7Vtable1",
-   "self_type" : "_ZTI7Vtable1",
    "size" : 16,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h",
    "vtable_components" :
@@ -209,8 +191,6 @@
    ],
    "linker_set_key" : "_ZTI7Vtable2",
    "name" : "Vtable2",
-   "referenced_type" : "_ZTI7Vtable2",
-   "self_type" : "_ZTI7Vtable2",
    "size" : 16,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h",
    "vtable_components" :
@@ -251,8 +231,6 @@
    ],
    "linker_set_key" : "_ZTI7Vtable3",
    "name" : "Vtable3",
-   "referenced_type" : "_ZTI7Vtable3",
-   "self_type" : "_ZTI7Vtable3",
    "size" : 48,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h",
    "vtable_components" :
@@ -340,8 +318,6 @@
    "linker_set_key" : "_ZTIN7Struct26NestedE",
    "name" : "Struct2::Nested",
    "record_kind" : "union",
-   "referenced_type" : "_ZTIN7Struct26NestedE",
-   "self_type" : "_ZTIN7Struct26NestedE",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/base.h"
   }
