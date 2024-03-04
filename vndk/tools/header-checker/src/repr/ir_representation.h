@@ -65,15 +65,11 @@ static inline CompatibilityStatusIR operator&(CompatibilityStatusIR f,
 }
 
 enum AccessSpecifierIR {
+  // Ordered from the least to the most restricted.
   PublicAccess = 1,
   ProtectedAccess = 2,
   PrivateAccess = 3
 };
-
-static inline bool IsAccessDowngraded(AccessSpecifierIR old_access,
-                                      AccessSpecifierIR new_access) {
-  return old_access < new_access;
-}
 
 enum LinkableMessageKind {
   RecordTypeKind,
