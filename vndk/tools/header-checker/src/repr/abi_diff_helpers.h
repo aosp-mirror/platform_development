@@ -176,6 +176,9 @@ class AbiDiffHelper {
   FixupDiffedFieldTypeIds(
       const std::vector<RecordFieldDiffIR> &field_diffs);
 
+  DiffStatus CompareAccess(AccessSpecifierIR old_access,
+                           AccessSpecifierIR new_access);
+
   DiffStatus CompareCommonRecordFields(const RecordFieldIR *old_field,
                                        const RecordFieldIR *new_field,
                                        IRDiffDumper::DiffKind diff_kind);
