@@ -34,7 +34,6 @@
    "linker_set_key" : "_ZTIP10OpaqueType",
    "name" : "OpaqueType *",
    "referenced_type" : "_ZTI10OpaqueType",
-   "self_type" : "_ZTIP10OpaqueType",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/opaque_type/include/opaque_type.h"
   }

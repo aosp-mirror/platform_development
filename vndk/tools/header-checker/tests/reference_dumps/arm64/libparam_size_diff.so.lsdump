@@ -7,15 +7,11 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -68,8 +64,6 @@
    ],
    "linker_set_key" : "_ZTI6Return",
    "name" : "Return",
-   "referenced_type" : "_ZTI6Return",
-   "self_type" : "_ZTI6Return",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
   },
@@ -89,8 +83,6 @@
    ],
    "linker_set_key" : "_ZTI9Parameter",
    "name" : "Parameter",
-   "referenced_type" : "_ZTI9Parameter",
-   "self_type" : "_ZTI9Parameter",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
   }
