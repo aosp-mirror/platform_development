@@ -37,7 +37,7 @@ describe('Deployment - Viewer Protolog', () => {
     );
     await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.259191031');
 
-    await checkNumberOfEntries(40);
+    await checkNumberOfEntries(41);
     await filterByText('FREEZE');
     await checkNumberOfEntries(4);
   });

@@ -25,7 +25,7 @@ describe('Viewer ProtoLog', () => {
 
   it('processes trace and renders view', async () => {
     await E2eTestUtils.uploadFixture(
-      'traces/elapsed_and_real_timestamp/ProtoLog.pb',
+      'traces/elapsed_and_real_timestamp/ProtoLog32.pb',
     );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
