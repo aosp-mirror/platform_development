@@ -346,6 +346,17 @@ static bool CompareSizeAndAlignment(const TypeIR *old_type,
       old_type->GetAlignment() == new_type->GetAlignment();
 }
 
+DiffStatus AbiDiffHelper::CompareAccess(AccessSpecifierIR old_access,
+                                        AccessSpecifierIR new_access) {
+  if (old_access == new_access) {
+    return DiffStatus::kNoDiff;
+  }
+  if (old_access > new_access) {
+    return DiffStatus::kDirectExt;
+  }
+  return DiffStatus::kDirectDiff;
+}
+
 DiffStatus AbiDiffHelper::CompareCommonRecordFields(
     const RecordFieldIR *old_field, const RecordFieldIR *new_field,
     DiffMessageIR::DiffKind diff_kind) {
@@ -355,12 +366,11 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
   // CompareAndDumpTypeDiff should not return kDirectExt.
   // In case it happens, report an incompatible diff for review.
   if (field_diff_status.IsExtension() ||
-      old_field->GetOffset() != new_field->GetOffset() ||
-      // TODO: Should this be an inquality check instead ? Some compilers can
-      // make signatures dependant on absolute values of access specifiers.
-      IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess())) {
+      old_field->GetOffset() != new_field->GetOffset()) {
     field_diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
+  field_diff_status.CombineWith(
+      CompareAccess(old_field->GetAccess(), new_field->GetAccess()));
   return field_diff_status;
 }
 
@@ -603,8 +613,10 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   record_type_diff_ir->SetName(old_type->GetName());
   record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
 
-  if (IsAccessDowngraded(old_type->GetAccess(), new_type->GetAccess())) {
-    final_diff_status.CombineWith(DiffStatus::kDirectDiff);
+  DiffStatus access_diff_status =
+      CompareAccess(old_type->GetAccess(), new_type->GetAccess());
+  final_diff_status.CombineWith(access_diff_status);
+  if (access_diff_status.HasDiff()) {
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<AccessSpecifierDiffIR>(
             old_type->GetAccess(), new_type->GetAccess()));
