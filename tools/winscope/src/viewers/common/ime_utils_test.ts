@@ -16,7 +16,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
-import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {
@@ -129,7 +128,7 @@ describe('ImeUtils', () => {
 
     expect(
       assertDefined(layers.properties.focusedWindowColor).formattedValue(),
-    ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
+    ).toEqual('(0, 0, 0, 1)');
 
     const taskLayerOfImeContainer = assertDefined(
       layers.taskLayerOfImeContainer,
