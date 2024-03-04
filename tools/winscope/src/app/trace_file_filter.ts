@@ -33,6 +33,7 @@ export class TraceFileFilter {
     'FS/data/misc/wmtrace/',
     'FS/data/misc/perfetto-traces/',
     'proto/window_CRITICAL.proto',
+    'proto/input_method_CRITICAL.proto',
   ];
 
   async filter(
