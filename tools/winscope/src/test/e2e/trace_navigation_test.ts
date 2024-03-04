@@ -15,11 +15,13 @@
  */
 
 import {browser, by, element, ElementFinder} from 'protractor';
-import {E2eTestUtils} from '../utils';
+import {E2eTestUtils} from './utils';
 
-describe('Deployment - trace navigation', () => {
+describe('Trace navigation', () => {
+  const DEFAULT_TIMEOUT_MS = 1000;
+
   beforeAll(async () => {
-    await browser.manage().timeouts().implicitlyWait(1000);
+    await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });
 
