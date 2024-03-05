@@ -265,7 +265,7 @@ import {UploadTracesComponent} from './upload_traces_component';
       .file-descriptor {
         font-size: 14px;
         padding-left: 10px;
-        width: 350px;
+        max-width: 350px;
       }
       .download-file-info {
         text-overflow: ellipsis;
