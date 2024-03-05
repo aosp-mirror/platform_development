@@ -55,7 +55,6 @@ describe('RectsComponent', () => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    fixture.detectChanges();
   });
 
   it('can be created', () => {
@@ -78,31 +77,10 @@ describe('RectsComponent', () => {
   });
 
   it('draws scene when input data changes', async () => {
+    fixture.detectChanges();
     spyOn(Canvas.prototype, 'draw').and.callThrough();
 
-    const inputRect = new UiRectBuilder()
-      .setX(0)
-      .setY(0)
-      .setWidth(1)
-      .setHeight(1)
-      .setLabel('rectangle1')
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
-      .setIsVisible(true)
-      .setIsDisplay(false)
-      .setId('test-id-1234')
-      .setGroupId(0)
-      .setIsVirtual(false)
-      .setIsClickable(false)
-      .setCornerRadius(0)
-      .setDepth(0)
-      .build();
+    const inputRect = makeRectWithGroupId(0);
 
     expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
     component.rects = [inputRect];
@@ -114,6 +92,7 @@ describe('RectsComponent', () => {
   });
 
   it('draws scene when rotation slider changes', () => {
+    fixture.detectChanges();
     spyOn(Canvas.prototype, 'draw').and.callThrough();
     const slider = assertDefined(htmlElement.querySelector('.slider-rotation'));
 
@@ -124,6 +103,7 @@ describe('RectsComponent', () => {
   });
 
   it('draws scene when spacing slider changes', () => {
+    fixture.detectChanges();
     spyOn(Canvas.prototype, 'draw').and.callThrough();
     const slider = assertDefined(htmlElement.querySelector('.slider-spacing'));
 
@@ -134,6 +114,7 @@ describe('RectsComponent', () => {
   });
 
   it('unfocuses spacing slider on click', () => {
+    fixture.detectChanges();
     const spacingSlider = assertDefined(
       htmlElement.querySelector('.slider-spacing'),
     );
@@ -141,6 +122,7 @@ describe('RectsComponent', () => {
   });
 
   it('unfocuses rotation slider on click', () => {
+    fixture.detectChanges();
     const rotationSlider = assertDefined(
       htmlElement.querySelector('.slider-rotation'),
     );
@@ -406,21 +388,56 @@ describe('RectsComponent', () => {
   });
 
   it('uses stored rects view settings', () => {
-    expect(component.rectsComponent.getZSpacingFactor()).toEqual(1);
-    component.rectsComponent.onSeparationSliderChange(0.06);
     fixture.detectChanges();
-    expect(component.rectsComponent.getZSpacingFactor()).toEqual(0.06);
+    const rectsComponent = assertDefined(component.rectsComponent);
+    expect(rectsComponent.getZSpacingFactor()).toEqual(1);
+    rectsComponent.onSeparationSliderChange(0.06);
+    fixture.detectChanges();
+    expect(rectsComponent.getZSpacingFactor()).toEqual(0.06);
 
-    expect(component.rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
+    expect(rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
     findAndClickCheckbox('.top-view-controls .show-only-visible  input');
-    expect(component.rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
+    expect(rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
 
     const newFixture = TestBed.createComponent(TestHostComponent);
-    const newComponent = newFixture.componentInstance;
     newFixture.detectChanges();
+    const newRectsComponent = assertDefined(
+      newFixture.componentInstance.rectsComponent,
+    );
+    expect(newRectsComponent.getZSpacingFactor()).toEqual(0.06);
+    expect(newRectsComponent.getShowOnlyVisibleMode()).toBeTrue();
+  });
 
-    expect(newComponent.rectsComponent.getZSpacingFactor()).toEqual(0.06);
-    expect(newComponent.rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
+  it('defaults initial selection to first display with non-display rects and groupId 0', () => {
+    const inputRect = makeRectWithGroupId(0);
+    component.rects = [inputRect];
+    component.displays = [
+      {displayId: 10, groupId: 1, name: 'Display 0'},
+      {displayId: 20, groupId: 0, name: 'Display 1'},
+    ];
+    fixture.detectChanges();
+
+    checkButtons(
+      ['Display 0', 'Display 1'],
+      ['secondary', 'primary'],
+      '.display-name-buttons',
+    );
+  });
+
+  it('defaults initial selection to first display with non-display rects and groupId non-zero', () => {
+    const inputRect = makeRectWithGroupId(1);
+    component.rects = [inputRect];
+    component.displays = [
+      {displayId: 10, groupId: 0, name: 'Display 0'},
+      {displayId: 20, groupId: 1, name: 'Display 1'},
+    ];
+    fixture.detectChanges();
+
+    checkButtons(
+      ['Display 0', 'Display 1'],
+      ['secondary', 'primary'],
+      '.display-name-buttons',
+    );
   });
 
   function checkButtons(
@@ -461,14 +478,41 @@ describe('RectsComponent', () => {
   }
 
   function checkSliderUnfocusesOnClick(slider: Element, expectedValue: number) {
+    const rectsComponent = assertDefined(component.rectsComponent);
     slider.dispatchEvent(new MouseEvent('mousedown'));
-    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+    expect(rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
     htmlElement.dispatchEvent(
       new KeyboardEvent('keydown', {key: 'ArrowRight'}),
     );
-    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+    expect(rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
     htmlElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
-    expect(component.rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+    expect(rectsComponent.getZSpacingFactor()).toEqual(expectedValue);
+  }
+
+  function makeRectWithGroupId(groupId: number): UiRect {
+    return new UiRectBuilder()
+      .setX(0)
+      .setY(0)
+      .setWidth(1)
+      .setHeight(1)
+      .setLabel('rectangle1')
+      .setTransform({
+        dsdx: 1,
+        dsdy: 0,
+        dtdx: 0,
+        dtdy: 1,
+        tx: 0,
+        ty: 0,
+      })
+      .setIsVisible(true)
+      .setIsDisplay(false)
+      .setId('test-id-1234')
+      .setGroupId(groupId)
+      .setIsVirtual(false)
+      .setIsClickable(false)
+      .setCornerRadius(0)
+      .setDepth(0)
+      .build();
   }
 
   @Component({
@@ -489,6 +533,6 @@ describe('RectsComponent', () => {
     isStackBased = false;
 
     @ViewChild(RectsComponent)
-    rectsComponent!: RectsComponent;
+    rectsComponent: RectsComponent | undefined;
   }
 });
