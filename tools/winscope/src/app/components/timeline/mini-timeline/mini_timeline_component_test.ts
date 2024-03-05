@@ -416,7 +416,7 @@ describe('MiniTimelineComponent', () => {
         deltaX: 0,
         x: 10, // scrolling on pos
         target: {id: 'mini-timeline-canvas', offsetLeft: 0},
-      } as any as WheelEvent);
+      } as unknown as WheelEvent);
 
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
@@ -451,7 +451,7 @@ describe('MiniTimelineComponent', () => {
         deltaX: 0,
         x: 10, // scrolling on pos
         target: {id: 'mini-timeline-canvas', offsetLeft: 0},
-      } as any as WheelEvent);
+      } as unknown as WheelEvent);
 
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
@@ -483,7 +483,35 @@ describe('MiniTimelineComponent', () => {
       deltaX: 0,
       x: 10, // scrolling on pos
       target: {id: 'mini-timeline-canvas', offsetLeft: 0},
-    } as any as WheelEvent);
+    } as unknown as WheelEvent);
+
+    fixture.detectChanges();
+
+    const finalZoom = timelineData.getZoomRange();
+
+    expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
+    expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
+  });
+
+  it('applies expanded timeline scroll wheel event', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
+      .build();
+
+    assertDefined(component.timelineData).initialize(traces, undefined);
+
+    const initialZoom = {
+      from: timestamp10,
+      to: timestamp1000,
+    };
+    component.onZoomChanged(initialZoom);
+
+    component.expandedTimelineScrollEvent = {
+      deltaY: 1000,
+      deltaX: 0,
+      x: 10, // scrolling on pos
+    } as unknown as WheelEvent;
 
     fixture.detectChanges();
 

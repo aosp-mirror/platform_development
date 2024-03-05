@@ -230,6 +230,17 @@ describe('DefaultTimelineRowComponent', () => {
     await drawCorrectEntryOnClick(entryPos, 70n, 3);
   });
 
+  //TODO(b/304982982): test via dom interactions, not calling listener directly
+  it('emits scroll event', async () => {
+    setTraceAndSelectionRange(10n, 110n);
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    const spy = spyOn(component.onScrollEvent, 'emit');
+    component.updateScroll(new WheelEvent('scroll'));
+    expect(spy).toHaveBeenCalled();
+  });
+
   function setTraceAndSelectionRange(low: bigint, high: bigint) {
     component.trace = new TraceBuilder<{}>()
       .setType(TraceType.TRANSITION)

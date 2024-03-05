@@ -92,6 +92,7 @@ export class MiniTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Input() currentTracePosition: TracePosition | undefined;
   @Input() selectedTraces: TraceType[] | undefined;
+  @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onSeekTimestampUpdate = new EventEmitter<
@@ -130,6 +131,18 @@ export class MiniTimelineComponent {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['expandedTimelineScrollEvent']?.currentValue !== undefined) {
+      const event = changes['expandedTimelineScrollEvent'].currentValue;
+      const moveDirection = this.getMoveDirection(event);
+
+      if (event.deltaY !== 0 && moveDirection === 'y') {
+        this.updateZoomByScrollEvent(event);
+      }
+
+      if (event.deltaX !== 0 && moveDirection === 'x') {
+        this.updateHorizontalScroll(event);
+      }
+    }
     if (this.drawer !== undefined) {
       this.drawer.draw();
     }

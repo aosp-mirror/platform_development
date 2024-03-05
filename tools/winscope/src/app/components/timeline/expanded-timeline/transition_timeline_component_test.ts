@@ -571,4 +571,42 @@ describe('TransitionTimelineComponent', () => {
 
     expect(drawRectSpy).not.toHaveBeenCalled();
   });
+
+  //TODO(b/304982982): test via dom interactions, not calling listener directly
+  it('emits scroll event', async () => {
+    component.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setEntries([
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: time30}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: time10}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+      ])
+      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n)])
+      .build();
+
+    component.selectionRange = {
+      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+    };
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    const spy = spyOn(component.onScrollEvent, 'emit');
+    component.updateScroll(new WheelEvent('scroll'));
+    expect(spy).toHaveBeenCalled();
+  });
 });
