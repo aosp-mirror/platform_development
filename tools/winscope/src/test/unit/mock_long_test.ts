@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-import {MockKotlinLong} from './mock_kotlin_long';
+import {MockLong} from './mock_long';
 
-describe('MockKotlinLong', () => {
+describe('MockLong', () => {
   it('converts low/high bits to string correctly', () => {
-    expect(new MockKotlinLong(0, 0).toString()).toEqual('0');
-    expect(new MockKotlinLong(10, 0).toString()).toEqual('10');
-    expect(new MockKotlinLong(0, 10).toString()).toEqual('42949672960');
-    expect(new MockKotlinLong(10, 10).toString()).toEqual('42949672970');
-    expect(new MockKotlinLong(-1719594551, 174).toString()).toEqual(
-      '749899682249',
-    );
+    expect(new MockLong(0, 0).toString()).toEqual('0');
+    expect(new MockLong(10, 0).toString()).toEqual('10');
+    expect(new MockLong(0, 10).toString()).toEqual('42949672960');
+    expect(new MockLong(10, 10).toString()).toEqual('42949672970');
+    expect(new MockLong(-1719594551, 174).toString()).toEqual('749899682249');
   });
 });

@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {MockKotlinLong} from 'test/unit/mock_kotlin_long';
+import {MockLong} from 'test/unit/mock_long';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TranslateChanges} from './translate_changes';
 
@@ -44,16 +44,12 @@ describe('TranslateChanges', () => {
                     {name: '0', children: [{name: 'what', value: 2}]},
                     {
                       name: '1',
-                      children: [
-                        {name: 'what', value: new MockKotlinLong(2, 0)},
-                      ],
+                      children: [{name: 'what', value: new MockLong(2, 0)}],
                     },
                     {name: '2', children: [{name: 'what', value: 4294967360}]},
                     {
                       name: '3',
-                      children: [
-                        {name: 'what', value: new MockKotlinLong(64, 1)},
-                      ],
+                      children: [{name: 'what', value: new MockLong(64, 1)}],
                     },
                   ],
                 },

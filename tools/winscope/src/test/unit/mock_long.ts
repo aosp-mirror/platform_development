@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export class MockKotlinLong {
+export class MockLong {
   constructor(public low: number, public high: number) {}
 
   toString() {

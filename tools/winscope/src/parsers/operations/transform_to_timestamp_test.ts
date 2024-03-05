@@ -16,14 +16,14 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {MockKotlinLong} from 'test/unit/mock_kotlin_long';
+import {MockLong} from 'test/unit/mock_long';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TransformToTimestamp} from './transform_to_timestamp';
 
 describe('TransformToTimestamp', () => {
   const timestampProperties = ['timestamp'];
-  const longTimestamp = new MockKotlinLong(10, 0);
+  const longTimestamp = new MockLong(10, 0);
   let propertyRoot: PropertyTreeNode;
 
   beforeEach(() => {
