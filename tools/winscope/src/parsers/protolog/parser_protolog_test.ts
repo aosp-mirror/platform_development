@@ -200,4 +200,36 @@ describe('ParserProtoLog', () => {
       },
     ),
   );
+  describe(
+    'Missing config message',
+    genProtoLogTest(
+      'traces/elapsed_and_real_timestamp/ProtoLogMissingConfigMessage.pb',
+      7295,
+      [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669053909777144978n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669053909778011697n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669053909778800707n),
+      ],
+      [
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(24398190144978n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(24398191011697n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(24398191800707n),
+      ],
+      [
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669073709777144978n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669073709778011697n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1669073709778800707n),
+      ],
+      {
+        'message': 'SURFACE isColorSpaceAgnostic=true: NotificationShade',
+        'ts': {
+          'real': '2022-11-21T18:05:09.777144978',
+          'elapsed': '6h46m38s190ms144978ns',
+        },
+        'tag': 'WindowManager',
+        'level': 'INFO',
+        'at': 'com/android/server/wm/WindowSurfaceController.java',
+      },
+    ),
+  );
 });

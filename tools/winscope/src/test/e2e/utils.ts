@@ -28,7 +28,7 @@ class E2eTestUtils {
     }
   }
 
-  static async loadTrace(
+  static async loadTraceAndCheckViewer(
     fixturePath: string,
     viewerTabTitle: string,
     viewerSelector: string,

@@ -128,8 +128,10 @@ class ParserProtoLog extends AbstractParser {
       config = assertDefined(configJson32) as ProtologConfig;
     }
 
-    const message: ConfigMessage = config.messages[messageHash];
-    const tag: string = config.groups[message.group].tag;
+    const message: ConfigMessage | undefined = config.messages[messageHash];
+    const tag: string | undefined = message
+      ? config.groups[message.group].tag
+      : undefined;
 
     const logMessage = this.makeLogMessage(entry, message, tag);
     return ParserProtologUtils.makeMessagePropertiesTree(
@@ -143,9 +145,9 @@ class ParserProtoLog extends AbstractParser {
   private makeLogMessage(
     entry: com.android.internal.protolog.IProtoLogMessage,
     message: ConfigMessage | undefined,
-    tag: string,
+    tag: string | undefined,
   ): LogMessage {
-    if (!message) {
+    if (!message || !tag) {
       return this.makeLogMessageWithoutFormat(entry);
     }
     try {
