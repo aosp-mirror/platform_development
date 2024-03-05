@@ -50,6 +50,7 @@ describe('TraceFileFilter', () => {
         ),
         makeTraceFile('FS/data/misc/wmtrace/transactions.bp', bugreportArchive),
         makeTraceFile('proto/window_CRITICAL.proto', bugreportArchive),
+        makeTraceFile('proto/input_method_CRITICAL.proto', bugreportArchive),
       ];
 
       const ignoredBugreportFile = makeTraceFile(

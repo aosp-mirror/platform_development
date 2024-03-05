@@ -259,7 +259,7 @@ fi
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
         f"""
 if is_perfetto_data_source_available android.protolog && \
-    is_flag_set windowing_tools/android.tracing.perfetto_protolog; then
+    is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
@@ -275,7 +275,7 @@ fi
         """,
         """
 if ! is_perfetto_data_source_available android.protolog && \
-    ! is_flag_set windowing_tools/android.tracing.perfetto_protolog; then
+    ! is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
     su root cmd window logging stop >/dev/null 2>&1
     echo "ProtoLog (legacy) stopped."
 fi

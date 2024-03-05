@@ -112,7 +112,9 @@ describe('Cross-Tool Protocol', () => {
   }
 
   async function checkWinscopeRenderedAllViewTabs() {
-    const tabParagraphs = await element.all(by.css('.tabs-navigation-bar a p'));
+    const tabParagraphs = await element.all(
+      by.css('.tabs-navigation-bar a span'),
+    );
 
     const actualTabParagraphs = await Promise.all(
       (tabParagraphs as ElementFinder[]).map(
