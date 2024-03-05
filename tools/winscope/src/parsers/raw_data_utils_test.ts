@@ -128,25 +128,53 @@ describe('RawDataUtils', () => {
     expect(RawDataUtils.isRegion(region)).toBeFalse();
   });
 
-  it('identifies non-empty color and rect', () => {
-    const color = TreeNodeUtils.makeColorNode(0, 8, 0, 1);
-    const rect = TreeNodeUtils.makeRectNode(0, 0, 1, 1);
+  describe('identifies empty object', () => {
+    it('rect', () => {
+      const rectWithUndefinedValues = TreeNodeUtils.makeRectNode(
+        0,
+        0,
+        undefined,
+        undefined,
+      );
+      expect(RawDataUtils.isEmptyObj(rectWithUndefinedValues)).toBeTrue();
 
-    const isEmptyColor = RawDataUtils.isEmptyObj(color);
-    const isEmptyRect = RawDataUtils.isEmptyObj(rect);
-    expect(isEmptyColor).toBeFalse();
-    expect(isEmptyRect).toBeFalse();
+      const rectAllZeroValues = TreeNodeUtils.makeRectNode(0, 0, 0, 0);
+      expect(RawDataUtils.isEmptyObj(rectAllZeroValues)).toBeTrue();
+
+      const rectWithMinusOneValues = TreeNodeUtils.makeRectNode(0, 0, -1, -1);
+      expect(RawDataUtils.isEmptyObj(rectWithMinusOneValues)).toBeTrue();
+    });
+
+    it('color', () => {
+      const bMinusOne = TreeNodeUtils.makeColorNode(153, 23, -1, 1);
+      expect(RawDataUtils.isEmptyObj(bMinusOne)).toBeTrue();
+
+      const rgbMinusOne = TreeNodeUtils.makeColorNode(-1, -1, -1, 0.9);
+      expect(RawDataUtils.isEmptyObj(rgbMinusOne)).toBeTrue();
+
+      const alphaZero = TreeNodeUtils.makeColorNode(1, 1, 1, 0);
+      expect(RawDataUtils.isEmptyObj(alphaZero)).toBeTrue();
+    });
   });
 
-  it('identifies empty color and rect', () => {
-    const color = TreeNodeUtils.makeColorNode(-1, -1, undefined, 1);
-    const rect = TreeNodeUtils.makeRectNode(0, 0, undefined, undefined);
-    const otherColor = TreeNodeUtils.makeColorNode(1, 1, 1, 0);
-    const otherRect = TreeNodeUtils.makeRectNode(0, 0, 0, 0);
+  describe('identifies non-empty object', () => {
+    it('rect', () => {
+      const rect = TreeNodeUtils.makeRectNode(0, 0, 1, 1);
+      expect(RawDataUtils.isEmptyObj(rect)).toBeFalse();
+    });
 
-    expect(RawDataUtils.isEmptyObj(color)).toBeTrue();
-    expect(RawDataUtils.isEmptyObj(rect)).toBeTrue();
-    expect(RawDataUtils.isEmptyObj(otherColor)).toBeTrue();
-    expect(RawDataUtils.isEmptyObj(otherRect)).toBeTrue();
+    it('color', () => {
+      const color = TreeNodeUtils.makeColorNode(0, 8, 0, 1);
+      expect(RawDataUtils.isEmptyObj(color)).toBeFalse();
+
+      const missingB = TreeNodeUtils.makeColorNode(153, 23, undefined, 1);
+      expect(RawDataUtils.isEmptyObj(missingB)).toBeFalse();
+
+      const rgbZeroAlphaNonZero = TreeNodeUtils.makeColorNode(0, 0, 0, 0.7);
+      expect(RawDataUtils.isEmptyObj(rgbZeroAlphaNonZero)).toBeFalse();
+
+      const rgbZeroAlphaOne = TreeNodeUtils.makeColorNode(0, 0, 0, 1);
+      expect(RawDataUtils.isEmptyObj(rgbZeroAlphaOne)).toBeFalse();
+    });
   });
 });
