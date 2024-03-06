@@ -124,14 +124,6 @@ export function executePresenterInputMethodTests(
       expect(uiData.pinnedItems).toContain(pinnedItem);
     });
 
-    it('can update highlighted item', () => {
-      setUpPresenter([imeTraceType]);
-      expect(uiData.highlightedItem).toEqual('');
-      const id = 'entry';
-      presenter.onHighlightedItemChange(id);
-      expect(uiData.highlightedItem).toEqual(id);
-    });
-
     it('flattens hierarchy tree', async () => {
       setUpPresenter([imeTraceType, TraceType.SURFACE_FLINGER]);
       //change flat view to true
@@ -205,11 +197,11 @@ export function executePresenterInputMethodTests(
       ).toEqual(0);
     });
 
-    it('can set new properties tree and associated ui data', async () => {
+    it('can set new properties tree and associated ui data from node', async () => {
       setUpPresenter([imeTraceType]);
       expect(uiData.propertiesTree).toBeUndefined();
       await presenter.onAppEvent(positionUpdate);
-      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      await presenter.onHighlightedNodeChange(selectedTree);
       const propertiesTree = assertDefined(uiData.propertiesTree);
       expect(propertiesTree.name).toEqual(selectedTree.name);
     });
@@ -217,7 +209,7 @@ export function executePresenterInputMethodTests(
     it('can show/hide defaults in properties tree', async () => {
       setUpPresenter([imeTraceType]);
       await presenter.onAppEvent(positionUpdate);
-      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      await presenter.onHighlightedNodeChange(selectedTree);
       expect(
         assertDefined(uiData.propertiesTree).getAllChildren().length,
       ).toEqual(expectedChildren[0]);
@@ -235,7 +227,7 @@ export function executePresenterInputMethodTests(
     it('can filter properties tree', async () => {
       setUpPresenter([imeTraceType]);
       await presenter.onAppEvent(positionUpdate);
-      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      await presenter.onHighlightedNodeChange(selectedTree);
       expect(
         assertDefined(uiData.propertiesTree).getAllChildren().length,
       ).toEqual(expectedChildren[0]);

@@ -28,7 +28,6 @@ import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
-import {DiffType} from 'viewers/common/diff_type';
 import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -54,7 +53,7 @@ export class Presenter {
   private viewCapturePackageNames: string[] = [];
 
   private previousFrameData: TraceEntry<HierarchyTreeNode> | undefined;
-  private selectedHierarchyTree: UiHierarchyTreeNode | undefined;
+  private selectedHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTree: HierarchyTreeNode | undefined;
   private previousHierarchyTree: HierarchyTreeNode | undefined;
 
@@ -170,17 +169,24 @@ export class Presenter {
     if (this.currentHierarchyTree) {
       vcRects = UI_RECT_FACTORY.makeVcUiRects(this.currentHierarchyTree);
       this.pinnedItems = [];
-      tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
-        this.currentHierarchyTree,
+      tree = assertDefined(
+        await this.formatHierarchyTreeAndUpdatePinnedItems(
+          this.currentHierarchyTree,
+        ),
       );
 
-      if (!this.selectedHierarchyTree) {
+      if (!this.highlightedItem) {
         this.selectedHierarchyTree = tree;
+      } else {
+        this.selectedHierarchyTree = this.currentHierarchyTree.findDfs((node) =>
+          UiTreeUtils.isHighlighted(node, this.highlightedItem),
+        );
       }
     }
 
     let formattedPropertiesTree: UiPropertyTreeNode | undefined;
     let curatedProperties: VcCuratedProperties | undefined;
+
     if (this.selectedHierarchyTree) {
       const propertiesTree =
         await this.selectedHierarchyTree.getAllProperties();
@@ -319,14 +325,18 @@ export class Presenter {
     }
   }
 
-  onHighlightedItemChange(id: string) {
-    if (this.highlightedItem === id) {
-      this.highlightedItem = '';
-    } else {
-      this.highlightedItem = id;
-    }
-    assertDefined(this.uiData).highlightedItem = this.highlightedItem;
-    this.copyUiDataAndNotifyView();
+  async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
+    this.updateHighlightedItem(item.id);
+    this.selectedHierarchyTree = item;
+    await this.updateSelectedHierarchyTree(item);
+  }
+
+  async onHighlightedIdChange(newId: string) {
+    this.updateHighlightedItem(newId);
+    this.selectedHierarchyTree = this.currentHierarchyTree?.findDfs(
+      UiTreeUtils.makeIdMatchFilter(newId),
+    );
+    await this.updateSelectedTreeUiData();
   }
 
   async onHierarchyUserOptionsChange(userOptions: UserOptions) {
@@ -360,14 +370,20 @@ export class Presenter {
     await this.updateSelectedTreeUiData();
   }
 
-  async onSelectedHierarchyTreeChange(selectedTree: UiHierarchyTreeNode) {
-    if (
-      !selectedTree.isOldNode() ||
-      selectedTree.getDiff() === DiffType.DELETED
-    ) {
-      this.selectedHierarchyTree = selectedTree;
-      await this.updateSelectedTreeUiData();
+  private updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
+    } else {
+      this.highlightedItem = id;
     }
+    assertDefined(this.uiData).highlightedItem = this.highlightedItem;
+  }
+
+  private async updateSelectedHierarchyTree(selectedTree: UiHierarchyTreeNode) {
+    if (UiTreeUtils.shouldGetProperties(selectedTree)) {
+      this.selectedHierarchyTree = selectedTree;
+    }
+    await this.updateSelectedTreeUiData();
   }
 
   private async updateSelectedTreeUiData() {

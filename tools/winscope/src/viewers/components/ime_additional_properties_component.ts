@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {Item} from 'trace/item';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -266,7 +265,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
             Input Method Surface
           </button>
           <div class="left-column">
-            <p class="mat-body-2">ScreenBounds:</p>
+            <p class="mat-body-2">Screen Bounds:</p>
             <coordinates-table [coordinates]="sfImeContainerScreenBounds()"></coordinates-table>
           </div>
           <div class="right-column">
@@ -505,15 +504,20 @@ export class ImeAdditionalPropertiesComponent {
     this.updateAdditionalPropertySelected(item, name);
   }
 
-  onClickShowInPropertiesPanelSf(item: Item) {
+  onClickShowInPropertiesPanelSf(
+    item: ImeContainerProperties | InputMethodSurfaceProperties,
+  ) {
     this.updateHighlightedItem(item.id);
   }
 
   private updateHighlightedItem(newId: string) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
-      bubbles: true,
-      detail: {id: newId},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.HighlightedIdChange,
+      {
+        bubbles: true,
+        detail: {id: newId},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 

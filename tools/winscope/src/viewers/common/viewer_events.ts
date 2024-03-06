@@ -15,11 +15,11 @@
  */
 export const ViewerEvents = {
   HierarchyPinnedChange: 'HierarchyPinnedChange',
-  HighlightedChange: 'HighlightedChange',
+  HighlightedNodeChange: 'HighlightedNodeChange',
+  HighlightedIdChange: 'HighlightedIdChange',
   HighlightedPropertyChange: 'HighlightedPropertyChange',
   HierarchyUserOptionsChange: 'HierarchyUserOptionsChange',
   HierarchyFilterChange: 'HierarchyFilterChange',
-  SelectedTreeChange: 'SelectedTreeChange',
   PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
   PropertiesFilterChange: 'PropertiesFilterChange',
   AdditionalPropertySelected: 'AdditionalPropertySelected',

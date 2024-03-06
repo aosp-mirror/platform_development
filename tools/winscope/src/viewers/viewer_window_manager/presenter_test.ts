@@ -35,22 +35,29 @@ import {UiData} from './ui_data';
 describe('PresenterWindowManager', () => {
   let trace: Trace<HierarchyTreeNode>;
   let positionUpdate: TracePositionUpdate;
+  let secondPositionUpdate: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
   let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
     trace = new TraceBuilder<HierarchyTreeNode>()
-      .setEntries([await UnitTestUtils.getWindowManagerState()])
+      .setEntries([
+        await UnitTestUtils.getWindowManagerState(0),
+        await UnitTestUtils.getWindowManagerState(1),
+      ])
       .build();
 
     const firstEntry = trace.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+    secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
+      trace.getEntry(1),
+    );
 
     const firstEntryDataTree = await firstEntry.getValue();
     selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
-        firstEntryDataTree.findDfs((node) => node.id.includes('2088ac1')),
+        firstEntryDataTree.findDfs(UiTreeUtils.makeIdFilter('93d3f3c')),
       ),
     );
   });
@@ -87,7 +94,7 @@ describe('PresenterWindowManager', () => {
       ? Object.keys(uiData.propertiesUserOptions)
       : null;
     expect(uiData.highlightedItem?.length).toEqual(0);
-    expect(filteredUiDataRectLabels?.length).toEqual(14);
+    expect(filteredUiDataRectLabels?.length).toEqual(12);
     expect(uiData.displays.map((display) => display.groupId)).toContain(0);
     expect(hierarchyOpts).toBeTruthy();
     expect(propertyOpts).toBeTruthy();
@@ -132,13 +139,6 @@ describe('PresenterWindowManager', () => {
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted item', () => {
-    expect(uiData.highlightedItem).toEqual('');
-    const id = '4';
-    presenter.onHighlightedItemChange(id);
-    expect(uiData.highlightedItem).toBe(id);
-  });
-
   it('updates highlighted property', () => {
     expect(uiData.highlightedProperty).toEqual('');
     const id = '4';
@@ -174,7 +174,7 @@ describe('PresenterWindowManager', () => {
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const newDataTree = assertDefined(uiData.tree);
-    expect(newDataTree.getAllChildren().length).toEqual(72);
+    expect(newDataTree.getAllChildren().length).toEqual(68);
     newDataTree.getAllChildren().forEach((child) => {
       expect(child.getAllChildren().length).toEqual(0);
     });
@@ -205,7 +205,7 @@ describe('PresenterWindowManager', () => {
 
     const longName =
       'com.google.android.apps.nexuslauncher/.NexusLauncherActivity';
-    const id = `Activity 64953af ${longName}`;
+    const id = `Activity f7092ed ${longName}`;
 
     const nodeWithLongName = assertDefined(
       assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
@@ -243,18 +243,71 @@ describe('PresenterWindowManager', () => {
     };
     await presenter.onAppEvent(positionUpdate);
     await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(72);
+    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
 
     await presenter.onHierarchyFilterChange('ScreenDecor');
     // All but four layers should be filtered out
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(2);
   });
 
-  it('sets properties tree and associated ui data', async () => {
+  it('sets properties tree and associated ui data from tree node', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    // does not check specific tree values as tree transformation method may change
-    expect(uiData.propertiesTree).toBeTruthy();
+    expect(uiData.propertiesTree).toBeUndefined();
+    await presenter.onHighlightedNodeChange(selectedTree);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual(
+      'WindowState 93d3f3c ScreenDecorOverlayBottom',
+    );
+    expect(propertiesTree.getAllChildren().length).toEqual(21);
+  });
+
+  it('sets properties tree and associated ui data from rect', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    expect(uiData.propertiesTree).toBeUndefined();
+    const rect = assertDefined(uiData.rects.at(5));
+    await presenter.onHighlightedIdChange(rect.id);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual('WindowState e3666ec NotificationShade');
+    expect(propertiesTree.getAllChildren().length).toEqual(16);
+  });
+
+  it('after highlighting a node, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    const selectedTree = assertDefined(
+      assertDefined(uiData.tree).findDfs(
+        UiTreeUtils.makeIdMatchFilter(
+          'Activity f7092ed com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
+        ),
+      ),
+    );
+    await presenter.onHighlightedNodeChange(selectedTree);
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
+    ).toEqual('STOPPED');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
+    ).toEqual('RESUMED');
+  });
+
+  it('after highlighting a rect, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHighlightedIdChange(
+      'Activity f7092ed com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
+    );
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
+    ).toEqual('STOPPED');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
+    ).toEqual('RESUMED');
   });
 
   it('updates properties tree to show diffs', async () => {
@@ -267,7 +320,7 @@ describe('PresenterWindowManager', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(
         uiData.propertiesTree?.getChildByName('animator'),
@@ -297,7 +350,7 @@ describe('PresenterWindowManager', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(21);
@@ -311,7 +364,7 @@ describe('PresenterWindowManager', () => {
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(21);

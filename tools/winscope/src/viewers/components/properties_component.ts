@@ -162,10 +162,10 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onHighlightedPropertyChange(newId: string) {
+  onHighlightedPropertyChange(newNode: UiPropertyTreeNode) {
     const event = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
       bubbles: true,
-      detail: {id: newId},
+      detail: {id: newNode.id},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

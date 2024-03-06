@@ -60,7 +60,7 @@ describe('SetFormatters', () => {
       .setRootId('test')
       .setName('node')
       .build();
-    propertyRoot.addOrReplaceChild(TreeNodeUtils.makeColorNode(0, 0, 0, 1));
+    propertyRoot.addOrReplaceChild(TreeNodeUtils.makeColorNode(-1, -1, -1, 1));
     operation = new SetFormatters();
     operation.apply(propertyRoot);
 
