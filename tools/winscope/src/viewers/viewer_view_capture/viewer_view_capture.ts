@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
+import {FunctionUtils} from 'common/function_utils';
+import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-// TODO: Fix "flatten tree hierarchy view" behavior.
 export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
-
-    this.presenter = new Presenter(traces, storage, (data: UiData) => {
+    this.presenter = new Presenter(this.getDependencies()[0], traces, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
@@ -39,7 +40,7 @@ export class ViewerViewCapture implements Viewer {
       this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`)
+      this.presenter.updateHighlightedItem(`${(event as CustomEvent).detail.id}`)
     );
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
       this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)
@@ -56,10 +57,21 @@ export class ViewerViewCapture implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
       this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
     );
+    this.htmlElement.addEventListener(ViewerEvents.MiniRectsDblClick, (event) => {
+      this.switchToSurfaceFlingerView();
+    });
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  async switchToSurfaceFlingerView() {
+    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
   }
 
   getViews(): View[] {
@@ -68,13 +80,47 @@ export class ViewerViewCapture implements Viewer {
         ViewType.TAB,
         this.getDependencies(),
         this.htmlElement,
-        'View Capture',
-        TraceType.VIEW_CAPTURE
+        this.getTitle(),
+        this.getDependencies()[0]
       ),
     ];
   }
 
   getDependencies(): TraceType[] {
     return ViewerViewCapture.DEPENDENCIES;
+  }
+
+  private getTitle(): string {
+    switch (this.getDependencies()[0]) {
+      case TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER:
+        return 'View Capture - Taskbar';
+      case TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER:
+        return 'View Capture - Taskbar Overlay';
+      default:
+        return 'View Capture - Nexuslauncher';
+    }
+  }
+}
+
+export class ViewerViewCaptureLauncherActivity extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureLauncherActivity.DEPENDENCIES;
+  }
+}
+
+export class ViewerViewCaptureTaskbarDragLayer extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureTaskbarDragLayer.DEPENDENCIES;
+  }
+}
+
+export class ViewerViewCaptureTaskbarOverlayDragLayer extends ViewerViewCapture {
+  static override readonly DEPENDENCIES: TraceType[] = [
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  ];
+  override getDependencies(): TraceType[] {
+    return ViewerViewCaptureTaskbarOverlayDragLayer.DEPENDENCIES;
   }
 }

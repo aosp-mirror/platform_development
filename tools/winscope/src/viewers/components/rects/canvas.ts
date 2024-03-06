@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {TransformMatrix} from 'common/geometry_utils';
 import * as THREE from 'three';
 import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
-import {Rectangle} from 'viewers/common/rectangle';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from './types3d';
+import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
 
 export class Canvas {
-  private static readonly TARGET_SCENE_DIAGONAL = 4;
+  static readonly TARGET_SCENE_DIAGONAL = 4;
   private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xd2e3fc);
+  private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
   private static readonly RECT_EDGE_COLOR = 0x000000;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
   private static readonly LABEL_CIRCLE_COLOR = 0x000000;
@@ -31,15 +32,14 @@ export class Canvas {
   private static readonly OPACITY_OVERSIZED = 0.25;
 
   private canvasRects: HTMLCanvasElement;
-  private canvasLabels: HTMLElement;
+  private canvasLabels?: HTMLElement;
   private camera?: THREE.OrthographicCamera;
   private scene?: THREE.Scene;
   private renderer?: THREE.WebGLRenderer;
   private labelRenderer?: CSS2DRenderer;
-  private rects: Rectangle[] = [];
   private clickableObjects: THREE.Object3D[] = [];
 
-  constructor(canvasRects: HTMLCanvasElement, canvasLabels: HTMLElement) {
+  constructor(canvasRects: HTMLCanvasElement, canvasLabels?: HTMLElement) {
     this.canvasRects = canvasRects;
     this.canvasLabels = canvasLabels;
   }
@@ -98,20 +98,20 @@ export class Canvas {
       alpha: true,
     });
 
-    this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
-
     // set various factors for shading and shifting
-    const numberOfRects = this.rects.length;
     this.drawRects(scene.rects);
-    this.drawLabels(scene.labels);
+    if (this.canvasLabels) {
+      this.drawLabels(scene.labels);
+
+      this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
+      this.labelRenderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
+      this.labelRenderer.render(this.scene, this.camera);
+    }
 
     this.renderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
-
-    this.labelRenderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
-    this.labelRenderer.render(this.scene, this.camera);
   }
 
   getClickedRectId(x: number, y: number, z: number): undefined | string {
@@ -128,8 +128,8 @@ export class Canvas {
   private drawRects(rects: Rect3D[]) {
     this.clickableObjects = [];
     rects.forEach((rect) => {
-      const rectMesh = this.makeRectMesh(rect);
-      const transform = this.toMatrix4(rect.transform);
+      const rectMesh = Canvas.makeRectMesh(rect);
+      const transform = Canvas.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
 
       this.scene?.add(rectMesh);
@@ -186,7 +186,7 @@ export class Canvas {
     div.style.pointerEvents = 'auto';
     div.style.cursor = 'pointer';
     div.addEventListener('click', (event) =>
-      this.propagateUpdateHighlightedItems(event, label.rectId)
+      this.propagateUpdateHighlightedItem(event, label.rectId)
     );
 
     const labelCss = new CSS2DObject(div);
@@ -195,7 +195,7 @@ export class Canvas {
     this.scene?.add(labelCss);
   }
 
-  private toMatrix4(transform: Transform3D): THREE.Matrix4 {
+  private static toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
     return new THREE.Matrix4().set(
       transform.dsdx,
       transform.dsdy,
@@ -216,10 +216,10 @@ export class Canvas {
     );
   }
 
-  private makeRectMesh(rect: Rect3D): THREE.Mesh {
-    const rectShape = this.createRectShape(rect);
+  private static makeRectMesh(rect: Rect3D): THREE.Mesh {
+    const rectShape = Canvas.createRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
-    const rectBorders = this.createRectBorders(rect, rectGeometry);
+    const rectBorders = Canvas.createRectBorders(rect, rectGeometry);
 
     let opacity = Canvas.OPACITY_REGULAR;
     if (rect.isOversized) {
@@ -230,7 +230,7 @@ export class Canvas {
     const mesh = new THREE.Mesh(
       rectGeometry,
       new THREE.MeshBasicMaterial({
-        color: this.getColor(rect),
+        color: Canvas.getColor(rect),
         opacity,
         transparent: true,
       })
@@ -245,7 +245,7 @@ export class Canvas {
     return mesh;
   }
 
-  private createRectShape(rect: Rect3D): THREE.Shape {
+  private static createRectShape(rect: Rect3D): THREE.Shape {
     const bottomLeft: Point3D = {x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z};
     const topRight: Point3D = {x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z};
 
@@ -283,7 +283,7 @@ export class Canvas {
       );
   }
 
-  private getColor(rect: Rect3D): THREE.Color {
+  private static getColor(rect: Rect3D): THREE.Color {
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
@@ -302,13 +302,19 @@ export class Canvas {
       case ColorType.HIGHLIGHTED: {
         return Canvas.RECT_COLOR_HIGHLIGHTED;
       }
+      case ColorType.HAS_CONTENT: {
+        return Canvas.RECT_COLOR_HAS_CONTENT;
+      }
       default: {
         throw new Error(`Unexpected color type: ${rect.colorType}`);
       }
     }
   }
 
-  private createRectBorders(rect: Rect3D, rectGeometry: THREE.ShapeGeometry): THREE.LineSegments {
+  private static createRectBorders(
+    rect: Rect3D,
+    rectGeometry: THREE.ShapeGeometry
+  ): THREE.LineSegments {
     // create line edges for rect
     const edgeGeo = new THREE.EdgesGeometry(rectGeometry);
     let edgeMaterial: THREE.Material;
@@ -336,7 +342,7 @@ export class Canvas {
     return mesh;
   }
 
-  private propagateUpdateHighlightedItems(event: MouseEvent, newId: string) {
+  private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
@@ -346,6 +352,8 @@ export class Canvas {
   }
 
   private clearLabels() {
-    this.canvasLabels.innerHTML = '';
+    if (this.canvasLabels) {
+      this.canvasLabels.innerHTML = '';
+    }
   }
 }

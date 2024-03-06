@@ -14,42 +14,99 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {TimestampType} from 'common/time';
+import {UrlUtils} from 'common/url_utils';
+import {LayerTraceEntry, WindowManagerState} from 'flickerlib/common';
 import {ParserFactory} from 'parsers/parser_factory';
+import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
 import {TracesParserFactory} from 'parsers/traces_parser_factory';
-import {CommonTestUtils} from 'test/common/utils';
-import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
-import {TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
+import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
+import {TraceBuilder} from './trace_builder';
 
-class UnitTestUtils extends CommonTestUtils {
-  static async getTraceFromFile(filename: string): Promise<Trace<object>> {
-    const parser = await UnitTestUtils.getParser(filename);
+class UnitTestUtils {
+  static async getFixtureFile(
+    srcFilename: string,
+    dstFilename: string = srcFilename
+  ): Promise<File> {
+    const url = UrlUtils.getRootUrl() + 'base/src/test/fixtures/' + srcFilename;
+    const response = await fetch(url);
+    expect(response.ok).toBeTrue();
+    const blob = await response.blob();
+    const file = new File([blob], dstFilename);
+    return file;
+  }
 
-    const trace = Trace.newUninitializedTrace(parser);
-    trace.init(
-      parser.getTimestamps(TimestampType.REAL) !== undefined
-        ? TimestampType.REAL
-        : TimestampType.ELAPSED
-    );
-    return trace;
+  static async getTrace<T extends TraceType>(type: T, filename: string): Promise<Trace<T>> {
+    const legacyParsers = await UnitTestUtils.getParsers(filename);
+    expect(legacyParsers.length).toBeLessThanOrEqual(1);
+    if (legacyParsers.length === 1) {
+      expect(legacyParsers[0].getTraceType()).toEqual(type);
+      return new TraceBuilder<T>()
+        .setType(type)
+        .setParser(legacyParsers[0] as unknown as Parser<T>)
+        .build();
+    }
+
+    const perfettoParsers = await UnitTestUtils.getPerfettoParsers(filename);
+    expect(perfettoParsers.length).toEqual(1);
+    expect(perfettoParsers[0].getTraceType()).toEqual(type);
+    return new TraceBuilder<T>()
+      .setType(type)
+      .setParser(perfettoParsers[0] as unknown as Parser<T>)
+      .build();
   }
 
   static async getParser(filename: string): Promise<Parser<object>> {
-    const file = new TraceFile(await CommonTestUtils.getFixtureFile(filename), undefined);
-    const [parsers, errors] = await new ParserFactory().createParsers([file]);
-    expect(parsers.length).toEqual(1);
-    return parsers[0].parser;
+    const parsers = await UnitTestUtils.getParsers(filename);
+    expect(parsers.length)
+      .withContext(`Should have been able to create a parser for ${filename}`)
+      .toBeGreaterThanOrEqual(1);
+    return parsers[0];
+  }
+
+  static async getParsers(filename: string): Promise<Array<Parser<object>>> {
+    const file = new TraceFile(await UnitTestUtils.getFixtureFile(filename), undefined);
+    const fileAndParsers = await new ParserFactory().createParsers([file]);
+    return fileAndParsers.map((fileAndParser) => {
+      return fileAndParser.parser;
+    });
+  }
+
+  static async getPerfettoParser<T extends TraceType>(
+    traceType: T,
+    fixturePath: string
+  ): Promise<Parser<TraceEntryTypeMap[T]>> {
+    const parsers = await UnitTestUtils.getPerfettoParsers(fixturePath);
+    const parser = assertDefined(parsers.find((parser) => parser.getTraceType() === traceType));
+    return parser as Parser<TraceEntryTypeMap[T]>;
+  }
+
+  static async getPerfettoParsers(fixturePath: string): Promise<Array<Parser<object>>> {
+    const file = await UnitTestUtils.getFixtureFile(fixturePath);
+    const traceFile = new TraceFile(file);
+    return await new PerfettoParserFactory().createParsers(traceFile);
   }
 
   static async getTracesParser(filenames: string[]): Promise<Parser<object>> {
-    const parsers = await Promise.all(
+    const parsersArray = await Promise.all(
       filenames.map((filename) => UnitTestUtils.getParser(filename))
     );
-    const tracesParsers = await new TracesParserFactory().createParsers(parsers);
-    expect(tracesParsers.length).toEqual(1);
+
+    const traces = new Traces();
+    parsersArray.forEach((parser) => {
+      const trace = Trace.fromParser(parser, TimestampType.REAL);
+      traces.setTrace(parser.getTraceType(), trace);
+    });
+
+    const tracesParsers = await new TracesParserFactory().createParsers(traces);
+    expect(tracesParsers.length)
+      .withContext(`Should have been able to create a traces parser for [${filenames.join()}]`)
+      .toEqual(1);
     return tracesParsers[0];
   }
 

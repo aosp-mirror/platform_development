@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import * as path from 'path';
 import {browser, by, element} from 'protractor';
-import {CommonTestUtils} from '../common/utils';
 
-class E2eTestUtils extends CommonTestUtils {
+class E2eTestUtils {
   static readonly WINSCOPE_URL = 'http://localhost:8080';
   static readonly REMOTE_TOOL_MOCK_URL = 'http://localhost:8081';
 
@@ -26,14 +26,6 @@ class E2eTestUtils extends CommonTestUtils {
     } catch (error) {
       fail(`${name} server (${url}) looks down. Did you start it?`);
     }
-  }
-
-  static async uploadFixture(...paths: string[]) {
-    const inputFile = element(by.css('input[type="file"]'));
-
-    // Uploading multiple files is not properly supported but
-    // chrome handles file paths joined with new lines
-    await inputFile.sendKeys(paths.map((it) => E2eTestUtils.getFixturePath(it)).join('\n'));
   }
 
   static async clickViewTracesButton() {
@@ -47,6 +39,29 @@ class E2eTestUtils extends CommonTestUtils {
     if (isPresent) {
       await closeButton.click();
     }
+  }
+
+  static async uploadFixture(...paths: string[]) {
+    const inputFile = element(by.css('input[type="file"]'));
+
+    // Uploading multiple files is not properly supported but
+    // chrome handles file paths joined with new lines
+    await inputFile.sendKeys(paths.map((it) => E2eTestUtils.getFixturePath(it)).join('\n'));
+  }
+
+  static getFixturePath(filename: string): string {
+    if (path.isAbsolute(filename)) {
+      return filename;
+    }
+    return path.join(E2eTestUtils.getProjectRootPath(), 'src/test/fixtures', filename);
+  }
+
+  private static getProjectRootPath(): string {
+    let root = __dirname;
+    while (path.basename(root) !== 'winscope') {
+      root = path.dirname(root);
+    }
+    return root;
   }
 }
 

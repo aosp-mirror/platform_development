@@ -83,15 +83,19 @@ export class UiTreeUtils {
     return diffType ?? '';
   }
 
-  static isHighlighted(item: UiTreeNode, highlightedItems: string[]) {
-    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.stableId}`);
+  static isHighlighted(item: UiTreeNode, highlighted: string): boolean {
+    return highlighted === `${item.stableId}`;
   }
 
-  static isVisibleNode(kind: string, type?: string) {
-    return kind === 'WindowState' || kind === 'Activity' || type?.includes('Layer');
+  static isVisibleNode(kind: string, type?: string): boolean {
+    return kind === 'WindowState' || kind === 'Activity' || UiTreeUtils.isSFEntryNode(type);
   }
 
-  static isParentNode(kind: string) {
+  private static isSFEntryNode(type?: string): boolean {
+    return type === undefined;
+  }
+
+  static isParentNode(kind: string): boolean {
     return UiTreeUtils.PARENT_NODE_KINDS.includes(kind);
   }
 

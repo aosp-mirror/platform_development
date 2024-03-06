@@ -13,17 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ProxyClient} from 'trace_collection/proxy_client';
+import {Device, DeviceProperties, ProxyClient} from 'trace_collection/proxy_client';
 import {ConfigMap} from './trace_collection_utils';
-
-export interface Device {
-  [key: string]: DeviceProperties;
-}
-
-export interface DeviceProperties {
-  authorised: boolean;
-  model: string;
-}
 
 export interface Connection {
   adbSuccess: () => boolean;

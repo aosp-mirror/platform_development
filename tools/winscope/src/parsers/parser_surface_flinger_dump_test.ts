@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Timestamp, TimestampType} from 'common/time';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
 import {UnitTestUtils} from 'test/unit/utils';
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserSurfaceFlingerDump', () => {

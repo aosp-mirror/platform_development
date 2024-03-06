@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
 import {DiffType, HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
@@ -62,15 +62,34 @@ export class TreeNodeComponent {
   @Input() isPinned?: boolean = false;
   @Input() isInPinnedSection?: boolean = false;
   @Input() isAlwaysCollapsed?: boolean;
+  @Input() isSelected?: boolean = false;
 
   @Output() toggleTreeChange = new EventEmitter<void>();
   @Output() expandTreeChange = new EventEmitter<boolean>();
   @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
 
   collapseDiffClass = '';
+  private el: HTMLElement;
+
+  constructor(@Inject(ElementRef) public elementRef: ElementRef) {
+    this.el = elementRef.nativeElement;
+  }
 
   ngOnChanges() {
     this.collapseDiffClass = this.updateCollapseDiffClass();
+    if (!this.isPinned && this.isSelected && !this.isNodeInView()) {
+      this.el.scrollIntoView({block: 'center', inline: 'nearest'});
+    }
+  }
+
+  isNodeInView() {
+    const rect = this.el.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
   }
 
   isPropertiesTreeNode() {

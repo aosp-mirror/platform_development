@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
+import {RealTimestamp} from 'common/time';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Point} from 'trace/flickerlib/common';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
-import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -35,7 +35,7 @@ describe('PresenterViewCapture', () => {
   let trace: Trace<object>;
   let uiData: UiData;
   let presenter: Presenter;
-  let position: TracePosition;
+  let positionUpdate: TracePositionUpdate;
   let selectedTree: HierarchyTreeNode;
 
   beforeAll(async () => {
@@ -43,13 +43,10 @@ describe('PresenterViewCapture', () => {
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc'
     );
     trace = new TraceBuilder<object>()
-      .setEntries([
-        parser.getEntry(0, TimestampType.REAL),
-        parser.getEntry(1, TimestampType.REAL),
-        parser.getEntry(2, TimestampType.REAL),
-      ])
+      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
+      .setParser(parser)
       .build();
-    position = TracePosition.fromTraceEntry(trace.getEntry(0));
+    positionUpdate = TracePositionUpdate.fromTraceEntry(trace.getEntry(0));
     selectedTree = new HierarchyTreeBuilder()
       .setName('Name@Id')
       .setStableId('stableId')
@@ -59,25 +56,31 @@ describe('PresenterViewCapture', () => {
       .build();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     presenter = createPresenter(trace);
   });
 
   it('is robust to empty trace', async () => {
-    const emptyTrace = new TraceBuilder<object>().setEntries([]).build();
+    const emptyTrace = new TraceBuilder<object>()
+      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
+      .setEntries([])
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, 'the_package_name')
+      .build();
     const presenter = createPresenter(emptyTrace);
 
-    const positionWithoutTraceEntry = TracePosition.fromTimestamp(new RealTimestamp(0n));
-    await presenter.onTracePositionUpdate(positionWithoutTraceEntry);
+    const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
+      new RealTimestamp(0n)
+    );
+    await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
     expect(uiData.tree).toBeFalsy();
   });
 
   it('processes trace position updates', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.highlightedItems?.length).toEqual(0);
+    expect(uiData.highlightedItem?.length).toEqual(0);
     const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
     expect(hierarchyOpts).toBeTruthy();
     const propertyOpts = Object.keys(uiData.propertiesUserOptions);
@@ -86,40 +89,42 @@ describe('PresenterViewCapture', () => {
   });
 
   it('creates input data for rects view', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].topLeft).toEqual(new Point(0, 0));
-    expect(uiData.rects[0].bottomRight).toEqual(new Point(1080, 2340));
+    expect(uiData.rects[0].x).toEqual(0);
+    expect(uiData.rects[0].y).toEqual(0);
+    expect(uiData.rects[0].w).toEqual(1080);
+    expect(uiData.rects[0].h).toEqual(249);
   });
 
   it('updates pinned items', async () => {
     const pinnedItem = new HierarchyTreeBuilder().setName('FirstPinnedItem').setId('id').build();
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it('updates highlighted items', async () => {
-    expect(uiData.highlightedItems).toEqual([]);
+  it('updates highlighted item', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    expect(uiData.highlightedItem).toEqual('');
 
     const id = '4';
-    await presenter.onTracePositionUpdate(position);
-    presenter.updateHighlightedItems(id);
-    expect(uiData.highlightedItems).toContain(id);
+    presenter.updateHighlightedItem(id);
+    expect(uiData.highlightedItem).toBe(id);
   });
 
   it('updates hierarchy tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     expect(
-      // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace
-      uiData.tree?.children[0].children[1].children[0].children[0].children[1].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> TaskbarView
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
 
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
-        enabled: true,
+        enabled: false,
       },
       simplifyNames: {
         name: 'Simplify names',
@@ -133,9 +138,9 @@ describe('PresenterViewCapture', () => {
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
-      // DecorView -> LinearLayout -> FrameLayout (before, this was the 2nd child) -> LauncherRootView -> DragLayer -> Workspace if filter works as expected
-      uiData.tree?.children[0].children[0].children[0].children[0].children[1].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> TaskbarScrimView
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
   it('filters hierarchy tree', async () => {
@@ -152,23 +157,19 @@ describe('PresenterViewCapture', () => {
         name: 'Only visible',
         enabled: false,
       },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
     };
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.updateHierarchyTree(userOptions);
-    presenter.filterHierarchyTree('Workspace');
+    presenter.filterHierarchyTree('BubbleBarView');
 
     expect(
-      // DecorView -> LinearLayout -> FrameLayout -> LauncherRootView -> DragLayer -> Workspace if filter works as expected
-      uiData.tree?.children[0].children[0].children[0].children[0].children[0].id
-    ).toEqual('com.android.launcher3.Workspace@251960479');
+      // TaskbarDragLayer -> BubbleBarView if filter works as expected
+      uiData.tree?.children[0].id
+    ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
   it('sets properties tree and associated ui data', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree).toBeTruthy();
   });
@@ -190,7 +191,7 @@ describe('PresenterViewCapture', () => {
       },
     };
 
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
 
@@ -200,7 +201,7 @@ describe('PresenterViewCapture', () => {
   });
 
   it('filters properties tree', async () => {
-    await presenter.onTracePositionUpdate(position);
+    await presenter.onAppEvent(positionUpdate);
 
     const userOptions: UserOptions = {
       showDiff: {
@@ -221,7 +222,7 @@ describe('PresenterViewCapture', () => {
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
       (it) => typeof it.propertyKey === 'string'
     );
-    expect(nonTerminalChildren?.length).toEqual(24);
+    expect(nonTerminalChildren?.length).toEqual(25);
     presenter.filterPropertiesTree('alpha');
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(
@@ -232,8 +233,8 @@ describe('PresenterViewCapture', () => {
 
   const createPresenter = (trace: Trace<object>): Presenter => {
     const traces = new Traces();
-    traces.setTrace(TraceType.VIEW_CAPTURE, trace);
-    return new Presenter(traces, new MockStorage(), (newData: UiData) => {
+    traces.setTrace(parser.getTraceType(), trace);
+    return new Presenter(parser.getTraceType(), traces, new MockStorage(), (newData: UiData) => {
       uiData = newData;
     });
   };

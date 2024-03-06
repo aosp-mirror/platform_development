@@ -17,11 +17,11 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {TimeUtils} from 'common/time_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
@@ -60,21 +60,21 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.initializeIfNeeded();
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
+      this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, event.position);
+      this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
+      this.uiData.selectedEntryIndex = undefined;
+      this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
+      this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
+        this.uiData.entries,
+        this.uiData.currentEntryIndex,
+        this.uiData.selectedEntryIndex
+      );
 
-    this.entry = TraceEntryFinder.findCorrespondingEntry(this.trace, position);
-
-    this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
-    this.uiData.selectedEntryIndex = undefined;
-    this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-    this.uiData.currentPropertiesTree = this.computeCurrentPropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex
-    );
-
-    this.notifyUiDataCallback(this.uiData);
+      this.notifyUiDataCallback(this.uiData);
+    });
   }
 
   onVSyncIdFilterChanged(vsyncIds: string[]) {
@@ -278,9 +278,15 @@ export class Presenter {
     const formattingOptions = ObjectFormatter.displayDefaults;
     ObjectFormatter.displayDefaults = true;
 
+    const entryProtos = await Promise.all(
+      this.trace.mapEntry(async (entry) => {
+        return await entry.getValue();
+      })
+    );
+
     for (let originalIndex = 0; originalIndex < this.trace.lengthEntries; ++originalIndex) {
       const entry = this.trace.getEntry(originalIndex);
-      const entryProto = (await entry.getValue()) as any;
+      const entryProto = entryProtos[originalIndex] as any;
 
       for (const transactionStateProto of entryProto.transactions) {
         for (const layerStateProto of transactionStateProto.layerChanges) {

@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
+import {TraceType, ViewNode} from 'trace/trace_type';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   readonly dependencies: TraceType[] = [TraceType.VIEW_CAPTURE];
   readonly displayPropertyGroups = false;
 
   constructor(
-    readonly rects: Rectangle[],
+    readonly rects: UiRect[],
+    public sfRects: UiRect[] | undefined,
     public tree: HierarchyTreeNode | null,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
     public pinnedItems: HierarchyTreeNode[],
-    public highlightedItems: string[],
-    public propertiesTree: PropertiesTreeNode | null
+    public highlightedItem: string,
+    public propertiesTree: PropertiesTreeNode | null,
+    public selectedViewNode: ViewNode
   ) {}
 }

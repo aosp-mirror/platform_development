@@ -15,9 +15,9 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
+import {Timestamp, TimestampType} from 'common/time';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';

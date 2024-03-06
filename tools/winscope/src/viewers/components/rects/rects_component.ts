@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
-import {Rectangle} from 'viewers/common/rectangle';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
 import {Distance2D} from './types3d';
@@ -86,9 +86,16 @@ import {Distance2D} from './types3d';
     <mat-divider></mat-divider>
     <div class="rects-content">
       <div class="canvas-container">
-        <canvas class="canvas-rects" (click)="onRectClick($event)" oncontextmenu="return false">
-        </canvas>
-        <div class="canvas-labels"></div>
+        <canvas
+          class="large-rects-canvas"
+          (click)="onRectClick($event)"
+          (dblclick)="onRectDblClick($event)"
+          oncontextmenu="return false"></canvas>
+        <div class="large-rects-labels"></div>
+        <canvas
+          class="mini-rects-canvas"
+          (dblclick)="onMiniRectDblClick($event)"
+          oncontextmenu="return false"></canvas>
       </div>
       <div *ngIf="internalDisplayIds.length > 1" class="display-button-container">
         <button
@@ -140,7 +147,7 @@ import {Distance2D} from './types3d';
         width: 100%;
         position: relative;
       }
-      .canvas-rects {
+      .large-rects-canvas {
         position: absolute;
         top: 0;
         left: 0;
@@ -148,7 +155,7 @@ import {Distance2D} from './types3d';
         height: 100%;
         cursor: pointer;
       }
-      .canvas-labels {
+      .large-rects-labels {
         position: absolute;
         top: 0;
         left: 0;
@@ -162,47 +169,64 @@ import {Distance2D} from './types3d';
         flex-wrap: wrap;
         column-gap: 10px;
       }
+      .mini-rects-canvas {
+        cursor: pointer;
+        width: 30%;
+        height: 30%;
+        top: 16px;
+        display: block;
+        position: absolute;
+        z-index: 1000;
+      }
     `,
   ],
 })
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
   @Input() enableShowVirtualButton: boolean = true;
-  @Input() set rects(rects: Rectangle[]) {
+  @Input() zoomFactor: number = 1;
+  @Input() set rects(rects: UiRect[]) {
     this.internalRects = rects;
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
+  }
+  @Input() set miniRects(rects: UiRect[] | undefined) {
+    this.internalMiniRects = rects;
+    this.drawMiniRects();
   }
 
   @Input() set displayIds(ids: number[]) {
     this.internalDisplayIds = ids;
     if (!this.internalDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
       this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0]);
-      this.drawScene();
+      this.drawLargeRectsAndLabels();
     }
   }
 
-  @Input() set highlightedItems(stableIds: string[]) {
-    this.internalHighlightedItems = stableIds;
-    this.mapper3d.setHighlightedRectIds(this.internalHighlightedItems);
-    this.drawScene();
+  @Input() set highlightedItem(stableId: string) {
+    this.internalHighlightedItem = stableId;
+    this.mapper3d.setHighlightedRectId(this.internalHighlightedItem);
+    this.drawLargeRectsAndLabels();
   }
 
-  private internalRects: Rectangle[] = [];
+  private internalRects: UiRect[] = [];
+  private internalMiniRects?: UiRect[];
   private internalDisplayIds: number[] = [];
-  private internalHighlightedItems: string[] = [];
+  private internalHighlightedItem: string = '';
 
   private mapper3d: Mapper3D;
-  private canvas?: Canvas;
+  private largeRectsCanvas?: Canvas;
+  private miniRectsCanvas?: Canvas;
   private resizeObserver: ResizeObserver;
-  private canvasRects?: HTMLCanvasElement;
-  private canvasLabels?: HTMLElement;
+  private largeRectsCanvasElement?: HTMLCanvasElement;
+  private miniRectsCanvasElement?: HTMLCanvasElement;
+  private largeRectsLabelsElement?: HTMLElement;
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {
     this.mapper3d = new Mapper3D();
     this.resizeObserver = new ResizeObserver((entries) => {
-      this.drawScene();
+      this.drawLargeRectsAndLabels();
     });
   }
 
@@ -210,14 +234,26 @@ export class RectsComponent implements OnInit, OnDestroy {
     const canvasContainer = this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
-    this.canvasRects = canvasContainer.querySelector('.canvas-rects')! as HTMLCanvasElement;
-    this.canvasLabels = canvasContainer.querySelector('.canvas-labels');
-    this.canvas = new Canvas(this.canvasRects, this.canvasLabels!);
-
-    this.canvasRects.addEventListener('mousedown', (event) => this.onCanvasMouseDown(event));
+    this.largeRectsCanvasElement = canvasContainer.querySelector(
+      '.large-rects-canvas'
+    )! as HTMLCanvasElement;
+    this.largeRectsLabelsElement = canvasContainer.querySelector('.large-rects-labels');
+    this.largeRectsCanvas = new Canvas(this.largeRectsCanvasElement, this.largeRectsLabelsElement!);
+    this.largeRectsCanvasElement.addEventListener('mousedown', (event) =>
+      this.onCanvasMouseDown(event)
+    );
 
     this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
-    this.drawScene();
+    this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
+    this.drawLargeRectsAndLabels();
+
+    this.miniRectsCanvasElement = canvasContainer.querySelector(
+      '.mini-rects-canvas'
+    )! as HTMLCanvasElement;
+    this.miniRectsCanvas = new Canvas(this.miniRectsCanvasElement);
+    if (this.miniRects) {
+      this.drawMiniRects();
+    }
   }
 
   ngOnDestroy() {
@@ -226,17 +262,17 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   onSeparationSliderChange(factor: number) {
     this.mapper3d.setZSpacingFactor(factor);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   onRotationSliderChange(factor: number) {
     this.mapper3d.setCameraRotationFactor(factor);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   resetCamera() {
     this.mapper3d.resetCamera();
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   @HostListener('wheel', ['$event'])
@@ -256,7 +292,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   onMouseMove(event: MouseEvent) {
     const distance = new Distance2D(event.movementX, event.movementY);
     this.mapper3d.addPanScreenDistance(distance);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   onMouseUp(event: MouseEvent) {
@@ -274,22 +310,53 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   onShowOnlyVisibleModeChange(enabled: boolean) {
     this.mapper3d.setShowOnlyVisibleMode(enabled);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   onShowVirtualModeChange(enabled: boolean) {
     this.mapper3d.setShowVirtualMode(enabled);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   onDisplayIdChange(id: number) {
     this.mapper3d.setCurrentDisplayId(id);
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   onRectClick(event: MouseEvent) {
     event.preventDefault();
 
+    const id = this.findClickedRectId(event);
+    if (id !== undefined) {
+      this.notifyHighlightedItem(id);
+    }
+  }
+
+  onRectDblClick(event: MouseEvent) {
+    event.preventDefault();
+
+    const clickedRectId = this.findClickedRectId(event);
+    if (clickedRectId === undefined) {
+      return;
+    }
+
+    this.elementRef.nativeElement.dispatchEvent(
+      new CustomEvent(ViewerEvents.RectsDblClick, {
+        bubbles: true,
+        detail: new RectDblClickDetail(clickedRectId),
+      })
+    );
+  }
+
+  onMiniRectDblClick(event: MouseEvent) {
+    event.preventDefault();
+
+    this.elementRef.nativeElement.dispatchEvent(
+      new CustomEvent(ViewerEvents.MiniRectsDblClick, {bubbles: true})
+    );
+  }
+
+  private findClickedRectId(event: MouseEvent): string | undefined {
     const canvas = event.target as Element;
     const canvasOffset = canvas.getBoundingClientRect();
 
@@ -297,29 +364,45 @@ export class RectsComponent implements OnInit, OnDestroy {
     const y = -((event.clientY - canvasOffset.top) / canvas.clientHeight) * 2 + 1;
     const z = 0;
 
-    const id = this.canvas?.getClickedRectId(x, y, z);
-    if (id !== undefined) {
-      this.notifyHighlightedItem(id);
-    }
+    return this.largeRectsCanvas?.getClickedRectId(x, y, z);
   }
 
   private doZoomIn() {
     this.mapper3d.increaseZoomFactor();
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
   private doZoomOut() {
     this.mapper3d.decreaseZoomFactor();
-    this.drawScene();
+    this.drawLargeRectsAndLabels();
   }
 
-  private drawScene() {
-    // TODO: Re-create scene only when input rects change. With the other input events
-    //  (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
-    //  We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
-    //  work directly with three.js's meshes.
+  private drawLargeRectsAndLabels() {
+    // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
+    // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
+    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // work directly with three.js's meshes.
     this.mapper3d.setRects(this.internalRects);
-    this.canvas?.draw(this.mapper3d.computeScene());
+    this.largeRectsCanvas?.draw(this.mapper3d.computeScene());
+  }
+
+  private drawMiniRects() {
+    // TODO(b/258593034): Re-create scene only when input rects change. With the other input events
+    // (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
+    // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
+    // work directly with three.js's meshes.
+    if (this.internalMiniRects) {
+      this.mapper3d.setRects(this.internalMiniRects);
+      this.mapper3d.decreaseZoomFactor(this.zoomFactor - 1);
+      this.miniRectsCanvas?.draw(this.mapper3d.computeScene());
+      this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
+
+      // Mapper internally sets these values to 100%. They need to be reset afterwards
+      if (this.miniRectsCanvasElement) {
+        this.miniRectsCanvasElement.style.width = '25%';
+        this.miniRectsCanvasElement.style.height = '25%';
+      }
+    }
   }
 
   private notifyHighlightedItem(id: string) {
