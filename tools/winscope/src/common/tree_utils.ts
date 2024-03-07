@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-interface TreeNode {
+interface TreeUtilsNode {
   name: string;
-  parent?: TreeNode;
-  children?: TreeNode[];
+  parent?: TreeUtilsNode;
+  children?: TreeUtilsNode[];
 }
 
-type FilterType = (node: TreeNode | undefined | null) => boolean;
+type FilterType = (node: TreeUtilsNode | undefined | null) => boolean;
 
 class TreeUtils {
-  static findDescendantNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
+  static findDescendantNode(
+    node: TreeUtilsNode,
+    isTargetNode: FilterType
+  ): TreeUtilsNode | undefined {
     if (isTargetNode(node)) {
       return node;
     }
@@ -42,7 +45,10 @@ class TreeUtils {
     return undefined;
   }
 
-  static findAncestorNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
+  static findAncestorNode(
+    node: TreeUtilsNode,
+    isTargetNode: FilterType
+  ): TreeUtilsNode | undefined {
     let ancestor = node.parent;
 
     while (ancestor && !isTargetNode(ancestor)) {
@@ -53,7 +59,7 @@ class TreeUtils {
   }
 
   static makeNodeFilter(filterString: string): FilterType {
-    const filter = (item: TreeNode | undefined | null) => {
+    const filter = (item: TreeUtilsNode | undefined | null) => {
       if (item) {
         const regex = new RegExp(filterString, 'i');
         return filterString.length === 0 || regex.test(`${item.name}`);
@@ -64,4 +70,4 @@ class TreeUtils {
   }
 }
 
-export {TreeNode, TreeUtils, FilterType};
+export {TreeUtilsNode, TreeUtils, FilterType};

@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Timestamp, TimestampType} from 'common/time';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserWindowManager', () => {
   describe('trace with elapsed + real timestamp', () => {
     let parser: Parser<WindowManagerState>;
+    let trace: Trace<WindowManagerState>;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/WindowManager.pb');
+      trace = new TraceBuilder().setType(TraceType.WINDOW_MANAGER).setParser(parser).build();
     });
 
     it('has expected trace type', () => {
@@ -59,6 +64,14 @@ describe('ParserWindowManager', () => {
     it('formats entry timestamps', async () => {
       const entry = await parser.getEntry(1, TimestampType.REAL);
       expect(entry.name).toEqual('2022-07-29T15:04:49.999048960');
+    });
+
+    it('supports WM_WINDOWS_TOKEN_AND_TITLE custom query', async () => {
+      const tokenAndTitles = await trace
+        .sliceEntries(0, 1)
+        .customQuery(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE);
+      expect(tokenAndTitles.length).toEqual(69);
+      expect(tokenAndTitles).toContain({token: 'c06766f', title: 'Leaf:36:36'});
     });
   });
 

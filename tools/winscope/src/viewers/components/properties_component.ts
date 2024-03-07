@@ -15,9 +15,11 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TraceTreeNode} from 'trace/trace_tree_node';
+import {TraceType, ViewNode} from 'trace/trace_type';
 import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'properties-view',
@@ -25,10 +27,8 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
     <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
-
-        <mat-form-field>
+        <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
-
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
@@ -38,16 +38,22 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           *ngFor="let option of objectKeys(userOptions)"
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
+          [disabled]="userOptions[option].isUnavailable ?? false"
           (ngModelChange)="updateTree()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
           >{{ userOptions[option].name }}</mat-checkbox
         >
       </div>
 
-      <property-groups
-        *ngIf="itemIsSelected() && displayPropertyGroups"
+      <surface-flinger-property-groups
+        *ngIf="itemIsSelected() && isSurfaceFlinger() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedFlickerItem"></property-groups>
+        [item]="selectedItem"></surface-flinger-property-groups>
+
+      <view-capture-property-groups
+        *ngIf="showViewCaptureFormat()"
+        class="property-groups"
+        [item]="selectedItem"></view-capture-property-groups>
     </div>
 
     <mat-divider></mat-divider>
@@ -61,9 +67,12 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 
       <div class="tree-wrapper">
         <tree-view
-          *ngIf="objectKeys(propertiesTree).length > 0"
+          *ngIf="objectKeys(propertiesTree).length > 0 && !showViewCaptureFormat()"
           [item]="propertiesTree"
           [showNode]="showNode"
+          [itemsClickable]="true"
+          [highlightedItem]="highlightedProperty"
+          (highlightedChange)="onHighlightedPropertyChange($event)"
           [isLeaf]="isLeaf"
           [isAlwaysCollapsed]="true"></tree-view>
       </div>
@@ -113,6 +122,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         overflow: auto;
       }
     `,
+    nodeStyles,
   ],
 })
 export class PropertiesComponent {
@@ -121,9 +131,11 @@ export class PropertiesComponent {
 
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNode = {};
-  @Input() selectedFlickerItem: TraceTreeNode | null = null;
+  @Input() highlightedProperty: string = '';
+  @Input() selectedItem: TraceTreeNode | ViewNode | null = null;
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
+  @Input() traceType: TraceType | undefined;
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -131,6 +143,14 @@ export class PropertiesComponent {
     const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  onHighlightedPropertyChange(newId: string) {
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedPropertyChange, {
+      bubbles: true,
+      detail: {id: newId},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
@@ -160,6 +180,20 @@ export class PropertiesComponent {
   }
 
   itemIsSelected() {
-    return this.selectedFlickerItem && Object.keys(this.selectedFlickerItem).length > 0;
+    return this.selectedItem && Object.keys(this.selectedItem).length > 0;
+  }
+
+  showViewCaptureFormat(): boolean {
+    return (
+      this.traceType === TraceType.VIEW_CAPTURE &&
+      this.filterString === '' &&
+      // Todo: Highlight Inline in formatted ViewCapture Properties Component.
+      this.userOptions['showDiff']?.enabled === false &&
+      this.selectedItem
+    );
+  }
+
+  isSurfaceFlinger(): boolean {
+    return this.traceType === TraceType.SURFACE_FLINGER;
   }
 }

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TraceType} from 'trace/trace_type';

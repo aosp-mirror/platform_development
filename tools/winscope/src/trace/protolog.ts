@@ -16,7 +16,7 @@
 
 import {TimeUtils} from 'common/time_utils';
 import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from './timestamp';
+import {ElapsedTimestamp, RealTimestamp, TimestampType} from '../common/time';
 
 class LogMessage {
   text: string;

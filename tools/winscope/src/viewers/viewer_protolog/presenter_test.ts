@@ -15,13 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp} from 'common/time';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {LogMessage} from 'trace/protolog';
-import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Presenter} from './presenter';
 import {UiData, UiDataMessage} from './ui_data';
@@ -30,9 +30,9 @@ describe('ViewerProtoLogPresenter', () => {
   let presenter: Presenter;
   let inputMessages: UiDataMessage[];
   let trace: Trace<LogMessage>;
-  let position10: TracePosition;
-  let position11: TracePosition;
-  let position12: TracePosition;
+  let positionUpdate10: TracePositionUpdate;
+  let positionUpdate11: TracePositionUpdate;
+  let positionUpdate12: TracePositionUpdate;
   let outputUiData: undefined | UiData;
 
   beforeEach(async () => {
@@ -54,9 +54,9 @@ describe('ViewerProtoLogPresenter', () => {
       .setTimestamps([time10, time11, time12])
       .build();
 
-    position10 = TracePosition.fromTimestamp(time10);
-    position11 = TracePosition.fromTimestamp(time11);
-    position12 = TracePosition.fromTimestamp(time12);
+    positionUpdate10 = TracePositionUpdate.fromTimestamp(time10);
+    positionUpdate11 = TracePositionUpdate.fromTimestamp(time11);
+    positionUpdate12 = TracePositionUpdate.fromTimestamp(time12);
 
     outputUiData = undefined;
 
@@ -65,7 +65,7 @@ describe('ViewerProtoLogPresenter', () => {
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
-    await presenter.onTracePositionUpdate(position10); // trigger initialization
+    await presenter.onAppEvent(positionUpdate10); // trigger initialization
   });
 
   it('is robust to empty trace', async () => {
@@ -77,13 +77,13 @@ describe('ViewerProtoLogPresenter', () => {
     expect(assertDefined(outputUiData).messages).toEqual([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
 
-    await presenter.onTracePositionUpdate(position10);
+    await presenter.onAppEvent(positionUpdate10);
     expect(assertDefined(outputUiData).messages).toEqual([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
   });
 
   it('processes trace position updates', async () => {
-    await presenter.onTracePositionUpdate(position10);
+    await presenter.onAppEvent(positionUpdate10);
 
     expect(assertDefined(outputUiData).allLogLevels).toEqual(['level0', 'level1', 'level2']);
     expect(assertDefined(outputUiData).allTags).toEqual(['tag0', 'tag1', 'tag2']);
@@ -153,7 +153,7 @@ describe('ViewerProtoLogPresenter', () => {
 
   it('computes current message index', async () => {
     // Position -> entry #0
-    await presenter.onTracePositionUpdate(position10);
+    await presenter.onAppEvent(positionUpdate10);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
@@ -164,7 +164,7 @@ describe('ViewerProtoLogPresenter', () => {
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     // Position -> entry #1
-    await presenter.onTracePositionUpdate(position11);
+    await presenter.onAppEvent(positionUpdate11);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
@@ -178,7 +178,7 @@ describe('ViewerProtoLogPresenter', () => {
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
     // Position -> entry #2
-    await presenter.onTracePositionUpdate(position12);
+    await presenter.onAppEvent(positionUpdate12);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(2);
   });

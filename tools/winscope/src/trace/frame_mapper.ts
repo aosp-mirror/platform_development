@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {CustomQueryType} from './custom_query';
 import {FrameMapBuilder} from './frame_map_builder';
 import {FramesRange, TraceEntry} from './trace';
 import {Traces} from './traces';
@@ -100,19 +101,18 @@ export class FrameMapper {
     }
 
     const transactions = assertDefined(this.traces.getTrace(TraceType.TRANSACTIONS));
+    const transactionEntries = await transactions.customQuery(CustomQueryType.VSYNCID);
+
     const surfaceFlinger = assertDefined(this.traces.getTrace(TraceType.SURFACE_FLINGER));
+    const surfaceFlingerEntries = await surfaceFlinger.customQuery(CustomQueryType.VSYNCID);
 
     const vsyncIdToFrames = new Map<bigint, FramesRange>();
 
-    for (let srcEntryIndex = 0; srcEntryIndex < surfaceFlinger.lengthEntries; ++srcEntryIndex) {
-      const srcEntry = surfaceFlinger.getEntry(srcEntryIndex);
-      const vsyncId = await this.getVsyncIdProperty(srcEntry, 'vSyncId');
-      if (vsyncId === undefined) {
-        continue;
-      }
+    surfaceFlingerEntries.forEach((srcEntry) => {
+      const vsyncId = srcEntry.getValue();
       const srcFrames = srcEntry.getFramesRange();
       if (!srcFrames) {
-        continue;
+        return;
       }
       let frames = vsyncIdToFrames.get(vsyncId);
       if (!frames) {
@@ -121,20 +121,16 @@ export class FrameMapper {
       frames.start = Math.min(frames.start, srcFrames.start);
       frames.end = Math.max(frames.end, srcFrames.end);
       vsyncIdToFrames.set(vsyncId, frames);
-    }
+    });
 
-    for (let dstEntryIndex = 0; dstEntryIndex < transactions.lengthEntries; ++dstEntryIndex) {
-      const dstEntry = transactions.getEntry(dstEntryIndex);
-      const vsyncId = await this.getVsyncIdProperty(dstEntry, 'vsyncId');
-      if (vsyncId === undefined) {
-        continue;
-      }
+    transactionEntries.forEach((dstEntry) => {
+      const vsyncId = dstEntry.getValue();
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {
-        continue;
+        return;
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), frames);
-    }
+    });
 
     const frameMap = frameMapBuilder.build();
     transactions.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
@@ -277,23 +273,5 @@ export class FrameMapper {
     const framesRange = srcTrace.getFramesRange();
     const lengthFrames = framesRange ? framesRange.end : 0;
     return new FrameMapBuilder(dstTrace.lengthEntries, lengthFrames);
-  }
-
-  private async getVsyncIdProperty(
-    entry: TraceEntry<object>,
-    propertyKey: string
-  ): Promise<bigint | undefined> {
-    const entryValue = await entry.getValue();
-    const vsyncId = (entryValue as any)[propertyKey];
-    if (vsyncId === undefined) {
-      console.error(`Failed to get trace entry's '${propertyKey}' property:`, entryValue);
-      return undefined;
-    }
-    try {
-      return BigInt(vsyncId.toString());
-    } catch (e) {
-      console.error(`Failed to convert trace entry's vsyncId to bigint:`, entryValue);
-      return undefined;
-    }
   }
 }

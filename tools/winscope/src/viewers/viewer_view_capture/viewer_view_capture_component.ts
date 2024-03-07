@@ -16,6 +16,7 @@
 
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
 import {UiData} from './ui_data';
 
 /**
@@ -31,14 +32,16 @@ import {UiData} from './ui_data';
         title="View Hierarchy Sketch"
         [enableShowVirtualButton]="false"
         [rects]="inputData?.rects ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [zoomFactor]="4"
+        [miniRects]="inputData?.sfRects ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displayIds]="[0]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
         [tree]="inputData?.tree ?? null"
         [dependencies]="inputData?.dependencies ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
@@ -47,8 +50,9 @@ import {UiData} from './ui_data';
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [displayPropertyGroups]="inputData?.displayPropertyGroups"
-        [isProtoDump]="true">
+        [selectedItem]="inputData?.selectedViewNode ?? null"
+        [traceType]="${TraceType.VIEW_CAPTURE}"
+        [isProtoDump]="false">
       </properties-view>
     </div>
   `,
