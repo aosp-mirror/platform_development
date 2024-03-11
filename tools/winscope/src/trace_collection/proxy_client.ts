@@ -28,15 +28,16 @@ export interface DeviceProperties {
 }
 
 export enum ProxyState {
-  ERROR = 0,
-  CONNECTING = 1,
-  NO_PROXY = 2,
-  INVALID_VERSION = 3,
-  UNAUTH = 4,
-  DEVICES = 5,
-  START_TRACE = 6,
-  END_TRACE = 7,
-  LOAD_DATA = 8,
+  ERROR,
+  CONNECTING,
+  NO_PROXY,
+  INVALID_VERSION,
+  UNAUTH,
+  DEVICES,
+  START_TRACE,
+  END_TRACE,
+  LOAD_DATA,
+  STARTING_TRACE,
 }
 
 export enum ProxyEndpoint {
@@ -178,7 +179,7 @@ class ProxyRequest {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
-      throw Error('Trace no started before stopping');
+      throw Error('Trace not started before stopping');
     }
     await proxyRequest.call(
       'POST',
