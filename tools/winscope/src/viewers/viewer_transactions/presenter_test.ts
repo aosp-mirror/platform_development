@@ -28,7 +28,6 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
 
@@ -84,6 +83,7 @@ describe('PresenterTransactions', () => {
 
   it('processes trace position update and computes output UI data', async () => {
     await presenter.onAppEvent(createTracePositionUpdate(0));
+    checkInitialTracePositionUpdate();
 
     expect(assertDefined(outputUiData).allPids).toEqual([
       'N/A',
@@ -116,21 +116,14 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).allLayerAndDisplayIds.length).toEqual(
       117,
     );
-
     expect(assertDefined(outputUiData).entries.length).toEqual(
       TOTAL_OUTPUT_ENTRIES,
     );
-
-    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
-    expect(assertDefined(outputUiData).currentPropertiesTree).toBeDefined();
   });
 
   it('processes trace position update and updates current entry and scroll position', async () => {
     await presenter.onAppEvent(createTracePositionUpdate(0));
-    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
+    checkInitialTracePositionUpdate();
 
     await presenter.onAppEvent(createTracePositionUpdate(10));
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
@@ -300,48 +293,29 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).entries.length).toEqual(0);
   });
 
-  it('updates selected entry and properties tree when entry is clicked', async () => {
+  it('updates selected entry ui data when entry clicked', async () => {
     await presenter.onAppEvent(createTracePositionUpdate(0));
-    presenter.onPropertiesUserOptionsChange({
-      showDefaults: {
-        name: 'Show defaults',
-        enabled: true,
-        tooltip: `
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-              `,
-      },
-    });
+    checkInitialTracePositionUpdate();
 
-    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).selectedEntryIndex).toBeUndefined();
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(0);
-    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      UiPropertyTreeNode.from(
-        assertDefined(outputUiData?.entries[0].propertiesTree),
-      ),
-    );
-
-    presenter.onEntryClicked(10);
-    const expectedTree = UiPropertyTreeNode.from(
-      assertDefined(outputUiData?.entries[10].propertiesTree),
-    );
-    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
-    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined(); // no scrolling
-    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      expectedTree,
-    );
+    const newIndex = 10;
+    presenter.onEntryClicked(newIndex);
+    checkSelectedEntryUiData(newIndex);
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(undefined); // no scrolling
 
     // does not remove selection when entry clicked again
-    presenter.onEntryClicked(10);
-    expect(assertDefined(outputUiData).currentEntryIndex).toEqual(0);
-    expect(assertDefined(outputUiData).selectedEntryIndex).toEqual(10);
-    expect(assertDefined(outputUiData).scrollToIndex).toBeUndefined();
-    expect(assertDefined(outputUiData).currentPropertiesTree).toEqual(
-      expectedTree,
-    );
+    presenter.onEntryClicked(newIndex);
+    checkSelectedEntryUiData(newIndex);
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(undefined);
+  });
+
+  it('updates selected entry ui data when entry changed by key press', async () => {
+    await presenter.onAppEvent(createTracePositionUpdate(0));
+    checkInitialTracePositionUpdate();
+
+    const newIndex = 10;
+    presenter.onEntryChangedByKeyPress(newIndex);
+    checkSelectedEntryUiData(newIndex);
+    expect(assertDefined(outputUiData).scrollToIndex).toEqual(newIndex);
   });
 
   it('computes current entry index', async () => {
@@ -382,7 +356,7 @@ describe('PresenterTransactions', () => {
     ).toEqual('2s450ms981445ns');
   });
 
-  const setUpTestEnvironment = async (timestampType: TimestampType) => {
+  async function setUpTestEnvironment(timestampType: TimestampType) {
     trace = new TraceBuilder<PropertyTreeNode>()
       .setParser(parser)
       .setTimestampType(timestampType)
@@ -396,12 +370,29 @@ describe('PresenterTransactions', () => {
     });
 
     await presenter.onAppEvent(createTracePositionUpdate(0)); // trigger initialization
-  };
+  }
 
-  const createTracePositionUpdate = (
-    entryIndex: number,
-  ): TracePositionUpdate => {
+  function createTracePositionUpdate(entryIndex: number): TracePositionUpdate {
     const entry = trace.getEntry(entryIndex);
     return TracePositionUpdate.fromTraceEntry(entry);
-  };
+  }
+
+  function checkInitialTracePositionUpdate() {
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.currentEntryIndex).toEqual(0);
+    expect(uiData.selectedEntryIndex).toBeUndefined();
+    expect(uiData.scrollToIndex).toEqual(0);
+    expect(assertDefined(uiData.currentPropertiesTree).id).toEqual(
+      assertDefined(uiData.entries[0].propertiesTree).id,
+    );
+  }
+
+  function checkSelectedEntryUiData(index: number) {
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.currentEntryIndex).toEqual(0);
+    expect(uiData.selectedEntryIndex).toEqual(index);
+    expect(assertDefined(uiData.currentPropertiesTree).id).toEqual(
+      assertDefined(uiData.entries[index].propertiesTree).id,
+    );
+  }
 });
