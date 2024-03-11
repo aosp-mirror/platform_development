@@ -16,6 +16,7 @@
 
 import {OnProgressUpdateType} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {OnRequestSuccessCallback} from './on_request_success_callback';
 import {ConfigMap} from './trace_collection_utils';
 
 export interface Device {
@@ -61,9 +62,9 @@ class ProxyRequest {
   async call(
     method: string,
     path: string,
-    onSuccess: ((request: XMLHttpRequest) => void | Promise<void>) | undefined,
+    onSuccess: OnRequestSuccessCallback | undefined,
     type?: XMLHttpRequest['responseType'],
-    jsonRequest: any = null,
+    jsonRequest?: object,
   ): Promise<void> {
     return new Promise((resolve) => {
       const request = new XMLHttpRequest();
@@ -139,41 +140,47 @@ class ProxyRequest {
     );
   }
 
-  async setEnabledConfig(view: any, req: string[]) {
+  async setEnabledConfig(view: ProxyClient, req: string[]) {
     await proxyRequest.call(
       'POST',
-      `${ProxyEndpoint.ENABLE_CONFIG_TRACE}${view.proxy.selectedDevice}/`,
+      `${ProxyEndpoint.ENABLE_CONFIG_TRACE}${view.selectedDevice}/`,
       undefined,
       undefined,
       req,
     );
   }
 
-  async setSelectedConfig(endpoint: ProxyEndpoint, view: any, req: ConfigMap) {
+  async setSelectedConfig(
+    endpoint: ProxyEndpoint,
+    view: ProxyClient,
+    req: ConfigMap,
+  ) {
     await proxyRequest.call(
       'POST',
-      `${endpoint}${view.proxy.selectedDevice}/`,
+      `${endpoint}${view.selectedDevice}/`,
       undefined,
       undefined,
       req,
     );
   }
 
-  async startTrace(view: any, requestedTraces: string[]) {
+  async startTrace(
+    view: ProxyClient,
+    requestedTraces: string[],
+    onSuccessStartTrace: OnRequestSuccessCallback,
+  ) {
     this.tracingTraces = requestedTraces;
     await proxyRequest.call(
       'POST',
-      `${ProxyEndpoint.START_TRACE}${view.proxy.selectedDevice}/`,
-      (request: XMLHttpRequest) => {
-        view.keepAliveTrace(view);
-      },
+      `${ProxyEndpoint.START_TRACE}${view.selectedDevice}/`,
+      onSuccessStartTrace,
       undefined,
       requestedTraces,
     );
   }
 
   async endTrace(
-    view: any,
+    view: ProxyClient,
     progressCallback: OnProgressUpdateType,
   ): Promise<void> {
     const requestedTraces = this.tracingTraces;
@@ -183,7 +190,7 @@ class ProxyRequest {
     }
     await proxyRequest.call(
       'POST',
-      `${ProxyEndpoint.END_TRACE}${view.proxy.selectedDevice}/`,
+      `${ProxyEndpoint.END_TRACE}${view.selectedDevice}/`,
       async (request: XMLHttpRequest) => {
         await proxyClient.updateAdbData(
           requestedTraces,
@@ -194,28 +201,25 @@ class ProxyRequest {
     );
   }
 
-  async keepTraceAlive(view: any) {
-    await this.call(
+  async keepTraceAlive(
+    view: ProxyClient,
+    onSuccessKeepTraceAlive: OnRequestSuccessCallback,
+  ) {
+    await proxyRequest.call(
       'GET',
-      `${ProxyEndpoint.STATUS}${view.proxy.selectedDevice}/`,
-      (request: XMLHttpRequest) => {
-        if (request.responseText !== 'True') {
-          view.endTrace();
-        } else if (view.keep_alive_worker === null) {
-          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000, view);
-        }
-      },
+      `${ProxyEndpoint.STATUS}${view.selectedDevice}/`,
+      onSuccessKeepTraceAlive,
     );
   }
 
   async dumpState(
-    view: any,
+    view: ProxyClient,
     requestedDumps: string[],
     progressCallback: OnProgressUpdateType,
   ) {
     await proxyRequest.call(
       'POST',
-      `${ProxyEndpoint.DUMP}${view.proxy.selectedDevice}/`,
+      `${ProxyEndpoint.DUMP}${view.selectedDevice}/`,
       async (request: XMLHttpRequest) => {
         await proxyClient.updateAdbData(
           requestedDumps,
@@ -228,7 +232,46 @@ class ProxyRequest {
     );
   }
 
-  onSuccessGetDevices = async (request: XMLHttpRequest) => {
+  async fetchFiles(dev: string, adbParams: AdbParams): Promise<void> {
+    const files = adbParams.files;
+    const idx = adbParams.idx;
+
+    await proxyRequest.call(
+      'GET',
+      `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+  }
+
+  private onSuccessFetchFiles: OnRequestSuccessCallback = async (
+    request: XMLHttpRequest,
+  ) => {
+    try {
+      const enc = new TextDecoder('utf-8');
+      const resp = enc.decode(request.response);
+      const filesByType = JSON.parse(resp);
+
+      for (const filetype of Object.keys(filesByType)) {
+        const files = filesByType[filetype];
+        for (const encodedFileBuffer of files) {
+          const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) =>
+            c.charCodeAt(0),
+          );
+          const blob = new Blob([buffer]);
+          const newFile = new File([blob], filetype);
+          proxyClient.adbData.push(newFile);
+        }
+      }
+    } catch (error) {
+      proxyClient.setState(ProxyState.ERROR, request.responseText);
+      throw error;
+    }
+  };
+
+  private onSuccessGetDevices: OnRequestSuccessCallback = async (
+    request: XMLHttpRequest,
+  ) => {
     const client = proxyClient;
     try {
       client.devices = JSON.parse(request.responseText);
@@ -247,39 +290,6 @@ class ProxyRequest {
       client.setState(ProxyState.ERROR, client.errorText);
     }
   };
-
-  async fetchFiles(dev: string, adbParams: AdbParams): Promise<void> {
-    const files = adbParams.files;
-    const idx = adbParams.idx;
-
-    await proxyRequest.call(
-      'GET',
-      `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`,
-      async (request: XMLHttpRequest) => {
-        try {
-          const enc = new TextDecoder('utf-8');
-          const resp = enc.decode(request.response);
-          const filesByType = JSON.parse(resp);
-
-          for (const filetype of Object.keys(filesByType)) {
-            const files = filesByType[filetype];
-            for (const encodedFileBuffer of files) {
-              const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) =>
-                c.charCodeAt(0),
-              );
-              const blob = new Blob([buffer]);
-              const newFile = new File([blob], filetype);
-              proxyClient.adbData.push(newFile);
-            }
-          }
-        } catch (error) {
-          proxyClient.setState(ProxyState.ERROR, request.responseText);
-          throw error;
-        }
-      },
-      'arraybuffer',
-    );
-  }
 }
 export const proxyRequest = new ProxyRequest();
 
