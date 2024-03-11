@@ -131,7 +131,7 @@ class ProxyRequest {
     });
   }
 
-  async getDevices(view: any) {
+  async getDevices() {
     await proxyRequest.call(
       'GET',
       ProxyEndpoint.DEVICES,
@@ -234,12 +234,12 @@ class ProxyRequest {
       client.devices = JSON.parse(request.responseText);
       const last = client.store.get('adb.lastDevice');
       if (last && client.devices[last] && client.devices[last].authorised) {
-        client.selectDevice(last);
+        await client.selectDevice(last);
       } else {
-        if (client.refresh_worker === null) {
-          client.refresh_worker = setInterval(client.getDevices, 1000);
-        }
         client.setState(ProxyState.DEVICES);
+      }
+      if (client.refresh_worker === undefined) {
+        client.refresh_worker = setInterval(client.getDevices, 1000);
       }
     } catch (err) {
       console.error(err);
@@ -297,7 +297,7 @@ export class ProxyClient {
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
-  refresh_worker: NodeJS.Timer | null = null;
+  refresh_worker: NodeJS.Timer | undefined;
   devices: Device = {};
   selectedDevice = '';
   errorText = '';
@@ -327,19 +327,22 @@ export class ProxyClient {
     );
   }
 
-  getDevices() {
+  async getDevices() {
     if (
-      this.state !== ProxyState.DEVICES &&
-      this.state !== ProxyState.CONNECTING
+      proxyClient.state !== ProxyState.DEVICES &&
+      proxyClient.state !== ProxyState.CONNECTING &&
+      proxyClient.state !== ProxyState.START_TRACE
     ) {
-      clearInterval(this.refresh_worker!);
-      this.refresh_worker = null;
+      if (proxyClient.refresh_worker !== undefined) {
+        clearInterval(proxyClient.refresh_worker);
+        proxyClient.refresh_worker = undefined;
+      }
       return;
     }
-    proxyRequest.getDevices(this);
+    proxyRequest.getDevices();
   }
 
-  selectDevice(device_id: string) {
+  async selectDevice(device_id: string) {
     this.selectedDevice = device_id;
     this.store.add('adb.lastDevice', device_id);
     this.setState(ProxyState.START_TRACE);
