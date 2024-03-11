@@ -89,9 +89,9 @@ import {Transformer} from './transformer';
   ],
 })
 export class MiniTimelineComponent {
-  @Input() timelineData!: TimelineData;
-  @Input() currentTracePosition!: TracePosition;
-  @Input() selectedTraces!: TraceType[];
+  @Input() timelineData: TimelineData | undefined;
+  @Input() currentTracePosition: TracePosition | undefined;
+  @Input() selectedTraces: TraceType[] | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onSeekTimestampUpdate = new EventEmitter<
@@ -99,13 +99,15 @@ export class MiniTimelineComponent {
   >();
 
   @ViewChild('miniTimelineWrapper', {static: false})
-  miniTimelineWrapper!: ElementRef;
-  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
-  get canvas(): HTMLCanvasElement {
-    return this.canvasRef.nativeElement;
+  miniTimelineWrapper: ElementRef | undefined;
+  @ViewChild('canvas', {static: false}) canvasRef: ElementRef | undefined;
+
+  getCanvas(): HTMLCanvasElement {
+    return assertDefined(this.canvasRef).nativeElement;
   }
 
   drawer: MiniTimelineDrawer | undefined = undefined;
+  private lastMoves: WheelEvent[] = [];
 
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
@@ -113,12 +115,12 @@ export class MiniTimelineComponent {
     const updateTimestampCallback = (timestamp: Timestamp) => {
       this.onSeekTimestampUpdate.emit(undefined);
       this.onTracePositionUpdate.emit(
-        this.timelineData.makePositionFromActiveTrace(timestamp),
+        assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
       );
     };
 
     this.drawer = new MiniTimelineDrawerImpl(
-      this.canvas,
+      this.getCanvas(),
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),
       updateTimestampCallback,
@@ -134,61 +136,25 @@ export class MiniTimelineComponent {
   }
 
   isZoomed(): boolean {
-    const fullRange = this.timelineData.getFullTimeRange();
-    const zoomRange = this.timelineData.getZoomRange();
+    const timelineData = assertDefined(this.timelineData);
+    const fullRange = timelineData.getFullTimeRange();
+    const zoomRange = timelineData.getZoomRange();
     return fullRange.from !== zoomRange.from || fullRange.to !== zoomRange.to;
-  }
-
-  private getMiniCanvasDrawerInput() {
-    return new MiniTimelineDrawerInput(
-      this.timelineData.getFullTimeRange(),
-      this.currentTracePosition.timestamp,
-      this.timelineData.getSelectionTimeRange(),
-      this.timelineData.getZoomRange(),
-      this.getTracesToShow(),
-      this.timelineData,
-    );
   }
 
   getTracesToShow(): Traces {
     const traces = new Traces();
-    this.selectedTraces
-      .filter(
-        (type) => this.timelineData.getTraces().getTrace(type) !== undefined,
-      )
+    const timelineData = assertDefined(this.timelineData);
+    assertDefined(this.selectedTraces)
+      .filter((type) => timelineData.getTraces().getTrace(type) !== undefined)
       .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(b, a)) // reversed to ensure display is ordered top to bottom
       .forEach((type) => {
         traces.setTrace(
           type,
-          assertDefined(this.timelineData.getTraces().getTrace(type)),
+          assertDefined(timelineData.getTraces().getTrace(type)),
         );
       });
     return traces;
-  }
-
-  private makeHiPPICanvas() {
-    // Reset any size before computing new size to avoid it interfering with size computations
-    this.canvas.width = 0;
-    this.canvas.height = 0;
-    this.canvas.style.width = 'auto';
-    this.canvas.style.height = 'auto';
-
-    const width = this.miniTimelineWrapper.nativeElement.offsetWidth;
-    const height = this.miniTimelineWrapper.nativeElement.offsetHeight;
-
-    const HiPPIwidth = window.devicePixelRatio * width;
-    const HiPPIheight = window.devicePixelRatio * height;
-
-    this.canvas.width = HiPPIwidth;
-    this.canvas.height = HiPPIheight;
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
-
-    // ensure all drawing operations are scaled
-    if (window.devicePixelRatio !== 1) {
-      const context = this.canvas.getContext('2d')!;
-      context.scale(window.devicePixelRatio, window.devicePixelRatio);
-    }
   }
 
   @HostListener('window:resize', ['$event'])
@@ -198,13 +164,14 @@ export class MiniTimelineComponent {
   }
 
   onZoomChanged(zoom: TimeRange) {
-    this.timelineData.setZoom(zoom);
-    this.timelineData.setSelectionTimeRange(zoom);
+    const timelineData = assertDefined(this.timelineData);
+    timelineData.setZoom(zoom);
+    timelineData.setSelectionTimeRange(zoom);
     this.drawer?.draw();
   }
 
   resetZoom() {
-    this.onZoomChanged(this.timelineData.getFullTimeRange());
+    this.onZoomChanged(assertDefined(this.timelineData).getFullTimeRange());
   }
 
   zoomIn(zoomOn?: Timestamp) {
@@ -219,14 +186,15 @@ export class MiniTimelineComponent {
     zoomRatio: {nominator: bigint; denominator: bigint},
     zoomOn?: Timestamp,
   ) {
-    const fullRange = this.timelineData.getFullTimeRange();
-    const currentZoomRange = this.timelineData.getZoomRange();
+    const timelineData = assertDefined(this.timelineData);
+    const fullRange = timelineData.getFullTimeRange();
+    const currentZoomRange = timelineData.getZoomRange();
     const currentZoomWidth = currentZoomRange.to.minus(currentZoomRange.from);
     const zoomToWidth = currentZoomWidth
       .times(zoomRatio.nominator)
       .div(zoomRatio.denominator);
 
-    const cursorPosition = this.timelineData.getCurrentPosition()?.timestamp;
+    const cursorPosition = timelineData.getCurrentPosition()?.timestamp;
     const currentMiddle = currentZoomRange.from
       .plus(currentZoomRange.to)
       .div(2n);
@@ -294,10 +262,64 @@ export class MiniTimelineComponent {
     });
   }
 
-  // -1 for x direction, 1 for y direction
-  private lastMoves: WheelEvent[] = [];
   @HostListener('wheel', ['$event'])
   onScroll(event: WheelEvent) {
+    const moveDirection = this.getMoveDirection(event);
+
+    if (
+      (event.target as any)?.id === 'mini-timeline-canvas' &&
+      event.deltaY !== 0 &&
+      moveDirection === 'y'
+    ) {
+      this.updateZoomByScrollEvent(event);
+    }
+
+    if (event.deltaX !== 0 && moveDirection === 'x') {
+      this.updateHorizontalScroll(event);
+    }
+  }
+
+  private getMiniCanvasDrawerInput() {
+    const timelineData = assertDefined(this.timelineData);
+    return new MiniTimelineDrawerInput(
+      timelineData.getFullTimeRange(),
+      assertDefined(this.currentTracePosition).timestamp,
+      timelineData.getSelectionTimeRange(),
+      timelineData.getZoomRange(),
+      this.getTracesToShow(),
+      timelineData,
+    );
+  }
+
+  private makeHiPPICanvas() {
+    // Reset any size before computing new size to avoid it interfering with size computations
+    const canvas = this.getCanvas();
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas.style.width = 'auto';
+    canvas.style.height = 'auto';
+
+    const miniTimelineWrapper = assertDefined(this.miniTimelineWrapper);
+    const width = miniTimelineWrapper.nativeElement.offsetWidth;
+    const height = miniTimelineWrapper.nativeElement.offsetHeight;
+
+    const HiPPIwidth = window.devicePixelRatio * width;
+    const HiPPIheight = window.devicePixelRatio * height;
+
+    canvas.width = HiPPIwidth;
+    canvas.height = HiPPIheight;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+
+    // ensure all drawing operations are scaled
+    if (window.devicePixelRatio !== 1) {
+      const context = canvas.getContext('2d')!;
+      context.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+  }
+
+  // -1 for x direction, 1 for y direction
+  private getMoveDirection(event: WheelEvent): string {
     this.lastMoves.push(event);
     setTimeout(() => this.lastMoves.shift(), 1000);
 
@@ -310,63 +332,57 @@ export class MiniTimelineComponent {
       0,
     );
 
-    let moveDirection: 'x' | 'y';
     if (Math.abs(yMoveAmount) > Math.abs(xMoveAmount)) {
-      moveDirection = 'y';
+      return 'y';
     } else {
-      moveDirection = 'x';
+      return 'x';
+    }
+  }
+
+  private updateZoomByScrollEvent(event: WheelEvent) {
+    const canvas = event.target as HTMLCanvasElement;
+    const xPosInCanvas = event.x - canvas.offsetLeft;
+    const zoomRange = assertDefined(this.timelineData).getZoomRange();
+
+    const zoomTo = new Transformer(
+      zoomRange,
+      assertDefined(this.drawer).usableRange,
+    ).untransform(xPosInCanvas);
+
+    if (event.deltaY < 0) {
+      this.zoomIn(zoomTo);
+    } else {
+      this.zoomOut(zoomTo);
+    }
+  }
+
+  private updateHorizontalScroll(event: WheelEvent) {
+    const scrollAmount = event.deltaX;
+    const timelineData = assertDefined(this.timelineData);
+    const fullRange = timelineData.getFullTimeRange();
+    const zoomRange = timelineData.getZoomRange();
+
+    const usableRange = assertDefined(this.drawer).usableRange;
+    const transformer = new Transformer(zoomRange, usableRange);
+    const shiftAmount = transformer
+      .untransform(usableRange.from + scrollAmount)
+      .minus(zoomRange.from);
+    let newFrom = zoomRange.from.plus(shiftAmount);
+    let newTo = zoomRange.to.plus(shiftAmount);
+
+    if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
+      newTo = newTo.plus(fullRange.from.minus(newFrom));
+      newFrom = fullRange.from;
     }
 
-    if (
-      (event.target as any)?.id === 'mini-timeline-canvas' &&
-      event.deltaY !== 0 &&
-      moveDirection === 'y'
-    ) {
-      // Zooming
-      const canvas = event.target as HTMLCanvasElement;
-      const xPosInCanvas = event.x - canvas.offsetLeft;
-      const zoomRange = this.timelineData.getZoomRange();
-
-      const zoomTo = new Transformer(
-        zoomRange,
-        assertDefined(this.drawer).usableRange,
-      ).untransform(xPosInCanvas);
-
-      if (event.deltaY < 0) {
-        this.zoomIn(zoomTo);
-      } else {
-        this.zoomOut(zoomTo);
-      }
+    if (newTo.getValueNs() > fullRange.to.getValueNs()) {
+      newFrom = newFrom.minus(newTo.minus(fullRange.to));
+      newTo = fullRange.to;
     }
 
-    if (event.deltaX !== 0 && moveDirection === 'x') {
-      // Horizontal scrolling
-      const scrollAmount = event.deltaX;
-      const fullRange = this.timelineData.getFullTimeRange();
-      const zoomRange = this.timelineData.getZoomRange();
-
-      const usableRange = assertDefined(this.drawer).usableRange;
-      const transformer = new Transformer(zoomRange, usableRange);
-      const shiftAmount = transformer
-        .untransform(usableRange.from + scrollAmount)
-        .minus(zoomRange.from);
-      let newFrom = zoomRange.from.plus(shiftAmount);
-      let newTo = zoomRange.to.plus(shiftAmount);
-
-      if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
-        newTo = newTo.plus(fullRange.from.minus(newFrom));
-        newFrom = fullRange.from;
-      }
-
-      if (newTo.getValueNs() > fullRange.to.getValueNs()) {
-        newFrom = newFrom.minus(newTo.minus(fullRange.to));
-        newTo = fullRange.to;
-      }
-
-      this.onZoomChanged({
-        from: newFrom,
-        to: newTo,
-      });
-    }
+    this.onZoomChanged({
+      from: newFrom,
+      to: newTo,
+    });
   }
 }
