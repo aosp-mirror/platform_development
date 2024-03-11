@@ -22,6 +22,8 @@ class Events {
   static LayerIdFilterChanged = 'ViewerTransactionsEvent_LayerIdFilterChanged';
   static WhatFilterChanged = 'ViewerTransactionsEvent_WhatFilterChanged';
   static EntryClicked = 'ViewerTransactionsEvent_EntryClicked';
+  static EntryChangedByKeyPress =
+    'ViewerTransactionsEvent_EntryChangedByKeyPress';
   static TransactionIdFilterChanged =
     'ViewerTransactionsEvent_TransactionIdFilterChanged';
 }
