@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {TracesBuilder} from 'test/unit/traces_builder';
-import {RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {TimelineData} from './timeline_data';
 
 describe('TimelineData', () => {
   let timelineData: TimelineData;
-  const timestamp10 = new Timestamp(TimestampType.REAL, 10n);
-  const timestamp11 = new Timestamp(TimestampType.REAL, 11n);
+
+  const timestamp10 = new RealTimestamp(10n);
+  const timestamp11 = new RealTimestamp(11n);
 
   const traces = new TracesBuilder()
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
@@ -31,11 +33,12 @@ describe('TimelineData', () => {
     .build();
 
   const position10 = TracePosition.fromTraceEntry(
-    traces.getTrace(TraceType.SURFACE_FLINGER)!.getEntry(0)
+    assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER)).getEntry(0)
   );
   const position11 = TracePosition.fromTraceEntry(
-    traces.getTrace(TraceType.WINDOW_MANAGER)!.getEntry(0)
+    assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER)).getEntry(0)
   );
+  const position1000 = TracePosition.fromTimestamp(new RealTimestamp(1000n));
 
   beforeEach(() => {
     timelineData = new TimelineData();
@@ -71,15 +74,14 @@ describe('TimelineData', () => {
     timelineData.initialize(traces, undefined);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
-    const explicitPosition = TracePosition.fromTimestamp(new RealTimestamp(1000n));
-    timelineData.setPosition(explicitPosition);
-    expect(timelineData.getCurrentPosition()).toEqual(explicitPosition);
+    timelineData.setPosition(position1000);
+    expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
     timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
-    expect(timelineData.getCurrentPosition()).toEqual(explicitPosition);
+    expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
     timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(timelineData.getCurrentPosition()).toEqual(explicitPosition);
+    expect(timelineData.getCurrentPosition()).toEqual(position1000);
   });
 
   it('sets active trace types and update current position accordingly', () => {
@@ -150,5 +152,73 @@ describe('TimelineData', () => {
       timelineData.initialize(traces, undefined);
       expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeTrue();
     }
+  });
+
+  it('getCurrentPosition() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getCurrentPosition()).toBe(timelineData.getCurrentPosition());
+
+    timelineData.setPosition(position11);
+
+    expect(timelineData.getCurrentPosition()).toBe(timelineData.getCurrentPosition());
+  });
+
+  it('makePositionFromActiveTrace()', () => {
+    timelineData.initialize(traces, undefined);
+    const time100 = new RealTimestamp(100n);
+
+    {
+      timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
+      const position = timelineData.makePositionFromActiveTrace(time100);
+      expect(position.timestamp).toEqual(time100);
+      expect(position.entry).toEqual(traces.getTrace(TraceType.SURFACE_FLINGER)?.getEntry(0));
+    }
+
+    {
+      timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+      const position = timelineData.makePositionFromActiveTrace(time100);
+      expect(position.timestamp).toEqual(time100);
+      expect(position.entry).toEqual(traces.getTrace(TraceType.WINDOW_MANAGER)?.getEntry(0));
+    }
+  });
+
+  it('getFullTimeRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getFullTimeRange()).toBe(timelineData.getFullTimeRange());
+  });
+
+  it('getSelectionTimeRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
+
+    timelineData.setSelectionTimeRange({
+      from: new Timestamp(TimestampType.REAL, 0n),
+      to: new Timestamp(TimestampType.REAL, 5n),
+    });
+
+    expect(timelineData.getSelectionTimeRange()).toBe(timelineData.getSelectionTimeRange());
+  });
+
+  it('getZoomRange() returns same object if no change to range', () => {
+    timelineData.initialize(traces, undefined);
+
+    expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
+
+    timelineData.setZoom({
+      from: new Timestamp(TimestampType.REAL, 0n),
+      to: new Timestamp(TimestampType.REAL, 5n),
+    });
+
+    expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
+  });
+
+  it("getCurrentPosition() prioritizes active trace's first entry", () => {
+    timelineData.initialize(traces, undefined);
+    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+
+    expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
   });
 });

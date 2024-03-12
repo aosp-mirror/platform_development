@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  CrossPlatform,
-  ShellTransitionData,
-  Transition,
-  WmTransitionData,
-} from 'trace/flickerlib/common';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {CrossPlatform, ShellTransitionData, Transition, WmTransitionData} from 'flickerlib/common';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {ShellTransitionsTraceFileProto} from './proto_types';
@@ -28,6 +24,10 @@ import {ShellTransitionsTraceFileProto} from './proto_types';
 export class ParserTransitionsShell extends AbstractParser {
   private realToElapsedTimeOffsetNs: undefined | bigint;
   private handlerMapping: undefined | Map<number, string>;
+
+  constructor(trace: TraceFile) {
+    super(trace);
+  }
 
   override getTraceType(): TraceType {
     return TraceType.SHELL_TRANSITION;

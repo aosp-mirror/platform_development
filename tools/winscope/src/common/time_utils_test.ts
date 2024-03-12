@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {TimeUtils} from './time_utils';
 
 describe('TimeUtils', () => {
@@ -191,6 +191,18 @@ describe('TimeUtils', () => {
     expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.006000002')).toEqual(
       new RealTimestamp(1668060294006000002n)
     );
+    expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54')).toEqual(
+      new RealTimestamp(1668060294000000000n)
+    );
+    expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0')).toEqual(
+      new RealTimestamp(1668060294000000000n)
+    );
+    expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0100')).toEqual(
+      new RealTimestamp(1668060294010000000n)
+    );
+    expect(TimeUtils.parseHumanReal('2022-11-10T06:04:54.0175328')).toEqual(
+      new RealTimestamp(1668060294017532800n)
+    );
   });
 
   it('canReverseDateFormatting', () => {
@@ -208,6 +220,10 @@ describe('TimeUtils', () => {
     expect(() => TimeUtils.parseHumanReal('100')).toThrow(invalidFormatError);
     expect(() => TimeUtils.parseHumanReal('06h4m54s, 10 Nov 2022')).toThrow(invalidFormatError);
     expect(() => TimeUtils.parseHumanReal('')).toThrow(invalidFormatError);
+    expect(() => TimeUtils.parseHumanReal('2022-11-10T06:04:54.')).toThrow(invalidFormatError);
+    expect(() => TimeUtils.parseHumanReal('2022-11-10T06:04:54.1234567890')).toThrow(
+      invalidFormatError
+    );
   });
 
   it('nano second regex accept all expected inputs', () => {

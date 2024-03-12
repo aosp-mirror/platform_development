@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
 import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from 'trace/protolog';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';

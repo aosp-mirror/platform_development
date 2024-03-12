@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Timestamp, TimestampType} from 'common/time';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
+import {ParserWindowManagerUtils} from './parser_window_manager_utils';
 import {WindowManagerServiceDumpProto} from './proto_types';
 
 class ParserWindowManagerDump extends AbstractParser {
@@ -62,6 +69,27 @@ class ParserWindowManagerDump extends AbstractParser {
     entryProto: any
   ): WindowManagerState {
     return WindowManagerState.fromProto(entryProto);
+  }
+
+  override customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, () => {
+        const result: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] =
+          [];
+        this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .forEach((windowManagerServiceDumpProto) => {
+            ParserWindowManagerUtils.parseWindowsTokenAndTitle(
+              windowManagerServiceDumpProto?.rootWindowContainer,
+              result
+            );
+          });
+        return Promise.resolve(result);
+      })
+      .getResult();
   }
 }
 

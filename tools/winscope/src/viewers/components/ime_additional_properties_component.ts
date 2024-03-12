@@ -158,7 +158,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
             *ngIf="wmProtoOrNull()"
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header wm-state"
             [class]="{selected: isHighlighted(wmProtoOrNull())}"
             (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
             WMState
@@ -230,7 +230,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           <button
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header ime-container"
             [class]="{selected: isHighlighted(additionalProperties.sf.imeContainer)}"
             (click)="onClickShowInPropertiesPanel(additionalProperties.sf.imeContainer)">
             Ime Container
@@ -252,7 +252,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
           <button
             color="primary"
             mat-button
-            class="group-header"
+            class="group-header input-method-surface"
             [class]="{selected: isHighlighted(additionalProperties.sf.inputMethodSurface)}"
             (click)="onClickShowInPropertiesPanel(additionalProperties.sf.inputMethodSurface)">
             Input Method Surface
@@ -321,12 +321,12 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 export class ImeAdditionalPropertiesComponent {
   @Input() additionalProperties!: ImeAdditionalProperties;
   @Input() isImeManagerService?: boolean;
-  @Input() highlightedItems: string[] = [];
+  @Input() highlightedItem: string = '';
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   isHighlighted(item: any) {
-    return UiTreeUtils.isHighlighted(item, this.highlightedItems);
+    return UiTreeUtils.isHighlighted(item, this.highlightedItem);
   }
 
   formatProto(item: any) {
@@ -458,14 +458,14 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   onClickShowInPropertiesPanel(item: any, name?: string) {
-    if (item.id) {
-      this.updateHighlightedItems(item.id);
+    if (item.stableId) {
+      this.updateHighlightedItem(item.stableId);
     } else {
       this.updateAdditionalPropertySelected(item, name);
     }
   }
 
-  private updateHighlightedItems(newId: string) {
+  private updateHighlightedItem(newId: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},

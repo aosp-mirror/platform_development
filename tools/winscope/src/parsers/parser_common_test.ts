@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CommonTestUtils} from 'test/common/utils';
+import {Timestamp, TimestampType} from 'common/time';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
 import {UnitTestUtils} from 'test/unit/utils';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {ParserFactory} from './parser_factory';
 
 describe('Parser', () => {
   it('is robust to empty trace file', async () => {
-    const trace = new TraceFile(await CommonTestUtils.getFixtureFile('traces/empty.pb'), undefined);
-    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
+    const trace = new TraceFile(await UnitTestUtils.getFixtureFile('traces/empty.pb'), undefined);
+    const parsers = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
   });
 

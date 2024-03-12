@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Event, EventLogParser} from 'trace/flickerlib/common';
-import {RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {RealTimestamp, Timestamp, TimestampType} from 'common/time';
+import {Event, EventLogParser} from 'flickerlib/common';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 

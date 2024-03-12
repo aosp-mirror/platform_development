@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="5dp"
+    tools:ignore="RtlHardcoded">
+
+    <ImageButton
+        android:id="@+id/dpad_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/dpad_center"
+        android:src="@drawable/dpad_center" />
+
+    <ImageButton
+        android:id="@+id/dpad_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/dpad_center"
+        android:layout_toLeftOf="@id/dpad_center"
+        android:contentDescription="@string/dpad_left"
+        android:src="@drawable/dpad_left" />
+
+    <ImageButton
+        android:id="@+id/dpad_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/dpad_center"
+        android:layout_toRightOf="@id/dpad_center"
+        android:contentDescription="@string/dpad_right"
+        android:src="@drawable/dpad_right" />
+
+    <ImageButton
+        android:id="@+id/dpad_up"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/dpad_center"
+        android:layout_alignLeft="@id/dpad_center"
+        android:contentDescription="@string/dpad_up"
+        android:src="@drawable/dpad_up" />
+
+    <ImageButton
+        android:id="@+id/dpad_down"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/dpad_center"
+        android:layout_alignLeft="@id/dpad_center"
+        android:contentDescription="@string/dpad_down"
+        android:src="@drawable/dpad_down" />
+</RelativeLayout>
