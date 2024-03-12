@@ -83,6 +83,10 @@ export class ProxyConnection implements Connection {
     return this.state() === ProxyState.ERROR;
   }
 
+  isStartingTraceState() {
+    return this.state() === ProxyState.STARTING_TRACE;
+  }
+
   isEndTraceState() {
     return this.state() === ProxyState.END_TRACE;
   }
@@ -161,8 +165,9 @@ export class ProxyConnection implements Connection {
         reqSelectedWmConfig,
       );
     }
-    await proxyClient.setState(ProxyState.END_TRACE);
-    proxyRequest.startTrace(this, requestedTraces);
+    await proxyClient.setState(ProxyState.STARTING_TRACE);
+    await proxyRequest.startTrace(this, requestedTraces);
+    proxyClient.setState(ProxyState.END_TRACE);
   }
 
   async endTrace() {

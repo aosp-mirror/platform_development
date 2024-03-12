@@ -62,7 +62,7 @@ import {LoadProgressComponent} from './load_progress_component';
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
           <adb-proxy
             *ngIf="isAdbProxy"
-            [(proxy)]="connect.proxy!"
+            [(proxy)]="connect.proxy"
             (addKey)="onAddKey($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
         </div>
@@ -98,9 +98,7 @@ import {LoadProgressComponent} from './load_progress_component';
         </div>
 
         <div
-          *ngIf="
-            connect.isStartTraceState() || connect.isEndTraceState() || isOperationInProgress()
-          "
+          *ngIf="showTraceCollectionConfig()"
           class="trace-collection-config">
           <mat-list>
             <mat-list-item>
@@ -134,12 +132,22 @@ import {LoadProgressComponent} from './load_progress_component';
                   </div>
                 </div>
 
-                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
-                  <div class="progress-desc">
-                    <p class="mat-body-3"><mat-icon fontIcon="cable"></mat-icon></p>
-                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                    <p class="mat-body-1">Tracing...</p>
+                <div *ngIf="connect.isStartingTraceState()" class="starting-trace">
+                  <load-progress
+                    message="Starting trace...">
+                  </load-progress>
+                  <div class="end-btn">
+                    <button color="primary" mat-raised-button [disabled]="true">
+                      End trace
+                    </button>
                   </div>
+                </div>
+
+                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+                  <load-progress
+                    icon="cable"
+                    message="Tracing...">
+                  </load-progress>
                   <div class="end-btn">
                     <button color="primary" mat-raised-button (click)="endTrace()">
                       End trace
@@ -153,7 +161,7 @@ import {LoadProgressComponent} from './load_progress_component';
                     [message]="progressMessage">
                   </load-progress>
                   <div class="end-btn">
-                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">
+                    <button color="primary" mat-raised-button [disabled]="true">
                       End trace
                     </button>
                   </div>
@@ -231,6 +239,7 @@ import {LoadProgressComponent} from './load_progress_component';
       .trace-collection-config,
       .trace-section,
       .dump-section,
+      .starting-trace,
       .end-tracing,
       .load-data,
       trace-config {
@@ -240,6 +249,7 @@ import {LoadProgressComponent} from './load_progress_component';
       }
       .trace-section,
       .dump-section,
+      .starting-trace,
       .end-tracing,
       .load-data {
         height: 100%;
@@ -320,11 +330,6 @@ import {LoadProgressComponent} from './load_progress_component';
 
       .tabbed-section {
         height: 100%;
-      }
-
-      .load-data p,
-      .end-tracing p {
-        opacity: 0.7;
       }
 
       .progress-desc {
@@ -442,6 +447,16 @@ export class CollectTracesComponent
       (newState) => this.changeDetectorRef.detectChanges(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
+    );
+  }
+
+  showTraceCollectionConfig() {
+    const connect = assertDefined(this.connect);
+    return (
+      connect.isStartTraceState() ||
+      connect.isStartingTraceState() ||
+      connect.isEndTraceState() ||
+      this.isOperationInProgress()
     );
   }
 

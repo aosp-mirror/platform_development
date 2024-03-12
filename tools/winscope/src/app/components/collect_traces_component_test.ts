@@ -263,13 +263,29 @@ describe('CollectTracesComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('displays starting trace elements', () => {
+    assertDefined(component.connect).isStartingTraceState = jasmine
+      .createSpy()
+      .and.returnValue(true);
+    fixture.detectChanges();
+
+    const el = assertDefined(htmlElement.querySelector('.starting-trace'));
+    const progress = assertDefined(el.querySelector('load-progress'));
+    expect(progress.innerHTML).toContain('Starting trace...');
+
+    const endButton = assertDefined(
+      el.querySelector('.end-btn button'),
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBeTrue();
+  });
+
   it('displays end tracing elements', () => {
     const connect = assertDefined(component.connect);
     connect.isEndTraceState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.end-tracing'));
-    const progress = assertDefined(el.querySelector('.progress-desc'));
+    const progress = assertDefined(el.querySelector('load-progress'));
     expect(progress.innerHTML).toContain('Tracing...');
     expect(progress.innerHTML).toContain('cable');
 
