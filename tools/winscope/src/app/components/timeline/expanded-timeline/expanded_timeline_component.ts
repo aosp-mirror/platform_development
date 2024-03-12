@@ -55,6 +55,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
           [selectionRange]="timelineData.getSelectionTimeRange()"
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
+          (onScrollEvent)="updateScroll($event)"
           class="single-timeline">
         </transition-timeline>
         <single-timeline
@@ -64,6 +65,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
           [selectionRange]="timelineData.getSelectionTimeRange()"
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
+          (onScrollEvent)="updateScroll($event)"
           class="single-timeline">
         </single-timeline>
 
@@ -154,6 +156,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 export class ExpandedTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
 
   @ViewChildren(DefaultTimelineRowComponent)
   singleTimelines: QueryList<DefaultTimelineRowComponent> | undefined;
@@ -180,6 +183,10 @@ export class ExpandedTimelineComponent {
     return traces.sort((a, b) =>
       TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
     );
+  }
+
+  updateScroll(event: WheelEvent) {
+    this.onScrollEvent.emit(event);
   }
 
   private resizeCanvases() {
