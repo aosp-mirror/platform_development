@@ -31,8 +31,11 @@ import {TraceType} from 'trace/trace_type';
 import {LoadedParsers} from './loaded_parsers';
 
 describe('LoadedParsers', () => {
+  const realZeroTimestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+  const elapsedZeroTimestamp =
+    NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
   const oldTimestamps = [
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+    realZeroTimestamp,
     NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n),
     NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n),
     NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n),
@@ -80,7 +83,16 @@ describe('LoadedParsers', () => {
     .build();
   const parserWm_dump = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)])
+    .setTimestamps([realZeroTimestamp])
+    .setDescriptors([filename])
+    .build();
+  const parserWmTransitions = new ParserBuilder<object>()
+    .setType(TraceType.WM_TRANSITION)
+    .setTimestamps([
+      elapsedZeroTimestamp,
+      elapsedZeroTimestamp,
+      elapsedZeroTimestamp,
+    ])
     .setDescriptors([filename])
     .build();
 
@@ -154,6 +166,13 @@ describe('LoadedParsers', () => {
     it('doesnt drop legacy parser with dump (zero timestamp)', () => {
       loadParsers([parserWm_dump, parserSf0], []);
       expectLoadResult([parserWm_dump, parserSf0], []);
+    });
+
+    it('doesnt drop legacy parser with wm transitions', () => {
+      // Only Shell Transition data used to set timestamps of merged Transition trace,
+      // so WM Transition data should not be considered by "old data" policy
+      loadParsers([parserWmTransitions, parserSf0], []);
+      expectLoadResult([parserWmTransitions, parserSf0], []);
     });
 
     it('is robust to traces with time range overlap', () => {
