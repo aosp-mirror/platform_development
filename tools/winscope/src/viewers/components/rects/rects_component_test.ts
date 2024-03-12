@@ -20,8 +20,8 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatSliderModule} from '@angular/material/slider';
-import {Rectangle} from 'viewers/common/rectangle';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
 
 describe('RectsComponent', () => {
@@ -57,30 +57,29 @@ describe('RectsComponent', () => {
   });
 
   it('renders canvas', () => {
-    const rectsCanvas = htmlElement.querySelector('.canvas-rects');
+    const rectsCanvas = htmlElement.querySelector('.large-rects-canvas');
     expect(rectsCanvas).toBeTruthy();
   });
 
   it('draws scene when input data changes', async () => {
     spyOn(Canvas.prototype, 'draw').and.callThrough();
 
-    const inputRect: Rectangle = {
-      topLeft: {x: 0, y: 0},
-      bottomRight: {x: 1, y: -1},
+    const inputRect: UiRect = {
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
       label: 'rectangle1',
       transform: {
-        matrix: {
-          dsdx: 1,
-          dsdy: 0,
-          dtdx: 0,
-          dtdy: 1,
-          tx: 0,
-          ty: 0,
-        },
+        dsdx: 1,
+        dsdy: 0,
+        dtdx: 0,
+        dtdy: 1,
+        tx: 0,
+        ty: 0,
       },
       isVisible: true,
       isDisplay: false,
-      ref: null,
       id: 'test-id-1234',
       displayId: 0,
       isVirtual: false,

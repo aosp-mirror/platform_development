@@ -1,3 +1,4 @@
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/time';
 import {
   CrossPlatform,
   ShellTransitionData,
@@ -5,14 +6,18 @@ import {
   TransitionChange,
   TransitionType,
   WmTransitionData,
-} from 'trace/flickerlib/common';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+} from 'flickerlib/common';
+import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
 import {WmTransitionsTraceFileProto} from './proto_types';
 
 export class ParserTransitionsWm extends AbstractParser {
   private realToElapsedTimeOffsetNs: undefined | bigint;
+
+  constructor(trace: TraceFile) {
+    super(trace);
+  }
 
   override getTraceType(): TraceType {
     return TraceType.WM_TRANSITION;
@@ -107,6 +112,20 @@ export class ParserTransitionsWm extends AbstractParser {
       );
     }
 
+    const startingWindowRemoveTime = null;
+    if (
+      entry.startingWindowRemoveTimeNs &&
+      BigInt(entry.startingWindowRemoveTimeNs.toString()) !== 0n
+    ) {
+      const unixNs =
+        BigInt(entry.startingWindowRemoveTimeNs.toString()) + this.realToElapsedTimeOffsetNs;
+      finishTime = CrossPlatform.timestamp.fromString(
+        entry.startingWindowRemoveTimeNs.toString(),
+        null,
+        unixNs.toString()
+      );
+    }
+
     let startTransactionId = null;
     if (entry.startTransactionId && BigInt(entry.startTransactionId.toString()) !== 0n) {
       startTransactionId = BigInt(entry.startTransactionId.toString());
@@ -129,6 +148,7 @@ export class ParserTransitionsWm extends AbstractParser {
         sendTime,
         abortTime,
         finishTime,
+        startingWindowRemoveTime,
         startTransactionId?.toString(),
         finishTransactionId?.toString(),
         type,

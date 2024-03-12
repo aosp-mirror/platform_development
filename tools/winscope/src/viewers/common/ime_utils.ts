@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {WindowContainer} from 'trace/flickerlib/common';
-import {Layer} from 'trace/flickerlib/layers/Layer';
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
-import {Activity} from 'trace/flickerlib/windows/Activity';
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
-import {WindowState} from 'trace/flickerlib/windows/WindowState';
+import {WindowContainer} from 'flickerlib/common';
+import {Layer} from 'flickerlib/layers/Layer';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {Activity} from 'flickerlib/windows/Activity';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {WindowState} from 'flickerlib/windows/WindowState';
 
 class ProcessedWindowManagerState {
   constructor(

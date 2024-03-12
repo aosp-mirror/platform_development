@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Timestamp, TimestampType} from 'common/time';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
@@ -111,6 +117,19 @@ class ParserTransactions extends AbstractParser {
     entryProto: object
   ): object {
     return entryProto;
+  }
+
+  override customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, async () => {
+        return this.decodedEntries.slice(entriesRange.start, entriesRange.end).map((entry) => {
+          return BigInt(entry.vsyncId.toString()); // convert Long to bigint
+        });
+      })
+      .getResult();
   }
 
   private realToElapsedTimeOffsetNs: undefined | bigint;

@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name" translatable="false">VDM Host</string>
+    <string name="launcher_name" translatable="false">VDM Launcher</string>
+    <string name="create_home_display" translatable="false">Create Home Display</string>
+    <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
+    <string name="app_icon_description" translatable="false">Application Icon</string>
+    <string name="settings" translatable="false">Settings</string>
+
+    <string name="pref_device_profile" translatable="false">device_profile</string>
+    <string name="pref_enable_recents" translatable="false">enable_recents</string>
+    <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
+    <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
+    <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>
+    <string name="pref_enable_display_rotation" translatable="false">enable_display_rotation</string>
+    <string name="pref_always_unlocked_device" translatable="false">always_unlocked_device</string>
+    <string name="pref_show_pointer_icon" translatable="false">show_pointer_icon</string>
+    <string name="pref_enable_custom_home" translatable="false">enable_custom_home</string>
+    <string name="pref_display_ime_policy" translatable="false">display_ime_policy</string>
+    <string name="pref_record_encoder_output" translatable="false">record_encoder_output</string>
+
+    <string name="internal_pref_enable_home_displays" translatable="false">enable_home_displays</string>
+    <string name="internal_pref_enable_mirror_displays" translatable="false">enable_mirror_displays</string>
+
+    <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
+    <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>
+</resources>

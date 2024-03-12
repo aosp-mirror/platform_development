@@ -25,7 +25,11 @@ import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_rec
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
-import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
+import {
+  ViewerViewCaptureLauncherActivity,
+  ViewerViewCaptureTaskbarDragLayer,
+  ViewerViewCaptureTaskbarOverlayDragLayer,
+} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
@@ -42,10 +46,13 @@ class ViewerFactory {
     ViewerProtoLog,
     ViewerScreenRecording,
     ViewerTransitions,
-    ViewerViewCapture,
+    ViewerViewCaptureLauncherActivity,
+    ViewerViewCaptureTaskbarDragLayer,
+    ViewerViewCaptureTaskbarOverlayDragLayer,
   ];
 
-  createViewers(activeTraceTypes: Set<TraceType>, traces: Traces, storage: Storage): Viewer[] {
+  createViewers(traces: Traces, storage: Storage): Viewer[] {
+    const activeTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {

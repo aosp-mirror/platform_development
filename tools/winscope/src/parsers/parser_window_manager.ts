@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Timestamp, TimestampType} from 'common/time';
+import {WindowManagerState} from 'flickerlib/windows/WindowManagerState';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
+import {ParserWindowManagerUtils} from './parser_window_manager_utils';
 import {WindowManagerTraceFileProto} from './proto_types';
 
-class ParserWindowManager extends AbstractParser {
+export class ParserWindowManager extends AbstractParser {
   constructor(trace: TraceFile) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
@@ -70,8 +77,27 @@ class ParserWindowManager extends AbstractParser {
     );
   }
 
+  override customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE, () => {
+        const result: CustomQueryParserResultTypeMap[CustomQueryType.WM_WINDOWS_TOKEN_AND_TITLE] =
+          [];
+        this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .forEach((windowManagerTraceProto) => {
+            ParserWindowManagerUtils.parseWindowsTokenAndTitle(
+              windowManagerTraceProto?.windowManagerService?.rootWindowContainer,
+              result
+            );
+          });
+        return Promise.resolve(result);
+      })
+      .getResult();
+  }
+
   private realToElapsedTimeOffsetNs: undefined | bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 }
-
-export {ParserWindowManager};

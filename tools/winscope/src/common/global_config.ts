@@ -17,7 +17,7 @@
 export type Schema = Omit<GlobalConfig, 'set'>;
 
 class GlobalConfig {
-  readonly MODE: 'DEV' | 'PROD' = 'PROD' as const;
+  readonly MODE: 'KARMA_TEST' | 'DEV' | 'PROD' = 'KARMA_TEST' as const;
 
   set(config: Schema) {
     Object.assign(this, config);

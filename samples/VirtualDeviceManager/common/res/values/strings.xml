@@ -1,0 +1,8 @@
+<resources>
+    <string name="this_device" translatable="false">%s: %s</string>
+    <string name="disconnected" translatable="false">Disconnected</string>
+    <string name="initialized" translatable="false">Looking for devices...</string>
+    <string name="connecting" translatable="false">Connecting to %s...</string>
+    <string name="connected" translatable="false">Connected to %s</string>
+    <string name="error" translatable="false">Error: %s</string>
+</resources>

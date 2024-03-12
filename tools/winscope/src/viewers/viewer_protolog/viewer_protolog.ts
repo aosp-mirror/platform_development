@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
@@ -44,8 +44,12 @@ class ViewerProtoLog implements Viewer {
     });
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent() {
+    // do nothing
   }
 
   getViews(): View[] {

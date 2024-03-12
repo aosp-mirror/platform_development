@@ -19,7 +19,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
   resolve: {
     extensions: ['.ts', '.js', '.css'],
-    modules: ['node_modules', 'src', 'kotlin_build', path.resolve(__dirname, '../../..')],
+    modules: ['node_modules', 'src', 'deps_build', __dirname, path.resolve(__dirname, '../../..')],
   },
 
   resolveLoader: {
@@ -49,7 +49,9 @@ module.exports = {
         loader: 'proto-loader',
         options: {
           paths: [
+            __dirname,
             path.resolve(__dirname, '../../..'),
+            path.resolve(__dirname, '../../../external/perfetto'),
             path.resolve(__dirname, '../../../external/protobuf/src'),
           ],
         },
