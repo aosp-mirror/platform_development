@@ -15,12 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {MockLong} from 'test/unit/mock_long';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TranslateChanges} from './translate_changes';
-
-class Long {
-  constructor(public low: number, public high: number) {}
-}
 
 describe('TranslateChanges', () => {
   let operation: TranslateChanges;
@@ -47,12 +44,12 @@ describe('TranslateChanges', () => {
                     {name: '0', children: [{name: 'what', value: 2}]},
                     {
                       name: '1',
-                      children: [{name: 'what', value: new Long(2, 0)}],
+                      children: [{name: 'what', value: new MockLong(2, 0)}],
                     },
                     {name: '2', children: [{name: 'what', value: 4294967360}]},
                     {
                       name: '3',
-                      children: [{name: 'what', value: new Long(64, 1)}],
+                      children: [{name: 'what', value: new MockLong(64, 1)}],
                     },
                   ],
                 },

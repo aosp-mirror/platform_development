@@ -30,7 +30,8 @@ class RectSfFactory {
       const layerStack = assertDefined(
         display.getChildByName('layerStack'),
       ).getValue();
-      let displayName = display.getChildByName('name')?.getValue() ?? '';
+      let displayName =
+        display.getChildByName('name')?.getValue() ?? 'Unknown Display';
       const id = assertDefined(display.getChildByName('id')).getValue();
 
       const existingNameCount = nameCounts.get(displayName);

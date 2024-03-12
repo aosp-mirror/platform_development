@@ -82,7 +82,6 @@ import {
         [itemsClickable]="itemsClickable"
         (highlightedChange)="propagateNewHighlightedItem($event)"
         (pinnedItemChange)="propagateNewPinnedItem($event)"
-        (selectedTreeChange)="propagateNewSelectedTree($event)"
         (hoverStart)="childHover = true"
         (hoverEnd)="childHover = false"></tree-view>
     </div>
@@ -110,9 +109,9 @@ export class TreeComponent {
 
   @Input() showNode = (node: UiPropertyTreeNode | UiHierarchyTreeNode) => true;
 
-  @Output() readonly highlightedChange = new EventEmitter<string>();
-  @Output() readonly selectedTreeChange =
-    new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly highlightedChange = new EventEmitter<
+    UiHierarchyTreeNode | UiPropertyTreeNode
+  >();
   @Output() readonly pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
   @Output() readonly hoverStart = new EventEmitter<void>();
   @Output() readonly hoverEnd = new EventEmitter<void>();
@@ -160,12 +159,6 @@ export class TreeComponent {
       } else {
         this.setExpandedValue(true);
       }
-    }
-    if (
-      this.node instanceof UiHierarchyTreeNode &&
-      UiTreeUtils.isHighlighted(this.node, this.highlightedItem)
-    ) {
-      this.selectedTreeChange.emit(this.node);
     }
   }
 
@@ -225,16 +218,14 @@ export class TreeComponent {
     return false;
   }
 
-  propagateNewHighlightedItem(newId: string) {
-    this.highlightedChange.emit(newId);
+  propagateNewHighlightedItem(
+    newItem: UiPropertyTreeNode | UiHierarchyTreeNode,
+  ) {
+    this.highlightedChange.emit(newItem);
   }
 
   propagateNewPinnedItem(newPinnedItem: UiHierarchyTreeNode) {
     this.pinnedItemChange.emit(newPinnedItem);
-  }
-
-  propagateNewSelectedTree(newTree: UiHierarchyTreeNode) {
-    this.selectedTreeChange.emit(newTree);
   }
 
   isClickable() {
@@ -277,7 +268,7 @@ export class TreeComponent {
   }
 
   private updateHighlightedItem() {
-    if (this.node) this.highlightedChange.emit(this.node.id);
+    if (this.node) this.highlightedChange.emit(this.node);
   }
 
   private setExpandedValue(

@@ -21,6 +21,7 @@ import {
   Input,
   OnDestroy,
   OnInit,
+  SimpleChange,
   SimpleChanges,
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
@@ -269,16 +270,15 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const canvasContainer =
+    const canvasContainer: HTMLElement =
       this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
     this.largeRectsCanvasElement = canvasContainer.querySelector(
       '.large-rects-canvas',
     )! as HTMLCanvasElement;
-    this.largeRectsLabelsElement = canvasContainer.querySelector(
-      '.large-rects-labels',
-    );
+    this.largeRectsLabelsElement =
+      canvasContainer.querySelector('.large-rects-labels') ?? undefined;
     this.largeRectsCanvas = new Canvas(
       this.largeRectsCanvasElement,
       this.largeRectsLabelsElement!,
@@ -291,7 +291,10 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.updateControlsFromStore();
     }
 
-    this.currentDisplay = this.internalDisplays[0] ?? undefined;
+    this.currentDisplay =
+      this.internalDisplays.length > 0
+        ? this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays)
+        : undefined;
     this.mapper3d.setCurrentGroupId(this.currentDisplay?.groupId ?? 0);
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
@@ -321,7 +324,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       }
     }
     if (simpleChanges['displays']) {
-      this.onDisplaysChange(simpleChanges['displays'].currentValue);
+      this.onDisplaysChange(simpleChanges['displays']);
       if (this.isStackBased) {
         this.internalGroupIds = new Set(
           this.internalDisplays.map((display) => display.groupId),
@@ -338,10 +341,18 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.resizeObserver?.disconnect();
   }
 
-  onDisplaysChange(displays: DisplayIdentifier[]) {
+  onDisplaysChange(change: SimpleChange) {
+    const displays = change.currentValue;
     this.internalDisplays = displays;
 
     if (displays.length === 0) {
+      return;
+    }
+
+    if (change.firstChange) {
+      this.updateCurrentDisplay(
+        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
+      );
       return;
     }
 
@@ -355,11 +366,13 @@ export class RectsComponent implements OnInit, OnDestroy {
       }
     }
 
-    const firstDisplayWithCurrentGroupId = this.internalDisplays.find(
+    const displaysWithCurrentGroupId = this.internalDisplays.filter(
       (display) => display.groupId === this.mapper3d.getCurrentGroupId(),
     );
-    if (!firstDisplayWithCurrentGroupId) {
-      this.updateCurrentDisplay(this.internalDisplays[0]);
+    if (displaysWithCurrentGroupId.length === 0) {
+      this.updateCurrentDisplay(
+        this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays),
+      );
       return;
     }
 
@@ -367,7 +380,9 @@ export class RectsComponent implements OnInit, OnDestroy {
       (display) => display.displayId === this.currentDisplay?.displayId,
     );
     if (!displayWithCurrentDisplayId) {
-      this.updateCurrentDisplay(firstDisplayWithCurrentGroupId);
+      this.updateCurrentDisplay(
+        this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
+      );
       return;
     }
 
@@ -468,7 +483,9 @@ export class RectsComponent implements OnInit, OnDestroy {
       displaysWithGroupId.length > 0 &&
       !displaysWithGroupId.includes(this.currentDisplay)
     ) {
-      this.updateCurrentDisplay(displaysWithGroupId[0]);
+      this.updateCurrentDisplay(
+        this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithGroupId),
+      );
     }
   }
 
@@ -544,6 +561,18 @@ export class RectsComponent implements OnInit, OnDestroy {
     return this.currentDisplay.groupId === groupId ? 'primary' : 'secondary';
   }
 
+  private getFirstDisplayWithRectsOrFirstDisplay(
+    displays: DisplayIdentifier[],
+  ): DisplayIdentifier {
+    return (
+      displays.find((display) =>
+        this.internalRects.some(
+          (rect) => !rect.isDisplay && rect.groupId === display.groupId,
+        ),
+      ) ?? assertDefined(displays.at(0))
+    );
+  }
+
   private updateCurrentDisplay(display: DisplayIdentifier) {
     this.currentDisplay = display;
     this.mapper3d.setCurrentGroupId(display.groupId);
@@ -608,10 +637,13 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   private notifyHighlightedItem(id: string) {
-    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
-      bubbles: true,
-      detail: {id},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.HighlightedIdChange,
+      {
+        bubbles: true,
+        detail: {id},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

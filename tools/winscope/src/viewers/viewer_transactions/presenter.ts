@@ -104,7 +104,7 @@ export class Presenter {
         this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
         this.uiData.selectedEntryIndex = undefined;
         this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-        this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+        this.currentPropertiesTree = this.computePropertiesTree(
           this.uiData.entries,
           this.uiData.currentEntryIndex,
           this.uiData.selectedEntryIndex,
@@ -163,23 +163,19 @@ export class Presenter {
   onEntryClicked(index: number) {
     if (this.uiData.selectedEntryIndex === index) {
       return;
-    } else {
-      this.uiData.selectedEntryIndex = index;
     }
-
+    this.uiData.selectedEntryIndex = index;
     this.uiData.scrollToIndex = undefined; // no scrolling
+    this.updatePropertiesTree();
+  }
 
-    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex,
-    );
-
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
-      this.currentPropertiesTree,
-    );
-
-    this.notifyUiDataCallback(this.uiData);
+  onEntryChangedByKeyPress(index: number) {
+    if (this.uiData.selectedEntryIndex === index) {
+      return;
+    }
+    this.uiData.selectedEntryIndex = index;
+    this.uiData.scrollToIndex = index;
+    this.updatePropertiesTree();
   }
 
   onPropertiesUserOptionsChange(userOptions: UserOptions) {
@@ -287,7 +283,7 @@ export class Presenter {
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
     const selectedEntryIndex = undefined;
-    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computePropertiesTree(
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
@@ -331,7 +327,21 @@ export class Presenter {
     );
   }
 
-  private computeCurrentPropertiesTree(
+  private updatePropertiesTree() {
+    this.currentPropertiesTree = this.computePropertiesTree(
+      this.uiData.entries,
+      this.uiData.currentEntryIndex,
+      this.uiData.selectedEntryIndex,
+    );
+
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
+      this.currentPropertiesTree,
+    );
+
+    this.notifyUiDataCallback(this.uiData);
+  }
+
+  private computePropertiesTree(
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
     selectedEntryIndex: undefined | number,

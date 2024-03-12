@@ -59,7 +59,7 @@ export class Presenter {
   private highlightedProperty = '';
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
-  private selectedHierarchyTree: UiHierarchyTreeNode | undefined;
+  private selectedHierarchyTree: HierarchyTreeNode | undefined;
   private previousEntry: TraceEntry<HierarchyTreeNode> | undefined;
   private previousHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTree: HierarchyTreeNode | undefined;
@@ -168,6 +168,21 @@ export class Presenter {
           this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
             this.currentHierarchyTree,
           );
+          if (this.highlightedItem !== undefined && this.currentHierarchyTree) {
+            const selectedItem = this.currentHierarchyTree.findDfs(
+              (node) => node.id === this.highlightedItem,
+            );
+            if (selectedItem) {
+              this.selectedHierarchyTree = selectedItem;
+              const propertiesTree =
+                await this.selectedHierarchyTree.getAllProperties();
+
+              this.uiData.propertiesTree = await this.formatPropertiesTree(
+                propertiesTree,
+                this.selectedHierarchyTree.isRoot(),
+              );
+            }
+          }
         }
 
         this.copyUiDataAndNotifyView();
@@ -189,14 +204,18 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  onHighlightedItemChange(id: string) {
-    if (this.highlightedItem === id) {
-      this.highlightedItem = '';
-    } else {
-      this.highlightedItem = id;
-    }
-    this.uiData.highlightedItem = this.highlightedItem;
-    this.copyUiDataAndNotifyView();
+  async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
+    this.updateHighlightedItem(item.id);
+    this.selectedHierarchyTree = item;
+    await this.updateSelectedHierarchyTree(item);
+  }
+
+  async onHighlightedIdChange(newId: string) {
+    this.updateHighlightedItem(newId);
+    this.selectedHierarchyTree = this.currentHierarchyTree?.findDfs(
+      UiTreeUtils.makeIdMatchFilter(newId),
+    );
+    await this.updateSelectedTreeUiData();
   }
 
   onHighlightedPropertyChange(id: string) {
@@ -237,14 +256,25 @@ export class Presenter {
     await this.updateSelectedTreeUiData();
   }
 
-  async onSelectedHierarchyTreeChange(selectedTree: UiHierarchyTreeNode) {
-    if (
-      !selectedTree.isOldNode() ||
-      selectedTree.getDiff() === DiffType.DELETED
-    ) {
-      this.selectedHierarchyTree = selectedTree;
-      await this.updateSelectedTreeUiData();
+  private updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
+    } else {
+      this.highlightedItem = id;
     }
+    this.uiData.highlightedItem = this.highlightedItem;
+  }
+
+  private async updateSelectedHierarchyTree(selectedTree: UiHierarchyTreeNode) {
+    if (UiTreeUtils.shouldGetProperties(selectedTree)) {
+      this.selectedHierarchyTree = selectedTree;
+    } else if (selectedTree.getDiff() === DiffType.DELETED_MOVE) {
+      const addedMovedNode = this.currentHierarchyTree?.findDfs(
+        UiTreeUtils.makeIdMatchFilter(selectedTree.id),
+      );
+      this.selectedHierarchyTree = addedMovedNode;
+    }
+    await this.updateSelectedTreeUiData();
   }
 
   private getDisplays(rects: UiRect[]): DisplayIdentifier[] {

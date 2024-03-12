@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
-import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  Inject,
+  Input,
+  ViewChild,
+} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -323,6 +330,24 @@ class ViewerTransactionsComponent {
   onTimestampClicked(timestamp: PropertyTreeNode) {
     this.lastClicked = timestamp.formattedValue();
     this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  async handleKeyboardEvent(event: KeyboardEvent) {
+    const index =
+      this.uiData.selectedEntryIndex ?? this.uiData.currentEntryIndex;
+    if (index === undefined) {
+      return;
+    }
+    if (event.key === 'ArrowDown' && index < this.uiData.entries.length - 1) {
+      event.preventDefault();
+      this.emitEvent(Events.EntryChangedByKeyPress, index + 1);
+    }
+
+    if (event.key === 'ArrowUp' && index > 0) {
+      event.preventDefault();
+      this.emitEvent(Events.EntryChangedByKeyPress, index - 1);
+    }
   }
 
   isCurrentEntry(index: number): boolean {

@@ -406,7 +406,7 @@ export class Canvas {
   private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent = new CustomEvent(
-      ViewerEvents.HighlightedChange,
+      ViewerEvents.HighlightedIdChange,
       {
         bubbles: true,
         detail: {id: newId},

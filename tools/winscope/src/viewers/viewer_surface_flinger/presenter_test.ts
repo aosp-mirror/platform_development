@@ -36,6 +36,7 @@ import {UiData} from './ui_data';
 describe('PresenterSurfaceFlinger', () => {
   let trace: Trace<HierarchyTreeNode>;
   let positionUpdate: TracePositionUpdate;
+  let secondPositionUpdate: TracePositionUpdate;
   let positionUpdateMultiDisplayEntry: TracePositionUpdate;
   let presenter: Presenter;
   let uiData: UiData;
@@ -44,8 +45,9 @@ describe('PresenterSurfaceFlinger', () => {
   beforeAll(async () => {
     trace = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([
-        await UnitTestUtils.getLayerTraceEntry(),
+        await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
+        await UnitTestUtils.getLayerTraceEntry(1),
       ])
       .build();
 
@@ -53,6 +55,9 @@ describe('PresenterSurfaceFlinger', () => {
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
     positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(
       trace.getEntry(1),
+    );
+    secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
+      trace.getEntry(2),
     );
 
     const firstEntryDataTree = await firstEntry.getValue();
@@ -139,14 +144,6 @@ describe('PresenterSurfaceFlinger', () => {
 
     presenter.onPinnedItemChange(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
-  });
-
-  it('updates highlighted item', () => {
-    expect(uiData.highlightedItem).toEqual('');
-
-    const id = '4';
-    presenter.onHighlightedItemChange(id);
-    expect(uiData.highlightedItem).toBe(id);
   });
 
   it('updates highlighted property', () => {
@@ -259,11 +256,84 @@ describe('PresenterSurfaceFlinger', () => {
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(4);
   });
 
-  it('sets properties tree and associated ui data', async () => {
+  it('sets properties tree and associated ui data from tree node', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
-    // does not check specific tree values as tree transformation method may change
-    expect(uiData.propertiesTree).toBeTruthy();
+    expect(uiData.propertiesTree).toBeUndefined();
+    await presenter.onHighlightedNodeChange(selectedTree);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual('53 Dim layer#53');
+    expect(propertiesTree.getAllChildren().length).toEqual(22);
+    expect(assertDefined(uiData.curatedProperties).flags).toEqual(
+      'HIDDEN (0x1)',
+    );
+  });
+
+  it('sets properties tree and associated ui data from rect', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    expect(uiData.propertiesTree).toBeUndefined();
+    const rect = assertDefined(uiData.rects.at(5));
+    await presenter.onHighlightedIdChange(rect.id);
+    const propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(propertiesTree.id).toEqual('62 ScreenDecorOverlay#62');
+    expect(propertiesTree.getAllChildren().length).toEqual(26);
+    expect(assertDefined(uiData.curatedProperties).flags).toEqual(
+      'SKIP_SCREENSHOT|ENABLE_BACKPRESSURE (0x140)',
+    );
+  });
+
+  it('after highlighting a node, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    const selectedTree = assertDefined(
+      assertDefined(uiData.tree).findDfs(
+        UiTreeUtils.makeIdMatchFilter('79 Wallpaper BBQ wrapper#79'),
+      ),
+    );
+    await presenter.onHighlightedNodeChange(selectedTree);
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree
+          .getChildByName('metadata')
+          ?.getChildByName('2')
+          ?.getChildByName('byteOffset'),
+      ).formattedValue(),
+    ).toEqual('2919');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree
+          .getChildByName('metadata')
+          ?.getChildByName('2')
+          ?.getChildByName('byteOffset'),
+      ).formattedValue(),
+    ).toEqual('44517');
+  });
+
+  it('after highlighting a rect, updates properties tree on position update', async () => {
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHighlightedIdChange('79 Wallpaper BBQ wrapper#79');
+    let propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree
+          .getChildByName('metadata')
+          ?.getChildByName('2')
+          ?.getChildByName('byteOffset'),
+      ).formattedValue(),
+    ).toEqual('2919');
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    propertiesTree = assertDefined(uiData.propertiesTree);
+    expect(
+      assertDefined(
+        propertiesTree
+          .getChildByName('metadata')
+          ?.getChildByName('2')
+          ?.getChildByName('byteOffset'),
+      ).formattedValue(),
+    ).toEqual('44517');
   });
 
   it('updates properties tree to show diffs', async () => {
@@ -276,7 +346,7 @@ describe('PresenterSurfaceFlinger', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree?.getChildByName('bounds')).getDiff(),
     ).toEqual(DiffType.NONE);
@@ -301,7 +371,7 @@ describe('PresenterSurfaceFlinger', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(22);
@@ -315,7 +385,7 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('filters properties tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-    await presenter.onSelectedHierarchyTreeChange(selectedTree);
+    await presenter.onHighlightedNodeChange(selectedTree);
     expect(
       assertDefined(uiData.propertiesTree).getAllChildren().length,
     ).toEqual(22);

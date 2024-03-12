@@ -153,6 +153,31 @@ export abstract class PresenterInputMethod {
           await this.updateAdditionalPropertyTree(
             this.uiData.additionalProperties,
           );
+
+          if (this.highlightedItem !== undefined && this.entry) {
+            const isHighlightedFilter = (node: HierarchyTreeNode) =>
+              UiTreeUtils.isHighlighted(node, this.highlightedItem);
+            let selectedItem = this.entry.findDfs(isHighlightedFilter);
+            if (!selectedItem) {
+              selectedItem =
+                this.uiData.additionalProperties.sf?.taskLayerOfImeContainer?.findDfs(
+                  isHighlightedFilter,
+                );
+            }
+            if (!selectedItem) {
+              selectedItem =
+                this.uiData.additionalProperties.sf?.taskLayerOfImeSnapshot?.findDfs(
+                  isHighlightedFilter,
+                );
+            }
+
+            if (selectedItem) {
+              this.selectedHierarchyTree = selectedItem;
+              this.uiData.propertiesTree = await this.getPropertiesTree(
+                this.selectedHierarchyTree,
+              );
+            }
+          }
         }
         this.copyUiDataAndNotifyView();
       },
@@ -173,8 +198,34 @@ export abstract class PresenterInputMethod {
     this.copyUiDataAndNotifyView();
   }
 
-  onHighlightedItemChange(id: string) {
-    this.updateHighlightedItem(id);
+  async onHighlightedNodeChange(item: UiHierarchyTreeNode) {
+    this.updateHighlightedItem(item.id);
+    await this.updateSelectedHierarchyTree(item);
+  }
+
+  async onHighlightedIdChange(newId: string) {
+    this.updateHighlightedItem(newId);
+    if (this.selectedHierarchyTree?.id !== newId) {
+      const idMatchFilter = UiTreeUtils.makeIdMatchFilter(newId);
+      this.clearAdditionalPropertyTreeSelection();
+      const imeContainerNode = this.uiData.sfSubtrees
+        .at(0)
+        ?.findDfs(idMatchFilter);
+      if (imeContainerNode) {
+        this.uiData.propertiesTree = await this.getPropertiesTree(
+          imeContainerNode,
+        );
+      } else {
+        const inputMethodSurfaceNode = this.uiData.sfSubtrees
+          .at(1)
+          ?.findDfs(idMatchFilter);
+        if (inputMethodSurfaceNode) {
+          this.uiData.propertiesTree = await this.getPropertiesTree(
+            inputMethodSurfaceNode,
+          );
+        }
+      }
+    }
     this.copyUiDataAndNotifyView();
   }
 
@@ -216,14 +267,6 @@ export abstract class PresenterInputMethod {
   async onPropertiesFilterChange(filterString: string) {
     this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
-  }
-
-  async onSelectedHierarchyTreeChange(selectedItem: UiHierarchyTreeNode) {
-    if (this.selectedHierarchyTree?.id !== selectedItem.id) {
-      this.clearAdditionalPropertyTreeSelection();
-      this.selectedHierarchyTree = selectedItem;
-      await this.updateSelectedTreeUiData();
-    }
   }
 
   async onAdditionalPropertySelected(selectedItem: {
@@ -281,6 +324,14 @@ export abstract class PresenterInputMethod {
       this.highlightedItem = id; //if multi-select surfaces implemented, remove this line
     }
     this.uiData.highlightedItem = this.highlightedItem;
+  }
+
+  private async updateSelectedHierarchyTree(selectedItem: UiHierarchyTreeNode) {
+    if (this.selectedHierarchyTree?.id !== selectedItem.id) {
+      this.clearAdditionalPropertyTreeSelection();
+      this.selectedHierarchyTree = selectedItem;
+    }
+    await this.updateSelectedTreeUiData();
   }
 
   private getSfSubtrees(sfProperties: ImeLayers): UiHierarchyTreeNode[] {

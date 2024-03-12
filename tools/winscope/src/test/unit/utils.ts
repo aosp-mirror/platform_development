@@ -160,15 +160,17 @@ class UnitTestUtils {
     return tracesParsers[0];
   }
 
-  static async getWindowManagerState(): Promise<HierarchyTreeNode> {
+  static async getWindowManagerState(index = 0): Promise<HierarchyTreeNode> {
     return UnitTestUtils.getTraceEntry(
-      'traces/elapsed_timestamp/WindowManager.pb',
+      'traces/elapsed_and_real_timestamp/WindowManager.pb',
+      index,
     );
   }
 
-  static async getLayerTraceEntry(): Promise<HierarchyTreeNode> {
+  static async getLayerTraceEntry(index = 0): Promise<HierarchyTreeNode> {
     return await UnitTestUtils.getTraceEntry<HierarchyTreeNode>(
       'traces/elapsed_timestamp/SurfaceFlinger.pb',
+      index,
     );
   }
 
@@ -240,9 +242,9 @@ class UnitTestUtils {
     return true;
   }
 
-  private static async getTraceEntry<T>(filename: string) {
+  private static async getTraceEntry<T>(filename: string, index = 0) {
     const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
-    return parser.getEntry(0, TimestampType.ELAPSED);
+    return parser.getEntry(index, TimestampType.ELAPSED);
   }
 }
 

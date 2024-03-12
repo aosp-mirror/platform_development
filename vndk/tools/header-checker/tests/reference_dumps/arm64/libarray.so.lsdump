@@ -6,7 +6,6 @@
    "linker_set_key" : "_ZTIA0_i",
    "name" : "int[0]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA0_i",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
   {
@@ -14,7 +13,6 @@
    "linker_set_key" : "_ZTIA10_i",
    "name" : "int[10]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA10_i",
    "size" : 40,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -23,7 +21,6 @@
    "linker_set_key" : "_ZTIA1_i",
    "name" : "int[1]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA1_i",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -32,7 +29,6 @@
    "linker_set_key" : "_ZTIA2_i",
    "name" : "int[2]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA2_i",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -41,7 +37,6 @@
    "linker_set_key" : "_ZTIA_A10_i",
    "name" : "int[][10]",
    "referenced_type" : "_ZTIA10_i",
-   "self_type" : "_ZTIA_A10_i",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
   {
@@ -49,7 +44,6 @@
    "linker_set_key" : "_ZTIA_A1_i",
    "name" : "int[][1]",
    "referenced_type" : "_ZTIA1_i",
-   "self_type" : "_ZTIA_A1_i",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
   {
@@ -57,7 +51,6 @@
    "linker_set_key" : "_ZTIA_i",
    "name" : "int[]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA_i",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   }
  ],
@@ -68,15 +61,11 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -201,7 +190,6 @@
    "linker_set_key" : "_ZTIR6Struct",
    "name" : "Struct &",
    "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTIR6Struct",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -210,7 +198,6 @@
    "linker_set_key" : "_ZTIRA_A1_i",
    "name" : "int (&)[][1]",
    "referenced_type" : "_ZTIA_A1_i",
-   "self_type" : "_ZTIRA_A1_i",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   }
@@ -222,7 +209,6 @@
    "linker_set_key" : "_ZTIPA2_i",
    "name" : "int (*)[2]",
    "referenced_type" : "_ZTIA2_i",
-   "self_type" : "_ZTIPA2_i",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -231,7 +217,6 @@
    "linker_set_key" : "_ZTIPA_A10_i",
    "name" : "int (*)[][10]",
    "referenced_type" : "_ZTIA_A10_i",
-   "self_type" : "_ZTIPA_A10_i",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -240,7 +225,6 @@
    "linker_set_key" : "_ZTIPA_i",
    "name" : "int (*)[]",
    "referenced_type" : "_ZTIA_i",
-   "self_type" : "_ZTIPA_i",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -249,7 +233,6 @@
    "linker_set_key" : "_ZTIPPi",
    "name" : "int **",
    "referenced_type" : "_ZTIPi",
-   "self_type" : "_ZTIPPi",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   },
@@ -258,7 +241,6 @@
    "linker_set_key" : "_ZTIPi",
    "name" : "int *",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIPi",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   }
@@ -277,8 +259,6 @@
    ],
    "linker_set_key" : "_ZTI6Struct",
    "name" : "Struct",
-   "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTI6Struct",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/array/include/base.h"
   }
  ],

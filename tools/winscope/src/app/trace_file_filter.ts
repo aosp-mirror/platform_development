@@ -33,6 +33,7 @@ export class TraceFileFilter {
     'FS/data/misc/wmtrace/',
     'FS/data/misc/perfetto-traces/',
     'proto/window_CRITICAL.proto',
+    'proto/input_method_CRITICAL.proto',
   ];
 
   async filter(
@@ -86,19 +87,28 @@ export class TraceFileFilter {
       return undefined;
     }
 
-    const locale = this.extractValueFromDumpstateBoard(fileData, localeStartIndex);
-    const timezone = this.extractValueFromDumpstateBoard(fileData, timezoneStartIndex);
+    const locale = this.extractValueFromDumpstateBoard(
+      fileData,
+      localeStartIndex,
+    );
+    const timezone = this.extractValueFromDumpstateBoard(
+      fileData,
+      timezoneStartIndex,
+    );
     return {timezone, locale};
   }
 
-  private extractValueFromDumpstateBoard(fileData: string, startIndex: number): string {
+  private extractValueFromDumpstateBoard(
+    fileData: string,
+    startIndex: number,
+  ): string {
     return fileData
-    .slice(startIndex)
-    .split(']', 2)
-    .map((substr) => {
-      const start = substr.lastIndexOf('[');
-      return substr.slice(start + 1);
-    })[1];
+      .slice(startIndex)
+      .split(']', 2)
+      .map((substr) => {
+        const start = substr.lastIndexOf('[');
+        return substr.slice(start + 1);
+      })[1];
   }
 
   private async isBugreport(

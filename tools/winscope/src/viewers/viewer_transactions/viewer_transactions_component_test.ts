@@ -31,6 +31,7 @@ import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {Events} from './events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -56,7 +57,7 @@ describe('ViewerTransactionsComponent', () => {
       component = fixture.componentInstance;
       htmlElement = fixture.nativeElement;
 
-      component.inputData = makeUiData();
+      component.inputData = makeUiData(0);
       fixture.detectChanges();
     });
 
@@ -100,8 +101,31 @@ describe('ViewerTransactionsComponent', () => {
       expect(spy).toHaveBeenCalledWith(1);
     });
 
+    it('changes selected entry on arrow key press', () => {
+      htmlElement.addEventListener(Events.EntryChangedByKeyPress, (event) => {
+        component.inputData = makeUiData((event as CustomEvent).detail);
+        fixture.detectChanges();
+      });
+
+      // does not do anything if no prev entry available
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(0);
+
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowDown'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(1);
+
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(0);
+    });
+
     it('propagates timestamp on click', () => {
-      component.inputData = makeUiData();
+      component.inputData = makeUiData(0);
       fixture.detectChanges();
       let timestamp = '';
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
@@ -115,7 +139,7 @@ describe('ViewerTransactionsComponent', () => {
       expect(timestamp).toEqual('1ns');
     });
 
-    function makeUiData(): UiData {
+    function makeUiData(selectedEntryIndex: number): UiData {
       const propertiesTree = new PropertyTreeBuilder()
         .setRootId('Transactions')
         .setName('tree')
@@ -165,7 +189,7 @@ describe('ViewerTransactionsComponent', () => {
         ['flag1', 'flag2', 'flag3', 'flag4'],
         [entry, entry2],
         1,
-        0,
+        selectedEntryIndex,
         0,
         UiPropertyTreeNode.from(propertiesTree),
         {},
