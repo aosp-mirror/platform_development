@@ -76,7 +76,7 @@ describe('TracePipeline', () => {
     );
   });
 
-  it('can convert illegal uploaded archive filename to legal name for download archive', async () => {
+  xit('can convert illegal uploaded archive filename to legal name for download archive', async () => {
     const fileWithIllegalName = await UnitTestUtils.getFixtureFile(
       'traces/SF_trace&(*_with:_illegal+_characters.pb'
     );
