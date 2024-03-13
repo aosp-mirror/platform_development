@@ -68,6 +68,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
       <expanded-timeline
         [timelineData]="timelineData"
         (onTracePositionUpdate)="updatePosition($event)"
+        (onScrollEvent)="updateScrollEvent($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
@@ -168,6 +169,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
             [timelineData]="timelineData"
             [currentTracePosition]="getCurrentTracePosition()"
             [selectedTraces]="selectedTraces"
+            [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
             id="mini-timeline"
@@ -401,6 +403,7 @@ export class TimelineComponent
 
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private expandedTimelineScrollEvent: WheelEvent | undefined;
 
   constructor(
     @Inject(DomSanitizer) private sanitizer: DomSanitizer,
@@ -692,5 +695,9 @@ export class TimelineComponent
     if (this.selectedNsFormControl.valid) {
       (event.target as HTMLInputElement).blur();
     }
+  }
+
+  updateScrollEvent(event: WheelEvent) {
+    this.expandedTimelineScrollEvent = event;
   }
 }

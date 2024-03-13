@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ElementRef, EventEmitter} from '@angular/core';
+import {ElementRef, EventEmitter, HostListener, Output} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {TraceEntry} from 'trace/trace';
@@ -26,6 +26,8 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   abstract onTracePositionUpdate: EventEmitter<TracePosition>;
   abstract wrapperRef: ElementRef | undefined;
   abstract canvasRef: ElementRef | undefined;
+
+  @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
 
   canvasDrawer = new CanvasDrawer();
   protected viewInitialized = false;
@@ -129,6 +131,11 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
 
     this.updateCursor(mousePoint);
     this.onHover(mousePoint);
+  }
+
+  @HostListener('wheel', ['$event'])
+  updateScroll(event: WheelEvent) {
+    this.onScrollEvent.emit(event);
   }
 
   protected async updateCursor(mousePoint: Point) {

@@ -32,7 +32,7 @@ import {
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
-  keep_alive_worker: any = null;
+  keep_alive_worker: NodeJS.Timer | undefined;
   notConnected = [
     ProxyState.NO_PROXY,
     ProxyState.UNAUTH,
@@ -81,6 +81,10 @@ export class ProxyConnection implements Connection {
 
   isErrorState() {
     return this.state() === ProxyState.ERROR;
+  }
+
+  isStartingTraceState() {
+    return this.state() === ProxyState.STARTING_TRACE;
   }
 
   isEndTraceState() {
@@ -132,10 +136,16 @@ export class ProxyConnection implements Connection {
   keepAliveTrace(view: ProxyConnection) {
     if (!view.isEndTraceState()) {
       clearInterval(view.keep_alive_worker);
-      view.keep_alive_worker = null;
+      view.keep_alive_worker = undefined;
       return;
     }
-    proxyRequest.keepTraceAlive(view);
+    proxyRequest.keepTraceAlive(view.proxy, (request: XMLHttpRequest) => {
+      if (request.responseText !== 'True') {
+        view.endTrace();
+      } else if (view.keep_alive_worker === undefined) {
+        view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000, view);
+      }
+    });
   }
 
   async startTrace(
@@ -145,30 +155,35 @@ export class ProxyConnection implements Connection {
     reqSelectedWmConfig?: ConfigMap,
   ) {
     if (reqEnableConfig) {
-      proxyRequest.setEnabledConfig(this, reqEnableConfig);
+      proxyRequest.setEnabledConfig(this.proxy, reqEnableConfig);
     }
     if (reqSelectedSfConfig) {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_SF_CONFIG_TRACE,
-        this,
+        this.proxy,
         reqSelectedSfConfig,
       );
     }
     if (reqSelectedWmConfig) {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_WM_CONFIG_TRACE,
-        this,
+        this.proxy,
         reqSelectedWmConfig,
       );
     }
-    await proxyClient.setState(ProxyState.END_TRACE);
-    proxyRequest.startTrace(this, requestedTraces);
+    await proxyClient.setState(ProxyState.STARTING_TRACE);
+    await proxyRequest.startTrace(
+      this.proxy,
+      requestedTraces,
+      (request: XMLHttpRequest) => this.keepAliveTrace(this),
+    );
+    proxyClient.setState(ProxyState.END_TRACE);
   }
 
   async endTrace() {
     this.progressCallback(0);
     await this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.endTrace(this, this.progressCallback);
+    await proxyRequest.endTrace(this.proxy, this.progressCallback);
   }
 
   async dumpState(requestedDumps: string[]): Promise<boolean> {
@@ -179,7 +194,11 @@ export class ProxyConnection implements Connection {
       return false;
     }
     await this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.dumpState(this, requestedDumps, this.progressCallback);
+    await proxyRequest.dumpState(
+      this.proxy,
+      requestedDumps,
+      this.progressCallback,
+    );
     return true;
   }
 
