@@ -17,11 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {
-  TraceHasOldData,
-  TraceOverridden,
-  WinscopeError,
-} from 'messaging/winscope_error';
+import {UserWarning} from 'messaging/user_warning';
+import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
@@ -97,7 +94,7 @@ describe('LoadedParsers', () => {
     .build();
 
   let loadedParsers: LoadedParsers;
-  let errors: WinscopeError[] = [];
+  let warnings: UserWarning[] = [];
 
   beforeEach(async () => {
     loadedParsers = new LoadedParsers();
@@ -390,23 +387,23 @@ describe('LoadedParsers', () => {
     const perfettoFileAndParsers =
       perfetto.length > 0 ? new FileAndParsers(file, perfetto) : undefined;
 
-    errors = [];
-    const errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    warnings = [];
+    const listener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
 
     loadedParsers.addParsers(
       legacyFileAndParsers,
       perfettoFileAndParsers,
-      errorListener,
+      listener,
     );
   }
 
   function expectLoadResult(
     expectedParsers: Array<Parser<object>>,
-    expectedErrors: WinscopeError[],
+    expectedWarnings: UserWarning[],
   ) {
     expectedParsers.sort((a, b) => a.getTraceType() - b.getTraceType());
     const actualParsers = loadedParsers
@@ -421,6 +418,6 @@ describe('LoadedParsers', () => {
       expect(actualParsers[i]).toBe(expectedParsers[i]);
     }
 
-    expect(errors).toEqual(expectedErrors);
+    expect(warnings).toEqual(expectedWarnings);
   }
 });

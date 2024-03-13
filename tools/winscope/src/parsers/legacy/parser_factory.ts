@@ -15,8 +15,8 @@
  */
 import {TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UnsupportedFileFormat} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UnsupportedFileFormat} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {ParserInputMethodClients} from 'parsers/input_method/legacy/parser_input_method_clients';
@@ -59,7 +59,7 @@ export class ParserFactory {
     traceFiles: TraceFile[],
     timestampFactory: TimestampFactory,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener,
+    notificationListener?: UserNotificationsListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
@@ -91,9 +91,9 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        errorListener?.onError(
+        notificationListener?.onNotifications([
           new UnsupportedFileFormat(traceFile.getDescriptor()),
-        );
+        ]);
       }
     }
     return parsers;

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {TraceOverridden, WinscopeError} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UserWarning} from 'messaging/user_warning';
+import {TraceOverridden} from 'messaging/user_warnings';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceFile} from 'trace/trace_file';
 import {TraceFileFilter} from './trace_file_filter';
@@ -29,14 +30,14 @@ describe('TraceFileFilter', () => {
     'test_bugreport.zip',
   ) as unknown as File;
 
-  let errors: WinscopeError[];
-  let errorListener: WinscopeErrorListener;
+  let warnings: UserWarning[];
+  let notificationListener: UserNotificationsListener;
 
   beforeEach(() => {
-    errors = [];
-    errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    warnings = [];
+    notificationListener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
   });
@@ -78,7 +79,7 @@ describe('TraceFileFilter', () => {
 
       const result = await filter.filter(
         [...bugreportFiles, plainTraceFile],
-        errorListener,
+        notificationListener,
       );
       expect(result.perfetto).toBeUndefined();
 
@@ -105,10 +106,10 @@ describe('TraceFileFilter', () => {
           bugreportArchive,
         ),
       ];
-      const result = await filter.filter(bugreportFiles, errorListener);
+      const result = await filter.filter(bugreportFiles, notificationListener);
       expect(result.perfetto).toEqual(perfettoSystemTrace);
       expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([]);
+      expect(warnings).toEqual([]);
     });
 
     it('ignores perfetto traces other than systrace.pftrace', async () => {
@@ -124,10 +125,10 @@ describe('TraceFileFilter', () => {
           bugreportArchive,
         ),
       ];
-      const result = await filter.filter(bugreportFiles, errorListener);
+      const result = await filter.filter(bugreportFiles, notificationListener);
       expect(result.perfetto).toBeUndefined();
       expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([]);
+      expect(warnings).toEqual([]);
     });
 
     it('identifies dumpstate_board.txt file', async () => {
@@ -141,14 +142,14 @@ describe('TraceFileFilter', () => {
         await makeBugreportDumpstateBoardTextFile(),
         legacyFile,
       ];
-      const result = await filter.filter(bugreportFiles, errorListener);
+      const result = await filter.filter(bugreportFiles, notificationListener);
       expect(result.legacy).toEqual([legacyFile]);
       expect(result.perfetto).toBeUndefined();
       expect(result.timezoneInfo).toEqual({
         timezone: 'Asia/Kolkata',
         locale: 'en-US',
       });
-      expect(errors).toEqual([]);
+      expect(warnings).toEqual([]);
     });
   });
 
@@ -187,10 +188,13 @@ describe('TraceFileFilter', () => {
       const small = makeTraceFile('small.perfetto-trace', undefined, 10);
       const medium = makeTraceFile('medium.perfetto-trace', undefined, 20);
       const large = makeTraceFile('large.perfetto-trace', undefined, 30);
-      const result = await filter.filter([small, large, medium], errorListener);
+      const result = await filter.filter(
+        [small, large, medium],
+        notificationListener,
+      );
       expect(result.perfetto).toEqual(large);
       expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([
+      expect(warnings).toEqual([
         new TraceOverridden(small.getDescriptor()),
         new TraceOverridden(medium.getDescriptor()),
       ]);
@@ -199,10 +203,10 @@ describe('TraceFileFilter', () => {
     async function checkPerfettoFilePickedWithoutErrors(
       perfettoFile: TraceFile,
     ) {
-      const result = await filter.filter([perfettoFile], errorListener);
+      const result = await filter.filter([perfettoFile], notificationListener);
       expect(result.perfetto).toEqual(perfettoFile);
       expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([]);
+      expect(warnings).toEqual([]);
     }
   });
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import {WinscopeError} from 'messaging/winscope_error';
+import {ErrorHandler} from '@angular/core';
+import {Analytics} from 'logging/analytics';
 
-export interface UserNotificationListener {
-  onErrors(errors: WinscopeError[]): void;
+export class GlobalErrorHandler implements ErrorHandler {
+  handleError(error: Error) {
+    Analytics.Error.logGlobalException(error.message);
+    console.error(error);
+  }
 }

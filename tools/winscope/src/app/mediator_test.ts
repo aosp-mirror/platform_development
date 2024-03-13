@@ -22,8 +22,8 @@ import {
 } from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {UserNotificationListener} from 'messaging/user_notification_listener';
-import {UserNotificationListenerStub} from 'messaging/user_notification_listener_stub';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {
   AppFilesCollected,
   AppFilesUploaded,
@@ -71,7 +71,7 @@ describe('Mediator', () => {
   );
 
   let inputFiles: File[];
-  let userNotificationListener: UserNotificationListener;
+  let userNotificationsListener: UserNotificationsListener;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -109,7 +109,7 @@ describe('Mediator', () => {
 
   beforeEach(async () => {
     jasmine.addCustomEqualityTester(tracePositionUpdateEqualityTester);
-    userNotificationListener = new UserNotificationListenerStub();
+    userNotificationsListener = new UserNotificationsListenerStub();
     tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = FunctionUtils.mixin(
@@ -140,7 +140,7 @@ describe('Mediator', () => {
       abtChromeExtensionProtocol,
       crossToolProtocol,
       appComponent,
-      userNotificationListener,
+      userNotificationsListener,
       new MockStorage(),
     );
     mediator.setTimelineComponent(timelineComponent);
@@ -168,7 +168,7 @@ describe('Mediator', () => {
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
       spyOn(uploadTracesComponent, 'onOperationFinished'),
-      spyOn(userNotificationListener, 'onErrors'),
+      spyOn(userNotificationsListener, 'onNotifications'),
       spyOn(viewerStub0, 'onWinscopeEvent'),
       spyOn(viewerStub1, 'onWinscopeEvent'),
       spyOn(viewerOverlay, 'onWinscopeEvent'),
@@ -490,7 +490,7 @@ describe('Mediator', () => {
 
   async function loadFiles(files = inputFiles) {
     await mediator.onWinscopeEvent(new AppFilesUploaded(files));
-    expect(userNotificationListener.onErrors).not.toHaveBeenCalled();
+    expect(userNotificationsListener.onNotifications).not.toHaveBeenCalled();
   }
 
   async function loadTraceView() {

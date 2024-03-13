@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {WinscopeError} from './winscope_error';
+import {UserNotification} from './user_notification';
 
-export interface WinscopeErrorListener {
-  onError(error: WinscopeError): void;
+export interface UserNotificationsListener {
+  onNotifications(notifications: UserNotification[]): void;
 }
