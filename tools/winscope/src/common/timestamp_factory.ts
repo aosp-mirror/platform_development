@@ -80,10 +80,26 @@ export class TimestampFactory {
       timeZone: timezone,
     });
     const timezoneDate = new Date(timezoneDateFormatted);
-    const hoursDiff = timezoneDate.getHours() - utcDate.getHours();
+
+    let daysDiff = timezoneDate.getDay() - utcDate.getDay(); // day of the week
+    if (daysDiff > 1) {
+      // Saturday in timezone, Sunday in UTC
+      daysDiff = -1;
+    } else if (daysDiff < -1) {
+      // Sunday in timezone, Saturday in UTC
+      daysDiff = 1;
+    }
+
+    const hoursDiff =
+      timezoneDate.getHours() - utcDate.getHours() + daysDiff * 24;
     const minutesDiff = timezoneDate.getMinutes() - utcDate.getMinutes();
+    const localTimezoneOffsetMinutes = utcDate.getTimezoneOffset();
+
     return (
-      timestampNs + BigInt(hoursDiff * 3.6e12) + BigInt(minutesDiff * 6e10)
+      timestampNs +
+      BigInt(hoursDiff * 3.6e12) +
+      BigInt(minutesDiff * 6e10) -
+      BigInt(localTimezoneOffsetMinutes * 6e10)
     );
   }
 }

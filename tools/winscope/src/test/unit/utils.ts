@@ -234,11 +234,11 @@ class UnitTestUtils {
   }
 
   private static testTimestamps(
-    node: Timestamp,
-    expectedNode: Timestamp,
+    timestamp: Timestamp,
+    expectedTimestamp: Timestamp,
   ): boolean {
-    if (node.getType() !== expectedNode.getType()) return false;
-    if (node.getValueNs() !== expectedNode.getValueNs()) return false;
+    if (timestamp.getType() !== expectedTimestamp.getType()) return false;
+    if (timestamp.getValueNs() !== expectedTimestamp.getValueNs()) return false;
     return true;
   }
 
