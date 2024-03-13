@@ -370,6 +370,20 @@ describe('TracePipeline', () => {
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
   });
 
+  it('can filter traces without visualization', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles([validSfFile, shellTransitionFile]);
+    await expectLoadResult(2, []);
+
+    tracePipeline.filterTracesWithoutVisualization();
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    expect(
+      tracePipeline.getTraces().getTrace(TraceType.SHELL_TRANSITION),
+    ).toBeUndefined();
+  });
+
   async function loadFiles(
     files: File[],
     source: FilesSource = FilesSource.TEST,

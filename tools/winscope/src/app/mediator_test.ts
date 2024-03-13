@@ -295,6 +295,17 @@ describe('Mediator', () => {
     await checkLoadTraceViewEvents(uploadTracesComponent);
   });
 
+  it('filters traces without visualization on loading viewers', async () => {
+    const fileWithoutVisualization = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles();
+    await mediator.onWinscopeEvent(
+      new AppFilesUploaded([fileWithoutVisualization]),
+    );
+    await loadTraceView();
+  });
+
   describe('timestamp received from remote tool', () => {
     it('propagates trace position update', async () => {
       await loadFiles();

@@ -317,6 +317,7 @@ export class Mediator {
     // allow the UI to update before making the main thread very busy
     await new Promise<void>((resolve) => setTimeout(resolve, 10));
 
+    this.tracePipeline.filterTracesWithoutVisualization();
     await this.tracePipeline.buildTraces();
     this.currentProgressListener?.onOperationFinished();
 
