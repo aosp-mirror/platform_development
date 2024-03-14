@@ -45,8 +45,6 @@ The VDM Demo contains 3 apps:
 *   Both devices need to support
     [Wi-Fi Aware](https://developer.android.com/develop/connectivity/wifi/wifi-aware)
 
-<!-- TODO(b/314429442): Make the host app work on older Android versions. -->
-
 Note: This example app uses an Android device as a client, but there's no such
 general requirement. The client device, its capabilities, the connectivity layer
 and the communication protocol are entirely up to the virtual device owner.
@@ -78,7 +76,6 @@ available devices, build the APKs and install them.
     ```
 
 1.  Install the application as a system app on the host device.
-    <!-- TODO(b/314436863): Add a bash script for easy host app install. -->
 
     ```shell
     adb root && adb disable-verity && adb reboot  # one time
