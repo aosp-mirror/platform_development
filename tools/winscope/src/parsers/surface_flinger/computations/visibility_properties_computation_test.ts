@@ -486,7 +486,7 @@ describe('VisibilityPropertiesComputation', () => {
         .getEagerPropertyByName('occludedBy')
         ?.getChildByName('0')
         ?.getValue(),
-    ).toEqual(2);
+    ).toEqual('2 occludingLayer');
 
     expect(
       assertDefined(
@@ -589,7 +589,7 @@ describe('VisibilityPropertiesComputation', () => {
         .getEagerPropertyByName('partiallyOccludedBy')
         ?.getChildByName('0')
         ?.getValue(),
-    ).toEqual(2);
+    ).toEqual('2 partiallyOccludingLayer');
 
     expect(
       assertDefined(
@@ -692,7 +692,7 @@ describe('VisibilityPropertiesComputation', () => {
         .getEagerPropertyByName('coveredBy')
         ?.getChildByName('0')
         ?.getValue(),
-    ).toEqual(2);
+    ).toEqual('2 coveringLayer');
 
     expect(
       assertDefined(

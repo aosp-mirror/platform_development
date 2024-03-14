@@ -20,7 +20,7 @@ import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {propertyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
-import {timeButtonStyle} from './styles/timestamp_button.styles';
+import {timeButtonStyle} from './styles/clickable_property.styles';
 
 @Component({
   selector: 'property-tree-node-data-view',
