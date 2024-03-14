@@ -37,6 +37,7 @@ import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TimeUtils} from 'common/time_utils';
 import {
+  ExpandedTimelineToggled,
   TracePositionUpdate,
   WinscopeEvent,
   WinscopeEventType,
@@ -477,9 +478,10 @@ export class TimelineComponent
     });
   }
 
-  toggleExpand() {
+  async toggleExpand() {
     this.expanded = !this.expanded;
     this.changeDetectorRef.detectChanges();
+    await this.emitEvent(new ExpandedTimelineToggled(this.expanded));
   }
 
   async updatePosition(position: TracePosition) {

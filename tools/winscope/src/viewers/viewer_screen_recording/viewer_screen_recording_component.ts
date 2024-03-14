@@ -27,13 +27,13 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
           <span class="mat-body-2">{{ title }}</span>
         </button>
 
-        <button mat-button class="button-minimize" (click)="onMinimizeButtonClick()">
+        <button mat-button class="button-minimize" [disabled]="forceMinimize" (click)="onMinimizeButtonClick()">
           <mat-icon>
-            {{ isMinimized ? 'maximize' : 'minimize' }}
+            {{ isMinimized() ? 'maximize' : 'minimize' }}
           </mat-icon>
         </button>
       </mat-card-title>
-      <div class="video-container" [style.height]="isMinimized ? '0px' : ''">
+      <div class="video-container" [style.height]="isMinimized() ? '0px' : ''">
         <ng-container *ngIf="hasFrameToShow(); then video; else noVideo"> </ng-container>
       </div>
     </mat-card>
@@ -105,12 +105,13 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 })
 class ViewerScreenRecordingComponent {
   safeUrl: undefined | SafeUrl = undefined;
-  isMinimized = false;
+  shouldMinimize = false;
 
   constructor(@Inject(DomSanitizer) private sanitizer: DomSanitizer) {}
 
   @Input() currentTraceEntry: ScreenRecordingTraceEntry | undefined;
   @Input() title = 'Screen recording';
+  @Input() forceMinimize = false;
 
   ngOnChanges(changes: SimpleChanges) {
     if (this.currentTraceEntry === undefined) {
@@ -129,7 +130,11 @@ class ViewerScreenRecordingComponent {
   }
 
   onMinimizeButtonClick() {
-    this.isMinimized = !this.isMinimized;
+    this.shouldMinimize = !this.shouldMinimize;
+  }
+
+  isMinimized() {
+    return this.forceMinimize || this.shouldMinimize;
   }
 
   hasFrameToShow() {

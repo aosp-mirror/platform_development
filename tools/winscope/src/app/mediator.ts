@@ -20,6 +20,7 @@ import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {
+  ExpandedTimelineToggled,
   TracePositionUpdate,
   ViewersLoaded,
   ViewersUnloaded,
@@ -200,6 +201,13 @@ export class Mediator {
       WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
       async (event) => {
         await this.processRemoteToolTimestampReceived(event.timestampNs);
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
+      async (event) => {
+        await this.propagateToOverlays(event);
       },
     );
   }
@@ -418,5 +426,14 @@ export class Mediator {
     this.lastRemoteToolTimestampReceived = undefined;
     this.focusedTabView = undefined;
     await this.appComponent.onWinscopeEvent(new ViewersUnloaded());
+  }
+
+  private async propagateToOverlays(event: ExpandedTimelineToggled) {
+    const overlayViewers = this.viewers.filter((viewer) =>
+      viewer.getViews().some((view) => view.type === ViewType.OVERLAY),
+    );
+    for (const overlay of overlayViewers) {
+      await overlay.onWinscopeEvent(event);
+    }
   }
 }
