@@ -59,6 +59,7 @@ private const val TYPE_ALL = "All Type Mix"
 @RequiresApi(34)
 class ShareTestActivity : Activity() {
     private lateinit var customActionReceiver: BroadcastReceiver
+    private lateinit var refinementReceiver: BroadcastReceiver
     private lateinit var mediaSelection: RadioGroup
     private lateinit var textSelection: RadioGroup
     private lateinit var mediaTypeSelection: Spinner
@@ -80,11 +81,26 @@ class ShareTestActivity : Activity() {
             }
         }
 
+        refinementReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent) {
+                // Need to show refinement in another activity because this one is beneath the
+                // sharesheet.
+                val activityIntent = Intent(this@ShareTestActivity, RefinementActivity::class.java)
+                activityIntent.putExtras(intent)
+                startActivity(activityIntent)
+            }
+        }
+
         registerReceiver(
             customActionReceiver,
             IntentFilter(CustomActionFactory.BROADCAST_ACTION),
             Context.RECEIVER_EXPORTED
         )
+
+        registerReceiver(
+            refinementReceiver,
+            IntentFilter(REFINEMENT_ACTION),
+            Context.RECEIVER_EXPORTED)
 
         richText = requireViewById(R.id.use_rich_text)
         albumCheck = requireViewById(R.id.album_text)
@@ -95,7 +111,7 @@ class ShareTestActivity : Activity() {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
         }
-        metadata = requireViewById<EditText>(R.id.metadata)
+        metadata = requireViewById(R.id.metadata)
 
         textSelection = requireViewById<RadioGroup>(R.id.text_selection).apply {
             check(R.id.short_text)
@@ -281,6 +297,17 @@ class ShareTestActivity : Activity() {
             chooserIntent.putExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION, modifyShareAction)
         }
 
+        if (requireViewById<CheckBox>(R.id.use_refinement).isChecked) {
+            val refinementIntentSender = PendingIntent.getBroadcast(
+                this,
+                1,
+                Intent(REFINEMENT_ACTION).setPackage(getPackageName()),
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+            ).intentSender
+            chooserIntent.putExtra(
+                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER, refinementIntentSender)
+        }
+
         when (requireViewById<RadioGroup>(R.id.action_selection).checkedRadioButtonId) {
             R.id.one_action -> chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS, customActionFactory.getCustomActions(1)
@@ -381,6 +408,11 @@ class ShareTestActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(customActionReceiver)
+        unregisterReceiver(refinementReceiver)
+    }
+
+    companion object {
+        const val REFINEMENT_ACTION = "com.android.sharetest.REFINEMENT"
     }
 }
 
