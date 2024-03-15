@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/rect';
 import {Transform} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
@@ -26,7 +27,10 @@ class RectSfFactory {
   makeDisplayRects(displays: readonly PropertyTreeNode[]): TraceRect[] {
     const nameCounts = new Map<string, number>();
     return displays.map((display, index) => {
-      const size = display.getChildByName('size');
+      const layerStackSpaceRect = assertDefined(
+        display.getChildByName('layerStackSpaceRect'),
+      );
+      const displayRect = Rect.from(layerStackSpaceRect);
       const layerStack = assertDefined(
         display.getChildByName('layerStack'),
       ).getValue();
@@ -43,10 +47,10 @@ class RectSfFactory {
       }
 
       return new TraceRectBuilder()
-        .setX(0)
-        .setY(0)
-        .setWidth(size?.getChildByName('w')?.getValue() ?? 0)
-        .setHeight(size?.getChildByName('h')?.getValue() ?? 0)
+        .setX(displayRect.x)
+        .setY(displayRect.y)
+        .setWidth(displayRect.w)
+        .setHeight(displayRect.h)
         .setId(`Display - ${id}`)
         .setName(displayName)
         .setCornerRadius(0)
@@ -69,23 +73,15 @@ class RectSfFactory {
       layer.getEagerPropertyByName('isComputedVisible'),
     ).getValue();
 
-    const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
-
     const name = assertDefined(layer.getEagerPropertyByName('name')).getValue();
-    const boundsLeft = assertDefined(bounds.getChildByName('left')).getValue();
-    const boundsTop = assertDefined(bounds.getChildByName('top')).getValue();
-    const boundsRight = assertDefined(
-      bounds.getChildByName('right'),
-    ).getValue();
-    const boundsBottom = assertDefined(
-      bounds.getChildByName('bottom'),
-    ).getValue();
+    const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
+    const boundsRect = Rect.from(bounds);
 
     return new TraceRectBuilder()
-      .setX(boundsLeft)
-      .setY(boundsTop)
-      .setWidth(boundsRight - boundsLeft)
-      .setHeight(boundsBottom - boundsTop)
+      .setX(boundsRect.x)
+      .setY(boundsRect.y)
+      .setWidth(boundsRect.w)
+      .setHeight(boundsRect.h)
       .setId(
         `${assertDefined(
           layer.getEagerPropertyByName('id'),
