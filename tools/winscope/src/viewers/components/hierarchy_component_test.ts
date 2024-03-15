@@ -16,11 +16,13 @@
 import {CommonModule} from '@angular/common';
 import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TreeComponent} from 'viewers/components/tree_component';
@@ -49,6 +51,7 @@ describe('HierarchyComponent', () => {
         MatInputModule,
         MatFormFieldModule,
         BrowserAnimationsModule,
+        FormsModule,
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -58,18 +61,19 @@ describe('HierarchyComponent', () => {
     htmlElement = fixture.nativeElement;
 
     component.tree = new HierarchyTreeBuilder()
+      .setStableId('RootNode1')
       .setName('Root node')
       .setChildren([new HierarchyTreeBuilder().setName('Child node').build()])
       .build();
 
     component.store = new PersistentStore();
     component.userOptions = {
-      onlyVisible: {
-        name: 'Only visible',
+      showDiff: {
+        name: 'Show diff',
         enabled: false,
+        isUnavailable: false,
       },
     };
-    component.pinnedItems = [component.tree];
 
     fixture.detectChanges();
   });
@@ -86,12 +90,72 @@ describe('HierarchyComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
+    const box = htmlElement.querySelector('.view-controls input');
+    expect(box).toBeTruthy(); //renders at least one view control option
   });
 
-  it('renders initial tree elements', async () => {
+  it('disables checkboxes if option unavailable', () => {
+    let box = htmlElement.querySelector('.view-controls input');
+    expect(box).toBeTruthy();
+    expect((box as HTMLInputElement).disabled).toBeFalse();
+
+    component.userOptions['showDiff'].isUnavailable = true;
+    fixture.detectChanges();
+    box = htmlElement.querySelector('.view-controls input');
+    expect((box as HTMLInputElement).disabled).toBeTrue();
+  });
+
+  it('updates tree on user option checkbox change', () => {
+    const box = htmlElement.querySelector('.view-controls input');
+    expect(box).toBeTruthy();
+
+    const spy = spyOn(component, 'updateTree');
+    (box as HTMLInputElement).checked = true;
+    (box as HTMLInputElement).dispatchEvent(new Event('click'));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('renders initial tree elements', () => {
     const treeView = htmlElement.querySelector('tree-view');
     expect(treeView).toBeTruthy();
-    expect(treeView!.innerHTML).toContain('Root node');
-    expect(treeView!.innerHTML).toContain('Child node');
+    expect(assertDefined(treeView).innerHTML).toContain('Root node');
+    expect(assertDefined(treeView).innerHTML).toContain('Child node');
+  });
+
+  it('renders pinned nodes', () => {
+    const pinnedNodesDiv = htmlElement.querySelector('.pinned-items');
+    expect(pinnedNodesDiv).toBeFalsy();
+
+    component.pinnedItems = [assertDefined(component.tree)];
+    fixture.detectChanges();
+    const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
+    expect(pinnedNodeEl).toBeTruthy();
+  });
+
+  it('handles pinned node click', () => {
+    component.pinnedItems = [assertDefined(component.tree)];
+    fixture.detectChanges();
+    const pinnedNodeEl = htmlElement.querySelector('.pinned-items tree-node');
+    expect(pinnedNodeEl).toBeTruthy();
+
+    const propertyTreeChangeSpy = spyOn(component, 'onSelectedTreeChange');
+    const highlightedChangeSpy = spyOn(component, 'onHighlightedItemChange');
+    (pinnedNodeEl as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(propertyTreeChangeSpy).toHaveBeenCalled();
+    expect(highlightedChangeSpy).toHaveBeenCalled();
+  });
+
+  it('handles change in filter', () => {
+    const inputEl = htmlElement.querySelector('.title-filter input');
+    expect(inputEl).toBeTruthy();
+
+    const spy = spyOn(component, 'filterTree');
+    (inputEl as HTMLInputElement).value = 'Root';
+    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+    expect(component.filterString).toBe('Root');
   });
 });

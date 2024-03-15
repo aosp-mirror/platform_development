@@ -28,14 +28,14 @@ import {UiData} from './ui_data';
         class="rects-view"
         title="Layers"
         [rects]="inputData?.rects ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displayIds]="inputData?.displayIds ?? []"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
         [tree]="inputData?.tree ?? null"
         [dependencies]="inputData?.dependencies ?? []"
-        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
@@ -44,7 +44,9 @@ import {UiData} from './ui_data';
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
+        [highlightedProperty]="inputData?.highlightedProperty ?? ''"
+        [selectedItem]="inputData?.selectedLayer ?? {}"
+        [traceType]="${TraceType.SURFACE_FLINGER}"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
         [isProtoDump]="true"></properties-view>
     </div>

@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
-import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Timestamp, TimestampType} from 'common/time';
+import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/trace';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {AbstractParser} from './abstract_parser';
@@ -79,6 +85,33 @@ class ParserSurfaceFlinger extends AbstractParser {
       timestampType === TimestampType.ELAPSED /*useElapsedTime*/,
       entryProto.excludesCompositionState ?? false
     );
+  }
+
+  override customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, () => {
+        const result = this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .map((entry) => {
+            return BigInt(entry.vsyncId.toString()); // convert Long to bigint
+          });
+        return Promise.resolve(result);
+      })
+      .visit(CustomQueryType.SF_LAYERS_ID_AND_NAME, () => {
+        const result: Array<{id: number; name: string}> = [];
+        this.decodedEntries
+          .slice(entriesRange.start, entriesRange.end)
+          .forEach((entry: LayerTraceEntry) => {
+            entry.layers.layers.forEach((layer: any) => {
+              result.push({id: layer.id, name: layer.name});
+            });
+          });
+        return Promise.resolve(result);
+      })
+      .getResult();
   }
 
   private realToElapsedTimeOffsetNs: undefined | bigint;

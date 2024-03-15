@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
+import {Transition} from 'flickerlib/common';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Transition} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserTransitions', () => {

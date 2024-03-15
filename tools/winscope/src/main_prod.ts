@@ -16,6 +16,11 @@
 import {enableProdMode} from '@angular/core';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import {AppModule} from './app/app_module';
+import {globalConfig} from './common/global_config';
+
+globalConfig.set({
+  MODE: 'PROD',
+});
 
 enableProdMode();
 

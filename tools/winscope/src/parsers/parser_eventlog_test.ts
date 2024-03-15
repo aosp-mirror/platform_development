@@ -15,10 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {RealTimestamp, TimestampType} from 'common/time';
+import {CujEvent} from 'flickerlib/common';
 import {UnitTestUtils} from 'test/unit/utils';
-import {CujEvent} from 'trace/flickerlib/common';
 import {Parser} from 'trace/parser';
-import {RealTimestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 describe('ParserEventLog', () => {

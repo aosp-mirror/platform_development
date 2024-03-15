@@ -17,24 +17,28 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {FilterType, TreeUtils} from 'common/tree_utils';
-import {Point} from 'trace/flickerlib/common';
+import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
+import {FrameData, TraceType, ViewNode} from 'trace/trace_type';
+import {SurfaceFlingerUtils} from 'viewers/common/surface_flinger_utils';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
+import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
+import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 export class Presenter {
-  private viewCaptureTrace: Trace<object>;
+  private readonly traces: Traces;
+  private readonly surfaceFlingerTrace: Trace<object> | undefined;
+  private readonly viewCaptureTrace: Trace<object>;
+  private viewCapturePackageNames: string[] = [];
 
-  private selectedFrameData: any | undefined;
-  private previousFrameData: any | undefined;
+  private selectedFrameData: FrameData | undefined;
+  private previousFrameData: FrameData | undefined;
   private selectedHierarchyTree: HierarchyTreeNode | undefined;
 
   private uiData: UiData | undefined;
@@ -42,7 +46,7 @@ export class Presenter {
   private pinnedItems: HierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
 
-  private highlightedItems: string[] = [];
+  private highlightedItem: string = '';
 
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
@@ -87,25 +91,51 @@ export class Presenter {
   );
 
   constructor(
+    traceType: TraceType,
     traces: Traces,
     private readonly storage: Storage,
     private readonly notifyUiDataCallback: (data: UiData) => void
   ) {
-    this.viewCaptureTrace = assertDefined(traces.getTrace(TraceType.VIEW_CAPTURE));
+    this.traces = traces;
+    this.viewCaptureTrace = assertDefined(traces.getTrace(traceType));
+    this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    const entry = TraceEntryFinder.findCorrespondingEntry(this.viewCaptureTrace, position);
+  async onAppEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async (event) => {
+      await this.initializeIfNeeded();
 
-    let prevEntry: typeof entry;
-    if (entry && entry.getIndex() > 0) {
-      prevEntry = this.viewCaptureTrace.getEntry(entry.getIndex() - 1);
-    }
+      const vcEntry = TraceEntryFinder.findCorrespondingEntry(
+        this.viewCaptureTrace,
+        event.position
+      );
+      let prevVcEntry: typeof vcEntry;
+      if (vcEntry && vcEntry.getIndex() > 0) {
+        prevVcEntry = this.viewCaptureTrace.getEntry(vcEntry.getIndex() - 1);
+      }
 
-    this.selectedFrameData = await entry?.getValue();
-    this.previousFrameData = await prevEntry?.getValue();
+      this.selectedFrameData = await vcEntry?.getValue();
+      this.previousFrameData = await prevVcEntry?.getValue();
 
-    this.refreshUI();
+      if (this.uiData && this.surfaceFlingerTrace) {
+        const surfaceFlingerEntry = await TraceEntryFinder.findCorrespondingEntry(
+          this.surfaceFlingerTrace,
+          event.position
+        )?.getValue();
+        if (surfaceFlingerEntry) {
+          this.uiData.sfRects = SurfaceFlingerUtils.makeRects(
+            surfaceFlingerEntry,
+            this.viewCapturePackageNames,
+            this.hierarchyUserOptions
+          );
+        }
+      }
+      this.refreshUI();
+    });
+  }
+
+  private async initializeIfNeeded() {
+    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(this.traces);
   }
 
   private refreshUI() {
@@ -114,42 +144,51 @@ export class Presenter {
     if (!this.selectedHierarchyTree && tree) {
       this.selectedHierarchyTree = tree;
     }
+    let selectedViewNode: any | null = null;
+    if (this.selectedHierarchyTree?.name && this.selectedFrameData?.node) {
+      selectedViewNode = this.findViewNode(
+        this.selectedHierarchyTree.name,
+        this.selectedFrameData.node
+      );
+    }
 
     this.uiData = new UiData(
-      this.generateRectangles(),
+      this.generateViewCaptureUiRects(),
+      this.uiData?.sfRects,
       tree,
       this.hierarchyUserOptions,
       this.propertiesUserOptions,
       this.pinnedItems,
-      this.highlightedItems,
-      this.getTreeWithTransformedProperties(this.selectedHierarchyTree)
+      this.highlightedItem,
+      this.getTreeWithTransformedProperties(this.selectedHierarchyTree),
+      selectedViewNode
     );
+
     this.notifyUiDataCallback(this.uiData);
   }
 
-  private generateRectangles(): Rectangle[] {
-    const rectangles: Rectangle[] = [];
+  private generateViewCaptureUiRects(): UiRect[] {
+    const rectangles: UiRect[] = [];
 
     function inner(node: any /* ViewNode */) {
-      const aRectangle: Rectangle = {
-        topLeft: new Point(node.boxPos.left, node.boxPos.top),
-        bottomRight: new Point(
-          node.boxPos.left + node.boxPos.width,
-          node.boxPos.top + node.boxPos.height
-        ),
+      const aUiRect: UiRect = {
+        x: node.boxPos.left,
+        y: node.boxPos.top,
+        w: node.boxPos.width,
+        h: node.boxPos.height,
         label: '',
-        transform: null,
+        transform: undefined,
         isVisible: node.isVisible,
         isDisplay: false,
-        ref: {},
         id: node.id,
         displayId: 0,
         isVirtual: false,
         isClickable: true,
         cornerRadius: 0,
         depth: node.depth,
+        hasContent: node.isVisible,
       };
-      rectangles.push(aRectangle);
+      rectangles.push(aUiRect);
       node.children.forEach((it: any) /* ViewNode */ => inner(it));
     }
     if (this.selectedFrameData?.node) {
@@ -204,18 +243,17 @@ export class Presenter {
     }
   }
 
-  updateHighlightedItems(id: string) {
-    if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
+  updateHighlightedItem(id: string) {
+    if (this.highlightedItem === id) {
+      this.highlightedItem = '';
     } else {
-      this.highlightedItems = [];
-      this.highlightedItems.push(id);
+      this.highlightedItem = id;
     }
-    this.uiData!!.highlightedItems = this.highlightedItems;
+    this.uiData!!.highlightedItem = this.highlightedItem;
     this.copyUiDataAndNotifyView();
   }
 
-  updateHierarchyTree(userOptions: any) {
+  updateHierarchyTree(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData!!.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData!!.tree = this.generateTree();
@@ -241,6 +279,10 @@ export class Presenter {
 
   newPropertiesTree(selectedItem: HierarchyTreeNode) {
     this.selectedHierarchyTree = selectedItem;
+    this.uiData!!.selectedViewNode = this.findViewNode(
+      selectedItem.name,
+      this.selectedFrameData.node
+    );
     this.updateSelectedTreeUiData();
   }
 
@@ -251,7 +293,23 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  private getTreeWithTransformedProperties(selectedTree: any): PropertiesTreeNode | null {
+  private findViewNode(name: string, root: ViewNode): ViewNode | null {
+    if (name === root.name) {
+      return root;
+    } else {
+      for (let i = 0; i < root.children.length; i++) {
+        const subTreeSearch = this.findViewNode(name, root.children[i]);
+        if (subTreeSearch != null) {
+          return subTreeSearch;
+        }
+      }
+    }
+    return null;
+  }
+
+  private getTreeWithTransformedProperties(
+    selectedTree: HierarchyTreeNode | undefined
+  ): PropertiesTreeNode | null {
     if (!selectedTree) {
       return null;
     }

@@ -16,6 +16,7 @@
 const {merge} = require('webpack-merge');
 const configCommon = require('./webpack.config.common');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 const configDev = {
   mode: 'development',
@@ -25,11 +26,31 @@ const configDev = {
     app: './src/main_dev.ts',
   },
   devtool: 'source-map',
+
+  externals: {
+    fs: 'fs',
+    path: 'path',
+    crypto: 'crypto',
+  },
+
+  node: {
+    global: false,
+    __filename: false,
+    __dirname: false,
+  },
+
   plugins: [
     new HtmlWebpackPlugin({
       template: 'src/index.html',
       inject: 'body',
       inlineSource: '.(css|js)$',
+    }),
+    new CopyPlugin({
+      patterns: [
+        'deps_build/trace_processor/to_be_served/trace_processor.wasm',
+        'deps_build/trace_processor/to_be_served/engine_bundle.js',
+        {from: 'src/adb/winscope_proxy.py', to: 'winscope_proxy.py'},
+      ],
     }),
   ],
 };

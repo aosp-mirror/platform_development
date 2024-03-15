@@ -28,7 +28,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
           class="hierarchy-view"
           [tree]="inputData?.tree ?? null"
           [dependencies]="inputData?.dependencies ?? []"
-          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"
@@ -39,6 +39,7 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
 
           <ime-additional-properties
             class="ime-additional-properties"
+            [highlightedItem]="inputData?.highlightedItem"
             [additionalProperties]="inputData?.additionalProperties!"></ime-additional-properties>
         </ng-container>
       </div>

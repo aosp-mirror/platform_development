@@ -6,7 +6,6 @@
    "linker_set_key" : "_ZTIA0_c",
    "name" : "char[0]",
    "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIA0_c",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   },
   {
@@ -14,7 +13,6 @@
    "linker_set_key" : "_ZTIA0_i",
    "name" : "int[0]",
    "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIA0_i",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   }
  ],
@@ -26,8 +24,6 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIc",
    "name" : "char",
-   "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIc",
    "size" : 1
   },
   {
@@ -35,15 +31,11 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -105,8 +97,6 @@
    "linker_set_key" : "_ZTI10ChangeType",
    "name" : "ChangeType",
    "record_kind" : "union",
-   "referenced_type" : "_ZTI10ChangeType",
-   "self_type" : "_ZTI10ChangeType",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   },
@@ -136,8 +126,6 @@
    ],
    "linker_set_key" : "_ZTI18ChangeTypeInStruct",
    "name" : "ChangeTypeInStruct",
-   "referenced_type" : "_ZTI18ChangeTypeInStruct",
-   "self_type" : "_ZTI18ChangeTypeInStruct",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   },
@@ -157,8 +145,6 @@
    "linker_set_key" : "_ZTI4Swap",
    "name" : "Swap",
    "record_kind" : "union",
-   "referenced_type" : "_ZTI4Swap",
-   "self_type" : "_ZTI4Swap",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   },
@@ -178,8 +164,6 @@
    "linker_set_key" : "_ZTI6Rename",
    "name" : "Rename",
    "record_kind" : "union",
-   "referenced_type" : "_ZTI6Rename",
-   "self_type" : "_ZTI6Rename",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/union/include/base.h"
   }

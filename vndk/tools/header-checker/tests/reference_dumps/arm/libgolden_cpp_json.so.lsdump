@@ -6,8 +6,6 @@
    "alignment" : 4,
    "linker_set_key" : "_ZTIf",
    "name" : "float",
-   "referenced_type" : "_ZTIf",
-   "self_type" : "_ZTIf",
    "size" : 4
   },
   {
@@ -15,8 +13,6 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
@@ -25,15 +21,11 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIj",
    "name" : "unsigned int",
-   "referenced_type" : "_ZTIj",
-   "self_type" : "_ZTIj",
    "size" : 4
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -104,8 +96,6 @@
    ],
    "linker_set_key" : "_ZTIN12SuperSpeaker6VolumeE",
    "name" : "SuperSpeaker::Volume",
-   "referenced_type" : "_ZTIN12SuperSpeaker6VolumeE",
-   "self_type" : "_ZTIN12SuperSpeaker6VolumeE",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
    "underlying_type" : "_ZTIj"
@@ -230,7 +220,6 @@
    "linker_set_key" : "_ZTIP12SuperSpeaker",
    "name" : "SuperSpeaker *",
    "referenced_type" : "_ZTI12SuperSpeaker",
-   "self_type" : "_ZTIP12SuperSpeaker",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
@@ -239,7 +228,6 @@
    "linker_set_key" : "_ZTIP16LowVolumeSpeaker",
    "name" : "LowVolumeSpeaker *",
    "referenced_type" : "_ZTI16LowVolumeSpeaker",
-   "self_type" : "_ZTIP16LowVolumeSpeaker",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
@@ -248,7 +236,6 @@
    "linker_set_key" : "_ZTIP17HighVolumeSpeaker",
    "name" : "HighVolumeSpeaker *",
    "referenced_type" : "_ZTI17HighVolumeSpeaker",
-   "self_type" : "_ZTIP17HighVolumeSpeaker",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
@@ -257,7 +244,6 @@
    "linker_set_key" : "_ZTIPf",
    "name" : "float *",
    "referenced_type" : "_ZTIf",
-   "self_type" : "_ZTIPf",
    "size" : 4,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   }
@@ -279,8 +265,6 @@
    "linker_set_key" : "_ZTI12SuperSpeaker",
    "name" : "SuperSpeaker",
    "record_kind" : "class",
-   "referenced_type" : "_ZTI12SuperSpeaker",
-   "self_type" : "_ZTI12SuperSpeaker",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
    "vtable_components" :
@@ -334,8 +318,6 @@
    "linker_set_key" : "_ZTI16LowVolumeSpeaker",
    "name" : "LowVolumeSpeaker",
    "record_kind" : "class",
-   "referenced_type" : "_ZTI16LowVolumeSpeaker",
-   "self_type" : "_ZTI16LowVolumeSpeaker",
    "size" : 16,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
    "vtable_components" :
@@ -374,8 +356,6 @@
    "linker_set_key" : "_ZTI17HighVolumeSpeaker",
    "name" : "HighVolumeSpeaker",
    "record_kind" : "class",
-   "referenced_type" : "_ZTI17HighVolumeSpeaker",
-   "self_type" : "_ZTI17HighVolumeSpeaker",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
    "vtable_components" :

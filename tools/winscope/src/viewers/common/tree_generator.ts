@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FilterType, TreeNode} from 'common/tree_utils';
-import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
+import {FilterType, TreeUtilsNode} from 'common/tree_utils';
+import {ObjectFormatter} from 'flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {
   GPU_CHIP,
@@ -155,7 +155,7 @@ export class TreeGenerator {
     }
   }
 
-  private filterMatches(item?: TreeNode | null): boolean {
+  private filterMatches(item?: TreeUtilsNode | null): boolean {
     return this.filter(item) ?? false;
   }
 
@@ -184,11 +184,16 @@ export class TreeGenerator {
   }
 
   private addChips(tree: HierarchyTreeNode): HierarchyTreeNode {
-    if (tree.hwcCompositionType === HwcCompositionType.CLIENT) {
+    if (
+      tree.hwcCompositionType === HwcCompositionType.CLIENT ||
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_CLIENT'
+    ) {
       tree.chips.push(GPU_CHIP);
     } else if (
       tree.hwcCompositionType === HwcCompositionType.DEVICE ||
-      tree.hwcCompositionType === HwcCompositionType.SOLID_COLOR
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_DEVICE' ||
+      tree.hwcCompositionType === HwcCompositionType.SOLID_COLOR ||
+      tree.hwcCompositionType?.toString() === 'HWC_TYPE_SOLID_COLOR'
     ) {
       tree.chips.push(HWC_CHIP);
     }

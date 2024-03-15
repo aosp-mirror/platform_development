@@ -20,9 +20,9 @@ import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
+import {RealTimestamp} from '../common/time';
 import {FrameMapBuilder} from './frame_map_builder';
 import {AbsoluteFrameIndex} from './index_types';
-import {RealTimestamp} from './timestamp';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
 

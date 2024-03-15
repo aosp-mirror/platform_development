@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {TabbedViewSwitched, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab extends View {
@@ -56,13 +60,6 @@ interface Tab extends View {
           </p>
         </a>
       </nav>
-      <button
-        color="primary"
-        mat-button
-        class="save-button"
-        (click)="downloadTracesButtonClick.emit()">
-        Download all traces
-      </button>
     </div>
     <mat-divider></mat-divider>
     <div class="trace-view-content"></div>
@@ -102,18 +99,16 @@ interface Tab extends View {
     `,
   ],
 })
-export class TraceViewComponent {
+export class TraceViewComponent implements WinscopeEventEmitter, WinscopeEventListener {
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
-  @Output() activeViewChanged = new EventEmitter<View>();
 
   TRACE_INFO = TRACE_INFO;
+  tabs: Tab[] = [];
 
   private elementRef: ElementRef;
-
-  tabs: Tab[] = [];
   private currentActiveTab: undefined | Tab;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
     this.elementRef = elementRef;
@@ -124,8 +119,25 @@ export class TraceViewComponent {
     this.renderViewsOverlay();
   }
 
-  onTabClick(tab: Tab) {
-    this.showTab(tab);
+  async onTabClick(tab: Tab) {
+    await this.showTab(tab);
+  }
+
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST, async (event) => {
+      const tab = this.tabs.find((tab) => tab.traceType === event.newFocusedViewId);
+      if (tab) {
+        await this.showTab(tab);
+      }
+    });
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  isCurrentActiveTab(tab: Tab) {
+    return tab === this.currentActiveTab;
   }
 
   private renderViewsTab() {
@@ -179,7 +191,7 @@ export class TraceViewComponent {
     });
   }
 
-  private showTab(tab: Tab) {
+  private async showTab(tab: Tab) {
     if (this.currentActiveTab) {
       this.currentActiveTab.htmlElement.style.display = 'none';
     }
@@ -198,10 +210,7 @@ export class TraceViewComponent {
     }
 
     this.currentActiveTab = tab;
-    this.activeViewChanged.emit(tab);
-  }
 
-  isCurrentActiveTab(tab: Tab) {
-    return tab === this.currentActiveTab;
+    await this.emitAppEvent(new TabbedViewSwitched(tab));
   }
 }

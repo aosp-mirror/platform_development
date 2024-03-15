@@ -334,6 +334,8 @@ def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | 
     commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
     commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
+    commands.append('# If the below `gdb-remote` fails, run the command manually, '
+                    + 'as it may have raced with lldbserver startup.')
     commands.append('gdb-remote {}'.format(str(port)))
     return '\n'.join(commands)
 
