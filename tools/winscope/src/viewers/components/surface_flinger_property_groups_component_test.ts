@@ -25,6 +25,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
@@ -57,6 +58,34 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   it('renders flags', () => {
     const flags = assertDefined(htmlElement.querySelector('.flags'));
     expect(flags.innerHTML).toMatch('Flags:.*HIDDEN \\(0x1\\)');
+  });
+
+  it('renders simple summary property', () => {
+    const summary = htmlElement.querySelectorAll('.summary').item(0);
+    expect(summary.textContent).toMatch(
+      'Invisible due to: reason 1, reason 2, reason 3',
+    );
+  });
+
+  it('renders interactive summary property', () => {
+    const summary = htmlElement.querySelectorAll('.summary').item(1);
+    expect(summary.textContent).toContain('Covered by:');
+    const button = assertDefined(
+      summary.querySelector('button'),
+    ) as HTMLButtonElement;
+    expect(button.textContent).toMatch('1');
+  });
+
+  it('emits highlighted id event', () => {
+    let id = '';
+    htmlElement.addEventListener(ViewerEvents.HighlightedIdChange, (event) => {
+      id = (event as CustomEvent).detail.id;
+    });
+    const button = assertDefined(
+      htmlElement.querySelector('.summary button'),
+    ) as HTMLButtonElement;
+    button.click();
+    expect(id).toEqual('1 coveringLayer');
   });
 
   it('displays calculated geometry', () => {
@@ -187,7 +216,19 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     });
 
     properties: SfCuratedProperties = {
-      summary: [],
+      summary: [
+        {key: 'Invisible due to', simpleValue: 'reason 1, reason 2, reason 3'},
+        {
+          key: 'Covered by',
+          layerValues: [
+            {
+              layerId: '1',
+              nodeId: '1 coveringLayer',
+              name: 'coveringLayer',
+            },
+          ],
+        },
+      ],
       flags: 'HIDDEN (0x1)',
       calcTransform: this.transformNode,
       calcCrop: EMPTY_OBJ_STRING,

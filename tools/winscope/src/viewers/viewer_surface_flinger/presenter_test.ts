@@ -271,14 +271,26 @@ describe('PresenterSurfaceFlinger', () => {
   it('sets properties tree and associated ui data from rect', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.propertiesTree).toBeUndefined();
-    const rect = assertDefined(uiData.rects.at(5));
+    const rect = assertDefined(uiData.rects.at(4));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
-    expect(propertiesTree.id).toEqual('62 ScreenDecorOverlay#62');
-    expect(propertiesTree.getAllChildren().length).toEqual(26);
-    expect(assertDefined(uiData.curatedProperties).flags).toEqual(
-      'SKIP_SCREENSHOT|ENABLE_BACKPRESSURE (0x140)',
-    );
+    expect(propertiesTree.id).toEqual('85 NavigationBar0#85');
+    expect(propertiesTree.getAllChildren().length).toEqual(28);
+
+    const curatedProperties = assertDefined(uiData.curatedProperties);
+    expect(curatedProperties.flags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+    expect(curatedProperties.summary).toEqual([
+      {
+        key: 'Covered by',
+        layerValues: [
+          {
+            layerId: '65',
+            nodeId: '65 ScreenDecorOverlayBottom#65',
+            name: 'ScreenDecorOverlayBottom#65',
+          },
+        ],
+      },
+    ]);
   });
 
   it('after highlighting a node, updates properties tree on position update', async () => {
