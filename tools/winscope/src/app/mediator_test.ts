@@ -31,6 +31,7 @@ import {
   AppTraceViewRequest,
   BuganizerAttachmentsDownloaded,
   BuganizerAttachmentsDownloadStart,
+  ExpandedTimelineToggled,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
@@ -217,6 +218,14 @@ describe('Mediator', () => {
     // and display error messages
     await mediator.onWinscopeEvent(new BuganizerAttachmentsDownloaded([]));
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalledTimes(1);
+  });
+
+  it('notifies overlay viewer of expanded timeline toggle change', async () => {
+    await loadFiles();
+    await loadTraceView();
+    const event = new ExpandedTimelineToggled(true);
+    await mediator.onWinscopeEvent(new ExpandedTimelineToggled(true));
+    expect(viewerOverlay.onWinscopeEvent).toHaveBeenCalledWith(event);
   });
 
   it('propagates trace position update', async () => {

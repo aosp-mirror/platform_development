@@ -35,6 +35,7 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {ExpandedTimelineToggled, WinscopeEvent} from 'messaging/winscope_event';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -121,17 +122,25 @@ describe('TimelineComponent', () => {
     );
     expect(expandedTimelineElement).toBeFalsy();
 
+    let isExpanded = false;
+    component.setEmitEvent(async (event: WinscopeEvent) => {
+      expect(event).toBeInstanceOf(ExpandedTimelineToggled);
+      isExpanded = (event as ExpandedTimelineToggled).isTimelineExpanded;
+    });
+
     button.dispatchEvent(new Event('click'));
     expandedTimelineElement = fixture.debugElement.query(
       By.directive(ExpandedTimelineComponent),
     );
     expect(expandedTimelineElement).toBeTruthy();
+    expect(isExpanded).toBeTrue();
 
     button.dispatchEvent(new Event('click'));
     expandedTimelineElement = fixture.debugElement.query(
       By.directive(ExpandedTimelineComponent),
     );
     expect(expandedTimelineElement).toBeFalsy();
+    expect(isExpanded).toBeFalse();
   });
 
   it('handles empty traces', () => {
