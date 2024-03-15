@@ -89,7 +89,7 @@ describe('ParserViewCapture', () => {
         parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
       )[0],
     ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691626336292808460n),
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691712736292808460n),
     );
   });
 

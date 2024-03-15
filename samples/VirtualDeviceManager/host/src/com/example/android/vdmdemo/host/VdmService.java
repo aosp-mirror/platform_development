@@ -130,15 +130,7 @@ public final class VdmService extends Hilt_VdmService {
     private VirtualDeviceManager mVirtualDeviceManager;
     private Consumer<Boolean> mLocalVirtualDeviceLifecycleListener;
 
-    private VirtualDeviceManager.VirtualDeviceListener mVirtualDeviceListener =
-            new VirtualDeviceManager.VirtualDeviceListener() {
-                @Override
-                public void onVirtualDeviceClosed(int deviceId) {
-                    if (mVirtualDevice != null && mVirtualDevice.getDeviceId() == deviceId) {
-                        closeVirtualDevice();
-                    }
-                }
-            };
+    private VirtualDeviceManager.VirtualDeviceListener mVirtualDeviceListener;
 
     private final DisplayManager.DisplayListener mDisplayListener =
             new DisplayManager.DisplayListener() {
@@ -235,14 +227,27 @@ public final class VdmService extends Hilt_VdmService {
 
         mVirtualDeviceManager =
                 Objects.requireNonNull(getSystemService(VirtualDeviceManager.class));
-        mVirtualDeviceManager.registerVirtualDeviceListener(
-                Executors.newSingleThreadExecutor(), mVirtualDeviceListener);
+
+        if (BuildCompat.isAtLeastV()) {
+            mVirtualDeviceListener = new VirtualDeviceManager.VirtualDeviceListener() {
+                @Override
+                public void onVirtualDeviceClosed(int deviceId) {
+                    if (mVirtualDevice != null && mVirtualDevice.getDeviceId() == deviceId) {
+                        closeVirtualDevice();
+                    }
+                }
+            };
+            mVirtualDeviceManager.registerVirtualDeviceListener(
+                    Executors.newSingleThreadExecutor(), mVirtualDeviceListener);
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mVirtualDeviceManager.unregisterVirtualDeviceListener(mVirtualDeviceListener);
+        if (BuildCompat.isAtLeastV()) {
+            mVirtualDeviceManager.unregisterVirtualDeviceListener(mVirtualDeviceListener);
+        }
         mPreferenceController.removePreferenceObserver(this);
         mConnectionManager.removeConnectionCallback(mConnectionCallback);
         closeVirtualDevice();
