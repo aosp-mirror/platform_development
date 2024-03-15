@@ -22,7 +22,7 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {ViewerViewCaptureComponent} from './viewer_view_capture_component';
 
-describe('ViewerSurfaceFlingerComponent', () => {
+describe('ViewerViewCaptureComponent', () => {
   let fixture: ComponentFixture<ViewerViewCaptureComponent>;
   let component: ViewerViewCaptureComponent;
   let htmlElement: HTMLElement;

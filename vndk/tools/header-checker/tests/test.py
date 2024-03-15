@@ -296,7 +296,7 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_internal_struct_access_upgraded(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp_internal_private_struct",
-            "libgolden_cpp_internal_public_struct", 0, [], True, True)
+            "libgolden_cpp_internal_public_struct", 4, [], True, True)
 
     def test_libgolden_cpp_internal_struct_access_downgraded(self):
         self.prepare_and_run_abi_diff_all_archs(

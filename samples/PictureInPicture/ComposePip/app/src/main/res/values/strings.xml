@@ -1,0 +1,4 @@
+<resources>
+  <string name="app_name">SamplePip</string>
+  <string name="start_pip_button">Enter Pip</string>
+</resources>

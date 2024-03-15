@@ -15,13 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
@@ -45,7 +45,7 @@ export function executePresenterInputMethodTests(
   describe('PresenterInputMethod', () => {
     let presenter: PresenterInputMethod;
     let uiData: ImeUiData;
-    let position: TracePosition;
+    let positionUpdate: TracePositionUpdate;
     let selectedTree: HierarchyTreeNode;
 
     beforeEach(async () => {
@@ -65,7 +65,7 @@ export function executePresenterInputMethodTests(
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(uiData.tree).toBeFalsy();
 
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(uiData.tree).toBeFalsy();
@@ -73,7 +73,7 @@ export function executePresenterInputMethodTests(
 
     it('is robust to traces without SF', async () => {
       await setUpTestEnvironment([imeTraceType, TraceType.WINDOW_MANAGER]);
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
@@ -81,7 +81,7 @@ export function executePresenterInputMethodTests(
 
     it('is robust to traces without WM', async () => {
       await setUpTestEnvironment([imeTraceType, TraceType.SURFACE_FLINGER]);
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
@@ -89,14 +89,14 @@ export function executePresenterInputMethodTests(
 
     it('is robust to traces without WM and SF', async () => {
       await setUpTestEnvironment([imeTraceType]);
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
     });
 
     it('processes trace position updates', async () => {
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
@@ -113,11 +113,11 @@ export function executePresenterInputMethodTests(
       expect(uiData.pinnedItems).toContain(pinnedItem);
     });
 
-    it('can update highlighted items', () => {
-      expect(uiData.highlightedItems).toEqual([]);
+    it('can update highlighted item', () => {
+      expect(uiData.highlightedItem).toEqual('');
       const id = 'entry';
-      presenter.updateHighlightedItems(id);
-      expect(uiData.highlightedItems).toContain(id);
+      presenter.updateHighlightedItem(id);
+      expect(uiData.highlightedItem).toBe(id);
     });
 
     it('can update hierarchy tree', async () => {
@@ -138,7 +138,7 @@ export function executePresenterInputMethodTests(
       };
 
       let expectedChildren = expectHierarchyTreeWithSfSubtree ? 2 : 1;
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       expect(uiData.tree?.children.length).toEqual(expectedChildren);
 
       // Filter out non-visible child
@@ -165,7 +165,7 @@ export function executePresenterInputMethodTests(
       };
 
       const expectedChildren = expectHierarchyTreeWithSfSubtree ? 12 : 1;
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       presenter.updateHierarchyTree(userOptions);
       expect(uiData.tree?.children.length).toEqual(expectedChildren);
 
@@ -175,14 +175,14 @@ export function executePresenterInputMethodTests(
     });
 
     it('can set new properties tree and associated ui data', async () => {
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       presenter.newPropertiesTree(selectedTree);
       // does not check specific tree values as tree transformation method may change
       expect(uiData.propertiesTree).toBeTruthy();
     });
 
     it('can filter properties tree', async () => {
-      await presenter.onTracePositionUpdate(position);
+      await presenter.onAppEvent(positionUpdate);
       presenter.newPropertiesTree(selectedTree);
       let nonTerminalChildren =
         uiData.propertiesTree?.children?.filter(
@@ -199,7 +199,7 @@ export function executePresenterInputMethodTests(
       expect(nonTerminalChildren.length).toEqual(expectedChildren[1]);
     });
 
-    const setUpTestEnvironment = async (traceTypes: TraceType[]) => {
+    async function setUpTestEnvironment(traceTypes: TraceType[]) {
       const traces = new Traces();
       const entries = await UnitTestUtils.getImeTraceEntries();
 
@@ -213,12 +213,11 @@ export function executePresenterInputMethodTests(
 
       presenter = createPresenter(traces);
 
-      position = TracePosition.fromTraceEntry(
-        assertDefined(traces.getTrace(imeTraceType)).getEntry(0)
-      );
-    };
+      const entry = assertDefined(traces.getTrace(imeTraceType)).getEntry(0);
+      positionUpdate = TracePositionUpdate.fromTraceEntry(entry);
+    }
 
-    const createPresenter = (traces: Traces): PresenterInputMethod => {
+    function createPresenter(traces: Traces): PresenterInputMethod {
       return new PresenterInputMethod(
         traces,
         new MockStorage(),
@@ -227,6 +226,6 @@ export function executePresenterInputMethodTests(
           uiData = newData;
         }
       );
-    };
+    }
   });
 }

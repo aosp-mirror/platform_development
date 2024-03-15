@@ -17,8 +17,8 @@
 import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TRACE_INFO} from 'app/trace_info';
-import {UserNotificationListener} from 'interfaces/user_notification_listener';
-import {ParserError, ParserErrorType} from 'parsers/parser_factory';
+import {UserNotificationListener} from 'messaging/user_notification_listener';
+import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
 import {SnackBarComponent} from './snack_bar_component';
 
 @Injectable({providedIn: 'root'})
@@ -28,7 +28,7 @@ export class SnackBarOpener implements UserNotificationListener {
     @Inject(MatSnackBar) private snackBar: MatSnackBar
   ) {}
 
-  onParserErrors(errors: ParserError[]) {
+  onErrors(errors: WinscopeError[]) {
     const messages = this.convertErrorsToMessages(errors);
 
     if (messages.length === 0) {
@@ -45,7 +45,7 @@ export class SnackBarOpener implements UserNotificationListener {
     });
   }
 
-  private convertErrorsToMessages(errors: ParserError[]): string[] {
+  private convertErrorsToMessages(errors: WinscopeError[]): string[] {
     const messages: string[] = [];
     const groups = this.groupErrorsByType(errors);
 
@@ -66,37 +66,39 @@ export class SnackBarOpener implements UserNotificationListener {
     return messages;
   }
 
-  private convertErrorToMessage(error: ParserError): string {
+  private convertErrorToMessage(error: WinscopeError): string {
     const fileName = error.trace !== undefined ? error.trace : '<no file name>';
-    const traceTypeName =
-      error.traceType !== undefined ? TRACE_INFO[error.traceType].name : '<unknown>';
+    const traceTypeInfo =
+      error.traceType !== undefined ? ` of type ${TRACE_INFO[error.traceType].name}` : '';
 
     switch (error.type) {
-      case ParserErrorType.NO_INPUT_FILES:
-        return 'No input files';
-      case ParserErrorType.UNSUPPORTED_FORMAT:
+      case WinscopeErrorType.CORRUPTED_ARCHIVE:
+        return `${fileName}: corrupted archive`;
+      case WinscopeErrorType.NO_INPUT_FILES:
+        return `Input doesn't contain trace files`;
+      case WinscopeErrorType.UNSUPPORTED_FILE_FORMAT:
         return `${fileName}: unsupported file format`;
-      case ParserErrorType.OVERRIDE: {
-        return `${fileName}: overridden by another trace of type ${traceTypeName}`;
+      case WinscopeErrorType.FILE_OVERRIDDEN: {
+        return `${fileName}: overridden by another trace${traceTypeInfo}`;
       }
       default:
         return `${fileName}: unknown error occurred`;
     }
   }
 
-  private makeCroppedMessage(type: ParserErrorType, count: number): string {
+  private makeCroppedMessage(type: WinscopeErrorType, count: number): string {
     switch (type) {
-      case ParserErrorType.OVERRIDE:
+      case WinscopeErrorType.FILE_OVERRIDDEN:
         return `... (cropped ${count} overridden trace messages)`;
-      case ParserErrorType.UNSUPPORTED_FORMAT:
+      case WinscopeErrorType.UNSUPPORTED_FILE_FORMAT:
         return `... (cropped ${count} unsupported file format messages)`;
       default:
         return `... (cropped ${count} unknown error messages)`;
     }
   }
 
-  private groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
-    const groups = new Map<ParserErrorType, ParserError[]>();
+  private groupErrorsByType(errors: WinscopeError[]): Map<WinscopeErrorType, WinscopeError[]> {
+    const groups = new Map<WinscopeErrorType, WinscopeError[]>();
 
     errors.forEach((error) => {
       if (groups.get(error.type) === undefined) {

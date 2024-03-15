@@ -17,12 +17,27 @@ import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Transactions', () => {
-  beforeAll(async () => {
-    browser.manage().timeouts().implicitlyWait(1000);
+  beforeEach(async () => {
+    browser.manage().timeouts().implicitlyWait(5000);
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
-  it('processes trace and renders view', async () => {
+
+  it('processes perfetto trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture('traces/perfetto/transactions_trace.perfetto-trace');
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
+
+    const isViewerRendered = await element(by.css('viewer-transactions')).isPresent();
+    expect(isViewerRendered).toBeTruthy();
+
+    const isFirstEntryRendered = await element(
+      by.css('viewer-transactions .scroll .entry')
+    ).isPresent();
+    expect(isFirstEntryRendered).toBeTruthy();
+  });
+
+  it('processes legacy trace and renders view', async () => {
     await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/Transactions.pb');
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
@@ -23,14 +23,21 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
 
 abstract class ViewerInputMethod implements Viewer {
+  protected htmlElement: HTMLElement;
+  protected presenter: PresenterInputMethod;
+
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-input-method');
     this.presenter = this.initialisePresenter(traces, storage);
     this.addViewerEventListeners();
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent() {
+    // do nothing
   }
 
   abstract getViews(): View[];
@@ -49,7 +56,7 @@ abstract class ViewerInputMethod implements Viewer {
       this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`)
+      this.presenter.updateHighlightedItem(`${(event as CustomEvent).detail.id}`)
     );
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
       this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)
@@ -72,9 +79,6 @@ abstract class ViewerInputMethod implements Viewer {
   }
 
   protected abstract initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethod;
-
-  protected htmlElement: HTMLElement;
-  protected presenter: PresenterInputMethod;
 }
 
 export {ViewerInputMethod};

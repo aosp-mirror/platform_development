@@ -24,8 +24,9 @@ import {
 } from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Trace} from 'trace/trace';
+import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';
 
 @Component({
@@ -39,7 +40,7 @@ import {LoadProgressComponent} from './load_progress_component';
         ref="drop-box"
         (dragleave)="onFileDragOut($event)"
         (dragover)="onFileDragIn($event)"
-        (drop)="onHandleFileDrop($event)"
+        (drop)="onFileDrop($event)"
         (click)="fileDropRef.click()">
         <input
           id="fileDropRef"
@@ -88,6 +89,9 @@ import {LoadProgressComponent} from './load_progress_component';
           color="primary"
           mat-raised-button
           class="load-btn"
+          matTooltip="Upload trace with an associated viewer to visualise"
+          [matTooltipDisabled]="hasLoadedFilesWithViewers()"
+          [disabled]="!hasLoadedFilesWithViewers()"
           (click)="onViewTracesButtonClick()">
           View traces
         </button>
@@ -96,7 +100,13 @@ import {LoadProgressComponent} from './load_progress_component';
           Upload another file
         </button>
 
-        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">Clear all</button>
+        <button
+          class="clear-all-btn"
+          color="primary"
+          mat-stroked-button
+          (click)="onClearButtonClick()">
+          Clear all
+        </button>
       </div>
     </mat-card>
   `,
@@ -228,7 +238,7 @@ export class UploadTracesComponent implements ProgressListener {
     e.stopPropagation();
   }
 
-  onHandleFileDrop(e: DragEvent) {
+  onFileDrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
@@ -241,6 +251,17 @@ export class UploadTracesComponent implements ProgressListener {
     event.stopPropagation();
     this.tracePipeline.removeTrace(trace);
     this.onOperationFinished();
+  }
+
+  hasLoadedFilesWithViewers(): boolean {
+    return this.ngZone.run(() => {
+      let hasFilesWithViewers = false;
+      this.tracePipeline.getTraces().forEachTrace((trace) => {
+        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) hasFilesWithViewers = true;
+      });
+
+      return hasFilesWithViewers;
+    });
   }
 
   private getInputFiles(event: Event): File[] {

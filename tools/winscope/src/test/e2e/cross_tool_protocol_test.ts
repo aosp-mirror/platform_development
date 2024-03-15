@@ -24,7 +24,7 @@ describe('Cross-Tool Protocol', () => {
 
   beforeAll(async () => {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
-    await browser.manage().timeouts().implicitlyWait(15000);
+    await browser.manage().timeouts().implicitlyWait(20000);
     await E2eTestUtils.checkServerIsUp('Remote tool mock', E2eTestUtils.REMOTE_TOOL_MOCK_URL);
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
   });

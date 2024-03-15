@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {FrameMap} from 'trace/frame_map';
-import {Timestamp} from 'trace/timestamp';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {TraceBuilder} from './trace_builder';

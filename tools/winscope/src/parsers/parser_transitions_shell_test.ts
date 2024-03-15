@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/time';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 describe('ShellFileParserTransitions', () => {
