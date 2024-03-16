@@ -240,6 +240,12 @@ export class LoadedParsers {
     }
 
     return newLegacyParsers.filter(({parser, file}) => {
+      // Only Shell Transition data used to set timestamps of merged Transition trace,
+      // so WM Transition data should not be considered by "old data" policy
+      if (parser.getTraceType() === TraceType.WM_TRANSITION) {
+        return true;
+      }
+
       const timestamps = parser.getTimestamps(commonTimestampType);
       if (!timestamps || timestamps.length === 0) {
         return true;

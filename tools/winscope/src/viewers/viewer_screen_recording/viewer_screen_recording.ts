@@ -56,6 +56,14 @@ class ViewerScreenRecording implements Viewer {
         ).currentTraceEntry = await entry?.getValue();
       },
     );
+    await event.visit(
+      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
+      async (event) => {
+        (
+          this.htmlElement as unknown as ViewerScreenRecordingComponent
+        ).forceMinimize = event.isTimelineExpanded;
+      },
+    );
   }
 
   setEmitEvent() {

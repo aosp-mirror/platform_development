@@ -78,6 +78,25 @@ describe('ViewerScreenRecordingComponent', () => {
     expect(videoContainer.style.height).toEqual('');
   });
 
+  it('forces minimized state', () => {
+    component.forceMinimize = true;
+    fixture.detectChanges();
+
+    const buttonMinimize = assertDefined(
+      htmlElement.querySelector('.button-minimize'),
+    ) as HTMLButtonElement;
+    const videoContainer = assertDefined(
+      htmlElement.querySelector('.video-container'),
+    ) as HTMLElement;
+    expect(videoContainer.style.height).toEqual('0px');
+    expect(buttonMinimize.disabled).toBeTrue();
+
+    component.forceMinimize = false;
+    fixture.detectChanges();
+    expect(videoContainer.style.height).toEqual('');
+    expect(buttonMinimize.disabled).toBeFalse();
+  });
+
   it('shows video', async () => {
     const videoFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',

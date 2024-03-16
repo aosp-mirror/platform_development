@@ -16,8 +16,20 @@
 
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
+export interface SfLayerSummary {
+  layerId: string;
+  nodeId: string;
+  name: string;
+}
+
+export interface SfSummaryProperty {
+  key: string;
+  simpleValue?: string;
+  layerValues?: SfLayerSummary[];
+}
+
 export interface SfCuratedProperties {
-  summary: Array<{key: string; value: string}>;
+  summary: SfSummaryProperty[];
   flags: string;
   calcTransform: PropertyTreeNode | undefined;
   calcCrop: string;

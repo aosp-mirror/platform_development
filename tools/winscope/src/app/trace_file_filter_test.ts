@@ -155,18 +155,32 @@ describe('TraceFileFilter', () => {
   describe('plain input (no bugreport)', () => {
     it('picks perfetto trace with .perfetto-trace extension', async () => {
       const perfettoTrace = makeTraceFile('file.perfetto-trace');
-      const result = await filter.filter([perfettoTrace], errorListener);
-      expect(result.perfetto).toEqual(perfettoTrace);
-      expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([]);
+      await checkPerfettoFilePickedWithoutErrors(perfettoTrace);
     });
 
     it('picks perfetto trace with .pftrace extension', async () => {
       const pftrace = makeTraceFile('file.pftrace');
-      const result = await filter.filter([pftrace], errorListener);
-      expect(result.perfetto).toEqual(pftrace);
-      expect(result.legacy).toEqual([]);
-      expect(errors).toEqual([]);
+      await checkPerfettoFilePickedWithoutErrors(pftrace);
+    });
+
+    it('picks perfetto trace with .perfetto extension', async () => {
+      const perfetto = makeTraceFile('file.perfetto');
+      await checkPerfettoFilePickedWithoutErrors(perfetto);
+    });
+
+    it('picks perfetto trace with .perfetto-trace.gz extension', async () => {
+      const perfettoTraceGz = makeTraceFile('file.perfetto-trace.gz');
+      await checkPerfettoFilePickedWithoutErrors(perfettoTraceGz);
+    });
+
+    it('picks perfetto trace with .pftrace.gz extension', async () => {
+      const pftraceGz = makeTraceFile('file.pftrace.gz');
+      await checkPerfettoFilePickedWithoutErrors(pftraceGz);
+    });
+
+    it('picks perfetto trace with .perfetto.gz extension', async () => {
+      const perfettoGz = makeTraceFile('file.perfetto.gz');
+      await checkPerfettoFilePickedWithoutErrors(perfettoGz);
     });
 
     it('picks largest perfetto trace', async () => {
@@ -181,6 +195,15 @@ describe('TraceFileFilter', () => {
         new TraceOverridden(medium.getDescriptor()),
       ]);
     });
+
+    async function checkPerfettoFilePickedWithoutErrors(
+      perfettoFile: TraceFile,
+    ) {
+      const result = await filter.filter([perfettoFile], errorListener);
+      expect(result.perfetto).toEqual(perfettoFile);
+      expect(result.legacy).toEqual([]);
+      expect(errors).toEqual([]);
+    }
   });
 
   function makeTraceFile(

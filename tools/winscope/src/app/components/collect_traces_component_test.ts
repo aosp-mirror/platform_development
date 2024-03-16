@@ -171,23 +171,22 @@ describe('CollectTracesComponent', () => {
     expect(el.innerHTML).toContain('screen_lock_portrait');
   });
 
-  it('auto detects changes in devices', (done) => {
+  it('auto detects changes in devices', async () => {
     const connect = assertDefined(component.connect);
     connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
-    expect(el.innerHTML).toContain('No devices detected');
+    expect(el.textContent).toContain('No devices detected');
 
     connect.devices = jasmine
       .createSpy()
       .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
 
-    setTimeout(() => {
-      expect(el.innerHTML).toContain('Pixel 6');
-      expect(el.innerHTML).toContain('smartphone');
-      done();
-    }, 1000);
+    await fixture.whenStable();
+    expect(el.textContent).toContain(
+      'Select a device: smartphone  Pixel 6 (35562)',
+    );
   });
 
   it('displays trace collection config elements', () => {

@@ -68,17 +68,26 @@ PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.con
 PERFETTO_SF_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy.surfaceflinger.conf'
 PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
 PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
-PERFETTO_UTILS = """
-function is_perfetto_data_source_available {
+PERFETTO_UNIQUE_SESSION_NAME = 'winscope proxy perfetto tracing'
+PERFETTO_UTILS = f"""
+function is_perfetto_data_source_available {{
     local data_source_name=$1
     if perfetto --query | grep $data_source_name 2>&1 >/dev/null; then
         return 0
     else
         return 1
     fi
-}
+}}
 
-function is_any_perfetto_data_source_available {
+function is_perfetto_tracing_session_running {{
+    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}}
+
+function is_any_perfetto_data_source_available {{
     if is_perfetto_data_source_available android.surfaceflinger.layers || \
        is_perfetto_data_source_available android.surfaceflinger.transactions || \
        is_perfetto_data_source_available com.android.wm.shell.transition || \
@@ -87,16 +96,16 @@ function is_any_perfetto_data_source_available {
     else
         return 1
     fi
-}
+}}
 
-function is_flag_set {
+function is_flag_set {{
     local flag_name=$1
     if dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
         return 0
     else
         return 1
     fi
-}
+}}
 """
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
@@ -346,7 +355,16 @@ duration_ms: 0
 flush_period_ms: 1000
 write_into_file: true
 max_file_size_bytes: 1000000000
+unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
+
+    if is_perfetto_tracing_session_running; then
+        perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
+        echo 'Stopped already-running winscope perfetto session'
+    fi
+
+    echo 'Concurrent Perfetto Sessions'
+    perfetto --query | sed -n '/^TRACING SESSIONS:$/,$p'
 
     rm -f {PERFETTO_TRACE_FILE}
     perfetto --out {PERFETTO_TRACE_FILE} --txt --config {PERFETTO_TRACE_CONFIG_FILE} --detach=WINSCOPE-PROXY-TRACING-SESSION

@@ -34,7 +34,7 @@ import {FrameMapper} from 'trace/frame_mapper';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {FilesSource} from './files_source';
 import {LoadedParsers} from './loaded_parsers';
 import {TraceFileFilter} from './trace_file_filter';
@@ -102,12 +102,15 @@ export class TracePipeline {
         this.traces.setTrace(trace.type, trace);
       });
 
-      const hasTransitionTrace = this.traces
-        .mapTrace((trace) => trace.type)
-        .some((type) => type === TraceType.TRANSITION);
+      const hasTransitionTrace = this.traces.getTrace(TraceType.TRANSITION);
       if (hasTransitionTrace) {
         this.traces.deleteTrace(TraceType.WM_TRANSITION);
         this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
+      }
+
+      const hasCujTrace = this.traces.getTrace(TraceType.CUJS);
+      if (hasCujTrace) {
+        this.traces.deleteTrace(TraceType.EVENT_LOG);
       }
     } finally {
       progressListener?.onOperationFinished();
@@ -121,6 +124,18 @@ export class TracePipeline {
 
   async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
     return this.loadedParsers.makeZipArchive();
+  }
+
+  filterTracesWithoutVisualization() {
+    const tracesWithoutVisualization = this.traces
+      .mapTrace((trace) => {
+        if (!TraceTypeUtils.canVisualizeTrace(trace.type)) {
+          return trace.type;
+        }
+        return undefined;
+      })
+      .filter((type) => type !== undefined) as TraceType[];
+    tracesWithoutVisualization.forEach((type) => this.traces.deleteTrace(type));
   }
 
   async buildTraces() {

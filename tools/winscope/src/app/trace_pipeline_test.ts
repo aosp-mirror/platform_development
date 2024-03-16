@@ -95,9 +95,9 @@ describe('TracePipeline', () => {
     );
   });
 
-  xit('can convert illegal uploaded archive filename to legal name for download archive', async () => {
+  it('can convert illegal uploaded archive filename to legal name for download archive', async () => {
     const fileWithIllegalName = await UnitTestUtils.getFixtureFile(
-      'traces/SF_trace&(*_with:_illegal+_characters.pb',
+      'traces/SFtrace(with_illegal_characters).pb',
     );
     await loadFiles([fileWithIllegalName]);
     await expectLoadResult(1, []);
@@ -368,6 +368,20 @@ describe('TracePipeline', () => {
 
     tracePipeline.clear();
     expect(tracePipeline.getTraces().getSize()).toEqual(0);
+  });
+
+  it('can filter traces without visualization', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles([validSfFile, shellTransitionFile]);
+    await expectLoadResult(2, []);
+
+    tracePipeline.filterTracesWithoutVisualization();
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+    expect(
+      tracePipeline.getTraces().getTrace(TraceType.SHELL_TRANSITION),
+    ).toBeUndefined();
   });
 
   async function loadFiles(

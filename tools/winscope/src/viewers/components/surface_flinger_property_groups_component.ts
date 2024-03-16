@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input} from '@angular/core';
+import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {inlineButtonStyle} from './styles/clickable_property.styles';
 
 @Component({
   selector: 'surface-flinger-property-groups',
@@ -29,11 +31,25 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
           &ngsp;
           {{ properties.flags }}
         </p>
-        <p *ngFor="let reason of properties.summary" class="mat-body-1">
-          <span class="mat-body-2">{{ reason.key }}:</span>
-          &ngsp;
-          {{ reason.value }}
-        </p>
+        <span *ngFor="let summaryProperty of properties.summary" class="mat-body-1 summary inline">
+          <span class="mat-body-2">{{ summaryProperty.key }}:</span>
+          <ng-container *ngIf="summaryProperty.simpleValue">
+            {{ summaryProperty.simpleValue }}
+          </ng-container>
+          <ng-container *ngIf="summaryProperty.layerValues">
+            &ngsp;
+            <ng-container *ngFor="let layer of summaryProperty.layerValues; index as i">
+              <button
+                mat-button
+                color="primary"
+                [matTooltip]="layer.name"
+                (click)="onIdClicked(layer.nodeId)">
+                {{ layer.layerId }}
+              </button>
+              {{(i === summaryProperty.layerValues.length - 1) ? '' : ', '}}
+            </ng-container>
+          </ng-container>
+        </span>
       </div>
     </div>
     <mat-divider></mat-divider>
@@ -273,10 +289,13 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
         color: gray;
       }
     `,
+    inlineButtonStyle,
   ],
 })
 export class SurfaceFlingerPropertyGroupsComponent {
   @Input() properties: SfCuratedProperties | undefined;
+
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   getTransformType(transformNode: UiPropertyTreeNode): string {
     const typeFlags = transformNode.formattedValue();
@@ -285,5 +304,13 @@ export class SurfaceFlingerPropertyGroupsComponent {
 
   getTransformMatrix(transformNode: UiPropertyTreeNode): UiPropertyTreeNode {
     return assertDefined(transformNode.getChildByName('matrix'));
+  }
+
+  onIdClicked(layerNodeId: string) {
+    const event = new CustomEvent(ViewerEvents.HighlightedIdChange, {
+      bubbles: true,
+      detail: {id: layerNodeId},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

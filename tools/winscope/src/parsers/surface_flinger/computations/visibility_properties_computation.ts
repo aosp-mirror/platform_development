@@ -102,7 +102,7 @@ export class VisibilityPropertiesComputation implements Computation {
               0)
           );
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       if (occludedBy.length > 0) {
         isVisible = false;
@@ -136,7 +136,7 @@ export class VisibilityPropertiesComputation implements Computation {
           }
           return !occludedBy.includes(this.getDefinedValue(other, 'id'));
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
@@ -156,7 +156,7 @@ export class VisibilityPropertiesComputation implements Computation {
           }
           return this.layerOverlaps(other, layer, displaySize);
         })
-        .map((other) => this.getDefinedValue(other, 'id'));
+        .map((other) => other.id);
 
       layer.addEagerProperty(
         DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(

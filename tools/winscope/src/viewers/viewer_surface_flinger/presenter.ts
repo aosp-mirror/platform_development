@@ -33,7 +33,11 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
-import {SfCuratedProperties} from 'viewers/common/curated_properties';
+import {
+  SfCuratedProperties,
+  SfLayerSummary,
+  SfSummaryProperty,
+} from 'viewers/common/curated_properties';
 import {DiffType} from 'viewers/common/diff_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
@@ -441,42 +445,41 @@ export class Presenter {
     return curated;
   }
 
-  private getSummaryOfVisibility(
-    tree: PropertyTreeNode,
-  ): Array<{key: string; value: string}> {
-    const summary = [];
+  private getSummaryOfVisibility(tree: PropertyTreeNode): SfSummaryProperty[] {
+    const summary: SfSummaryProperty[] = [];
     const visibilityReason = tree.getChildByName('visibilityReason');
     if (visibilityReason && visibilityReason.getAllChildren().length > 0) {
       const reason = this.mapNodeArrayToString(
         visibilityReason.getAllChildren(),
       );
-      summary.push({key: 'Invisible due to', value: reason});
+      summary.push({key: 'Invisible due to', simpleValue: reason});
     }
 
-    const occludedBy = tree.getChildByName('occludedBy');
-    if (occludedBy && occludedBy.getAllChildren().length > 0) {
+    const occludedBy = tree.getChildByName('occludedBy')?.getAllChildren();
+    if (occludedBy && occludedBy.length > 0) {
       summary.push({
         key: 'Occluded by',
-        value: this.mapNodeArrayToString(occludedBy.getAllChildren()),
+        layerValues: occludedBy.map((layer) => this.getLayerSummary(layer)),
       });
     }
 
-    const partiallyOccludedBy = tree.getChildByName('partiallyOccludedBy');
-    if (
-      partiallyOccludedBy &&
-      partiallyOccludedBy.getAllChildren().length > 0
-    ) {
+    const partiallyOccludedBy = tree
+      .getChildByName('partiallyOccludedBy')
+      ?.getAllChildren();
+    if (partiallyOccludedBy && partiallyOccludedBy.length > 0) {
       summary.push({
         key: 'Partially occluded by',
-        value: this.mapNodeArrayToString(partiallyOccludedBy.getAllChildren()),
+        layerValues: partiallyOccludedBy.map((layer) =>
+          this.getLayerSummary(layer),
+        ),
       });
     }
 
-    const coveredBy = tree.getChildByName('coveredBy');
-    if (coveredBy && coveredBy.getAllChildren().length > 0) {
+    const coveredBy = tree.getChildByName('coveredBy')?.getAllChildren();
+    if (coveredBy && coveredBy.length > 0) {
       summary.push({
         key: 'Covered by',
-        value: this.mapNodeArrayToString(coveredBy.getAllChildren()),
+        layerValues: coveredBy.map((layer) => this.getLayerSummary(layer)),
       });
     }
     return summary;
@@ -484,6 +487,16 @@ export class Presenter {
 
   private mapNodeArrayToString(nodes: readonly PropertyTreeNode[]): string {
     return nodes.map((reason) => reason.formattedValue()).join(', ');
+  }
+
+  private getLayerSummary(layer: PropertyTreeNode): SfLayerSummary {
+    const nodeId = layer.formattedValue();
+    const [layerId, name] = nodeId.split(' ');
+    return {
+      layerId,
+      nodeId,
+      name,
+    };
   }
 
   private getPixelPropertyValue(tree: PropertyTreeNode, label: string): string {
