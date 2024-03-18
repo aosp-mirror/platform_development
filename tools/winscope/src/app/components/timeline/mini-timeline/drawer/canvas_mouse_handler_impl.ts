@@ -120,13 +120,15 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   private getPos(e: MouseEvent): Point {
     let mouseX = e.offsetX;
     const mouseY = e.offsetY;
+    const padding = this.drawer.getPadding();
+    const width = this.drawer.getWidth();
 
-    if (mouseX < this.drawer.padding.left) {
-      mouseX = this.drawer.padding.left;
+    if (mouseX < padding.left) {
+      mouseX = padding.left;
     }
 
-    if (mouseX > this.drawer.getWidth() - this.drawer.padding.right) {
-      mouseX = this.drawer.getWidth() - this.drawer.padding.right;
+    if (mouseX > width - padding.right) {
+      mouseX = width - padding.right;
     }
 
     return {x: mouseX, y: mouseY};

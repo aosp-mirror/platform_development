@@ -370,7 +370,7 @@ export class MiniTimelineComponent {
 
     const zoomTo = new Transformer(
       zoomRange,
-      assertDefined(this.drawer).usableRange,
+      assertDefined(this.drawer).getUsableRange(),
     ).untransform(xPosInCanvas);
 
     if (event.deltaY < 0) {
@@ -386,7 +386,7 @@ export class MiniTimelineComponent {
     const fullRange = timelineData.getFullTimeRange();
     const zoomRange = timelineData.getZoomRange();
 
-    const usableRange = assertDefined(this.drawer).usableRange;
+    const usableRange = assertDefined(this.drawer).getUsableRange();
     const transformer = new Transformer(zoomRange, usableRange);
     const shiftAmount = transformer
       .untransform(usableRange.from + scrollAmount)
