@@ -30,6 +30,14 @@
         <item name="android:radioButtonStyle">@style/RadioButtonStyle</item>
     </style>
 
+    <style name="ShareTestDialog" parent="@android:style/Theme.DeviceDefault.Light">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+
     <style name="CheckBoxStyle" parent="android:Widget.CompoundButton.CheckBox">
         <item name="android:textSize">18sp</item>
     </style>
