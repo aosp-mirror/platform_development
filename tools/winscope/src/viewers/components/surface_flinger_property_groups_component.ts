@@ -288,6 +288,10 @@ import {inlineButtonStyle} from './styles/clickable_property.styles';
       .column-header {
         color: gray;
       }
+
+      .summary {
+        display: block;
+      }
     `,
     inlineButtonStyle,
   ],
