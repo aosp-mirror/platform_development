@@ -238,7 +238,7 @@ describe('RectsComputation', () => {
           {
             id: 1,
             layerStack: 0,
-            size: {w: 5, h: 5},
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
             transform: Transform.EMPTY,
             name: 'Test Display',
           },
@@ -277,7 +277,7 @@ describe('RectsComputation', () => {
           {
             id: 1,
             layerStack: 0,
-            size: {w: 5, h: 5},
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
             transform: Transform.EMPTY,
           },
         ],
