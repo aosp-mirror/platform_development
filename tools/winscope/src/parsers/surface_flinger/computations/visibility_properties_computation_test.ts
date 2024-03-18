@@ -487,6 +487,9 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getChildByName('0')
         ?.getValue(),
     ).toEqual('2 occludingLayer');
+    expect(
+      invisibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
+    ).toEqual([]);
 
     expect(
       assertDefined(
