@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -144,7 +144,7 @@ export class Presenter {
         );
         this.currentHierarchyTree = await entry?.getValue();
         if (entry) {
-          this.currentHierarchyTreeName = TimeUtils.format(
+          this.currentHierarchyTreeName = TimestampUtils.format(
             entry.getTimestamp(),
           );
         }
