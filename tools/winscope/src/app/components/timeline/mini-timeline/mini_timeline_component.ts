@@ -73,7 +73,7 @@ import {Transformer} from './transformer';
       }
       .zoom-control-wrapper {
         margin-top: -25px;
-        margin-left: -60px;
+        margin-left: -80px;
         padding-right: 30px;
       }
       .zoom-control {
@@ -85,6 +85,16 @@ import {Transformer} from './transformer';
       }
       .zoom-control slider {
         flex-grow: 1;
+      }
+      .zoom-buttons {
+        z-index: 20;
+        position: relative;
+        left: 120px;
+        display: flex;
+        background-color: #f8f9fa;
+      }
+      .zoom-buttons .mat-icon-button {
+        width: 28px;
       }
     `,
   ],

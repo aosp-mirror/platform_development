@@ -222,30 +222,23 @@ describe('TimelineComponent', () => {
       TraceType.WINDOW_MANAGER,
     ]);
 
-    // oldest trace to be selected is replaced (SF)
     component.activeViewTraceTypes = [TraceType.PROTO_LOG];
     expect(component.internalActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(component.selectedTraces).toEqual([
+      TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
     ]);
 
-    // setting active trace that is already selected causes it to become most recent selection
+    // setting active trace that is already selected does not affect selection
     component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
     expect(component.internalActiveTrace).toEqual(TraceType.TRANSACTIONS);
     expect(component.selectedTraces).toEqual([
+      TraceType.SURFACE_FLINGER,
+      TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
-      TraceType.TRANSACTIONS,
-    ]);
-
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
-    expect(component.selectedTraces).toEqual([
-      TraceType.PROTO_LOG,
-      TraceType.TRANSACTIONS,
-      TraceType.SURFACE_FLINGER,
     ]);
   });
 
@@ -263,97 +256,71 @@ describe('TimelineComponent', () => {
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
 
-  it('sorts selected traces correctly for display in selection trigger', () => {
+  it('updates trace selection using selector', async () => {
+    const allTraces = [
+      TraceType.SCREEN_RECORDING,
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+      TraceType.PROTO_LOG,
+    ];
     loadTracesForSelectorTest();
-
-    fixture.whenStable().then(() => {
-      let selectionTriggerIcons = Array.from(
-        htmlElement.querySelectorAll('.mat-select-trigger .mat-icon'),
-      );
-      expect(selectionTriggerIcons.length).toEqual(1);
-      expect(selectionTriggerIcons[0].innerHTML).toContain(
-        TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-      );
-
-      component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
-      selectionTriggerIcons = Array.from(
-        htmlElement.querySelectorAll('.mat-select-trigger mat-icon'),
-      );
-      expect(selectionTriggerIcons.length).toEqual(2);
-      expect(selectionTriggerIcons[0].innerHTML).toContain(
-        TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-      );
-      expect(selectionTriggerIcons[1].innerHTML).toContain(
-        TRACE_INFO[TraceType.TRANSACTIONS].icon,
-      );
-
-      component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
-      selectionTriggerIcons = Array.from(
-        htmlElement.querySelectorAll('.mat-select-trigger mat-icon'),
-      );
-      expect(selectionTriggerIcons.length).toEqual(3);
-      expect(selectionTriggerIcons[0].innerHTML).toContain(
-        TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
-      );
-      expect(selectionTriggerIcons[1].innerHTML).toContain(
-        TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
-      );
-      expect(selectionTriggerIcons[2].innerHTML).toContain(
-        TRACE_INFO[TraceType.TRANSACTIONS].icon,
-      );
-
-      component.activeViewTraceTypes = [TraceType.PROTO_LOG];
-      selectionTriggerIcons = Array.from(
-        htmlElement.querySelectorAll('.mat-select-trigger mat-icon'),
-      );
-      expect(selectionTriggerIcons.length).toEqual(3);
-      expect(selectionTriggerIcons[0].innerHTML).toContain(
-        TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
-      );
-      expect(selectionTriggerIcons[1].innerHTML).toContain(
-        TRACE_INFO[TraceType.TRANSACTIONS].icon,
-      );
-      expect(selectionTriggerIcons[2].innerHTML).toContain(
-        TRACE_INFO[TraceType.PROTO_LOG].icon,
-      );
-    });
-  });
-
-  it('updates trace selection using selector', () => {
-    loadTracesForSelectorTest();
+    expect(component.selectedTraces).toEqual(allTraces);
 
     const selectTrigger = assertDefined(
       htmlElement.querySelector('.mat-select-trigger'),
     );
     (selectTrigger as HTMLElement).click();
     fixture.detectChanges();
+    await fixture.whenStable();
 
-    fixture.whenStable().then(() => {
-      const matOptions = Array.from(
-        assertDefined(htmlElement.querySelectorAll('mat-select mat-option')),
+    const matOptions = assertDefined(
+      document.documentElement.querySelectorAll('mat-option'),
+    );
+    const sfOption = assertDefined(matOptions.item(1)) as HTMLInputElement;
+    expect(sfOption.textContent).toContain('Surface Flinger');
+    expect(sfOption.ariaDisabled).toEqual('true');
+    for (const i of [0, 2, 3]) {
+      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
+        'false',
       );
+    }
 
-      expect((matOptions[0] as HTMLInputElement).value).toEqual(
-        `${TraceType.SURFACE_FLINGER}`,
-      );
-      expect((matOptions[0] as HTMLInputElement).disabled).toBeTrue();
-      for (let i = 1; i < 4; i++) {
-        expect((matOptions[i] as HTMLInputElement).disabled).toBeFalse();
-      }
+    (matOptions.item(2) as HTMLElement).click();
+    fixture.detectChanges();
+    expect(component.selectedTraces).toEqual([
+      TraceType.SCREEN_RECORDING,
+      TraceType.SURFACE_FLINGER,
+      TraceType.PROTO_LOG,
+    ]);
+    const icons = htmlElement.querySelectorAll(
+      '#trace-selector .shown-selection .mat-icon',
+    );
+    expect(
+      Array.from(icons)
+        .map((icon) => icon.textContent?.trim())
+        .slice(1),
+    ).toEqual([
+      TRACE_INFO[TraceType.SCREEN_RECORDING].icon,
+      TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
+      TRACE_INFO[TraceType.PROTO_LOG].icon,
+    ]);
 
-      (matOptions[1] as HTMLElement).click();
-      (matOptions[2] as HTMLElement).click();
-      expect(component.selectedTraces).toEqual([
-        TraceType.SURFACE_FLINGER,
-        TraceType.WINDOW_MANAGER,
-        TraceType.SCREEN_RECORDING,
-      ]);
-
-      expect((matOptions[3] as HTMLInputElement).value).toEqual(
-        `${TraceType.PROTO_LOG}`,
-      );
-      expect((matOptions[3] as HTMLInputElement).disabled).toBeTrue();
-    });
+    (matOptions.item(2) as HTMLElement).click();
+    fixture.detectChanges();
+    expect(component.selectedTraces).toEqual(allTraces);
+    const newIcons = htmlElement.querySelectorAll(
+      '#trace-selector .shown-selection .mat-icon',
+    );
+    expect(
+      Array.from(newIcons)
+        .map((icon) => icon.textContent?.trim())
+        .slice(1),
+    ).toEqual([
+      TRACE_INFO[TraceType.SCREEN_RECORDING].icon,
+      TRACE_INFO[TraceType.SURFACE_FLINGER].icon,
+      TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
+      TRACE_INFO[TraceType.PROTO_LOG].icon,
+    ]);
   });
 
   it('next button disabled if no next entry', () => {

@@ -44,12 +44,6 @@ import {MatSelectChange} from '@angular/material/select';
   `,
   styles: [
     `
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
-
       mat-form-field {
         width: 100%;
         font-size: 12px;
