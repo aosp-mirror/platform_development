@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {
   ChangeDetectionStrategy,
@@ -83,6 +84,7 @@ describe('TimelineComponent', () => {
         ReactiveFormsModule,
         BrowserAnimationsModule,
         DragDropModule,
+        ClipboardModule,
       ],
       declarations: [
         TestHostComponent,

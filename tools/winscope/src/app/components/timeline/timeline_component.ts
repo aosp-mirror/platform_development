@@ -54,6 +54,7 @@ import {
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
 
 @Component({
   selector: 'timeline',
@@ -98,37 +99,62 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
                 appearance="fill"
                 (keydown.enter)="onKeydownEnterTimeInputField($event)"
                 (change)="onHumanTimeInputChange($event)">
+                <mat-icon matPrefix>schedule</mat-icon>
                 <input
                   matInput
                   name="humanTimeInput"
                   [formControl]="selectedTimeFormControl" />
+                <div class="field-suffix" matSuffix>
+                  <span class="time-difference"> {{ getUTCOffset() }} </span>
+                  <button
+                    mat-icon-button
+                    [matTooltip]="getCopyPositionTooltip(selectedTimeFormControl.value)"
+                    matTooltipClass="multline-tooltip"
+                    [cdkCopyToClipboard]="selectedTimeFormControl.value"
+                    matSuffix>
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
               </mat-form-field>
               <mat-form-field
                 class="time-input nano"
                 appearance="fill"
                 (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
                 (change)="onNanosecondsInputTimeChange($event)">
+                <mat-icon class="material-symbols-outlined" matPrefix>timer</mat-icon>
                 <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
+                <div class="field-suffix" matSuffix>
+                  <button
+                    mat-icon-button
+                    [matTooltip]="getCopyPositionTooltip(selectedNsFormControl.value)"
+                    matTooltipClass="multline-tooltip"
+                    [cdkCopyToClipboard]="selectedNsFormControl.value"
+                    matSuffix>
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
               </mat-form-field>
             </form>
-            <div class="trace-playback">
+            <div class="time-controls">
               <button
                 mat-icon-button
                 id="prev_entry_button"
-                color="primary"
+                matTooltip="Go to previous entry"
                 (click)="moveToPreviousEntry()"
+                [class.disabled]="!hasPrevEntry()"
                 [disabled]="!hasPrevEntry()">
                 <mat-icon>chevron_left</mat-icon>
               </button>
               <button
                 mat-icon-button
                 id="next_entry_button"
-                color="primary"
+                matTooltip="Go to next entry"
                 (click)="moveToNextEntry()"
+                [class.disabled]="!hasNextEntry()"
                 [disabled]="!hasNextEntry()">
                 <mat-icon>chevron_right</mat-icon>
               </button>
-              </div>
+            </div>
           </div>
           <div id="trace-selector">
             <mat-form-field appearance="none">
@@ -240,23 +266,72 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        border-radius: 10px;
+        background-color: #EEEFF0;
+        margin-left: 0.5rem;
+        height: 116px;
+        width: 282px;
       }
-      #time-selector .mat-form-field-infix {
-        padding: 0 0.75rem 0 0.5rem;
+      #time-selector .mat-form-field-wrapper {
+        width: 100%;
+      }
+      #time-selector .mat-form-field-infix, #trace-selector .mat-form-field-infix {
+        padding: 0 0.75rem 0 0.5rem !important;
         border-top: unset;
+      }
+      #time-selector .mat-form-field-flex, #time-selector .field-suffix {
+        border-radius: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
       }
       .time-selector-form {
         display: flex;
         flex-direction: column;
         height: 60px;
-        width: 282px;
-        border-radius: 10px;
-        background-color: #EEEFF0;
+        width: 90%;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
       }
-      .time-selector-form .time-input {
-        width: 100%;
+      .time-selector-form mat-form-field {
         margin-bottom: -1.34375em;
-        text-align: center;
+        display: flex;
+        width: 100%;
+        font-size: 12px;
+      }
+      .time-selector-form input {
+        text-overflow: ellipsis;
+        font-weight: bold;
+      }
+      .time-selector-form .time-difference {
+        padding-right: 2px;
+      }
+      #time-selector .time-controls {
+        background-color: #DDDDDD;
+        border-radius: 10px;
+        margin: 0.5rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 90%;
+      }
+      #time-selector .mat-icon-button {
+        width: 24px;
+        height: 24px;
+        padding-left: 3px;
+        padding-right: 3px;
+      }
+      #time-selector .mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        display: flex;
+      }
+      .time-selector-form .mat-icon,
+      .shown-selection .filter-header .mat-icon {
+        color: #444746;
       }
       .shown-selection .trace-icon {
         font-size: 18px;
@@ -298,8 +373,6 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
       }
       #trace-selector .mat-form-field-infix {
         width: 80px;
-        padding: 0 0.75rem 0 0.5rem;
-        border-top: unset;
       }
       #trace-selector .shown-selection {
         height: 116px;
@@ -315,7 +388,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
         display: flex;
         gap: 2px;
       }
-      #trace-selector .shown-selection .trace-icons {
+      .shown-selection .trace-icons {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
@@ -360,6 +433,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
         flex-direction: column;
       }
     `,
+    multlineTooltip,
   ],
 })
 export class TimelineComponent
@@ -696,6 +770,16 @@ export class TimelineComponent
 
   updateScrollEvent(event: WheelEvent) {
     this.expandedTimelineScrollEvent = event;
+  }
+
+  getCopyPositionTooltip(position: string): string {
+    return `Copy current position:\n${position}`;
+  }
+
+  getUTCOffset(): string {
+    return assertDefined(this.timelineData)
+      .getTimestampConverter()
+      .getUTCOffset();
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {

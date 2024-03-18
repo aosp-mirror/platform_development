@@ -142,13 +142,13 @@ class E2eTestUtils {
   }
 
   static async checkWinscopeRealTimestamp(timestamp: string) {
-    const inputElement = element(by.css('input[name="humanRealTimeInput"]'));
+    const inputElement = element(by.css('input[name="humanTimeInput"]'));
     const value = await inputElement.getAttribute('value');
     expect(value).toEqual(timestamp);
   }
 
   static async changeRealTimestampInWinscope(newTimestamp: string) {
-    await E2eTestUtils.updateInputField('', 'humanRealTimeInput', newTimestamp);
+    await E2eTestUtils.updateInputField('', 'humanTimeInput', newTimestamp);
   }
 
   static async checkWinscopeNsTimestamp(newTimestamp: string) {
