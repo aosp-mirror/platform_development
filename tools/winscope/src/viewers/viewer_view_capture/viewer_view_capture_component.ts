@@ -35,8 +35,7 @@ import {UiData} from './ui_data';
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
-        [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displays]="[{displayId: 0, stackId: 0}]"></rects-view>
+        [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
