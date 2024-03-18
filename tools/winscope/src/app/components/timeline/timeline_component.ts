@@ -33,7 +33,7 @@ import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {StringUtils} from 'common/string_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {TimeRange, Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {
@@ -191,6 +191,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
             [timelineData]="timelineData"
             [currentTracePosition]="getCurrentTracePosition()"
             [selectedTraces]="selectedTraces"
+            [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
@@ -406,6 +407,7 @@ export class TimelineComponent
   videoUrl: SafeUrl | undefined;
 
   internalActiveTrace: TraceType | undefined = undefined;
+  initialZoom: TimeRange | undefined = undefined;
   selectedTraces: TraceType[] = [];
   sortedAvailableTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl<TraceType[]>([]);
@@ -468,6 +470,23 @@ export class TimelineComponent
     this.selectedTracesFormControl = new FormControl<TraceType[]>(
       this.selectedTraces,
     );
+
+    const initialTraceToCropZoom = this.sortedAvailableTraces.find((type) => {
+      return (
+        type !== TraceType.SCREEN_RECORDING &&
+        TraceTypeUtils.isTraceTypeWithViewer(type) &&
+        timelineData.getTraces().getTrace(type)
+      );
+    });
+    if (initialTraceToCropZoom !== undefined) {
+      const trace = assertDefined(
+        timelineData.getTraces().getTrace(initialTraceToCropZoom),
+      );
+      this.initialZoom = {
+        from: trace.getEntry(0).getTimestamp(),
+        to: timelineData.getFullTimeRange().to,
+      };
+    }
   }
 
   ngAfterViewInit() {

@@ -88,8 +88,6 @@ describe('MiniTimelineComponent', () => {
     expect(timelineData.getCurrentPosition()).toBeTruthy();
     component.currentTracePosition = timelineData.getCurrentPosition()!;
     component.selectedTraces = [TraceType.SURFACE_FLINGER];
-
-    fixture.detectChanges();
   });
 
   it('can be created', () => {
@@ -97,6 +95,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('redraws on resize', () => {
+    fixture.detectChanges();
     const spy = spyOn(assertDefined(component.drawer), 'draw');
     expect(spy).not.toHaveBeenCalled();
 
@@ -171,8 +170,17 @@ describe('MiniTimelineComponent', () => {
     );
   });
 
-  it('loads zoomed out', () => {
-    expect(component.isZoomed()).toBeFalse();
+  it('loads with initial zoom', () => {
+    const initialZoom = {
+      from: timestamp15,
+      to: timestamp16,
+    };
+    component.initialZoom = initialZoom;
+    fixture.detectChanges();
+    const timelineData = assertDefined(component.timelineData);
+    const zoomRange = timelineData.getZoomRange();
+    expect(zoomRange.from).toEqual(initialZoom.from);
+    expect(zoomRange.to).toEqual(initialZoom.to);
   });
 
   it('updates timelinedata on zoom changed', () => {
@@ -185,6 +193,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('creates an appropriately sized canvas', () => {
+    fixture.detectChanges();
     const canvas = component.getCanvas();
     expect(canvas.width).toBeGreaterThan(100);
     expect(canvas.height).toBeGreaterThan(10);
@@ -219,7 +228,7 @@ describe('MiniTimelineComponent', () => {
     ]);
   });
 
-  it('moving slider around updates zoom', fakeAsync(async () => {
+  it('moving slider around updates zoom', fakeAsync(() => {
     const initialZoom = {
       from: timestamp15,
       to: timestamp16,
@@ -230,7 +239,7 @@ describe('MiniTimelineComponent', () => {
 
     const slider = htmlElement.querySelector('.slider .handle');
     expect(slider).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(slider)).visibility).toBe(
+    expect(window.getComputedStyle(assertDefined(slider)).visibility).toEqual(
       'visible',
     );
 
@@ -300,6 +309,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('can zoom out with the buttons', () => {
+    fixture.detectChanges();
     const timelineData = assertDefined(component.timelineData);
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
@@ -430,6 +440,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('zooms out with scroll wheel', () => {
+    fixture.detectChanges();
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
@@ -465,6 +476,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('cannot zoom out past full range', () => {
+    fixture.detectChanges();
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])

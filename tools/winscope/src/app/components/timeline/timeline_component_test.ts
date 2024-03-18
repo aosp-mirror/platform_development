@@ -263,7 +263,7 @@ describe('TimelineComponent', () => {
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
     ];
-    loadTracesForSelectorTest();
+    loadAllTraces();
     expect(component.selectedTraces).toEqual(allTraces);
 
     const selectTrigger = assertDefined(
@@ -324,7 +324,7 @@ describe('TimelineComponent', () => {
   });
 
   it('next button disabled if no next entry', () => {
-    loadTraces();
+    loadSfWmTraces();
     const timelineData = assertDefined(component.timelineData);
 
     expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(
@@ -350,7 +350,7 @@ describe('TimelineComponent', () => {
   });
 
   it('prev button disabled if no prev entry', () => {
-    loadTraces();
+    loadSfWmTraces();
     const timelineData = assertDefined(component.timelineData);
 
     expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(
@@ -375,7 +375,7 @@ describe('TimelineComponent', () => {
   });
 
   it('next button enabled for different active viewers', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     const nextEntryButton = assertDefined(
       fixture.debugElement.query(By.css('#next_entry_button')),
@@ -390,7 +390,7 @@ describe('TimelineComponent', () => {
   });
 
   it('changes timestamp on next entry button press', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     expect(
       assertDefined(component.timelineData)
@@ -415,7 +415,7 @@ describe('TimelineComponent', () => {
   });
 
   it('changes timestamp on previous entry button press', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     expect(
       assertDefined(component.timelineData)
@@ -444,7 +444,7 @@ describe('TimelineComponent', () => {
 
   //TODO(b/304982982): find a way to test via dom interactions, not calling listener directly
   it('performs expected action on arrow key press depending on input form focus', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     const spyNextEntry = spyOn(component, 'moveToNextEntry');
     const spyPrevEntry = spyOn(component, 'moveToPreviousEntry');
@@ -479,7 +479,7 @@ describe('TimelineComponent', () => {
   });
 
   it('updates position based on ns input field', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     expect(
       assertDefined(component.timelineData)
@@ -524,7 +524,7 @@ describe('TimelineComponent', () => {
   });
 
   it('updates position based on real time input field', () => {
-    loadTraces();
+    loadSfWmTraces();
 
     expect(
       assertDefined(component.timelineData)
@@ -573,7 +573,15 @@ describe('TimelineComponent', () => {
     );
   });
 
-  function loadTraces() {
+  it('sets initial zoom of mini timeline from first non-SR viewer to end of all traces', () => {
+    loadAllTraces();
+    expect(component.initialZoom).toEqual({
+      from: time100,
+      to: time112,
+    });
+  });
+
+  function loadSfWmTraces() {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .setTimestamps(TraceType.WINDOW_MANAGER, [
@@ -586,15 +594,19 @@ describe('TimelineComponent', () => {
 
     const timelineData = assertDefined(component.timelineData);
     timelineData.initialize(traces, undefined);
+    component.availableTraces = [
+      TraceType.SURFACE_FLINGER,
+      TraceType.WINDOW_MANAGER,
+    ];
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     timelineData.setPosition(position100);
     fixture.detectChanges();
   }
 
-  function loadTracesForSelectorTest() {
+  function loadAllTraces() {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110, time112])
       .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();

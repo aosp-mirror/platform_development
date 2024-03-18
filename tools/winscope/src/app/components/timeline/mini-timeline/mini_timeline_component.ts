@@ -103,6 +103,7 @@ export class MiniTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Input() currentTracePosition: TracePosition | undefined;
   @Input() selectedTraces: TraceType[] | undefined;
+  @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
@@ -138,7 +139,12 @@ export class MiniTimelineComponent {
       updateTimestampCallback,
       updateTimestampCallback,
     );
-    this.drawer.draw();
+
+    if (this.initialZoom !== undefined) {
+      this.onZoomChanged(this.initialZoom);
+    } else {
+      this.resetZoom();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -156,13 +162,6 @@ export class MiniTimelineComponent {
     } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
-  }
-
-  isZoomed(): boolean {
-    const timelineData = assertDefined(this.timelineData);
-    const fullRange = timelineData.getFullTimeRange();
-    const zoomRange = timelineData.getZoomRange();
-    return fullRange.from !== zoomRange.from || fullRange.to !== zoomRange.to;
   }
 
   getTracesToShow(): Traces {
