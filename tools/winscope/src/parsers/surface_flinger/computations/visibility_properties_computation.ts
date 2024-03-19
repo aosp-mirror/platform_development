@@ -134,7 +134,7 @@ export class VisibilityPropertiesComputation implements Computation {
           if (!this.layerOverlaps(layer, other, displaySize)) {
             return false;
           }
-          return !occludedBy.includes(this.getDefinedValue(other, 'id'));
+          return !occludedBy.includes(other.id);
         })
         .map((other) => other.id);
 
