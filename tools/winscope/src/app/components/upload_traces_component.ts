@@ -195,6 +195,9 @@ import {LoadProgressComponent} from './load_progress_component';
       .no-visualization {
         background-color: #fff5bf;
       }
+      .info-icon, .warning-icon {
+        flex-shrink: 0;
+      }
     `,
   ],
 })

@@ -27,7 +27,7 @@ import {
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -254,7 +254,7 @@ export class MiniTimelineComponent {
     }
 
     if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
-      newTo = TimeUtils.min(
+      newTo = TimestampUtils.min(
         fullRange.to,
         newTo.plus(fullRange.from.minus(newFrom)),
       );
@@ -262,7 +262,7 @@ export class MiniTimelineComponent {
     }
 
     if (newTo.getValueNs() > fullRange.to.getValueNs()) {
-      newFrom = TimeUtils.max(
+      newFrom = TimestampUtils.max(
         fullRange.from,
         newFrom.minus(newTo.minus(fullRange.to)),
       );

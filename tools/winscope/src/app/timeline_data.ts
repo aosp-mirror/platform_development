@@ -21,7 +21,7 @@ import {
   Timestamp,
   TimestampType,
 } from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -363,7 +363,7 @@ export class TimelineData {
       .filter((trace) => trace.lengthEntries > 0)
       .map((trace) => trace.getEntry(0))
       .sort((a, b) => {
-        return TimeUtils.compareFn(a.getTimestamp(), b.getTimestamp());
+        return TimestampUtils.compareFn(a.getTimestamp(), b.getTimestamp());
       });
     if (activeEntries.length === 0) {
       return undefined;

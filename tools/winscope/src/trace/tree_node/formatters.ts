@@ -15,7 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeNode} from './property_tree_node';
@@ -214,7 +214,7 @@ class TimestampFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const timestamp = node.getValue();
     if (timestamp instanceof Timestamp) {
-      return TimeUtils.format(timestamp);
+      return TimestampUtils.format(timestamp);
     }
     return 'null';
   }

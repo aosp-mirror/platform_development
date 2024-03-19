@@ -16,7 +16,7 @@
 
 import {TimeRange} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {TraceType} from 'trace/trace_type';
 
 export interface WinscopeError {
@@ -72,7 +72,7 @@ export class TraceHasOldData implements WinscopeError {
     );
     return `${
       this.descriptor
-    }: discarded because data is older than ${TimeUtils.format(
+    }: discarded because data is older than ${TimestampUtils.format(
       elapsedTime,
       true,
     )}`;
