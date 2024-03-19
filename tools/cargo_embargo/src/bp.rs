@@ -124,6 +124,7 @@ impl BpProperties {
             "static_libs",
             "whole_static_libs",
             "shared_libs",
+            "aliases",
             "arch",
             "target",
             "ld_flags",
