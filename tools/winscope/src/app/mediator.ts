@@ -15,6 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
@@ -323,7 +324,7 @@ export class Mediator {
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
-    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await TimeUtils.sleepMs(10);
 
     this.tracePipeline.filterTracesWithoutVisualization();
     await this.tracePipeline.buildTraces();
@@ -336,7 +337,7 @@ export class Mediator {
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
-    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await TimeUtils.sleepMs(10);
 
     this.timelineData.initialize(
       this.tracePipeline.getTraces(),

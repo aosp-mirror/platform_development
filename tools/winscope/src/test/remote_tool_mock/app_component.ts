@@ -16,6 +16,7 @@
 
 import {ChangeDetectorRef, Component, Inject} from '@angular/core';
 import {FunctionUtils} from 'common/function_utils';
+import {TimeUtils} from 'common/time_utils';
 import {
   Message,
   MessageBugReport,
@@ -116,7 +117,7 @@ export class AppComponent {
     setTimeout(async () => {
       while (!this.isWinscopeUp) {
         this.winscope!.postMessage(new MessagePing(), AppComponent.TARGET);
-        await this.sleep(10);
+        await TimeUtils.sleepMs(10);
       }
     }, 0);
 
@@ -202,10 +203,6 @@ export class AppComponent {
 
   private printStatus(status: string) {
     console.log('STATUS: ' + status);
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async readInputFile(event: Event): Promise<[File, ArrayBuffer]> {

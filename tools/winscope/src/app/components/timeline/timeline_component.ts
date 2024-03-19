@@ -35,7 +35,7 @@ import {FunctionUtils} from 'common/function_utils';
 import {StringUtils} from 'common/string_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TimeUtils} from 'common/time_utils';
+import {TimestampUtils} from 'common/timestamp_utils';
 import {
   ExpandedTimelineToggled,
   TracePositionUpdate,
@@ -377,21 +377,21 @@ export class TimelineComponent
     'undefined',
     Validators.compose([
       Validators.required,
-      Validators.pattern(TimeUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX),
+      Validators.pattern(TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX),
     ]),
   );
   selectedRealTimeFormControl = new FormControl(
     'undefined',
     Validators.compose([
       Validators.required,
-      Validators.pattern(TimeUtils.HUMAN_REAL_TIMESTAMP_REGEX),
+      Validators.pattern(TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX),
     ]),
   );
   selectedNsFormControl = new FormControl(
     'undefined',
     Validators.compose([
       Validators.required,
-      Validators.pattern(TimeUtils.NS_TIMESTAMP_REGEX),
+      Validators.pattern(TimestampUtils.NS_TIMESTAMP_REGEX),
     ]),
   );
   timestampForm = new FormGroup({
@@ -509,13 +509,15 @@ export class TimelineComponent
   private updateTimeInputValuesToCurrentTimestamp() {
     const currentNs = this.getCurrentTracePosition().timestamp.getValueNs();
     this.selectedElapsedTimeFormControl.setValue(
-      TimeUtils.format(
+      TimestampUtils.format(
         NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(currentNs),
         false,
       ),
     );
     this.selectedRealTimeFormControl.setValue(
-      TimeUtils.format(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(currentNs)),
+      TimestampUtils.format(
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(currentNs),
+      ),
     );
     this.selectedNsFormControl.setValue(
       `${this.getCurrentTracePosition().timestamp.getValueNs()} ns`,
@@ -643,7 +645,7 @@ export class TimelineComponent
       return;
     }
     const target = event.target as HTMLInputElement;
-    const timestamp = TimeUtils.parseHumanElapsed(target.value);
+    const timestamp = TimestampUtils.parseHumanElapsed(target.value);
     await this.updatePosition(
       assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
     );
@@ -656,7 +658,7 @@ export class TimelineComponent
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = TimeUtils.parseHumanReal(target.value);
+    const timestamp = TimestampUtils.parseHumanReal(target.value);
     await this.updatePosition(
       assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
     );
