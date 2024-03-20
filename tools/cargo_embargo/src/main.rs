@@ -817,10 +817,14 @@ fn crate_to_bp_modules(
 
         let mut rust_libs = Vec::new();
         let mut proc_macro_libs = Vec::new();
+        let mut aliases = Vec::new();
         for extern_dep in &crate_.externs {
             match extern_dep.extern_type {
                 ExternType::Rust => rust_libs.push(extern_dep.lib_name.clone()),
                 ExternType::ProcMacro => proc_macro_libs.push(extern_dep.lib_name.clone()),
+            }
+            if extern_dep.name != extern_dep.lib_name {
+                aliases.push(format!("{}:{}", extern_dep.lib_name, extern_dep.name));
             }
         }
 
@@ -849,6 +853,7 @@ fn crate_to_bp_modules(
         m.props.set_if_nonempty("static_libs", static_libs);
         m.props.set_if_nonempty("whole_static_libs", whole_static_libs);
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
+        m.props.set_if_nonempty("aliases", aliases);
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
