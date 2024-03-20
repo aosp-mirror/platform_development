@@ -33,7 +33,7 @@ import {
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
-  keep_alive_worker: NodeJS.Timer | undefined;
+  keep_alive_worker: NodeJS.Timeout | undefined;
   notConnected = [
     ProxyState.NO_PROXY,
     ProxyState.UNAUTH,

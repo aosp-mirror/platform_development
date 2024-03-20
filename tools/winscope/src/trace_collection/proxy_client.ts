@@ -307,7 +307,7 @@ export class ProxyClient {
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
-  refresh_worker: NodeJS.Timer | undefined;
+  refresh_worker: NodeJS.Timeout | undefined;
   devices: Device = {};
   selectedDevice = '';
   errorText = '';
