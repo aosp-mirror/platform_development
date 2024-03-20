@@ -25,9 +25,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.Icon
 import android.os.Bundle
-import android.service.chooser.ChooserAction
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.BackgroundColorSpan
@@ -75,8 +73,12 @@ class ShareTestActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         customActionReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                Toast.makeText(this@ShareTestActivity, "Custom action invoked", Toast.LENGTH_LONG)
+            override fun onReceive(context: Context?, intent: Intent) {
+                Toast.makeText(
+                    this@ShareTestActivity,
+                    "Custom action invoked, isModified: ${!intent.isInitial}",
+                    Toast.LENGTH_LONG
+                )
                     .show()
             }
         }
@@ -100,7 +102,8 @@ class ShareTestActivity : Activity() {
         registerReceiver(
             refinementReceiver,
             IntentFilter(REFINEMENT_ACTION),
-            Context.RECEIVER_EXPORTED)
+            Context.RECEIVER_EXPORTED
+        )
 
         richText = requireViewById(R.id.use_rich_text)
         albumCheck = requireViewById(R.id.album_text)
@@ -304,19 +307,7 @@ class ShareTestActivity : Activity() {
         }
 
         if (requireViewById<CheckBox>(R.id.include_modify_share).isChecked) {
-            val pendingIntent = PendingIntent.getBroadcast(
-                this,
-                1,
-                Intent(CustomActionFactory.BROADCAST_ACTION),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
-            )
-            val modifyShareAction = ChooserAction.Builder(
-                Icon.createWithResource(this, R.drawable.testicon),
-                "Modify Share",
-                pendingIntent
-            ).build()
-
-            chooserIntent.putExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION, modifyShareAction)
+            chooserIntent.setModifyShareAction(this)
         }
 
         if (requireViewById<CheckBox>(R.id.use_refinement).isChecked) {
@@ -327,7 +318,8 @@ class ShareTestActivity : Activity() {
                 PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
             ).intentSender
             chooserIntent.putExtra(
-                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER, refinementIntentSender)
+                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER, refinementIntentSender
+            )
         }
 
         when (requireViewById<RadioGroup>(R.id.action_selection).checkedRadioButtonId) {
