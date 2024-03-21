@@ -35,6 +35,11 @@ export class TraceFileFilter {
     'proto/window_CRITICAL.proto',
     'proto/input_method_CRITICAL.proto',
   ];
+  private static readonly PERFETTO_EXTENSIONS = [
+    '.pftrace',
+    '.perfetto-trace',
+    '.perfetto',
+  ];
 
   async filter(
     files: TraceFile[],
@@ -158,10 +163,12 @@ export class TraceFileFilter {
   }
 
   private isPerfettoFile(file: TraceFile): boolean {
-    return (
-      file.file.name.endsWith('.pftrace') ||
-      file.file.name.endsWith('.perfetto-trace')
-    );
+    return TraceFileFilter.PERFETTO_EXTENSIONS.some((perfettoExt) => {
+      return (
+        file.file.name.endsWith(perfettoExt) ||
+        file.file.name.endsWith(`${perfettoExt}.gz`)
+      );
+    });
   }
 
   private pickLargestFile(

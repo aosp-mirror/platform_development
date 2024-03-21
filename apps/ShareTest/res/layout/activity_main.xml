@@ -321,6 +321,18 @@
                     android:text="100%"
                 />
             </RadioGroup>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Refinement"
+                />
+            <CheckBox
+                android:id="@+id/use_refinement"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Use Refinement"
+                />
         </LinearLayout>
     </ScrollView>
     <Button

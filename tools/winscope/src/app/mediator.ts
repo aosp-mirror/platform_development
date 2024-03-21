@@ -15,11 +15,13 @@
  */
 
 import {Timestamp} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {
+  ExpandedTimelineToggled,
   TracePositionUpdate,
   ViewersLoaded,
   ViewersUnloaded,
@@ -202,6 +204,13 @@ export class Mediator {
         await this.processRemoteToolTimestampReceived(event.timestampNs);
       },
     );
+
+    await event.visit(
+      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
+      async (event) => {
+        await this.propagateToOverlays(event);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
@@ -315,8 +324,9 @@ export class Mediator {
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
-    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await TimeUtils.sleepMs(10);
 
+    this.tracePipeline.filterTracesWithoutVisualization();
     await this.tracePipeline.buildTraces();
     this.currentProgressListener?.onOperationFinished();
 
@@ -327,7 +337,7 @@ export class Mediator {
 
     // TODO: move this into the ProgressListener
     // allow the UI to update before making the main thread very busy
-    await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    await TimeUtils.sleepMs(10);
 
     this.timelineData.initialize(
       this.tracePipeline.getTraces(),
@@ -418,5 +428,14 @@ export class Mediator {
     this.lastRemoteToolTimestampReceived = undefined;
     this.focusedTabView = undefined;
     await this.appComponent.onWinscopeEvent(new ViewersUnloaded());
+  }
+
+  private async propagateToOverlays(event: ExpandedTimelineToggled) {
+    const overlayViewers = this.viewers.filter((viewer) =>
+      viewer.getViews().some((view) => view.type === ViewType.OVERLAY),
+    );
+    for (const overlay of overlayViewers) {
+      await overlay.onWinscopeEvent(event);
+    }
   }
 }

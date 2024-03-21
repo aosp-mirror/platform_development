@@ -30,6 +30,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".RefinementActivity"
+            android:theme="@style/ShareTestDialog"
+            />
+
         <provider
             android:authorities="com.android.sharetest.provider"
             android:name=".ImageContentProvider"

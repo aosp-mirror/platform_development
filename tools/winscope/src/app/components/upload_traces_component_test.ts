@@ -172,6 +172,30 @@ describe('UploadTracesComponent', () => {
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeFalse();
   });
 
+  it('shows warning elements for traces without visualization', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles([shellTransitionFile]);
+    fixture.detectChanges();
+
+    expect(htmlElement.querySelector('.warning-icon')).toBeTruthy();
+    const viewTracesButton = assertDefined(
+      htmlElement.querySelector('.load-btn'),
+    );
+    expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
+  });
+
+  it('shows info elements for traces with upload info for the user', async () => {
+    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog.winscope',
+    );
+    await loadFiles([shellTransitionFile]);
+    fixture.detectChanges();
+
+    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
+  });
+
   async function loadFiles(files: File[]) {
     component.tracePipeline.clear();
     await component.tracePipeline.loadFiles(

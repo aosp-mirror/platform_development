@@ -31,6 +31,7 @@ import {
   AppTraceViewRequest,
   BuganizerAttachmentsDownloaded,
   BuganizerAttachmentsDownloadStart,
+  ExpandedTimelineToggled,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
@@ -219,6 +220,14 @@ describe('Mediator', () => {
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalledTimes(1);
   });
 
+  it('notifies overlay viewer of expanded timeline toggle change', async () => {
+    await loadFiles();
+    await loadTraceView();
+    const event = new ExpandedTimelineToggled(true);
+    await mediator.onWinscopeEvent(new ExpandedTimelineToggled(true));
+    expect(viewerOverlay.onWinscopeEvent).toHaveBeenCalledWith(event);
+  });
+
   it('propagates trace position update', async () => {
     await loadFiles();
     await loadTraceView();
@@ -293,6 +302,17 @@ describe('Mediator', () => {
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
     await checkLoadTraceViewEvents(uploadTracesComponent);
+  });
+
+  it('filters traces without visualization on loading viewers', async () => {
+    const fileWithoutVisualization = await UnitTestUtils.getFixtureFile(
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    );
+    await loadFiles();
+    await mediator.onWinscopeEvent(
+      new AppFilesUploaded([fileWithoutVisualization]),
+    );
+    await loadTraceView();
   });
 
   describe('timestamp received from remote tool', () => {

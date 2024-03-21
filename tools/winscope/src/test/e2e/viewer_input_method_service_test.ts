@@ -62,12 +62,15 @@ describe('Viewer Input Method Service', () => {
     const nodes = await element.all(
       by.css(`${viewerSelector} hierarchy-view .node`),
     );
-    expect(nodes.length).toEqual(3);
+    expect(nodes.length).toEqual(4);
     expect(await nodes[0].getText()).toContain(
       'InputMethodService - 2022-11-21T18:05:14.721076009 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(
+      '778 - Letterbox - left#778 GPU V',
+    );
+    expect(await nodes[3].getText()).toContain(
       '786 - com.google.(...).ZeroStateSearchActivity#786 GPU V',
     );
   }
