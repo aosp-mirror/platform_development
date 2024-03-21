@@ -56,6 +56,13 @@
                 android:text="Enable Shareousel"
                 />
 
+            <CheckBox
+                android:id="@+id/alt_intent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Include Alternate Share Text Intent"
+                />
+
             <TextView
                 android:id="@+id/media_type_header"
                 android:layout_width="match_parent"

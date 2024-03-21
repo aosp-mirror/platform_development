@@ -49,3 +49,7 @@ rects-view .mat-tab-label {
 rects-view .mat-tab-body {
     padding-bottom: 0px;
 }
+
+rects-view .mat-tab-label-active {
+  opacity: 100%;
+}

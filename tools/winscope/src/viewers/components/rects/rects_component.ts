@@ -113,6 +113,7 @@ import {Distance2D} from './types3d';
         class="grouping-tabs"
         mat-align-tabs="start"
         *ngIf="internalDisplays.length > 0"
+        (selectedTabChange)="blurTab()"
         dynamicHeight>
         <mat-tab label="Displays">
           <div class="display-button-container display-name-buttons">
@@ -306,6 +307,10 @@ export class RectsComponent implements OnInit, OnDestroy {
     if (this.miniRects) {
       this.drawMiniRects();
     }
+  }
+
+  blurTab() {
+    (document.activeElement as HTMLElement).blur();
   }
 
   ngOnChanges(simpleChanges: SimpleChanges) {

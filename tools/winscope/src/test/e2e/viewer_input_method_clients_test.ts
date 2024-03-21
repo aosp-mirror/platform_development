@@ -66,15 +66,18 @@ describe('Viewer Input Method Clients', () => {
     const nodes = await element.all(
       by.css(`${viewerSelector} hierarchy-view .node`),
     );
-    expect(nodes.length).toEqual(4);
+    expect(nodes.length).toEqual(5);
     expect(await nodes[0].getText()).toContain(
       'InputMethodClients - 2022-11-21T18:05:14.969071242 - InsetsSourceConsumer#notifyAnimationFinished',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(
+      '778 - Letterbox - left#778 HWC V',
+    );
+    expect(await nodes[3].getText()).toContain(
       '786 - com.google.(...).ZeroStateSearchActivity#786 HWC V',
     );
-    expect(await nodes[3].getText()).toContain('765 - InputMethod#765 HWC V');
+    expect(await nodes[4].getText()).toContain('765 - InputMethod#765 HWC V');
   }
 
   async function checkInputMethodLayerProperties() {
@@ -152,7 +155,7 @@ describe('Viewer Input Method Clients', () => {
     );
     const inputMethodSurfaceText = await inputMethodSurface.getText();
     expect(inputMethodSurfaceText).toContain(
-      'ScreenBounds:\nLeft\nTop\nRight\nBottom\n-10800\n-23400\n10800\n23400',
+      'Screen Bounds:\nLeft\nTop\nRight\nBottom\n-10800\n-23400\n10800\n23400',
     );
     expect(inputMethodSurfaceText).toContain(
       'Rect:\nLeft\nTop\nRight\nBottom\n-10936\n-23548\n10664\n23252',
