@@ -52,6 +52,11 @@ export abstract class AbstractParser<T> implements Parser<T> {
   }
 
   async parse() {
+    const module = this.getStdLibModuleName();
+    if (module) {
+      await this.traceProcessor.query(`INCLUDE PERFETTO MODULE ${module};`);
+    }
+
     this.bootTimeTimestampsNs = await this.queryBootTimeTimestamps();
     this.lengthEntries = this.bootTimeTimestampsNs.length;
     assertTrue(
@@ -137,6 +142,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
     const real = result.iter({}).get('realtime') as bigint;
     return real - bootTimeNs;
+  }
+
+  protected getStdLibModuleName(): string | undefined {
+    return undefined;
   }
 
   protected abstract getTableName(): string;

@@ -84,5 +84,18 @@ describe('ParserInputMethodClients', () => {
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
       expect(entry.id).toEqual('InputMethodClients entry');
     });
+
+    it('translates intdefs', async () => {
+      const entry = await parser.getEntry(8);
+      const client = assertDefined(entry.getChildByName('client'));
+      const properties = await client.getAllProperties();
+      const intdefProperty = assertDefined(
+        properties
+          ?.getChildByName('viewRootImpl')
+          ?.getChildByName('windowAttributes')
+          ?.getChildByName('type'),
+      );
+      expect(intdefProperty.formattedValue()).toEqual('TYPE_BASE_APPLICATION');
+    });
   });
 });

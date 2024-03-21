@@ -30,6 +30,9 @@ async function build() {
         buildProtos([
             '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
         ], 'ime/udc'),
+        buildProtos([
+            'ime/latest/wrapper.proto',
+        ], 'ime/latest'),
 
         // ProtoLog
         buildProtos([
