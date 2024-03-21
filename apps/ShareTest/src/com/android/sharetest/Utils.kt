@@ -16,9 +16,16 @@
 
 package com.android.sharetest
 
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.Uri
+import android.os.Bundle
+import android.service.chooser.ChooserAction
 import android.text.TextUtils
+
+private const val EXTRA_IS_INITIAL = "isInitial"
 
 fun createAlternateIntent(intent: Intent): Intent {
     val text = buildString {
@@ -39,7 +46,43 @@ fun Intent.setText(text: CharSequence) {
     putExtra(Intent.EXTRA_TEXT, text)
 }
 
-private val Intent.extraStream: List<Uri>
+fun Intent.setModifyShareAction(context: Context) {
+    val modifyShareAction = createModifyShareAction(context, true, 0)
+    putExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION, modifyShareAction)
+}
+
+fun Bundle.setModifyShareAction(context: Context, count: Int) {
+    val modifyShareAction = createModifyShareAction(context, false, count)
+    putParcelable(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION, modifyShareAction)
+}
+
+private fun createModifyShareAction(
+    context: Context,
+    isInitial: Boolean,
+    count: Int,
+): ChooserAction {
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        1,
+        Intent(CustomActionFactory.BROADCAST_ACTION)
+            .apply {
+                this.isInitial = isInitial
+            },
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
+    )
+    return ChooserAction.Builder(
+        Icon.createWithResource(context, R.drawable.testicon),
+        buildString {
+            append("Modify Share")
+            if (!isInitial) {
+                append(" (items: $count)")
+            }
+        },
+        pendingIntent
+    ).build()
+}
+
+val Intent.extraStream: List<Uri>
     get() = buildList {
         when (action) {
             Intent.ACTION_SEND -> getParcelableExtra(
@@ -59,3 +102,9 @@ private val Intent.extraStream: List<Uri>
             }
         }
     }
+
+var Intent.isInitial: Boolean
+    set(value) {
+        putExtra(EXTRA_IS_INITIAL, value)
+    }
+    get() = getBooleanExtra(EXTRA_IS_INITIAL, true)

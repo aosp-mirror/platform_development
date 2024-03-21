@@ -61,15 +61,26 @@ class AdditionalContentProvider : ContentProvider() {
         )
 
         // Update alternate intent if the chooser intent has one.
-        val chooserIntent = extras?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java)
-        if (chooserIntent?.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS) == true) {
-            chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                ?.let { targetIntent ->
-                    result.putParcelableArray(
-                        Intent.EXTRA_ALTERNATE_INTENTS,
-                        arrayOf(createAlternateIntent(targetIntent))
-                    )
-                }
+        extras?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java)?.let { chooserIntent ->
+            if (chooserIntent.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS)) {
+                chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                    ?.let { targetIntent ->
+                        result.putParcelableArray(
+                            Intent.EXTRA_ALTERNATE_INTENTS,
+                            arrayOf(createAlternateIntent(targetIntent))
+                        )
+                    }
+            }
+
+            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION)) {
+                result.setModifyShareAction(
+                    context,
+                    chooserIntent.getParcelableExtra(
+                        Intent.EXTRA_INTENT,
+                        Intent::class.java
+                    )?.extraStream?.size ?: -1
+                )
+            }
         }
         return result
     }
