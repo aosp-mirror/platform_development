@@ -34,15 +34,12 @@ describe('PropertyTreeNodeDataViewComponent', () => {
   let component: PropertyTreeNodeDataViewComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [PropertyTreeNodeDataViewComponent],
       imports: [MatButtonModule, BrowserAnimationsModule],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PropertyTreeNodeDataViewComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
