@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TimestampFactory} from 'common/timestamp_factory';
-import {ParsingUtils} from 'parsers/parsing_utils';
+import {ParsingUtils} from 'parsers/legacy/parsing_utils';
 import {com} from 'protos/viewcapture/latest/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';

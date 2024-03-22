@@ -21,9 +21,9 @@ import {
   TimestampFactory,
 } from 'common/timestamp_factory';
 import {UrlUtils} from 'common/url_utils';
-import {ParserFactory} from 'parsers/parser_factory';
+import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
+import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
-import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -92,7 +92,7 @@ class UnitTestUtils {
       await UnitTestUtils.getFixtureFile(filename),
       undefined,
     );
-    const fileAndParsers = await new ParserFactory().createParsers(
+    const fileAndParsers = await new LegacyParserFactory().createParsers(
       [file],
       withTimezoneInfo
         ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE

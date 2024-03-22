@@ -16,12 +16,12 @@
 
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
+import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import root from 'protos/transitions/udc/json';
 import {com} from 'protos/transitions/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ParserTransitionsUtils} from './parser_transitions_utils';
 
 export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   private static readonly WmShellTransitionsTraceProto = root.lookupType(
