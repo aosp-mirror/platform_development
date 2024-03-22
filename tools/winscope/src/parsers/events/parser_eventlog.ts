@@ -16,7 +16,7 @@
 
 import {StringUtils} from 'common/string_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';

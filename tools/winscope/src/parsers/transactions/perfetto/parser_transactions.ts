@@ -19,6 +19,9 @@ import {TimestampType} from 'common/time';
 import {TimestampFactory} from 'common/timestamp_factory';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
+import {AbstractParser} from 'parsers/perfetto/abstract_parser';
+import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
+import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
 import root from 'protos/transactions/latest/json';
@@ -34,9 +37,6 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
-import {AbstractParser} from './abstract_parser';
-import {FakeProtoTransformer} from './fake_proto_transformer';
-import {Utils} from './utils';
 
 export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   private static readonly TransactionsTraceFileProto =

@@ -15,11 +15,11 @@
  */
 
 import {TimestampType} from 'common/time';
+import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {AbstractParser} from './abstract_parser';
 
 class PerfettoLogMessageTableRow {
   message = '<NO_MESSAGE>';

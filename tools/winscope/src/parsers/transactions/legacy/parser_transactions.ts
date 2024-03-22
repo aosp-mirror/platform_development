@@ -16,10 +16,11 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
 import root from 'protos/transactions/udc/json';
 import {android} from 'protos/transactions/udc/static';
 import {
@@ -31,7 +32,6 @@ import {EntriesRange} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TranslateChanges} from './operations/translate_changes';
 
 class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   private static readonly MAGIC_NUMBER = [

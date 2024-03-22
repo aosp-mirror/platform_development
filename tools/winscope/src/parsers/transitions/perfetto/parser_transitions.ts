@@ -15,12 +15,12 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
+import {AbstractParser} from 'parsers/perfetto/abstract_parser';
+import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {perfetto} from 'protos/transitions/latest/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {AbstractParser} from './abstract_parser';
-import {FakeProtoBuilder} from './fake_proto_builder';
 
 export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
   private handlerIdToName: {[id: number]: string} | undefined = undefined;
