@@ -78,7 +78,9 @@ class ProxyRequest {
           resolve();
         } else if (this.status === 200) {
           if (
-            this.getResponseHeader('Winscope-Proxy-Version') !== client.VERSION
+            !client.areVersionsCompatible(
+              this.getResponseHeader('Winscope-Proxy-Version'),
+            )
           ) {
             client.setState(ProxyState.INVALID_VERSION);
             resolve();
@@ -372,6 +374,13 @@ export class ProxyClient {
       await proxyRequest.fetchFiles(this.selectedDevice, adbParams);
       progressCallback((100 * (idx + 1)) / files.length);
     }
+  }
+
+  areVersionsCompatible(proxyVersion: string | null): boolean {
+    if (!proxyVersion) return false;
+    const [proxyMajor, proxyMinor, patch] = proxyVersion.split('.');
+    const [clientMajor, clientMinor] = this.VERSION.split('.');
+    return proxyMajor === clientMajor && proxyMinor >= clientMinor;
   }
 }
 
