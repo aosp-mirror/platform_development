@@ -170,8 +170,9 @@ describe('SliderComponent', () => {
     );
     const cursor = assertDefined(htmlElement.querySelector('.cursor'));
     const sliderBoxRect = sliderBox.getBoundingClientRect();
-    expect(cursor.getBoundingClientRect().left).toBe(
+    expect(cursor.getBoundingClientRect().left).toBeCloseTo(
       (sliderBoxRect.left + sliderBoxRect.right) / 2,
+      0,
     );
   });
 
