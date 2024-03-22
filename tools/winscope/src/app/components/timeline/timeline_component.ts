@@ -32,6 +32,7 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
 import {TimeRange, Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
@@ -150,7 +151,7 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
                       opacity: isOptionDisabled(trace) ? 0.5 : 1.0
                     }"
                     [disabled]="isOptionDisabled(trace)"
-                    (click)="applyNewTraceSelection()">
+                    (click)="applyNewTraceSelection(trace)">
                     <mat-icon
                       [style]="{
                         color: TRACE_INFO[trace].color
@@ -397,6 +398,7 @@ export class TimelineComponent
 
   @Input() timelineData: TimelineData | undefined;
   @Input() availableTraces: TraceType[] = [];
+  @Input() store: PersistentStore | undefined;
 
   @Output() readonly collapsedTimelineSizeChanged = new EventEmitter<number>();
 
@@ -439,6 +441,7 @@ export class TimelineComponent
   });
   TRACE_INFO = TRACE_INFO;
   isInputFormFocused = false;
+  storeKeyDeselectedTraces = 'miniTimeline.deselectedTraces';
 
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -466,7 +469,13 @@ export class TimelineComponent
     this.sortedAvailableTraces = this.availableTraces.sort((a, b) =>
       TraceTypeUtils.compareByDisplayOrder(a, b),
     ); // to display in fixed order corresponding to viewer tabs
-    this.selectedTraces = this.sortedAvailableTraces;
+
+    const storedDeselectedTraces = this.getStoredDeselectedTraces();
+    this.selectedTraces = this.sortedAvailableTraces.filter(
+      (availableTrace) => {
+        return !storedDeselectedTraces.includes(availableTrace);
+      },
+    );
     this.selectedTracesFormControl = new FormControl<TraceType[]>(
       this.selectedTraces,
     );
@@ -567,9 +576,10 @@ export class TimelineComponent
     return this.internalActiveTrace === trace;
   }
 
-  applyNewTraceSelection() {
+  applyNewTraceSelection(clickedType: TraceType) {
     this.selectedTraces =
       this.selectedTracesFormControl.value ?? this.sortedAvailableTraces;
+    this.updateStoredDeselectedTraces(clickedType);
   }
 
   @HostListener('document:focusin', ['$event'])
@@ -752,5 +762,35 @@ export class TimelineComponent
     return this.selectedTraces
       .slice()
       .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a, b));
+  }
+
+  private getStoredDeselectedTraces(): TraceType[] {
+    const storedDeselectedTraces = this.store?.get(
+      this.storeKeyDeselectedTraces,
+    );
+    return JSON.parse(storedDeselectedTraces ?? '[]');
+  }
+
+  private updateStoredDeselectedTraces(clickedType: TraceType) {
+    if (!this.store) {
+      return;
+    }
+
+    let storedTraces = this.getStoredDeselectedTraces();
+    if (
+      this.selectedTraces.includes(clickedType) &&
+      storedTraces.includes(clickedType)
+    ) {
+      storedTraces = storedTraces.filter(
+        (storedTrace) => storedTrace !== clickedType,
+      );
+    } else if (
+      !this.selectedTraces.includes(clickedType) &&
+      !storedTraces.includes(clickedType)
+    ) {
+      storedTraces.push(clickedType);
+    }
+
+    this.store.add(this.storeKeyDeselectedTraces, JSON.stringify(storedTraces));
   }
 }
