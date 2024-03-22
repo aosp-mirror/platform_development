@@ -19,6 +19,7 @@
     <string name="send_home" translatable="false">Send HOME intent</string>
     <string name="send_secondary_home" translatable="false">Send SECONDARY_HOME intent</string>
     <string name="move_task_to_back" translatable="false">Move task to back</string>
+    <string name="calculator_new_task" translatable="false">Calculator in new task</string>
 
     <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
 

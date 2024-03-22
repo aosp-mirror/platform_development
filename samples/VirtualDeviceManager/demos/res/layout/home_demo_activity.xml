@@ -27,4 +27,11 @@
         android:onClick="onMoveTaskToBack"
         android:text="@string/move_task_to_back" />
 
+    <Button
+        android:id="@+id/calculator_new_task"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onCalculatorNewTask"
+        android:text="@string/calculator_new_task" />
+
 </LinearLayout>
