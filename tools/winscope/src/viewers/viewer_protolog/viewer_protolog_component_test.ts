@@ -34,6 +34,7 @@ import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
@@ -56,7 +57,11 @@ describe('ViewerProtologComponent', () => {
           BrowserAnimationsModule,
           MatSelectModule,
         ],
-        declarations: [ViewerProtologComponent, ProtologScrollDirective],
+        declarations: [
+          ViewerProtologComponent,
+          SelectWithFilterComponent,
+          ProtologScrollDirective,
+        ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
       }).compileComponents();
       fixture = TestBed.createComponent(ViewerProtologComponent);
@@ -79,12 +84,55 @@ describe('ViewerProtologComponent', () => {
       expect(htmlElement.querySelector('.scroll-messages')).toBeTruthy();
     });
 
-    it('applies text filters correctly', () => {
+    it('applies log level filter correctly', async () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.messages = allMessages;
+          return;
+        }
+        component.uiData.messages = allMessages.filter((message) =>
+          (event as CustomEvent).detail.includes(message.level),
+        );
+      });
+      await checkSelectFilter('.log-level');
+    });
+
+    it('applies tag filter correctly', async () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.messages = allMessages;
+          return;
+        }
+        component.uiData.messages = allMessages.filter((message) =>
+          (event as CustomEvent).detail.includes(message.tag),
+        );
+      });
+      await checkSelectFilter('.tag');
+    });
+
+    it('applies source file filter correctly', async () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.messages = allMessages;
+          return;
+        }
+        component.uiData.messages = allMessages.filter((message) =>
+          (event as CustomEvent).detail.includes(message.at),
+        );
+      });
+      await checkSelectFilter('.source-file');
+    });
+
+    it('applies text filter correctly', () => {
+      const allMessages = makeUiData().messages;
       htmlElement.addEventListener(
         Events.SearchStringFilterChanged,
         (event) => {
-          component.uiData.messages = component.uiData.messages.filter(
-            (message) => message.text.includes((event as CustomEvent).detail),
+          component.uiData.messages = allMessages.filter((message) =>
+            message.text.includes((event as CustomEvent).detail),
           );
         },
       );
@@ -102,6 +150,10 @@ describe('ViewerProtologComponent', () => {
       inputEl.dispatchEvent(new Event('input'));
       fixture.detectChanges();
       expect(component.uiData.messages.length).toEqual(100);
+      inputEl.value = '';
+      inputEl.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
     });
 
     it('scrolls to current entry on button click', () => {
@@ -157,6 +209,31 @@ describe('ViewerProtologComponent', () => {
 
       expect(timestamp).toEqual('10ns');
     });
+
+    async function checkSelectFilter(filterSelector: string) {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
+
+      const filterTrigger = assertDefined(
+        htmlElement.querySelector(
+          `.filters ${filterSelector} .mat-select-trigger`,
+        ),
+      ) as HTMLInputElement;
+      filterTrigger.click();
+      await fixture.whenStable();
+
+      const firstOption = assertDefined(
+        document.querySelector('.mat-select-panel .mat-option'),
+      ) as HTMLElement;
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(100);
+
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
+    }
   });
 
   describe('Scroll component', () => {

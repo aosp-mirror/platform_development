@@ -23,7 +23,12 @@ import {
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -31,6 +36,7 @@ import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {Events} from './events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
@@ -45,10 +51,19 @@ describe('ViewerTransactionsComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [MatDividerModule, ScrollingModule],
+        imports: [
+          ScrollingModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatInputModule,
+          BrowserAnimationsModule,
+          MatSelectModule,
+          MatDividerModule,
+        ],
         declarations: [
           ViewerTransactionsComponent,
           TransactionsScrollDirective,
+          SelectWithFilterComponent,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
       }).compileComponents();
@@ -87,6 +102,109 @@ describe('ViewerTransactionsComponent', () => {
 
     it('renders properties', () => {
       expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
+    });
+
+    it('applies transaction id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(
+        Events.TransactionIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) =>
+            (event as CustomEvent).detail.includes(entry.transactionId),
+          );
+        },
+      );
+      await checkSelectFilter('.transaction-id');
+    });
+
+    it('applies vsync id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.VSyncIdFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(`${entry.vsyncId}`);
+        });
+      });
+      await checkSelectFilter('.vsyncid');
+    });
+
+    it('applies pid filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.pid);
+        });
+      });
+      await checkSelectFilter('.pid');
+    });
+
+    it('applies uid filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.UidFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.uid);
+        });
+      });
+      await checkSelectFilter('.uid');
+    });
+
+    it('applies type filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.TypeFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.type);
+        });
+      });
+      await checkSelectFilter('.type');
+    });
+
+    it('applies layer/display id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.LayerIdFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.layerOrDisplayId);
+        });
+      });
+      await checkSelectFilter('.layer-or-display-id');
+    });
+
+    it('applies what filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(Events.WhatFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.some((allowed: string) => {
+            return entry.what.includes(allowed);
+          });
+        });
+      });
+      await checkSelectFilter('.what');
     });
 
     it('scrolls to current entry on button click', () => {
@@ -194,6 +312,30 @@ describe('ViewerTransactionsComponent', () => {
         UiPropertyTreeNode.from(propertiesTree),
         {},
       );
+    }
+
+    async function checkSelectFilter(filterSelector: string) {
+      component.inputData = makeUiData(0);
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(2);
+      const filterTrigger = assertDefined(
+        htmlElement.querySelector(
+          `.filters ${filterSelector} .mat-select-trigger`,
+        ),
+      ) as HTMLInputElement;
+      filterTrigger.click();
+      await fixture.whenStable();
+
+      const firstOption = assertDefined(
+        document.querySelector('.mat-select-panel .mat-option'),
+      ) as HTMLElement;
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(1);
+
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(2);
     }
   });
 
