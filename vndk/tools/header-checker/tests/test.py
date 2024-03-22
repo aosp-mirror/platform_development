@@ -539,6 +539,14 @@ class HeaderCheckerTest(unittest.TestCase):
                                    'x86_64', 'libtest', diff_flags)
         self.assertEqual(return_code, 1)
 
+    def test_bit_field_diff(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libbit_field", "libbit_field")
+        self.prepare_and_run_abi_diff_all_archs(
+            "libbit_field", "libbit_field_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=True)
+
 
 if __name__ == '__main__':
     unittest.main()

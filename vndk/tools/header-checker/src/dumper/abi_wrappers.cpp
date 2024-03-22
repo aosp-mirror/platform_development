@@ -605,9 +605,11 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
     }
     std::string field_name(field->getName());
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
+    uint64_t bit_width =
+        field->isBitField() ? field->getBitWidthValue(*ast_contextp_) : 0;
     recordp->AddRecordField(repr::RecordFieldIR(
         field_name, GetTypeUniqueId(field_type), field_offset,
-        AccessClangToIR(field->getAccess())));
+        AccessClangToIR(field->getAccess()), field->isBitField(), bit_width));
     field++;
     field_index++;
   }

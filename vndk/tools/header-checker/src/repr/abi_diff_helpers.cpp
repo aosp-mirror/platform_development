@@ -366,7 +366,9 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
   // CompareAndDumpTypeDiff should not return kDirectExt.
   // In case it happens, report an incompatible diff for review.
   if (field_diff_status.IsExtension() ||
-      old_field->GetOffset() != new_field->GetOffset()) {
+      old_field->GetOffset() != new_field->GetOffset() ||
+      old_field->IsBitField() != new_field->IsBitField() ||
+      old_field->GetBitWidth() != new_field->GetBitWidth()) {
     field_diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
   field_diff_status.CombineWith(
@@ -376,8 +378,8 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
 
 // This function filters out the pairs of old and new fields that meet the
 // following conditions:
-//   The old field's (offset, type) is unique in old_fields.
-//   The new field's (offset, type) is unique in new_fields.
+//   The old field's (offset, bit width, type) is unique in old_fields.
+//   The new field's (offset, bit width, type) is unique in new_fields.
 //   The two fields have compatible attributes except the name.
 //
 // This function returns either kNoDiff or kIndirectDiff. It is the status of
@@ -392,6 +394,12 @@ DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
   auto is_less = [](const RecordFieldIR *first, const RecordFieldIR *second) {
     if (first->GetOffset() != second->GetOffset()) {
       return first->GetOffset() < second->GetOffset();
+    }
+    if (first->IsBitField() != second->IsBitField()) {
+      return first->IsBitField() < second->IsBitField();
+    }
+    if (first->GetBitWidth() != second->GetBitWidth()) {
+      return first->GetBitWidth() < second->GetBitWidth();
     }
     return first->GetReferencedType() < second->GetReferencedType();
   };
@@ -452,14 +460,17 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
   // Map names to RecordFieldIR.
   AbiElementMap<const RecordFieldIR *> old_fields_map;
   AbiElementMap<const RecordFieldIR *> new_fields_map;
-  utils::AddToMap(
-      &old_fields_map, old_fields,
-      [](const RecordFieldIR *f) {return f->GetName();},
-      [](const RecordFieldIR *f) {return f;});
-  utils::AddToMap(
-      &new_fields_map, new_fields,
-      [](const RecordFieldIR *f) {return f->GetName();},
-      [](const RecordFieldIR *f) {return f;});
+
+  auto get_field_name = [](const RecordFieldIR *f) -> std::string {
+    return !f->GetName().empty()
+               ? f->GetName()
+               : std::to_string(f->GetOffset()) + "#" + f->GetReferencedType();
+  };
+
+  utils::AddToMap(&old_fields_map, old_fields, get_field_name,
+                  [](const RecordFieldIR *f) { return f; });
+  utils::AddToMap(&new_fields_map, new_fields, get_field_name,
+                  [](const RecordFieldIR *f) { return f; });
   // Compare the fields whose names are not present in both records.
   result.removed_fields =
       utils::FindRemovedElements(old_fields_map, new_fields_map);
