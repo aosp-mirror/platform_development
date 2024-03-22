@@ -20,14 +20,14 @@ class AdditionalContentProvider : ContentProvider() {
         uri: Uri,
         projection: Array<String>?,
         queryArgs: Bundle?,
-        cancellationSignal: CancellationSignal?
+        cancellationSignal: CancellationSignal?,
     ): Cursor? {
         val context = context ?: return null
         val cursor = MatrixCursor(arrayOf(AdditionalContentContract.Columns.URI))
         val chooserIntent =
             queryArgs?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java) ?: return cursor
         // Images are img1 ... img8
-        var uris = Array(ImageContentProvider.IMAGE_COUNT) { idx ->
+        val uris = Array(ImageContentProvider.IMAGE_COUNT) { idx ->
             ImageContentProvider.makeItemUri(idx + 1, "image/jpeg")
         }
         val callingPackage = getCallingPackage()
@@ -55,8 +55,33 @@ class AdditionalContentProvider : ContentProvider() {
         val customActionFactory = CustomActionFactory(context)
 
         // Make a random number of custom actions each time they change something.
-        result.putParcelableArray(Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
-            customActionFactory.getCustomActions(Random.nextInt(5)))
+        result.putParcelableArray(
+            Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
+            customActionFactory.getCustomActions(Random.nextInt(5))
+        )
+
+        // Update alternate intent if the chooser intent has one.
+        extras?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java)?.let { chooserIntent ->
+            if (chooserIntent.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS)) {
+                chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                    ?.let { targetIntent ->
+                        result.putParcelableArray(
+                            Intent.EXTRA_ALTERNATE_INTENTS,
+                            arrayOf(createAlternateIntent(targetIntent))
+                        )
+                    }
+            }
+
+            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION)) {
+                result.setModifyShareAction(
+                    context,
+                    chooserIntent.getParcelableExtra(
+                        Intent.EXTRA_INTENT,
+                        Intent::class.java
+                    )?.extraStream?.size ?: -1
+                )
+            }
+        }
         return result
     }
 
@@ -65,7 +90,7 @@ class AdditionalContentProvider : ContentProvider() {
         projection: Array<String>?,
         selection: String?,
         selectionArgs: Array<String>?,
-        sortOrder: String?
+        sortOrder: String?,
     ): Cursor? {
         return null
     }
@@ -86,7 +111,7 @@ class AdditionalContentProvider : ContentProvider() {
         uri: Uri,
         values: ContentValues?,
         selection: String?,
-        selectionArgs: Array<String>?
+        selectionArgs: Array<String>?,
     ): Int {
         return 0
     }
