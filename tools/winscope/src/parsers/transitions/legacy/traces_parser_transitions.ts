@@ -17,12 +17,12 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
+import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
+import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ParserTransitionsUtils} from './parser_transitions_utils';
 
 export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNode> {
   private readonly wmTransitionTrace: Trace<PropertyTreeNode> | undefined;

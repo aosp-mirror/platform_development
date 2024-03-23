@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+import {TracesParserCujs} from 'parsers/events/traces_parser_cujs';
+import {TracesParserTransitions} from 'parsers/transitions/legacy/traces_parser_transitions';
 import {Parser} from 'trace/parser';
 import {Traces} from 'trace/traces';
-import {TracesParserCujs} from './events/traces_parser_cujs';
-import {TracesParserTransitions} from './transitions/traces_parser_transitions';
 
 export class TracesParserFactory {
   static readonly PARSERS = [TracesParserCujs, TracesParserTransitions];

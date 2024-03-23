@@ -17,10 +17,15 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
+import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
+import {VisibilityPropertiesComputation} from 'parsers/surface_flinger/computations/visibility_properties_computation';
+import {ZOrderPathsComputation} from 'parsers/surface_flinger/computations/z_order_paths_computation';
+import {HierarchyTreeBuilderSf} from 'parsers/surface_flinger/hierarchy_tree_builder_sf';
+import {ParserSfUtils} from 'parsers/surface_flinger/parser_surface_flinger_utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/surfaceflinger/udc/json';
 import {android} from 'protos/surfaceflinger/udc/static';
@@ -35,11 +40,6 @@ import {EnumFormatter, LAYER_ID_FORMATTER} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
-import {RectsComputation} from './computations/rects_computation';
-import {VisibilityPropertiesComputation} from './computations/visibility_properties_computation';
-import {ZOrderPathsComputation} from './computations/z_order_paths_computation';
-import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
-import {ParserSfUtils} from './parser_surface_flinger_utils';
 
 class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [

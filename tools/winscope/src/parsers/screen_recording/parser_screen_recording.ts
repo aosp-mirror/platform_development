@@ -17,7 +17,7 @@
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
