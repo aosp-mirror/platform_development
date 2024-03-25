@@ -40,7 +40,7 @@ import {UiData} from './ui_data';
       <div class="entries">
         <div class="filters">
           <div class="time"></div>
-          <div class="id">
+          <div class="id transaction-id">
             <select-with-filter
               label="TX ID"
               [options]="uiData.allTransactionIds"
@@ -80,7 +80,7 @@ import {UiData} from './ui_data';
               (selectChange)="onTypeFilterChanged($event)">
             </select-with-filter>
           </div>
-          <div class="id">
+          <div class="id layer-or-display-id">
             <select-with-filter
               label="LAYER/DISP ID"
               outerFilterWidth="125"
