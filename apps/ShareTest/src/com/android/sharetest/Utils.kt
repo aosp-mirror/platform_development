@@ -28,6 +28,7 @@ import android.service.chooser.ChooserTarget
 import android.text.TextUtils
 import androidx.core.os.bundleOf
 
+const val REFINEMENT_ACTION = "com.android.sharetest.REFINEMENT"
 private const val EXTRA_IS_INITIAL = "isInitial"
 
 fun createAlternateIntent(intent: Intent): Intent {
@@ -120,3 +121,16 @@ fun createCallerTarget(context: Context, text: String) =
         ComponentName(context, CallerDirectTargetActivity::class.java),
         bundleOf(Intent.EXTRA_TEXT to text)
     )
+
+fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
+    PendingIntent.getBroadcast(
+        context,
+        1,
+        Intent(REFINEMENT_ACTION).apply {
+            setPackage(context.packageName)
+            this.isInitial = isInitial
+        },
+        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT or
+            PendingIntent.FLAG_CANCEL_CURRENT
+
+    ).intentSender

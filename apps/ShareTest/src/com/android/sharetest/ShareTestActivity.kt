@@ -319,14 +319,9 @@ class ShareTestActivity : Activity() {
         }
 
         if (requireViewById<CheckBox>(R.id.use_refinement).isChecked) {
-            val refinementIntentSender = PendingIntent.getBroadcast(
-                this,
-                1,
-                Intent(REFINEMENT_ACTION).setPackage(getPackageName()),
-                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT
-            ).intentSender
             chooserIntent.putExtra(
-                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER, refinementIntentSender
+                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
+                createRefinementIntentSender(this, true)
             )
         }
 
@@ -430,10 +425,6 @@ class ShareTestActivity : Activity() {
         super.onDestroy()
         unregisterReceiver(customActionReceiver)
         unregisterReceiver(refinementReceiver)
-    }
-
-    companion object {
-        const val REFINEMENT_ACTION = "com.android.sharetest.REFINEMENT"
     }
 }
 

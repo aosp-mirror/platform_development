@@ -14,7 +14,13 @@ class RefinementActivity : Activity() {
         val sharedIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
         val builder: AlertDialog.Builder = AlertDialog.Builder(this)
         builder
-                .setMessage("Complete the share?")
+                .setMessage(
+                    """
+                    |Is modified by payload selection: ${!intent.isInitial}
+                    |
+                    |Complete the share?
+                    """.trimMargin()
+                )
                 .setTitle("Refinement invoked!")
                 .setPositiveButton("Yes") { _, _ ->
                     val bundle = Bundle().apply {

@@ -101,6 +101,13 @@ class AdditionalContentProvider : ContentProvider() {
                     )
                 )
             }
+
+            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER)) {
+                result.putParcelable(
+                    Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
+                    createRefinementIntentSender(context, false)
+                )
+            }
         }
         return result
     }
