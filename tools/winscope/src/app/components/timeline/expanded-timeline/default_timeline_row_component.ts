@@ -55,11 +55,19 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
-  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
-  @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;
+  @ViewChild('canvas', {static: false}) override canvasRef:
+    | ElementRef
+    | undefined;
+  @ViewChild('wrapper', {static: false}) override wrapperRef:
+    | ElementRef
+    | undefined;
 
   hoveringEntry?: Timestamp;
-  hoveringSegment?: TimeRange;
+
+  ngOnInit() {
+    assertDefined(this.trace);
+    assertDefined(this.selectionRange);
+  }
 
   getEntryWidth() {
     return this.canvasDrawer.getScaledCanvasHeight();
@@ -71,26 +79,19 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     );
   }
 
-  ngOnInit() {
-    if (!this.trace || !this.selectionRange) {
-      throw Error('Not all required inputs have been set');
-    }
-  }
-
   override onHover(mousePoint: Point) {
     this.drawEntryHover(mousePoint);
   }
 
   override handleMouseOut(e: MouseEvent) {
-    if (this.hoveringEntry || this.hoveringSegment) {
+    if (this.hoveringEntry) {
       // If undefined there is no current hover effect so no need to clear
       this.redraw();
     }
     this.hoveringEntry = undefined;
-    this.hoveringSegment = undefined;
   }
 
-  override async drawTimeline() {
+  override drawTimeline() {
     assertDefined(this.trace)
       .sliceTime(
         assertDefined(this.selectionRange).from,
@@ -102,9 +103,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     this.drawSelectedEntry();
   }
 
-  protected override async getEntryAt(
-    mousePoint: Point,
-  ): Promise<TraceEntry<{}> | undefined> {
+  protected override getEntryAt(mousePoint: Point): TraceEntry<{}> | undefined {
     const timestampOfClick = this.getTimestampOf(mousePoint.x);
     const candidateEntry = assertDefined(this.trace).findLastLowerOrEqualEntry(
       timestampOfClick,
@@ -121,10 +120,8 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     return undefined;
   }
 
-  private async drawEntryHover(mousePoint: Point) {
-    const currentHoverEntry = (
-      await this.getEntryAt(mousePoint)
-    )?.getTimestamp();
+  private drawEntryHover(mousePoint: Point) {
+    const currentHoverEntry = this.getEntryAt(mousePoint)?.getTimestamp();
 
     if (this.hoveringEntry === currentHoverEntry) {
       return;
@@ -132,8 +129,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
 
     if (this.hoveringEntry) {
       // If null there is no current hover effect so no need to clear
-      this.canvasDrawer.clear();
-      this.drawTimeline();
+      this.redraw();
     }
 
     this.hoveringEntry = currentHoverEntry;

@@ -83,7 +83,7 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.TRANSACTIONS, [timestamp10, timestamp20])
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp20])
       .build();
-    timelineData.initialize(traces, undefined);
+    await timelineData.initialize(traces, undefined);
     component.timelineData = timelineData;
     expect(timelineData.getCurrentPosition()).toBeTruthy();
     component.currentTracePosition = timelineData.getCurrentPosition()!;

@@ -339,7 +339,7 @@ export class Mediator {
     // allow the UI to update before making the main thread very busy
     await TimeUtils.sleepMs(10);
 
-    this.timelineData.initialize(
+    await this.timelineData.initialize(
       this.tracePipeline.getTraces(),
       await this.tracePipeline.getScreenRecordingVideo(),
     );

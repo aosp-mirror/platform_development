@@ -120,7 +120,7 @@ describe('ExpandedTimelineComponent', () => {
       .setTimestamps(TraceType.TRANSITION, [time10, time60])
       .setTimestamps(TraceType.PROTO_LOG, [])
       .build();
-    timelineData.initialize(traces, undefined);
+    await timelineData.initialize(traces, undefined);
     component.timelineData = timelineData;
   });
 
