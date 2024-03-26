@@ -232,7 +232,8 @@ void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
   for (auto &&field : record_type.GetObjects("fields")) {
     RecordFieldIR record_field_ir(
         field.GetString("field_name"), field.GetString("referenced_type"),
-        field.GetUint("field_offset"), GetAccess(field));
+        field.GetUint("field_offset"), GetAccess(field),
+        field.GetBool("is_bit_field"), field.GetUint("bit_width"));
     record_ir->AddRecordField(std::move(record_field_ir));
   }
 }
