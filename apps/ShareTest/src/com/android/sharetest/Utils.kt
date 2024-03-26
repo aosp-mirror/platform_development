@@ -17,13 +17,16 @@
 package com.android.sharetest
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Bundle
 import android.service.chooser.ChooserAction
+import android.service.chooser.ChooserTarget
 import android.text.TextUtils
+import androidx.core.os.bundleOf
 
 private const val EXTRA_IS_INITIAL = "isInitial"
 
@@ -108,3 +111,12 @@ var Intent.isInitial: Boolean
         putExtra(EXTRA_IS_INITIAL, value)
     }
     get() = getBooleanExtra(EXTRA_IS_INITIAL, true)
+
+fun createCallerTarget(context: Context, text: String) =
+    ChooserTarget(
+        "Caller Target",
+        Icon.createWithResource(context, R.drawable.launcher_icon),
+        1f,
+        ComponentName(context, CallerDirectTargetActivity::class.java),
+        bundleOf(Intent.EXTRA_TEXT to text)
+    )
