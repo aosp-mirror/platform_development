@@ -307,6 +307,10 @@ inline void SetIRToProtobufRecordField(
   record_field_protobuf->set_access(
       AccessIRToProtobuf(record_field_ir->GetAccess()));
   record_field_protobuf->set_field_offset(record_field_ir->GetOffset());
+  if (record_field_ir->IsBitField()) {
+    record_field_protobuf->set_is_bit_field(true);
+    record_field_protobuf->set_bit_width(record_field_ir->GetBitWidth());
+  }
 }
 
 inline bool SetIRToProtobufBaseSpecifier(
