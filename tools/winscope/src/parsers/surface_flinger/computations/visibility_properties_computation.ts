@@ -169,21 +169,14 @@ export class VisibilityPropertiesComputation implements Computation {
       this.getDefinedValue(layer, 'isOpaque')
         ? opaqueLayers.push(layer)
         : transparentLayers.push(layer);
-
-      if (!isVisible) {
-        layer.addEagerProperty(
-          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
-            layer.id,
-            'visibilityReason',
-            this.getVisibilityReasons(layer),
-          ),
-        );
-      }
     }
   }
 
   private getIsVisible(layer: HierarchyTreeNode): boolean {
     if (this.isHiddenByParent(layer) || this.isHiddenByPolicy(layer)) {
+      return false;
+    }
+    if (this.hasZeroAlpha(layer)) {
       return false;
     }
     if (
@@ -242,8 +235,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('buffer is empty');
     }
 
-    const color = this.getColor(layer);
-    if (color && this.getDefinedValue(color, 'a') === 0) {
+    if (this.hasZeroAlpha(layer)) {
       reasons.push('alpha is 0');
     }
 
@@ -252,6 +244,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('bounds is 0x0');
     }
 
+    const color = this.getColor(layer);
     if (
       color &&
       bounds &&
@@ -289,6 +282,13 @@ export class VisibilityPropertiesComputation implements Computation {
       this.hasValidEmptyVisibleRegion(visibleRegionNode)
     ) {
       reasons.push('visible region calculated by Composition Engine is empty');
+    }
+
+    if (
+      visibleRegionNode?.getValue() === null &&
+      !layer.getEagerPropertyByName('excludesCompositionState')?.getValue()
+    ) {
+      reasons.push('null visible region');
     }
 
     if (reasons.length === 0) reasons.push('unknown');
@@ -402,6 +402,11 @@ export class VisibilityPropertiesComputation implements Computation {
       this.getDefinedValue(layer, 'id') ===
         VisibilityPropertiesComputation.OFFSCREEN_LAYER_ROOT_ID
     );
+  }
+
+  private hasZeroAlpha(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue() ?? 0;
+    return alpha === 0;
   }
 
   private isActiveBufferEmpty(buffer: PropertyTreeNode | undefined): boolean {

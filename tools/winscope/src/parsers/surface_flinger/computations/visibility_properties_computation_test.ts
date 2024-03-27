@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
 import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {VisibilityPropertiesComputation} from './visibility_properties_computation';
 
 describe('VisibilityPropertiesComputation', () => {
@@ -43,7 +44,7 @@ describe('VisibilityPropertiesComputation', () => {
             visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -72,6 +73,9 @@ describe('VisibilityPropertiesComputation', () => {
         visibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeTrue();
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
   });
 
   it('detects non-visible layer that is hidden by policy', () => {
@@ -90,7 +94,7 @@ describe('VisibilityPropertiesComputation', () => {
             flags: LayerFlag.HIDDEN,
             visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -119,6 +123,7 @@ describe('VisibilityPropertiesComputation', () => {
         invisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual(['flag is hidden']);
   });
 
   it('detects non-visible layer that is hidden by parent', () => {
@@ -137,7 +142,7 @@ describe('VisibilityPropertiesComputation', () => {
             visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             flags: LayerFlag.HIDDEN,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -165,7 +170,7 @@ describe('VisibilityPropertiesComputation', () => {
                 flags: 0,
                 visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
                 activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
-                color: {r: 0, g: 0, b: 0, a: 0},
+                color: {r: 0, g: 0, b: 0, a: 1},
                 cornerRadius: 0,
                 shadowRadius: 0,
                 backgroundBlurRadius: 0,
@@ -203,9 +208,59 @@ describe('VisibilityPropertiesComputation', () => {
         hiddenLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(hiddenLayer)).toEqual(['hidden by parent 1']);
   });
 
-  it('detects non-visible layer due to null active buffer', () => {
+  it('detects non-visible layer due to zero alpha', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setChildren([
+        {
+          id: 1,
+          name: 'layerZeroAlpha',
+          properties: {
+            id: 1,
+            name: 'layerZeroAlpha',
+            parent: -1,
+            children: [],
+            visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 0},
+            cornerRadius: 0,
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            layerStack: 0,
+            z: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+            screenBounds: null,
+            isOpaque: false,
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+
+    const layerZeroAlpha = assertDefined(
+      hierarchyRoot.getChildByName('layerZeroAlpha'),
+    );
+    expect(
+      assertDefined(
+        layerZeroAlpha.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
+    ).toBeFalse();
+    expect(getVisibilityReasons(layerZeroAlpha)).toEqual(['alpha is 0']);
+  });
+
+  it('detects non-visible layer due to null active buffer and no effects', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -250,6 +305,11 @@ describe('VisibilityPropertiesComputation', () => {
         invisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual([
+      'buffer is empty',
+      'alpha is 0',
+      'does not have color fill, shadow or blur',
+    ]);
   });
 
   it('detects non-visible layer due to empty bounds', () => {
@@ -270,7 +330,7 @@ describe('VisibilityPropertiesComputation', () => {
             bounds: {left: 0, right: 0, top: 0, bottom: 0},
             excludesCompositionState: true,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -299,9 +359,10 @@ describe('VisibilityPropertiesComputation', () => {
         invisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual(['bounds is 0x0']);
   });
 
-  it('detects non-visible layer due to no visible region', () => {
+  it('detects non-visible layer due to null visible region', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -317,7 +378,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             visibleRegion: null,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -346,6 +407,9 @@ describe('VisibilityPropertiesComputation', () => {
         invisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual([
+      'null visible region',
+    ]);
   });
 
   it('detects non-visible layer due to empty visible region', () => {
@@ -364,7 +428,7 @@ describe('VisibilityPropertiesComputation', () => {
             visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 0}]},
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             cornerRadius: 0,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
@@ -393,6 +457,9 @@ describe('VisibilityPropertiesComputation', () => {
         invisibleLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeFalse();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual([
+      'visible region calculated by Composition Engine is empty',
+    ]);
   });
 
   it('adds occludedBy layers and updates isVisible', () => {
@@ -424,7 +491,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 0,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -452,7 +519,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 0,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -490,6 +557,9 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       invisibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
+    expect(
+      invisibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
 
     expect(
       assertDefined(
@@ -499,6 +569,9 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       visibleLayer.getEagerPropertyByName('occludedBy')?.getValue(),
     ).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
   });
 
   it('adds partiallyOccludedBy layers and updates isVisible', () => {
@@ -530,7 +603,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 0,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -558,7 +631,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 1,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -593,6 +666,9 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getChildByName('0')
         ?.getValue(),
     ).toEqual('2 partiallyOccludingLayer');
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
 
     expect(
       assertDefined(
@@ -602,6 +678,9 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       visibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
   });
 
   it('adds coveredByLayers layers and updates isVisible', () => {
@@ -633,7 +712,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 0,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -661,7 +740,7 @@ describe('VisibilityPropertiesComputation', () => {
             activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
             cornerRadius: 0,
             flags: 0,
-            color: {r: 0, g: 0, b: 0, a: 0},
+            color: {r: 0, g: 0, b: 0, a: 1},
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -696,6 +775,9 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getChildByName('0')
         ?.getValue(),
     ).toEqual('2 coveringLayer');
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
 
     expect(
       assertDefined(
@@ -705,5 +787,14 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       visibleLayer.getEagerPropertyByName('coveredBy')?.getValue(),
     ).toEqual([]);
+    expect(
+      visibleLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
   });
+
+  function getVisibilityReasons(layer: HierarchyTreeNode): string[] {
+    return assertDefined(layer.getEagerPropertyByName('visibilityReason'))
+      .getAllChildren()
+      .map((child) => child.getValue());
+  }
 });
