@@ -66,7 +66,7 @@ export class ParserTransitionsUtils {
     ParserTransitionsUtils.TransitionTraceProto.fields['transitions'];
   private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
     ParserTransitionsUtils.TransitionField,
-    ['type'],
+    ['type', 'targets'],
   );
   private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
   private static readonly PERFETTO_TRANSITION_OPERATIONS = [
