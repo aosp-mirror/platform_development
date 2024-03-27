@@ -17,6 +17,7 @@
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
+import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceType} from 'trace/trace_type';
 
@@ -27,6 +28,10 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
 
   override getTraceType(): TraceType {
     return TraceType.SCREENSHOT;
+  }
+
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LATEST;
   }
 
   override getMagicNumber(): number[] | undefined {

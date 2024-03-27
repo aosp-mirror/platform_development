@@ -18,6 +18,7 @@ import {TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -42,6 +43,10 @@ describe('ParserWindowManager', () => {
 
     it('has expected trace type', () => {
       expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+    });
+
+    it('has expected coarse version', () => {
+      expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
     it('provides elapsed timestamps', () => {

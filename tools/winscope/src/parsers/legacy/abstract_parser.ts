@@ -16,6 +16,7 @@
 
 import {Timestamp, TimestampType} from 'common/time';
 import {TimestampFactory} from 'common/timestamp_factory';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -27,7 +28,9 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {ParsingUtils} from './parsing_utils';
 
-abstract class AbstractParser<T extends object = object> implements Parser<T> {
+export abstract class AbstractParser<T extends object = object>
+  implements Parser<T>
+{
   private timestamps = new Map<TimestampType, Timestamp[]>();
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
@@ -70,6 +73,10 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
 
   getTimestamps(type: TimestampType): undefined | Timestamp[] {
     return this.timestamps.get(type);
+  }
+
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
   }
 
   getEntry(
@@ -116,5 +123,3 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
 
   abstract getTraceType(): TraceType;
 }
-
-export {AbstractParser};
