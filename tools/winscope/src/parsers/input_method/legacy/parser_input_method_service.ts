@@ -16,78 +16,72 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {HierarchyTreeBuilderInputMethod} from 'parsers/input_method/hierarchy_tree_builder_input_method';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/ime/latest/json';
-import {android} from 'protos/ime/latest/static';
+import root from 'protos/ime/udc/json';
+import {android} from 'protos/ime/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {HierarchyTreeBuilderInputMethod} from './hierarchy_tree_builder_input_method';
 
-class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> {
+class ParserInputMethodService extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [
-    0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45,
-  ]; // .IMMTRACE
+    0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45,
+  ]; // .IMSTRACE
 
-  private static readonly ENTRY_DENYLIST_PROPERTIES = [
-    'inputMethodManagerService',
-  ];
+  private static readonly ENTRY_DENYLIST_PROPERTIES = ['inputMethodService'];
   private static readonly ENTRY_EAGER_PROPERTIES = ['where'];
   private static readonly SERVICE_EAGER_PROPERTIES = [
-    'curMethodId',
-    'curFocusedWindowName',
-    'lastImeTargetWindowName',
-    'inputShown',
+    'windowVisible',
+    'decorViewVisible',
+    'inputEditorInfo',
   ];
 
-  private static readonly InputMethodManagerServiceTraceFileProto =
+  private static readonly InputMethodServiceTraceFileProto =
     TamperedMessageType.tamper(
       root.lookupType(
-        'android.view.inputmethod.InputMethodManagerServiceTraceFileProto',
+        'android.view.inputmethod.InputMethodServiceTraceFileProto',
       ),
     );
   private static readonly entryField =
-    ParserInputMethodManagerService.InputMethodManagerServiceTraceFileProto
-      .fields['entry'];
+    ParserInputMethodService.InputMethodServiceTraceFileProto.fields['entry'];
   private static readonly serviceField = assertDefined(
-    ParserInputMethodManagerService.entryField.tamperedMessageType,
-  ).fields['inputMethodManagerService'];
+    ParserInputMethodService.entryField.tamperedMessageType,
+  ).fields['inputMethodService'];
 
   private static readonly Operations = {
     SetFormattersService: new SetFormatters(
-      ParserInputMethodManagerService.serviceField,
+      ParserInputMethodService.serviceField,
     ),
     TranslateIntDefService: new TranslateIntDef(
-      ParserInputMethodManagerService.serviceField,
+      ParserInputMethodService.serviceField,
     ),
     AddDefaultsServiceEager: new AddDefaults(
-      ParserInputMethodManagerService.serviceField,
-      ParserInputMethodManagerService.SERVICE_EAGER_PROPERTIES,
+      ParserInputMethodService.serviceField,
+      ParserInputMethodService.SERVICE_EAGER_PROPERTIES,
     ),
     AddDefaultsServiceLazy: new AddDefaults(
-      ParserInputMethodManagerService.serviceField,
+      ParserInputMethodService.serviceField,
       undefined,
-      ParserInputMethodManagerService.SERVICE_EAGER_PROPERTIES,
+      ParserInputMethodService.SERVICE_EAGER_PROPERTIES,
     ),
-    SetFormattersEntry: new SetFormatters(
-      ParserInputMethodManagerService.entryField,
-    ),
+    SetFormattersEntry: new SetFormatters(ParserInputMethodService.entryField),
     AddDefaultsEntryEager: new AddDefaults(
-      ParserInputMethodManagerService.entryField,
-      ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES,
+      ParserInputMethodService.entryField,
+      ParserInputMethodService.ENTRY_EAGER_PROPERTIES,
     ),
     AddDefaultsEntryLazy: new AddDefaults(
-      ParserInputMethodManagerService.entryField,
+      ParserInputMethodService.entryField,
       undefined,
-      ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES.concat(
-        ParserInputMethodManagerService.ENTRY_DENYLIST_PROPERTIES,
+      ParserInputMethodService.ENTRY_EAGER_PROPERTIES.concat(
+        ParserInputMethodService.ENTRY_DENYLIST_PROPERTIES,
       ),
     ),
   };
@@ -95,20 +89,20 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
   private realToElapsedTimeOffsetNs: undefined | bigint;
 
   override getTraceType(): TraceType {
-    return TraceType.INPUT_METHOD_MANAGER_SERVICE;
+    return TraceType.INPUT_METHOD_SERVICE;
   }
 
   override getMagicNumber(): number[] {
-    return ParserInputMethodManagerService.MAGIC_NUMBER;
+    return ParserInputMethodService.MAGIC_NUMBER;
   }
 
   override decodeTrace(
     buffer: Uint8Array,
-  ): android.view.inputmethod.IInputMethodManagerServiceTraceProto[] {
+  ): android.view.inputmethod.IInputMethodServiceTraceProto[] {
     const decoded =
-      ParserInputMethodManagerService.InputMethodManagerServiceTraceFileProto.decode(
+      ParserInputMethodService.InputMethodServiceTraceFileProto.decode(
         buffer,
-      ) as android.view.inputmethod.IInputMethodManagerServiceTraceFileProto;
+      ) as android.view.inputmethod.IInputMethodServiceTraceFileProto;
     const timeOffset = BigInt(
       decoded.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
@@ -116,9 +110,9 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
     return decoded.entry ?? [];
   }
 
-  protected override getTimestamp(
+  override getTimestamp(
     type: TimestampType,
-    entry: android.view.inputmethod.IInputMethodManagerServiceTraceProto,
+    entry: android.view.inputmethod.IInputMethodServiceTraceProto,
   ): undefined | Timestamp {
     const elapsedRealtimeNanos = BigInt(
       assertDefined(entry.elapsedRealtimeNanos).toString(),
@@ -138,10 +132,10 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
     return undefined;
   }
 
-  protected override processDecodedEntry(
+  override processDecodedEntry(
     index: number,
     timestampType: TimestampType,
-    entry: android.view.inputmethod.IInputMethodManagerServiceTraceProto,
+    entry: android.view.inputmethod.IInputMethodServiceTraceProto,
   ): HierarchyTreeNode {
     if (
       entry.elapsedRealtimeNanos === undefined ||
@@ -153,7 +147,7 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
   }
 
   private makeHierarchyTree(
-    entryProto: android.view.inputmethod.IInputMethodManagerServiceTraceProto,
+    entryProto: android.view.inputmethod.IInputMethodServiceTraceProto,
   ): HierarchyTreeNode {
     const entry = new PropertiesProviderBuilder()
       .setEagerProperties(this.makeEntryEagerPropertiesTree(entryProto))
@@ -161,78 +155,74 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
         this.makeEntryLazyPropertiesStrategy(entryProto),
       )
       .setEagerOperations([
-        ParserInputMethodManagerService.Operations.AddDefaultsEntryEager,
+        ParserInputMethodService.Operations.AddDefaultsEntryEager,
       ])
       .setCommonOperations([
-        ParserInputMethodManagerService.Operations.SetFormattersEntry,
+        ParserInputMethodService.Operations.SetFormattersEntry,
       ])
       .setLazyOperations([
-        ParserInputMethodManagerService.Operations.AddDefaultsEntryLazy,
+        ParserInputMethodService.Operations.AddDefaultsEntryLazy,
       ])
       .build();
 
-    const inputMethodManagerService = entryProto.inputMethodManagerService
+    const inputMethodService = entryProto.inputMethodService
       ? new PropertiesProviderBuilder()
           .setEagerProperties(
-            this.makeServiceEagerPropertiesTree(
-              entryProto.inputMethodManagerService,
-            ),
+            this.makeServiceEagerPropertiesTree(entryProto.inputMethodService),
           )
           .setLazyPropertiesStrategy(
             this.makeServiceLazyPropertiesStrategy(
-              entryProto.inputMethodManagerService,
+              entryProto.inputMethodService,
             ),
           )
           .setEagerOperations([
-            ParserInputMethodManagerService.Operations.AddDefaultsServiceEager,
+            ParserInputMethodService.Operations.AddDefaultsServiceEager,
           ])
           .setCommonOperations([
-            ParserInputMethodManagerService.Operations.SetFormattersService,
-            ParserInputMethodManagerService.Operations.TranslateIntDefService,
+            ParserInputMethodService.Operations.SetFormattersService,
+            ParserInputMethodService.Operations.TranslateIntDefService,
           ])
           .setLazyOperations([
-            ParserInputMethodManagerService.Operations.AddDefaultsServiceLazy,
+            ParserInputMethodService.Operations.AddDefaultsServiceLazy,
           ])
           .build()
       : undefined;
 
     return new HierarchyTreeBuilderInputMethod()
       .setRoot(entry)
-      .setChildren(inputMethodManagerService ? [inputMethodManagerService] : [])
+      .setChildren(inputMethodService ? [inputMethodService] : [])
       .build();
   }
 
   private makeEntryEagerPropertiesTree(
-    entryProto: android.view.inputmethod.IInputMethodManagerServiceTraceProto,
+    entryProto: android.view.inputmethod.IInputMethodServiceTraceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     Object.getOwnPropertyNames(entryProto).forEach((it) => {
-      if (
-        !ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES.includes(it)
-      ) {
+      if (!ParserInputMethodService.ENTRY_EAGER_PROPERTIES.includes(it)) {
         denyList.push(it);
       }
     });
 
     return new PropertyTreeBuilderFromProto()
       .setData(entryProto)
-      .setRootId('InputMethodManagerService')
+      .setRootId('InputMethodService')
       .setRootName('entry')
       .setDenyList(denyList)
       .build();
   }
 
   private makeEntryLazyPropertiesStrategy(
-    entryProto: android.view.inputmethod.IInputMethodManagerServiceTraceProto,
+    entryProto: android.view.inputmethod.IInputMethodServiceTraceProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
         .setData(entryProto)
-        .setRootId('InputMethodManagerService')
+        .setRootId('InputMethodService')
         .setRootName('entry')
         .setDenyList(
-          ParserInputMethodManagerService.ENTRY_EAGER_PROPERTIES.concat(
-            ParserInputMethodManagerService.ENTRY_DENYLIST_PROPERTIES,
+          ParserInputMethodService.ENTRY_EAGER_PROPERTIES.concat(
+            ParserInputMethodService.ENTRY_DENYLIST_PROPERTIES,
           ),
         )
         .build();
@@ -240,44 +230,41 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
   }
 
   private makeServiceEagerPropertiesTree(
-    serviceProto: android.server.inputmethod.IInputMethodManagerServiceProto,
+    serviceProto: android.inputmethodservice.IInputMethodServiceProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     let data: any = serviceProto;
     if (serviceProto) {
       Object.getOwnPropertyNames(serviceProto).forEach((it) => {
-        if (
-          !ParserInputMethodManagerService.SERVICE_EAGER_PROPERTIES.includes(it)
-        ) {
+        if (!ParserInputMethodService.SERVICE_EAGER_PROPERTIES.includes(it)) {
           denyList.push(it);
         }
       });
     } else {
-      data = {inputMethodManagerService: null};
+      data = {inputMethodService: null};
     }
-
     return new PropertyTreeBuilderFromProto()
-      .setData(data)
-      .setRootId('InputMethodManagerService')
-      .setRootName('inputMethodManagerService')
+      .setData(serviceProto)
+      .setRootId('InputMethodService')
+      .setRootName('inputMethodService')
       .setDenyList(denyList)
       .setVisitPrototype(false)
       .build();
   }
 
   private makeServiceLazyPropertiesStrategy(
-    serviceProto: android.server.inputmethod.IInputMethodManagerServiceProto,
+    serviceProto: android.inputmethodservice.IInputMethodServiceProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
-        .setData(serviceProto ?? {inputMethodManagerService: null})
-        .setRootId('InputMethodManagerService')
-        .setRootName('inputMethodManagerService')
-        .setDenyList(ParserInputMethodManagerService.SERVICE_EAGER_PROPERTIES)
+        .setData(serviceProto ?? {inputMethodService: null})
+        .setRootId('InputMethodService')
+        .setRootName('inputMethodService')
+        .setDenyList(ParserInputMethodService.SERVICE_EAGER_PROPERTIES)
         .setVisitPrototype(false)
         .build();
     };
   }
 }
 
-export {ParserInputMethodManagerService};
+export {ParserInputMethodService};
