@@ -135,7 +135,7 @@ export class ProxyConnection implements Connection {
   }
 
   keepAliveTrace(view: ProxyConnection) {
-    if (!view.isEndTraceState()) {
+    if (!view.isStartingTraceState() && !view.isEndTraceState()) {
       clearInterval(view.keep_alive_worker);
       view.keep_alive_worker = undefined;
       return;

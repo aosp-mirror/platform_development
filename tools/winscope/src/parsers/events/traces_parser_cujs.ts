@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractTracesParser} from 'parsers/abstract_traces_parser';
+import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';

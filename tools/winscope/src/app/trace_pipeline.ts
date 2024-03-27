@@ -27,9 +27,9 @@ import {
 } from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
 import {FileAndParsers} from 'parsers/file_and_parsers';
-import {ParserFactory} from 'parsers/parser_factory';
+import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
+import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
-import {TracesParserFactory} from 'parsers/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -190,7 +190,7 @@ export class TracePipeline {
       return;
     }
 
-    const legacyParsers = await new ParserFactory().createParsers(
+    const legacyParsers = await new LegacyParserFactory().createParsers(
       filterResult.legacy,
       this.timestampFactory,
       progressListener,

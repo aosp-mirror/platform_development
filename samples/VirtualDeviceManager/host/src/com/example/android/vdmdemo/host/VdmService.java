@@ -67,7 +67,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -279,6 +278,7 @@ public final class VdmService extends Hilt_VdmService {
             mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_APP;
             if (mPendingRemoteIntent != null) {
                 remoteDisplay.launchIntent(mPendingRemoteIntent);
+                mPendingRemoteIntent = null;
             }
         } else if (event.hasStopStreaming() && !event.getStopStreaming().getPause()) {
             mDisplayRepository.removeDisplayByRemoteId(event.getDisplayId());
@@ -431,24 +431,12 @@ public final class VdmService extends Hilt_VdmService {
                 MoreExecutors.directExecutor(),
                 new ActivityListener() {
 
-                    private final HashSet<Integer> mSeenTrampolines = new HashSet<>();
-
                     @Override
                     public void onTopActivityChanged(
                             int displayId, @NonNull ComponentName componentName) {
                         Log.w(TAG, "onTopActivityChanged " + displayId + ": " + componentName);
                         int remoteDisplayId = mDisplayRepository.getRemoteDisplayId(displayId);
                         if (remoteDisplayId == Display.INVALID_DISPLAY) {
-                            return;
-                        }
-
-                        // The second time the trampoline activity is shown on the display, simply
-                        // remove the display.
-                        if (new ComponentName(VdmService.this, EmptyTrampolineActivity.class)
-                                .equals(componentName)) {
-                            if (!mSeenTrampolines.add(displayId)) {
-                                onDisplayEmpty(displayId);
-                            }
                             return;
                         }
 
@@ -472,7 +460,6 @@ public final class VdmService extends Hilt_VdmService {
                     public void onDisplayEmpty(int displayId) {
                         Log.i(TAG, "Display " + displayId + " is empty, removing");
                         mDisplayRepository.removeDisplay(displayId);
-                        mSeenTrampolines.remove(displayId);
                     }
                 });
         mVirtualDevice.addActivityListener(
@@ -539,8 +526,7 @@ public final class VdmService extends Hilt_VdmService {
     }
 
     void startStreaming(Intent intent) {
-        mPendingRemoteIntent = new Intent(this, EmptyTrampolineActivity.class);
-        mPendingRemoteIntent.putExtra(Intent.EXTRA_INTENT, intent);
+        mPendingRemoteIntent = intent;
         mPendingRemoteIntent.addFlags(
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         mRemoteIo.sendMessage(

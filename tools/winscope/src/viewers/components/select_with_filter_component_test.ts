@@ -67,6 +67,29 @@ describe('SelectWithFilterComponent', () => {
     expect(selectComponent.filteredOptions).toEqual(['2']);
   });
 
+  it('applies selection correctly', () => {
+    const spy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
+    );
+    const trigger = assertDefined(
+      htmlElement.querySelector('.mat-select-trigger'),
+    ) as HTMLElement;
+    trigger.click();
+
+    const option1 = assertDefined(
+      document.querySelector('.mat-select-panel .mat-option'),
+    ) as HTMLElement;
+
+    option1.click();
+    expect(spy).toHaveBeenCalled();
+    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(['1']);
+
+    option1.click();
+    expect(spy).toHaveBeenCalled();
+    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual([]);
+  });
+
   @Component({
     selector: 'host-component',
     template: ` <select-with-filter [label]="label" [options]="allOptions"> </select-with-filter> `,

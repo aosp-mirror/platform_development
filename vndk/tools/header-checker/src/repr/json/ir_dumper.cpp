@@ -106,6 +106,8 @@ static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
   record_field.Set("referenced_type", record_field_ir->GetReferencedType());
   AddAccess(record_field, record_field_ir->GetAccess());
   record_field.Set("field_offset", (uint64_t)record_field_ir->GetOffset());
+  record_field.Set("is_bit_field", record_field_ir->IsBitField());
+  record_field.Set("bit_width", (uint64_t)record_field_ir->GetBitWidth());
   return record_field;
 }
 

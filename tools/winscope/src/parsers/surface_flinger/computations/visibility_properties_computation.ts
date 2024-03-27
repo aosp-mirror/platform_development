@@ -89,7 +89,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ) {
             return false;
           }
-          if (!this.layerContains(layer, other, displaySize)) {
+          if (!this.layerContains(other, layer, displaySize)) {
             return false;
           }
           const cornerRadiusOther =
@@ -131,7 +131,7 @@ export class VisibilityPropertiesComputation implements Computation {
           ) {
             return false;
           }
-          if (!this.layerOverlaps(layer, other, displaySize)) {
+          if (!this.layerOverlaps(other, layer, displaySize)) {
             return false;
           }
           return !occludedBy.includes(other.id);

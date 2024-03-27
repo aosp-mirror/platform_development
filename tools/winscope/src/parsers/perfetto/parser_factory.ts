@@ -20,6 +20,10 @@ import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {InvalidPerfettoTrace} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {ParserProtolog} from 'parsers/protolog/perfetto/parser_protolog';
+import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
+import {ParserTransactions} from 'parsers/transactions/perfetto/parser_transactions';
+import {ParserTransitions} from 'parsers/transitions/perfetto/parser_transitions';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {
@@ -27,10 +31,6 @@ import {
   resetEngineWorker,
   WasmEngineProxy,
 } from 'trace_processor/wasm_engine_proxy';
-import {ParserProtolog} from './parser_protolog';
-import {ParserSurfaceFlinger} from './parser_surface_flinger';
-import {ParserTransactions} from './parser_transactions';
-import {ParserTransitions} from './parser_transitions';
 
 export class ParserFactory {
   private static readonly PARSERS = [

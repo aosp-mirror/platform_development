@@ -75,33 +75,32 @@ describe('DefaultTimelineRowComponent', () => {
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
-    drawRectSpy.calls.reset();
-    await waitToBeCalled(drawRectSpy, 4);
 
-    const width = 32;
-    const height = width;
+    const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
+    const rectWidth = rectHeight;
     const alpha = 0.2;
 
-    const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
+    const canvasWidth =
+      component.canvasDrawer.getScaledCanvasWidth() - rectWidth;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(4);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(0, 0, width, height),
+      new Rect(0, 0, rectWidth, rectHeight),
       component.color,
       alpha,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(Math.floor((canvasWidth * 2) / 100), 0, width, height),
+      new Rect(Math.floor((canvasWidth * 2) / 100), 0, rectWidth, rectHeight),
       component.color,
       alpha,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(Math.floor((canvasWidth * 5) / 100), 0, width, height),
+      new Rect(Math.floor((canvasWidth * 5) / 100), 0, rectWidth, rectHeight),
       component.color,
       alpha,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(Math.floor((canvasWidth * 60) / 100), 0, width, height),
+      new Rect(Math.floor((canvasWidth * 60) / 100), 0, rectWidth, rectHeight),
       component.color,
       alpha,
     );
@@ -114,18 +113,17 @@ describe('DefaultTimelineRowComponent', () => {
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
-    drawRectSpy.calls.reset();
-    await waitToBeCalled(drawRectSpy, 1);
 
-    const width = 32;
-    const height = width;
+    const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
+    const rectWidth = rectHeight;
     const alpha = 0.2;
 
-    const canvasWidth = component.canvasDrawer.getScaledCanvasWidth() - width;
+    const canvasWidth =
+      component.canvasDrawer.getScaledCanvasWidth() - rectWidth;
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(Math.floor((canvasWidth * 10) / 25), 0, width, height),
+      new Rect(Math.floor((canvasWidth * 10) / 25), 0, rectWidth, rectHeight),
       component.color,
       alpha,
     );
@@ -163,16 +161,21 @@ describe('DefaultTimelineRowComponent', () => {
 
     await Promise.all(waitPromises);
 
+    const rectHeight = component.canvasDrawer.getScaledCanvasHeight();
+    const rectWidth = rectHeight;
+
     expect(assertDefined(component.hoveringEntry).getValueNs()).toBe(10n);
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
     expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(0, 0, 32, 32),
+      new Rect(0, 0, rectWidth, rectHeight),
       component.color,
       1.0,
     );
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectBorderSpy).toHaveBeenCalledWith(new Rect(0, 0, 32, 32));
+    expect(drawRectBorderSpy).toHaveBeenCalledWith(
+      new Rect(0, 0, rectWidth, rectHeight),
+    );
   });
 
   it('can draw correct entry on click of first entry', async () => {
@@ -192,7 +195,8 @@ describe('DefaultTimelineRowComponent', () => {
     await fixture.whenRenderingDone();
 
     const canvasWidth = Math.floor(
-      component.canvasDrawer.getScaledCanvasWidth() - 32,
+      component.canvasDrawer.getScaledCanvasWidth() -
+        component.canvasDrawer.getScaledCanvasHeight(),
     );
     const entryPos = Math.floor((canvasWidth * 5) / 100);
 
@@ -207,7 +211,8 @@ describe('DefaultTimelineRowComponent', () => {
     await fixture.whenRenderingDone();
 
     const canvasWidth = Math.floor(
-      component.canvasDrawer.getScaledCanvasWidth() - 32,
+      component.canvasDrawer.getScaledCanvasWidth() -
+        component.canvasDrawer.getScaledCanvasHeight(),
     );
     const entryPos = Math.floor((canvasWidth * 2) / 5);
 
@@ -222,7 +227,8 @@ describe('DefaultTimelineRowComponent', () => {
     await fixture.whenRenderingDone();
 
     const canvasWidth = Math.floor(
-      component.canvasDrawer.getScaledCanvasWidth() - 32,
+      component.canvasDrawer.getScaledCanvasWidth() -
+        component.canvasDrawer.getScaledCanvasHeight(),
     );
     const entryPos = Math.floor((canvasWidth * 10) / 20);
 
@@ -293,7 +299,10 @@ describe('DefaultTimelineRowComponent', () => {
       assertDefined(component.selectedEntry).getTimestamp().getValueNs(),
     ).toBe(expectedTimestampNs);
 
-    const expectedRect = new Rect(xPos + 1, 1, 30, 30);
+    const rectHeight = component.canvasDrawer.getScaledCanvasHeight() - 2;
+    const rectWidth = rectHeight;
+
+    const expectedRect = new Rect(xPos + 1, 1, rectWidth, rectHeight);
 
     expect(drawRectSpy).toHaveBeenCalledTimes(rectSpyCalls);
     expect(drawRectSpy).toHaveBeenCalledWith(
