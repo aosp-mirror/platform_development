@@ -58,6 +58,7 @@ pub struct DependencyMetadata {
     pub kind: Option<String>,
     pub optional: bool,
     pub target: Option<String>,
+    pub rename: Option<String>,
 }
 
 impl DependencyMetadata {
@@ -216,7 +217,7 @@ fn get_externs(
                 && dependency.kind.as_deref() != Some("build")
                 && (dependency.kind.is_none() || test)
             {
-                Some(make_extern(packages, &dependency.name))
+                Some(make_extern(packages, dependency))
             } else {
                 None
             }
@@ -243,16 +244,18 @@ fn get_externs(
     Ok(externs)
 }
 
-fn make_extern(packages: &[PackageMetadata], package_name: &str) -> Result<Extern> {
-    let Some(package) = packages.iter().find(|package| package.name == package_name) else {
-        bail!("package {} not found in metadata", package_name);
+fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) -> Result<Extern> {
+    let Some(package) = packages.iter().find(|package| package.name == dependency.name) else {
+        bail!("package {} not found in metadata", dependency.name);
     };
     let Some(target) = package.targets.iter().find(|target| {
         target.kind.contains(&TargetKind::Lib) || target.kind.contains(&TargetKind::ProcMacro)
     }) else {
-        bail!("Package {} didn't have any library or proc-macro targets", package_name);
+        bail!("Package {} didn't have any library or proc-macro targets", dependency.name);
     };
     let lib_name = target.name.replace('-', "_");
+    let name =
+        if let Some(rename) = &dependency.rename { rename.clone() } else { lib_name.clone() };
 
     // Check whether the package is a proc macro.
     let extern_type =
@@ -262,7 +265,7 @@ fn make_extern(packages: &[PackageMetadata], package_name: &str) -> Result<Exter
             ExternType::Rust
         };
 
-    Ok(Extern { name: lib_name.clone(), lib_name, extern_type })
+    Ok(Extern { name, lib_name, extern_type })
 }
 
 /// Given a package ID like
@@ -391,18 +394,21 @@ mod tests {
                 kind: None,
                 optional: true,
                 target: None,
+                rename: None,
             },
             DependencyMetadata {
                 name: "optionaldep2".to_string(),
                 kind: None,
                 optional: true,
                 target: None,
+                rename: None,
             },
             DependencyMetadata {
                 name: "requireddep".to_string(),
                 kind: None,
                 optional: false,
                 target: None,
+                rename: None,
             },
         ];
         assert_eq!(
