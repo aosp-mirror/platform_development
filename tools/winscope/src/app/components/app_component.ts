@@ -41,6 +41,7 @@ import {
   AppFilesCollected,
   AppFilesUploaded,
   AppInitialized,
+  AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
   WinscopeEvent,
@@ -139,6 +140,15 @@ import {UploadTracesComponent} from './upload_traces_component';
         </div>
 
         <div *ngIf="showDataLoadedElements" class="icon-divider"></div>
+        <button
+          *ngIf="showDataLoadedElements && dumpsUploaded()"
+          color="primary"
+          mat-icon-button
+          matTooltip="Refresh dumps"
+          class="refresh-dumps"
+          (click)="onRefreshDumpsButtonClick()">
+          <mat-icon class="material-symbols-outlined">refresh</mat-icon>
+        </button>
         <button
           *ngIf="showDataLoadedElements"
           color="primary"
@@ -356,7 +366,7 @@ export class AppComponent implements WinscopeEventListener {
   @ViewChild(UploadTracesComponent)
   uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent)
-  collectTracesComponent?: UploadTracesComponent;
+  collectTracesComponent?: CollectTracesComponent;
   @ViewChild(TraceViewComponent) traceViewComponent?: TraceViewComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
@@ -524,6 +534,10 @@ export class AppComponent implements WinscopeEventListener {
     await this.mediator.onWinscopeEvent(new AppFilesUploaded(files));
   }
 
+  async onRefreshDumpsButtonClick() {
+    await this.mediator.onWinscopeEvent(new AppRefreshDumpsRequest());
+  }
+
   async onUploadNewButtonClick() {
     await this.mediator.onWinscopeEvent(new AppResetRequest());
     this.store.clear('treeView');
@@ -598,6 +612,10 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     return `${trace.getDescriptors().join(', ')}`;
+  }
+
+  dumpsUploaded() {
+    return !this.timelineData.hasMoreThanOneDistinctTimestamp();
   }
 
   private getActiveTrace(view: View): Trace<object> | undefined {
