@@ -218,9 +218,10 @@ describe('TimelineComponent', () => {
   });
 
   it('processes active trace input and updates selected traces', () => {
+    loadSfWmTraces();
     fixture.detectChanges();
     const timelineComponent = assertDefined(component.timeline);
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    timelineComponent.selectedTraces = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
@@ -285,29 +286,21 @@ describe('TimelineComponent', () => {
   });
 
   it('handles undefined active trace input', () => {
+    loadSfWmTraces();
     fixture.detectChanges();
     const timelineComponent = assertDefined(component.timeline);
-    component.activeViewTraceTypes = undefined;
-    expect(timelineComponent.internalActiveTrace).toBeUndefined();
-    expect(timelineComponent.selectedTraces).toEqual([]);
 
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
     );
-    expect(timelineComponent.selectedTraces).toEqual([
-      TraceType.SURFACE_FLINGER,
-    ]);
 
     component.activeViewTraceTypes = undefined;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
     );
-    expect(timelineComponent.selectedTraces).toEqual([
-      TraceType.SURFACE_FLINGER,
-    ]);
   });
 
   it('updates trace selection using selector', async () => {
@@ -538,9 +531,10 @@ describe('TimelineComponent', () => {
         .getCurrentPosition()
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
+
     const timeInputField = assertDefined(
-      fixture.debugElement.query(By.css('.time-input.nano')),
-    );
+      document.querySelector('.time-input.nano'),
+    ) as HTMLInputElement;
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
@@ -575,7 +569,7 @@ describe('TimelineComponent', () => {
     );
   });
 
-  it('updates position based on real time input field', () => {
+  it('updates position based on human time input field using date time format', () => {
     loadSfWmTraces();
 
     expect(
@@ -583,28 +577,29 @@ describe('TimelineComponent', () => {
         .getCurrentPosition()
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
+
     const timeInputField = assertDefined(
-      fixture.debugElement.query(By.css('.time-input.human')),
-    );
+      document.querySelector('.time-input.human'),
+    ) as HTMLInputElement;
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
       position105,
-      '1970-01-01T00:00:00.000000110',
+      '1970-01-01, 00:00:00.000000110',
       110n,
     );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
       position100,
-      '1970-01-01T00:00:00.000000110',
+      '1970-01-01, 00:00:00.000000110',
       110n,
     );
 
     testCurrentTimestampOnTimeInput(
       timeInputField,
       position90,
-      '1970-01-01T00:00:00.000000100',
+      '1970-01-01, 00:00:00.000000100',
       100n,
     );
 
@@ -612,7 +607,7 @@ describe('TimelineComponent', () => {
     testCurrentTimestampOnTimeInput(
       timeInputField,
       position110,
-      '1970-01-01T00:00:00.000000110',
+      '1970-01-01, 00:00:00.000000110',
       110n,
     );
 
@@ -620,8 +615,50 @@ describe('TimelineComponent', () => {
     testCurrentTimestampOnTimeInput(
       timeInputField,
       position112,
-      '1970-01-01T00:00:00.000000112',
+      '1970-01-01, 00:00:00.000000112',
       112n,
+    );
+  });
+
+  it('updates position based on human time input field using ISO timestamp format', () => {
+    loadSfWmTraces();
+
+    expect(
+      assertDefined(component.timelineData)
+        .getCurrentPosition()
+        ?.timestamp.valueOf(),
+    ).toEqual(100n);
+
+    const timeInputField = assertDefined(
+      document.querySelector('.time-input.human'),
+    ) as HTMLInputElement;
+
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position90,
+      '1970-01-01T00:00:00.000000100',
+      100n,
+    );
+  });
+
+  it('updates position based on human time input field using time-only format', () => {
+    loadSfWmTraces();
+
+    expect(
+      assertDefined(component.timelineData)
+        .getCurrentPosition()
+        ?.timestamp.valueOf(),
+    ).toEqual(100n);
+
+    const timeInputField = assertDefined(
+      document.querySelector('.time-input.human'),
+    ) as HTMLInputElement;
+
+    testCurrentTimestampOnTimeInput(
+      timeInputField,
+      position105,
+      '00:00:00.000000110',
+      110n,
     );
   });
 
@@ -828,7 +865,7 @@ describe('TimelineComponent', () => {
   }
 
   function testCurrentTimestampOnTimeInput(
-    inputField: DebugElement,
+    inputField: HTMLInputElement,
     pos: TracePosition,
     textInput: string,
     expectedNs: bigint,
@@ -837,8 +874,8 @@ describe('TimelineComponent', () => {
     timelineData.setPosition(pos);
     fixture.detectChanges();
 
-    inputField.nativeElement.value = textInput;
-    inputField.nativeElement.dispatchEvent(new Event('change'));
+    inputField.value = textInput;
+    inputField.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
     expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(

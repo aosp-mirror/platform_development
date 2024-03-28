@@ -57,7 +57,7 @@ describe('Perfetto ParserProtolog', () => {
     ).toEqual('Sent Transition (#11) createdAt=01-29 17:54:23.793');
     expect(
       assertDefined(message.getChildByName('timestamp')).formattedValue(),
-    ).toEqual('2024-01-29T16:54:24.827624563');
+    ).toEqual('2024-01-29, 16:54:24.827624563');
     expect(
       assertDefined(message.getChildByName('tag')).formattedValue(),
     ).toEqual('WindowManager');

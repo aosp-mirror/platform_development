@@ -156,7 +156,7 @@ describe('Timestamp', () => {
       const NOV_10_2022 = 1668038400000n * MILLISECOND;
       expect(
         TimestampConverterUtils.makeRealTimestamp(0n).format(true),
-      ).toEqual('1970-01-01T00:00:00.000');
+      ).toEqual('1970-01-01, 00:00:00.000');
       expect(
         TimestampConverterUtils.makeRealTimestamp(
           NOV_10_2022 +
@@ -166,18 +166,18 @@ describe('Timestamp', () => {
             186n * MILLISECOND +
             123212n,
         ).format(true),
-      ).toEqual('2022-11-10T22:04:54.186');
+      ).toEqual('2022-11-10, 22:04:54.186');
       expect(
         TimestampConverterUtils.makeRealTimestamp(NOV_10_2022).format(true),
-      ).toEqual('2022-11-10T00:00:00.000');
+      ).toEqual('2022-11-10, 00:00:00.000');
       expect(
         TimestampConverterUtils.makeRealTimestamp(NOV_10_2022 + 1n).format(
           true,
         ),
-      ).toEqual('2022-11-10T00:00:00.000');
+      ).toEqual('2022-11-10, 00:00:00.000');
 
       expect(TimestampConverterUtils.makeRealTimestamp(0n).format()).toEqual(
-        '1970-01-01T00:00:00.000000000',
+        '1970-01-01, 00:00:00.000000000',
       );
       expect(
         TimestampConverterUtils.makeRealTimestamp(
@@ -188,13 +188,13 @@ describe('Timestamp', () => {
             186n * MILLISECOND +
             123212n,
         ).format(),
-      ).toEqual('2022-11-10T22:04:54.186123212');
+      ).toEqual('2022-11-10, 22:04:54.186123212');
       expect(
         TimestampConverterUtils.makeRealTimestamp(NOV_10_2022).format(),
-      ).toEqual('2022-11-10T00:00:00.000000000');
+      ).toEqual('2022-11-10, 00:00:00.000000000');
       expect(
         TimestampConverterUtils.makeRealTimestamp(NOV_10_2022 + 1n).format(),
-      ).toEqual('2022-11-10T00:00:00.000000001');
+      ).toEqual('2022-11-10, 00:00:00.000000001');
     });
 
     it('real timestamps with timezone info', () => {
@@ -203,7 +203,7 @@ describe('Timestamp', () => {
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           0n,
         ).format(true),
-      ).toEqual('1970-01-01T05:30:00.000');
+      ).toEqual('1970-01-01, 05:30:00.000');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022 +
@@ -213,23 +213,23 @@ describe('Timestamp', () => {
             186n * MILLISECOND +
             123212n,
         ).format(true),
-      ).toEqual('2022-11-11T03:34:54.186');
+      ).toEqual('2022-11-11, 03:34:54.186');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022,
         ).format(true),
-      ).toEqual('2022-11-10T05:30:00.000');
+      ).toEqual('2022-11-10, 05:30:00.000');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022 + 1n,
         ).format(true),
-      ).toEqual('2022-11-10T05:30:00.000');
+      ).toEqual('2022-11-10, 05:30:00.000');
 
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           0n,
         ).format(),
-      ).toEqual('1970-01-01T05:30:00.000000000');
+      ).toEqual('1970-01-01, 05:30:00.000000000');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022 +
@@ -239,17 +239,17 @@ describe('Timestamp', () => {
             186n * MILLISECOND +
             123212n,
         ).format(),
-      ).toEqual('2022-11-11T03:34:54.186123212');
+      ).toEqual('2022-11-11, 03:34:54.186123212');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022,
         ).format(),
-      ).toEqual('2022-11-10T05:30:00.000000000');
+      ).toEqual('2022-11-10, 05:30:00.000000000');
       expect(
         TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
           NOV_10_2022 + 1n,
         ).format(),
-      ).toEqual('2022-11-10T05:30:00.000000001');
+      ).toEqual('2022-11-10, 05:30:00.000000001');
     });
   });
 });

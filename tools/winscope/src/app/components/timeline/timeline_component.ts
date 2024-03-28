@@ -27,9 +27,11 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
@@ -99,7 +101,10 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                 appearance="fill"
                 (keydown.enter)="onKeydownEnterTimeInputField($event)"
                 (change)="onHumanTimeInputChange($event)">
-                <mat-icon matPrefix>schedule</mat-icon>
+                <mat-icon
+                  [matTooltip]="getHumanTimeTooltip()"
+                  matTooltipClass="multline-tooltip"
+                  matPrefix>schedule</mat-icon>
                 <input
                   matInput
                   name="humanTimeInput"
@@ -108,9 +113,9 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                   <span class="time-difference"> {{ getUTCOffset() }} </span>
                   <button
                     mat-icon-button
-                    [matTooltip]="getCopyPositionTooltip(selectedTimeFormControl.value)"
+                    [matTooltip]="getCopyHumanTimeTooltip()"
                     matTooltipClass="multline-tooltip"
-                    [cdkCopyToClipboard]="selectedTimeFormControl.value"
+                    [cdkCopyToClipboard]="getHumanTime()"
                     matSuffix>
                     <mat-icon>content_copy</mat-icon>
                   </button>
@@ -479,16 +484,10 @@ export class TimelineComponent
   selectedTraces: TraceType[] = [];
   sortedAvailableTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl<TraceType[]>([]);
-  selectedTimeFormControl = new FormControl(
-    'undefined',
-    Validators.compose([Validators.required, this.validateTimeFormat]),
-  );
+  selectedTimeFormControl = new FormControl('undefined');
   selectedNsFormControl = new FormControl(
     'undefined',
-    Validators.compose([
-      Validators.required,
-      Validators.pattern(TimestampUtils.NS_TIMESTAMP_REGEX),
-    ]),
+    Validators.compose([Validators.required, this.validateNsFormat]),
   );
   timestampForm = new FormGroup({
     selectedTime: this.selectedTimeFormControl,
@@ -513,6 +512,14 @@ export class TimelineComponent
     if (timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
     }
+    const converter = assertDefined(timelineData.getTimestampConverter());
+    const validatorFn: ValidatorFn = (control: AbstractControl) => {
+      const valid = converter.validateHumanInput(control.value ?? '');
+      return !valid ? {invalidInput: control.value} : null;
+    };
+    this.selectedTimeFormControl.addValidators(
+      assertDefined(Validators.compose([Validators.required, validatorFn])),
+    );
 
     const screenRecordingVideo = timelineData.getScreenRecordingVideo();
     if (screenRecordingVideo) {
@@ -729,13 +736,22 @@ export class TimelineComponent
       return;
     }
     const target = event.target as HTMLInputElement;
-
+    let input = target.value;
+    // if hh:mm:ss.zz format, append date of current timestamp
+    if (TimestampUtils.isRealTimeOnlyFormat(input)) {
+      const date = assertDefined(
+        TimestampUtils.extractDateFromHumanTimestamp(
+          this.getCurrentTracePosition().timestamp.format(),
+        ),
+      );
+      input = date + 'T' + input;
+    }
     const timelineData = assertDefined(this.timelineData);
     const timestamp = assertDefined(
       timelineData.getTimestampConverter(),
-    ).makeTimestampFromHuman(target.value);
+    ).makeTimestampFromHuman(input);
     await this.updatePosition(
-      assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
+      timelineData.makePositionFromActiveTrace(timestamp),
     );
     this.updateTimeInputValuesToCurrentTimestamp();
   }
@@ -776,21 +792,49 @@ export class TimelineComponent
     return `Copy current position:\n${position}`;
   }
 
+  getHumanTimeTooltip(): string {
+    const [date, time] = this.getCurrentTracePosition()
+      .timestamp.format()
+      .split(', ');
+    return `
+      Date: ${date}
+      Time: ${time}\xa0\xa0\xa0\xa0${this.getUTCOffset()}
+
+      Edit field to update position by inputting time as
+      "hh:mm:ss.zz", "YYYY-MM-DDThh:mm:ss.zz", or "YYYY-MM-DD, hh:mm:ss.zz"
+    `;
+  }
+
+  getCopyHumanTimeTooltip(): string {
+    return this.getCopyPositionTooltip(this.getHumanTime());
+  }
+
+  getHumanTime(): string {
+    return this.getCurrentTracePosition().timestamp.format();
+  }
+
   getUTCOffset(): string {
-    return assertDefined(this.timelineData)
-      .getTimestampConverter()
-      .getUTCOffset();
+    return assertDefined(
+      this.timelineData?.getTimestampConverter(),
+    ).getUTCOffset();
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {
     const currentTimestampNs =
       this.getCurrentTracePosition().timestamp.getValueNs();
     const timelineData = assertDefined(this.timelineData);
-    this.selectedTimeFormControl.setValue(
-      assertDefined(timelineData.getTimestampConverter())
-        .makeTimestampFromNs(currentTimestampNs)
-        .format(),
-    );
+
+    let formattedCurrentTimestamp = assertDefined(
+      timelineData.getTimestampConverter(),
+    )
+      .makeTimestampFromNs(currentTimestampNs)
+      .format();
+    if (TimestampUtils.isHumanRealTimestampFormat(formattedCurrentTimestamp)) {
+      formattedCurrentTimestamp = assertDefined(
+        TimestampUtils.extractTimeFromHumanTimestamp(formattedCurrentTimestamp),
+      );
+    }
+    this.selectedTimeFormControl.setValue(formattedCurrentTimestamp);
     this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }
 
@@ -830,11 +874,8 @@ export class TimelineComponent
     this.store.add(this.storeKeyDeselectedTraces, JSON.stringify(storedTraces));
   }
 
-  private validateTimeFormat(control: FormControl): ValidationErrors | null {
-    const timestampHuman = control.value ?? '';
-    const valid =
-      TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman) ||
-      TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman);
+  private validateNsFormat(control: FormControl): ValidationErrors | null {
+    const valid = TimestampUtils.isNsFormat(control.value ?? '');
     return !valid ? {invalidInput: control.value} : null;
   }
 }

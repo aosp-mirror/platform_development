@@ -48,16 +48,18 @@ describe('Viewer Transactions', () => {
       icon: 'show_chart',
       color: 'rgba(91, 185, 116, 1)',
     });
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:19.592049232');
+    await E2eTestUtils.checkFinalRealTimestamp(
+      '2022-11-21, 18:05:19.592049232',
+    );
     await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T11:36:19.513353722',
+      '2022-11-21, 11:36:19.513353722',
     );
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:17.505508034',
+      '2022-11-21, 18:05:17.505508034',
     );
     await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:17.505508034',
+      '2022-11-21, 18:05:17.505508034',
     );
     await checkSelectedEntry();
 

@@ -37,15 +37,17 @@ describe('Viewer Input Method Service', () => {
       color: 'rgba(242, 153, 0, 1)',
     });
     await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:12.497050996',
+      '2022-11-21, 18:05:12.497050996',
     );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.060151811');
+    await E2eTestUtils.checkFinalRealTimestamp(
+      '2022-11-21, 18:05:18.060151811',
+    );
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:14.721076009',
+      '2022-11-21, 18:05:14.721076009',
     );
     await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:14.721076009',
+      '2022-11-21, 18:05:14.721076009',
     );
 
     await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, true);
@@ -64,7 +66,7 @@ describe('Viewer Input Method Service', () => {
     );
     expect(nodes.length).toEqual(4);
     expect(await nodes[0].getText()).toContain(
-      'InputMethodService - 2022-11-21T18:05:14.721076009 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
+      'InputMethodService - 2022-11-21, 18:05:14.721076009 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(

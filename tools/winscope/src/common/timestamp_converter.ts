@@ -47,7 +47,8 @@ class RealTimestampFormatter implements TimestampFormatter {
     const extraNanos = timestampNanos % 1000000n;
     const formattedTimestamp = new Date(Number(ms))
       .toISOString()
-      .replace('Z', '');
+      .replace('Z', '')
+      .replace('T', ', ');
 
     if (hideNs) {
       return formattedTimestamp;
@@ -79,7 +80,7 @@ export interface ComponentTimestampConverter {
   makeTimestampFromHuman(timestampHuman: string): Timestamp;
   getUTCOffset(): string;
   makeTimestampFromNs(valueNs: bigint): Timestamp;
-  canMakeRealTimestamps(): boolean;
+  validateHumanInput(timestampHuman: string): boolean;
 }
 
 export interface RemoteToolTimestampConverter {
@@ -173,12 +174,15 @@ export class TimestampConverter
   }
 
   makeTimestampFromHuman(timestampHuman: string): Timestamp {
-    if (TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman)) {
+    if (TimestampUtils.isHumanElapsedTimeFormat(timestampHuman)) {
       return this.makeTimestampfromHumanElapsed(timestampHuman);
     }
 
-    if (TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman)) {
-      return assertDefined(this.makeTimestampFromHumanReal(timestampHuman));
+    if (
+      TimestampUtils.isISOFormat(timestampHuman) ||
+      TimestampUtils.isRealDateTimeFormat(timestampHuman)
+    ) {
+      return this.makeTimestampFromHumanReal(timestampHuman);
     }
 
     throw Error('Invalid timestamp format');
@@ -208,7 +212,14 @@ export class TimestampConverter
     return undefined;
   }
 
-  canMakeRealTimestamps(): boolean {
+  validateHumanInput(timestampHuman: string, context = this): boolean {
+    if (context.canMakeRealTimestamps()) {
+      return TimestampUtils.isHumanRealTimestampFormat(timestampHuman);
+    }
+    return TimestampUtils.isHumanElapsedTimeFormat(timestampHuman);
+  }
+
+  private canMakeRealTimestamps(): boolean {
     return this.createdTimestampType === TimestampType.REAL;
   }
 
@@ -233,6 +244,11 @@ export class TimestampConverter
   private makeTimestampFromHumanReal(timestampHuman: string): Timestamp {
     // Remove trailing Z if present
     timestampHuman = timestampHuman.replace('Z', '');
+
+    // Convert to ISO format if required
+    if (TimestampUtils.isRealDateTimeFormat(timestampHuman)) {
+      timestampHuman = timestampHuman.replace(', ', 'T');
+    }
 
     // Date.parse only considers up to millisecond precision,
     // so only pass in YYYY-MM-DDThh:mm:ss
@@ -263,7 +279,7 @@ export class TimestampConverter
     for (let i = 0; i < usedUnits.length; i++) {
       const unit = usedUnits[i];
       const value = usedValues[i];
-      const unitData = TIME_UNITS.find((it) => it.unit === unit)!;
+      const unitData = assertDefined(TIME_UNITS.find((it) => it.unit === unit));
       ns += BigInt(unitData.nanosInUnit) * BigInt(value);
     }
 
