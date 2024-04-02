@@ -340,6 +340,19 @@
                 android:layout_height="wrap_content"
                 android:text="Use Refinement"
                 />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Caller Target"
+                />
+            <CheckBox
+                android:id="@+id/caller_direct_target"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Include Caller Direct Target"
+                />
         </LinearLayout>
     </ScrollView>
     <Button

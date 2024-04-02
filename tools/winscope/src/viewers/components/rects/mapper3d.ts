@@ -36,7 +36,7 @@ class Mapper3D {
   private static readonly LABEL_CIRCLE_RADIUS = 15;
   private static readonly ZOOM_FACTOR_INIT = 1;
   private static readonly ZOOM_FACTOR_MIN = 0.1;
-  private static readonly ZOOM_FACTOR_MAX = 8.5;
+  private static readonly ZOOM_FACTOR_MAX = 30;
   private static readonly ZOOM_FACTOR_STEP = 0.2;
 
   private rects: UiRect[] = [];

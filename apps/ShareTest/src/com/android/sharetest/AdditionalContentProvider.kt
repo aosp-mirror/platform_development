@@ -81,6 +81,33 @@ class AdditionalContentProvider : ContentProvider() {
                     )?.extraStream?.size ?: -1
                 )
             }
+
+            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_TARGETS)) {
+                result.putParcelableArray(
+                    Intent.EXTRA_CHOOSER_TARGETS,
+                    arrayOf(
+                        createCallerTarget(
+                            context,
+                            buildString {
+                                append("Modified Caller Target. Shared URIs:")
+                                chooserIntent.getParcelableExtra(
+                                    Intent.EXTRA_INTENT,
+                                    Intent::class.java
+                                )?.extraStream?.forEach {
+                                    append("\n * $it")
+                                }
+                            }
+                        )
+                    )
+                )
+            }
+
+            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER)) {
+                result.putParcelable(
+                    Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
+                    createRefinementIntentSender(context, false)
+                )
+            }
         }
         return result
     }

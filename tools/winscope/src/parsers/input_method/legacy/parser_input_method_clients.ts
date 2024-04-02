@@ -16,20 +16,20 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
+import {HierarchyTreeBuilderInputMethod} from 'parsers/input_method/hierarchy_tree_builder_input_method';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/ime/latest/json';
-import {android} from 'protos/ime/latest/static';
+import root from 'protos/ime/udc/json';
+import {android} from 'protos/ime/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {LazyPropertiesStrategyType} from 'trace/tree_node/properties_provider';
 import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_builder';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {HierarchyTreeBuilderInputMethod} from './hierarchy_tree_builder_input_method';
 
 class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
   private static readonly MAGIC_NUMBER = [
