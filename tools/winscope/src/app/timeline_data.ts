@@ -28,6 +28,7 @@ import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineData {
   private traces = new Traces();
@@ -45,8 +46,9 @@ export class TimelineData {
     TraceEntry<any> | undefined
   >();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
+  private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
 
-  initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
+  async initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
     this.clear();
 
     this.traces = new Traces();
@@ -61,6 +63,13 @@ export class TimelineData {
 
       this.traces.setTrace(type, trace);
     });
+
+    const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
+    if (transitionTrace) {
+      this.transitions = await Promise.all(
+        transitionTrace.mapEntry(async (entry) => await entry.getValue()),
+      );
+    }
 
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
@@ -78,6 +87,10 @@ export class TimelineData {
     if (types.length > 0) {
       this.setActiveViewTraceTypes([types[0]]);
     }
+  }
+
+  getTransitions(): PropertyTreeNode[] {
+    return this.transitions;
   }
 
   getCurrentPosition(): TracePosition | undefined {

@@ -412,14 +412,12 @@ export class TimelineComponent
   ) {}
 
   ngOnInit() {
-    if (!this.timelineData) {
-      throw Error('timeline data not found');
-    }
-    if (this.timelineData.hasTimestamps()) {
+    const timelineData = assertDefined(this.timelineData);
+    if (timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
     }
 
-    const screenRecordingVideo = this.timelineData.getScreenRecordingVideo();
+    const screenRecordingVideo = timelineData.getScreenRecordingVideo();
     if (screenRecordingVideo) {
       this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(
         URL.createObjectURL(screenRecordingVideo),

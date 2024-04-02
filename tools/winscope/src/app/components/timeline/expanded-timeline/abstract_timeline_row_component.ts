@@ -37,9 +37,9 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     return this.canvasRef?.nativeElement;
   }
 
-  async ngAfterViewInit() {
+  ngAfterViewInit() {
     this._observer.observe(assertDefined(this.wrapperRef).nativeElement);
-    await this.initializeCanvas();
+    this.initializeCanvas();
   }
 
   ngOnChanges() {
@@ -52,7 +52,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     this._observer.disconnect();
   }
 
-  async initializeCanvas() {
+  initializeCanvas() {
     const canvas = this.getCanvas();
 
     // Reset any size before computing new size to avoid it interfering with size computations
@@ -87,7 +87,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     }
 
     this.canvasDrawer.setCanvas(this.getCanvas());
-    await this.redraw();
+    this.redraw();
 
     canvas.addEventListener('mousemove', (event: MouseEvent) => {
       this.handleMouseMove(event);
@@ -110,7 +110,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
       y: e.offsetY,
     };
 
-    const transitionEntry = await this.getEntryAt(mousePoint);
+    const transitionEntry = this.getEntryAt(mousePoint);
     // TODO: This can probably get made better by getting the transition and checking both the end and start timestamps match
     if (transitionEntry && transitionEntry !== this.selectedEntry) {
       this.redraw();
@@ -146,15 +146,13 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     }
   }
 
-  protected async redraw() {
+  protected redraw() {
     this.canvasDrawer.clear();
-    await this.drawTimeline();
+    this.drawTimeline();
   }
 
-  abstract drawTimeline(): Promise<void>;
-  protected abstract getEntryAt(
-    mousePoint: Point,
-  ): Promise<TraceEntry<T> | undefined>;
+  abstract drawTimeline(): void;
+  protected abstract getEntryAt(mousePoint: Point): TraceEntry<T> | undefined;
   protected abstract onHover(mousePoint: Point): void;
   protected abstract handleMouseOut(e: MouseEvent): void;
 }

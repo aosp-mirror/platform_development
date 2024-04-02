@@ -142,8 +142,7 @@ export class MiniTimelineComponent {
       if (event.deltaX !== 0 && moveDirection === 'x') {
         this.updateHorizontalScroll(event);
       }
-    }
-    if (this.drawer !== undefined) {
+    } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
   }
