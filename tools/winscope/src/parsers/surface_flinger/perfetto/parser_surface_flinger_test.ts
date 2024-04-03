@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -51,62 +50,24 @@ describe('Perfetto ParserSurfaceFlinger', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
     });
 
-    it('provides elapsed timestamps', () => {
+    it('provides timestamps', () => {
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089102062832n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089233029344n),
+        TimestampConverterUtils.makeRealTimestamp(1659107090005226366n),
       ];
-      const actual = assertDefined(
-        parser.getTimestamps(TimestampType.ELAPSED),
-      ).slice(0, 3);
+      const actual = assertDefined(parser.getTimestamps()).slice(0, 3);
       expect(actual).toEqual(expected);
-    });
-
-    it('provides real timestamps', () => {
-      const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089102062832n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
-      ];
-      const actual = assertDefined(
-        parser.getTimestamps(TimestampType.REAL),
-      ).slice(0, 3);
-      expect(actual).toEqual(expected);
-    });
-
-    it('applies timezone info to real timestamps only', async () => {
-      const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
-        TraceType.SURFACE_FLINGER,
-        'traces/perfetto/layers_trace.perfetto-trace',
-        true,
-      );
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.SURFACE_FLINGER,
-      );
-
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-        )[0],
-      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n));
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-        )[0],
-      ).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n),
-      );
     });
 
     it('provides correct root entry node', async () => {
-      const entry = await parser.getEntry(1, TimestampType.REAL);
+      const entry = await parser.getEntry(1);
       expect(entry.id).toEqual('LayerTraceEntry root');
       expect(entry.name).toEqual('root');
     });
 
     it('decodes layer state flags', async () => {
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
       {
         const layer = assertDefined(
           entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27')),
@@ -182,7 +143,7 @@ describe('Perfetto ParserSurfaceFlinger', () => {
         TraceType.SURFACE_FLINGER,
         'traces/perfetto/layers_trace_with_duplicated_ids.perfetto-trace',
       );
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
       expect(entry).toBeTruthy();
 
       const layer = assertDefined(

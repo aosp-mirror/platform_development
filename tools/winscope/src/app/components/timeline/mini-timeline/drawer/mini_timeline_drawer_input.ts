@@ -37,7 +37,11 @@ export class MiniTimelineDrawerInput {
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
-    const transformer = new Transformer(this.zoomRange, mapToRange);
+    const transformer = new Transformer(
+      this.zoomRange,
+      mapToRange,
+      assertDefined(this.timelineData.getTimestampConverter()),
+    );
 
     return new MiniCanvasDrawerData(
       transformer.transform(this.selectedPosition),
@@ -117,8 +121,8 @@ export class MiniTimelineDrawerInput {
 
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
-      entry.getTimestamp().getType(),
       this.selection,
+      assertDefined(this.timelineData.getTimestampConverter()),
     );
 
     if (!timeRange) {

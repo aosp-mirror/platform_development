@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -404,9 +403,7 @@ export abstract class PresenterInputMethod {
       return [undefined, undefined, undefined];
     }
 
-    this.currentImeEntryTimestamp = TimestampUtils.format(
-      imeEntry.getTimestamp(),
-    );
+    this.currentImeEntryTimestamp = imeEntry.getTimestamp().format();
 
     if (!this.imeTrace.hasFrameInfo()) {
       return [imeEntry, undefined, undefined];

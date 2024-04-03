@@ -15,8 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -94,7 +93,8 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     ),
   };
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
+  private realToMonotonicTimeOffsetNs: bigint | undefined;
+  private isDump = false;
 
   override getTraceType(): TraceType {
     return TraceType.SURFACE_FLINGER;
@@ -102,6 +102,14 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   override getMagicNumber(): number[] {
     return ParserSurfaceFlinger.MAGIC_NUMBER;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return this.realToMonotonicTimeOffsetNs;
   }
 
   override decodeTrace(
@@ -113,52 +121,30 @@ class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     const timeOffset = BigInt(
       decoded.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
-    this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
+    this.realToMonotonicTimeOffsetNs =
+      timeOffset !== 0n ? timeOffset : undefined;
+    this.isDump =
+      decoded.entry?.length === 1 &&
+      !Object.prototype.hasOwnProperty.call(
+        decoded.entry[0],
+        'elapsedRealtimeNanos',
+      );
     return decoded.entry ?? [];
   }
 
-  override getTimestamp(
-    type: TimestampType,
+  protected override getTimestamp(
     entry: android.surfaceflinger.ILayersTraceProto,
-  ): undefined | Timestamp {
-    const isDump = !Object.prototype.hasOwnProperty.call(
-      entry,
-      'elapsedRealtimeNanos',
+  ): Timestamp {
+    if (this.isDump) {
+      return this.timestampConverter.makeZeroTimestamp();
+    }
+    return this.timestampConverter.makeTimestampFromMonotonicNs(
+      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
-    if (
-      isDump &&
-      NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(
-        type,
-        this.realToElapsedTimeOffsetNs,
-      )
-    ) {
-      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
-    }
-
-    if (!isDump) {
-      const elapsedRealtimeNanos = BigInt(
-        assertDefined(entry.elapsedRealtimeNanos).toString(),
-      );
-      if (
-        this.timestampFactory.canMakeTimestampFromType(
-          type,
-          this.realToElapsedTimeOffsetNs,
-        )
-      ) {
-        return this.timestampFactory.makeTimestampFromType(
-          type,
-          elapsedRealtimeNanos,
-          this.realToElapsedTimeOffsetNs,
-        );
-      }
-    }
-
-    return undefined;
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entry: android.surfaceflinger.ILayersTraceProto,
   ): HierarchyTreeNode {
     return this.makeHierarchyTree(entry);

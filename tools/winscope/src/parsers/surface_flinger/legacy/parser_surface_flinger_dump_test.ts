@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -22,7 +22,11 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserSurfaceFlingerDump', () => {
-  describe('trace with elapsed + real timestamp', () => {
+  beforeAll(() => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
+  });
+
+  describe('trace with real timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
@@ -39,42 +43,28 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
-    it('provides elapsed timestamp', () => {
-      const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
-      expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
-    });
-
-    it('provides real timestamp (always zero)', () => {
-      const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
-      expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
+    it('provides timestamps (always zero)', () => {
+      const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
+      expect(parser.getTimestamps()).toEqual(expected);
     });
 
     it('does not apply timezone info', async () => {
       const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb',
-        true,
+        UnitTestUtils.getTimestampConverter(true),
       )) as Parser<HierarchyTreeNode>;
 
-      const expectedElapsed = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-      ];
-      expect(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-      ).toEqual(expectedElapsed);
-
-      const expectedReal = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
-      expect(parserWithTimezoneInfo.getTimestamps(TimestampType.REAL)).toEqual(
-        expectedReal,
-      );
+      const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
+      expect(parserWithTimezoneInfo.getTimestamps()).toEqual(expected);
     });
 
     it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(0);
       expect(entry).toBeTruthy();
     });
   });
 
-  describe('trace with elapsed (only) timestamp', () => {
+  describe('trace with only elapsed timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
@@ -91,13 +81,9 @@ describe('ParserSurfaceFlingerDump', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
-    it('provides elapsed timestamp (always zero)', () => {
-      const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
-      expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
-    });
-
-    it("doesn't provide real timestamp", () => {
-      expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
+    it('provides timestamp (always zero)', () => {
+      const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
+      expect(parser.getTimestamps()).toEqual(expected);
     });
   });
 });

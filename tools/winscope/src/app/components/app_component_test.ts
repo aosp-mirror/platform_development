@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
 import {ChangeDetectionStrategy} from '@angular/core';
 import {
@@ -37,11 +38,9 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-
-import {ClipboardModule} from '@angular/cdk/clipboard';
-import {Title} from '@angular/platform-browser';
 import {FileUtils} from 'common/file_utils';
 import {
   AppRefreshDumpsRequest,

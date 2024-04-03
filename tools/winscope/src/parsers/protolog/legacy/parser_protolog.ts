@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
@@ -36,7 +36,7 @@ class ParserProtoLog extends AbstractParser {
   private static readonly PROTOLOG_32_BIT_VERSION = '1.0.0';
   private static readonly PROTOLOG_64_BIT_VERSION = '2.0.0';
 
-  private realToElapsedTimeOffsetNs: bigint | undefined;
+  private realToBootTimeOffsetNs: bigint | undefined;
 
   override getTraceType(): TraceType {
     return TraceType.PROTO_LOG;
@@ -44,6 +44,14 @@ class ParserProtoLog extends AbstractParser {
 
   override getMagicNumber(): number[] {
     return ParserProtoLog.MAGIC_NUMBER;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.realToBootTimeOffsetNs;
   }
 
   override decodeTrace(
@@ -71,7 +79,7 @@ class ParserProtoLog extends AbstractParser {
       throw new TypeError(message);
     }
 
-    this.realToElapsedTimeOffsetNs =
+    this.realToBootTimeOffsetNs =
       BigInt(
         assertDefined(fileProto.realTimeToElapsedTimeOffsetMillis).toString(),
       ) * 1000000n;
@@ -92,31 +100,16 @@ class ParserProtoLog extends AbstractParser {
     return fileProto.log;
   }
 
-  override getTimestamp(
-    type: TimestampType,
+  protected override getTimestamp(
     entry: com.android.internal.protolog.IProtoLogMessage,
-  ): undefined | Timestamp {
-    const elapsedRealtimeNanos = BigInt(
-      assertDefined(entry.elapsedRealtimeNanos).toString(),
+  ): Timestamp {
+    return this.timestampConverter.makeTimestampFromBootTimeNs(
+      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
-    if (
-      this.timestampFactory.canMakeTimestampFromType(
-        type,
-        this.realToElapsedTimeOffsetNs,
-      )
-    ) {
-      return this.timestampFactory.makeTimestampFromType(
-        type,
-        elapsedRealtimeNanos,
-        this.realToElapsedTimeOffsetNs,
-      );
-    }
-    return undefined;
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entry: com.android.internal.protolog.IProtoLogMessage,
   ): PropertyTreeNode {
     let messageHash = assertDefined(entry.messageHash).toString();
@@ -136,9 +129,8 @@ class ParserProtoLog extends AbstractParser {
     const logMessage = this.makeLogMessage(entry, message, tag);
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
-      timestampType,
-      this.realToElapsedTimeOffsetNs,
-      this.timestampFactory,
+      this.timestampConverter,
+      this.getRealToMonotonicTimeOffsetNs() !== undefined,
     );
   }
 

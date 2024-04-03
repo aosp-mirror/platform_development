@@ -40,8 +40,8 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ExpandedTimelineToggled, WinscopeEvent} from 'messaging/winscope_event';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -53,12 +53,12 @@ import {SliderComponent} from './mini-timeline/slider_component';
 import {TimelineComponent} from './timeline_component';
 
 describe('TimelineComponent', () => {
-  const time90 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(90n);
-  const time100 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n);
-  const time101 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(101n);
-  const time105 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(105n);
-  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
-  const time112 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(112n);
+  const time90 = TimestampConverterUtils.makeRealTimestamp(90n);
+  const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
+  const time101 = TimestampConverterUtils.makeRealTimestamp(101n);
+  const time105 = TimestampConverterUtils.makeRealTimestamp(105n);
+  const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
+  const time112 = TimestampConverterUtils.makeRealTimestamp(112n);
 
   const position90 = TracePosition.fromTimestamp(time90);
   const position100 = TracePosition.fromTimestamp(time100);
@@ -114,7 +114,11 @@ describe('TimelineComponent', () => {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .build();
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     fixture.detectChanges();
 
     const timelineComponent = assertDefined(component.timeline);
@@ -157,6 +161,7 @@ describe('TimelineComponent', () => {
     assertDefined(assertDefined(component.timelineData)).initialize(
       traces,
       undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
     fixture.detectChanges();
 
@@ -202,7 +207,11 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.SURFACE_FLINGER, [])
       .setTimestamps(TraceType.WINDOW_MANAGER, [time100])
       .build();
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     fixture.detectChanges();
   });
 
@@ -573,7 +582,7 @@ describe('TimelineComponent', () => {
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
     const timeInputField = assertDefined(
-      fixture.debugElement.query(By.css('.time-input.real')),
+      fixture.debugElement.query(By.css('.time-input.human')),
     );
 
     testCurrentTimestampOnTimeInput(
@@ -766,7 +775,11 @@ describe('TimelineComponent', () => {
       .build();
 
     const timelineData = assertDefined(hostComponent.timelineData);
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     hostComponent.availableTraces = [
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
@@ -783,7 +796,11 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();
-    assertDefined(hostComponent.timelineData).initialize(traces, undefined);
+    assertDefined(hostComponent.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     hostComponent.availableTraces = [
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,

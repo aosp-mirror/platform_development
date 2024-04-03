@@ -15,7 +15,7 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {TimestampType} from 'common/time';
+import {RemoteToolTimestampConverter} from 'common/timestamp_converter';
 import {
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
@@ -46,6 +46,7 @@ export class CrossToolProtocol
 {
   private remoteTool?: RemoteTool;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+  private timestampConverter: RemoteToolTimestampConverter | undefined;
 
   constructor() {
     window.addEventListener('message', async (event) => {
@@ -57,6 +58,10 @@ export class CrossToolProtocol
     this.emitEvent = callback;
   }
 
+  setTimestampConverter(converter: RemoteToolTimestampConverter | undefined) {
+    this.timestampConverter = converter;
+  }
+
   async onWinscopeEvent(event: WinscopeEvent) {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
@@ -65,13 +70,11 @@ export class CrossToolProtocol
           return;
         }
 
-        const timestamp = event.position.timestamp;
-        if (timestamp.getType() !== TimestampType.REAL) {
-          console.warn(
-            'Cannot propagate timestamp change to remote tool.' +
-              ` Remote tool expects timestamp type ${TimestampType.REAL},` +
-              ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`,
+        const timestamp =
+          this.timestampConverter?.tryMakeTimestampForRemoteTool(
+            event.position.timestamp,
           );
+        if (timestamp === undefined) {
           return;
         }
 

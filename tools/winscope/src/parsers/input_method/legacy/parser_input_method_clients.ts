@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {HierarchyTreeBuilderInputMethod} from 'parsers/input_method/hierarchy_tree_builder_input_method';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
@@ -86,7 +86,7 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
     ),
   };
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
+  private realToBootTimeOffsetNs: bigint | undefined;
 
   override getTraceType(): TraceType {
     return TraceType.INPUT_METHOD_CLIENTS;
@@ -94,6 +94,14 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
 
   override getMagicNumber(): number[] {
     return ParserInputMethodClients.MAGIC_NUMBER;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.realToBootTimeOffsetNs;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
   }
 
   override decodeTrace(
@@ -106,35 +114,20 @@ class ParserInputMethodClients extends AbstractParser<HierarchyTreeNode> {
     const timeOffset = BigInt(
       decoded.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
-    this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
+    this.realToBootTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
     return decoded.entry ?? [];
   }
 
-  override getTimestamp(
-    type: TimestampType,
+  protected override getTimestamp(
     entry: android.view.inputmethod.IInputMethodClientsTraceProto,
-  ): undefined | Timestamp {
-    const elapsedRealtimeNanos = BigInt(
-      assertDefined(entry.elapsedRealtimeNanos).toString(),
+  ): Timestamp {
+    return this.timestampConverter.makeTimestampFromBootTimeNs(
+      BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     );
-    if (
-      this.timestampFactory.canMakeTimestampFromType(
-        type,
-        this.realToElapsedTimeOffsetNs,
-      )
-    ) {
-      return this.timestampFactory.makeTimestampFromType(
-        type,
-        elapsedRealtimeNanos,
-        this.realToElapsedTimeOffsetNs,
-      );
-    }
-    return undefined;
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entry: android.view.inputmethod.IInputMethodClientsTraceProto,
   ): HierarchyTreeNode {
     if (

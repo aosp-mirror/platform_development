@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {PropertySource} from 'trace/tree_node/property_tree_node';
-import {AddRealToElapsedTimeOffsetTimestamp} from './add_real_to_elapsed_time_offset_timestamp';
+import {AddRealToBootTimeOffsetTimestamp} from './add_real_to_elapsed_time_offset_timestamp';
 
-describe('AddRealToElapsedTimeOffsetTimestamp', () => {
+describe('AddRealToBootTimeOffsetTimestamp', () => {
   it('adds undefined offset', () => {
     const propertyRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -33,21 +33,23 @@ describe('AddRealToElapsedTimeOffsetTimestamp', () => {
       .setName('transition')
       .setChildren([
         {
-          name: 'realToElapsedTimeOffsetTimestamp',
+          name: 'realToBootTimeOffsetTimestamp',
           value: undefined,
           source: PropertySource.CALCULATED,
         },
       ])
       .build();
 
-    const operation = new AddRealToElapsedTimeOffsetTimestamp(undefined);
+    const operation = new AddRealToBootTimeOffsetTimestamp(undefined);
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);
   });
 
   it('adds offset timestamp', () => {
-    const realToElapsedTimeOffsetTimestamp =
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(12345n);
+    const realToBootTimeOffsetTimestamp =
+      TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromMonotonicNs(
+        12345n,
+      );
     const propertyRoot = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('TransitionsTraceEntry')
@@ -60,15 +62,15 @@ describe('AddRealToElapsedTimeOffsetTimestamp', () => {
       .setName('transition')
       .setChildren([
         {
-          name: 'realToElapsedTimeOffsetTimestamp',
-          value: realToElapsedTimeOffsetTimestamp,
+          name: 'realToBootTimeOffsetTimestamp',
+          value: realToBootTimeOffsetTimestamp,
           source: PropertySource.CALCULATED,
         },
       ])
       .build();
 
-    const operation = new AddRealToElapsedTimeOffsetTimestamp(
-      realToElapsedTimeOffsetTimestamp,
+    const operation = new AddRealToBootTimeOffsetTimestamp(
+      realToBootTimeOffsetTimestamp,
     );
     operation.apply(propertyRoot);
     expect(propertyRoot).toEqual(expectedRoot);

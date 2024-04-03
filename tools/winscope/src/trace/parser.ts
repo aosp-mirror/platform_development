@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {CoarseVersion} from './coarse_version';
 import {
   CustomQueryParamTypeMap,
@@ -28,12 +28,15 @@ export interface Parser<T> {
   getCoarseVersion(): CoarseVersion;
   getTraceType(): TraceType;
   getLengthEntries(): number;
-  getTimestamps(type: TimestampType): Timestamp[] | undefined;
-  getEntry(index: AbsoluteEntryIndex, timestampType: TimestampType): Promise<T>;
+  getTimestamps(): Timestamp[] | undefined;
+  getEntry(index: AbsoluteEntryIndex): Promise<T>;
   customQuery<Q extends CustomQueryType>(
     type: Q,
     entriesRange: EntriesRange,
     param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]>;
   getDescriptors(): string[];
+  getRealToMonotonicTimeOffsetNs(): bigint | undefined;
+  getRealToBootTimeOffsetNs(): bigint | undefined;
+  createTimestamps(): void;
 }

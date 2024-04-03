@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {dragElement} from 'test/utils';
 import {TracePosition} from 'trace/trace_position';
@@ -41,16 +41,16 @@ describe('MiniTimelineComponent', () => {
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
 
-  const timestamp10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-  const timestamp15 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n);
-  const timestamp16 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(16n);
-  const timestamp20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
-  const timestamp700 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(700n);
-  const timestamp810 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(810n);
-  const timestamp1000 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1000n);
+  const timestamp10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const timestamp15 = TimestampConverterUtils.makeRealTimestamp(15n);
+  const timestamp16 = TimestampConverterUtils.makeRealTimestamp(16n);
+  const timestamp20 = TimestampConverterUtils.makeRealTimestamp(20n);
+  const timestamp700 = TimestampConverterUtils.makeRealTimestamp(700n);
+  const timestamp810 = TimestampConverterUtils.makeRealTimestamp(810n);
+  const timestamp1000 = TimestampConverterUtils.makeRealTimestamp(1000n);
 
   const position800 = TracePosition.fromTimestamp(
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(800n),
+    TimestampConverterUtils.makeRealTimestamp(800n),
   );
 
   beforeEach(async () => {
@@ -83,7 +83,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.TRANSACTIONS, [timestamp10, timestamp20])
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp20])
       .build();
-    await timelineData.initialize(traces, undefined);
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     component.timelineData = timelineData;
     expect(timelineData.getCurrentPosition()).toBeTruthy();
     component.currentTracePosition = timelineData.getCurrentPosition()!;
@@ -256,7 +260,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     let initialZoom = {
       from: timestamp10,
@@ -285,14 +293,21 @@ describe('MiniTimelineComponent', () => {
       expect(finalZoom.to.getValueNs()).toBeLessThanOrEqual(
         Number(initialZoom.to.getValueNs()),
       );
-      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeLessThan(
-        Number(initialZoom.to.minus(initialZoom.from).getValueNs()),
+      expect(
+        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
+      ).toBeLessThan(
+        Number(
+          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
+        ),
       );
 
       // center to get closer to cursor or stay on cursor
-      const curCenter = finalZoom.from.plus(finalZoom.to).div(2n).getValueNs();
+      const curCenter = finalZoom.from
+        .add(finalZoom.to.getValueNs())
+        .div(2n)
+        .getValueNs();
       const prevCenter = initialZoom.from
-        .plus(initialZoom.to)
+        .add(initialZoom.to.getValueNs())
         .div(2n)
         .getValueNs();
 
@@ -316,7 +331,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     let initialZoom = {
       from: timestamp700,
@@ -345,14 +364,21 @@ describe('MiniTimelineComponent', () => {
       expect(finalZoom.to.getValueNs()).toBeGreaterThanOrEqual(
         Number(initialZoom.to.getValueNs()),
       );
-      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeGreaterThan(
-        Number(initialZoom.to.minus(initialZoom.from).getValueNs()),
+      expect(
+        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
+      ).toBeGreaterThan(
+        Number(
+          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
+        ),
       );
 
       // center to get closer to cursor or stay on cursor unless we reach the edge
-      const curCenter = finalZoom.from.plus(finalZoom.to).div(2n).getValueNs();
+      const curCenter = finalZoom.from
+        .add(finalZoom.to.getValueNs())
+        .div(2n)
+        .getValueNs();
       const prevCenter = initialZoom.from
-        .plus(initialZoom.to)
+        .add(initialZoom.to.getValueNs())
         .div(2n)
         .getValueNs();
 
@@ -380,7 +406,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     const initialZoom = {
       from: timestamp10,
@@ -410,7 +440,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     let initialZoom = {
       from: timestamp10,
@@ -431,8 +465,12 @@ describe('MiniTimelineComponent', () => {
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
       expect(finalZoom).not.toBe(initialZoom);
-      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeLessThan(
-        Number(initialZoom.to.minus(initialZoom.from).getValueNs()),
+      expect(
+        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
+      ).toBeLessThan(
+        Number(
+          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
+        ),
       );
 
       initialZoom = finalZoom;
@@ -446,7 +484,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     let initialZoom = {
       from: timestamp700,
@@ -467,8 +509,12 @@ describe('MiniTimelineComponent', () => {
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
       expect(finalZoom).not.toBe(initialZoom);
-      expect(finalZoom.to.minus(finalZoom.from).getValueNs()).toBeGreaterThan(
-        Number(initialZoom.to.minus(initialZoom.from).getValueNs()),
+      expect(
+        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
+      ).toBeGreaterThan(
+        Number(
+          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
+        ),
       );
 
       initialZoom = finalZoom;
@@ -482,7 +528,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     const initialZoom = {
       from: timestamp10,
@@ -511,7 +561,11 @@ describe('MiniTimelineComponent', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp1000])
       .build();
 
-    assertDefined(component.timelineData).initialize(traces, undefined);
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     const initialZoom = {
       from: timestamp10,

@@ -26,7 +26,12 @@ import {
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
-import {FormControl, FormGroup, Validators} from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
@@ -34,8 +39,7 @@ import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
-import {TimeRange, Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {
   ExpandedTimelineToggled,
@@ -90,26 +94,14 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
           <div id="time-selector">
             <form [formGroup]="timestampForm" class="time-selector-form">
               <mat-form-field
-                class="time-input elapsed"
+                class="time-input human"
                 appearance="fill"
-                (keydown.enter)="onKeydownEnterElapsedTimeInputField($event)"
-                (change)="onHumanElapsedTimeInputChange($event)"
-                *ngIf="!usingRealtime()">
+                (keydown.enter)="onKeydownEnterTimeInputField($event)"
+                (change)="onHumanTimeInputChange($event)">
                 <input
                   matInput
-                  name="humanElapsedTimeInput"
-                  [formControl]="selectedElapsedTimeFormControl" />
-              </mat-form-field>
-              <mat-form-field
-                class="time-input real"
-                appearance="fill"
-                (keydown.enter)="onKeydownEnterRealTimeInputField($event)"
-                (change)="onHumanRealTimeInputChange($event)"
-                *ngIf="usingRealtime()">
-                <input
-                  matInput
-                  name="humanRealTimeInput"
-                  [formControl]="selectedRealTimeFormControl" />
+                  name="humanTimeInput"
+                  [formControl]="selectedTimeFormControl" />
               </mat-form-field>
               <mat-form-field
                 class="time-input nano"
@@ -413,19 +405,9 @@ export class TimelineComponent
   selectedTraces: TraceType[] = [];
   sortedAvailableTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl<TraceType[]>([]);
-  selectedElapsedTimeFormControl = new FormControl(
+  selectedTimeFormControl = new FormControl(
     'undefined',
-    Validators.compose([
-      Validators.required,
-      Validators.pattern(TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX),
-    ]),
-  );
-  selectedRealTimeFormControl = new FormControl(
-    'undefined',
-    Validators.compose([
-      Validators.required,
-      Validators.pattern(TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX),
-    ]),
+    Validators.compose([Validators.required, this.validateTimeFormat]),
   );
   selectedNsFormControl = new FormControl(
     'undefined',
@@ -435,8 +417,7 @@ export class TimelineComponent
     ]),
   );
   timestampForm = new FormGroup({
-    selectedElapsedTime: this.selectedElapsedTimeFormControl,
-    selectedRealTime: this.selectedRealTimeFormControl,
+    selectedTime: this.selectedTimeFormControl,
     selectedNs: this.selectedNsFormControl,
   });
   TRACE_INFO = TRACE_INFO;
@@ -555,12 +536,6 @@ export class TimelineComponent
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
-  usingRealtime(): boolean {
-    return (
-      assertDefined(this.timelineData).getTimestampType() === TimestampType.REAL
-    );
-  }
-
   updateSeekTimestamp(timestamp: Timestamp | undefined) {
     if (timestamp) {
       this.seekTracePosition = assertDefined(
@@ -675,25 +650,16 @@ export class TimelineComponent
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
-  async onHumanElapsedTimeInputChange(event: Event) {
-    if (event.type !== 'change' || !this.selectedElapsedTimeFormControl.valid) {
-      return;
-    }
-    const target = event.target as HTMLInputElement;
-    const timestamp = TimestampUtils.parseHumanElapsed(target.value);
-    await this.updatePosition(
-      assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
-    );
-    this.updateTimeInputValuesToCurrentTimestamp();
-  }
-
-  async onHumanRealTimeInputChange(event: Event) {
-    if (event.type !== 'change' || !this.selectedRealTimeFormControl.valid) {
+  async onHumanTimeInputChange(event: Event) {
+    if (event.type !== 'change' || !this.selectedTimeFormControl.valid) {
       return;
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = TimestampUtils.parseHumanReal(target.value);
+    const timelineData = assertDefined(this.timelineData);
+    const timestamp = assertDefined(
+      timelineData.getTimestampConverter(),
+    ).makeTimestampFromHuman(target.value);
     await this.updatePosition(
       assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
     );
@@ -707,25 +673,17 @@ export class TimelineComponent
     const target = event.target as HTMLInputElement;
     const timelineData = assertDefined(this.timelineData);
 
-    const timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      assertDefined(timelineData.getTimestampType()),
-      StringUtils.parseBigIntStrippingUnit(target.value),
-      0n,
-    );
+    const timestamp = assertDefined(
+      timelineData.getTimestampConverter(),
+    ).makeTimestampFromNs(StringUtils.parseBigIntStrippingUnit(target.value));
     await this.updatePosition(
       timelineData.makePositionFromActiveTrace(timestamp),
     );
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
-  onKeydownEnterElapsedTimeInputField(event: KeyboardEvent) {
-    if (this.selectedElapsedTimeFormControl.valid) {
-      (event.target as HTMLInputElement).blur();
-    }
-  }
-
-  onKeydownEnterRealTimeInputField(event: KeyboardEvent) {
-    if (this.selectedRealTimeFormControl.valid) {
+  onKeydownEnterTimeInputField(event: KeyboardEvent) {
+    if (this.selectedTimeFormControl.valid) {
       (event.target as HTMLInputElement).blur();
     }
   }
@@ -741,21 +699,15 @@ export class TimelineComponent
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {
-    const currentNs = this.getCurrentTracePosition().timestamp.getValueNs();
-    this.selectedElapsedTimeFormControl.setValue(
-      TimestampUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(currentNs),
-        false,
-      ),
+    const currentTimestampNs =
+      this.getCurrentTracePosition().timestamp.getValueNs();
+    const timelineData = assertDefined(this.timelineData);
+    this.selectedTimeFormControl.setValue(
+      assertDefined(timelineData.getTimestampConverter())
+        .makeTimestampFromNs(currentTimestampNs)
+        .format(),
     );
-    this.selectedRealTimeFormControl.setValue(
-      TimestampUtils.format(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(currentNs),
-      ),
-    );
-    this.selectedNsFormControl.setValue(
-      `${this.getCurrentTracePosition().timestamp.getValueNs()} ns`,
-    );
+    this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }
 
   private getSelectedTracesSortedByDisplayOrder(): TraceType[] {
@@ -792,5 +744,13 @@ export class TimelineComponent
     }
 
     this.store.add(this.storeKeyDeselectedTraces, JSON.stringify(storedTraces));
+  }
+
+  private validateTimeFormat(control: FormControl): ValidationErrors | null {
+    const timestampHuman = control.value ?? '';
+    const valid =
+      TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman) ||
+      TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman);
+    return !valid ? {invalidInput: control.value} : null;
   }
 }

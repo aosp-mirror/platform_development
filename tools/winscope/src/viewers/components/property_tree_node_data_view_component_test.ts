@@ -21,9 +21,9 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
@@ -59,9 +59,9 @@ describe('PropertyTreeNodeDataViewComponent', () => {
         .setRootId('test node')
         .setName('timestamp')
         .setValue(
-          NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102158832n),
+          TimestampConverterUtils.makeRealTimestamp(1659126889102158832n),
         )
-        .setFormatter(TIMESTAMP_FORMATTER)
+        .setFormatter(TIMESTAMP_NODE_FORMATTER)
         .build(),
     );
     component.node = node;

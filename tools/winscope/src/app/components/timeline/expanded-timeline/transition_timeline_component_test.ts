@@ -26,8 +26,8 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Rect} from 'common/rect';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
@@ -37,15 +37,15 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 describe('TransitionTimelineComponent', () => {
   let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
-  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-  const time20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
-  const time30 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(30n);
-  const time35 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(35n);
-  const time60 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n);
-  const time85 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(85n);
-  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
-  const time160 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(160n);
+  const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const time20 = TimestampConverterUtils.makeRealTimestamp(20n);
+  const time30 = TimestampConverterUtils.makeRealTimestamp(30n);
+  const time35 = TimestampConverterUtils.makeRealTimestamp(35n);
+  const time60 = TimestampConverterUtils.makeRealTimestamp(60n);
+  const time85 = TimestampConverterUtils.makeRealTimestamp(85n);
+  const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
+  const time160 = TimestampConverterUtils.makeRealTimestamp(160n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -69,6 +69,7 @@ describe('TransitionTimelineComponent', () => {
       .compileComponents();
     fixture = TestBed.createComponent(TransitionTimelineComponent);
     component = fixture.componentInstance;
+    component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
   });
 
   it('can be created', () => {
@@ -115,14 +116,14 @@ describe('TransitionTimelineComponent', () => {
       .setType(TraceType.TRANSITION)
       .setEntries(transitions)
       .setTimestamps([
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(60n),
       ])
       .build();
     component.traceEntries = transitions;
     component.selectionRange = {
-      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+      from: TimestampConverterUtils.makeRealTimestamp(10n),
+      to: TimestampConverterUtils.makeRealTimestamp(110n),
     };
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -614,12 +615,12 @@ describe('TransitionTimelineComponent', () => {
     component.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.TRANSITION)
       .setEntries(transitions)
-      .setTimestamps([NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n)])
+      .setTimestamps([TimestampConverterUtils.makeRealTimestamp(10n)])
       .build();
     component.traceEntries = transitions;
     component.selectionRange = {
-      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n),
+      from: TimestampConverterUtils.makeRealTimestamp(10n),
+      to: TimestampConverterUtils.makeRealTimestamp(110n),
     };
 
     fixture.detectChanges();

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
@@ -29,12 +28,8 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
     return TraceType.TRANSITION;
   }
 
-  override async getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
-    const transitionProto = await this.queryTransition(index);
-
+  override async getEntry(index: number): Promise<PropertyTreeNode> {
+    const transitionProto = await this.queryEntry(index);
     if (this.handlerIdToName === undefined) {
       const handlers = await this.queryHandlers();
       this.handlerIdToName = {};
@@ -42,26 +37,56 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
         (it) => (assertDefined(this.handlerIdToName)[it.id] = it.name),
       );
     }
-
-    return this.makePropertiesTree(timestampType, transitionProto);
+    return this.makePropertiesTree(transitionProto);
   }
 
   protected override getTableName(): string {
     return 'window_manager_shell_transitions';
   }
 
+  protected override async queryEntry(
+    index: number,
+  ): Promise<perfetto.protos.ShellTransition> {
+    const protoBuilder = new FakeProtoBuilder();
+
+    const sql = `
+      SELECT
+        transitions.transition_id,
+        args.key,
+        args.value_type,
+        args.int_value,
+        args.string_value,
+        args.real_value
+      FROM
+        window_manager_shell_transitions as transitions
+        INNER JOIN args ON transitions.arg_set_id = args.arg_set_id
+      WHERE transitions.id = ${index};
+    `;
+    const result = await this.traceProcessor.query(sql).waitAllRows();
+
+    for (const it = result.iter({}); it.valid(); it.next()) {
+      protoBuilder.addArg(
+        it.get('key') as string,
+        it.get('value_type') as string,
+        it.get('int_value') as bigint | undefined,
+        it.get('real_value') as number | undefined,
+        it.get('string_value') as string | undefined,
+      );
+    }
+
+    return protoBuilder.build();
+  }
+
   private makePropertiesTree(
-    timestampType: TimestampType,
     transitionProto: perfetto.protos.ShellTransition,
   ): PropertyTreeNode {
     this.validatePerfettoTransition(transitionProto);
 
     const perfettoTransitionInfo = {
       entry: transitionProto,
-      realToElapsedTimeOffsetNs: assertDefined(this.realToElapsedTimeOffsetNs),
-      timestampType,
+      realToBootTimeOffsetNs: undefined,
       handlerMapping: this.handlerIdToName,
-      timestampFactory: this.timestampFactory,
+      timestampConverter: this.timestampConverter,
     };
 
     const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(
@@ -95,39 +120,6 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       shellEntryTree,
       wmEntryTree,
     );
-  }
-
-  private async queryTransition(
-    index: number,
-  ): Promise<perfetto.protos.ShellTransition> {
-    const protoBuilder = new FakeProtoBuilder();
-
-    const sql = `
-      SELECT
-        transitions.transition_id,
-        args.key,
-        args.value_type,
-        args.int_value,
-        args.string_value,
-        args.real_value
-      FROM
-        window_manager_shell_transitions as transitions
-        INNER JOIN args ON transitions.arg_set_id = args.arg_set_id
-      WHERE transitions.id = ${index};
-    `;
-    const result = await this.traceProcessor.query(sql).waitAllRows();
-
-    for (const it = result.iter({}); it.valid(); it.next()) {
-      protoBuilder.addArg(
-        it.get('key') as string,
-        it.get('value_type') as string,
-        it.get('int_value') as bigint | undefined,
-        it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined,
-      );
-    }
-
-    return protoBuilder.build();
   }
 
   private async queryHandlers(): Promise<TransitionHandler[]> {
