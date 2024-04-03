@@ -25,9 +25,9 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
-import {Analytics} from 'common/analytics';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';

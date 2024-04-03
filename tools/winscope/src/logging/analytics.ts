@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import {globalConfig} from 'common/global_config';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
-import {globalConfig} from '../common/global_config';
 
+/* eslint-disable no-undef */
 export class Analytics {
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
@@ -34,7 +35,7 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
-    static logCollectDumps(requestedDumps: String[]) {
+    static logCollectDumps(requestedDumps: string[]) {
       requestedDumps.forEach((dumpType) => {
         Analytics.doLogEvent(Analytics.TRACING_COLLECT_DUMP, {
           type: dumpType,
@@ -42,7 +43,7 @@ export class Analytics {
       });
     }
 
-    static logCollectTraces(requestedTraces: String[]) {
+    static logCollectTraces(requestedTraces: string[]) {
       requestedTraces.forEach((traceType) => {
         Analytics.doLogEvent(Analytics.TRACING_COLLECT_TRACE, {
           type: traceType,
@@ -61,8 +62,8 @@ export class Analytics {
       direction?: 'in' | 'out',
     ) {
       Analytics.doLogEvent(Analytics.NAVIGATION_ZOOM_EVENT, {
-        direction: direction,
-        type: type,
+        direction,
+        type,
       } as Gtag.CustomParams);
     }
   };

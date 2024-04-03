@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Analytics} from 'common/analytics';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';

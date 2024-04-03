@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CoarseVersion} from './coarse_version';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
