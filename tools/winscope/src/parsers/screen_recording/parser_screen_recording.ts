@@ -18,6 +18,7 @@ import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
+import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {TraceType} from 'trace/trace_type';
@@ -32,6 +33,10 @@ class ScreenRecordingMetadataEntry {
 class ParserScreenRecording extends AbstractParser {
   override getTraceType(): TraceType {
     return TraceType.SCREEN_RECORDING;
+  }
+
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LATEST;
   }
 
   override getMagicNumber(): number[] {

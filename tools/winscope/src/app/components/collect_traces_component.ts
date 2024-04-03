@@ -25,6 +25,7 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
+import {Analytics} from 'common/analytics';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -487,6 +488,7 @@ export class CollectTracesComponent
   async startTracing() {
     console.log('begin tracing');
     const requestedTraces = this.getRequestedTraces();
+    Analytics.Tracing.logCollectTraces(requestedTraces);
     const reqEnableConfig = this.requestedEnableConfig();
     const reqSelectedSfConfig = this.requestedSelection('layers_trace');
     const reqSelectedWmConfig = this.requestedSelection('window_trace');
@@ -506,6 +508,7 @@ export class CollectTracesComponent
   async dumpState() {
     console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
+    Analytics.Tracing.logCollectDumps(requestedDumps);
     const dumpSuccessful = await assertDefined(this.connect).dumpState(
       requestedDumps,
     );

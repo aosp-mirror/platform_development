@@ -19,6 +19,7 @@ import {
   NO_TIMEZONE_OFFSET_FACTORY,
   TimestampFactory,
 } from 'common/timestamp_factory';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {
   CorruptedArchive,
@@ -91,6 +92,7 @@ export class TracePipeline {
       this.loadedParsers.getParsers().forEach((parser) => {
         const trace = Trace.fromParser(parser, commonTimestampType);
         this.traces.setTrace(parser.getTraceType(), trace);
+        Analytics.Tracing.logTraceLoaded(parser);
       });
 
       const tracesParsers = await this.tracesParserFactory.createParsers(

@@ -66,8 +66,8 @@ export class AbtChromeExtensionProtocol
   }
 
   private async onMessageReceived(message: WebCommandMessage) {
-    if (this.isOpenBuganizerResponseMessage(message)) {
-      await this.onOpenBuganizerResponseMessageReceived(message);
+    if (this.isOpenFromBuganizerResponseMessage(message)) {
+      await this.onOpenFromBuganizerResponseMessageReceived(message);
     } else {
       console.warn(
         'ABT chrome extension protocol received unexpected message:',
@@ -76,7 +76,7 @@ export class AbtChromeExtensionProtocol
     }
   }
 
-  private async onOpenBuganizerResponseMessageReceived(
+  private async onOpenFromBuganizerResponseMessageReceived(
     message: OpenBuganizerResponse,
   ) {
     console.log(
@@ -104,7 +104,7 @@ export class AbtChromeExtensionProtocol
     await this.emitEvent(new BuganizerAttachmentsDownloaded(files));
   }
 
-  private isOpenBuganizerResponseMessage(
+  private isOpenFromBuganizerResponseMessage(
     message: WebCommandMessage,
   ): message is OpenBuganizerResponse {
     return message.action === MessageType.OPEN_BUGANIZER_RESPONSE;

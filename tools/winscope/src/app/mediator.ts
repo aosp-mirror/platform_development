@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Analytics} from 'common/analytics';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -147,6 +148,7 @@ export class Mediator {
     await event.visit(
       WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
       async () => {
+        Analytics.Tracing.logOpenFromABT();
         await this.resetAppToInitialState();
         this.currentProgressListener = this.uploadTracesComponent;
         this.currentProgressListener?.onProgressUpdate(

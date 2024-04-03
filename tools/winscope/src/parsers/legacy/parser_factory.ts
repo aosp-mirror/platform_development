@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UnsupportedFileFormat} from 'messaging/winscope_error';
@@ -77,6 +76,7 @@ export class ParserFactory {
           const p = new ParserType(traceFile, timestampFactory);
           await p.parse();
           hasFoundParser = true;
+
           if (p instanceof ParserViewCapture) {
             p.getWindowParsers().forEach((subParser) =>
               parsers.push(new FileAndParser(traceFile, subParser)),

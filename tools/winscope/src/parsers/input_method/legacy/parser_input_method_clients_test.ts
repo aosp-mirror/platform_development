@@ -17,6 +17,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -34,6 +35,10 @@ describe('ParserInputMethodClients', () => {
 
     it('has expected trace type', () => {
       expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_CLIENTS);
+    });
+
+    it('has expected coarse version', () => {
+      expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
     it('provides elapsed timestamps', () => {

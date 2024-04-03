@@ -17,6 +17,7 @@
 import {assertDefined, assertTrue} from 'common/assert_utils';
 import {Timestamp, TimestampType} from 'common/time';
 import {TimestampFactory} from 'common/timestamp_factory';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -90,6 +91,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   getTimestamps(type: TimestampType): Timestamp[] | undefined {
     return this.timestamps.get(type);
+  }
+
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LATEST;
   }
 
   abstract getEntry(

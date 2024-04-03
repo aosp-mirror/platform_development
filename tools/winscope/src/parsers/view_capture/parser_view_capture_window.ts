@@ -21,6 +21,7 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {com} from 'protos/viewcapture/latest/static';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -109,6 +110,10 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
 
   getTraceType(): TraceType {
     return this.traceType;
+  }
+
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
   }
 
   getLengthEntries(): number {
