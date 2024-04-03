@@ -20,14 +20,52 @@ import {TraceType} from 'trace/trace_type';
 import {globalConfig} from '../common/global_config';
 
 export class Analytics {
-  private static TRACE_LOADED_EVENT = 'trace_loaded';
+  private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
+  private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
+  private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
+  private static TRACING_COLLECT_TRACE = 'tracing_collect_trace';
+  private static TRACING_OPEN_FROM_ABT = 'tracing_from_abt';
 
-  static logTraceLoaded(parser: Parser<object>) {
-    Analytics.doLogEvent(
-      Analytics.TRACE_LOADED_EVENT,
-      Analytics.createTraceLoadedEvent(parser),
-    );
-  }
+  static Tracing = class {
+    static logTraceLoaded(parser: Parser<object>) {
+      Analytics.doLogEvent(Analytics.TRACING_LOADED_EVENT, {
+        type: TraceType[parser.getTraceType()],
+        coarse_version: CoarseVersion[parser.getCoarseVersion()],
+      } as Gtag.CustomParams);
+    }
+
+    static logCollectDumps(requestedDumps: String[]) {
+      requestedDumps.forEach((dumpType) => {
+        Analytics.doLogEvent(Analytics.TRACING_COLLECT_DUMP, {
+          type: dumpType,
+        } as Gtag.CustomParams);
+      });
+    }
+
+    static logCollectTraces(requestedTraces: String[]) {
+      requestedTraces.forEach((traceType) => {
+        Analytics.doLogEvent(Analytics.TRACING_COLLECT_TRACE, {
+          type: traceType,
+        } as Gtag.CustomParams);
+      });
+    }
+
+    static logOpenFromABT() {
+      Analytics.doLogEvent(Analytics.TRACING_OPEN_FROM_ABT);
+    }
+  };
+
+  static Navigation = class {
+    static logZoom(
+      type: 'scroll' | 'button' | 'reset',
+      direction?: 'in' | 'out',
+    ) {
+      Analytics.doLogEvent(Analytics.NAVIGATION_ZOOM_EVENT, {
+        direction: direction,
+        type: type,
+      } as Gtag.CustomParams);
+    }
+  };
 
   private static doLogEvent(
     eventName: Gtag.EventNames | (string & {}),
@@ -36,14 +74,5 @@ export class Analytics {
     if (globalConfig.MODE === 'PROD') {
       gtag('event', eventName, eventParams);
     }
-  }
-
-  private static createTraceLoadedEvent(
-    parser: Parser<object>,
-  ): Gtag.EventParams {
-    return {
-      event_label: TraceType[parser.getTraceType()],
-      event_category: CoarseVersion[parser.getCoarseVersion()],
-    } as Gtag.EventParams;
   }
 }

@@ -25,6 +25,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
+import {Analytics} from 'common/analytics';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
@@ -184,14 +185,17 @@ export class MiniTimelineComponent {
   }
 
   resetZoom() {
+    Analytics.Navigation.logZoom('reset');
     this.onZoomChanged(assertDefined(this.timelineData).getFullTimeRange());
   }
 
   zoomIn(zoomOn?: Timestamp) {
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'in');
     this.zoom({nominator: 3n, denominator: 4n}, zoomOn);
   }
 
   zoomOut(zoomOn?: Timestamp) {
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'out');
     this.zoom({nominator: 5n, denominator: 4n}, zoomOn);
   }
 
@@ -290,6 +294,14 @@ export class MiniTimelineComponent {
     if (event.deltaX !== 0 && moveDirection === 'x') {
       this.updateHorizontalScroll(event);
     }
+  }
+
+  private getZoomSource(zoomOn?: Timestamp): 'scroll' | 'button' {
+    if (zoomOn === undefined) {
+      return 'button';
+    }
+
+    return 'scroll';
   }
 
   private getMiniCanvasDrawerInput() {

@@ -92,7 +92,7 @@ export class TracePipeline {
       this.loadedParsers.getParsers().forEach((parser) => {
         const trace = Trace.fromParser(parser, commonTimestampType);
         this.traces.setTrace(parser.getTraceType(), trace);
-        Analytics.logTraceLoaded(parser);
+        Analytics.Tracing.logTraceLoaded(parser);
       });
 
       const tracesParsers = await this.tracesParserFactory.createParsers(
