@@ -18,6 +18,7 @@ import {FunctionUtils} from 'common/function_utils';
 import {TimestampType} from 'common/time';
 import {
   RemoteToolBugreportReceived,
+  RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   WinscopeEvent,
   WinscopeEventType,
@@ -30,6 +31,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {
   Message,
   MessageBugReport,
+  MessageFiles,
   MessagePong,
   MessageTimestamp,
   MessageType,
@@ -110,7 +112,7 @@ export class CrossToolProtocol
         console.log('Cross-tool protocol received bugreport message:', message);
         await this.onMessageBugreportReceived(message as MessageBugReport);
         console.log(
-          'Cross-tool protocol processes bugreport message:',
+          'Cross-tool protocol processed bugreport message:',
           message,
         );
         break;
@@ -123,6 +125,9 @@ export class CrossToolProtocol
         );
         break;
       case MessageType.FILES:
+        console.log('Cross-tool protocol received files message:', message);
+        await this.onMessageFilesReceived(message as MessageFiles);
+        console.log('Cross-tool protocol processed files message:', message);
         console.log(
           'Cross-tool protocol received unexpected files message',
           message,
@@ -140,6 +145,12 @@ export class CrossToolProtocol
   private async onMessageBugreportReceived(message: MessageBugReport) {
     await this.emitEvent(
       new RemoteToolBugreportReceived(message.file, message.timestampNs),
+    );
+  }
+
+  private async onMessageFilesReceived(message: MessageFiles) {
+    await this.emitEvent(
+      new RemoteToolFilesReceived(message.files, message.timestampNs),
     );
   }
 

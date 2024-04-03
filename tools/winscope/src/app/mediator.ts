@@ -211,6 +211,19 @@ export class Mediator {
     );
 
     await event.visit(
+      WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED,
+      async (event) => {
+        await this.processRemoteFilesReceived(
+          event.files,
+          FilesSource.UPLOADED,
+        );
+        if (event.timestampNs !== undefined) {
+          await this.processRemoteToolTimestampReceived(event.timestampNs);
+        }
+      },
+    );
+
+    await event.visit(
       WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
       async (event) => {
         await this.processRemoteToolTimestampReceived(event.timestampNs);

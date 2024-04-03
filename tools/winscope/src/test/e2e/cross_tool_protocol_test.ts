@@ -19,47 +19,60 @@ import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
   const TIMESTAMP_IN_BUGREPORT_MESSAGE = '1670509911000000000';
+  const TIMESTAMP_IN_FILES_MESSAGE = '1659107090338700812';
   const TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE = '1670509912000000000';
   const TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL = '1670509913000000000';
 
-  beforeAll(async () => {
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
+  beforeEach(async () => {
+    await browser.restart();
+
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
     await browser.manage().timeouts().implicitlyWait(20000);
     await E2eTestUtils.checkServerIsUp(
       'Remote tool mock',
       E2eTestUtils.REMOTE_TOOL_MOCK_URL,
     );
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
-  });
 
-  beforeEach(async () => {
     await browser.get(E2eTestUtils.REMOTE_TOOL_MOCK_URL);
   });
 
-  it('allows communication between remote tool and Winscope', async () => {
+  it('allows cross-tool communication (open winscope with MessageBugreport)', async () => {
     await openWinscopeTabFromRemoteTool();
     await waitWinscopeTabIsOpen();
 
     await sendBugreportToWinscope();
     await checkWinscopeRendersUploadView();
-    await closeWinscopeSnackBarIfNeeded();
+    await closeWinscopeSnackBar();
 
     await clickWinscopeViewTracesButton();
     await checkWinscopeRenderedSurfaceFlingerView();
     await checkWinscopeRenderedAllViewTabs();
-    await checkWinscopeAppliedTimestampInBugreportMessage();
+    await checkWinscopeTimestamp(TIMESTAMP_IN_BUGREPORT_MESSAGE);
 
-    await sendTimestampToWinscope();
-    await browser.switchTo().window(await getWindowHandleWinscope());
-    await E2eTestUtils.checkWinscopeNsTimestamp(
-      TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE,
-    );
+    await sendTimestampToWinscope(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+    await checkWinscopeTimestamp(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
 
-    browser.switchTo().window(await getWindowHandleWinscope());
-    await E2eTestUtils.changeNsTimestampInWinscope(
-      TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL,
-    );
-    await checkRemoteToolReceivedTimestamp();
+    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+    await checkRemoteToolTimestamp(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+  });
+
+  it('allows cross-tool communication (open winscope with MessageFiles)', async () => {
+    await openWinscopeTabFromRemoteTool();
+    await waitWinscopeTabIsOpen();
+
+    await sendFilesToWinscope();
+    await checkWinscopeRendersUploadView();
+
+    await clickWinscopeViewTracesButton();
+    await checkWinscopeRenderedSurfaceFlingerView();
+    await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE);
+
+    await sendTimestampToWinscope(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+    await checkWinscopeTimestamp(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+
+    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+    await checkRemoteToolTimestamp(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
   });
 
   async function openWinscopeTabFromRemoteTool() {
@@ -70,9 +83,19 @@ describe('Cross-Tool Protocol', () => {
 
   async function sendBugreportToWinscope() {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
-    const inputFileElement = element(by.css('.button-upload-bugreport'));
+    const inputFileElement = element(by.css('.button-send-bugreport'));
     await inputFileElement.sendKeys(
       E2eTestUtils.getFixturePath('bugreports/bugreport_stripped.zip'),
+    );
+  }
+
+  async function sendFilesToWinscope() {
+    await browser.switchTo().window(await getWindowHandleRemoteToolMock());
+    const inputFileElement = element(by.css('.button-send-files'));
+    await inputFileElement.sendKeys(
+      E2eTestUtils.getFixturePath(
+        'traces/perfetto/layers_trace.perfetto-trace',
+      ),
     );
   }
 
@@ -87,9 +110,9 @@ describe('Cross-Tool Protocol', () => {
     await E2eTestUtils.clickViewTracesButton();
   }
 
-  async function closeWinscopeSnackBarIfNeeded() {
+  async function closeWinscopeSnackBar() {
     await browser.switchTo().window(await getWindowHandleWinscope());
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
   }
 
   async function waitWinscopeTabIsOpen() {
@@ -132,26 +155,29 @@ describe('Cross-Tool Protocol', () => {
     expect(actualTabParagraphs.sort()).toEqual(expectedTabParagraphs.sort());
   }
 
-  async function checkWinscopeAppliedTimestampInBugreportMessage() {
-    await browser.switchTo().window(await getWindowHandleWinscope());
-    const inputElement = element(by.css('input[name="nsTimeInput"]'));
-    const valueWithNsSuffix = await inputElement.getAttribute('value');
-    expect(valueWithNsSuffix).toEqual(TIMESTAMP_IN_BUGREPORT_MESSAGE + ' ns');
-  }
-
-  async function sendTimestampToWinscope() {
+  async function sendTimestampToWinscope(value: string) {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const inputElement = element(by.css('.input-timestamp'));
-    await inputElement.sendKeys(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+    await inputElement.sendKeys(value);
     const buttonElement = element(by.css('.button-send-timestamp'));
     await buttonElement.click();
   }
 
-  async function checkRemoteToolReceivedTimestamp() {
+  async function sendTimestampToRemoteTool(value: string) {
+    browser.switchTo().window(await getWindowHandleWinscope());
+    await E2eTestUtils.changeNsTimestampInWinscope(value);
+  }
+
+  async function checkWinscopeTimestamp(expectedValue: string) {
+    await browser.switchTo().window(await getWindowHandleWinscope());
+    await E2eTestUtils.checkWinscopeNsTimestamp(expectedValue);
+  }
+
+  async function checkRemoteToolTimestamp(expectedValue: string) {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const paragraphElement = element(by.css('.paragraph-received-timestamp'));
-    const value = await paragraphElement.getText();
-    expect(value).toEqual(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+    const actualValue = await paragraphElement.getText();
+    expect(actualValue).toEqual(expectedValue);
   }
 
   async function getWindowHandleRemoteToolMock(): Promise<string> {

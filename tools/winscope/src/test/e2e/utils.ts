@@ -34,7 +34,7 @@ class E2eTestUtils {
     viewerSelector: string,
   ) {
     await E2eTestUtils.uploadFixture(fixturePath);
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
     await E2eTestUtils.clickViewerTabButton(viewerTabTitle);
 
@@ -48,7 +48,7 @@ class E2eTestUtils {
     expect(await E2eTestUtils.areMessagesEmitted(defaulttimeMs)).toBeTruthy();
     await E2eTestUtils.checkEmitsUnsupportedFileFormatMessages();
     await E2eTestUtils.checkEmitsOldDataMessages();
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
   }
 
   static async areMessagesEmitted(defaultTimeoutMs: number): Promise<boolean> {
@@ -85,7 +85,7 @@ class E2eTestUtils {
     await button.click();
   }
 
-  static async closeSnackBarIfNeeded() {
+  static async closeSnackBar() {
     const closeButton = element(by.css('.snack-bar-action'));
     const isPresent = await closeButton.isPresent();
     if (isPresent) {

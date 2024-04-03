@@ -34,7 +34,7 @@ describe('Trace navigation', () => {
       'traces/perfetto/layers_trace.perfetto-trace',
     );
     await checkHomepage();
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
     await checkTraceViewPage();
 
