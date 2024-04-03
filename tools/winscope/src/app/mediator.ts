@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Analytics} from 'common/analytics';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -43,7 +44,7 @@ export class Mediator {
     WinscopeEventListener;
   private crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener;
   private uploadTracesComponent?: ProgressListener;
-  private collectTracesComponent?: ProgressListener;
+  private collectTracesComponent?: ProgressListener & WinscopeEventListener;
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
@@ -88,7 +89,9 @@ export class Mediator {
     this.uploadTracesComponent = component;
   }
 
-  setCollectTracesComponent(component: ProgressListener | undefined) {
+  setCollectTracesComponent(
+    component: (ProgressListener & WinscopeEventListener) | undefined,
+  ) {
     this.collectTracesComponent = component;
   }
 
@@ -130,6 +133,14 @@ export class Mediator {
       await this.resetAppToInitialState();
     });
 
+    await event.visit(
+      WinscopeEventType.APP_REFRESH_DUMPS_REQUEST,
+      async (event) => {
+        await this.resetAppToInitialState();
+        await this.collectTracesComponent?.onWinscopeEvent(event);
+      },
+    );
+
     await event.visit(WinscopeEventType.APP_TRACE_VIEW_REQUEST, async () => {
       await this.loadViewers();
     });
@@ -137,6 +148,7 @@ export class Mediator {
     await event.visit(
       WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
       async () => {
+        Analytics.Tracing.logOpenFromABT();
         await this.resetAppToInitialState();
         this.currentProgressListener = this.uploadTracesComponent;
         this.currentProgressListener?.onProgressUpdate(

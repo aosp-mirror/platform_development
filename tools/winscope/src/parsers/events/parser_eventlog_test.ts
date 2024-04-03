@@ -19,6 +19,7 @@ import {TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -37,6 +38,10 @@ describe('ParserEventLog', () => {
 
     it('has expected trace type', () => {
       expect(parser.getTraceType()).toEqual(TraceType.EVENT_LOG);
+    });
+
+    it('has expected coarse version', () => {
+      expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
     it('has expected timestamps', () => {

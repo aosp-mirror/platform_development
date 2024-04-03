@@ -24,6 +24,7 @@ import {
   SimpleChange,
   SimpleChanges,
 } from '@angular/core';
+import {Analytics} from 'common/analytics';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {DisplayLayerStack} from 'trace/display_layer_stack';
@@ -430,6 +431,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   resetCamera() {
+    Analytics.Navigation.logZoom('reset');
     this.mapper3d.resetCamera();
     this.drawLargeRectsAndLabels();
   }
@@ -438,8 +440,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   onScroll(event: WheelEvent) {
     if ((event.target as HTMLElement).className === 'large-rects-canvas') {
       if (event.deltaY > 0) {
+        Analytics.Navigation.logZoom('scroll', 'out');
         this.doZoomOut();
       } else {
+        Analytics.Navigation.logZoom('scroll', 'in');
         this.doZoomIn();
       }
     }
@@ -462,10 +466,12 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onZoomInClick() {
+    Analytics.Navigation.logZoom('button', 'in');
     this.doZoomIn();
   }
 
   onZoomOutClick() {
+    Analytics.Navigation.logZoom('button', 'out');
     this.doZoomOut();
   }
 

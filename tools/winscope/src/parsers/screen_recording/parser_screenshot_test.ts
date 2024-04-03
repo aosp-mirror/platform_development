@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -38,6 +39,10 @@ describe('ParserScreenshot', () => {
 
   it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.SCREENSHOT);
+  });
+
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
   });
 
   it('provides elapsed timestamps', () => {

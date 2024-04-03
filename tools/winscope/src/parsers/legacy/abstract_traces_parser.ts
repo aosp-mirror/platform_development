@@ -15,6 +15,7 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -36,6 +37,10 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
     index: AbsoluteEntryIndex,
     timestampType: TimestampType,
   ): Promise<T>;
+
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
+  }
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
