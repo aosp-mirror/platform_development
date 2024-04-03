@@ -27,6 +27,7 @@ export enum WinscopeEventType {
   APP_FILES_UPLOADED,
   APP_RESET_REQUEST,
   APP_TRACE_VIEW_REQUEST,
+  APP_REFRESH_DUMPS_REQUEST,
   BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
   BUGANIZER_ATTACHMENTS_DOWNLOADED,
   REMOTE_TOOL_BUGREPORT_RECEIVED,
@@ -45,6 +46,7 @@ interface TypeMap {
   [WinscopeEventType.APP_FILES_UPLOADED]: AppFilesUploaded;
   [WinscopeEventType.APP_RESET_REQUEST]: AppResetRequest;
   [WinscopeEventType.APP_TRACE_VIEW_REQUEST]: AppTraceViewRequest;
+  [WinscopeEventType.APP_REFRESH_DUMPS_REQUEST]: AppRefreshDumpsRequest;
   [WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START]: BuganizerAttachmentsDownloadStart;
   [WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED]: BuganizerAttachmentsDownloaded;
   [WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED]: RemoteToolBugreportReceived;
@@ -97,6 +99,10 @@ export class AppResetRequest extends WinscopeEvent {
 
 export class AppTraceViewRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_TRACE_VIEW_REQUEST;
+}
+
+export class AppRefreshDumpsRequest extends WinscopeEvent {
+  override readonly type = WinscopeEventType.APP_REFRESH_DUMPS_REQUEST;
 }
 
 export class BuganizerAttachmentsDownloadStart extends WinscopeEvent {
