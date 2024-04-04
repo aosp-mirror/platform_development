@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Analytics} from 'common/analytics';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
+import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
 import {WinscopeError} from 'messaging/winscope_error';
@@ -146,7 +146,7 @@ export class Mediator {
     });
 
     await event.visit(
-      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
+      WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START,
       async () => {
         Analytics.Tracing.logOpenFromABT();
         await this.resetAppToInitialState();
@@ -159,12 +159,22 @@ export class Mediator {
     );
 
     await event.visit(
-      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED,
+      WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED,
       async (event) => {
         await this.processRemoteFilesReceived(
           event.files,
-          FilesSource.BUGANIZER,
+          FilesSource.REMOTE_TOOL,
         );
+        if (event.timestampNs !== undefined) {
+          await this.processRemoteToolTimestampReceived(event.timestampNs);
+        }
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
+      async (event) => {
+        await this.processRemoteToolTimestampReceived(event.timestampNs);
       },
     );
 
@@ -194,26 +204,6 @@ export class Mediator {
           this.timelineData.setPosition(event.position);
         }
         await this.propagateTracePosition(event.position, false);
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED,
-      async (event) => {
-        await this.processRemoteFilesReceived(
-          [event.bugreport],
-          FilesSource.BUGREPORT,
-        );
-        if (event.timestampNs !== undefined) {
-          await this.processRemoteToolTimestampReceived(event.timestampNs);
-        }
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
-      async (event) => {
-        await this.processRemoteToolTimestampReceived(event.timestampNs);
       },
     );
 

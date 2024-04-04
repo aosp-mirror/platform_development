@@ -16,8 +16,8 @@
 
 import {FunctionUtils} from 'common/function_utils';
 import {
-  BuganizerAttachmentsDownloaded,
-  BuganizerAttachmentsDownloadStart,
+  RemoteToolDownloadStart,
+  RemoteToolFilesReceived,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
@@ -51,7 +51,7 @@ export class AbtChromeExtensionProtocol
         return;
       }
 
-      await this.emitEvent(new BuganizerAttachmentsDownloadStart());
+      await this.emitEvent(new RemoteToolDownloadStart());
 
       const openRequestMessage: OpenRequest = {
         action: MessageType.OPEN_REQUEST,
@@ -101,7 +101,7 @@ export class AbtChromeExtensionProtocol
     });
 
     const files = await Promise.all(filesBlobPromises);
-    await this.emitEvent(new BuganizerAttachmentsDownloaded(files));
+    await this.emitEvent(new RemoteToolFilesReceived(files));
   }
 
   private isOpenFromBuganizerResponseMessage(

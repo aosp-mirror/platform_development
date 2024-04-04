@@ -28,9 +28,8 @@ export enum WinscopeEventType {
   APP_RESET_REQUEST,
   APP_TRACE_VIEW_REQUEST,
   APP_REFRESH_DUMPS_REQUEST,
-  BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
-  BUGANIZER_ATTACHMENTS_DOWNLOADED,
-  REMOTE_TOOL_BUGREPORT_RECEIVED,
+  REMOTE_TOOL_DOWNLOAD_START,
+  REMOTE_TOOL_FILES_RECEIVED,
   REMOTE_TOOL_TIMESTAMP_RECEIVED,
   TABBED_VIEW_SWITCHED,
   TABBED_VIEW_SWITCH_REQUEST,
@@ -47,9 +46,8 @@ interface TypeMap {
   [WinscopeEventType.APP_RESET_REQUEST]: AppResetRequest;
   [WinscopeEventType.APP_TRACE_VIEW_REQUEST]: AppTraceViewRequest;
   [WinscopeEventType.APP_REFRESH_DUMPS_REQUEST]: AppRefreshDumpsRequest;
-  [WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START]: BuganizerAttachmentsDownloadStart;
-  [WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED]: BuganizerAttachmentsDownloaded;
-  [WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED]: RemoteToolBugreportReceived;
+  [WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START]: RemoteToolDownloadStart;
+  [WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED]: RemoteToolFilesReceived;
   [WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED]: RemoteToolTimestampReceived;
   [WinscopeEventType.TABBED_VIEW_SWITCHED]: TabbedViewSwitched;
   [WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST]: TabbedViewSwitchRequest;
@@ -105,23 +103,14 @@ export class AppRefreshDumpsRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.APP_REFRESH_DUMPS_REQUEST;
 }
 
-export class BuganizerAttachmentsDownloadStart extends WinscopeEvent {
-  override readonly type =
-    WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START;
+export class RemoteToolDownloadStart extends WinscopeEvent {
+  override readonly type = WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START;
 }
 
-export class BuganizerAttachmentsDownloaded extends WinscopeEvent {
-  override readonly type = WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED;
+export class RemoteToolFilesReceived extends WinscopeEvent {
+  override readonly type = WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED;
 
-  constructor(readonly files: File[]) {
-    super();
-  }
-}
-
-export class RemoteToolBugreportReceived extends WinscopeEvent {
-  override readonly type = WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED;
-
-  constructor(readonly bugreport: File, readonly timestampNs?: bigint) {
+  constructor(readonly files: File[], readonly timestampNs?: bigint) {
     super();
   }
 }

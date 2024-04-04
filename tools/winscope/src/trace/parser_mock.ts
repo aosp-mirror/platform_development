@@ -15,9 +15,10 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
+import {CoarseVersion} from './coarse_version';
 import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
 import {AbsoluteEntryIndex, EntriesRange} from './index_types';
-import {CoarseVersion, Parser} from './parser';
+import {Parser} from './parser';
 import {TraceType} from './trace_type';
 
 export class ParserMock<T> implements Parser<T> {

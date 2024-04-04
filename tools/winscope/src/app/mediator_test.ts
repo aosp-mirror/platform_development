@@ -30,9 +30,9 @@ import {
   AppInitialized,
   AppRefreshDumpsRequest,
   AppTraceViewRequest,
-  BuganizerAttachmentsDownloaded,
-  BuganizerAttachmentsDownloadStart,
   ExpandedTimelineToggled,
+  RemoteToolDownloadStart,
+  RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   TabbedViewSwitched,
   TabbedViewSwitchRequest,
@@ -224,19 +224,19 @@ describe('Mediator', () => {
   //TODO: test "data from ABT chrome extension" when FileUtils is fully compatible with Node.js
   //      (b/262269229).
 
-  it('handles start download event from ABT chrome extension', async () => {
+  it('handles start download event from remote tool', async () => {
     expect(uploadTracesComponent.onProgressUpdate).toHaveBeenCalledTimes(0);
 
-    await mediator.onWinscopeEvent(new BuganizerAttachmentsDownloadStart());
+    await mediator.onWinscopeEvent(new RemoteToolDownloadStart());
     expect(uploadTracesComponent.onProgressUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it('handles empty downloaded files from ABT chrome extension', async () => {
+  it('handles empty downloaded files from remote tool', async () => {
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalledTimes(0);
 
     // Pass files even if empty so that the upload component will update the progress bar
     // and display error messages
-    await mediator.onWinscopeEvent(new BuganizerAttachmentsDownloaded([]));
+    await mediator.onWinscopeEvent(new RemoteToolFilesReceived([]));
     expect(uploadTracesComponent.onOperationFinished).toHaveBeenCalledTimes(1);
   });
 

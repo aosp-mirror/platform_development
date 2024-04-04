@@ -24,9 +24,9 @@ import {
   SimpleChange,
   SimpleChanges,
 } from '@angular/core';
-import {Analytics} from 'common/analytics';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {DisplayLayerStack} from 'trace/display_layer_stack';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
