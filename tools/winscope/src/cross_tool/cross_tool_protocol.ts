@@ -17,7 +17,6 @@
 import {FunctionUtils} from 'common/function_utils';
 import {TimestampType} from 'common/time';
 import {
-  RemoteToolBugreportReceived,
   RemoteToolFilesReceived,
   RemoteToolTimestampReceived,
   WinscopeEvent,
@@ -144,7 +143,7 @@ export class CrossToolProtocol
 
   private async onMessageBugreportReceived(message: MessageBugReport) {
     await this.emitEvent(
-      new RemoteToolBugreportReceived(message.file, message.timestampNs),
+      new RemoteToolFilesReceived([message.file], message.timestampNs),
     );
   }
 

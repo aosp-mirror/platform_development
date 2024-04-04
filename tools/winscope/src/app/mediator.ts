@@ -146,7 +146,7 @@ export class Mediator {
     });
 
     await event.visit(
-      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START,
+      WinscopeEventType.REMOTE_TOOL_DOWNLOAD_START,
       async () => {
         Analytics.Tracing.logOpenFromABT();
         await this.resetAppToInitialState();
@@ -159,12 +159,22 @@ export class Mediator {
     );
 
     await event.visit(
-      WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOADED,
+      WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED,
       async (event) => {
         await this.processRemoteFilesReceived(
           event.files,
-          FilesSource.BUGANIZER,
+          FilesSource.REMOTE_TOOL,
         );
+        if (event.timestampNs !== undefined) {
+          await this.processRemoteToolTimestampReceived(event.timestampNs);
+        }
+      },
+    );
+
+    await event.visit(
+      WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
+      async (event) => {
+        await this.processRemoteToolTimestampReceived(event.timestampNs);
       },
     );
 
@@ -194,39 +204,6 @@ export class Mediator {
           this.timelineData.setPosition(event.position);
         }
         await this.propagateTracePosition(event.position, false);
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED,
-      async (event) => {
-        await this.processRemoteFilesReceived(
-          [event.bugreport],
-          FilesSource.BUGREPORT,
-        );
-        if (event.timestampNs !== undefined) {
-          await this.processRemoteToolTimestampReceived(event.timestampNs);
-        }
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED,
-      async (event) => {
-        await this.processRemoteFilesReceived(
-          event.files,
-          FilesSource.UPLOADED,
-        );
-        if (event.timestampNs !== undefined) {
-          await this.processRemoteToolTimestampReceived(event.timestampNs);
-        }
-      },
-    );
-
-    await event.visit(
-      WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
-      async (event) => {
-        await this.processRemoteToolTimestampReceived(event.timestampNs);
       },
     );
 
