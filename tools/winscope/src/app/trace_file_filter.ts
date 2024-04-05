@@ -34,6 +34,7 @@ export class TraceFileFilter {
     'FS/data/misc/perfetto-traces/',
     'proto/window_CRITICAL.proto',
     'proto/input_method_CRITICAL.proto',
+    'proto/SurfaceFlinger_CRITICAL.proto',
   ];
   private static readonly PERFETTO_EXTENSIONS = [
     '.pftrace',
