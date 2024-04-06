@@ -8,6 +8,7 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.CancellationSignal
+import android.os.SystemClock
 import android.service.chooser.AdditionalContentContract
 import kotlin.random.Random
 
@@ -108,6 +109,11 @@ class AdditionalContentProvider : ContentProvider() {
                     createRefinementIntentSender(context, false)
                 )
             }
+
+            val latency = chooserIntent.getIntExtra(EXTRA_SELECTION_LATENCY, 0)
+            if (latency > 0) {
+                SystemClock.sleep(latency.toLong())
+            }
         }
         return result
     }
@@ -146,6 +152,7 @@ class AdditionalContentProvider : ContentProvider() {
     companion object {
         val ADDITIONAL_CONTENT_URI = Uri.parse("content://com.android.sharetest.additionalcontent")
         val CURSOR_START_POSITION = "com.android.sharetest.CURSOR_START_POS"
+        val EXTRA_SELECTION_LATENCY = "latency"
     }
 }
 
