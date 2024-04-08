@@ -67,6 +67,7 @@ class ShareTestActivity : Activity() {
     private lateinit var shareouselCheck: CheckBox
     private lateinit var altIntentCheck: CheckBox
     private lateinit var callerTargetCheck: CheckBox
+    private lateinit var selectionLatencyGroup: RadioGroup
     private val customActionFactory = CustomActionFactory(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +114,7 @@ class ShareTestActivity : Activity() {
         callerTargetCheck = requireViewById(R.id.caller_direct_target)
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
         mediaTypeHeader = requireViewById(R.id.media_type_header)
+        selectionLatencyGroup = requireViewById(R.id.selection_latency)
         mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
@@ -352,6 +354,15 @@ class ShareTestActivity : Activity() {
                     AdditionalContentProvider.CURSOR_START_POSITION,
                     imageIndex,
                 )
+            }
+            val latency = when (selectionLatencyGroup.checkedRadioButtonId) {
+                R.id.selection_latency_50 -> 50
+                R.id.selection_latency_200 -> 200
+                R.id.selection_latency_800 -> 800
+                else -> 0
+            }
+            if (latency > 0) {
+                chooserIntent.putExtra(AdditionalContentProvider.EXTRA_SELECTION_LATENCY, latency)
             }
         }
 

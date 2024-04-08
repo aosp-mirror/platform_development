@@ -7,11 +7,8 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
-import java.util.Random
-import kotlin.math.roundToLong
 
 class ImageContentProvider : ContentProvider() {
-    private val random = Random()
     override fun onCreate(): Boolean = true
 
     override fun query(
@@ -80,14 +77,7 @@ class ImageContentProvider : ContentProvider() {
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? =
         openAssetFile(uri, mode)?.parcelFileDescriptor
 
-    private fun shouldFailOpen() = random.nextFloat() < openFailureRate
-
-    // Provide some gaussian noise around the preferred average latency
-    private fun getLatencyMs(avg: Long): Long {
-        // Using avg/4 as the standard deviation.
-        val noise = avg / 4 * random.nextGaussian()
-        return (avg + noise).roundToLong().coerceAtLeast(0)
-    }
+    private fun shouldFailOpen() = getRandomFailure(openFailureRate)
 
     companion object {
         fun makeItemUri(idx: Int, mimeType: String): Uri =
