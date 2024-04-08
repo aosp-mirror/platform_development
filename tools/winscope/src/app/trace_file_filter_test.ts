@@ -151,6 +151,24 @@ describe('TraceFileFilter', () => {
       });
       expect(errors).toEqual([]);
     });
+
+    it('unzips trace files within bugreport zip', async () => {
+      const zippedTraceFile = await makeZippedTraceFile();
+
+      const bugreportFiles = [
+        await makeBugreportMainEntryTraceFile(),
+        await makeBugreportCodenameTraceFile(),
+        zippedTraceFile,
+      ];
+
+      const result = await filter.filter(bugreportFiles, errorListener);
+      expect(result.perfetto).toBeUndefined();
+      expect(result.legacy.map((file) => file.file.name)).toEqual([
+        'Surface Flinger/SurfaceFlinger.pb',
+        'Window Manager/WindowManager.pb',
+      ]);
+      expect(errors).toEqual([]);
+    });
   });
 
   describe('plain input (no bugreport)', () => {
@@ -237,6 +255,14 @@ describe('TraceFileFilter', () => {
     const file = await UnitTestUtils.getFixtureFile(
       'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
       'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+    );
+    return new TraceFile(file, bugreportArchive);
+  }
+
+  async function makeZippedTraceFile() {
+    const file = await UnitTestUtils.getFixtureFile(
+      'traces/winscope.zip',
+      'FS/data/misc/wmtrace/winscope.zip',
     );
     return new TraceFile(file, bugreportArchive);
   }

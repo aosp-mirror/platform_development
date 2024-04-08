@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FileUtils} from 'common/file_utils';
 import {TimezoneInfo} from 'common/time';
 import {TraceOverridden} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
@@ -67,7 +68,7 @@ export class TraceFileFilter {
       bugReportDumpstateBoard,
     );
 
-    return this.filterBugreport(
+    return await this.filterBugreport(
       assertDefined(bugreportMainEntry),
       perfettoFiles,
       legacyFiles,
@@ -135,12 +136,12 @@ export class TraceFileFilter {
     );
   }
 
-  private filterBugreport(
+  private async filterBugreport(
     bugreportMainEntry: TraceFile,
     perfettoFiles: TraceFile[],
     legacyFiles: TraceFile[],
     timezoneInfo?: TimezoneInfo,
-  ): FilterResult {
+  ): Promise<FilterResult> {
     const isFileAllowlisted = (file: TraceFile) => {
       for (const traceDir of TraceFileFilter.BUGREPORT_LEGACY_FILES_ALLOWLIST) {
         if (file.file.name.startsWith(traceDir)) {
@@ -157,10 +158,27 @@ export class TraceFileFilter {
       return isFileAllowlisted(file) || !fileBelongsToBugreport(file);
     });
 
+    const unzippedLegacyFiles: TraceFile[] = [];
+
+    for (const file of legacyFiles) {
+      if (FileUtils.isZipFile(file.file)) {
+        try {
+          const subFiles = await FileUtils.unzipFile(file.file);
+          const subTraceFiles = subFiles.map((subFile) => {
+            return new TraceFile(subFile, file.file);
+          });
+          unzippedLegacyFiles.push(...subTraceFiles);
+        } catch {
+          unzippedLegacyFiles.push(file);
+        }
+      } else {
+        unzippedLegacyFiles.push(file);
+      }
+    }
     const perfettoFile = perfettoFiles.find(
       (file) => file.file.name === TraceFileFilter.BUGREPORT_SYSTRACE_PATH,
     );
-    return {perfetto: perfettoFile, legacy: legacyFiles, timezoneInfo};
+    return {perfetto: perfettoFile, legacy: unzippedLegacyFiles, timezoneInfo};
   }
 
   private isPerfettoFile(file: TraceFile): boolean {
