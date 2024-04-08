@@ -301,6 +301,44 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/subtitle"
+                android:text="Average selection latency"
+                />
+
+            <RadioGroup
+                android:id="@+id/selection_latency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/selection_latency_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="None"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="50ms"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_200"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="200ms"
+                    />
+                <RadioButton
+                    android:id="@+id/selection_latency_800"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800ms"
+                    />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
                 android:text="Image load failure probability"
             />
 
