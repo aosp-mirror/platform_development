@@ -45,6 +45,7 @@ import android.content.IntentSender;
 import android.content.IntentSender.SendIntentException;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Icon;
 import android.hardware.display.DisplayManager;
 import android.media.AudioManager;
 import android.os.Binder;
@@ -93,6 +94,7 @@ public final class VdmService extends Hilt_VdmService {
             "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
     private int mRecordingAudioSessionId;
     private int mPlaybackAudioSessionId;
+    private PermissionHelper mPermissionHelper;
 
     /** Provides an instance of this service to bound clients. */
     public class LocalBinder extends Binder {
@@ -204,7 +206,8 @@ public final class VdmService extends Hilt_VdmService {
                         .setContentIntent(pendingIntentOpen)
                         .addAction(
                                 new Notification.Action.Builder(
-                                        R.drawable.close, "Stop", pendingIntentStop)
+                                        Icon.createWithResource("", R.drawable.close), "Stop",
+                                        pendingIntentStop)
                                         .build())
                         .setOngoing(true)
                         .build();
@@ -242,6 +245,7 @@ public final class VdmService extends Hilt_VdmService {
             mVirtualDeviceManager.registerVirtualDeviceListener(
                     Executors.newSingleThreadExecutor(), mVirtualDeviceListener);
         }
+        mPermissionHelper = new PermissionHelper(this);
     }
 
     @Override
@@ -316,8 +320,8 @@ public final class VdmService extends Hilt_VdmService {
                     || !Objects.equals(associationInfo.getPackageName(), getPackageName())
                     || associationInfo.getDisplayName() == null
                     || !Objects.equals(
-                            associationInfo.getDisplayName().toString(),
-                            mDeviceCapabilities.getDeviceName())) {
+                    associationInfo.getDisplayName().toString(),
+                    mDeviceCapabilities.getDeviceName())) {
                 continue;
             }
             // It is possible that the role was revoked but the CDM association remained.
@@ -328,6 +332,11 @@ public final class VdmService extends Hilt_VdmService {
                 createVirtualDevice(associationInfo);
                 return;
             }
+        }
+
+        if (!mPermissionHelper.hasStreamingPermission()) {
+            Log.w(TAG, "Missing streaming permission");
+            return;
         }
 
         @SuppressLint("MissingPermission")
