@@ -31,6 +31,7 @@ export class TraceFileFilter {
     'FS/data/misc/wmtrace/',
     'FS/data/misc/perfetto-traces/',
     'proto/window_CRITICAL.proto',
+    'proto/SurfaceFlinger_CRITICAL.proto',
   ];
 
   async filter(files: TraceFile[], errorListener: WinscopeErrorListener): Promise<FilterResult> {
