@@ -162,13 +162,13 @@ describe('TraceFileFilter', () => {
         zippedTraceFile,
       ];
 
-      const result = await filter.filter(bugreportFiles, errorListener);
+      const result = await filter.filter(bugreportFiles, notificationListener);
       expect(result.perfetto).toBeUndefined();
       expect(result.legacy.map((file) => file.file.name)).toEqual([
         'Surface Flinger/SurfaceFlinger.pb',
         'Window Manager/WindowManager.pb',
       ]);
-      expect(errors).toEqual([]);
+      expect(warnings).toEqual([]);
     });
   });
 
