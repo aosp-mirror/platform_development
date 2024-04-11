@@ -17,8 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {TimezoneInfo} from 'common/time';
-import {TraceOverridden} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {TraceOverridden} from 'messaging/user_warnings';
 import {TraceFile} from 'trace/trace_file';
 
 export interface FilterResult {
@@ -45,7 +45,7 @@ export class TraceFileFilter {
 
   async filter(
     files: TraceFile[],
-    errorListener: WinscopeErrorListener,
+    UserNotificationsListener: UserNotificationsListener,
   ): Promise<FilterResult> {
     const bugreportMainEntry = files.find((file) =>
       file.file.name.endsWith('main_entry.txt'),
@@ -57,7 +57,10 @@ export class TraceFileFilter {
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
     if (!(await this.isBugreport(bugreportMainEntry, files))) {
-      const perfettoFile = this.pickLargestFile(perfettoFiles, errorListener);
+      const perfettoFile = this.pickLargestFile(
+        perfettoFiles,
+        UserNotificationsListener,
+      );
       return {
         perfetto: perfettoFile,
         legacy: legacyFiles,
@@ -192,7 +195,7 @@ export class TraceFileFilter {
 
   private pickLargestFile(
     files: TraceFile[],
-    errorListener: WinscopeErrorListener,
+    UserNotificationsListener: UserNotificationsListener,
   ): TraceFile | undefined {
     if (files.length === 0) {
       return undefined;
@@ -202,7 +205,9 @@ export class TraceFileFilter {
         largestSoFar.file.size > file.file.size
           ? [largestSoFar, file]
           : [file, largestSoFar];
-      errorListener.onError(new TraceOverridden(overridden.getDescriptor()));
+      UserNotificationsListener.onNotifications([
+        new TraceOverridden(overridden.getDescriptor()),
+      ]);
       return largest;
     });
   }

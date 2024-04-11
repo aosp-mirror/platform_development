@@ -16,8 +16,8 @@
 
 import {FileUtils} from 'common/file_utils';
 import {INVALID_TIME_NS, TimeRange, TimestampType} from 'common/time';
-import {TraceHasOldData, TraceOverridden} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
@@ -35,22 +35,22 @@ export class LoadedParsers {
   addParsers(
     legacyParsers: FileAndParser[],
     perfettoParsers: FileAndParsers | undefined,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     if (perfettoParsers) {
-      this.addPerfettoParsers(perfettoParsers, errorListener);
+      this.addPerfettoParsers(perfettoParsers, userNotificationsListener);
     }
 
     legacyParsers = this.filterOutLegacyParsersWithOldData(
       legacyParsers,
-      errorListener,
+      userNotificationsListener,
     );
     legacyParsers = this.filterScreenshotParsersIfRequired(
       legacyParsers,
-      errorListener,
+      userNotificationsListener,
     );
 
-    this.addLegacyParsers(legacyParsers, errorListener);
+    this.addLegacyParsers(legacyParsers, userNotificationsListener);
   }
 
   getParsers(): Array<Parser<object>> {
@@ -117,7 +117,7 @@ export class LoadedParsers {
 
   private addLegacyParsers(
     parsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     const legacyParsersBeingLoaded = new Map<TraceType, Parser<object>>();
 
@@ -127,7 +127,7 @@ export class LoadedParsers {
         this.shouldUseLegacyParser(
           parser,
           legacyParsersBeingLoaded,
-          errorListener,
+          userNotificationsListener,
         )
       ) {
         legacyParsersBeingLoaded.set(parser.getTraceType(), parser);
@@ -138,7 +138,7 @@ export class LoadedParsers {
 
   private addPerfettoParsers(
     {file, parsers}: FileAndParsers,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     // We currently run only one Perfetto TP WebWorker at a time, so Perfetto parsers previously
     // loaded are now invalid and must be removed (previous WebWorker is not running anymore).
@@ -155,9 +155,9 @@ export class LoadedParsers {
       // parsers must always override legacy ones so that dangling legacy files are ignored.
       const legacyParser = this.legacyParsers.get(parser.getTraceType());
       if (legacyParser) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(legacyParser.parser.getDescriptors().join()),
-        );
+        ]);
         this.legacyParsers.delete(parser.getTraceType());
       }
     });
@@ -166,15 +166,15 @@ export class LoadedParsers {
   private shouldUseLegacyParser(
     newParser: Parser<object>,
     parsersBeingLoaded: Map<TraceType, Parser<object>>,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): boolean {
     // While transitioning to the Perfetto format, devices might still have old legacy trace files
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
     if (this.perfettoParsers.get(newParser.getTraceType())) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(newParser.getDescriptors().join()),
-      );
+      ]);
       return false;
     }
 
@@ -185,9 +185,9 @@ export class LoadedParsers {
     }
 
     if (oldParser && !currParser) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(oldParser.getDescriptors().join()),
-      );
+      ]);
       return true;
     }
 
@@ -195,21 +195,21 @@ export class LoadedParsers {
       currParser &&
       newParser.getLengthEntries() > currParser.getLengthEntries()
     ) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(currParser.getDescriptors().join()),
-      );
+      ]);
       return true;
     }
 
-    errorListener.onError(
+    userNotificationsListener.onNotifications([
       new TraceOverridden(newParser.getDescriptors().join()),
-    );
+    ]);
     return false;
   }
 
   private filterOutLegacyParsersWithOldData(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
     const allParsers = [
       ...newLegacyParsers,
@@ -261,9 +261,9 @@ export class LoadedParsers {
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
       if (isOldData) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceHasOldData(file.getDescriptor(), timeGap),
-        );
+        ]);
         return false;
       }
 
@@ -273,7 +273,7 @@ export class LoadedParsers {
 
   private filterScreenshotParsersIfRequired(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
     const oldScreenRecordingParser = this.legacyParsers.get(
       TraceType.SCREEN_RECORDING,
@@ -293,21 +293,21 @@ export class LoadedParsers {
 
     if (oldScreenRecordingParser || newScreenRecordingParsers.length > 0) {
       newScreenshotParsers.forEach((newScreenshotParser) => {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(
             newScreenshotParser.parser.getDescriptors().join(),
             TraceType.SCREEN_RECORDING,
           ),
-        );
+        ]);
       });
 
       if (oldScreenshotParser) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(
             oldScreenshotParser.getDescriptors().join(),
             TraceType.SCREEN_RECORDING,
           ),
-        );
+        ]);
         this.remove(TraceType.SCREENSHOT);
       }
 

@@ -18,14 +18,14 @@ import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
 import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
+import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   InvalidPerfettoTrace,
   NoInputFiles,
   TraceOverridden,
   UnsupportedFileFormat,
-  WinscopeError,
-} from 'messaging/winscope_error';
+} from 'messaging/user_warnings';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
@@ -35,7 +35,7 @@ import {TracePipeline} from './trace_pipeline';
 describe('TracePipeline', () => {
   let validSfFile: File;
   let validWmFile: File;
-  let errors: WinscopeError[];
+  let warnings: UserWarning[];
   let progressListener: ProgressListenerStub;
   let tracePipeline: TracePipeline;
 
@@ -48,7 +48,7 @@ describe('TracePipeline', () => {
       'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
 
-    errors = [];
+    warnings = [];
 
     progressListener = new ProgressListenerStub();
     spyOn(progressListener, 'onProgressUpdate');
@@ -388,15 +388,15 @@ describe('TracePipeline', () => {
     files: File[],
     source: FilesSource = FilesSource.TEST,
   ) {
-    const errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    const notificationListener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
     await tracePipeline.loadFiles(
       files,
       source,
-      errorListener,
+      notificationListener,
       progressListener,
     );
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
@@ -405,9 +405,9 @@ describe('TracePipeline', () => {
 
   async function expectLoadResult(
     numberOfTraces: number,
-    expectedErrors: WinscopeError[],
+    expectedWarnings: UserWarning[],
   ) {
-    expect(errors).toEqual(expectedErrors);
+    expect(warnings).toEqual(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
   }
 });

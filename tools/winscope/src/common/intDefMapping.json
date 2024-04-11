@@ -13909,7 +13909,7 @@
       "4": "SET_SIM_POWER_STATE_NOT_SUPPORTED"
     }
   },
-  "android.telephony.TelephonyManager.SimCombinationWarningType": {
+  "android.telephony.TelephonyManager.SimCombinationNotificationType": {
     "flag": false,
     "values": {
       "0": "EXTRA_SIM_COMBINATION_WARNING_TYPE_NONE",

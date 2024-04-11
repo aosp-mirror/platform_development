@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-import {UserNotificationListener} from './user_notification_listener';
-import {WinscopeError} from './winscope_error';
+import {Analytics} from 'logging/analytics';
+import {NotificationType, UserNotification} from './user_notification';
 
-export class UserNotificationListenerStub implements UserNotificationListener {
-  onErrors(errors: WinscopeError[]) {
-    // do nothing
+export abstract class UserWarning implements UserNotification {
+  constructor() {
+    Analytics.UserNotification.logUserWarning(this.getDescriptor());
   }
+  getNotificationType(): NotificationType {
+    return NotificationType.WARNING;
+  }
+  abstract getDescriptor(): string;
+  abstract getMessage(): string;
 }

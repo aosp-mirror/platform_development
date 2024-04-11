@@ -26,6 +26,8 @@ export class Analytics {
   private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
   private static TRACING_COLLECT_TRACE = 'tracing_collect_trace';
   private static TRACING_OPEN_FROM_ABT = 'tracing_from_abt';
+  private static USER_WARNING = 'user_warning';
+  private static GLOBAL_EXCEPTION = 'global_exception';
 
   static Tracing = class {
     static logTraceLoaded(parser: Parser<object>) {
@@ -64,6 +66,22 @@ export class Analytics {
       Analytics.doLogEvent(Analytics.NAVIGATION_ZOOM_EVENT, {
         direction,
         type,
+      } as Gtag.CustomParams);
+    }
+  };
+
+  static UserNotification = class {
+    static logUserWarning(description: string) {
+      Analytics.doLogEvent(Analytics.USER_WARNING, {
+        description,
+      } as Gtag.CustomParams);
+    }
+  };
+
+  static Error = class {
+    static logGlobalException(description: string) {
+      Analytics.doLogEvent(Analytics.GLOBAL_EXCEPTION, {
+        description,
       } as Gtag.CustomParams);
     }
   };
