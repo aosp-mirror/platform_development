@@ -21,12 +21,12 @@ import {
 } from 'common/timestamp_factory';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {
   CorruptedArchive,
   NoCommonTimestampType,
   NoInputFiles,
-} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
@@ -53,7 +53,7 @@ export class TracePipeline {
   async loadFiles(
     files: File[],
     source: FilesSource,
-    errorListener: WinscopeErrorListener,
+    notificationListener: UserNotificationsListener,
     progressListener: ProgressListener | undefined,
   ) {
     this.downloadArchiveFilename = this.makeDownloadArchiveFilename(
@@ -65,18 +65,18 @@ export class TracePipeline {
       const unzippedArchives = await this.unzipFiles(
         files,
         progressListener,
-        errorListener,
+        notificationListener,
       );
 
       if (unzippedArchives.length === 0) {
-        errorListener.onError(new NoInputFiles());
+        notificationListener.onNotifications([new NoInputFiles()]);
         return;
       }
 
       for (const unzippedArchive of unzippedArchives) {
         await this.loadUnzippedArchive(
           unzippedArchive,
-          errorListener,
+          notificationListener,
           progressListener,
         );
       }
@@ -85,7 +85,7 @@ export class TracePipeline {
 
       const commonTimestampType = this.loadedParsers.findCommonTimestampType();
       if (commonTimestampType === undefined) {
-        errorListener.onError(new NoCommonTimestampType());
+        notificationListener.onNotifications([new NoCommonTimestampType()]);
         return;
       }
 
@@ -176,19 +176,19 @@ export class TracePipeline {
 
   private async loadUnzippedArchive(
     unzippedArchive: UnzippedArchive,
-    errorListener: WinscopeErrorListener,
+    notificationListener: UserNotificationsListener,
     progressListener: ProgressListener | undefined,
   ) {
     const filterResult = await this.traceFileFilter.filter(
       unzippedArchive,
-      errorListener,
+      notificationListener,
     );
     if (filterResult.timezoneInfo) {
       this.timestampFactory = new TimestampFactory(filterResult.timezoneInfo);
     }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
-      errorListener.onError(new NoInputFiles());
+      notificationListener.onNotifications([new NoInputFiles()]);
       return;
     }
 
@@ -196,7 +196,7 @@ export class TracePipeline {
       filterResult.legacy,
       this.timestampFactory,
       progressListener,
-      errorListener,
+      notificationListener,
     );
 
     let perfettoParsers: FileAndParsers | undefined;
@@ -206,7 +206,7 @@ export class TracePipeline {
         filterResult.perfetto,
         this.timestampFactory,
         progressListener,
-        errorListener,
+        notificationListener,
       );
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
@@ -214,7 +214,7 @@ export class TracePipeline {
     this.loadedParsers.addParsers(
       legacyParsers,
       perfettoParsers,
-      errorListener,
+      notificationListener,
     );
   }
 
@@ -251,7 +251,7 @@ export class TracePipeline {
   private async unzipFiles(
     files: File[],
     progressListener: ProgressListener | undefined,
-    errorListener: WinscopeErrorListener,
+    notificationListener: UserNotificationsListener,
   ): Promise<UnzippedArchive[]> {
     const unzippedArchives: UnzippedArchive[] = [];
     const progressMessage = 'Unzipping files...';
@@ -276,7 +276,7 @@ export class TracePipeline {
           unzippedArchives.push([...subTraceFiles]);
           onSubProgressUpdate(100);
         } catch (e) {
-          errorListener.onError(new CorruptedArchive(file));
+          notificationListener.onNotifications([new CorruptedArchive(file)]);
         }
       } else {
         unzippedArchives.push([new TraceFile(file, undefined)]);

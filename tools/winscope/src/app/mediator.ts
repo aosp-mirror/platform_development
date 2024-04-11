@@ -18,9 +18,8 @@ import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UserNotificationListener} from 'messaging/user_notification_listener';
-import {WinscopeError} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UserWarning} from 'messaging/user_warning';
 import {
   ExpandedTimelineToggled,
   TracePositionUpdate,
@@ -48,7 +47,7 @@ export class Mediator {
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
-  private userNotificationListener: UserNotificationListener;
+  private userNotificationsListener: UserNotificationsListener;
   private storage: Storage;
 
   private tracePipeline: TracePipeline;
@@ -65,7 +64,7 @@ export class Mediator {
     abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener,
     crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener,
     appComponent: WinscopeEventListener,
-    userNotificationListener: UserNotificationListener,
+    userNotificationsListener: UserNotificationsListener,
     storage: Storage,
   ) {
     this.tracePipeline = tracePipeline;
@@ -73,7 +72,7 @@ export class Mediator {
     this.abtChromeExtensionProtocol = abtChromeExtensionProtocol;
     this.crossToolProtocol = crossToolProtocol;
     this.appComponent = appComponent;
-    this.userNotificationListener = userNotificationListener;
+    this.userNotificationsListener = userNotificationsListener;
     this.storage = storage;
 
     this.crossToolProtocol.setEmitEvent(async (event) => {
@@ -216,21 +215,21 @@ export class Mediator {
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
-    const errors: WinscopeError[] = [];
-    const errorListener: WinscopeErrorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    const warnings: UserWarning[] = [];
+    const notificationsListener: UserNotificationsListener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
     await this.tracePipeline.loadFiles(
       files,
       source,
-      errorListener,
+      notificationsListener,
       this.currentProgressListener,
     );
 
-    if (errors.length > 0) {
-      this.userNotificationListener.onErrors(errors);
+    if (warnings.length > 0) {
+      this.userNotificationsListener.onNotifications(warnings);
     }
   }
 

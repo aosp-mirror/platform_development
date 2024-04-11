@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import {WinscopeError} from './winscope_error';
-import {WinscopeErrorListener} from './winscope_error_listener';
+import {UserNotification} from './user_notification';
+import {UserNotificationsListener} from './user_notifications_listener';
 
-export class WinscopeErrorListenerStub implements WinscopeErrorListener {
-  onError(error: WinscopeError) {
+export class UserNotificationsListenerStub
+  implements UserNotificationsListener
+{
+  onNotifications(notifications: UserNotification[]) {
     // do nothing
   }
 }

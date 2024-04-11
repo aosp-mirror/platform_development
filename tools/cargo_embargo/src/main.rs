@@ -52,7 +52,6 @@ use std::collections::VecDeque;
 use std::env;
 use std::fs::{read_to_string, write, File};
 use std::io::{Read, Write};
-use std::os::fd::{FromRawFd, OwnedFd};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -379,7 +378,7 @@ fn write_all_bp(
 
 /// Runs the given command, and returns its standard output and standard error as a string.
 fn run_cargo(cmd: &mut Command) -> Result<String> {
-    let (pipe_read, pipe_write) = pipe()?;
+    let (pipe_read, pipe_write) = pipe2(OFlag::O_CLOEXEC)?;
     cmd.stdout(pipe_write.try_clone()?).stderr(pipe_write).stdin(Stdio::null());
     debug!("Running: {:?}\n", cmd);
     let mut child = cmd.spawn()?;
@@ -402,13 +401,6 @@ fn run_cargo(cmd: &mut Command) -> Result<String> {
     }
 
     Ok(output)
-}
-
-/// Creates a new pipe and returns the file descriptors for each end of it.
-fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
-    let (a, b) = pipe2(OFlag::O_CLOEXEC)?;
-    // SAFETY: We just created the file descriptors, so we own them.
-    unsafe { Ok((OwnedFd::from_raw_fd(a), OwnedFd::from_raw_fd(b))) }
 }
 
 /// The raw output from running `cargo metadata`, `cargo build` and other commands.
