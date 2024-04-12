@@ -7,3 +7,10 @@ flag {
   description: "Ahoy, raise the first flag of this namespace"
   bug: "294537090"
 }
+
+flag {
+  name: "test_migrate_flag"
+  namespace: "core_experiments_team_internal"
+  description: "Flag to test flag migration"
+  bug: "319479098"
+}
