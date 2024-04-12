@@ -363,13 +363,10 @@ TEST(VersionScriptParserTest, IncludeSymbolTags) {
         always;  # unknown
         api34;  # introduced=34
         api35;  # introduced=35
-        api35_llndk202404;  # introduced=35 llndk=202404
+        llndk202404;  # llndk=202404
+        llndk202504;  # llndk=202504
         systemapi;  # systemapi
         systemapi_llndk;  # systemapi llndk
-    };
-    LIBEX_2.0 {  # introduced=36
-        api36_llndk202504;
-        api36_llndk202504;  # llndk=202504
     };
   )TESTDATA";
 
@@ -384,9 +381,8 @@ TEST(VersionScriptParserTest, IncludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_THAT(funcs,
-                ElementsAre(Key("always"), Key("api34"),
-                            Key("api35_llndk202404"), Key("systemapi_llndk")));
+    EXPECT_THAT(funcs, ElementsAre(Key("always"), Key("api34"),
+                                   Key("llndk202404"), Key("systemapi_llndk")));
   }
 
   {
@@ -400,10 +396,9 @@ TEST(VersionScriptParserTest, IncludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_THAT(
-        funcs,
-        ElementsAre(Key("always"), Key("api34"), Key("api35_llndk202404"),
-                    Key("api36_llndk202504"), Key("systemapi_llndk")));
+    EXPECT_THAT(funcs,
+                ElementsAre(Key("always"), Key("api34"), Key("llndk202404"),
+                            Key("llndk202504"), Key("systemapi_llndk")));
   }
 
   // Include all mode tags
@@ -417,10 +412,9 @@ TEST(VersionScriptParserTest, IncludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_THAT(funcs,
-                ElementsAre(Key("always"), Key("api34"), Key("api35"),
-                            Key("api35_llndk202404"), Key("api36_llndk202504"),
-                            Key("systemapi"), Key("systemapi_llndk")));
+    EXPECT_THAT(funcs, ElementsAre(Key("always"), Key("api34"), Key("api35"),
+                                   Key("llndk202404"), Key("llndk202504"),
+                                   Key("systemapi"), Key("systemapi_llndk")));
   }
 
   // Exclude all mode tags
@@ -435,8 +429,65 @@ TEST(VersionScriptParserTest, IncludeSymbolTags) {
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
-    EXPECT_THAT(funcs, ElementsAre(Key("always"), Key("api34"), Key("api35"),
-                                   Key("api36_llndk202504")));
+    EXPECT_THAT(funcs, ElementsAre(Key("always"), Key("api34"), Key("api35")));
+  }
+}
+
+
+TEST(VersionScriptParserTest, SetModeTagPolicy) {
+  static const char testdata[] = R"TESTDATA(
+    LIBEX_1.0 {  # introduced=36
+        api36;
+        api36_llndk202504;
+        api36_llndk202504;  # llndk=202504
+        llndk202504;  # llndk=202504
+    };
+  )TESTDATA";
+
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(35);
+    parser.AddModeTag("llndk=202504");
+    parser.SetModeTagPolicy(ModeTagPolicy::MatchTagAndApi);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_TRUE(funcs.empty());
+  }
+
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(35);
+    parser.AddModeTag("llndk=202504");
+    parser.SetModeTagPolicy(ModeTagPolicy::MatchTagOnly);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs,
+                ElementsAre(Key("api36_llndk202504"), Key("llndk202504")));
+  }
+
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(36);
+    parser.SetModeTagPolicy(ModeTagPolicy::MatchTagAndApi);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs, ElementsAre(Key("api36"), Key("api36_llndk202504"),
+                                   Key("llndk202504")));
   }
 }
 
