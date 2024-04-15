@@ -87,7 +87,6 @@ class MonkeySourceScriptTest {
 
     /**
      * Send two PressAndHold commands in a row and ensure that the injected stream is consistent.
-     * TODO(b/328347986): fix this incorrect stream of events.
      */
     @Test
     fun pressAndHoldTwice() {
@@ -104,13 +103,13 @@ class MonkeySourceScriptTest {
         assertTouchEvent(script, ACTION_DOWN)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
-        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        assertTouchEvent(script, ACTION_UP)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
 
         assertTouchEvent(script, ACTION_DOWN)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
-        receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
+        assertTouchEvent(script, ACTION_UP)
         receiveEvent(script, MonkeyEvent.EVENT_TYPE_THROTTLE)
         assertNull(script.getNextEvent())
 
