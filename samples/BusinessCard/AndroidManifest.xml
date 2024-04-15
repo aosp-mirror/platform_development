@@ -24,7 +24,8 @@
 
     <application android:label="@string/businesscard_app">
         <activity android:name="BusinessCardActivity"
-            android:exported="true">
+                  android:theme="@style/BusinessCardTheme"
+                  android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
