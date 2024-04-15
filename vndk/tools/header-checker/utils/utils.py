@@ -29,7 +29,11 @@ BUILTIN_HEADERS_DIR = (
 SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
-LLNDK_ABI_DUMP_EXT = SO_EXT + '.llndk' + SOURCE_ABI_DUMP_EXT_END
+KNOWN_ABI_DUMP_EXTS = {
+    SOURCE_ABI_DUMP_EXT,
+    SO_EXT + '.apex' + SOURCE_ABI_DUMP_EXT_END,
+    SO_EXT + '.llndk' + SOURCE_ABI_DUMP_EXT_END,
+}
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
 DEFAULT_CFLAGS = ['-std=gnu99']
@@ -85,7 +89,7 @@ class Arch(object):
 
 def _strip_dump_name_ext(filename):
     """Remove .so*.lsdump from a file name."""
-    for ext in (SOURCE_ABI_DUMP_EXT, LLNDK_ABI_DUMP_EXT):
+    for ext in KNOWN_ABI_DUMP_EXTS:
         if filename.endswith(ext) and len(filename) > len(ext):
             return filename[:-len(ext)]
     raise ValueError(f'{filename} has an unknown file name extension.')
@@ -206,7 +210,7 @@ def _get_module_variant_dir_name(tag, arch_cpu_str):
 
     For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
     """
-    if tag in ('LLNDK', 'NDK', 'PLATFORM'):
+    if tag in ('LLNDK', 'NDK', 'PLATFORM', 'APEX'):
         return f'android_{arch_cpu_str}_shared'
     if tag == 'VENDOR':
         return f'android_vendor_{arch_cpu_str}_shared'
