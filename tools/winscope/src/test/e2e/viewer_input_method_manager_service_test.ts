@@ -46,9 +46,7 @@ describe('Viewer Input Method Manager Service', () => {
     await E2eTestUtils.changeRealTimestampInWinscope(
       '2022-11-21, 18:05:14.713780435',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21, 18:05:14.713780435',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.713780435');
 
     await checkAdditionalProperties();
     await clickWmState();
@@ -70,7 +68,7 @@ describe('Viewer Input Method Manager Service', () => {
       by.css('.ime-manager-service .wm-state'),
     );
     const wmStateTimestamp = await wmState.getText();
-    expect(wmStateTimestamp).toEqual('2022-11-21, 18:05:14.713503732');
+    expect(wmStateTimestamp).toEqual('2022-11-21, 18:05:14.714263022');
 
     const insetsSourceProvider = additionalProperties.element(
       by.css('.insets-source-provider'),

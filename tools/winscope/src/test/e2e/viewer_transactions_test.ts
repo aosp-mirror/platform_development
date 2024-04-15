@@ -58,9 +58,7 @@ describe('Viewer Transactions', () => {
     await E2eTestUtils.changeRealTimestampInWinscope(
       '2022-11-21, 18:05:17.505508034',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21, 18:05:17.505508034',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:17.505508034');
     await checkSelectedEntry();
 
     await checkSelectFilter('.pid', ['6914'], 2);

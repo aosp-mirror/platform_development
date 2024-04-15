@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {INVALID_TIME_NS, TimeRange} from 'common/time';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
 import {TIME_UNIT_TO_NANO} from 'common/time_units';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
@@ -114,6 +115,36 @@ export class LoadedParsers {
     );
 
     return await FileUtils.createZipArchive(uniqueArchiveFiles);
+  }
+
+  getLatestRealToMonotonicOffset(
+    parsers: Array<Parser<object>>,
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToMonotonicTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToMonotonicTimeOffsetNs() ?? 0n) -
+            (b.getRealToMonotonicTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToMonotonicTimeOffsetNs();
+  }
+
+  getLatestRealToBootTimeOffset(
+    parsers: Array<Parser<object>>,
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToBootTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToBootTimeOffsetNs() ?? 0n) -
+            (b.getRealToBootTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToBootTimeOffsetNs();
   }
 
   private addLegacyParsers(
@@ -283,17 +314,11 @@ export class LoadedParsers {
         return true;
       }
 
-      const timestamps = parser.getTimestamps();
-      if (!timestamps || timestamps.length === 0) {
+      let timestamps = parser.getTimestamps();
+      if (!this.hasValidTimestamps(timestamps)) {
         return true;
       }
-
-      const isDump =
-        timestamps.length === 1 &&
-        timestamps[0].getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
-        return true;
-      }
+      timestamps = assertDefined(timestamps);
 
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
@@ -371,7 +396,9 @@ export class LoadedParsers {
         );
       });
     const hasParserWithoutOffset = newLegacyParsers.find(({parser, file}) => {
+      const timestamps = parser.getTimestamps();
       return (
+        this.hasValidTimestamps(timestamps) &&
         parser.getRealToBootTimeOffsetNs() === undefined &&
         parser.getRealToMonotonicTimeOffsetNs() === undefined
       );
@@ -420,33 +447,16 @@ export class LoadedParsers {
     return undefined;
   }
 
-  getLatestRealToMonotonicOffset(
-    parsers: Array<Parser<object>>,
-  ): bigint | undefined {
-    const p = parsers
-      .filter((offset) => offset.getRealToMonotonicTimeOffsetNs() !== undefined)
-      .sort((a, b) => {
-        return Number(
-          (a.getRealToMonotonicTimeOffsetNs() ?? 0n) -
-            (b.getRealToMonotonicTimeOffsetNs() ?? 0n),
-        );
-      })
-      .at(-1);
-    return p?.getRealToMonotonicTimeOffsetNs();
-  }
+  private hasValidTimestamps(timestamps: Timestamp[] | undefined): boolean {
+    if (!timestamps || timestamps.length === 0) {
+      return false;
+    }
 
-  getLatestRealToBootTimeOffset(
-    parsers: Array<Parser<object>>,
-  ): bigint | undefined {
-    const p = parsers
-      .filter((offset) => offset.getRealToBootTimeOffsetNs() !== undefined)
-      .sort((a, b) => {
-        return Number(
-          (a.getRealToBootTimeOffsetNs() ?? 0n) -
-            (b.getRealToBootTimeOffsetNs() ?? 0n),
-        );
-      })
-      .at(-1);
-    return p?.getRealToBootTimeOffsetNs();
+    const isDump =
+      timestamps.length === 1 && timestamps[0].getValueNs() === INVALID_TIME_NS;
+    if (isDump) {
+      return false;
+    }
+    return true;
   }
 }

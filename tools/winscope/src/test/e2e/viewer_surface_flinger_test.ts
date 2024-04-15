@@ -42,9 +42,7 @@ describe('Viewer Surface Flinger', () => {
     await E2eTestUtils.changeRealTimestampInWinscope(
       '2022-11-21, 18:05:11.314875855',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21, 18:05:11.314875855',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:11.314875855');
     await E2eTestUtils.filterHierarchy(
       viewerSelector,
       'ConversationListActivity#632',

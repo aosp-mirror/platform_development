@@ -46,18 +46,14 @@ describe('Viewer Window Manager', () => {
     await E2eTestUtils.changeRealTimestampInWinscope(
       '2022-11-21, 18:05:09.753946780',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21, 18:05:09.753946780',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:09.753946780');
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'root');
     await checkRootProperties();
 
     await E2eTestUtils.changeRealTimestampInWinscope(
       '2022-11-21, 18:05:14.544918403',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21, 18:05:14.544918403',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.544918403');
     await E2eTestUtils.filterHierarchy(viewerSelector, 'InputMethod');
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'InputMethod');
     await checkInputMethodWindowProperties();
