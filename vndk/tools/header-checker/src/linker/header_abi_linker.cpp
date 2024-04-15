@@ -81,9 +81,19 @@ static llvm::cl::list<std::string> excluded_symbol_tags(
     "exclude-symbol-tag", llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::list<std::string> included_symbol_tags(
+    "include-symbol-tag",
+    llvm::cl::desc("Filter the symbols in the version script by mode tag, "
+                   "such as llndk, apex, and systemapi. The format is "
+                   "<tag>=<level> or <tag>. If this option is not specified, "
+                   "all mode tags are included."),
+    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
 static llvm::cl::opt<std::string> api(
-    "api", llvm::cl::desc("<api>"), llvm::cl::Optional,
-    llvm::cl::init("current"),
+    "api",
+    llvm::cl::desc("Filter the symbols in the version script by comparing "
+                   "\"introduced\" tags and the specified API level."),
+    llvm::cl::Optional, llvm::cl::init("current"),
     llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> api_map(
@@ -479,6 +489,12 @@ static bool InitializeVersionScriptParser(repr::VersionScriptParser &parser) {
   }
   for (auto &&tag : excluded_symbol_tags) {
     parser.AddExcludedSymbolTag(tag);
+  }
+  for (auto &&tag : included_symbol_tags) {
+    if (!parser.AddModeTag(tag)) {
+      llvm::errs() << "Failed to parse -include-symbol-tag " << tag << "\n";
+      return false;
+    }
   }
 
   return true;
