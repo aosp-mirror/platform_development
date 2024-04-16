@@ -14,7 +14,7 @@ PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
 PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
-KNOWN_TAGS = {'LLNDK', 'NDK', 'PLATFORM', 'VENDOR', 'PRODUCT'}
+KNOWN_TAGS = {'APEX', 'LLNDK', 'NDK', 'PLATFORM', 'VENDOR', 'PRODUCT'}
 NON_AOSP_TAGS = {'VENDOR', 'PRODUCT'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
@@ -70,7 +70,7 @@ def tag_to_dir_name(tag):
         return ''
     if tag == 'NDK':
         return 'ndk'
-    if tag == 'PLATFORM':
+    if tag in ('APEX', 'PLATFORM'):
         return 'platform'
     if tag == 'LLNDK':
         return 'vndk'

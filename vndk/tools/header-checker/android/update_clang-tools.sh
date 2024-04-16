@@ -66,7 +66,7 @@ update_prebuilts () {
 commit () {
   cd "${CLANG_TOOLS_DIR}"
   echo "Update clang-tools to ab/${BUILD_ID}" > "/tmp/clang-tools-update.msg"
-  git add manifest.xml linux-x86 darwin-x86
+  git add manifest.xml linux-x86
   git commit -a -t "/tmp/clang-tools-update.msg"
 }
 
@@ -76,5 +76,4 @@ repo start "update_${BUILD_ID}" .
 
 update_manifest
 update_prebuilts "linux-x86" "linux"
-update_prebuilts "darwin-x86" "darwin_mac"
 commit

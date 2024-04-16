@@ -43,6 +43,7 @@ rust_binary_host {
 rust_test_host {
     name: "cargo_embargo.test",
     defaults: ["cargo_embargo.defaults"],
+    rustlibs: ["libgoogletest_rust"],
     test_config: "AndroidTest.xml",
     data: ["testdata/**/*"],
 }
