@@ -174,8 +174,9 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
     ASSERT_TRUE(result);
 
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
-
-    EXPECT_TRUE(funcs.empty());
+    // This may be an undefined behavior. ndkstubgen includes it in llndk mode,
+    // but excludes it in ndk mode.
+    EXPECT_THAT(funcs, ElementsAre(Key("test5")));
   }
 
   {
@@ -351,6 +352,91 @@ TEST(VersionScriptParserTest, ExcludeSymbolTags) {
     const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
 
     EXPECT_THAT(funcs, ElementsAre(Key("test1")));
+  }
+}
+
+
+TEST(VersionScriptParserTest, IncludeSymbolTags) {
+  static const char testdata[] = R"TESTDATA(
+    LIBEX_1.0 {
+      global:
+        always;  # unknown
+        api34;  # introduced=34
+        api35;  # introduced=35
+        api35_llndk202404;  # introduced=35 llndk=202404
+        systemapi;  # systemapi
+        systemapi_llndk;  # systemapi llndk
+    };
+    LIBEX_2.0 {  # introduced=36
+        api36_llndk202504;
+        api36_llndk202504;  # llndk=202504
+    };
+  )TESTDATA";
+
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(34);
+    parser.AddModeTag("llndk=202404");
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs,
+                ElementsAre(Key("always"), Key("api34"),
+                            Key("api35_llndk202404"), Key("systemapi_llndk")));
+  }
+
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(34);
+    parser.AddModeTag("llndk");
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(
+        funcs,
+        ElementsAre(Key("always"), Key("api34"), Key("api35_llndk202404"),
+                    Key("api36_llndk202504"), Key("systemapi_llndk")));
+  }
+
+  // Include all mode tags
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(utils::FUTURE_API_LEVEL);
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs,
+                ElementsAre(Key("always"), Key("api34"), Key("api35"),
+                            Key("api35_llndk202404"), Key("api36_llndk202504"),
+                            Key("systemapi"), Key("systemapi_llndk")));
+  }
+
+  // Exclude all mode tags
+  {
+    VersionScriptParser parser;
+    parser.SetApiLevel(utils::FUTURE_API_LEVEL);
+    parser.AddModeTag("none");
+
+    std::istringstream stream(testdata);
+    std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
+    ASSERT_TRUE(result);
+
+    const ExportedSymbolSet::FunctionMap &funcs = result->GetFunctions();
+
+    EXPECT_THAT(funcs, ElementsAre(Key("always"), Key("api34"), Key("api35"),
+                                   Key("api36_llndk202504")));
   }
 }
 
