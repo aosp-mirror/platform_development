@@ -1132,6 +1132,8 @@ fn crate_to_rulesmk(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::matchers::eq;
+    use googletest::prelude::assert_that;
     use std::env::{current_dir, set_current_dir};
     use std::fs::{self, read_to_string};
     use std::path::PathBuf;
@@ -1213,7 +1215,7 @@ mod tests {
                 .unwrap();
             }
 
-            assert_eq!(output, expected_output);
+            assert_that!(output, eq(expected_output));
 
             set_current_dir(old_current_dir).unwrap();
         }
