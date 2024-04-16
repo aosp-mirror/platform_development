@@ -127,7 +127,7 @@ class E2eTestUtils {
 
   static async checkInitialRealTimestamp(timestamp: string) {
     await E2eTestUtils.changeRealTimestampInWinscope(timestamp);
-    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp);
+    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp.slice(12));
     const prevEntryButton = element(by.css('#prev_entry_button'));
     const isDisabled = await prevEntryButton.getAttribute('disabled');
     expect(isDisabled).toEqual('true');
@@ -135,20 +135,20 @@ class E2eTestUtils {
 
   static async checkFinalRealTimestamp(timestamp: string) {
     await E2eTestUtils.changeRealTimestampInWinscope(timestamp);
-    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp);
+    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp.slice(12));
     const nextEntryButton = element(by.css('#next_entry_button'));
     const isDisabled = await nextEntryButton.getAttribute('disabled');
     expect(isDisabled).toEqual('true');
   }
 
   static async checkWinscopeRealTimestamp(timestamp: string) {
-    const inputElement = element(by.css('input[name="humanRealTimeInput"]'));
+    const inputElement = element(by.css('input[name="humanTimeInput"]'));
     const value = await inputElement.getAttribute('value');
     expect(value).toEqual(timestamp);
   }
 
   static async changeRealTimestampInWinscope(newTimestamp: string) {
-    await E2eTestUtils.updateInputField('', 'humanRealTimeInput', newTimestamp);
+    await E2eTestUtils.updateInputField('', 'humanTimeInput', newTimestamp);
   }
 
   static async checkWinscopeNsTimestamp(newTimestamp: string) {
@@ -366,7 +366,7 @@ class E2eTestUtils {
 
   private static async checkEmitsOldDataMessages() {
     const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('discarded because data is older than');
+    expect(text).toContain('discarded because data is old');
   }
 }
 

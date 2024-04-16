@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UnsupportedFileFormat} from 'messaging/user_warnings';
@@ -57,7 +57,7 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
     notificationListener?: UserNotificationsListener,
   ): Promise<FileAndParser[]> {
@@ -73,7 +73,7 @@ export class ParserFactory {
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const p = new ParserType(traceFile, timestampFactory);
+          const p = new ParserType(traceFile, timestampConverter);
           await p.parse();
           hasFoundParser = true;
 

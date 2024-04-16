@@ -15,9 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -45,26 +44,20 @@ describe('ParserEventLog', () => {
     });
 
     it('has expected timestamps', () => {
-      const timestamps = assertDefined(
-        parser.getTimestamps(TimestampType.REAL),
-      );
+      const timestamps = assertDefined(parser.getTimestamps());
 
       expect(timestamps.length).toEqual(184);
 
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047981157174n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991161039n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991310494n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047981157174n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047991161039n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047991310494n),
       ];
       expect(timestamps.slice(0, 3)).toEqual(expected);
     });
 
-    it("doesn't provide elapsed timestamps", () => {
-      expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(undefined);
-    });
-
     it('contains parsed jank CUJ events', async () => {
-      const entry = await parser.getEntry(18, TimestampType.REAL);
+      const entry = await parser.getEntry(18);
 
       const expected = new PropertyTreeBuilder()
         .setRootId('EventLogTrace')
@@ -85,27 +78,6 @@ describe('ParserEventLog', () => {
 
       expect(entry).toEqual(expected);
     });
-
-    it('applies timezone info to real timestamps', async () => {
-      const parserWithTimezoneInfo = assertDefined(
-        await UnitTestUtils.getParser('traces/eventlog.winscope', true),
-      ) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.EVENT_LOG,
-      );
-
-      const timestamps = assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      );
-      expect(timestamps.length).toEqual(184);
-
-      const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847981157174n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991161039n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991310494n),
-      ];
-      expect(timestamps.slice(0, 3)).toEqual(expected);
-    });
   });
 
   describe('trace with timestamps not monotonically increasing', () => {
@@ -121,22 +93,20 @@ describe('ParserEventLog', () => {
     });
 
     it('sorts entries to make timestamps monotonically increasing', () => {
-      const timestamps = assertDefined(
-        parser.getTimestamps(TimestampType.REAL),
-      );
+      const timestamps = assertDefined(parser.getTimestamps());
 
       expect(timestamps.length).toEqual(3);
 
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047981157174n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991161039n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207047991310494n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047981157174n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047991161039n),
+        TimestampConverterUtils.makeRealTimestamp(1681207047991310494n),
       ];
       expect(timestamps).toEqual(expected);
     });
 
     it('contains parsed events', async () => {
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
 
       const expected = new PropertyTreeBuilder()
         .setRootId('EventLogTrace')
@@ -153,30 +123,6 @@ describe('ParserEventLog', () => {
         .build();
 
       expect(entry).toEqual(expected);
-    });
-
-    it('applies timezone info to real timestamps', async () => {
-      const parserWithTimezoneInfo = assertDefined(
-        await UnitTestUtils.getParser(
-          'traces/eventlog_timestamps_not_monotonically_increasing.winscope',
-          true,
-        ),
-      ) as Parser<PropertyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.EVENT_LOG,
-      );
-
-      const timestamps = assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      );
-      expect(timestamps.length).toEqual(3);
-
-      const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847981157174n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991161039n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681226847991310494n),
-      ];
-      expect(timestamps).toEqual(expected);
     });
   });
 });

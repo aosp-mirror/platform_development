@@ -50,9 +50,6 @@ export class TraceFileFilter {
     const bugreportMainEntry = files.find((file) =>
       file.file.name.endsWith('main_entry.txt'),
     );
-    const bugReportDumpstateBoard = files.find((file) =>
-      file.file.name.endsWith('dumpstate_board.txt'),
-    );
 
     const perfettoFiles = files.filter((file) => this.isPerfettoFile(file));
     const legacyFiles = files.filter((file) => !this.isPerfettoFile(file));
@@ -67,8 +64,9 @@ export class TraceFileFilter {
       };
     }
 
-    const timezoneInfo = await this.processDumpstateBoard(
-      bugReportDumpstateBoard,
+    const timezoneInfo = await this.processRawBugReport(
+      assertDefined(bugreportMainEntry),
+      files,
     );
 
     return await this.filterBugreport(
@@ -79,36 +77,40 @@ export class TraceFileFilter {
     );
   }
 
-  private async processDumpstateBoard(
-    bugReportDumpstateBoard: TraceFile | undefined,
+  private async processRawBugReport(
+    bugreportMainEntry: TraceFile,
+    files: TraceFile[],
   ): Promise<TimezoneInfo | undefined> {
-    if (!bugReportDumpstateBoard) {
+    const bugreportName = (await bugreportMainEntry.file.text()).trim();
+    const rawBugReport = files.find((file) => file.file.name === bugreportName);
+    if (!rawBugReport) {
       return undefined;
     }
 
-    const traceBuffer = new Uint8Array(
-      await bugReportDumpstateBoard.file.arrayBuffer(),
-    );
+    const traceBuffer = new Uint8Array(await rawBugReport.file.arrayBuffer());
     const fileData = new TextDecoder().decode(traceBuffer);
-    const localeStartIndex = fileData.indexOf('[persist.sys.locale]');
-    const timezoneStartIndex = fileData.indexOf('[persist.sys.timezone]');
 
-    if (localeStartIndex === -1 || timezoneStartIndex === -1) {
+    const timezoneStartIndex = fileData.indexOf('[persist.sys.timezone]');
+    if (timezoneStartIndex === -1) {
       return undefined;
     }
-
-    const locale = this.extractValueFromDumpstateBoard(
-      fileData,
-      localeStartIndex,
-    );
-    const timezone = this.extractValueFromDumpstateBoard(
+    const timezone = this.extractValueFromRawBugReport(
       fileData,
       timezoneStartIndex,
     );
-    return {timezone, locale};
+
+    let utcOffsetMs = undefined;
+    const timeOffsetIndex = fileData.indexOf('[persist.sys.time.offset]');
+    if (timeOffsetIndex !== -1) {
+      utcOffsetMs = Number(
+        this.extractValueFromRawBugReport(fileData, timeOffsetIndex),
+      );
+    }
+
+    return {timezone, locale: 'en-US', utcOffsetMs};
   }
 
-  private extractValueFromDumpstateBoard(
+  private extractValueFromRawBugReport(
     fileData: string,
     startIndex: number,
   ): string {

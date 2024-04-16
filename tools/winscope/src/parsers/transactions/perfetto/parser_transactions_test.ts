@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -43,66 +42,27 @@ describe('Perfetto ParserTransactions', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
+  it('provides timestamps', () => {
+    const timestamps = assertDefined(parser.getTimestamps());
 
     expect(timestamps.length).toEqual(712);
 
     const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2517952515n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(4021151449n),
+      TimestampConverterUtils.makeRealTimestamp(1659507541051480997n),
+      TimestampConverterUtils.makeRealTimestamp(1659507541118452067n),
+      TimestampConverterUtils.makeRealTimestamp(1659507542621651001n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
-  it('provides real timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
-
-    expect(timestamps.length).toEqual(712);
-
-    const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541051480997n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507541118452067n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659507542621651001n),
-    ];
-    expect(timestamps.slice(0, 3)).toEqual(expected);
-  });
-
-  it('applies timezone info to real timestamps only', async () => {
-    const parserWithTimezoneInfo = await UnitTestUtils.getPerfettoParser(
-      TraceType.TRANSACTIONS,
-      'traces/perfetto/transactions_trace.perfetto-trace',
-      true,
-    );
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-      TraceType.TRANSACTIONS,
-    );
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-      )[0],
-    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2450981445n));
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      )[0],
-    ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659527341051480997n),
-    );
-  });
-
-  it('retrieves trace entry from real timestamp', async () => {
-    const entry = await parser.getEntry(1, TimestampType.REAL);
+  it('retrieves trace entry from timestamp', async () => {
+    const entry = await parser.getEntry(1);
     expect(entry.id).toEqual('TransactionsTraceEntry entry');
   });
 
   it('transforms fake proto built from trace processor args', async () => {
-    const entry0 = await parser.getEntry(0, TimestampType.REAL);
-    const entry2 = await parser.getEntry(2, TimestampType.REAL);
+    const entry0 = await parser.getEntry(0);
+    const entry2 = await parser.getEntry(2);
 
     // Add empty arrays
     expect(entry0.getChildByName('addedDisplays')?.getAllChildren()).toEqual(
@@ -162,7 +122,7 @@ describe('Perfetto ParserTransactions', () => {
 
   it("decodes 'what' field in proto", async () => {
     {
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
       const transactions = assertDefined(entry.getChildByName('transactions'));
       expect(
         transactions
@@ -183,7 +143,7 @@ describe('Perfetto ParserTransactions', () => {
       ).toEqual('eFlagsChanged | eDestinationFrameChanged');
     }
     {
-      const entry = await parser.getEntry(222, TimestampType.REAL);
+      const entry = await parser.getEntry(222);
       const transactions = assertDefined(entry.getChildByName('transactions'));
 
       expect(

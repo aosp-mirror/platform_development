@@ -37,16 +37,16 @@ describe('Viewer Input Method Clients', () => {
       color: 'rgba(250, 144, 62, 1)',
     });
     await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:11.145224924',
+      '2022-11-21, 18:05:11.145224924',
     );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.244652089');
+    await E2eTestUtils.checkFinalRealTimestamp(
+      '2022-11-21, 18:05:18.245119988',
+    );
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:14.969071242',
+      '2022-11-21, 18:05:14.969539141',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:14.969071242',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.969539141');
 
     await checkAdditionalProperties();
     await clickWmState();
@@ -68,7 +68,7 @@ describe('Viewer Input Method Clients', () => {
     );
     expect(nodes.length).toEqual(5);
     expect(await nodes[0].getText()).toContain(
-      'InputMethodClients - 2022-11-21T18:05:14.969071242 - InsetsSourceConsumer#notifyAnimationFinished',
+      'InputMethodClients - 2022-11-21, 18:05:14.969539141 - InsetsSourceConsumer#notifyAnimationFinished',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(
@@ -112,11 +112,11 @@ describe('Viewer Input Method Clients', () => {
 
     const sfState = additionalProperties.element(by.css('.sf-state'));
     const sfStateTimestamp = await sfState.getText();
-    expect(sfStateTimestamp).toEqual('2022-11-21T18:05:14.902440275');
+    expect(sfStateTimestamp).toEqual('2022-11-21, 18:05:14.902440327');
 
     const wmState = additionalProperties.element(by.css('.wm-state'));
     const wmStateTimestamp = await wmState.getText();
-    expect(wmStateTimestamp).toEqual('2022-11-21T18:05:14.895700208');
+    expect(wmStateTimestamp).toEqual('2022-11-21, 18:05:14.896459498');
 
     const focusSection = additionalProperties.element(by.css('.focus'));
     const focusSectionText = await focusSection.getText();

@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {INVALID_TIME_NS, TimeRange, TimestampType} from 'common/time';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {TIME_UNIT_TO_NANO} from 'common/time_units';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
@@ -26,8 +28,16 @@ import {TraceType} from 'trace/trace_type';
 import {TRACE_INFO} from './trace_info';
 
 export class LoadedParsers {
-  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS =
-    5n * 60n * 1000000000n; // 5m
+  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = BigInt(
+    5 * TIME_UNIT_TO_NANO.m,
+  ); // 5m
+  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET = BigInt(
+    5 * TIME_UNIT_TO_NANO.s,
+  ); // 5s
+  static readonly REAL_TIME_TRACES_WITHOUT_RTE_OFFSET = [
+    TraceType.CUJS,
+    TraceType.EVENT_LOG,
+  ];
 
   private legacyParsers = new Map<TraceType, FileAndParser>();
   private perfettoParsers = new Map<TraceType, FileAndParser>();
@@ -40,7 +50,14 @@ export class LoadedParsers {
     if (perfettoParsers) {
       this.addPerfettoParsers(perfettoParsers, userNotificationsListener);
     }
-
+    // Traces were simultaneously upgraded to contain real-to-boottime or real-to-monotonic offsets.
+    // If we have a mix of parsers with and without offsets, the ones without must be dangling
+    // trace files with old data, and should be filtered out.
+    legacyParsers = this.filterOutParsersWithoutOffsetsIfRequired(
+      legacyParsers,
+      perfettoParsers,
+      userNotificationsListener,
+    );
     legacyParsers = this.filterOutLegacyParsersWithOldData(
       legacyParsers,
       userNotificationsListener,
@@ -100,19 +117,34 @@ export class LoadedParsers {
     return await FileUtils.createZipArchive(uniqueArchiveFiles);
   }
 
-  findCommonTimestampType(): TimestampType | undefined {
-    return this.findCommonTimestampTypeInternal(this.getParsers());
-  }
-  private findCommonTimestampTypeInternal(
+  getLatestRealToMonotonicOffset(
     parsers: Array<Parser<object>>,
-  ): TimestampType | undefined {
-    const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
-    for (const type of priorityOrder) {
-      if (parsers.every((parser) => parser.getTimestamps(type) !== undefined)) {
-        return type;
-      }
-    }
-    return undefined;
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToMonotonicTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToMonotonicTimeOffsetNs() ?? 0n) -
+            (b.getRealToMonotonicTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToMonotonicTimeOffsetNs();
+  }
+
+  getLatestRealToBootTimeOffset(
+    parsers: Array<Parser<object>>,
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToBootTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToBootTimeOffsetNs() ?? 0n) -
+            (b.getRealToBootTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToBootTimeOffsetNs();
   }
 
   private addLegacyParsers(
@@ -211,22 +243,58 @@ export class LoadedParsers {
     newLegacyParsers: FileAndParser[],
     userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
-    const allParsers = [
+    let allParsers = [
       ...newLegacyParsers,
       ...this.legacyParsers.values(),
       ...this.perfettoParsers.values(),
     ];
 
-    const commonTimestampType = this.findCommonTimestampTypeInternal(
-      allParsers.map(({parser}) => parser),
+    const latestMonotonicOffset = this.getLatestRealToMonotonicOffset(
+      allParsers.map(({parser, file}) => parser),
     );
-    if (commonTimestampType === undefined) {
-      return newLegacyParsers;
-    }
+    const latestBootTimeOffset = this.getLatestRealToBootTimeOffset(
+      allParsers.map(({parser, file}) => parser),
+    );
+
+    newLegacyParsers = newLegacyParsers.filter(({parser, file}) => {
+      const monotonicOffset = parser.getRealToMonotonicTimeOffsetNs();
+      if (monotonicOffset && latestMonotonicOffset) {
+        const isOldData =
+          Math.abs(Number(monotonicOffset - latestMonotonicOffset)) >
+          LoadedParsers.MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET;
+        if (isOldData) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(file.getDescriptor()),
+          ]);
+          return false;
+        }
+      }
+
+      const bootTimeOffset = parser.getRealToBootTimeOffsetNs();
+      if (bootTimeOffset && latestBootTimeOffset) {
+        const isOldData =
+          Math.abs(Number(bootTimeOffset - latestBootTimeOffset)) >
+          LoadedParsers.MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET;
+        if (isOldData) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(file.getDescriptor()),
+          ]);
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    allParsers = [
+      ...newLegacyParsers,
+      ...this.legacyParsers.values(),
+      ...this.perfettoParsers.values(),
+    ];
 
     const timeRanges = allParsers
       .map(({parser}) => {
-        const timestamps = parser.getTimestamps(commonTimestampType);
+        const timestamps = parser.getTimestamps();
         if (!timestamps || timestamps.length === 0) {
           return undefined;
         }
@@ -246,17 +314,11 @@ export class LoadedParsers {
         return true;
       }
 
-      const timestamps = parser.getTimestamps(commonTimestampType);
-      if (!timestamps || timestamps.length === 0) {
+      let timestamps = parser.getTimestamps();
+      if (!this.hasValidTimestamps(timestamps)) {
         return true;
       }
-
-      const isDump =
-        timestamps.length === 1 &&
-        timestamps[0].getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
-        return true;
-      }
+      timestamps = assertDefined(timestamps);
 
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
@@ -320,6 +382,52 @@ export class LoadedParsers {
     return newLegacyParsers;
   }
 
+  private filterOutParsersWithoutOffsetsIfRequired(
+    newLegacyParsers: FileAndParser[],
+    perfettoParsers: FileAndParsers | undefined,
+    userNotificationsListener: UserNotificationsListener,
+  ): FileAndParser[] {
+    const hasParserWithOffset =
+      perfettoParsers ||
+      newLegacyParsers.find(({parser, file}) => {
+        return (
+          parser.getRealToBootTimeOffsetNs() !== undefined ||
+          parser.getRealToMonotonicTimeOffsetNs() !== undefined
+        );
+      });
+    const hasParserWithoutOffset = newLegacyParsers.find(({parser, file}) => {
+      const timestamps = parser.getTimestamps();
+      return (
+        this.hasValidTimestamps(timestamps) &&
+        parser.getRealToBootTimeOffsetNs() === undefined &&
+        parser.getRealToMonotonicTimeOffsetNs() === undefined
+      );
+    });
+
+    if (hasParserWithOffset && hasParserWithoutOffset) {
+      return newLegacyParsers.filter(({parser, file}) => {
+        if (
+          LoadedParsers.REAL_TIME_TRACES_WITHOUT_RTE_OFFSET.some(
+            (traceType) => parser.getTraceType() === traceType,
+          )
+        ) {
+          return true;
+        }
+        const hasOffset =
+          parser.getRealToMonotonicTimeOffsetNs() !== undefined ||
+          parser.getRealToBootTimeOffsetNs() !== undefined;
+        if (!hasOffset) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(parser.getDescriptors().join()),
+          ]);
+        }
+        return hasOffset;
+      });
+    }
+
+    return newLegacyParsers;
+  }
+
   private findLastTimeGapAboveThreshold(
     ranges: readonly TimeRange[],
   ): TimeRange | undefined {
@@ -337,5 +445,18 @@ export class LoadedParsers {
     }
 
     return undefined;
+  }
+
+  private hasValidTimestamps(timestamps: Timestamp[] | undefined): boolean {
+    if (!timestamps || timestamps.length === 0) {
+      return false;
+    }
+
+    const isDump =
+      timestamps.length === 1 && timestamps[0].getValueNs() === INVALID_TIME_NS;
+    if (isDump) {
+      return false;
+    }
+    return true;
   }
 }

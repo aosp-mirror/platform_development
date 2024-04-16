@@ -16,7 +16,6 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserWarning} from 'messaging/user_warning';
 import {
@@ -26,6 +25,7 @@ import {
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
@@ -152,40 +152,15 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
   });
 
-  it('detects bugreports and extracts timezone info from dumpstate_board.txt', async () => {
-    const bugreportFiles = [
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/main_entry.txt',
-        'main_entry.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/dumpstate_board.txt',
-        'dumpstate_board.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        'FS/data/misc/wmtrace/surface_flinger.bp',
-      ),
-    ];
-    const bugreportArchive = new File(
-      [await FileUtils.createZipArchive(bugreportFiles)],
-      'bugreport.zip',
+  it('detects bugreports and extracts utc offset directly', async () => {
+    await testTimezoneOffsetExtraction(
+      'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
     );
+  });
 
-    await loadFiles([bugreportArchive]);
-    await expectLoadResult(1, []);
-
-    const timestampFactory = tracePipeline.getTimestampFactory();
-    expect(timestampFactory).not.toEqual(NO_TIMEZONE_OFFSET_FACTORY);
-
-    const expectedTimestamp =
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n);
-    expect(timestampFactory.makeRealTimestamp(1659107089102062832n)).toEqual(
-      expectedTimestamp,
+  it('detects bugreports and extracts timezone info, then calculates utc offset', async () => {
+    await testTimezoneOffsetExtraction(
+      'bugreports/bugreport-codename_beta-no-time-offset-UPB2.230407.019-2023-05-30-14-33-48.txt',
     );
   });
 
@@ -409,5 +384,41 @@ describe('TracePipeline', () => {
   ) {
     expect(warnings).toEqual(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
+  }
+
+  async function testTimezoneOffsetExtraction(codenameFileName: string) {
+    const bugreportFiles = [
+      await UnitTestUtils.getFixtureFile(
+        'bugreports/main_entry.txt',
+        'main_entry.txt',
+      ),
+      await UnitTestUtils.getFixtureFile(
+        codenameFileName,
+        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+      ),
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'FS/data/misc/wmtrace/surface_flinger.bp',
+      ),
+    ];
+    const bugreportArchive = new File(
+      [await FileUtils.createZipArchive(bugreportFiles)],
+      'bugreport.zip',
+    );
+
+    await loadFiles([bugreportArchive]);
+    await expectLoadResult(1, []);
+
+    const timestampConverter = tracePipeline.getTimestampConverter();
+    expect(timestampConverter);
+    expect(timestampConverter.getUTCOffset()).toEqual('UTC+05:30');
+
+    const expectedTimestamp =
+      TimestampConverterUtils.makeRealTimestampWithUTCOffset(
+        1659107089102062832n,
+      );
+    expect(
+      timestampConverter.makeTimestampFromMonotonicNs(14500282843n),
+    ).toEqual(expectedTimestamp);
   }
 });

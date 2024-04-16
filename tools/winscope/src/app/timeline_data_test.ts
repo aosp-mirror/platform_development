@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -24,11 +24,11 @@ import {TimelineData} from './timeline_data';
 describe('TimelineData', () => {
   let timelineData: TimelineData;
 
-  const timestamp0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-  const timestamp5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
-  const timestamp9 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(9n);
-  const timestamp10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-  const timestamp11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+  const timestamp0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const timestamp5 = TimestampConverterUtils.makeRealTimestamp(5n);
+  const timestamp9 = TimestampConverterUtils.makeRealTimestamp(9n);
+  const timestamp10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const timestamp11 = TimestampConverterUtils.makeRealTimestamp(11n);
 
   const traces = new TracesBuilder()
     .setTimestamps(TraceType.PROTO_LOG, [timestamp9])
@@ -47,7 +47,7 @@ describe('TimelineData', () => {
     assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER)).getEntry(0),
   );
   const position1000 = TracePosition.fromTimestamp(
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1000n),
+    TimestampConverterUtils.makeRealTimestamp(1000n),
   );
 
   beforeEach(() => {
@@ -57,7 +57,11 @@ describe('TimelineData', () => {
   it('can be initialized', () => {
     expect(timelineData.getCurrentPosition()).toBeUndefined();
 
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     expect(timelineData.getCurrentPosition()).toBeDefined();
   });
 
@@ -68,7 +72,11 @@ describe('TimelineData', () => {
       .build();
 
     it('drops trace if it is a dump (will not display in timeline UI)', () => {
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(
         timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER),
       ).toBeUndefined();
@@ -77,7 +85,11 @@ describe('TimelineData', () => {
     });
 
     it('is robust to prev/next entry request of a dump', () => {
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(
         timelineData.getPreviousEntryFor(TraceType.WINDOW_MANAGER),
       ).toBeUndefined();
@@ -88,12 +100,20 @@ describe('TimelineData', () => {
   });
 
   it('uses first entry of first active trace by default', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     expect(timelineData.getCurrentPosition()).toEqual(position10);
   });
 
   it('uses explicit position if set', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
     timelineData.setPosition(position1000);
@@ -107,7 +127,11 @@ describe('TimelineData', () => {
   });
 
   it('sets active trace types and update current position accordingly', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     timelineData.setActiveViewTraceTypes([]);
     expect(timelineData.getCurrentPosition()).toEqual(position9);
@@ -131,7 +155,11 @@ describe('TimelineData', () => {
     // no trace
     {
       const traces = new TracesBuilder().build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasTimestamps()).toBeFalse();
     }
     // trace without timestamps
@@ -139,7 +167,11 @@ describe('TimelineData', () => {
       const traces = new TracesBuilder()
         .setTimestamps(TraceType.SURFACE_FLINGER, [])
         .build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasTimestamps()).toBeFalse();
     }
     // trace with timestamps
@@ -147,7 +179,11 @@ describe('TimelineData', () => {
       const traces = new TracesBuilder()
         .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
         .build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasTimestamps()).toBeTrue();
     }
   });
@@ -158,7 +194,11 @@ describe('TimelineData', () => {
     // no trace
     {
       const traces = new TracesBuilder().build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeFalse();
     }
     // no distinct timestamps
@@ -167,7 +207,11 @@ describe('TimelineData', () => {
         .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
         .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp10])
         .build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeFalse();
     }
     // distinct timestamps
@@ -176,13 +220,21 @@ describe('TimelineData', () => {
         .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
         .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
         .build();
-      timelineData.initialize(traces, undefined);
+      timelineData.initialize(
+        traces,
+        undefined,
+        TimestampConverterUtils.TIMESTAMP_CONVERTER,
+      );
       expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeTrue();
     }
   });
 
   it('getCurrentPosition() returns same object if no change to range', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     expect(timelineData.getCurrentPosition()).toBe(
       timelineData.getCurrentPosition(),
@@ -196,8 +248,12 @@ describe('TimelineData', () => {
   });
 
   it('makePositionFromActiveTrace()', () => {
-    timelineData.initialize(traces, undefined);
-    const time100 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(100n);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
 
     {
       timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
@@ -219,7 +275,11 @@ describe('TimelineData', () => {
   });
 
   it('getFullTimeRange() returns same object if no change to range', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     expect(timelineData.getFullTimeRange()).toBe(
       timelineData.getFullTimeRange(),
@@ -227,7 +287,11 @@ describe('TimelineData', () => {
   });
 
   it('getSelectionTimeRange() returns same object if no change to range', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     expect(timelineData.getSelectionTimeRange()).toBe(
       timelineData.getSelectionTimeRange(),
@@ -244,7 +308,11 @@ describe('TimelineData', () => {
   });
 
   it('getZoomRange() returns same object if no change to range', () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
 
@@ -257,7 +325,11 @@ describe('TimelineData', () => {
   });
 
   it("getCurrentPosition() prioritizes active trace's first entry", () => {
-    timelineData.initialize(traces, undefined);
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
     timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
 
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);

@@ -19,9 +19,9 @@ import {AddOperation} from 'trace/tree_node/operations/add_operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 
-export class AddRealToElapsedTimeOffsetTimestamp extends AddOperation<PropertyTreeNode> {
+export class AddRealToBootTimeOffsetTimestamp extends AddOperation<PropertyTreeNode> {
   constructor(
-    private readonly realToElapsedTimeOffsetTimestamp: Timestamp | undefined,
+    private readonly realToBootTimeOffsetTimestamp: Timestamp | undefined,
   ) {
     super();
   }
@@ -31,8 +31,8 @@ export class AddRealToElapsedTimeOffsetTimestamp extends AddOperation<PropertyTr
     const offsetNode =
       DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
         value.id,
-        'realToElapsedTimeOffsetTimestamp',
-        this.realToElapsedTimeOffsetTimestamp,
+        'realToBootTimeOffsetTimestamp',
+        this.realToBootTimeOffsetTimestamp,
       );
 
     return [offsetNode];

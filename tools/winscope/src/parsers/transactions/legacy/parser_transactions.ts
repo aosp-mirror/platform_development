@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
@@ -51,7 +51,7 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     new TranslateChanges(),
   ];
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
+  private realToMonotonicTimeOffsetNs: bigint | undefined;
 
   override getTraceType(): TraceType {
     return TraceType.TRANSACTIONS;
@@ -59,6 +59,14 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
 
   override getMagicNumber(): number[] {
     return ParserTransactions.MAGIC_NUMBER;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return this.realToMonotonicTimeOffsetNs;
   }
 
   override decodeTrace(
@@ -71,36 +79,22 @@ class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     const timeOffset = BigInt(
       decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
-    this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
+    this.realToMonotonicTimeOffsetNs =
+      timeOffset !== 0n ? timeOffset : undefined;
 
     return decodedProto.entry ?? [];
   }
 
-  override getTimestamp(
-    type: TimestampType,
+  protected override getTimestamp(
     entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
-  ): undefined | Timestamp {
-    const elapsedRealtimeNanos = BigInt(
-      assertDefined(entryProto.elapsedRealtimeNanos).toString(),
+  ): Timestamp {
+    return this.timestampConverter.makeTimestampFromMonotonicNs(
+      BigInt(assertDefined(entryProto.elapsedRealtimeNanos).toString()),
     );
-    if (
-      this.timestampFactory.canMakeTimestampFromType(
-        type,
-        this.realToElapsedTimeOffsetNs,
-      )
-    ) {
-      return this.timestampFactory.makeTimestampFromType(
-        type,
-        elapsedRealtimeNanos,
-        this.realToElapsedTimeOffsetNs,
-      );
-    }
-    return undefined;
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entryProto: android.surfaceflinger.proto.ITransactionTraceEntry,
   ): PropertyTreeNode {
     return this.makePropertiesTree(entryProto);

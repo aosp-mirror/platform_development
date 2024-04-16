@@ -15,12 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {
-  INVALID_TIME_NS,
-  TimeRange,
-  Timestamp,
-  TimestampType,
-} from 'common/time';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -33,7 +29,6 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 export class TimelineData {
   private traces = new Traces();
   private screenRecordingVideo?: Blob;
-  private timestampType?: TimestampType;
   private firstEntry?: TraceEntry<{}>;
   private lastEntry?: TraceEntry<{}>;
   private explicitlySetPosition?: TracePosition;
@@ -47,9 +42,16 @@ export class TimelineData {
   >();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
   private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
+  private timestampConverter: ComponentTimestampConverter | undefined;
 
-  async initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
+  async initialize(
+    traces: Traces,
+    screenRecordingVideo: Blob | undefined,
+    timestampConverter: ComponentTimestampConverter,
+  ) {
     this.clear();
+
+    this.timestampConverter = timestampConverter;
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
@@ -74,7 +76,6 @@ export class TimelineData {
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
-    this.timestampType = this.firstEntry?.getTimestamp().getType();
 
     const types = traces
       .mapTrace((trace, type) => type)
@@ -91,6 +92,10 @@ export class TimelineData {
 
   getTransitions(): PropertyTreeNode[] {
     return this.transitions;
+  }
+
+  getTimestampConverter(): ComponentTimestampConverter | undefined {
+    return this.timestampConverter;
   }
 
   getCurrentPosition(): TracePosition | undefined {
@@ -127,19 +132,6 @@ export class TimelineData {
       return;
     }
 
-    if (position) {
-      if (this.timestampType === undefined) {
-        throw Error(
-          'Attempted to set explicit position but no timestamp type is available',
-        );
-      }
-      if (position.timestamp.getType() !== this.timestampType) {
-        throw Error(
-          'Attempted to set explicit position with incompatible timestamp type',
-        );
-      }
-    }
-
     this.explicitlySetPosition = position;
   }
 
@@ -163,10 +155,6 @@ export class TimelineData {
 
   setActiveViewTraceTypes(types: TraceType[]) {
     this.activeViewTraceTypes = types;
-  }
-
-  getTimestampType(): TimestampType | undefined {
-    return this.timestampType;
   }
 
   getFullTimeRange(): TimeRange {
@@ -239,8 +227,8 @@ export class TimelineData {
     }
 
     return ScreenRecordingUtils.timestampToVideoTimeSeconds(
-      firstTimestamp,
-      entry.getTimestamp(),
+      firstTimestamp.getValueNs(),
+      entry.getTimestamp().getValueNs(),
     );
   }
 
@@ -328,7 +316,6 @@ export class TimelineData {
     this.firstEntry = undefined;
     this.lastEntry = undefined;
     this.explicitlySetPosition = undefined;
-    this.timestampType = undefined;
     this.explicitlySetSelection = undefined;
     this.lastReturnedCurrentPosition = undefined;
     this.screenRecordingVideo = undefined;

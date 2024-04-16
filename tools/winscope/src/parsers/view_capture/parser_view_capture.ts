@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {ParsingUtils} from 'parsers/legacy/parsing_utils';
 import {com} from 'protos/viewcapture/latest/static';
 import {Parser} from 'trace/parser';
@@ -30,7 +30,7 @@ export class ParserViewCapture {
 
   constructor(
     private readonly traceFile: TraceFile,
-    private readonly timestampFactory: TimestampFactory,
+    private readonly timestampConverter: ParserTimestampConverter,
   ) {}
 
   async parse() {
@@ -44,7 +44,7 @@ export class ParserViewCapture {
       traceBuffer,
     ) as com.android.app.viewcapture.data.IExportedData;
 
-    const realToElapsedTimeOffsetNs = BigInt(
+    const realToBootTimeOffsetNs = BigInt(
       assertDefined(exportedData.realToElapsedTimeOffsetNanos).toString(),
     );
 
@@ -55,10 +55,10 @@ export class ParserViewCapture {
             [this.traceFile.getDescriptor()],
             windowData.frameData ?? [],
             ParserViewCapture.toTraceType(windowData),
-            realToElapsedTimeOffsetNs,
+            realToBootTimeOffsetNs,
             assertDefined(exportedData.package),
             assertDefined(exportedData.classname),
-            this.timestampFactory,
+            this.timestampConverter,
           ),
         ),
     );

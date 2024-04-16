@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import {assertExists, assertTrue} from './logging';
-
 import {Engine, LoadingTracker} from './engine';
 
 let bundlePath: string;

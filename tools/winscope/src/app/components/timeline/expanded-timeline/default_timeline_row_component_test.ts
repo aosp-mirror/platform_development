@@ -27,7 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
 import {TraceType} from 'trace/trace_type';
@@ -252,16 +252,17 @@ describe('DefaultTimelineRowComponent', () => {
       .setType(TraceType.TRANSITION)
       .setEntries([{}, {}, {}, {}])
       .setTimestamps([
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(70n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(12n),
+        TimestampConverterUtils.makeRealTimestamp(15n),
+        TimestampConverterUtils.makeRealTimestamp(70n),
       ])
       .build();
     component.selectionRange = {
-      from: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(low),
-      to: NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(high),
+      from: TimestampConverterUtils.makeRealTimestamp(low),
+      to: TimestampConverterUtils.makeRealTimestamp(high),
     };
+    component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
   }
 
   async function drawCorrectEntryOnClick(

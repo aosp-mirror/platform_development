@@ -53,3 +53,7 @@ rects-view .mat-tab-body {
 rects-view .mat-tab-label-active {
   opacity: 100%;
 }
+
+.mat-select-panel:has(>.select-filter) {
+  max-height: 75vh;
+}

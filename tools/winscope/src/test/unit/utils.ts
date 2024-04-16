@@ -15,11 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {
-  NO_TIMEZONE_OFFSET_FACTORY,
-  TimestampFactory,
-} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {TimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
@@ -30,14 +27,10 @@ import {Traces} from 'trace/traces';
 import {TraceFile} from 'trace/trace_file';
 import {TraceEntryTypeMap, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {TimestampConverterUtils} from './timestamp_converter_utils';
 import {TraceBuilder} from './trace_builder';
 
 class UnitTestUtils {
-  static readonly TIMESTAMP_FACTORY_WITH_TIMEZONE = new TimestampFactory({
-    timezone: 'Asia/Kolkata',
-    locale: 'en-US',
-  });
-
   static async getFixtureFile(
     srcFilename: string,
     dstFilename: string = srcFilename,
@@ -54,7 +47,8 @@ class UnitTestUtils {
     type: T,
     filename: string,
   ): Promise<Trace<T>> {
-    const legacyParsers = await UnitTestUtils.getParsers(filename);
+    const converter = UnitTestUtils.getTimestampConverter(false);
+    const legacyParsers = await UnitTestUtils.getParsers(filename, converter);
     expect(legacyParsers.length).toBeLessThanOrEqual(1);
     if (legacyParsers.length === 1) {
       expect(legacyParsers[0].getTraceType()).toEqual(type);
@@ -75,44 +69,28 @@ class UnitTestUtils {
 
   static async getParser(
     filename: string,
-    withTimezoneInfo = false,
+    converter = UnitTestUtils.getTimestampConverter(),
+    initializeRealToElapsedTimeOffsetNs = true,
   ): Promise<Parser<object>> {
-    const parsers = await UnitTestUtils.getParsers(filename, withTimezoneInfo);
+    const parsers = await UnitTestUtils.getParsers(
+      filename,
+      converter,
+      initializeRealToElapsedTimeOffsetNs,
+    );
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
       .toBeGreaterThanOrEqual(1);
     return parsers[0];
   }
 
-  static async getParsers(
-    filename: string,
-    withTimezoneInfo = false,
-  ): Promise<Array<Parser<object>>> {
-    const file = new TraceFile(
-      await UnitTestUtils.getFixtureFile(filename),
-      undefined,
-    );
-    const fileAndParsers = await new LegacyParserFactory().createParsers(
-      [file],
-      withTimezoneInfo
-        ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE
-        : NO_TIMEZONE_OFFSET_FACTORY,
-      undefined,
-      undefined,
-    );
-    return fileAndParsers.map((fileAndParser) => {
-      return fileAndParser.parser;
-    });
-  }
-
   static async getPerfettoParser<T extends TraceType>(
     traceType: T,
     fixturePath: string,
-    withTimezoneInfo = false,
+    withUTCOffset = false,
   ): Promise<Parser<TraceEntryTypeMap[T]>> {
     const parsers = await UnitTestUtils.getPerfettoParsers(
       fixturePath,
-      withTimezoneInfo,
+      withUTCOffset,
     );
     const parser = assertDefined(
       parsers.find((parser) => parser.getTraceType() === traceType),
@@ -122,42 +100,72 @@ class UnitTestUtils {
 
   static async getPerfettoParsers(
     fixturePath: string,
-    withTimezoneInfo = false,
+    withUTCOffset = false,
   ): Promise<Array<Parser<object>>> {
     const file = await UnitTestUtils.getFixtureFile(fixturePath);
     const traceFile = new TraceFile(file);
-    return await new PerfettoParserFactory().createParsers(
+    const converter = UnitTestUtils.getTimestampConverter(withUTCOffset);
+    const parsers = await new PerfettoParserFactory().createParsers(
       traceFile,
-      withTimezoneInfo
-        ? UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE
-        : NO_TIMEZONE_OFFSET_FACTORY,
+      converter,
       undefined,
     );
+    parsers.forEach((parser) => {
+      converter.setRealToBootTimeOffsetNs(
+        assertDefined(parser.getRealToBootTimeOffsetNs()),
+      );
+      parser.createTimestamps();
+    });
+    return parsers;
   }
 
   static async getTracesParser(
     filenames: string[],
-    withTimezoneInfo = false,
+    withUTCOffset = false,
   ): Promise<Parser<object>> {
+    const converter = UnitTestUtils.getTimestampConverter(withUTCOffset);
     const parsersArray = await Promise.all(
-      filenames.map((filename) =>
-        UnitTestUtils.getParser(filename, withTimezoneInfo),
+      filenames.map(async (filename) =>
+        UnitTestUtils.getParser(filename, converter, true),
       ),
     );
+    const offset = parsersArray
+      .filter((parser) => parser.getRealToBootTimeOffsetNs() !== undefined)
+      .sort((a, b) =>
+        Number(
+          (a.getRealToBootTimeOffsetNs() ?? 0n) -
+            (b.getRealToBootTimeOffsetNs() ?? 0n),
+        ),
+      )
+      .at(-1)
+      ?.getRealToBootTimeOffsetNs();
+
+    if (offset !== undefined) {
+      converter.setRealToBootTimeOffsetNs(offset);
+    }
 
     const traces = new Traces();
     parsersArray.forEach((parser) => {
-      const trace = Trace.fromParser(parser, TimestampType.REAL);
+      const trace = Trace.fromParser(parser);
       traces.setTrace(parser.getTraceType(), trace);
     });
 
-    const tracesParsers = await new TracesParserFactory().createParsers(traces);
+    const tracesParsers = await new TracesParserFactory().createParsers(
+      traces,
+      converter,
+    );
     expect(tracesParsers.length)
       .withContext(
         `Should have been able to create a traces parser for [${filenames.join()}]`,
       )
       .toEqual(1);
     return tracesParsers[0];
+  }
+
+  static getTimestampConverter(withUTCOffset = false): TimestampConverter {
+    return withUTCOffset
+      ? new TimestampConverter(TimestampConverterUtils.ASIA_TIMEZONE_INFO)
+      : new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO);
   }
 
   static async getWindowManagerState(index = 0): Promise<HierarchyTreeNode> {
@@ -194,7 +202,7 @@ class UnitTestUtils {
       const parser = (await UnitTestUtils.getParser(
         'traces/ime/SurfaceFlinger_with_IME.pb',
       )) as Parser<HierarchyTreeNode>;
-      surfaceFlingerEntry = await parser.getEntry(5, TimestampType.ELAPSED);
+      surfaceFlingerEntry = await parser.getEntry(5);
     }
 
     let windowManagerEntry: HierarchyTreeNode | undefined;
@@ -202,7 +210,7 @@ class UnitTestUtils {
       const parser = (await UnitTestUtils.getParser(
         'traces/ime/WindowManager_with_IME.pb',
       )) as Parser<HierarchyTreeNode>;
-      windowManagerEntry = await parser.getEntry(2, TimestampType.ELAPSED);
+      windowManagerEntry = await parser.getEntry(2);
     }
 
     const entries = new Map<TraceType, HierarchyTreeNode>();
@@ -237,14 +245,59 @@ class UnitTestUtils {
     timestamp: Timestamp,
     expectedTimestamp: Timestamp,
   ): boolean {
-    if (timestamp.getType() !== expectedTimestamp.getType()) return false;
-    if (timestamp.getValueNs() !== expectedTimestamp.getValueNs()) return false;
+    if (timestamp.format() !== expectedTimestamp.format()) return false;
+    if (timestamp.getValueNs() !== expectedTimestamp.getValueNs()) {
+      return false;
+    }
     return true;
   }
 
   private static async getTraceEntry<T>(filename: string, index = 0) {
     const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
-    return parser.getEntry(index, TimestampType.ELAPSED);
+    return parser.getEntry(index);
+  }
+
+  private static async getParsers(
+    filename: string,
+    converter: TimestampConverter,
+    initializeRealToElapsedTimeOffsetNs = true,
+  ): Promise<Array<Parser<object>>> {
+    const file = new TraceFile(
+      await UnitTestUtils.getFixtureFile(filename),
+      undefined,
+    );
+    const fileAndParsers = await new LegacyParserFactory().createParsers(
+      [file],
+      converter,
+      undefined,
+      undefined,
+    );
+
+    if (initializeRealToElapsedTimeOffsetNs) {
+      const monotonicOffset = fileAndParsers
+        .find(
+          (fileAndParser) =>
+            fileAndParser.parser.getRealToMonotonicTimeOffsetNs() !== undefined,
+        )
+        ?.parser.getRealToMonotonicTimeOffsetNs();
+      if (monotonicOffset !== undefined) {
+        converter.setRealToMonotonicTimeOffsetNs(monotonicOffset);
+      }
+      const bootTimeOffset = fileAndParsers
+        .find(
+          (fileAndParser) =>
+            fileAndParser.parser.getRealToBootTimeOffsetNs() !== undefined,
+        )
+        ?.parser.getRealToBootTimeOffsetNs();
+      if (bootTimeOffset !== undefined) {
+        converter.setRealToBootTimeOffsetNs(bootTimeOffset);
+      }
+    }
+
+    return fileAndParsers.map((fileAndParser) => {
+      fileAndParser.parser.createTimestamps();
+      return fileAndParser.parser;
+    });
   }
 }
 

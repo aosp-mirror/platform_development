@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -29,6 +29,7 @@ describe('ParserWindowManagerDump', () => {
   let trace: Trace<HierarchyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getParser(
       'traces/dump_WindowManager.pb',
     )) as Parser<HierarchyTreeNode>;
@@ -46,35 +47,27 @@ describe('ParserWindowManagerDump', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
-  it('provides elapsed timestamp (always zero)', () => {
-    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n)];
-    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
-  });
-
-  it('provides real timestamp (always zero)', () => {
-    const expected = [NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n)];
-    expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
+  it('provides timestamp (always zero)', () => {
+    const expected = [TimestampConverterUtils.makeElapsedTimestamp(0n)];
+    expect(parser.getTimestamps()).toEqual(expected);
   });
 
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
       'traces/dump_WindowManager.pb',
-      true,
+      UnitTestUtils.getTimestampConverter(true),
     )) as Parser<HierarchyTreeNode>;
     expect(parserWithTimezoneInfo.getTraceType()).toEqual(
       TraceType.WINDOW_MANAGER,
     );
 
-    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-    ]);
-    expect(parser.getTimestamps(TimestampType.REAL)).toEqual([
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+    expect(parser.getTimestamps()).toEqual([
+      TimestampConverterUtils.makeElapsedTimestamp(0n),
     ]);
   });
 
   it('retrieves trace entry', async () => {
-    const entry = await parser.getEntry(0, TimestampType.ELAPSED);
+    const entry = await parser.getEntry(0);
     expect(entry).toBeInstanceOf(HierarchyTreeNode);
     expect(entry.getEagerPropertyByName('focusedApp')?.getValue()).toEqual(
       'com.google.android.apps.nexuslauncher/.NexusLauncherActivity',

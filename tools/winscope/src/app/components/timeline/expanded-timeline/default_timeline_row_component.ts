@@ -26,7 +26,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -52,6 +52,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   @Input() trace: Trace<{}> | undefined;
   @Input() selectedEntry: TraceEntry<{}> | undefined;
   @Input() selectionRange: TimeRange | undefined;
+  @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
@@ -172,11 +173,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
       (BigInt(Math.floor(x)) * (end - start)) /
         BigInt(this.getAvailableWidth()) +
       start;
-    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      assertDefined(this.selectionRange).from.getType(),
-      ts,
-      0n,
-    );
+    return assertDefined(this.timestampConverter).makeTimestampFromNs(ts);
   }
 
   private drawEntry(entry: Timestamp) {

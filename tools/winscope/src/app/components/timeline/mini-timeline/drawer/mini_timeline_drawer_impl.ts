@@ -34,12 +34,7 @@ import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
 export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
-
   private activePointer: DraggableCanvasObject;
-
-  private get pointerWidth() {
-    return this.getHeight() / 6;
-  }
 
   getXScale() {
     return this.ctx.getTransform().m11;
@@ -57,15 +52,16 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     return this.canvas.height / this.getYScale();
   }
 
-  get usableRange() {
+  getUsableRange() {
+    const padding = this.getPadding();
     return {
-      from: this.padding.left,
-      to: this.getWidth() - this.padding.left - this.padding.right,
+      from: padding.left,
+      to: this.getWidth() - padding.left - padding.right,
     };
   }
 
-  get input(): MiniCanvasDrawerData {
-    return this.inputGetter().transform(this.usableRange);
+  getInput(): MiniCanvasDrawerData {
+    return this.inputGetter().transform(this.getUsableRange());
   }
 
   constructor(
@@ -84,7 +80,9 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     this.ctx = ctx;
 
     const onUnhandledClickInternal = async (mousePoint: Point) => {
-      this.onUnhandledClick(this.input.transformer.untransform(mousePoint.x));
+      this.onUnhandledClick(
+        this.getInput().transformer.untransform(mousePoint.x),
+      );
     };
     this.handler = new CanvasMouseHandlerImpl(
       this,
@@ -94,10 +92,10 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
     this.activePointer = new DraggableCanvasObjectImpl(
       this,
-      () => this.selectedPosition,
+      () => this.getSelectedPosition(),
       (ctx: CanvasRenderingContext2D, position: number) => {
         const barWidth = 3;
-        const triangleHeight = this.pointerWidth / 2;
+        const triangleHeight = this.getPointerWidth() / 2;
 
         ctx.beginPath();
         ctx.moveTo(position - triangleHeight, 0);
@@ -113,58 +111,62 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
         fill: true,
       },
       (x) => {
-        this.input.selectedPosition = x;
-        this.onPointerPositionDragging(this.input.transformer.untransform(x));
+        const input = this.getInput();
+        input.selectedPosition = x;
+        this.onPointerPositionDragging(input.transformer.untransform(x));
       },
       (x) => {
-        this.input.selectedPosition = x;
-        this.onPointerPositionChanged(this.input.transformer.untransform(x));
+        const input = this.getInput();
+        input.selectedPosition = x;
+        this.onPointerPositionChanged(input.transformer.untransform(x));
       },
-      () => this.usableRange,
+      () => this.getUsableRange(),
     );
   }
 
-  get selectedPosition() {
-    return this.input.selectedPosition;
-  }
-
-  get selection() {
-    return this.input.selection;
+  getSelectedPosition() {
+    return this.getInput().selectedPosition;
   }
 
   async getTimelineEntries(): Promise<TimelineEntries> {
-    return await this.input.getTimelineEntries();
+    return await this.getInput().getTimelineEntries();
   }
 
-  get padding(): Padding {
+  getPadding(): Padding {
+    const height = this.getHeight();
+    const pointerWidth = this.getPointerWidth();
     return {
-      top: Math.ceil(this.getHeight() / 5),
-      bottom: Math.ceil(this.getHeight() / 5),
-      left: Math.ceil(this.pointerWidth / 2),
-      right: Math.ceil(this.pointerWidth / 2),
+      top: Math.ceil(height / 10),
+      bottom: Math.ceil(height / 10),
+      left: Math.ceil(pointerWidth / 2),
+      right: Math.ceil(pointerWidth / 2),
     };
   }
 
-  get innerHeight() {
-    return this.getHeight() - this.padding.top - this.padding.bottom;
+  getInnerHeight() {
+    const padding = this.getPadding();
+    return this.getHeight() - padding.top - padding.bottom;
   }
 
   async draw() {
     this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
-
     await this.drawTraceLines();
-
-    this.drawTimelineGuides();
-
     this.activePointer.draw(this.ctx);
   }
 
+  private getPointerWidth() {
+    return this.getHeight() / 6;
+  }
+
   private async drawTraceLines() {
-    const lineHeight = this.innerHeight / 8;
+    const timelineEntries = await this.getTimelineEntries();
+    const innerHeight = this.getInnerHeight();
+    const lineHeight =
+      innerHeight / (Math.max(timelineEntries.size - 10, 0) + 12);
 
-    let fromTop = this.padding.top + (this.innerHeight * 2) / 3 - lineHeight;
+    let fromTop = this.getPadding().top + innerHeight - lineHeight;
 
-    (await this.getTimelineEntries()).forEach((entries, traceType) => {
+    timelineEntries.forEach((entries, traceType) => {
       this.ctx.globalAlpha = 0.7;
       this.ctx.fillStyle = TRACE_INFO[traceType].color;
       this.ctx.strokeStyle = 'blue';
@@ -196,50 +198,5 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
 
       fromTop -= (lineHeight * 4) / 3;
     });
-  }
-
-  private drawTimelineGuides() {
-    const edgeBarWidth = 4;
-
-    const boldBarHeight = (this.innerHeight * 1) / 5;
-    const boldBarWidth = edgeBarWidth;
-
-    const lightBarHeight = (this.innerHeight * 1) / 6;
-    const lightBarWidth = 2;
-
-    const minSpacing = lightBarWidth * 7;
-    const barsInSetWidth = 9 * lightBarWidth + boldBarWidth;
-    const barSets = Math.floor(
-      (this.getWidth() - edgeBarWidth * 2 - minSpacing) /
-        (barsInSetWidth + 10 * minSpacing),
-    );
-    const bars = barSets * 10;
-    const spacing =
-      (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
-    let start = edgeBarWidth + spacing;
-    for (let i = 1; i < bars; i++) {
-      if (i % 10 === 0) {
-        // Draw boldbar
-        this.ctx.fillStyle = Color.GUIDE_BAR;
-        this.ctx.fillRect(
-          start,
-          this.padding.top + this.innerHeight - boldBarHeight,
-          boldBarWidth,
-          boldBarHeight,
-        );
-        start += boldBarWidth; // TODO: Shift a bit
-      } else {
-        // Draw lightbar
-        this.ctx.fillStyle = Color.GUIDE_BAR_LIGHT;
-        this.ctx.fillRect(
-          start,
-          this.padding.top + this.innerHeight - lightBarHeight,
-          lightBarWidth,
-          lightBarHeight,
-        );
-        start += lightBarWidth;
-      }
-      start += spacing;
-    }
   }
 }

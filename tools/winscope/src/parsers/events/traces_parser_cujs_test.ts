@@ -15,9 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
@@ -28,6 +27,7 @@ describe('ParserCujs', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/eventlog.winscope',
     ])) as Parser<PropertyTreeNode>;
@@ -37,37 +37,20 @@ describe('ParserCujs', () => {
     expect(parser.getTraceType()).toEqual(TraceType.CUJS);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
-
-    expect(timestamps.length).toEqual(16);
-
+  it('provides timestamps', () => {
     const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012770462n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012874914n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(2661012903966n),
-    ];
-    expect(timestamps.slice(0, 3)).toEqual(expected);
-  });
-
-  it('provides real timestamps', () => {
-    const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025446000n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025551000n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1681207048025580000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025446000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025551000n),
+      TimestampConverterUtils.makeRealTimestamp(1681207048025580000n),
     ];
 
-    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
-
+    const timestamps = assertDefined(parser.getTimestamps());
     expect(timestamps.length).toEqual(16);
-
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
   it('contains parsed CUJ events', async () => {
-    const entry = await parser.getEntry(2, TimestampType.REAL);
+    const entry = await parser.getEntry(2);
 
     const expected = new PropertyTreeBuilder()
       .setRootId('CujTrace')

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
@@ -31,26 +31,19 @@ import {ParsingUtils} from './parsing_utils';
 export abstract class AbstractParser<T extends object = object>
   implements Parser<T>
 {
-  private timestamps = new Map<TimestampType, Timestamp[]>();
+  private timestamps: Timestamp[] | undefined;
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
-  protected timestampFactory: TimestampFactory;
+  protected timestampConverter: ParserTimestampConverter;
 
   protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
-  protected abstract getTimestamp(
-    type: TimestampType,
-    decodedEntry: any,
-  ): undefined | Timestamp;
-  protected abstract processDecodedEntry(
-    index: number,
-    timestampType: TimestampType,
-    decodedEntry: any,
-  ): any;
+  protected abstract getTimestamp(decodedEntry: any): Timestamp;
+  protected abstract processDecodedEntry(index: number, decodedEntry: any): any;
 
-  constructor(trace: TraceFile, timestampFactory: TimestampFactory) {
+  constructor(trace: TraceFile, timestampConverter: ParserTimestampConverter) {
     this.traceFile = trace;
-    this.timestampFactory = timestampFactory;
+    this.timestampConverter = timestampConverter;
   }
 
   async parse() {
@@ -60,7 +53,6 @@ export abstract class AbstractParser<T extends object = object>
       this.getMagicNumber(),
     );
     this.decodedEntries = this.decodeTrace(traceBuffer);
-    this.timestamps = this.decodeTimestamps();
   }
 
   getDescriptors(): string[] {
@@ -71,23 +63,20 @@ export abstract class AbstractParser<T extends object = object>
     return this.decodedEntries.length;
   }
 
-  getTimestamps(type: TimestampType): undefined | Timestamp[] {
-    return this.timestamps.get(type);
+  createTimestamps() {
+    this.timestamps = this.decodeTimestamps();
+  }
+
+  getTimestamps(): undefined | Timestamp[] {
+    return this.timestamps;
   }
 
   getCoarseVersion(): CoarseVersion {
     return CoarseVersion.LEGACY;
   }
 
-  getEntry(
-    index: AbsoluteEntryIndex,
-    timestampType: TimestampType,
-  ): Promise<T> {
-    const entry = this.processDecodedEntry(
-      index,
-      timestampType,
-      this.decodedEntries[index],
-    );
+  getEntry(index: AbsoluteEntryIndex): Promise<T> {
+    const entry = this.processDecodedEntry(index, this.decodedEntries[index]);
     return Promise.resolve(entry);
   }
 
@@ -99,27 +88,11 @@ export abstract class AbstractParser<T extends object = object>
     throw new Error('Not implemented');
   }
 
-  private decodeTimestamps(): Map<TimestampType, Timestamp[]> {
-    const timeStampMap = new Map<TimestampType, Timestamp[]>();
-    for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
-      const timestamps: Timestamp[] = [];
-      let areTimestampsValid = true;
-
-      for (const entry of this.decodedEntries) {
-        const timestamp = this.getTimestamp(type, entry);
-        if (timestamp === undefined) {
-          areTimestampsValid = false;
-          break;
-        }
-        timestamps.push(timestamp);
-      }
-
-      if (areTimestampsValid) {
-        timeStampMap.set(type, timestamps);
-      }
-    }
-    return timeStampMap;
+  private decodeTimestamps(): Timestamp[] {
+    return this.decodedEntries.map((entry) => this.getTimestamp(entry));
   }
 
   abstract getTraceType(): TraceType;
+  abstract getRealToBootTimeOffsetNs(): bigint | undefined;
+  abstract getRealToMonotonicTimeOffsetNs(): bigint | undefined;
 }

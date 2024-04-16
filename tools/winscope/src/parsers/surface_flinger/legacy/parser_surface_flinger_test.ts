@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -27,7 +26,7 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 
 describe('ParserSurfaceFlinger', () => {
-  describe('trace with elapsed + real timestamp', () => {
+  describe('trace with real timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
     let trace: Trace<HierarchyTreeNode>;
 
@@ -50,68 +49,25 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
-    it('provides elapsed timestamps', () => {
+    it('provides timestamps', () => {
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089102062832n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089233029344n),
+        TimestampConverterUtils.makeRealTimestamp(1659107090005226366n),
       ];
-      expect(
-        assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
-      ).toEqual(expected);
-    });
-
-    it('provides real timestamps', () => {
-      const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089102062832n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089233029344n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090005226366n),
-      ];
-      expect(
-        assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
-      ).toEqual(expected);
-    });
-
-    it('applies timezone info to real timestamps only', async () => {
-      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        true,
-      )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.SURFACE_FLINGER,
+      expect(assertDefined(parser.getTimestamps()).slice(0, 3)).toEqual(
+        expected,
       );
-
-      const expectedElapsed = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14500282843n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14631249355n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15403446377n),
-      ];
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-        ).slice(0, 3),
-      ).toEqual(expectedElapsed);
-
-      const expectedReal = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889102062832n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889233029344n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126890005226366n),
-      ];
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-        ).slice(0, 3),
-      ).toEqual(expectedReal);
     });
 
     it('provides correct root entry node', async () => {
-      const entry = await parser.getEntry(1, TimestampType.REAL);
+      const entry = await parser.getEntry(1);
       expect(entry.id).toEqual('LayerTraceEntry root');
       expect(entry.name).toEqual('root');
     });
 
     it('decodes layer state flags', async () => {
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
       {
         const layer = assertDefined(
           entry.findDfs(UiTreeUtils.makeIdMatchFilter('27 Leaf:24:25#27')),
@@ -184,7 +140,7 @@ describe('ParserSurfaceFlinger', () => {
       const parser = (await UnitTestUtils.getParser(
         'traces/elapsed_and_real_timestamp/SurfaceFlinger_with_duplicated_ids.pb',
       )) as Parser<HierarchyTreeNode>;
-      const entry = await parser.getEntry(0, TimestampType.REAL);
+      const entry = await parser.getEntry(0);
       expect(entry).toBeTruthy();
 
       const layer = assertDefined(
@@ -214,7 +170,7 @@ describe('ParserSurfaceFlinger', () => {
     });
   });
 
-  describe('trace with elapsed (only) timestamp', () => {
+  describe('trace with only elapsed timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
@@ -231,34 +187,14 @@ describe('ParserSurfaceFlinger', () => {
       expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
-    it('provides elapsed timestamps', () => {
-      expect(
-        assertDefined(parser.getTimestamps(TimestampType.ELAPSED))[0],
-      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n));
-    });
-
-    it("doesn't provide real timestamps", () => {
-      expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
-    });
-
-    it('does not apply timezone info', async () => {
-      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/SurfaceFlinger.pb',
-        true,
-      )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.SURFACE_FLINGER,
+    it('provides timestamps', () => {
+      expect(assertDefined(parser.getTimestamps())[0]).toEqual(
+        TimestampConverterUtils.makeElapsedTimestamp(850335483446n),
       );
-
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-        )[0],
-      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850335483446n));
     });
 
     it('provides correct root entry node', async () => {
-      const entry = await parser.getEntry(0, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(0);
       expect(entry.id).toEqual('LayerTraceEntry root');
       expect(entry.name).toEqual('root');
     });

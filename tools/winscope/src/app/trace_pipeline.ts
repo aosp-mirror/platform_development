@@ -15,18 +15,15 @@
  */
 
 import {FileUtils} from 'common/file_utils';
+import {INVALID_TIME_NS} from 'common/time';
 import {
-  NO_TIMEZONE_OFFSET_FACTORY,
-  TimestampFactory,
-} from 'common/timestamp_factory';
+  TimestampConverter,
+  UTC_TIMEZONE_INFO,
+} from 'common/timestamp_converter';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {
-  CorruptedArchive,
-  NoCommonTimestampType,
-  NoInputFiles,
-} from 'messaging/user_warnings';
+import {CorruptedArchive, NoInputFiles} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
@@ -48,7 +45,7 @@ export class TracePipeline {
   private tracesParserFactory = new TracesParserFactory();
   private traces = new Traces();
   private downloadArchiveFilename?: string;
-  private timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
+  private timestampConverter = new TimestampConverter(UTC_TIMEZONE_INFO);
 
   async loadFiles(
     files: File[],
@@ -83,24 +80,19 @@ export class TracePipeline {
 
       this.traces = new Traces();
 
-      const commonTimestampType = this.loadedParsers.findCommonTimestampType();
-      if (commonTimestampType === undefined) {
-        notificationListener.onNotifications([new NoCommonTimestampType()]);
-        return;
-      }
-
       this.loadedParsers.getParsers().forEach((parser) => {
-        const trace = Trace.fromParser(parser, commonTimestampType);
+        const trace = Trace.fromParser(parser);
         this.traces.setTrace(parser.getTraceType(), trace);
         Analytics.Tracing.logTraceLoaded(parser);
       });
 
       const tracesParsers = await this.tracesParserFactory.createParsers(
         this.traces,
+        this.timestampConverter,
       );
 
       tracesParsers.forEach((tracesParser) => {
-        const trace = Trace.fromParser(tracesParser, commonTimestampType);
+        const trace = Trace.fromParser(tracesParser);
         this.traces.setTrace(trace.type, trace);
       });
 
@@ -141,6 +133,16 @@ export class TracePipeline {
   }
 
   async buildTraces() {
+    for (const trace of this.traces) {
+      if (trace.lengthEntries === 0) {
+        continue;
+      }
+      const timestamp = trace.getEntry(0).getTimestamp();
+      if (timestamp.getValueNs() !== INVALID_TIME_NS) {
+        this.timestampConverter.initializeUTCOffset(timestamp);
+        break;
+      }
+    }
     await new FrameMapper(this.traces).computeMapping();
   }
 
@@ -152,8 +154,8 @@ export class TracePipeline {
     return this.downloadArchiveFilename ?? 'winscope';
   }
 
-  getTimestampFactory(): TimestampFactory {
-    return this.timestampFactory;
+  getTimestampConverter(): TimestampConverter {
+    return this.timestampConverter;
   }
 
   async getScreenRecordingVideo(): Promise<undefined | Blob> {
@@ -170,7 +172,7 @@ export class TracePipeline {
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
-    this.timestampFactory = NO_TIMEZONE_OFFSET_FACTORY;
+    this.timestampConverter = new TimestampConverter(UTC_TIMEZONE_INFO);
     this.downloadArchiveFilename = undefined;
   }
 
@@ -184,7 +186,9 @@ export class TracePipeline {
       notificationListener,
     );
     if (filterResult.timezoneInfo) {
-      this.timestampFactory = new TimestampFactory(filterResult.timezoneInfo);
+      this.timestampConverter = new TimestampConverter(
+        filterResult.timezoneInfo,
+      );
     }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
@@ -194,7 +198,7 @@ export class TracePipeline {
 
     const legacyParsers = await new LegacyParserFactory().createParsers(
       filterResult.legacy,
-      this.timestampFactory,
+      this.timestampConverter,
       progressListener,
       notificationListener,
     );
@@ -204,12 +208,40 @@ export class TracePipeline {
     if (filterResult.perfetto) {
       const parsers = await new PerfettoParserFactory().createParsers(
         filterResult.perfetto,
-        this.timestampFactory,
+        this.timestampConverter,
         progressListener,
         notificationListener,
       );
       perfettoParsers = new FileAndParsers(filterResult.perfetto, parsers);
     }
+
+    const monotonicTimeOffset =
+      this.loadedParsers.getLatestRealToMonotonicOffset(
+        legacyParsers
+          .map((fileAndParser) => fileAndParser.parser)
+          .concat(perfettoParsers?.parsers ?? []),
+      );
+
+    const realToBootTimeOffset =
+      this.loadedParsers.getLatestRealToBootTimeOffset(
+        legacyParsers
+          .map((fileAndParser) => fileAndParser.parser)
+          .concat(perfettoParsers?.parsers ?? []),
+      );
+
+    if (monotonicTimeOffset !== undefined) {
+      this.timestampConverter.setRealToMonotonicTimeOffsetNs(
+        monotonicTimeOffset,
+      );
+    }
+    if (realToBootTimeOffset !== undefined) {
+      this.timestampConverter.setRealToBootTimeOffsetNs(realToBootTimeOffset);
+    }
+
+    perfettoParsers?.parsers.forEach((p) => p.createTimestamps());
+    legacyParsers.forEach((fileAndParser) =>
+      fileAndParser.parser.createTimestamps(),
+    );
 
     this.loadedParsers.addParsers(
       legacyParsers,

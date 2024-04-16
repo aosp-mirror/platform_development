@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {MockLong} from 'test/unit/mock_long';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TransformToTimestamp} from './transform_to_timestamp';
 
@@ -46,7 +46,7 @@ describe('TransformToTimestamp', () => {
     operation.apply(propertyRoot);
     expect(
       assertDefined(propertyRoot.getChildByName('timestamp')).getValue(),
-    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n));
+    ).toEqual(TimestampConverterUtils.makeRealTimestamp(10n));
     expect(
       assertDefined(propertyRoot.getChildByName('otherTimestamp')).getValue(),
     ).toEqual(longTimestamp);
@@ -60,17 +60,17 @@ describe('TransformToTimestamp', () => {
     operation.apply(propertyRoot);
     expect(
       assertDefined(propertyRoot.getChildByName('timestamp')).getValue(),
-    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n));
+    ).toEqual(TimestampConverterUtils.makeElapsedTimestamp(10n));
     expect(
       assertDefined(propertyRoot.getChildByName('otherTimestamp')).getValue(),
     ).toEqual(longTimestamp);
   });
 
   function makeRealTimestampStrategy(valueNs: bigint) {
-    return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(valueNs);
+    return TimestampConverterUtils.makeRealTimestamp(valueNs);
   }
 
   function makeElapsedTimestampStrategy(valueNs: bigint) {
-    return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(valueNs);
+    return TimestampConverterUtils.makeElapsedTimestamp(valueNs);
   }
 });

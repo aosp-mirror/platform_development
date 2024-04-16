@@ -27,6 +27,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -58,6 +59,7 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
   @Input() traceEntries: PropertyTreeNode[] | undefined;
   @Input() selectedEntry: TraceEntry<PropertyTreeNode> | undefined;
   @Input() selectionRange: TimeRange | undefined;
+  @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
@@ -104,8 +106,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
       }
       const timeRange = TimelineUtils.getTimeRangeForTransition(
         transition,
-        entry.getTimestamp().getType(),
         assertDefined(this.selectionRange),
+        assertDefined(this.timestampConverter),
       );
       if (!timeRange) {
         return;
@@ -133,8 +135,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
       }
       const timeRange = TimelineUtils.getTimeRangeForTransition(
         transition,
-        entry.getTimestamp().getType(),
         assertDefined(this.selectionRange),
+        assertDefined(this.timestampConverter),
       );
 
       if (!timeRange) {
@@ -170,8 +172,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     }
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
-      this.hoveringEntry.getTimestamp().getType(),
       assertDefined(this.selectionRange),
+      assertDefined(this.timestampConverter),
     );
 
     if (!timeRange) {
@@ -252,8 +254,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     }
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
-      this.selectedEntry.getTimestamp().getType(),
       assertDefined(this.selectionRange),
+      assertDefined(this.timestampConverter),
     );
     if (!timeRange) {
       return;
@@ -286,8 +288,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
 
       const timeRange = TimelineUtils.getTimeRangeForTransition(
         transition,
-        entry.getTimestamp().getType(),
         assertDefined(this.selectionRange),
+        assertDefined(this.timestampConverter),
       );
 
       if (!timeRange) {
