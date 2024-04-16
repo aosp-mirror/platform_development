@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
 import {ChangeDetectionStrategy} from '@angular/core';
 import {
@@ -37,17 +38,17 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-
-import {ClipboardModule} from '@angular/cdk/clipboard';
-import {Title} from '@angular/platform-browser';
 import {FileUtils} from 'common/file_utils';
 import {
   AppRefreshDumpsRequest,
   ViewersLoaded,
   ViewersUnloaded,
 } from 'messaging/winscope_event';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TracesBuilder} from 'test/unit/traces_builder';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
@@ -143,9 +144,7 @@ describe('AppComponent', () => {
   });
 
   it('displays correct elements when data loaded', () => {
-    component.dataLoaded = true;
-    component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    goToTraceView();
     checkTraceViewPage();
 
     spyOn(component, 'dumpsUploaded').and.returnValue(true);
@@ -154,9 +153,7 @@ describe('AppComponent', () => {
   });
 
   it('returns to homepage on upload new button click', async () => {
-    component.dataLoaded = true;
-    component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    goToTraceView();
     checkTraceViewPage();
 
     (htmlElement.querySelector('.upload-new') as HTMLButtonElement).click();
@@ -166,10 +163,8 @@ describe('AppComponent', () => {
   });
 
   it('sends event on refresh dumps button click', async () => {
-    component.dataLoaded = true;
-    component.showDataLoadedElements = true;
     spyOn(component, 'dumpsUploaded').and.returnValue(true);
-    fixture.detectChanges();
+    goToTraceView();
     checkTraceViewPage();
 
     const winscopeEventSpy = spyOn(
@@ -212,6 +207,11 @@ describe('AppComponent', () => {
 
   it('changes page title based on archive name', async () => {
     const pageTitle = TestBed.inject(Title);
+    component.timelineData.initialize(
+      new TracesBuilder().build(),
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     await component.onWinscopeEvent(new ViewersUnloaded());
     expect(pageTitle.getTitle()).toBe('Winscope');
@@ -272,6 +272,17 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
+
+  function goToTraceView() {
+    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
+    component.timelineData.initialize(
+      new TracesBuilder().build(),
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    fixture.detectChanges();
+  }
 
   function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
     const inputEl = assertDefined(

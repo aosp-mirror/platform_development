@@ -55,6 +55,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           [traceEntries]="timelineData.getTransitions()"
           [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
           [selectionRange]="timelineData.getSelectionTimeRange()"
+          [timestampConverter]="timelineData.getTimestampConverter()"
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
           (onScrollEvent)="updateScroll($event)"
           class="single-timeline">
@@ -65,6 +66,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           [trace]="trace"
           [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
           [selectionRange]="timelineData.getSelectionTimeRange()"
+          [timestampConverter]="timelineData.getTimestampConverter()"
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
           (onScrollEvent)="updateScroll($event)"
           class="single-timeline">

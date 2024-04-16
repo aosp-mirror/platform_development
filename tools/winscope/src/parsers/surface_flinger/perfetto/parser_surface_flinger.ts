@@ -15,13 +15,12 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
-import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
+import {FakeProto, FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
@@ -102,9 +101,9 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   constructor(
     traceFile: TraceFile,
     traceProcessor: WasmEngineProxy,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
   ) {
-    super(traceFile, traceProcessor, timestampFactory);
+    super(traceFile, traceProcessor, timestampConverter);
     this.layersSnapshotProtoTransformer = new FakeProtoTransformer(
       assertDefined(ParserSurfaceFlinger.entryField.tamperedMessageType),
     );
@@ -117,17 +116,8 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     return TraceType.SURFACE_FLINGER;
   }
 
-  override async getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<HierarchyTreeNode> {
-    let snapshotProto = await Utils.queryEntry(
-      this.traceProcessor,
-      this.getTableName(),
-      index,
-    );
-    snapshotProto =
-      this.layersSnapshotProtoTransformer.transform(snapshotProto);
+  override async getEntry(index: number): Promise<HierarchyTreeNode> {
+    const snapshotProto = await this.queryEntry(index);
     const layerProtos = (await this.querySnapshotLayers(index)).map(
       (layerProto) => this.layerProtoTransformer.transform(layerProto),
     );
@@ -179,6 +169,15 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   protected override getTableName(): string {
     return 'surfaceflinger_layers_snapshot';
+  }
+
+  protected override async queryEntry(index: number): Promise<FakeProto> {
+    const snapshotProto = await Utils.queryEntry(
+      this.traceProcessor,
+      this.getTableName(),
+      index,
+    );
+    return this.layersSnapshotProtoTransformer.transform(snapshotProto);
   }
 
   private makeHierarchyTree(

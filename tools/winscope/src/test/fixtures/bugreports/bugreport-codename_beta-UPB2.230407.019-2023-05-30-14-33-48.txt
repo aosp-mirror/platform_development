@@ -3,4 +3,6 @@
 ========================================================
 
 # ORIGINAL CONTENTS REMOVED TO AVOID INFORMATION LEAKS
-
+[persist.sys.locale]: [en-US]
+[persist.sys.timezone]: [Asia/Kolkata]
+[persist.sys.time.offset]: [19800000]

@@ -15,10 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {MockStorage} from 'test/unit/mock_storage';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -48,7 +47,7 @@ describe('PresenterTransactions', () => {
 
   beforeEach(async () => {
     outputUiData = undefined;
-    await setUpTestEnvironment(TimestampType.ELAPSED);
+    await setUpTestEnvironment();
   });
 
   it('is robust to empty trace', async () => {
@@ -75,7 +74,7 @@ describe('PresenterTransactions', () => {
     };
     await presenter.onAppEvent(
       TracePositionUpdate.fromTimestamp(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
       ),
     );
     expect(outputUiData).toEqual(UiData.EMPTY);
@@ -342,25 +341,15 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
   });
 
-  it('formats real time', async () => {
-    await setUpTestEnvironment(TimestampType.REAL);
+  it('formats entry time', async () => {
+    await setUpTestEnvironment();
     expect(
       assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2022-08-03T06:19:01.051480997');
+    ).toEqual('2022-08-03, 06:19:01.051480997');
   });
 
-  it('formats elapsed time', async () => {
-    await setUpTestEnvironment(TimestampType.ELAPSED);
-    expect(
-      assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2s450ms981445ns');
-  });
-
-  async function setUpTestEnvironment(timestampType: TimestampType) {
-    trace = new TraceBuilder<PropertyTreeNode>()
-      .setParser(parser)
-      .setTimestampType(timestampType)
-      .build();
+  async function setUpTestEnvironment() {
+    trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
 
     traces = new Traces();
     traces.setTrace(TraceType.TRANSACTIONS, trace);

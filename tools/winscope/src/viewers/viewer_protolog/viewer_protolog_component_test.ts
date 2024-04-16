@@ -29,9 +29,9 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
@@ -271,8 +271,8 @@ describe('ViewerProtologComponent', () => {
     const time = new PropertyTreeBuilder()
       .setRootId('ProtologMessage')
       .setName('timestamp')
-      .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n))
-      .setFormatter(TIMESTAMP_FORMATTER)
+      .setValue(TimestampConverterUtils.makeElapsedTimestamp(10n))
+      .setFormatter(TIMESTAMP_NODE_FORMATTER)
       .build();
 
     const messages = [];

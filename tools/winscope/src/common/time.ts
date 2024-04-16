@@ -20,81 +20,57 @@ export class TimeRange {
   constructor(readonly from: Timestamp, readonly to: Timestamp) {}
 }
 
-export enum TimestampType {
-  ELAPSED = 'ELAPSED',
-  REAL = 'REAL',
-}
-
 export interface TimezoneInfo {
   timezone: string;
   locale: string;
+  utcOffsetMs: number | undefined;
+}
+
+export interface TimestampFormatter {
+  format(timestamp: Timestamp, hideNs?: boolean): string;
 }
 
 export class Timestamp {
-  private readonly type: TimestampType;
-  private readonly valueNs: bigint;
-  private readonly timezoneOffset: bigint;
+  private readonly utcValueNs: bigint;
+  private readonly formatter: TimestampFormatter;
 
-  constructor(type: TimestampType, valueNs: bigint, timezoneOffset = 0n) {
-    this.type = type;
-    this.valueNs = valueNs;
-    this.timezoneOffset = timezoneOffset;
-  }
-
-  getType(): TimestampType {
-    return this.type;
+  constructor(valueNs: bigint, formatter: TimestampFormatter) {
+    this.utcValueNs = valueNs;
+    this.formatter = formatter;
   }
 
   getValueNs(): bigint {
-    return this.valueNs;
-  }
-
-  toUTC(): Timestamp {
-    return new Timestamp(this.type, this.valueNs - this.timezoneOffset);
+    return this.utcValueNs;
   }
 
   valueOf(): bigint {
-    return this.getValueNs();
+    return this.utcValueNs;
   }
 
   in(range: TimeRange): boolean {
-    if (range.from.type !== this.type || range.to.type !== this.type) {
-      throw new Error('Mismatching timestamp types');
-    }
-
     return (
       range.from.getValueNs() <= this.getValueNs() &&
       this.getValueNs() <= range.to.getValueNs()
     );
   }
 
-  add(nanoseconds: bigint): Timestamp {
-    return new Timestamp(this.type, this.getValueNs() + nanoseconds);
+  add(n: bigint): Timestamp {
+    return new Timestamp(this.getValueNs() + n, this.formatter);
   }
 
-  plus(timestamp: Timestamp): Timestamp {
-    this.validateTimestampArithmetic(timestamp);
-    return new Timestamp(this.type, timestamp.getValueNs() + this.getValueNs());
-  }
-
-  minus(timestamp: Timestamp): Timestamp {
-    this.validateTimestampArithmetic(timestamp);
-    return new Timestamp(this.type, this.getValueNs() - timestamp.getValueNs());
+  minus(n: bigint): Timestamp {
+    return new Timestamp(this.getValueNs() - n, this.formatter);
   }
 
   times(n: bigint): Timestamp {
-    return new Timestamp(this.type, this.getValueNs() * n);
+    return new Timestamp(this.getValueNs() * n, this.formatter);
   }
 
   div(n: bigint): Timestamp {
-    return new Timestamp(this.type, this.getValueNs() / n);
+    return new Timestamp(this.getValueNs() / n, this.formatter);
   }
 
-  private validateTimestampArithmetic(timestamp: Timestamp) {
-    if (timestamp.type !== this.type) {
-      throw new Error(
-        'Attemping to do timestamp arithmetic on different timestamp types',
-      );
-    }
+  format(hideNs = false): string {
+    return this.formatter.format(this, hideNs);
   }
 }

@@ -15,8 +15,7 @@
  */
 
 import {TimeRange} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {TimeDuration} from 'common/time_duration';
 import {TraceType} from 'trace/trace_type';
 import {UserWarning} from './user_warning';
 
@@ -34,16 +33,6 @@ export class CorruptedArchive extends UserWarning {
   }
 }
 
-export class NoCommonTimestampType extends UserWarning {
-  getDescriptor(): string {
-    return 'no common timestamp';
-  }
-
-  getMessage(): string {
-    return 'Failed to load traces because no common timestamp type could be found';
-  }
-}
-
 export class NoInputFiles extends UserWarning {
   getDescriptor(): string {
     return 'no input';
@@ -57,7 +46,7 @@ export class NoInputFiles extends UserWarning {
 export class TraceHasOldData extends UserWarning {
   constructor(
     private readonly descriptor: string,
-    private readonly timeGap: TimeRange,
+    private readonly timeGap?: TimeRange,
   ) {
     super();
   }
@@ -67,15 +56,15 @@ export class TraceHasOldData extends UserWarning {
   }
 
   getMessage(): string {
-    const elapsedTime = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-      this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs(),
+    const elapsedTime = this.timeGap
+      ? new TimeDuration(
+          this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs(),
+        )
+      : undefined;
+    return (
+      `${this.descriptor}: discarded because data is old` +
+      (this.timeGap ? `der than ${elapsedTime?.format(true)}` : '')
     );
-    return `${
-      this.descriptor
-    }: discarded because data is older than ${TimestampUtils.format(
-      elapsedTime,
-      true,
-    )}`;
   }
 }
 

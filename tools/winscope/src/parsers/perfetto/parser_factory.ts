@@ -15,7 +15,7 @@
  */
 
 import {globalConfig} from 'common/global_config';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
@@ -44,7 +44,7 @@ export class ParserFactory {
 
   async createParsers(
     traceFile: TraceFile,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
     notificationListener?: UserNotificationsListener,
   ): Promise<Array<Parser<object>>> {
@@ -85,7 +85,7 @@ export class ParserFactory {
         const parser = new ParserType(
           traceFile,
           traceProcessor,
-          timestampFactory,
+          timestampConverter,
         );
         await parser.parse();
         parsers.push(parser);

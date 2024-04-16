@@ -242,12 +242,6 @@ import {UiData} from './ui_data';
         height: 65%;
         width: fit-content;
       }
-
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
     `,
     selectedElementStyle,
     currentElementStyle,

@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
@@ -25,7 +25,7 @@ import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
-  TIMESTAMP_FORMATTER,
+  TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
@@ -41,12 +41,12 @@ describe('ViewerProtoLogPresenter', () => {
   let outputUiData: undefined | UiData;
 
   beforeEach(async () => {
-    const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-    const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
-    const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
-    const elapsedTime10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
-    const elapsedTime20 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
-    const elapsedTime30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
+    const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
+    const time11 = TimestampConverterUtils.makeRealTimestamp(11n);
+    const time12 = TimestampConverterUtils.makeRealTimestamp(12n);
+    const elapsedTime10 = TimestampConverterUtils.makeElapsedTimestamp(10n);
+    const elapsedTime20 = TimestampConverterUtils.makeElapsedTimestamp(20n);
+    const elapsedTime30 = TimestampConverterUtils.makeElapsedTimestamp(30n);
 
     const entries = [
       new PropertyTreeBuilder()
@@ -57,7 +57,7 @@ describe('ViewerProtoLogPresenter', () => {
           {
             name: 'timestamp',
             value: elapsedTime10,
-            formatter: TIMESTAMP_FORMATTER,
+            formatter: TIMESTAMP_NODE_FORMATTER,
           },
           {name: 'tag', value: 'tag0', formatter: DEFAULT_PROPERTY_FORMATTER},
           {
@@ -81,7 +81,7 @@ describe('ViewerProtoLogPresenter', () => {
           {
             name: 'timestamp',
             value: elapsedTime20,
-            formatter: TIMESTAMP_FORMATTER,
+            formatter: TIMESTAMP_NODE_FORMATTER,
           },
           {name: 'tag', value: 'tag1', formatter: DEFAULT_PROPERTY_FORMATTER},
           {
@@ -105,7 +105,7 @@ describe('ViewerProtoLogPresenter', () => {
           {
             name: 'timestamp',
             value: elapsedTime30,
-            formatter: TIMESTAMP_FORMATTER,
+            formatter: TIMESTAMP_NODE_FORMATTER,
           },
           {name: 'tag', value: 'tag2', formatter: DEFAULT_PROPERTY_FORMATTER},
           {

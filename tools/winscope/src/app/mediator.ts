@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
+import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
@@ -41,7 +41,7 @@ import {TracePipeline} from './trace_pipeline';
 export class Mediator {
   private abtChromeExtensionProtocol: WinscopeEventEmitter &
     WinscopeEventListener;
-  private crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener;
+  private crossToolProtocol: CrossToolProtocol;
   private uploadTracesComponent?: ProgressListener;
   private collectTracesComponent?: ProgressListener & WinscopeEventListener;
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
@@ -55,14 +55,14 @@ export class Mediator {
   private viewers: Viewer[] = [];
   private focusedTabView: undefined | View;
   private areViewersLoaded = false;
-  private lastRemoteToolTimestampReceived: Timestamp | undefined;
+  private lastRemoteToolRealNsReceived: bigint | undefined;
   private currentProgressListener?: ProgressListener;
 
   constructor(
     tracePipeline: TracePipeline,
     timelineData: TimelineData,
     abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener,
-    crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener,
+    crossToolProtocol: CrossToolProtocol,
     appComponent: WinscopeEventListener,
     userNotificationsListener: UserNotificationsListener,
     storage: Storage,
@@ -254,12 +254,8 @@ export class Mediator {
     });
 
     if (!omitCrossToolProtocol) {
-      const utcTimestamp = position.timestamp.toUTC();
-      const utcPosition = position.entry
-        ? TracePosition.fromTraceEntry(position.entry, utcTimestamp)
-        : TracePosition.fromTimestamp(utcTimestamp);
-      const utcEvent = new TracePositionUpdate(utcPosition);
-      promises.push(this.crossToolProtocol.onWinscopeEvent(utcEvent));
+      const event = new TracePositionUpdate(position);
+      promises.push(this.crossToolProtocol.onWinscopeEvent(event));
     }
 
     await Promise.all(promises);
@@ -285,21 +281,19 @@ export class Mediator {
   }
 
   private async processRemoteToolTimestampReceived(timestampNs: bigint) {
-    const factory = this.tracePipeline.getTimestampFactory();
-    const timestamp = factory.makeRealTimestamp(timestampNs);
-    this.lastRemoteToolTimestampReceived = timestamp;
+    const timestamp = this.tracePipeline
+      .getTimestampConverter()
+      .tryMakeTimestampFromRealNs(timestampNs);
+    if (timestamp === undefined) {
+      console.warn(
+        'Cannot apply new timestamp received from remote tool, as Winscope is only accepting elapsed timestamps for the loaded traces.',
+      );
+      return;
+    }
+    this.lastRemoteToolRealNsReceived = timestamp.getValueNs();
 
     if (!this.areViewersLoaded) {
       return; // apply timestamp later when traces are visualized
-    }
-
-    if (this.timelineData.getTimestampType() !== timestamp.getType()) {
-      console.warn(
-        'Cannot apply new timestamp received from remote tool.' +
-          ` Remote tool notified timestamp type ${timestamp.getType()},` +
-          ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`,
-      );
-      return;
     }
 
     const position = this.timelineData.makePositionFromActiveTrace(timestamp);
@@ -343,6 +337,11 @@ export class Mediator {
     await this.timelineData.initialize(
       this.tracePipeline.getTraces(),
       await this.tracePipeline.getScreenRecordingVideo(),
+      this.tracePipeline.getTimestampConverter(),
+    );
+
+    this.crossToolProtocol.setTimestampConverter(
+      this.tracePipeline.getTimestampConverter(),
     );
 
     this.viewers = new ViewerFactory().createViewers(
@@ -384,14 +383,15 @@ export class Mediator {
   }
 
   private getInitialTracePosition(): TracePosition | undefined {
-    if (
-      this.lastRemoteToolTimestampReceived &&
-      this.timelineData.getTimestampType() ===
-        this.lastRemoteToolTimestampReceived.getType()
-    ) {
-      return this.timelineData.makePositionFromActiveTrace(
-        this.lastRemoteToolTimestampReceived,
-      );
+    if (this.lastRemoteToolRealNsReceived !== undefined) {
+      const lastRemoteToolTimestamp = this.tracePipeline
+        .getTimestampConverter()
+        .tryMakeTimestampFromRealNs(this.lastRemoteToolRealNsReceived);
+      if (lastRemoteToolTimestamp) {
+        return this.timelineData.makePositionFromActiveTrace(
+          lastRemoteToolTimestamp,
+        );
+      }
     }
 
     const position = this.timelineData.getCurrentPosition();
@@ -426,8 +426,9 @@ export class Mediator {
     this.timelineData.clear();
     this.viewers = [];
     this.areViewersLoaded = false;
-    this.lastRemoteToolTimestampReceived = undefined;
+    this.lastRemoteToolRealNsReceived = undefined;
     this.focusedTabView = undefined;
+    this.crossToolProtocol?.setTimestampConverter(undefined);
     await this.appComponent.onWinscopeEvent(new ViewersUnloaded());
   }
 

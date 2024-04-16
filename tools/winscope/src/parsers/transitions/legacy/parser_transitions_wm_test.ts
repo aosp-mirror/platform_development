@@ -15,8 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
@@ -40,43 +39,11 @@ describe('WmFileParserTransitions', () => {
     expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
-    expect(timestamps.length).toEqual(8);
-    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
-    timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
-  });
-
-  it('provides real timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+  it('provides timestamps', () => {
+    const timestamps = assertDefined(parser.getTimestamps());
     expect(timestamps.length).toEqual(8);
     const expected =
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827956652323n);
+      TimestampConverterUtils.makeRealTimestamp(1683130827956652323n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
-  });
-
-  it('applies timezone info to real timestamps only', async () => {
-    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-      true,
-    )) as Parser<PropertyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-      TraceType.WM_TRANSITION,
-    );
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-      )[0],
-    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n));
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      )[0],
-    ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683150627956652323n),
-    );
   });
 });

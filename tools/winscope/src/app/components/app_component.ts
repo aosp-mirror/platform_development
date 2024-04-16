@@ -207,6 +207,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           [timelineData]="timelineData"
           [activeViewTraceTypes]="activeView?.dependencies"
           [availableTraces]="getLoadedTraceTypes()"
+          [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
       </mat-drawer>
     </mat-drawer-container>

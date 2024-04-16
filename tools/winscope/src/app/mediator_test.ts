@@ -16,10 +16,9 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
-import {
-  NO_TIMEZONE_OFFSET_FACTORY,
-  TimestampFactory,
-} from 'common/timestamp_factory';
+import {TimezoneInfo} from 'common/time';
+import {TimestampConverter} from 'common/timestamp_converter';
+import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
@@ -46,6 +45,7 @@ import {WinscopeEventEmitterStub} from 'messaging/winscope_event_emitter_stub';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
 import {MockStorage} from 'test/unit/mock_storage';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -75,7 +75,7 @@ describe('Mediator', () => {
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
-  let crossToolProtocol: WinscopeEventEmitter & WinscopeEventListener;
+  let crossToolProtocol: CrossToolProtocol;
   let appComponent: WinscopeEventListener;
   let timelineComponent: WinscopeEventEmitter & WinscopeEventListener;
   let uploadTracesComponent: ProgressListenerStub;
@@ -87,8 +87,8 @@ describe('Mediator', () => {
   const viewers = [viewerStub0, viewerStub1, viewerOverlay];
   let tracePositionUpdateListeners: WinscopeEventListener[];
 
-  const TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
-  const TIMESTAMP_11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+  const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
+  const TIMESTAMP_11 = TimestampConverterUtils.makeRealTimestamp(11n);
 
   const POSITION_10 = TracePosition.fromTimestamp(TIMESTAMP_10);
   const POSITION_11 = TracePosition.fromTimestamp(TIMESTAMP_11);
@@ -116,10 +116,7 @@ describe('Mediator', () => {
       new WinscopeEventEmitterStub(),
       new WinscopeEventListenerStub(),
     );
-    crossToolProtocol = FunctionUtils.mixin(
-      new WinscopeEventEmitterStub(),
-      new WinscopeEventListenerStub(),
-    );
+    crossToolProtocol = new CrossToolProtocol();
     appComponent = new WinscopeEventListenerStub();
     timelineComponent = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),
@@ -270,19 +267,20 @@ describe('Mediator', () => {
   });
 
   it('propagates trace position update according to timezone', async () => {
-    const timezoneInfo = {
+    const timezoneInfo: TimezoneInfo = {
       timezone: 'Asia/Kolkata',
       locale: 'en-US',
+      utcOffsetMs: 19800000,
     };
-    const factory = new TimestampFactory(timezoneInfo);
-    spyOn(tracePipeline, 'getTimestampFactory').and.returnValue(factory);
+    const converter = new TimestampConverter(timezoneInfo, 0n);
+    spyOn(tracePipeline, 'getTimestampConverter').and.returnValue(converter);
     await loadFiles();
     await loadTraceView();
 
     // notify position
     resetSpyCalls();
     const expectedPosition = TracePosition.fromTimestamp(
-      factory.makeRealTimestamp(10n),
+      converter.makeTimestampFromRealNs(10n),
     );
     await mediator.onWinscopeEvent(new TracePositionUpdate(expectedPosition));
     checkTracePositionUpdateEvents(
@@ -300,7 +298,7 @@ describe('Mediator', () => {
     resetSpyCalls();
     const finalTimestampNs = timelineData.getFullTimeRange().to.getValueNs();
     const timestamp =
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(finalTimestampNs);
+      TimestampConverterUtils.makeRealTimestamp(finalTimestampNs);
     const position = TracePosition.fromTimestamp(timestamp);
 
     await mediator.onWinscopeEvent(new TracePositionUpdate(position, true));
@@ -337,6 +335,7 @@ describe('Mediator', () => {
 
   describe('timestamp received from remote tool', () => {
     it('propagates trace position update', async () => {
+      tracePipeline.getTimestampConverter().setRealToMonotonicTimeOffsetNs(0n);
       await loadFiles();
       await loadTraceView();
 
@@ -362,12 +361,13 @@ describe('Mediator', () => {
     });
 
     it('propagates trace position update according to timezone', async () => {
-      const timezoneInfo = {
+      const timezoneInfo: TimezoneInfo = {
         timezone: 'Asia/Kolkata',
         locale: 'en-US',
+        utcOffsetMs: 19800000,
       };
-      const factory = new TimestampFactory(timezoneInfo);
-      spyOn(tracePipeline, 'getTimestampFactory').and.returnValue(factory);
+      const converter = new TimestampConverter(timezoneInfo, 0n);
+      spyOn(tracePipeline, 'getTimestampConverter').and.returnValue(converter);
       await loadFiles();
       await loadTraceView();
 
@@ -375,7 +375,7 @@ describe('Mediator', () => {
       resetSpyCalls();
 
       const expectedPosition = TracePosition.fromTimestamp(
-        factory.makeRealTimestamp(10n),
+        converter.makeTimestampFromRealNs(10n),
       );
       await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(10n));
       checkTracePositionUpdateEvents(
@@ -385,6 +385,7 @@ describe('Mediator', () => {
     });
 
     it("doesn't propagate timestamp back to remote tool", async () => {
+      tracePipeline.getTimestampConverter().setRealToMonotonicTimeOffsetNs(0n);
       await loadFiles();
       await loadTraceView();
 
@@ -401,6 +402,8 @@ describe('Mediator', () => {
     });
 
     it('defers trace position propagation till traces are loaded and visualized', async () => {
+      // ensure converter has been used to create real timestamps
+      tracePipeline.getTimestampConverter().makeTimestampFromRealNs(0n);
       // keep timestamp for later
       await mediator.onWinscopeEvent(
         new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()),

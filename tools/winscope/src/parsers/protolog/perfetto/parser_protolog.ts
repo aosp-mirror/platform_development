@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {TimestampType} from 'common/time';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
@@ -41,11 +40,8 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return TraceType.PROTO_LOG;
   }
 
-  override async getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
-    const protologEntry = await this.queryProtoLogEntry(index);
+  override async getEntry(index: number): Promise<PropertyTreeNode> {
+    const protologEntry = await this.queryEntry(index);
     const logMessage: LogMessage = {
       text: protologEntry.message,
       tag: protologEntry.tag,
@@ -56,9 +52,8 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
 
     return ParserProtologUtils.makeMessagePropertiesTree(
       logMessage,
-      timestampType,
-      this.realToElapsedTimeOffsetNs,
-      this.timestampFactory,
+      this.timestampConverter,
+      this.getRealToMonotonicTimeOffsetNs() !== undefined,
     );
   }
 
@@ -66,7 +61,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return 'protolog';
   }
 
-  private async queryProtoLogEntry(
+  protected override async queryEntry(
     index: number,
   ): Promise<PerfettoLogMessageTableRow> {
     const sql = `

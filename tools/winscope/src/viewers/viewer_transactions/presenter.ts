@@ -22,7 +22,7 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {Filter} from 'viewers/common/operations/filter';
@@ -406,7 +406,7 @@ export class Presenter {
           'timestamp',
           entry.getTimestamp(),
         );
-      entryTimestamp.setFormatter(TIMESTAMP_FORMATTER);
+      entryTimestamp.setFormatter(TIMESTAMP_NODE_FORMATTER);
 
       for (const transactionState of assertDefined(
         entryNode.getChildByName('transactions'),
