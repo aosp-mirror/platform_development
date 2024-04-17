@@ -19,7 +19,6 @@ import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
-import {FakeProto} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
@@ -72,17 +71,13 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return TraceType.TRANSACTIONS;
   }
 
-  override async queryEntry(index: number): Promise<FakeProto> {
-    const entryProto = await Utils.queryEntry(
+  override async getEntry(index: number): Promise<PropertyTreeNode> {
+    let entryProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
       index,
     );
-    return this.protoTransformer.transform(entryProto);
-  }
-
-  override async getEntry(index: number): Promise<PropertyTreeNode> {
-    const entryProto = await this.queryEntry(index);
+    entryProto = this.protoTransformer.transform(entryProto);
     return this.makePropertiesTree(entryProto);
   }
 

@@ -20,7 +20,7 @@ import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
-import {FakeProto, FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
+import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
 import {Utils} from 'parsers/perfetto/utils';
 import {RectsComputation} from 'parsers/surface_flinger/computations/rects_computation';
@@ -117,7 +117,14 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
   }
 
   override async getEntry(index: number): Promise<HierarchyTreeNode> {
-    const snapshotProto = await this.queryEntry(index);
+    let snapshotProto = await Utils.queryEntry(
+      this.traceProcessor,
+      this.getTableName(),
+      index,
+    );
+    snapshotProto =
+      this.layersSnapshotProtoTransformer.transform(snapshotProto);
+
     const layerProtos = (await this.querySnapshotLayers(index)).map(
       (layerProto) => this.layerProtoTransformer.transform(layerProto),
     );
@@ -169,15 +176,6 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
 
   protected override getTableName(): string {
     return 'surfaceflinger_layers_snapshot';
-  }
-
-  protected override async queryEntry(index: number): Promise<FakeProto> {
-    const snapshotProto = await Utils.queryEntry(
-      this.traceProcessor,
-      this.getTableName(),
-      index,
-    );
-    return this.layersSnapshotProtoTransformer.transform(snapshotProto);
   }
 
   private makeHierarchyTree(
