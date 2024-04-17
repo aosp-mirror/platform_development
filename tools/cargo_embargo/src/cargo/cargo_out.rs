@@ -361,6 +361,8 @@ impl Crate {
                 _ if arg.starts_with("--allow=clippy") => {}
                 _ if arg.starts_with("-Wclippy") => {}
                 _ if arg.starts_with("--warn=clippy") => {}
+                _ if arg.starts_with("-A=rustdoc") => {}
+                _ if arg.starts_with("--allow=rustdoc") => {}
                 _ if arg.starts_with("-D") => {}
                 _ if arg.starts_with("--deny=") => {}
                 _ if arg.starts_with("-W") => {}
