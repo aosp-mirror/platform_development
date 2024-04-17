@@ -276,9 +276,9 @@ impl Crate {
                     if let Some((name, path)) = arg.split_once('=') {
                         let filename = path.split('/').last().unwrap();
 
-                        // Example filename: "libgetrandom-fd8800939535fc59.rmeta"
+                        // Example filename: "libgetrandom-fd8800939535fc59.rmeta" or "libmls_rs_uniffi.rlib".
                         static REGEX: Lazy<Regex> = Lazy::new(|| {
-                            Regex::new(r"^lib(.*)-[0-9a-f]*.(rlib|so|rmeta)$").unwrap()
+                            Regex::new(r"^lib([^-]*)(?:-[0-9a-f]*)?.(rlib|so|rmeta)$").unwrap()
                         });
 
                         let Some(lib_name) = REGEX.captures(filename).and_then(|x| x.get(1)) else {
