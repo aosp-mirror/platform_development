@@ -19,7 +19,6 @@ use crate::config::VariantConfig;
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
 /// `cfg` strings for dependencies which should be considered enabled. It would be better to parse
@@ -124,20 +123,24 @@ fn parse_cargo_metadata(
         let package_dir = package_dir_from_id(&package.id)?;
 
         for target in &package.targets {
-            let [target_kind] = target.kind.deref() else {
-                bail!("Target kind had unexpected length: {:?}", target.kind);
-            };
-            if ![
-                TargetKind::Bin,
-                TargetKind::Cdylib,
-                TargetKind::Lib,
-                TargetKind::ProcMacro,
-                TargetKind::Rlib,
-                TargetKind::Staticlib,
-                TargetKind::Test,
-            ]
-            .contains(target_kind)
-            {
+            let target_kinds = target
+                .kind
+                .clone()
+                .into_iter()
+                .filter(|kind| {
+                    [
+                        TargetKind::Bin,
+                        TargetKind::Cdylib,
+                        TargetKind::Lib,
+                        TargetKind::ProcMacro,
+                        TargetKind::Rlib,
+                        TargetKind::Staticlib,
+                        TargetKind::Test,
+                    ]
+                    .contains(kind)
+                })
+                .collect::<Vec<_>>();
+            if target_kinds.is_empty() {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
             }
@@ -146,14 +149,14 @@ fn parse_cargo_metadata(
             // https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md
             // for background.
             let target_name = target.name.replace('-', "_");
-            let target_triple = if *target_kind == TargetKind::ProcMacro {
+            let target_triple = if target_kinds == [TargetKind::ProcMacro] {
                 None
             } else {
                 Some("x86_64-unknown-linux-gnu".to_string())
             };
             // Don't generate an entry for integration tests, they will be covered by the test case
             // below.
-            if *target_kind != TargetKind::Test {
+            if target_kinds != [TargetKind::Test] {
                 crates.push(Crate {
                     name: target_name.clone(),
                     package_name: package.name.to_owned(),
@@ -168,7 +171,7 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
-                        *target_kind,
+                        &target_kinds,
                         false,
                     )?,
                     ..Default::default()
@@ -190,7 +193,7 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
-                        *target_kind,
+                        &target_kinds,
                         true,
                     )?,
                     ..Default::default()
@@ -205,7 +208,7 @@ fn get_externs(
     package: &PackageMetadata,
     packages: &[PackageMetadata],
     features: &[String],
-    target_kind: TargetKind,
+    target_kinds: &[TargetKind],
     test: bool,
 ) -> Result<Vec<Extern>> {
     let mut externs = package
@@ -226,7 +229,7 @@ fn get_externs(
 
     // If there is a library target and this is a binary or integration test, add the library as an
     // extern.
-    if matches!(target_kind, TargetKind::Bin | TargetKind::Test) {
+    if matches!(target_kinds, [TargetKind::Bin] | [TargetKind::Test]) {
         for target in &package.targets {
             if target.kind.contains(&TargetKind::Lib) {
                 let lib_name = target.name.replace('-', "_");
