@@ -44,7 +44,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
     return 'window_manager_shell_transitions';
   }
 
-  protected override async queryEntry(
+  private async queryEntry(
     index: number,
   ): Promise<perfetto.protos.ShellTransition> {
     const protoBuilder = new FakeProtoBuilder();
