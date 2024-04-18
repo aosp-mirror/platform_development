@@ -61,9 +61,7 @@ export class ParserProtolog extends AbstractParser<PropertyTreeNode> {
     return 'protolog';
   }
 
-  protected override async queryEntry(
-    index: number,
-  ): Promise<PerfettoLogMessageTableRow> {
+  private async queryEntry(index: number): Promise<PerfettoLogMessageTableRow> {
     const sql = `
       SELECT
         ts, tag, level, message
