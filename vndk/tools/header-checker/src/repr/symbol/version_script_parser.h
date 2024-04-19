@@ -28,6 +28,11 @@ namespace header_checker {
 namespace repr {
 
 
+enum ModeTagPolicy {
+  MatchTagAndApi,
+  MatchTagOnly,
+};
+
 class VersionScriptParser {
  private:
   // This comparison function allows finding elements by string_view.
@@ -89,6 +94,8 @@ class VersionScriptParser {
   // Returns whether the argument is valid.
   bool AddModeTag(std::string_view mode_tag);
 
+  void SetModeTagPolicy(ModeTagPolicy policy) { mode_tag_policy_ = policy; }
+
   void SetErrorHandler(std::unique_ptr<ErrorHandler> error_handler) {
     error_handler_ = std::move(error_handler);
   }
@@ -133,6 +140,7 @@ class VersionScriptParser {
   utils::StringSet excluded_symbol_versions_;
   utils::StringSet excluded_symbol_tags_;
   ModeTagLevelMap included_mode_tags_;
+  ModeTagPolicy mode_tag_policy_;
 
   std::istream *stream_;
   int line_no_;
