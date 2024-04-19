@@ -70,4 +70,10 @@ export class TimelineUtils {
       to: finishTime,
     };
   }
+
+  static rangeContainsTimestamp(range: TimeRange, ts: Timestamp): boolean {
+    const min = range.from.getValueNs();
+    const max = range.to.getValueNs();
+    return ts.getValueNs() >= min && ts.getValueNs() <= max;
+  }
 }

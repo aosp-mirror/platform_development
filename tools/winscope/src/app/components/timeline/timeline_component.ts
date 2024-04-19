@@ -57,6 +57,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
+import {TimelineUtils} from './timeline_utils';
 
 @Component({
   selector: 'timeline',
@@ -126,7 +127,12 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                 appearance="fill"
                 (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
                 (change)="onNanosecondsInputTimeChange($event)">
-                <mat-icon class="material-symbols-outlined" matPrefix>timer</mat-icon>
+                <mat-icon
+                  class="bookmark-icon"
+                  [class.material-symbols-outlined]="!currentPositionBookmarked()"
+                  matTooltip="bookmark timestamp"
+                  (click)="toggleBookmarkCurrentPosition($event)"
+                  matPrefix>flag</mat-icon>
                 <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
                 <div class="field-suffix" matSuffix>
                   <button
@@ -221,8 +227,11 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
             [selectedTraces]="selectedTraces"
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
+            [bookmarks]="bookmarks"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
+            (onRemoveAllBookmarks)="removeAllBookmarks()"
+            (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
@@ -293,6 +302,9 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         padding: 0;
         display: flex;
         align-items: center;
+      }
+      .bookmark-icon {
+        cursor: pointer;
       }
       .time-selector-form {
         display: flex;
@@ -490,6 +502,7 @@ export class TimelineComponent
   TRACE_INFO = TRACE_INFO;
   isInputFormFocused = false;
   storeKeyDeselectedTraces = 'miniTimeline.deselectedTraces';
+  bookmarks: Timestamp[] = [];
 
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -814,6 +827,52 @@ export class TimelineComponent
     return assertDefined(
       this.timelineData?.getTimestampConverter(),
     ).getUTCOffset();
+  }
+
+  currentPositionBookmarked(): boolean {
+    const currentTimestampNs =
+      this.getCurrentTracePosition().timestamp.getValueNs();
+    return this.bookmarks.some((bm) => bm.getValueNs() === currentTimestampNs);
+  }
+
+  toggleBookmarkCurrentPosition(event: PointerEvent) {
+    const currentTimestamp = this.getCurrentTracePosition().timestamp;
+    this.toggleBookmarkRange({
+      from: currentTimestamp,
+      to: currentTimestamp,
+    });
+    event.stopPropagation();
+  }
+
+  toggleBookmarkRange(range: TimeRange, rangeContainsBookmark?: boolean) {
+    if (rangeContainsBookmark === undefined) {
+      rangeContainsBookmark = this.bookmarks.some((bookmark) =>
+        TimelineUtils.rangeContainsTimestamp(range, bookmark),
+      );
+    }
+    const clickedNs = (range.from.getValueNs() + range.to.getValueNs()) / 2n;
+    if (rangeContainsBookmark) {
+      const closestBookmark = this.bookmarks.reduce((prev, curr) => {
+        if (clickedNs - curr.getValueNs() < 0) return prev;
+        return Math.abs(Number(curr.getValueNs() - clickedNs)) <
+          Math.abs(Number(prev.getValueNs() - clickedNs))
+          ? curr
+          : prev;
+      });
+      this.bookmarks = this.bookmarks.filter(
+        (bm) => bm.getValueNs() !== closestBookmark.getValueNs(),
+      );
+    } else {
+      this.bookmarks = this.bookmarks.concat([
+        assertDefined(
+          this.timelineData?.getTimestampConverter(),
+        ).makeTimestampFromNs(clickedNs),
+      ]);
+    }
+  }
+
+  removeAllBookmarks() {
+    this.bookmarks = [];
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {

@@ -35,6 +35,7 @@ export class MiniCanvasDrawerData {
     public selection: Segment,
     private timelineEntriesGetter: () => Promise<TimelineEntries>,
     public transformer: Transformer,
+    public bookmarks: number[],
   ) {}
 
   private entries: TimelineEntries | undefined = undefined;

@@ -34,6 +34,7 @@ export class MiniTimelineDrawerInput {
     public zoomRange: TimeRange,
     public traces: Traces,
     public timelineData: TimelineData,
+    public bookmarks: Timestamp[],
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
@@ -53,6 +54,7 @@ export class MiniTimelineDrawerInput {
         return this.transformTracesTimestamps(transformer);
       },
       transformer,
+      this.transformBookmarks(transformer),
     );
   }
 
@@ -110,6 +112,12 @@ export class MiniTimelineDrawerInput {
     return trace
       .mapEntry((entry) => this.transformTransitionEntry(transformer, entry))
       .filter((it) => it !== undefined) as Segment[];
+  }
+
+  private transformBookmarks(transformer: Transformer): number[] {
+    return this.bookmarks.map((bookmarkedTimestamp) =>
+      transformer.transform(bookmarkedTimestamp),
+    );
   }
 
   private transformTransitionEntry(

@@ -16,6 +16,7 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
+import {CdkMenuModule} from '@angular/cdk/menu';
 import {ChangeDetectionStrategy, Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -84,6 +85,7 @@ describe('TimelineComponent', () => {
         BrowserAnimationsModule,
         DragDropModule,
         ClipboardModule,
+        CdkMenuModule,
       ],
       declarations: [
         TestHostComponent,
@@ -821,6 +823,71 @@ describe('TimelineComponent', () => {
     ]);
   });
 
+  it('toggles bookmark of current position', () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    expect(timelineComponent.bookmarks).toEqual([]);
+    expect(timelineComponent.currentPositionBookmarked()).toBeFalse();
+
+    const bookmarkIcon = assertDefined(
+      htmlElement.querySelector('.bookmark-icon'),
+    ) as HTMLElement;
+    bookmarkIcon.click();
+    fixture.detectChanges();
+
+    expect(timelineComponent.bookmarks).toEqual([time100]);
+    expect(timelineComponent.currentPositionBookmarked()).toBeTrue();
+
+    bookmarkIcon.click();
+    fixture.detectChanges();
+    expect(timelineComponent.bookmarks).toEqual([]);
+    expect(timelineComponent.currentPositionBookmarked()).toBeFalse();
+  });
+
+  it('toggles same bookmark if click within range', () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    expect(timelineComponent.bookmarks.length).toEqual(0);
+
+    openContextMenu();
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(1);
+
+    // click within marker y-pos, x-pos close enough to remove bookmark
+    openContextMenu(5);
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(0);
+
+    openContextMenu();
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(1);
+
+    // click within marker y-pos, x-pos too large so new bookmark added
+    openContextMenu(20);
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(2);
+
+    openContextMenu(20);
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(1);
+
+    // click below marker y-pos, x-pos now too large so new bookmark added
+    openContextMenu(5, true);
+    clickToggleBookmarkOption();
+    expect(timelineComponent.bookmarks.length).toEqual(2);
+  });
+
+  it('removes all bookmarks', () => {
+    loadSfWmTraces();
+    const timelineComponent = assertDefined(component.timeline);
+    timelineComponent.bookmarks = [time100, time101, time112];
+    fixture.detectChanges();
+
+    openContextMenu();
+    clickRemoveAllBookmarksOption();
+    expect(timelineComponent.bookmarks).toEqual([]);
+  });
+
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
@@ -958,6 +1025,40 @@ describe('TimelineComponent', () => {
   ) {
     expect(prevEntryButton.getAttribute('disabled')).toEqual('true');
     expect(nextEntryButton.getAttribute('disabled')).toEqual('true');
+  }
+
+  function openContextMenu(xOffset = 0, clickBelowMarker = false) {
+    const miniTimelineCanvas = assertDefined(
+      htmlElement.querySelector('#mini-timeline-canvas'),
+    ) as HTMLElement;
+    const clickPosX =
+      miniTimelineCanvas.offsetLeft +
+      miniTimelineCanvas.offsetWidth / 2 +
+      xOffset;
+    const clickPosY = clickBelowMarker ? 1000 : 0;
+    miniTimelineCanvas.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        clientX: clickPosX,
+        clientY: clickPosY,
+      }),
+    );
+    fixture.detectChanges();
+  }
+
+  function clickToggleBookmarkOption() {
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const toggleOption = assertDefined(
+      menu.querySelector('.context-menu-item'),
+    ) as HTMLElement;
+    toggleOption.click();
+    fixture.detectChanges();
+  }
+
+  function clickRemoveAllBookmarksOption() {
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const options = assertDefined(menu.querySelectorAll('.context-menu-item'));
+    (options.item(1) as HTMLElement).click();
+    fixture.detectChanges();
   }
 
   @Component({
