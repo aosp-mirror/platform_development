@@ -44,9 +44,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
     <div *ngIf="showPinNodeIcon()" class="icon-wrapper">
       <button class="icon-button pin-node-btn" (click)="pinNode($event)">
-        <mat-icon>
-          {{ isPinned ? 'star' : 'star_border' }}
-        </mat-icon>
+        <mat-icon [class.material-symbols-outlined]="!isPinned"> push_pin </mat-icon>
       </button>
     </div>
 
@@ -59,7 +57,7 @@ import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
         [node]="node"></property-tree-node-data-view>
     </div>
 
-    <div *ngIf="!isLeaf && !isExpanded" class="icon-wrapper">
+    <div *ngIf="!isLeaf && !isExpanded && !isPinned" class="icon-wrapper">
       <button
         class="icon-button expand-tree-btn"
         [class]="collapseDiffClass"

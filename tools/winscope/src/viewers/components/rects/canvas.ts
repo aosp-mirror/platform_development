@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Color} from 'app/colors';
 import {TransformMatrix} from 'common/geometry_types';
 import * as THREE from 'three';
 import {
@@ -31,7 +32,9 @@ import {
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
-  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xd2e3fc);
+  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(
+    Color.SELECTED_ELEMENT_BACKGROUND,
+  );
   private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
   private static readonly RECT_EDGE_COLOR = 0x000000;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
