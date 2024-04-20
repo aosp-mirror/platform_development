@@ -37,6 +37,7 @@
 
 
 using namespace header_checker;
+using header_checker::repr::ModeTagPolicy;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
@@ -101,6 +102,18 @@ static llvm::cl::opt<std::string> api_map(
     llvm::cl::desc("Specify the path to the json file that maps codenames to "
                    "API levels."),
     llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<ModeTagPolicy> symbol_tag_policy(
+    "symbol-tag-policy",
+    llvm::cl::desc("Specify how to match -include-symbol-tag."),
+    llvm::cl::values(clEnumValN(ModeTagPolicy::MatchTagAndApi, "MatchTagAndApi",
+                                "If a symbol has mode tags, match both the "
+                                "mode tags and the \"introduced\" tag."),
+                     clEnumValN(ModeTagPolicy::MatchTagOnly, "MatchTagOnly",
+                                "If a symbol has mode tags, match the mode "
+                                "tags and ignore the \"introduced\" tag.")),
+    llvm::cl::init(ModeTagPolicy::MatchTagAndApi),
+    llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> arch(
     "arch", llvm::cl::desc("<arch>"), llvm::cl::Optional,
@@ -496,6 +509,7 @@ static bool InitializeVersionScriptParser(repr::VersionScriptParser &parser) {
       return false;
     }
   }
+  parser.SetModeTagPolicy(symbol_tag_policy);
 
   return true;
 }
