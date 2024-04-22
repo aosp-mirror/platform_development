@@ -15,6 +15,7 @@
 //
 
 package {
+    default_team: "trendy_team_treble",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
