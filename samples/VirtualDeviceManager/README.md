@@ -287,6 +287,11 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 
 #### Input method
 
+Note: The virtual keyboard acts like a physically connected keyboard to the
+host device. If you want the software keyboard to be shown on the virtual
+displays, you likely need to enable this in the host Settings. On a Pixel
+device: System -> Language and input -> Physical keyboard.
+
 -   **Display IME policy**: Choose the IME behavior on remote displays. Run the
     commands below to enable this functionality. \
     *This can be changed dynamically.*
