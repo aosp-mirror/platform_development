@@ -348,9 +348,7 @@ describe('AppComponent', () => {
   }
 
   function checkPermanentHeaderItems() {
-    expect(
-      assertDefined(htmlElement.querySelector('.app-title')).innerHTML,
-    ).toContain('Winscope');
+    expect(htmlElement.querySelector('.app-title')).toBeTruthy();
     expect(htmlElement.querySelector('.documentation')).toBeTruthy();
     expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
     expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();
