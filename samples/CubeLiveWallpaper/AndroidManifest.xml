@@ -33,6 +33,7 @@
         <service
             android:label="@string/wallpaper_cube1"
             android:name=".cube1.CubeWallpaper1"
+            android:exported="true"
             android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
@@ -43,6 +44,7 @@
         <service
             android:label="@string/wallpaper_cube2"
             android:name=".cube2.CubeWallpaper2"
+            android:exported="true"
             android:permission="android.permission.BIND_WALLPAPER">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
