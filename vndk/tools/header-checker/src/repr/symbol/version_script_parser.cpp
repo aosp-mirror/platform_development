@@ -185,6 +185,10 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
 
 
 bool VersionScriptParser::MatchModeTags(const ParsedTags &tags) {
+  if (included_mode_tags_.empty()) {
+    // Include all tags if the user does not specify the option.
+    return true;
+  }
   for (const auto &mode_tag : tags.mode_tags_) {
     auto included_mode_tag = included_mode_tags_.find(mode_tag.first);
     if (included_mode_tag != included_mode_tags_.end() &&
@@ -216,11 +220,18 @@ bool VersionScriptParser::IsSymbolExported(const ParsedTags &tags) {
     return false;
   }
 
-  if (!included_mode_tags_.empty() && !tags.mode_tags_.empty()) {
-    return MatchModeTags(tags);
+  if (tags.mode_tags_.empty()) {
+    return MatchIntroducedTags(tags);
   }
 
-  return MatchIntroducedTags(tags);
+  switch (mode_tag_policy_) {
+    case MatchTagAndApi:
+      return MatchModeTags(tags) && MatchIntroducedTags(tags);
+    case MatchTagOnly:
+      return MatchModeTags(tags);
+  }
+  // Unreachable
+  return false;
 }
 
 

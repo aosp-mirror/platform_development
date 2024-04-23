@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_partner_eng",
     // See: http://go/android-license-faq
     default_applicable_licenses: [
         "Android-Apache-2.0",
@@ -26,13 +27,13 @@ android_test {
         "--rename-manifest-package com.example.android.pm.shortcutlauncherdemo",
     ],
     srcs: [
-	"common/src/**/*.java",
-	"launcher/src/**/*.java",
+        "common/src/**/*.java",
+        "launcher/src/**/*.java",
     ],
     resource_dirs: [
-    	"common/res",
-	"launcher/res",
-	"launcher/res1",
+        "common/res",
+        "launcher/res",
+        "launcher/res1",
     ],
     static_libs: [
         "androidx.legacy_legacy-support-v4",
@@ -49,13 +50,13 @@ android_test {
         "--rename-manifest-package com.example.android.pm.shortcutlauncherdemo2",
     ],
     srcs: [
-    	"common/src/**/*.java",
-	"launcher/src/**/*.java",
+        "common/src/**/*.java",
+        "launcher/src/**/*.java",
     ],
     resource_dirs: [
-    	"common/res",
+        "common/res",
         "launcher/res",
-	"launcher/res2",
+        "launcher/res2",
     ],
     static_libs: [
         "androidx.legacy_legacy-support-v4",
@@ -73,13 +74,13 @@ android_test {
         "--rename-manifest-package com.example.android.pm.shortcutdemo",
     ],
     srcs: [
-    	"common/src/**/*.java",
-	"publisher/src/**/*.java",
+        "common/src/**/*.java",
+        "publisher/src/**/*.java",
     ],
     resource_dirs: [
-    	"common/res",
-	"publisher/res",
-	"publisher/res1",
+        "common/res",
+        "publisher/res",
+        "publisher/res1",
     ],
     manifest: "publisher/AndroidManifest.xml",
     sdk_version: "current",
@@ -93,13 +94,13 @@ android_test {
         "--rename-manifest-package com.example.android.pm.shortcutdemo2",
     ],
     srcs: [
-    	"common/src/**/*.java",
-	"publisher/src/**/*.java",
+        "common/src/**/*.java",
+        "publisher/src/**/*.java",
     ],
     resource_dirs: [
-    	"common/res",
-	"publisher/res",
-	"publisher/res2",
+        "common/res",
+        "publisher/res",
+        "publisher/res2",
     ],
     manifest: "publisher/AndroidManifest.xml",
     sdk_version: "current",
