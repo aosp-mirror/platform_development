@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
-import {INVALID_TIME_NS, TimeRange, TimestampType} from 'common/time';
-import {TraceHasOldData, TraceOverridden} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {TIME_UNIT_TO_NANO} from 'common/time_units';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
@@ -26,8 +28,16 @@ import {TraceType} from 'trace/trace_type';
 import {TRACE_INFO} from './trace_info';
 
 export class LoadedParsers {
-  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS =
-    5n * 60n * 1000000000n; // 5m
+  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = BigInt(
+    5 * TIME_UNIT_TO_NANO.m,
+  ); // 5m
+  static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET = BigInt(
+    5 * TIME_UNIT_TO_NANO.s,
+  ); // 5s
+  static readonly REAL_TIME_TRACES_WITHOUT_RTE_OFFSET = [
+    TraceType.CUJS,
+    TraceType.EVENT_LOG,
+  ];
 
   private legacyParsers = new Map<TraceType, FileAndParser>();
   private perfettoParsers = new Map<TraceType, FileAndParser>();
@@ -35,22 +45,29 @@ export class LoadedParsers {
   addParsers(
     legacyParsers: FileAndParser[],
     perfettoParsers: FileAndParsers | undefined,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     if (perfettoParsers) {
-      this.addPerfettoParsers(perfettoParsers, errorListener);
+      this.addPerfettoParsers(perfettoParsers, userNotificationsListener);
     }
-
+    // Traces were simultaneously upgraded to contain real-to-boottime or real-to-monotonic offsets.
+    // If we have a mix of parsers with and without offsets, the ones without must be dangling
+    // trace files with old data, and should be filtered out.
+    legacyParsers = this.filterOutParsersWithoutOffsetsIfRequired(
+      legacyParsers,
+      perfettoParsers,
+      userNotificationsListener,
+    );
     legacyParsers = this.filterOutLegacyParsersWithOldData(
       legacyParsers,
-      errorListener,
+      userNotificationsListener,
     );
     legacyParsers = this.filterScreenshotParsersIfRequired(
       legacyParsers,
-      errorListener,
+      userNotificationsListener,
     );
 
-    this.addLegacyParsers(legacyParsers, errorListener);
+    this.addLegacyParsers(legacyParsers, userNotificationsListener);
   }
 
   getParsers(): Array<Parser<object>> {
@@ -100,24 +117,39 @@ export class LoadedParsers {
     return await FileUtils.createZipArchive(uniqueArchiveFiles);
   }
 
-  findCommonTimestampType(): TimestampType | undefined {
-    return this.findCommonTimestampTypeInternal(this.getParsers());
-  }
-  private findCommonTimestampTypeInternal(
+  getLatestRealToMonotonicOffset(
     parsers: Array<Parser<object>>,
-  ): TimestampType | undefined {
-    const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
-    for (const type of priorityOrder) {
-      if (parsers.every((parser) => parser.getTimestamps(type) !== undefined)) {
-        return type;
-      }
-    }
-    return undefined;
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToMonotonicTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToMonotonicTimeOffsetNs() ?? 0n) -
+            (b.getRealToMonotonicTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToMonotonicTimeOffsetNs();
+  }
+
+  getLatestRealToBootTimeOffset(
+    parsers: Array<Parser<object>>,
+  ): bigint | undefined {
+    const p = parsers
+      .filter((offset) => offset.getRealToBootTimeOffsetNs() !== undefined)
+      .sort((a, b) => {
+        return Number(
+          (a.getRealToBootTimeOffsetNs() ?? 0n) -
+            (b.getRealToBootTimeOffsetNs() ?? 0n),
+        );
+      })
+      .at(-1);
+    return p?.getRealToBootTimeOffsetNs();
   }
 
   private addLegacyParsers(
     parsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     const legacyParsersBeingLoaded = new Map<TraceType, Parser<object>>();
 
@@ -127,7 +159,7 @@ export class LoadedParsers {
         this.shouldUseLegacyParser(
           parser,
           legacyParsersBeingLoaded,
-          errorListener,
+          userNotificationsListener,
         )
       ) {
         legacyParsersBeingLoaded.set(parser.getTraceType(), parser);
@@ -138,7 +170,7 @@ export class LoadedParsers {
 
   private addPerfettoParsers(
     {file, parsers}: FileAndParsers,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ) {
     // We currently run only one Perfetto TP WebWorker at a time, so Perfetto parsers previously
     // loaded are now invalid and must be removed (previous WebWorker is not running anymore).
@@ -155,9 +187,9 @@ export class LoadedParsers {
       // parsers must always override legacy ones so that dangling legacy files are ignored.
       const legacyParser = this.legacyParsers.get(parser.getTraceType());
       if (legacyParser) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(legacyParser.parser.getDescriptors().join()),
-        );
+        ]);
         this.legacyParsers.delete(parser.getTraceType());
       }
     });
@@ -166,15 +198,15 @@ export class LoadedParsers {
   private shouldUseLegacyParser(
     newParser: Parser<object>,
     parsersBeingLoaded: Map<TraceType, Parser<object>>,
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): boolean {
     // While transitioning to the Perfetto format, devices might still have old legacy trace files
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
     if (this.perfettoParsers.get(newParser.getTraceType())) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(newParser.getDescriptors().join()),
-      );
+      ]);
       return false;
     }
 
@@ -185,9 +217,9 @@ export class LoadedParsers {
     }
 
     if (oldParser && !currParser) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(oldParser.getDescriptors().join()),
-      );
+      ]);
       return true;
     }
 
@@ -195,38 +227,74 @@ export class LoadedParsers {
       currParser &&
       newParser.getLengthEntries() > currParser.getLengthEntries()
     ) {
-      errorListener.onError(
+      userNotificationsListener.onNotifications([
         new TraceOverridden(currParser.getDescriptors().join()),
-      );
+      ]);
       return true;
     }
 
-    errorListener.onError(
+    userNotificationsListener.onNotifications([
       new TraceOverridden(newParser.getDescriptors().join()),
-    );
+    ]);
     return false;
   }
 
   private filterOutLegacyParsersWithOldData(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
-    const allParsers = [
+    let allParsers = [
       ...newLegacyParsers,
       ...this.legacyParsers.values(),
       ...this.perfettoParsers.values(),
     ];
 
-    const commonTimestampType = this.findCommonTimestampTypeInternal(
-      allParsers.map(({parser}) => parser),
+    const latestMonotonicOffset = this.getLatestRealToMonotonicOffset(
+      allParsers.map(({parser, file}) => parser),
     );
-    if (commonTimestampType === undefined) {
-      return newLegacyParsers;
-    }
+    const latestBootTimeOffset = this.getLatestRealToBootTimeOffset(
+      allParsers.map(({parser, file}) => parser),
+    );
+
+    newLegacyParsers = newLegacyParsers.filter(({parser, file}) => {
+      const monotonicOffset = parser.getRealToMonotonicTimeOffsetNs();
+      if (monotonicOffset && latestMonotonicOffset) {
+        const isOldData =
+          Math.abs(Number(monotonicOffset - latestMonotonicOffset)) >
+          LoadedParsers.MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET;
+        if (isOldData) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(file.getDescriptor()),
+          ]);
+          return false;
+        }
+      }
+
+      const bootTimeOffset = parser.getRealToBootTimeOffsetNs();
+      if (bootTimeOffset && latestBootTimeOffset) {
+        const isOldData =
+          Math.abs(Number(bootTimeOffset - latestBootTimeOffset)) >
+          LoadedParsers.MAX_ALLOWED_TIME_GAP_BETWEEN_RTE_OFFSET;
+        if (isOldData) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(file.getDescriptor()),
+          ]);
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    allParsers = [
+      ...newLegacyParsers,
+      ...this.legacyParsers.values(),
+      ...this.perfettoParsers.values(),
+    ];
 
     const timeRanges = allParsers
       .map(({parser}) => {
-        const timestamps = parser.getTimestamps(commonTimestampType);
+        const timestamps = parser.getTimestamps();
         if (!timestamps || timestamps.length === 0) {
           return undefined;
         }
@@ -246,24 +314,18 @@ export class LoadedParsers {
         return true;
       }
 
-      const timestamps = parser.getTimestamps(commonTimestampType);
-      if (!timestamps || timestamps.length === 0) {
+      let timestamps = parser.getTimestamps();
+      if (!this.hasValidTimestamps(timestamps)) {
         return true;
       }
-
-      const isDump =
-        timestamps.length === 1 &&
-        timestamps[0].getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
-        return true;
-      }
+      timestamps = assertDefined(timestamps);
 
       const endTimestamp = timestamps[timestamps.length - 1];
       const isOldData = endTimestamp.getValueNs() <= timeGap.from.getValueNs();
       if (isOldData) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceHasOldData(file.getDescriptor(), timeGap),
-        );
+        ]);
         return false;
       }
 
@@ -273,7 +335,7 @@ export class LoadedParsers {
 
   private filterScreenshotParsersIfRequired(
     newLegacyParsers: FileAndParser[],
-    errorListener: WinscopeErrorListener,
+    userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
     const oldScreenRecordingParser = this.legacyParsers.get(
       TraceType.SCREEN_RECORDING,
@@ -293,21 +355,21 @@ export class LoadedParsers {
 
     if (oldScreenRecordingParser || newScreenRecordingParsers.length > 0) {
       newScreenshotParsers.forEach((newScreenshotParser) => {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(
             newScreenshotParser.parser.getDescriptors().join(),
             TraceType.SCREEN_RECORDING,
           ),
-        );
+        ]);
       });
 
       if (oldScreenshotParser) {
-        errorListener.onError(
+        userNotificationsListener.onNotifications([
           new TraceOverridden(
             oldScreenshotParser.getDescriptors().join(),
             TraceType.SCREEN_RECORDING,
           ),
-        );
+        ]);
         this.remove(TraceType.SCREENSHOT);
       }
 
@@ -315,6 +377,52 @@ export class LoadedParsers {
         (fileAndParser) =>
           fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT,
       );
+    }
+
+    return newLegacyParsers;
+  }
+
+  private filterOutParsersWithoutOffsetsIfRequired(
+    newLegacyParsers: FileAndParser[],
+    perfettoParsers: FileAndParsers | undefined,
+    userNotificationsListener: UserNotificationsListener,
+  ): FileAndParser[] {
+    const hasParserWithOffset =
+      perfettoParsers ||
+      newLegacyParsers.find(({parser, file}) => {
+        return (
+          parser.getRealToBootTimeOffsetNs() !== undefined ||
+          parser.getRealToMonotonicTimeOffsetNs() !== undefined
+        );
+      });
+    const hasParserWithoutOffset = newLegacyParsers.find(({parser, file}) => {
+      const timestamps = parser.getTimestamps();
+      return (
+        this.hasValidTimestamps(timestamps) &&
+        parser.getRealToBootTimeOffsetNs() === undefined &&
+        parser.getRealToMonotonicTimeOffsetNs() === undefined
+      );
+    });
+
+    if (hasParserWithOffset && hasParserWithoutOffset) {
+      return newLegacyParsers.filter(({parser, file}) => {
+        if (
+          LoadedParsers.REAL_TIME_TRACES_WITHOUT_RTE_OFFSET.some(
+            (traceType) => parser.getTraceType() === traceType,
+          )
+        ) {
+          return true;
+        }
+        const hasOffset =
+          parser.getRealToMonotonicTimeOffsetNs() !== undefined ||
+          parser.getRealToBootTimeOffsetNs() !== undefined;
+        if (!hasOffset) {
+          userNotificationsListener.onNotifications([
+            new TraceHasOldData(parser.getDescriptors().join()),
+          ]);
+        }
+        return hasOffset;
+      });
     }
 
     return newLegacyParsers;
@@ -337,5 +445,18 @@ export class LoadedParsers {
     }
 
     return undefined;
+  }
+
+  private hasValidTimestamps(timestamps: Timestamp[] | undefined): boolean {
+    if (!timestamps || timestamps.length === 0) {
+      return false;
+    }
+
+    const isDump =
+      timestamps.length === 1 && timestamps[0].getValueNs() === INVALID_TIME_NS;
+    if (isDump) {
+      return false;
+    }
+    return true;
   }
 }

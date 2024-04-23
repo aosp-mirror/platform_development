@@ -15,8 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
@@ -57,9 +56,9 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
   constructor(
     traceFile: TraceFile,
     traceProcessor: WasmEngineProxy,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
   ) {
-    super(traceFile, traceProcessor, timestampFactory);
+    super(traceFile, traceProcessor, timestampConverter);
 
     this.protoTransformer = new FakeProtoTransformer(
       assertDefined(
@@ -72,10 +71,7 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     return TraceType.TRANSACTIONS;
   }
 
-  override async getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
+  override async getEntry(index: number): Promise<PropertyTreeNode> {
     let entryProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),

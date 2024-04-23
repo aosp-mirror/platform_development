@@ -15,37 +15,41 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimeRange, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {
-  TraceHasOldData,
-  TraceOverridden,
-  WinscopeError,
-} from 'messaging/winscope_error';
+import {TimeRange} from 'common/time';
+import {UserWarning} from 'messaging/user_warning';
+import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserBuilder} from 'test/unit/parser_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {LoadedParsers} from './loaded_parsers';
 
 describe('LoadedParsers', () => {
-  const realZeroTimestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-  const elapsedZeroTimestamp =
-    NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
+  const realZeroTimestamp = TimestampConverterUtils.makeRealTimestamp(0n);
+  const elapsedZeroTimestamp = TimestampConverterUtils.makeElapsedTimestamp(0n);
   const oldTimestamps = [
     realZeroTimestamp,
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n),
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n),
+    TimestampConverterUtils.makeRealTimestamp(1n),
+    TimestampConverterUtils.makeRealTimestamp(2n),
+    TimestampConverterUtils.makeRealTimestamp(3n),
+    TimestampConverterUtils.makeRealTimestamp(4n),
+  ];
+
+  const elapsedTimestamps = [
+    elapsedZeroTimestamp,
+    TimestampConverterUtils.makeElapsedTimestamp(1n),
+    TimestampConverterUtils.makeElapsedTimestamp(2n),
+    TimestampConverterUtils.makeElapsedTimestamp(3n),
+    TimestampConverterUtils.makeElapsedTimestamp(4n),
   ];
 
   const timestamps = [
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
-    NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 10n), // 5m10ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 11n), // 5m11ns
+    TimestampConverterUtils.makeRealTimestamp(5n * 60n * 1000000000n + 12n), // 5m12ns
   ];
 
   const filename = 'filename';
@@ -71,6 +75,12 @@ describe('LoadedParsers', () => {
     .setTimestamps([])
     .setDescriptors([filename])
     .build();
+  const parserSf_elapsed = new ParserBuilder<object>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setTimestamps(elapsedTimestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
   const parserWm0 = new ParserBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setTimestamps(timestamps)
@@ -86,6 +96,12 @@ describe('LoadedParsers', () => {
     .setTimestamps([realZeroTimestamp])
     .setDescriptors([filename])
     .build();
+  const parserWm_elapsed = new ParserBuilder<object>()
+    .setType(TraceType.WINDOW_MANAGER)
+    .setTimestamps(elapsedTimestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
   const parserWmTransitions = new ParserBuilder<object>()
     .setType(TraceType.WM_TRANSITION)
     .setTimestamps([
@@ -95,9 +111,15 @@ describe('LoadedParsers', () => {
     ])
     .setDescriptors([filename])
     .build();
+  const parserEventlog = new ParserBuilder<object>()
+    .setType(TraceType.EVENT_LOG)
+    .setTimestamps(timestamps)
+    .setDescriptors([filename])
+    .setNoOffsets(true)
+    .build();
 
   let loadedParsers: LoadedParsers;
-  let errors: WinscopeError[] = [];
+  let warnings: UserWarning[] = [];
 
   beforeEach(async () => {
     loadedParsers = new LoadedParsers();
@@ -135,13 +157,26 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserWm0], [new TraceOverridden(filename)]);
   });
 
+  it('drops elapsed-only parsers if parsers with real timestamps present', () => {
+    loadParsers([parserSf_elapsed, parserSf0], []);
+    expectLoadResult([parserSf0], [new TraceHasOldData(filename)]);
+  });
+
+  it('doesnt drop elapsed-only parsers if no parsers with real timestamps present', () => {
+    loadParsers([parserSf_elapsed, parserWm_elapsed], []);
+    expectLoadResult([parserSf_elapsed, parserWm_elapsed], []);
+  });
+
+  it('keeps real-time parsers without offset', () => {
+    loadParsers([parserSf0, parserEventlog], []);
+    expectLoadResult([parserSf0, parserEventlog], []);
+  });
+
   describe('drops legacy parser with old data (dangling old trace file)', () => {
     const timeGapFrom = assertDefined(
-      parserSf_longButOldData.getTimestamps(TimestampType.REAL)?.at(-1),
+      parserSf_longButOldData.getTimestamps()?.at(-1),
     );
-    const timeGapTo = assertDefined(
-      parserWm0.getTimestamps(TimestampType.REAL)?.at(0),
-    );
+    const timeGapTo = assertDefined(parserWm0.getTimestamps()?.at(0));
     const timeGap = new TimeRange(timeGapFrom, timeGapTo);
 
     it('taking into account other legacy parsers', () => {
@@ -177,9 +212,7 @@ describe('LoadedParsers', () => {
 
     it('is robust to traces with time range overlap', () => {
       const parser = parserSf0;
-      const timestamps = assertDefined(
-        parserSf0.getTimestamps(TimestampType.REAL),
-      );
+      const timestamps = assertDefined(parserSf0.getTimestamps());
 
       const timestampsOverlappingFront = [
         timestamps[0].add(-1n),
@@ -390,23 +423,23 @@ describe('LoadedParsers', () => {
     const perfettoFileAndParsers =
       perfetto.length > 0 ? new FileAndParsers(file, perfetto) : undefined;
 
-    errors = [];
-    const errorListener = {
-      onError(error: WinscopeError) {
-        errors.push(error);
+    warnings = [];
+    const listener = {
+      onNotifications(notifications: UserWarning[]) {
+        warnings.push(...notifications);
       },
     };
 
     loadedParsers.addParsers(
       legacyFileAndParsers,
       perfettoFileAndParsers,
-      errorListener,
+      listener,
     );
   }
 
   function expectLoadResult(
     expectedParsers: Array<Parser<object>>,
-    expectedErrors: WinscopeError[],
+    expectedWarnings: UserWarning[],
   ) {
     expectedParsers.sort((a, b) => a.getTraceType() - b.getTraceType());
     const actualParsers = loadedParsers
@@ -421,6 +454,6 @@ describe('LoadedParsers', () => {
       expect(actualParsers[i]).toBe(expectedParsers[i]);
     }
 
-    expect(errors).toEqual(expectedErrors);
+    expect(warnings).toEqual(expectedWarnings);
   }
 });

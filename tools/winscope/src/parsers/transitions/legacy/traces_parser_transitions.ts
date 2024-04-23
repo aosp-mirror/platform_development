@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import {Trace} from 'trace/trace';
@@ -30,8 +30,8 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
   private readonly descriptors: string[];
   private decodedEntries: PropertyTreeNode[] | undefined;
 
-  constructor(traces: Traces) {
-    super();
+  constructor(traces: Traces, timestampConverter: ParserTimestampConverter) {
+    super(timestampConverter);
     const wmTransitionTrace = traces.getTrace(TraceType.WM_TRANSITION);
     const shellTransitionTrace = traces.getTrace(TraceType.SHELL_TRANSITION);
     if (wmTransitionTrace && shellTransitionTrace) {
@@ -66,17 +66,14 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
 
     this.decodedEntries = this.compressEntries(allEntries);
 
-    await this.parseTimestamps();
+    await this.createTimestamps();
   }
 
   override getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
 
-  override getEntry(
-    index: number,
-    timestampType: TimestampType,
-  ): Promise<PropertyTreeNode> {
+  override getEntry(index: number): Promise<PropertyTreeNode> {
     const entry = assertDefined(this.decodedEntries)[index];
     return Promise.resolve(entry);
   }
@@ -89,35 +86,31 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
     return TraceType.TRANSITION;
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    decodedEntry: PropertyTreeNode,
-  ): undefined | Timestamp {
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  protected override getTimestamp(decodedEntry: PropertyTreeNode): Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
     const shellData = decodedEntry.getChildByName('shellData');
     const dispatchTimestamp: Timestamp | undefined = shellData
       ?.getChildByName('dispatchTimeNs')
       ?.getValue();
 
-    const realToElapsedTimeOffsetNs: bigint =
+    const realToBootTimeOffsetNs: bigint =
       shellData
-        ?.getChildByName('realToElapsedTimeOffsetTimestamp')
+        ?.getChildByName('realToBootTimeOffsetTimestamp')
         ?.getValue()
         ?.getValueNs() ?? 0n;
 
     const timestampNs: bigint = dispatchTimestamp
       ? dispatchTimestamp.getValueNs()
-      : realToElapsedTimeOffsetNs;
-
-    if (type === TimestampType.ELAPSED) {
-      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-        timestampNs - realToElapsedTimeOffsetNs,
-      );
-    } else if (type === TimestampType.REAL) {
-      return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(timestampNs);
-    }
-
-    return undefined;
+      : realToBootTimeOffsetNs;
+    return this.timestampConverter.makeTimestampFromRealNs(timestampNs);
   }
 
   private compressEntries(

@@ -22,8 +22,8 @@ export interface MiniTimelineDrawer {
   getXScale(): number;
   getYScale(): number;
   getWidth(): number;
+  getPadding(): Padding;
+  getUsableRange(): {from: number; to: number};
   canvas: HTMLCanvasElement;
   handler: CanvasMouseHandler;
-  padding: Padding;
-  usableRange: {from: number; to: number};
 }

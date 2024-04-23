@@ -15,19 +15,16 @@
  */
 
 import {TimeRange} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {TimeDuration} from 'common/time_duration';
 import {TraceType} from 'trace/trace_type';
+import {UserWarning} from './user_warning';
 
-export interface WinscopeError {
-  getType(): string;
-  getMessage(): string;
-}
+export class CorruptedArchive extends UserWarning {
+  constructor(private readonly file: File) {
+    super();
+  }
 
-export class CorruptedArchive implements WinscopeError {
-  constructor(private readonly file: File) {}
-
-  getType(): string {
+  getDescriptor(): string {
     return 'corrupted archive';
   }
 
@@ -36,18 +33,8 @@ export class CorruptedArchive implements WinscopeError {
   }
 }
 
-export class NoCommonTimestampType implements WinscopeError {
-  getType(): string {
-    return 'no common timestamp';
-  }
-
-  getMessage(): string {
-    return 'Failed to load traces because no common timestamp type could be found';
-  }
-}
-
-export class NoInputFiles implements WinscopeError {
-  getType(): string {
+export class NoInputFiles extends UserWarning {
+  getDescriptor(): string {
     return 'no input';
   }
 
@@ -56,36 +43,40 @@ export class NoInputFiles implements WinscopeError {
   }
 }
 
-export class TraceHasOldData implements WinscopeError {
+export class TraceHasOldData extends UserWarning {
   constructor(
     private readonly descriptor: string,
-    private readonly timeGap: TimeRange,
-  ) {}
+    private readonly timeGap?: TimeRange,
+  ) {
+    super();
+  }
 
-  getType(): string {
+  getDescriptor(): string {
     return 'old trace';
   }
 
   getMessage(): string {
-    const elapsedTime = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(
-      this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs(),
+    const elapsedTime = this.timeGap
+      ? new TimeDuration(
+          this.timeGap.to.getValueNs() - this.timeGap.from.getValueNs(),
+        )
+      : undefined;
+    return (
+      `${this.descriptor}: discarded because data is old` +
+      (this.timeGap ? `der than ${elapsedTime?.format(true)}` : '')
     );
-    return `${
-      this.descriptor
-    }: discarded because data is older than ${TimestampUtils.format(
-      elapsedTime,
-      true,
-    )}`;
   }
 }
 
-export class TraceOverridden implements WinscopeError {
+export class TraceOverridden extends UserWarning {
   constructor(
     private readonly descriptor: string,
     private readonly overridingType?: TraceType,
-  ) {}
+  ) {
+    super();
+  }
 
-  getType(): string {
+  getDescriptor(): string {
     return 'trace overridden';
   }
 
@@ -99,10 +90,12 @@ export class TraceOverridden implements WinscopeError {
   }
 }
 
-export class UnsupportedFileFormat implements WinscopeError {
-  constructor(private readonly descriptor: string) {}
+export class UnsupportedFileFormat extends UserWarning {
+  constructor(private readonly descriptor: string) {
+    super();
+  }
 
-  getType(): string {
+  getDescriptor(): string {
     return 'unsupported format';
   }
 
@@ -111,13 +104,15 @@ export class UnsupportedFileFormat implements WinscopeError {
   }
 }
 
-export class InvalidPerfettoTrace implements WinscopeError {
+export class InvalidPerfettoTrace extends UserWarning {
   constructor(
     private readonly descriptor: string,
     private readonly parserErrorMessages: string[],
-  ) {}
+  ) {
+    super();
+  }
 
-  getType(): string {
+  getDescriptor(): string {
     return 'invalid perfetto trace';
   }
 

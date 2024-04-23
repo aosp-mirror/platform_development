@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -45,56 +45,21 @@ describe('ParserViewCapture', () => {
     );
   });
 
-  it('provides elapsed timestamps', () => {
-    const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114421012750n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114429047540n),
-    ];
-    expect(
-      assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
-    ).toEqual(expected);
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
-  it('provides real timestamps', () => {
+  it('provides timestamps', () => {
     const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936292808460n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936301385080n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691692936309419870n),
+      TimestampConverterUtils.makeRealTimestamp(1691692936292808460n),
+      TimestampConverterUtils.makeRealTimestamp(1691692936301385080n),
+      TimestampConverterUtils.makeRealTimestamp(1691692936309419870n),
     ];
-    expect(
-      assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
-    ).toEqual(expected);
-  });
-
-  it('applies timezone info to real timestamps only', async () => {
-    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-      true,
-    )) as Parser<HierarchyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    );
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-      )[0],
-    ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(181114412436130n),
-    );
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      )[0],
-    ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1691712736292808460n),
-    );
+    expect(assertDefined(parser.getTimestamps()).slice(0, 3)).toEqual(expected);
   });
 
   it('retrieves trace entry', async () => {
-    const entry = await parser.getEntry(1, TimestampType.REAL);
+    const entry = await parser.getEntry(1);
     expect(entry.id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );

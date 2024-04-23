@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import root from 'protos/transitions/udc/json';
@@ -28,11 +27,19 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     'com.android.wm.shell.WmShellTransitionTraceProto',
   );
 
-  private realToElapsedTimeOffsetNs: undefined | bigint;
+  private realToBootTimeOffsetNs: bigint | undefined;
   private handlerMapping: undefined | {[key: number]: string};
 
   override getTraceType(): TraceType {
     return TraceType.SHELL_TRANSITION;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.realToBootTimeOffsetNs;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
   }
 
   override decodeTrace(
@@ -46,7 +53,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     const timeOffset = BigInt(
       decodedProto.realToElapsedTimeOffsetNanos?.toString() ?? '0',
     );
-    this.realToElapsedTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
+    this.realToBootTimeOffsetNs = timeOffset !== 0n ? timeOffset : undefined;
 
     this.handlerMapping = {};
     for (const mapping of decodedProto.handlerMappings ?? []) {
@@ -58,41 +65,20 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entryProto: com.android.wm.shell.ITransition,
   ): PropertyTreeNode {
-    return this.makePropertiesTree(timestampType, entryProto);
+    return this.makePropertiesTree(entryProto);
   }
 
-  override getTimestamp(
-    type: TimestampType,
+  protected override getTimestamp(
     entry: com.android.wm.shell.ITransition,
-  ): undefined | Timestamp {
+  ): Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else 0n
-    const decodedEntry = this.processDecodedEntry(0, type, entry);
-    const dispatchTimestamp: Timestamp | undefined = decodedEntry
-      .getChildByName('shellData')
-      ?.getChildByName('dispatchTimeNs')
-      ?.getValue();
-
-    if (type === TimestampType.REAL) {
-      if (dispatchTimestamp) {
-        return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-          dispatchTimestamp.getValueNs(),
-        );
-      } else {
-        return this.timestampFactory.makeRealTimestamp(
-          this.realToElapsedTimeOffsetNs ?? 0n,
-        );
-      }
-    }
-
-    if (type === TimestampType.ELAPSED) {
-      const timestampNs = dispatchTimestamp?.getValueNs() ?? 0n;
-      return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(timestampNs);
-    }
-
-    return undefined;
+    return entry.dispatchTimeNs
+      ? this.timestampConverter.makeTimestampFromBootTimeNs(
+          BigInt(entry.dispatchTimeNs.toString()),
+        )
+      : this.timestampConverter.makeTimestampFromBootTimeNs(INVALID_TIME_NS);
   }
 
   protected getMagicNumber(): number[] | undefined {
@@ -113,8 +99,8 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
     ) {
       throw new Error('Requires at least one non-null timestamp');
     }
-    if (this.realToElapsedTimeOffsetNs === undefined) {
-      throw new Error('missing realToElapsedTimeOffsetNs');
+    if (this.realToBootTimeOffsetNs === undefined) {
+      throw new Error('missing realToBootTimeOffsetNs');
     }
     if (this.handlerMapping === undefined) {
       throw new Error('Missing handler mapping');
@@ -122,17 +108,15 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
   }
 
   private makePropertiesTree(
-    timestampType: TimestampType,
     entryProto: com.android.wm.shell.ITransition,
   ): PropertyTreeNode {
     this.validateShellTransitionEntry(entryProto);
 
     const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree({
       entry: entryProto,
-      realToElapsedTimeOffsetNs: this.realToElapsedTimeOffsetNs,
-      timestampType,
+      realToBootTimeOffsetNs: this.realToBootTimeOffsetNs,
       handlerMapping: this.handlerMapping,
-      timestampFactory: this.timestampFactory,
+      timestampConverter: this.timestampConverter,
     });
     const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree();
 

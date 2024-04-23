@@ -28,6 +28,7 @@ import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
+import {Analytics} from 'logging/analytics';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -58,6 +59,7 @@ import {Transformer} from './transformer';
             [fullRange]="timelineData.getFullTimeRange()"
             [zoomRange]="timelineData.getZoomRange()"
             [currentPosition]="timelineData.getCurrentPosition()"
+            [timestampConverter]="timelineData.getTimestampConverter()"
             (onZoomChanged)="onZoomChanged($event)"></slider>
         </div>
       </div>
@@ -72,7 +74,7 @@ import {Transformer} from './transformer';
       }
       .zoom-control-wrapper {
         margin-top: -25px;
-        margin-left: -60px;
+        margin-left: -80px;
         padding-right: 30px;
       }
       .zoom-control {
@@ -85,6 +87,16 @@ import {Transformer} from './transformer';
       .zoom-control slider {
         flex-grow: 1;
       }
+      .zoom-buttons {
+        z-index: 20;
+        position: relative;
+        left: 120px;
+        display: flex;
+        background-color: #f8f9fa;
+      }
+      .zoom-buttons .mat-icon-button {
+        width: 28px;
+      }
     `,
   ],
 })
@@ -92,6 +104,7 @@ export class MiniTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Input() currentTracePosition: TracePosition | undefined;
   @Input() selectedTraces: TraceType[] | undefined;
+  @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
@@ -127,7 +140,12 @@ export class MiniTimelineComponent {
       updateTimestampCallback,
       updateTimestampCallback,
     );
-    this.drawer.draw();
+
+    if (this.initialZoom !== undefined) {
+      this.onZoomChanged(this.initialZoom);
+    } else {
+      this.resetZoom();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -142,17 +160,9 @@ export class MiniTimelineComponent {
       if (event.deltaX !== 0 && moveDirection === 'x') {
         this.updateHorizontalScroll(event);
       }
-    }
-    if (this.drawer !== undefined) {
+    } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
-  }
-
-  isZoomed(): boolean {
-    const timelineData = assertDefined(this.timelineData);
-    const fullRange = timelineData.getFullTimeRange();
-    const zoomRange = timelineData.getZoomRange();
-    return fullRange.from !== zoomRange.from || fullRange.to !== zoomRange.to;
   }
 
   getTracesToShow(): Traces {
@@ -184,14 +194,17 @@ export class MiniTimelineComponent {
   }
 
   resetZoom() {
+    Analytics.Navigation.logZoom('reset');
     this.onZoomChanged(assertDefined(this.timelineData).getFullTimeRange());
   }
 
   zoomIn(zoomOn?: Timestamp) {
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'in');
     this.zoom({nominator: 3n, denominator: 4n}, zoomOn);
   }
 
   zoomOut(zoomOn?: Timestamp) {
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'out');
     this.zoom({nominator: 5n, denominator: 4n}, zoomOn);
   }
 
@@ -202,14 +215,16 @@ export class MiniTimelineComponent {
     const timelineData = assertDefined(this.timelineData);
     const fullRange = timelineData.getFullTimeRange();
     const currentZoomRange = timelineData.getZoomRange();
-    const currentZoomWidth = currentZoomRange.to.minus(currentZoomRange.from);
+    const currentZoomWidth = currentZoomRange.to.minus(
+      currentZoomRange.from.getValueNs(),
+    );
     const zoomToWidth = currentZoomWidth
       .times(zoomRatio.nominator)
       .div(zoomRatio.denominator);
 
     const cursorPosition = timelineData.getCurrentPosition()?.timestamp;
     const currentMiddle = currentZoomRange.from
-      .plus(currentZoomRange.to)
+      .add(currentZoomRange.to.getValueNs())
       .div(2n);
 
     let newFrom: Timestamp;
@@ -234,9 +249,9 @@ export class MiniTimelineComponent {
         rightAdjustment = currentZoomWidth.times(0n);
       }
 
-      newFrom = currentZoomRange.from.plus(leftAdjustment);
-      newTo = currentZoomRange.to.minus(rightAdjustment);
-      const newMiddle = newFrom.plus(newTo).div(2n);
+      newFrom = currentZoomRange.from.add(leftAdjustment.getValueNs());
+      newTo = currentZoomRange.to.minus(rightAdjustment.getValueNs());
+      const newMiddle = newFrom.add(newTo.getValueNs()).div(2n);
 
       if (
         (zoomTowards.getValueNs() <= currentMiddle.getValueNs() &&
@@ -245,18 +260,18 @@ export class MiniTimelineComponent {
           newMiddle.getValueNs() > zoomTowards.getValueNs())
       ) {
         // Moved past middle, so ensure cursor is in the middle
-        newFrom = zoomTowards.minus(zoomToWidth.div(2n));
-        newTo = zoomTowards.plus(zoomToWidth.div(2n));
+        newFrom = zoomTowards.minus(zoomToWidth.div(2n).getValueNs());
+        newTo = zoomTowards.add(zoomToWidth.div(2n).getValueNs());
       }
     } else {
-      newFrom = zoomOn.minus(zoomToWidth.div(2n));
-      newTo = zoomOn.plus(zoomToWidth.div(2n));
+      newFrom = zoomOn.minus(zoomToWidth.div(2n).getValueNs());
+      newTo = zoomOn.add(zoomToWidth.div(2n).getValueNs());
     }
 
     if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
       newTo = TimestampUtils.min(
         fullRange.to,
-        newTo.plus(fullRange.from.minus(newFrom)),
+        newTo.add(fullRange.from.minus(newFrom.getValueNs()).getValueNs()),
       );
       newFrom = fullRange.from;
     }
@@ -264,7 +279,7 @@ export class MiniTimelineComponent {
     if (newTo.getValueNs() > fullRange.to.getValueNs()) {
       newFrom = TimestampUtils.max(
         fullRange.from,
-        newFrom.minus(newTo.minus(fullRange.to)),
+        newFrom.minus(newTo.minus(fullRange.to.getValueNs()).getValueNs()),
       );
       newTo = fullRange.to;
     }
@@ -290,6 +305,14 @@ export class MiniTimelineComponent {
     if (event.deltaX !== 0 && moveDirection === 'x') {
       this.updateHorizontalScroll(event);
     }
+  }
+
+  private getZoomSource(zoomOn?: Timestamp): 'scroll' | 'button' {
+    if (zoomOn === undefined) {
+      return 'button';
+    }
+
+    return 'scroll';
   }
 
   private getMiniCanvasDrawerInput() {
@@ -353,13 +376,15 @@ export class MiniTimelineComponent {
   }
 
   private updateZoomByScrollEvent(event: WheelEvent) {
+    const timelineData = assertDefined(this.timelineData);
     const canvas = event.target as HTMLCanvasElement;
     const xPosInCanvas = event.x - canvas.offsetLeft;
-    const zoomRange = assertDefined(this.timelineData).getZoomRange();
+    const zoomRange = timelineData.getZoomRange();
 
     const zoomTo = new Transformer(
       zoomRange,
-      assertDefined(this.drawer).usableRange,
+      assertDefined(this.drawer).getUsableRange(),
+      assertDefined(timelineData.getTimestampConverter()),
     ).untransform(xPosInCanvas);
 
     if (event.deltaY < 0) {
@@ -375,21 +400,29 @@ export class MiniTimelineComponent {
     const fullRange = timelineData.getFullTimeRange();
     const zoomRange = timelineData.getZoomRange();
 
-    const usableRange = assertDefined(this.drawer).usableRange;
-    const transformer = new Transformer(zoomRange, usableRange);
+    const usableRange = assertDefined(this.drawer).getUsableRange();
+    const transformer = new Transformer(
+      zoomRange,
+      usableRange,
+      assertDefined(timelineData.getTimestampConverter()),
+    );
     const shiftAmount = transformer
       .untransform(usableRange.from + scrollAmount)
-      .minus(zoomRange.from);
-    let newFrom = zoomRange.from.plus(shiftAmount);
-    let newTo = zoomRange.to.plus(shiftAmount);
+      .minus(zoomRange.from.getValueNs());
+    let newFrom = zoomRange.from.add(shiftAmount.getValueNs());
+    let newTo = zoomRange.to.add(shiftAmount.getValueNs());
 
     if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
-      newTo = newTo.plus(fullRange.from.minus(newFrom));
+      newTo = newTo.add(
+        fullRange.from.minus(newFrom.getValueNs()).getValueNs(),
+      );
       newFrom = fullRange.from;
     }
 
     if (newTo.getValueNs() > fullRange.to.getValueNs()) {
-      newFrom = newFrom.minus(newTo.minus(fullRange.to));
+      newFrom = newFrom.minus(
+        newTo.minus(fullRange.to.getValueNs()).getValueNs(),
+      );
       newTo = fullRange.to;
     }
 

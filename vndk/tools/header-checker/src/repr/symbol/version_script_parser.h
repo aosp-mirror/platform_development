@@ -20,7 +20,7 @@
 #include "utils/api_level.h"
 
 #include <functional>
-#include <set>
+#include <map>
 #include <string>
 
 
@@ -28,13 +28,20 @@ namespace header_checker {
 namespace repr {
 
 
+enum ModeTagPolicy {
+  MatchTagAndApi,
+  MatchTagOnly,
+};
+
 class VersionScriptParser {
  private:
+  // This comparison function allows finding elements by string_view.
+  using ModeTagLevelMap = std::map<std::string, utils::ApiLevel, std::less<>>;
+
   enum class LineScope {
     GLOBAL,
     LOCAL,
   };
-
 
   struct ParsedTags {
    public:
@@ -46,7 +53,7 @@ class VersionScriptParser {
     unsigned has_var_tag_ : 1;
     unsigned has_weak_tag_ : 1;
     utils::ApiLevel introduced_;
-
+    ModeTagLevelMap mode_tags_;
 
    public:
     ParsedTags()
@@ -84,6 +91,11 @@ class VersionScriptParser {
     excluded_symbol_tags_.insert(tag);
   }
 
+  // Returns whether the argument is valid.
+  bool AddModeTag(std::string_view mode_tag);
+
+  void SetModeTagPolicy(ModeTagPolicy policy) { mode_tag_policy_ = policy; }
+
   void SetErrorHandler(std::unique_ptr<ErrorHandler> error_handler) {
     error_handler_ = std::move(error_handler);
   }
@@ -94,11 +106,17 @@ class VersionScriptParser {
  private:
   bool ReadLine(std::string &line);
 
-  bool ParseVersionBlock(bool ignore_symbols);
+  bool ParseVersionBlock(bool ignore_symbols, const ParsedTags &tags);
 
-  bool ParseSymbolLine(const std::string &line, bool is_cpp_symbol);
+  bool ParseSymbolLine(const std::string &line, bool is_cpp_symbol,
+                       const ParsedTags &version_block_tags);
 
-  ParsedTags ParseSymbolTags(const std::string &line);
+  ParsedTags ParseSymbolTags(const std::string &line,
+                             const ParsedTags &initial_value);
+
+  bool MatchModeTags(const ParsedTags &tags);
+
+  bool MatchIntroducedTags(const ParsedTags &tags);
 
   bool IsSymbolExported(const ParsedTags &tags);
 
@@ -121,6 +139,8 @@ class VersionScriptParser {
 
   utils::StringSet excluded_symbol_versions_;
   utils::StringSet excluded_symbol_tags_;
+  ModeTagLevelMap included_mode_tags_;
+  ModeTagPolicy mode_tag_policy_;
 
   std::istream *stream_;
   int line_no_;

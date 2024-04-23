@@ -14,117 +14,81 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from './timestamp_factory';
+import {Timestamp} from 'common/time';
+import {TIME_UNITS} from './time_units';
 
 export class TimestampUtils {
   // (?=.) checks there is at least one character with a lookahead match
-  static readonly HUMAN_ELAPSED_TIMESTAMP_REGEX =
-    /^(?=.)([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?$/;
-  static readonly HUMAN_REAL_TIMESTAMP_REGEX =
+  private static readonly REAL_TIME_ONLY_REGEX =
+    /^(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9]):(0[0-9]|[1-5][0-9])(\.[0-9]{1,9})?Z?$/;
+  private static readonly REAL_DATE_TIME_REGEX =
+    /^[0-9]{4}-((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|(02)-(0[1-9]|[12][0-9])),\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9]):(0[0-9]|[1-5][0-9])(\.[0-9]{1,9})?Z?$/;
+  private static readonly ISO_TIMESTAMP_REGEX =
     /^[0-9]{4}-((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|(02)-(0[1-9]|[12][0-9]))T(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9]):(0[0-9]|[1-5][0-9])(\.[0-9]{1,9})?Z?$/;
-  static readonly NS_TIMESTAMP_REGEX = /^\s*[0-9]+(\s?ns)?\s*$/;
+  private static readonly ELAPSED_TIME_REGEX =
+    /^(?=.)([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?$/;
+  private static readonly NS_TIME_REGEX = /^\s*[0-9]+(\s?ns)?\s*$/;
 
-  static TO_NANO = {
-    ns: 1,
-    ms: 1000000,
-    s: 1000000 * 1000,
-    m: 1000000 * 1000 * 60,
-    h: 1000000 * 1000 * 60 * 60,
-    d: 1000000 * 1000 * 60 * 60 * 24,
-  };
-
-  static units = [
-    {nanosInUnit: TimestampUtils.TO_NANO['ns'], unit: 'ns'},
-    {nanosInUnit: TimestampUtils.TO_NANO['ms'], unit: 'ms'},
-    {nanosInUnit: TimestampUtils.TO_NANO['s'], unit: 's'},
-    {nanosInUnit: TimestampUtils.TO_NANO['m'], unit: 'm'},
-    {nanosInUnit: TimestampUtils.TO_NANO['h'], unit: 'h'},
-    {nanosInUnit: TimestampUtils.TO_NANO['d'], unit: 'd'},
-  ];
-
-  static compareFn(a: Timestamp, b: Timestamp): number {
-    if (a.getType() !== b.getType()) {
-      throw new Error(
-        'Attempted to compare two timestamps with different type',
-      );
-    }
-    return Number(a.getValueNs() - b.getValueNs());
+  static isNsFormat(timestampHuman: string): boolean {
+    return TimestampUtils.NS_TIME_REGEX.test(timestampHuman);
   }
 
-  static format(timestamp: Timestamp, hideNs = false): string {
-    switch (timestamp.getType()) {
-      case TimestampType.ELAPSED: {
-        return TimestampUtils.nanosecondsToHumanElapsed(
-          timestamp.getValueNs(),
-          hideNs,
-        );
-      }
-      case TimestampType.REAL: {
-        return TimestampUtils.nanosecondsToHumanReal(
-          timestamp.getValueNs(),
-          hideNs,
-        );
-      }
-      default: {
-        throw Error('Unhandled timestamp type');
-      }
-    }
+  static isHumanElapsedTimeFormat(timestampHuman: string): boolean {
+    return TimestampUtils.ELAPSED_TIME_REGEX.test(timestampHuman);
   }
 
-  static parseHumanElapsed(timestampHuman: string): Timestamp {
-    if (!TimestampUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman)) {
-      throw Error('Invalid elapsed timestamp format');
-    }
-
-    const units = TimestampUtils.units;
-
-    const usedUnits = timestampHuman.split(/[0-9]+/).filter((it) => it !== '');
-    const usedValues = timestampHuman
-      .split(/[a-z]+/)
-      .filter((it) => it !== '')
-      .map((it) => Math.floor(Number(it)));
-
-    let ns = BigInt(0);
-
-    for (let i = 0; i < usedUnits.length; i++) {
-      const unit = usedUnits[i];
-      const value = usedValues[i];
-      const unitData = units.find((it) => it.unit === unit)!;
-      ns += BigInt(unitData.nanosInUnit) * BigInt(value);
-    }
-
-    return NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(ns);
+  static isRealTimeOnlyFormat(timestampHuman: string): boolean {
+    return TimestampUtils.REAL_TIME_ONLY_REGEX.test(timestampHuman);
   }
 
-  static parseHumanReal(timestampHuman: string): Timestamp {
-    if (!TimestampUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman)) {
-      throw Error('Invalid real timestamp format');
-    }
+  static isRealDateTimeFormat(timestampHuman: string): boolean {
+    return TimestampUtils.REAL_DATE_TIME_REGEX.test(timestampHuman);
+  }
 
-    // Add trailing Z if it isn't there yet
-    if (timestampHuman[timestampHuman.length - 1] !== 'Z') {
-      timestampHuman += 'Z';
-    }
+  static isISOFormat(timestampHuman: string): boolean {
+    return TimestampUtils.ISO_TIMESTAMP_REGEX.test(timestampHuman);
+  }
 
-    // Date.parse only considers up to millisecond precision
-    let nanoSeconds = 0;
-    if (timestampHuman.includes('.')) {
-      const milliseconds = timestampHuman.split('.')[1].replace('Z', '');
-      nanoSeconds = Math.floor(Number(milliseconds.padEnd(9, '0').slice(3)));
-    }
-
-    return NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
-      BigInt(Date.parse(timestampHuman)) *
-        BigInt(TimestampUtils.TO_NANO['ms']) +
-        BigInt(nanoSeconds),
+  static isHumanRealTimestampFormat(timestampHuman: string): boolean {
+    return (
+      TimestampUtils.isISOFormat(timestampHuman) ||
+      TimestampUtils.isRealDateTimeFormat(timestampHuman) ||
+      TimestampUtils.isRealTimeOnlyFormat(timestampHuman)
     );
   }
 
-  static min(ts1: Timestamp, ts2: Timestamp): Timestamp {
-    if (ts1.getType() !== ts2.getType()) {
-      throw new Error("Can't compare timestamps of different types");
+  static extractDateFromHumanTimestamp(
+    timestampHuman: string,
+  ): string | undefined {
+    if (
+      !TimestampUtils.isRealDateTimeFormat(timestampHuman) &&
+      !TimestampUtils.isISOFormat(timestampHuman)
+    ) {
+      return undefined;
     }
+    return timestampHuman.slice(0, 10);
+  }
+
+  static extractTimeFromHumanTimestamp(
+    timestampHuman: string,
+  ): string | undefined {
+    if (TimestampUtils.isRealDateTimeFormat(timestampHuman)) {
+      return timestampHuman.slice(12);
+    }
+    if (TimestampUtils.isISOFormat(timestampHuman)) {
+      return timestampHuman.slice(11);
+    }
+    if (TimestampUtils.isRealTimeOnlyFormat(timestampHuman)) {
+      return timestampHuman;
+    }
+    return undefined;
+  }
+
+  static compareFn(a: Timestamp, b: Timestamp): number {
+    return Number(a.getValueNs() - b.getValueNs());
+  }
+
+  static min(ts1: Timestamp, ts2: Timestamp): Timestamp {
     if (ts2.getValueNs() < ts1.getValueNs()) {
       return ts2;
     }
@@ -133,9 +97,6 @@ export class TimestampUtils {
   }
 
   static max(ts1: Timestamp, ts2: Timestamp): Timestamp {
-    if (ts1.getType() !== ts2.getType()) {
-      throw new Error("Can't compare timestamps of different types");
-    }
     if (ts2.getValueNs() > ts1.getValueNs()) {
       return ts2;
     }
@@ -143,16 +104,9 @@ export class TimestampUtils {
     return ts1;
   }
 
-  private static nanosecondsToHumanElapsed(
-    timestampNanos: number | bigint,
-    hideNs = true,
-  ): string {
-    timestampNanos = BigInt(timestampNanos);
-    const units = TimestampUtils.units;
-
+  static formatElapsedNs(timestampNanos: bigint, hideNs = false): string {
     let leftNanos = timestampNanos;
-    const parts: Array<{value: bigint; unit: string}> = units
-      .slice()
+    const parts: Array<{value: bigint; unit: string}> = TIME_UNITS.slice()
       .reverse()
       .map(({nanosInUnit, unit}) => {
         let amountOfUnit = BigInt(0);
@@ -173,23 +127,5 @@ export class TimestampUtils {
     }
 
     return parts.map((part) => `${part.value}${part.unit}`).join('');
-  }
-
-  private static nanosecondsToHumanReal(
-    timestampNanos: number | bigint,
-    hideNs = true,
-  ): string {
-    timestampNanos = BigInt(timestampNanos);
-    const ms = timestampNanos / 1000000n;
-    const extraNanos = timestampNanos % 1000000n;
-    const formattedTimestamp = new Date(Number(ms))
-      .toISOString()
-      .replace('Z', '');
-
-    if (hideNs) {
-      return formattedTimestamp;
-    } else {
-      return `${formattedTimestamp}${extraNanos.toString().padStart(6, '0')}`;
-    }
   }
 }

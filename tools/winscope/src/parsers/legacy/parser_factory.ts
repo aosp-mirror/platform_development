@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UnsupportedFileFormat} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {UnsupportedFileFormat} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
 import {ParserInputMethodClients} from 'parsers/input_method/legacy/parser_input_method_clients';
@@ -58,9 +57,9 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener,
+    notificationListener?: UserNotificationsListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
@@ -74,9 +73,10 @@ export class ParserFactory {
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const p = new ParserType(traceFile, timestampFactory);
+          const p = new ParserType(traceFile, timestampConverter);
           await p.parse();
           hasFoundParser = true;
+
           if (p instanceof ParserViewCapture) {
             p.getWindowParsers().forEach((subParser) =>
               parsers.push(new FileAndParser(traceFile, subParser)),
@@ -91,9 +91,9 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        errorListener?.onError(
+        notificationListener?.onNotifications([
           new UnsupportedFileFormat(traceFile.getDescriptor()),
-        );
+        ]);
       }
     }
     return parsers;

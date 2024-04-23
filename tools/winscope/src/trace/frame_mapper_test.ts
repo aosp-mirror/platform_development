@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesUtils} from 'test/unit/traces_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {CustomQueryType} from './custom_query';
@@ -28,16 +28,16 @@ import {HierarchyTreeNode} from './tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from './tree_node/property_tree_node';
 
 describe('FrameMapper', () => {
-  const time0 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-  const time1 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1n);
-  const time2 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(2n);
-  const time3 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(3n);
-  const time4 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(4n);
-  const time5 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(5n);
-  const time6 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(6n);
-  const time7 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(7n);
-  const time8 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(8n);
-  const time10seconds = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(
+  const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
+  const time1 = TimestampConverterUtils.makeRealTimestamp(1n);
+  const time2 = TimestampConverterUtils.makeRealTimestamp(2n);
+  const time3 = TimestampConverterUtils.makeRealTimestamp(3n);
+  const time4 = TimestampConverterUtils.makeRealTimestamp(4n);
+  const time5 = TimestampConverterUtils.makeRealTimestamp(5n);
+  const time6 = TimestampConverterUtils.makeRealTimestamp(6n);
+  const time7 = TimestampConverterUtils.makeRealTimestamp(7n);
+  const time8 = TimestampConverterUtils.makeRealTimestamp(8n);
+  const time10seconds = TimestampConverterUtils.makeRealTimestamp(
     10n * 1000000000n,
   );
 

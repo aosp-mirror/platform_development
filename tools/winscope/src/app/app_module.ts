@@ -19,7 +19,7 @@ import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA, ErrorHandler, NgModule} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -85,6 +85,7 @@ import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
 import {UploadTracesComponent} from './components/upload_traces_component';
 import {WebAdbComponent} from './components/web_adb_component';
+import {GlobalErrorHandler} from './global_error_handler';
 
 @NgModule({
   declarations: [
@@ -161,7 +162,7 @@ import {WebAdbComponent} from './components/web_adb_component';
     ClipboardModule,
     ReactiveFormsModule,
   ],
-  providers: [Title],
+  providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],
 })

@@ -54,9 +54,5 @@ export class MessageTimestamp implements Message {
 export class MessageFiles implements Message {
   type = MessageType.FILES;
 
-  constructor(
-    public files: File[],
-    public timestampNs?: bigint,
-    public issueId?: string,
-  ) {}
+  constructor(public files: File[], public timestampNs?: bigint) {}
 }

@@ -26,7 +26,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -52,14 +52,23 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
   @Input() trace: Trace<{}> | undefined;
   @Input() selectedEntry: TraceEntry<{}> | undefined;
   @Input() selectionRange: TimeRange | undefined;
+  @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
-  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
-  @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;
+  @ViewChild('canvas', {static: false}) override canvasRef:
+    | ElementRef
+    | undefined;
+  @ViewChild('wrapper', {static: false}) override wrapperRef:
+    | ElementRef
+    | undefined;
 
   hoveringEntry?: Timestamp;
-  hoveringSegment?: TimeRange;
+
+  ngOnInit() {
+    assertDefined(this.trace);
+    assertDefined(this.selectionRange);
+  }
 
   getEntryWidth() {
     return this.canvasDrawer.getScaledCanvasHeight();
@@ -71,26 +80,19 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     );
   }
 
-  ngOnInit() {
-    if (!this.trace || !this.selectionRange) {
-      throw Error('Not all required inputs have been set');
-    }
-  }
-
   override onHover(mousePoint: Point) {
     this.drawEntryHover(mousePoint);
   }
 
   override handleMouseOut(e: MouseEvent) {
-    if (this.hoveringEntry || this.hoveringSegment) {
+    if (this.hoveringEntry) {
       // If undefined there is no current hover effect so no need to clear
       this.redraw();
     }
     this.hoveringEntry = undefined;
-    this.hoveringSegment = undefined;
   }
 
-  override async drawTimeline() {
+  override drawTimeline() {
     assertDefined(this.trace)
       .sliceTime(
         assertDefined(this.selectionRange).from,
@@ -102,9 +104,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     this.drawSelectedEntry();
   }
 
-  protected override async getEntryAt(
-    mousePoint: Point,
-  ): Promise<TraceEntry<{}> | undefined> {
+  protected override getEntryAt(mousePoint: Point): TraceEntry<{}> | undefined {
     const timestampOfClick = this.getTimestampOf(mousePoint.x);
     const candidateEntry = assertDefined(this.trace).findLastLowerOrEqualEntry(
       timestampOfClick,
@@ -121,10 +121,8 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     return undefined;
   }
 
-  private async drawEntryHover(mousePoint: Point) {
-    const currentHoverEntry = (
-      await this.getEntryAt(mousePoint)
-    )?.getTimestamp();
+  private drawEntryHover(mousePoint: Point) {
+    const currentHoverEntry = this.getEntryAt(mousePoint)?.getTimestamp();
 
     if (this.hoveringEntry === currentHoverEntry) {
       return;
@@ -132,8 +130,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
 
     if (this.hoveringEntry) {
       // If null there is no current hover effect so no need to clear
-      this.canvasDrawer.clear();
-      this.drawTimeline();
+      this.redraw();
     }
 
     this.hoveringEntry = currentHoverEntry;
@@ -176,11 +173,7 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
       (BigInt(Math.floor(x)) * (end - start)) /
         BigInt(this.getAvailableWidth()) +
       start;
-    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      assertDefined(this.selectionRange).from.getType(),
-      ts,
-      0n,
-    );
+    return assertDefined(this.timestampConverter).makeTimestampFromNs(ts);
   }
 
   private drawEntry(entry: Timestamp) {

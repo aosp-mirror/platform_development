@@ -37,10 +37,12 @@ import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
+import {Analytics} from 'logging/analytics';
 import {
   AppFilesCollected,
   AppFilesUploaded,
   AppInitialized,
+  AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
   WinscopeEvent,
@@ -140,6 +142,15 @@ import {UploadTracesComponent} from './upload_traces_component';
 
         <div *ngIf="showDataLoadedElements" class="icon-divider"></div>
         <button
+          *ngIf="showDataLoadedElements && dumpsUploaded()"
+          color="primary"
+          mat-icon-button
+          matTooltip="Refresh dumps"
+          class="refresh-dumps"
+          (click)="onRefreshDumpsButtonClick()">
+          <mat-icon class="material-symbols-outlined">refresh</mat-icon>
+        </button>
+        <button
           *ngIf="showDataLoadedElements"
           color="primary"
           mat-icon-button
@@ -196,6 +207,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           [timelineData]="timelineData"
           [activeViewTraceTypes]="activeView?.dependencies"
           [availableTraces]="getLoadedTraceTypes()"
+          [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
       </mat-drawer>
     </mat-drawer-container>
@@ -356,7 +368,7 @@ export class AppComponent implements WinscopeEventListener {
   @ViewChild(UploadTracesComponent)
   uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(CollectTracesComponent)
-  collectTracesComponent?: UploadTracesComponent;
+  collectTracesComponent?: CollectTracesComponent;
   @ViewChild(TraceViewComponent) traceViewComponent?: TraceViewComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
@@ -469,6 +481,10 @@ export class AppComponent implements WinscopeEventListener {
       },
       this.traceConfigStorage,
     );
+
+    window.onunhandledrejection = (evt) => {
+      Analytics.Error.logGlobalException(evt.reason);
+    };
   }
 
   async ngAfterViewInit() {
@@ -522,6 +538,10 @@ export class AppComponent implements WinscopeEventListener {
 
   async onFilesUploaded(files: File[]) {
     await this.mediator.onWinscopeEvent(new AppFilesUploaded(files));
+  }
+
+  async onRefreshDumpsButtonClick() {
+    await this.mediator.onWinscopeEvent(new AppRefreshDumpsRequest());
   }
 
   async onUploadNewButtonClick() {
@@ -598,6 +618,10 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     return `${trace.getDescriptors().join(', ')}`;
+  }
+
+  dumpsUploaded() {
+    return !this.timelineData.hasMoreThanOneDistinctTimestamp();
   }
 
   private getActiveTrace(view: View): Trace<object> | undefined {

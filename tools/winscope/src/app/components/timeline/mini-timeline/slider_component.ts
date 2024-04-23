@@ -30,7 +30,7 @@ import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {TimeRange, Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 
@@ -123,6 +123,7 @@ export class SliderComponent {
   @Input() fullRange: TimeRange | undefined;
   @Input() zoomRange: TimeRange | undefined;
   @Input() currentPosition: TracePosition | undefined;
+  @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onZoomChanged = new EventEmitter<TimeRange>();
 
@@ -151,8 +152,8 @@ export class SliderComponent {
 
   syncDragPositionTo(zoomRange: TimeRange) {
     this.sliderWidth = this.computeSliderWidth();
-    const middleOfZoomRange = zoomRange.from.plus(
-      zoomRange.to.minus(zoomRange.from).div(2n),
+    const middleOfZoomRange = zoomRange.from.add(
+      zoomRange.to.minus(zoomRange.from.getValueNs()).div(2n).getValueNs(),
     );
 
     this.dragPosition = {
@@ -172,7 +173,11 @@ export class SliderComponent {
     const width = this.viewInitialized
       ? this.sliderBox.nativeElement.offsetWidth
       : 0;
-    return new Transformer(assertDefined(this.fullRange), {from: 0, to: width});
+    return new Transformer(
+      assertDefined(this.fullRange),
+      {from: 0, to: width},
+      assertDefined(this.timestampConverter),
+    );
   }
 
   ngAfterViewInit(): void {
@@ -230,14 +235,14 @@ export class SliderComponent {
     // Calculation to adjust for min width slider
     const from = this.getTransformer()
       .untransform(newX + this.sliderWidth / 2)
-      .minus(zoomRange.to.minus(zoomRange.from).div(2n));
+      .minus(
+        zoomRange.to.minus(zoomRange.from.getValueNs()).div(2n).getValueNs(),
+      );
 
-    const to = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      assertDefined(this.zoomRange).to.getType(),
+    const to = assertDefined(this.timestampConverter).makeTimestampFromNs(
       from.getValueNs() +
         (assertDefined(this.zoomRange).to.getValueNs() -
           assertDefined(this.zoomRange).from.getValueNs()),
-      0n,
     );
 
     this.onZoomChanged.emit({from, to});

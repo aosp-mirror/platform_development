@@ -15,12 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {com} from 'protos/viewcapture/latest/static';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -81,16 +82,16 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     SetRootTransformProperties: new SetRootTransformProperties(),
   };
 
-  private timestamps = new Map<TimestampType, Timestamp[]>();
+  private timestamps: Timestamp[] | undefined;
 
   constructor(
     private readonly descriptors: string[],
     private readonly frameData: com.android.app.viewcapture.data.IFrameData[],
     private readonly traceType: TraceType,
-    private readonly realToElapsedTimeOffsetNs: bigint,
+    private readonly realToBootTimeOffsetNs: bigint,
     private readonly packageName: string,
     private readonly classNames: string[],
-    private readonly timestampFactory: TimestampFactory,
+    private readonly timestampConverter: ParserTimestampConverter,
   ) {
     /*
       TODO: Enable this once multiple ViewCapture Tabs becomes generic. Right now it doesn't matter since
@@ -100,26 +101,41 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
         windowData.title
       )}`;
       */
-    this.parse();
   }
 
   parse() {
-    this.timestamps = this.decodeTimestamps();
+    throw new Error('Not implemented');
   }
 
   getTraceType(): TraceType {
     return this.traceType;
   }
 
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
+  }
+
   getLengthEntries(): number {
     return this.frameData.length;
   }
 
-  getTimestamps(type: TimestampType): Timestamp[] | undefined {
-    return this.timestamps.get(type);
+  getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
   }
 
-  getEntry(index: number, _: TimestampType): Promise<HierarchyTreeNode> {
+  getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.realToBootTimeOffsetNs;
+  }
+
+  createTimestamps() {
+    this.timestamps = this.decodeTimestamps();
+  }
+
+  getTimestamps(): Timestamp[] | undefined {
+    return this.timestamps;
+  }
+
+  getEntry(index: number): Promise<HierarchyTreeNode> {
     const tree = this.makeHierarchyTree(this.frameData[index]);
     return Promise.resolve(tree);
   }
@@ -139,35 +155,12 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     return this.descriptors;
   }
 
-  private decodeTimestamps(): Map<TimestampType, Timestamp[]> {
-    const timestampMap = new Map<TimestampType, Timestamp[]>();
-    for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
-      const timestamps: Timestamp[] = [];
-      let areTimestampsValid = true;
-
-      for (const entry of this.frameData) {
-        const timestampNs = BigInt(assertDefined(entry.timestamp).toString());
-
-        let timestamp: Timestamp | undefined;
-        if (this.timestampFactory.canMakeTimestampFromType(type, 0n)) {
-          timestamp = this.timestampFactory.makeTimestampFromType(
-            type,
-            timestampNs,
-            this.realToElapsedTimeOffsetNs,
-          );
-        }
-        if (timestamp === undefined) {
-          areTimestampsValid = false;
-          break;
-        }
-        timestamps.push(timestamp);
-      }
-
-      if (areTimestampsValid) {
-        timestampMap.set(type, timestamps);
-      }
-    }
-    return timestampMap;
+  private decodeTimestamps(): Timestamp[] {
+    return this.frameData.map((entry) =>
+      this.timestampConverter.makeTimestampFromBootTimeNs(
+        BigInt(assertDefined(entry.timestamp).toString()),
+      ),
+    );
   }
 
   private makeHierarchyTree(

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {TracesParserCujs} from 'parsers/events/traces_parser_cujs';
 import {TracesParserTransitions} from 'parsers/transitions/legacy/traces_parser_transitions';
 import {Parser} from 'trace/parser';
@@ -22,12 +23,15 @@ import {Traces} from 'trace/traces';
 export class TracesParserFactory {
   static readonly PARSERS = [TracesParserCujs, TracesParserTransitions];
 
-  async createParsers(traces: Traces): Promise<Array<Parser<object>>> {
+  async createParsers(
+    traces: Traces,
+    timestampConverter: ParserTimestampConverter,
+  ): Promise<Array<Parser<object>>> {
     const parsers: Array<Parser<object>> = [];
 
     for (const ParserType of TracesParserFactory.PARSERS) {
       try {
-        const parser = new ParserType(traces);
+        const parser = new ParserType(traces, timestampConverter);
         await parser.parse();
         parsers.push(parser);
       } catch (error) {

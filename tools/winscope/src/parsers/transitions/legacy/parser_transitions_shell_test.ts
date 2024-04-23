@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -36,55 +36,20 @@ describe('ShellFileParserTransitions', () => {
     expect(parser.getTraceType()).toEqual(TraceType.SHELL_TRANSITION);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
-    const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57649649922341n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57651299086892n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n),
-    ];
-    expect(timestamps).toEqual(expected);
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
   });
 
-  it('provides real timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+  it('provides timestamps', () => {
+    const timestamps = assertDefined(parser.getTimestamps());
     const expected = [
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683188477607285317n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827957362976n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827957362976n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683188479256449868n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827957362976n),
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683130827957362976n),
+      TimestampConverterUtils.makeRealTimestamp(1683188477607285317n),
+      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
+      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
+      TimestampConverterUtils.makeRealTimestamp(1683188479256449868n),
+      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
+      TimestampConverterUtils.makeRealTimestamp(1683130827957362976n),
     ];
     expect(timestamps).toEqual(expected);
-  });
-
-  it('applies timezone info to real timestamps only', async () => {
-    const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
-      true,
-    )) as Parser<PropertyTreeNode>;
-    expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-      TraceType.SHELL_TRANSITION,
-    );
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-      )[0],
-    ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(57649649922341n));
-
-    expect(
-      assertDefined(
-        parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-      )[0],
-    ).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1683208277607285317n),
-    );
   });
 });

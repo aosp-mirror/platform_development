@@ -15,11 +15,11 @@
  */
 
 import {globalConfig} from 'common/global_config';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
-import {InvalidPerfettoTrace} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {InvalidPerfettoTrace} from 'messaging/user_warnings';
 import {ParserProtolog} from 'parsers/protolog/perfetto/parser_protolog';
 import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
 import {ParserTransactions} from 'parsers/transactions/perfetto/parser_transactions';
@@ -44,9 +44,9 @@ export class ParserFactory {
 
   async createParsers(
     traceFile: TraceFile,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener,
+    notificationListener?: UserNotificationsListener,
   ): Promise<Array<Parser<object>>> {
     const traceProcessor = await this.initializeTraceProcessor();
     for (
@@ -85,7 +85,7 @@ export class ParserFactory {
         const parser = new ParserType(
           traceFile,
           traceProcessor,
-          timestampFactory,
+          timestampConverter,
         );
         await parser.parse();
         parsers.push(parser);
@@ -97,9 +97,9 @@ export class ParserFactory {
     }
 
     if (!hasFoundParser) {
-      errorListener?.onError(
+      notificationListener?.onNotifications([
         new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
-      );
+      ]);
     }
 
     return parsers;

@@ -15,9 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -39,7 +38,7 @@ describe('PresenterTransitions', () => {
 
     await presenter.onAppEvent(
       TracePositionUpdate.fromTimestamp(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
       ),
     );
     expect(outputUiData).toEqual(UiData.EMPTY);
@@ -53,7 +52,6 @@ describe('PresenterTransitions', () => {
 
     const trace = new TraceBuilder<PropertyTreeNode>()
       .setParser(parser)
-      .setTimestampType(TimestampType.REAL)
       .build();
 
     const traces = new Traces();
@@ -74,7 +72,7 @@ describe('PresenterTransitions', () => {
     expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21T13:38:23.083364560',
+      '2023-11-21, 13:30:25.428925648',
     );
   });
 });

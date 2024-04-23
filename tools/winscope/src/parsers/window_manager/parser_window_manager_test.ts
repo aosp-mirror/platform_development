@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -25,7 +25,7 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 
 describe('ParserWindowManager', () => {
-  describe('trace with elapsed + real timestamp', () => {
+  describe('trace with real timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
     let trace: Trace<HierarchyTreeNode>;
 
@@ -44,53 +44,23 @@ describe('ParserWindowManager', () => {
       expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
     });
 
-    it('provides elapsed timestamps', () => {
-      const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14474594000n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15398076788n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(15409222011n),
-      ];
-      expect(
-        assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).slice(0, 3),
-      ).toEqual(expected);
+    it('has expected coarse version', () => {
+      expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LEGACY);
     });
 
-    it('provides real timestamps', () => {
+    it('provides timestamps', () => {
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089075566202n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107089999048990n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659107090010194213n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089075566202n),
+        TimestampConverterUtils.makeRealTimestamp(1659107089999048990n),
+        TimestampConverterUtils.makeRealTimestamp(1659107090010194213n),
       ];
-      expect(
-        assertDefined(parser.getTimestamps(TimestampType.REAL)).slice(0, 3),
-      ).toEqual(expected);
-    });
-
-    it('applies timezone info to real timestamps only', async () => {
-      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-        'traces/elapsed_and_real_timestamp/WindowManager.pb',
-        true,
-      )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.WINDOW_MANAGER,
-      );
-
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-        )[0],
-      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(14474594000n));
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.REAL),
-        )[0],
-      ).toEqual(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(1659126889075566202n),
+      expect(assertDefined(parser.getTimestamps()).slice(0, 3)).toEqual(
+        expected,
       );
     });
 
     it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(1, TimestampType.REAL);
+      const entry = await parser.getEntry(1);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
       expect(entry.id).toEqual('WindowManagerState root');
     });
@@ -104,7 +74,7 @@ describe('ParserWindowManager', () => {
     });
   });
 
-  describe('trace elapsed (only) timestamp', () => {
+  describe('trace with only elapsed timestamps', () => {
     let parser: Parser<HierarchyTreeNode>;
 
     beforeAll(async () => {
@@ -119,31 +89,15 @@ describe('ParserWindowManager', () => {
 
     it('provides timestamps', () => {
       const expected = [
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850254319343n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850763506110n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850782750048n),
+        TimestampConverterUtils.makeElapsedTimestamp(850254319343n),
+        TimestampConverterUtils.makeElapsedTimestamp(850763506110n),
+        TimestampConverterUtils.makeElapsedTimestamp(850782750048n),
       ];
-      expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
-    });
-
-    it('does not apply timezone info', async () => {
-      const parserWithTimezoneInfo = (await UnitTestUtils.getParser(
-        'traces/elapsed_timestamp/WindowManager.pb',
-        true,
-      )) as Parser<HierarchyTreeNode>;
-      expect(parserWithTimezoneInfo.getTraceType()).toEqual(
-        TraceType.WINDOW_MANAGER,
-      );
-
-      expect(
-        assertDefined(
-          parserWithTimezoneInfo.getTimestamps(TimestampType.ELAPSED),
-        )[0],
-      ).toEqual(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(850254319343n));
+      expect(parser.getTimestamps()).toEqual(expected);
     });
 
     it('retrieves trace entry', async () => {
-      const entry = await parser.getEntry(1, TimestampType.ELAPSED);
+      const entry = await parser.getEntry(1);
       expect(entry).toBeInstanceOf(HierarchyTreeNode);
       expect(entry.id).toEqual('WindowManagerState root');
     });

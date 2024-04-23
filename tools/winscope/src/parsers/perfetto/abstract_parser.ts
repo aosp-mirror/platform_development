@@ -15,8 +15,9 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -30,72 +31,61 @@ import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export abstract class AbstractParser<T> implements Parser<T> {
   protected traceProcessor: WasmEngineProxy;
-  protected realToElapsedTimeOffsetNs?: bigint;
-  protected timestampFactory: TimestampFactory;
-  private timestamps = new Map<TimestampType, Timestamp[]>();
+  protected realToBootTimeOffsetNs?: bigint;
+  protected timestampConverter: ParserTimestampConverter;
+  private timestamps: Timestamp[] | undefined;
   private lengthEntries = 0;
   private traceFile: TraceFile;
+  private bootTimeTimestampsNs: Array<bigint> = [];
 
   constructor(
     traceFile: TraceFile,
     traceProcessor: WasmEngineProxy,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
   ) {
     this.traceFile = traceFile;
     this.traceProcessor = traceProcessor;
-    this.timestampFactory = timestampFactory;
+    this.timestampConverter = timestampConverter;
   }
 
   async parse() {
-    const elapsedTimestamps = await this.queryElapsedTimestamps();
-    this.lengthEntries = elapsedTimestamps.length;
+    this.bootTimeTimestampsNs = await this.queryBootTimeTimestamps();
+    this.lengthEntries = this.bootTimeTimestampsNs.length;
     assertTrue(
       this.lengthEntries > 0,
       () =>
         `Trace processor tables don't contain entries of type ${this.getTraceType()}`,
     );
 
-    this.realToElapsedTimeOffsetNs = await this.queryRealToElapsedTimeOffset(
-      assertDefined(elapsedTimestamps.at(-1)),
-    );
-
-    this.timestamps.set(
-      TimestampType.ELAPSED,
-      elapsedTimestamps.map((value) =>
-        this.timestampFactory.makeElapsedTimestamp(value),
-      ),
-    );
-
-    this.timestamps.set(
-      TimestampType.REAL,
-      elapsedTimestamps.map((value) =>
-        this.timestampFactory.makeRealTimestamp(
-          value,
-          assertDefined(this.realToElapsedTimeOffsetNs),
-        ),
-      ),
-    );
-
-    if (this.lengthEntries > 0) {
-      // Make sure there are trace entries that can be parsed
-      await this.getEntry(0, TimestampType.ELAPSED);
+    let lastNonZeroTimestamp: bigint | undefined;
+    for (let i = this.bootTimeTimestampsNs.length - 1; i >= 0; i--) {
+      if (this.bootTimeTimestampsNs[i] !== 0n) {
+        lastNonZeroTimestamp = this.bootTimeTimestampsNs[i];
+        break;
+      }
     }
+    this.realToBootTimeOffsetNs = await this.queryRealToBootTimeOffset(
+      assertDefined(lastNonZeroTimestamp),
+    );
   }
 
-  abstract getTraceType(): TraceType;
+  createTimestamps() {
+    this.timestamps = this.bootTimeTimestampsNs.map((ns) => {
+      return this.timestampConverter.makeTimestampFromBootTimeNs(ns);
+    });
+  }
 
   getLengthEntries(): number {
     return this.lengthEntries;
   }
 
-  getTimestamps(type: TimestampType): Timestamp[] | undefined {
-    return this.timestamps.get(type);
+  getTimestamps(): Timestamp[] | undefined {
+    return this.timestamps;
   }
 
-  abstract getEntry(
-    index: AbsoluteEntryIndex,
-    timestampType: TimestampType,
-  ): Promise<T>;
+  getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LATEST;
+  }
 
   customQuery<Q extends CustomQueryType>(
     type: Q,
@@ -109,9 +99,15 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return [this.traceFile.getDescriptor()];
   }
 
-  protected abstract getTableName(): string;
+  getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
 
-  private async queryElapsedTimestamps(): Promise<Array<bigint>> {
+  getRealToBootTimeOffsetNs(): bigint | undefined {
+    return this.realToBootTimeOffsetNs;
+  }
+
+  private async queryBootTimeTimestamps(): Promise<Array<bigint>> {
     const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
     const result = await this.traceProcessor.query(sql).waitAllRows();
     const timestamps: Array<bigint> = [];
@@ -121,15 +117,15 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return timestamps;
   }
 
-  // Query the real-to-elapsed time offset at the specified time
+  // Query the real-to-boot time offset at the specified time
   // (timestamp parameter).
-  // The timestamp parameter must be a timestamp queried/provided by TP,
+  // The timestamp parameter must be a non-zero timestamp queried/provided by TP,
   // otherwise the TO_REALTIME() SQL function might return invalid values.
-  private async queryRealToElapsedTimeOffset(
-    elapsedTimestamp: bigint,
+  private async queryRealToBootTimeOffset(
+    bootTimeNs: bigint,
   ): Promise<bigint> {
     const sql = `
-      SELECT TO_REALTIME(${elapsedTimestamp}) as realtime;
+      SELECT TO_REALTIME(${bootTimeNs}) as realtime;
     `;
 
     const result = await this.traceProcessor.query(sql).waitAllRows();
@@ -139,6 +135,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
     );
 
     const real = result.iter({}).get('realtime') as bigint;
-    return real - elapsedTimestamp;
+    return real - bootTimeNs;
   }
+
+  protected abstract getTableName(): string;
+  abstract getEntry(index: AbsoluteEntryIndex): Promise<T>;
+  abstract getTraceType(): TraceType;
 }

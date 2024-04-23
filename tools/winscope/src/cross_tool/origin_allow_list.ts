@@ -20,6 +20,7 @@ export class OriginAllowList {
   private static readonly ALLOW_LIST_PROD = [
     new RegExp('^https://([^\\/]*\\.)*googleplex\\.com$'),
     new RegExp('^https://([^\\/]*\\.)*google\\.com$'),
+    new RegExp('^https://([^\\/]*\\.)*perfetto\\.dev$'),
   ];
 
   private static readonly ALLOW_LIST_DEV = [

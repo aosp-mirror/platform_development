@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-import {WinscopeError} from './winscope_error';
-import {WinscopeErrorListener} from './winscope_error_listener';
+import {TimestampUtils} from './timestamp_utils';
 
-export class WinscopeErrorListenerStub implements WinscopeErrorListener {
-  onError(error: WinscopeError) {
-    // do nothing
+export class TimeDuration {
+  constructor(private timeDiffNs: bigint) {}
+  getValueNs(): bigint {
+    return this.timeDiffNs;
+  }
+
+  format(hideNs = false): string {
+    return TimestampUtils.formatElapsedNs(this.timeDiffNs, hideNs);
   }
 }

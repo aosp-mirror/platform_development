@@ -27,7 +27,11 @@ import {MatSelectChange} from '@angular/material/select';
   template: `
     <mat-form-field appearance="fill" [style]="getOuterFormFieldStyle()">
       <mat-label>{{ label }}</mat-label>
-      <mat-select (opened)="filter.focus()" (selectionChange)="onSelectChange($event)" multiple>
+      <mat-select
+        (opened)="filter.focus()"
+        (closed)="onSelectClosed()"
+        (selectionChange)="onSelectChange($event)"
+        multiple>
         <mat-form-field class="select-filter" [style]="getInnerFormFieldStyle()">
           <mat-label>Filter options</mat-label>
           <input matInput #filter [(ngModel)]="filterString" (input)="onOptionsFilterChange()" />
@@ -40,12 +44,6 @@ import {MatSelectChange} from '@angular/material/select';
   `,
   styles: [
     `
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
-
       mat-form-field {
         width: 100%;
         font-size: 12px;
@@ -100,5 +98,10 @@ export class SelectWithFilterComponent {
       paddingRight: '20px',
       width: this.innerFilterWidth + 'px',
     };
+  }
+
+  onSelectClosed() {
+    this.filterString = '';
+    this.filteredOptions = this.options;
   }
 }

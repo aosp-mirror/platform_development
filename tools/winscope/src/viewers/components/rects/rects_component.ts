@@ -26,10 +26,12 @@ import {
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {DisplayLayerStack} from 'trace/display_layer_stack';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
 import {Distance2D} from './types3d';
@@ -118,11 +120,16 @@ import {Distance2D} from './types3d';
         <mat-tab label="Displays">
           <div class="display-button-container display-name-buttons">
             <button
+              #tooltip="matTooltip"
               *ngFor="let display of internalDisplays"
               [color]="getDisplayButtonColor(display.groupId)"
+              [matTooltip]="display.name"
+              [matTooltipDisabled]="shouldDisableTooltip(displayButtonText)"
+              (mouseenter)="shouldDisableTooltip(displayButtonText) ? tooltip.disabled = true : tooltip.disabled = false"
+              (mouseleave)="tooltip.disabled = true"
               mat-raised-button
               (click)="onDisplayIdChange(display)">
-              {{ display.name }}
+              <span #displayButtonText> {{ display.name }} </span>
             </button>
           </div>
         </mat-tab>
@@ -130,8 +137,12 @@ import {Distance2D} from './types3d';
           <div class="display-button-container stack-buttons">
             <button
               *ngFor="let groupId of internalGroupIds"
+              #tooltip="matTooltip"
               [color]="getStackButtonColor(groupId)"
+              (mouseenter)="tooltip.disabled = false"
+              (mouseleave)="tooltip.disabled = true"
               [matTooltip]="getStackButtonTooltip(groupId)"
+              matTooltipClass="multline-tooltip"
               mat-raised-button
               (click)="onGroupIdChange(groupId)">
               {{ getStackButtonLabel(groupId) }}
@@ -205,7 +216,7 @@ import {Distance2D} from './types3d';
         pointer-events: none;
       }
       .grouping-tabs {
-        max-height: 120px;
+        max-height: 160px;
       }
       .display-button-container {
         display: flex;
@@ -213,7 +224,7 @@ import {Distance2D} from './types3d';
         flex-wrap: wrap;
         column-gap: 10px;
         padding-bottom: 5px;
-        max-height: 72px;
+        max-height: 108px;
         overflow-y: auto;
       }
       .display-button-container button {
@@ -221,6 +232,9 @@ import {Distance2D} from './types3d';
         line-height: normal;
         height: 28px;
         margin-top: 5px;
+        max-width: 200px;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
       }
       .mini-rects-canvas {
         cursor: pointer;
@@ -232,6 +246,7 @@ import {Distance2D} from './types3d';
         z-index: 1000;
       }
     `,
+    multlineTooltip,
   ],
 })
 export class RectsComponent implements OnInit, OnDestroy {
@@ -430,6 +445,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   resetCamera() {
+    Analytics.Navigation.logZoom('reset');
     this.mapper3d.resetCamera();
     this.drawLargeRectsAndLabels();
   }
@@ -438,8 +454,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   onScroll(event: WheelEvent) {
     if ((event.target as HTMLElement).className === 'large-rects-canvas') {
       if (event.deltaY > 0) {
+        Analytics.Navigation.logZoom('scroll', 'out');
         this.doZoomOut();
       } else {
+        Analytics.Navigation.logZoom('scroll', 'in');
         this.doZoomIn();
       }
     }
@@ -462,10 +480,12 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onZoomInClick() {
+    Analytics.Navigation.logZoom('button', 'in');
     this.doZoomIn();
   }
 
   onZoomOutClick() {
+    Analytics.Navigation.logZoom('button', 'out');
     this.doZoomOut();
   }
 
@@ -478,6 +498,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   onDisplayIdChange(display: DisplayIdentifier) {
     this.stackSelected = false;
     this.updateCurrentDisplay(display);
+  }
+
+  shouldDisableTooltip(buttonText: HTMLElement) {
+    return buttonText.offsetWidth < 200;
   }
 
   onGroupIdChange(groupId: number) {
@@ -505,10 +529,19 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   getStackButtonTooltip(groupId: number): string {
+    const displayNames = this.getDisplaysWithGroupId(groupId)
+      .map((display) => display.name)
+      .join(', ');
     if (groupId === DisplayLayerStack.INVALID_LAYER_STACK) {
-      return 'Invalid layer stack - associated displays off';
+      return `
+        Invalid layer stack - associated displays off.
+        Displays: ${displayNames}
+      `;
     }
-    return 'Associated displays on';
+    return `
+    Associated displays on.
+    Displays: ${displayNames}
+  `;
   }
 
   getStackButtonLabel(groupId: number): string {

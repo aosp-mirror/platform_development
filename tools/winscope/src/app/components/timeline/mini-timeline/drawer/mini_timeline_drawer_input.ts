@@ -37,7 +37,11 @@ export class MiniTimelineDrawerInput {
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
-    const transformer = new Transformer(this.zoomRange, mapToRange);
+    const transformer = new Transformer(
+      this.zoomRange,
+      mapToRange,
+      assertDefined(this.timelineData.getTimestampConverter()),
+    );
 
     return new MiniCanvasDrawerData(
       transformer.transform(this.selectedPosition),
@@ -65,66 +69,60 @@ export class MiniTimelineDrawerInput {
       }
     >();
 
-    await Promise.all(
-      this.traces.mapTrace(async (trace, type) => {
-        const activeEntry = this.timelineData.findCurrentEntryFor(
-          trace.type,
-        ) as TraceEntry<PropertyTreeNode>;
+    this.traces.forEachTrace((trace, type) => {
+      const activeEntry = this.timelineData.findCurrentEntryFor(
+        trace.type,
+      ) as TraceEntry<PropertyTreeNode>;
 
-        if (type === TraceType.TRANSITION) {
-          // Transition trace is a special case, with entries with time ranges
-          const transitionTrace = assertDefined(this.traces.getTrace(type));
-          transformedTraceSegments.set(trace.type, {
-            points: [],
-            activePoint: undefined,
-            segments: await this.transformTransitionTraceTimestamps(
-              transformer,
-              transitionTrace,
-            ),
-            activeSegment: activeEntry
-              ? await this.transformTransitionEntry(transformer, activeEntry)
-              : undefined,
-          });
-        } else {
-          transformedTraceSegments.set(trace.type, {
-            points: this.transformTraceTimestamps(transformer, trace),
-            activePoint: activeEntry
-              ? transformer.transform(activeEntry.getTimestamp())
-              : undefined,
-            segments: [],
-            activeSegment: undefined,
-          });
-        }
-      }),
-    );
+      if (type === TraceType.TRANSITION) {
+        // Transition trace is a special case, with entries with time ranges
+        const transitionTrace = assertDefined(this.traces.getTrace(type));
+        transformedTraceSegments.set(trace.type, {
+          points: [],
+          activePoint: undefined,
+          segments: this.transformTransitionTraceTimestamps(
+            transformer,
+            transitionTrace,
+          ),
+          activeSegment: activeEntry
+            ? this.transformTransitionEntry(transformer, activeEntry)
+            : undefined,
+        });
+      } else {
+        transformedTraceSegments.set(trace.type, {
+          points: this.transformTraceTimestamps(transformer, trace),
+          activePoint: activeEntry
+            ? transformer.transform(activeEntry.getTimestamp())
+            : undefined,
+          segments: [],
+          activeSegment: undefined,
+        });
+      }
+    });
 
     return transformedTraceSegments;
   }
 
-  private async transformTransitionTraceTimestamps(
+  private transformTransitionTraceTimestamps(
     transformer: Transformer,
     trace: Trace<PropertyTreeNode>,
-  ): Promise<Segment[]> {
-    const promises: Array<Promise<Segment | undefined>> = [];
-    trace.forEachEntry((entry) => {
-      promises.push(this.transformTransitionEntry(transformer, entry));
-    });
-
-    return (await Promise.all(promises)).filter(
-      (it) => it !== undefined,
-    ) as Segment[];
+  ): Segment[] {
+    return trace
+      .mapEntry((entry) => this.transformTransitionEntry(transformer, entry))
+      .filter((it) => it !== undefined) as Segment[];
   }
 
-  private async transformTransitionEntry(
+  private transformTransitionEntry(
     transformer: Transformer,
     entry: TraceEntry<PropertyTreeNode>,
-  ): Promise<Segment | undefined> {
-    const transition: PropertyTreeNode = await entry.getValue();
+  ): Segment | undefined {
+    const transition: PropertyTreeNode =
+      this.timelineData.getTransitions()[entry.getIndex()];
 
     const timeRange = TimelineUtils.getTimeRangeForTransition(
       transition,
-      entry.getTimestamp().getType(),
       this.selection,
+      assertDefined(this.timelineData.getTimestampConverter()),
     );
 
     if (!timeRange) {

@@ -1,3 +1,7 @@
+package {
+    default_team: "trendy_team_android_core_experiments",
+}
+
 java_library_host {
     name: "ContentLibsHost",
     srcs: [

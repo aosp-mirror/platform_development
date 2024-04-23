@@ -107,7 +107,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     );
     expect(
       assertDefined(imeManagerService.querySelector('.wm-state')).textContent,
-    ).toContain('1970-01-01T00:00:00.000000000');
+    ).toContain('1970-01-01, 00:00:00.000000000');
     expect(
       imeManagerService.querySelector('.ime-control-target-button'),
     ).toBeDefined();
@@ -143,7 +143,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
         id: 'wmStateId',
         name: 'wmState',
         wmStateProperties: {
-          timestamp: '1970-01-01T00:00:00.000000000',
+          timestamp: '1970-01-01, 00:00:00.000000000',
           focusedApp: 'exampleFocusedApp',
           focusedWindow: undefined,
           focusedActivity: undefined,

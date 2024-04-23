@@ -46,6 +46,7 @@ import android.content.IntentSender.SendIntentException;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.display.DisplayManager;
+import android.media.AudioManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -90,6 +91,8 @@ public final class VdmService extends Hilt_VdmService {
 
     public static final String ACTION_LOCKDOWN =
             "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
+    private int mRecordingAudioSessionId;
+    private int mPlaybackAudioSessionId;
 
     /** Provides an instance of this service to bound clients. */
     public class LocalBinder extends Binder {
@@ -289,11 +292,13 @@ public final class VdmService extends Hilt_VdmService {
 
     private void handleAudioCapabilities() {
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
-            if (mDeviceCapabilities.getSupportsAudioOutput()) {
-                mAudioStreamer.start();
-            }
-            if (mDeviceCapabilities.getSupportsAudioInput()) {
-                mAudioInjector.start();
+            if (mVirtualDevice != null) {
+                if (mDeviceCapabilities.getSupportsAudioOutput()) {
+                    mAudioStreamer.start(mVirtualDevice.getDeviceId(), mPlaybackAudioSessionId);
+                }
+                if (mDeviceCapabilities.getSupportsAudioInput()) {
+                    mAudioInjector.start(mVirtualDevice.getDeviceId(), mRecordingAudioSessionId);
+                }
             }
         } else {
             mAudioStreamer.stop();
@@ -364,10 +369,17 @@ public final class VdmService extends Hilt_VdmService {
     private void createVirtualDevice(AssociationInfo associationInfo) {
         VirtualDeviceParams.Builder virtualDeviceBuilder =
                 new VirtualDeviceParams.Builder()
-                        .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName())
-                        .setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
-                        .setAudioPlaybackSessionId(mAudioStreamer.getPlaybackSessionId())
-                        .setAudioRecordingSessionId(mAudioInjector.getRecordingSessionId());
+                        .setName("VirtualDevice - " + mDeviceCapabilities.getDeviceName());
+
+        AudioManager audioManager = getSystemService(AudioManager.class);
+        mPlaybackAudioSessionId = audioManager.generateAudioSessionId();
+        mRecordingAudioSessionId = audioManager.generateAudioSessionId();
+
+        if (mPreferenceController.getBoolean(R.string.pref_enable_client_audio)) {
+            virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_AUDIO, DEVICE_POLICY_CUSTOM)
+                    .setAudioPlaybackSessionId(mPlaybackAudioSessionId)
+                    .setAudioRecordingSessionId(mRecordingAudioSessionId);
+        }
 
         if (mPreferenceController.getBoolean(R.string.pref_always_unlocked_device)) {
             virtualDeviceBuilder.setLockState(LOCK_STATE_ALWAYS_UNLOCKED);
@@ -464,7 +476,8 @@ public final class VdmService extends Hilt_VdmService {
                 });
         mVirtualDevice.addActivityListener(
                 MoreExecutors.directExecutor(),
-                new RunningVdmUidsTracker(getApplicationContext(), mAudioStreamer, mAudioInjector));
+                new RunningVdmUidsTracker(getApplicationContext(), mPreferenceController,
+                        mAudioStreamer, mAudioInjector));
 
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_camera)) {
             if (mRemoteCameraManager != null) {
