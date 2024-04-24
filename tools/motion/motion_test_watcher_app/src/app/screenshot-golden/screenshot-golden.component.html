@@ -1,0 +1,30 @@
+<div class="wrapper">
+  <div class=".mat-app-background label">Screenshot Golden result</div>
+
+  <div class="toolbar">
+    <mat-button-toggle-group
+      [(ngModel)]="selectedImage"
+      aria-label="Favorite Color"
+    >
+      <mat-button-toggle value="actual">Actual</mat-button-toggle>
+
+      <mat-button-toggle value="diff" [disabled]="!golden.diffUrl"
+        >Diff</mat-button-toggle
+      >
+      <mat-button-toggle value="expected" [disabled]="!golden.expectedUrl"
+        >Expected</mat-button-toggle
+      >
+    </mat-button-toggle-group>
+
+    <button mat-icon-button (click)="updateGolden()">
+      <mat-icon>save</mat-icon>
+    </button>
+  </div>
+  <div>Repo file: {{ golden.goldenRepoPath }}</div>
+
+  @if (selectedImageUrl) {
+    <div class="screenshot-container">
+      <img class="screenshot" [src]="selectedImageUrl" />
+    </div>
+  }
+</div>
