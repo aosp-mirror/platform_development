@@ -40,7 +40,6 @@ describe('Perfetto ParserProtolog', () => {
 
     expect(timestamps.length).toEqual(3);
 
-    // TODO: They shouldn't all have the same timestamp...
     const expected = [
       TimestampConverterUtils.makeRealTimestamp(1713866817780323315n),
       TimestampConverterUtils.makeRealTimestamp(1713866817780323415n),
@@ -69,5 +68,24 @@ describe('Perfetto ParserProtolog', () => {
     expect(
       assertDefined(message.getChildByName('at')).formattedValue(),
     ).toEqual('<NO_LOC>');
+  });
+
+  it('messages are ordered by timestamp', async () => {
+    let prevEntryTs = 0n;
+    for (let i = 0; i < parser.getLengthEntries(); i++) {
+      const ts = (await parser.getEntry(i))
+        .getChildByName('timestamp')
+        ?.getValue();
+      expect(ts >= prevEntryTs).toBeTrue();
+      prevEntryTs = ts;
+    }
+  });
+
+  it('timestamps are ordered', () => {
+    let prevEntryTs = 0n;
+    for (const ts of assertDefined(parser.getTimestamps())) {
+      expect(ts.getValueNs() >= prevEntryTs).toBeTrue();
+      prevEntryTs = ts.getValueNs();
+    }
   });
 });
