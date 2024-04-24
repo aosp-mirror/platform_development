@@ -95,7 +95,23 @@ describe('TreeComponent', () => {
       new MouseEvent('click', {detail: 2}),
     );
     fixture.detectChanges();
-    expect(!currLocalExpandedState).toBe(
+    expect(!currLocalExpandedState).toEqual(
+      component.treeComponents.first.localExpandedState,
+    );
+  });
+
+  it('does not toggle tree in flat mode on double click', () => {
+    component.isFlattened = true;
+    fixture.detectChanges();
+    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
+
+    const currLocalExpandedState =
+      component.treeComponents.first.localExpandedState;
+    (treeNode as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', {detail: 2}),
+    );
+    fixture.detectChanges();
+    expect(currLocalExpandedState).toEqual(
       component.treeComponents.first.localExpandedState,
     );
   });
@@ -154,7 +170,7 @@ describe('TreeComponent', () => {
       <tree-view
         [node]="tree0"
         [store]="store"
-        [isFlattened]="false"
+        [isFlattened]="isFlattened"
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [itemsClickable]="true"></tree-view>
@@ -195,6 +211,7 @@ describe('TreeComponent', () => {
 
     store = new PersistentStore();
     highlightedItem = '';
+    isFlattened = false;
 
     constructor() {
       localStorage.clear();
