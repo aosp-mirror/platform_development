@@ -194,7 +194,7 @@ export class TreeComponent {
     }
 
     const isDoubleClick = event.detail % 2 === 0;
-    if (!this.isLeaf(this.node) && isDoubleClick) {
+    if (!this.isFlattened && !this.isLeaf(this.node) && isDoubleClick) {
       event.preventDefault();
       this.toggleTree();
     } else {
