@@ -121,9 +121,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
   // (timestamp parameter).
   // The timestamp parameter must be a non-zero timestamp queried/provided by TP,
   // otherwise the TO_REALTIME() SQL function might return invalid values.
-  private async queryRealToBootTimeOffset(
-    bootTimeNs: bigint,
-  ): Promise<bigint> {
+  private async queryRealToBootTimeOffset(bootTimeNs: bigint): Promise<bigint> {
     const sql = `
       SELECT TO_REALTIME(${bootTimeNs}) as realtime;
     `;
