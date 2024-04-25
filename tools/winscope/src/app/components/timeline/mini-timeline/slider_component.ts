@@ -60,7 +60,7 @@ import {Transformer} from './transformer';
     `
       #timeline-slider-box {
         position: relative;
-        margin: 5px 0;
+        margin-bottom: 5px;
       }
 
       #timeline-slider-box,
@@ -309,4 +309,4 @@ export class SliderComponent {
   }
 }
 
-export const MIN_SLIDER_WIDTH = 50;
+export const MIN_SLIDER_WIDTH = 30;
