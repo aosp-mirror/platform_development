@@ -23,9 +23,11 @@ import {
   QueryList,
   ViewChildren,
 } from '@angular/core';
+import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -39,8 +41,9 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
         *ngFor="let trace of getTracesSortedByDisplayOrder(); trackBy: trackTraceByType"
-        class="timeline row">
-        <div class="icon-wrapper">
+        class="timeline row"
+        [style.border-bottom]="'1px solid ' + getTimelineSidebarColor()">
+        <div class="icon-wrapper" [style.background-color]="getTimelineSidebarColor()">
           <mat-icon
             class="icon"
             [matTooltip]="TRACE_INFO[trace.type].name"
@@ -72,34 +75,10 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           class="single-timeline">
         </single-timeline>
 
-        <div class="icon-wrapper">
+        <div class="icon-wrapper" [style.background-color]="getTimelineSidebarColor()">
           <mat-icon class="icon placeholder-icon"></mat-icon>
         </div>
       </div>
-
-      <!-- A filler row matching the format and colors of filled rows but with no content -->
-      <div class="timeline units-row">
-        <div class="icon-wrapper">
-          <mat-icon class="icon placeholder-icon"></mat-icon>
-        </div>
-        <div class="single-timeline"></div>
-        <div class="icon-wrapper">
-          <mat-icon class="icon placeholder-icon"></mat-icon>
-        </div>
-      </div>
-
-      <!-- TODO: Implement properly later when we have more time -->
-      <!-- <div id="pointer-overlay" class="timeline">
-        <div class="icon-wrapper" [style]="{ visibility: 'hidden' }">
-          <mat-icon class="icon placeholder-icon">home</mat-icon>
-        </div>
-        <selection-cursor
-          class="selection-cursor"
-          [currentTimestamp]="currentTimestamp"
-          [from]="presenter.selection.from"
-          [to]="presenter.selection.to"
-        ></selection-cursor>
-      </div> -->
     </div>
   `,
   styles: [
@@ -133,11 +112,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
       .selection-cursor {
         flex-grow: 1;
       }
-      .timeline {
-        border-bottom: 1px solid #f1f3f4;
-      }
       .icon-wrapper {
-        background-color: #f1f3f4;
         align-self: stretch;
         display: flex;
         justify-content: center;
@@ -158,6 +133,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 })
 export class ExpandedTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
+  @Input() store: PersistentStore | undefined;
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
 
@@ -215,5 +191,11 @@ export class ExpandedTimelineComponent {
       timeline.getCanvas().style.width = 'auto';
       timeline.getCanvas().style.height = 'auto';
     }
+  }
+
+  getTimelineSidebarColor() {
+    return this.store?.get('dark-mode') === 'true'
+      ? Color.TIMELINE_SIDEBAR_DARK_MODE
+      : Color.TIMELINE_SIDEBAR_LIGHT_MODE;
   }
 }

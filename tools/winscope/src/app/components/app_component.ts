@@ -76,28 +76,11 @@ import {UploadTracesComponent} from './upload_traces_component';
   selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
-      <div class="horizontal-align vertical-align">
-        <span class="app-title fixed">Winscope</span>
-        <div class="horizontal-align vertical-align active" *ngIf="showDataLoadedElements">
-          <button
-            *ngIf="activeTrace"
-            mat-icon-button
-            [disabled]="true">
-            <mat-icon
-              class="icon"
-              [matTooltip]="TRACE_INFO[activeTrace.type].name"
-              [style]="{color: TRACE_INFO[activeTrace.type].color}">
-              {{ TRACE_INFO[activeTrace.type].icon }}
-            </mat-icon>
-          </button>
-          <span class="trace-file-info mat-body-1" [matTooltip]="activeTraceFileInfo">
-            {{ activeTraceFileInfo }}
-          </span>
-        </div>
+      <div class="horizontal-align vertical-align fixed">
+        <span class="app-title">Winscope</span>
       </div>
 
-      <div class="horizontal-align vertical-align fixed">
-        <mat-icon class="material-symbols-outlined" *ngIf="showDataLoadedElements">description</mat-icon>
+      <div class="horizontal-align vertical-align">
         <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
           <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
             {{ filenameFormControl.value }}
@@ -132,7 +115,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           </button>
           <button
             mat-icon-button
-            *ngIf="!isEditingFilename"
+            [disabled]="isEditingFilename"
             matTooltip="Download all traces"
             class="save-button"
             (click)="onDownloadTracesButtonClick()">
@@ -255,13 +238,6 @@ import {UploadTracesComponent} from './upload_traces_component';
         overflow: auto;
         height: 820px;
       }
-      .trace-file-info {
-        text-overflow: ellipsis;
-        overflow-x: hidden;
-        max-width: 100%;
-        padding-top: 3px;
-        color: #063C8C;
-      }
       .horizontal-align {
         justify-content: center;
       }
@@ -277,24 +253,23 @@ import {UploadTracesComponent} from './upload_traces_component';
       .file-descriptor {
         font-size: 14px;
         padding-left: 10px;
-        max-width: 350px;
+        max-width: 700px;
       }
       .download-file-info {
         text-overflow: ellipsis;
         overflow-x: hidden;
         padding-top: 3px;
-        max-width: 300px;
+        max-width: 650px;
       }
       .download-file-ext {
         padding-top: 3px;
-        max-width: 300px;
       }
       .file-name-input-field .right-align {
         text-align: right;
       }
       .file-name-input-field .mat-form-field-wrapper {
         padding-bottom: 10px;
-        width: 300px;
+        width: 600px;
       }
       .icon-divider {
         width: 1px;
@@ -339,7 +314,6 @@ export class AppComponent implements WinscopeEventListener {
   states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
-  activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   TRACE_INFO = TRACE_INFO;
   isEditingFilename = false;
@@ -572,9 +546,6 @@ export class AppComponent implements WinscopeEventListener {
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
       this.activeView = event.newFocusedView;
       this.activeTrace = this.getActiveTrace(event.newFocusedView);
-      this.activeTraceFileInfo = this.makeActiveTraceFileInfo(
-        event.newFocusedView,
-      );
     });
 
     await event.visit(WinscopeEventType.VIEWERS_LOADED, async (event) => {
@@ -608,16 +579,6 @@ export class AppComponent implements WinscopeEventListener {
 
   goToLink(url: string) {
     window.open(url, '_blank');
-  }
-
-  private makeActiveTraceFileInfo(view: View): string {
-    const trace = this.getActiveTrace(view);
-
-    if (!trace) {
-      return '';
-    }
-
-    return `${trace.getDescriptors().join(', ')}`;
   }
 
   dumpsUploaded() {

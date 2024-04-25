@@ -38,13 +38,12 @@ describe('Perfetto ParserProtolog', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
 
-    expect(timestamps.length).toEqual(75);
+    expect(timestamps.length).toEqual(3);
 
-    // TODO: They shouldn't all have the same timestamp...
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1706547264827624563n),
-      TimestampConverterUtils.makeRealTimestamp(1706547264827624563n),
-      TimestampConverterUtils.makeRealTimestamp(1706547264827624563n),
+      TimestampConverterUtils.makeRealTimestamp(1713866817780323315n),
+      TimestampConverterUtils.makeRealTimestamp(1713866817780323415n),
+      TimestampConverterUtils.makeRealTimestamp(1713866817780323445n),
     ];
     expect(timestamps.slice(0, 3)).toEqual(expected);
   });
@@ -54,18 +53,39 @@ describe('Perfetto ParserProtolog', () => {
 
     expect(
       assertDefined(message.getChildByName('text')).formattedValue(),
-    ).toEqual('Sent Transition (#11) createdAt=01-29 17:54:23.793');
+    ).toEqual(
+      'Test message with different int formats: 1776, 0o3360, 0x6f0, 888.000000, 8.880000e+02.',
+    );
     expect(
       assertDefined(message.getChildByName('timestamp')).formattedValue(),
-    ).toEqual('2024-01-29, 16:54:24.827624563');
+    ).toEqual('2024-04-23, 10:06:57.780323315');
     expect(
       assertDefined(message.getChildByName('tag')).formattedValue(),
-    ).toEqual('WindowManager');
+    ).toEqual('MySecondGroup');
     expect(
       assertDefined(message.getChildByName('level')).formattedValue(),
-    ).toEqual('VERBOSE');
+    ).toEqual('WARN');
     expect(
       assertDefined(message.getChildByName('at')).formattedValue(),
     ).toEqual('<NO_LOC>');
+  });
+
+  it('messages are ordered by timestamp', async () => {
+    let prevEntryTs = 0n;
+    for (let i = 0; i < parser.getLengthEntries(); i++) {
+      const ts = (await parser.getEntry(i))
+        .getChildByName('timestamp')
+        ?.getValue();
+      expect(ts >= prevEntryTs).toBeTrue();
+      prevEntryTs = ts;
+    }
+  });
+
+  it('timestamps are ordered', () => {
+    let prevEntryTs = 0n;
+    for (const ts of assertDefined(parser.getTimestamps())) {
+      expect(ts.getValueNs() >= prevEntryTs).toBeTrue();
+      prevEntryTs = ts.getValueNs();
+    }
   });
 });

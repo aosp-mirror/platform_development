@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FileUtils} from 'common/file_utils';
 import {TimeRange} from 'common/time';
 import {UserWarning} from 'messaging/user_warning';
 import {TraceHasOldData, TraceOverridden} from 'messaging/user_warnings';
@@ -116,6 +117,11 @@ describe('LoadedParsers', () => {
     .setTimestamps(timestamps)
     .setDescriptors([filename])
     .setNoOffsets(true)
+    .build();
+  const parserScreenRecording = new ParserBuilder<object>()
+    .setType(TraceType.SCREEN_RECORDING)
+    .setTimestamps(timestamps)
+    .setDescriptors([filename])
     .build();
 
   let loadedParsers: LoadedParsers;
@@ -413,15 +419,40 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0, parserWm0], []);
   });
 
+  it('can make zip archive of traces with appropriate directories and extensions', async () => {
+    loadParsers([parserSf0, parserScreenRecording], [parserWmTransitions]);
+    expectLoadResult(
+      [parserSf0, parserScreenRecording, parserWmTransitions],
+      [],
+    );
+
+    const fileWithExt = new TraceFile(new File([], filename + '.pb'));
+    loadParsers([parserWm0], [], fileWithExt);
+    expectLoadResult(
+      [parserSf0, parserScreenRecording, parserWmTransitions, parserWm0],
+      [],
+    );
+
+    const zipArchive = await loadedParsers.makeZipArchive();
+    const zipFile = new File([zipArchive], 'winscope.zip');
+    const unzippedArchive = await FileUtils.unzipFile(zipFile);
+
+    expect(unzippedArchive[0].name).toEqual('filename.perfetto-trace'); // adds .perfetto-trace
+    expect(unzippedArchive[1].name).toEqual('sf/filename.winscope'); // adds .winscope
+    expect(unzippedArchive[2].name).toEqual('filename.mp4'); // adds .mp4
+    expect(unzippedArchive[3].name).toEqual('wm/filename.pb'); // does not add/replace .pb
+  });
+
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
+    testFile = file,
   ) {
     const legacyFileAndParsers = legacy.map(
-      (parser) => new FileAndParser(file, parser),
+      (parser) => new FileAndParser(testFile, parser),
     );
     const perfettoFileAndParsers =
-      perfetto.length > 0 ? new FileAndParsers(file, perfetto) : undefined;
+      perfetto.length > 0 ? new FileAndParsers(testFile, perfetto) : undefined;
 
     warnings = [];
     const listener = {

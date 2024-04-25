@@ -55,66 +55,71 @@ class AdditionalContentProvider : ContentProvider() {
         val result = Bundle()
         val customActionFactory = CustomActionFactory(context)
 
-        // Make a random number of custom actions each time they change something.
-        result.putParcelableArray(
-            Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
-            customActionFactory.getCustomActions(Random.nextInt(5))
-        )
+        val chooserIntent =
+            extras?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java) ?: return result
+
+        // If the chooser intent has a custom action, make a random number of custom actions each
+        // time they change something.
+        if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS)) {
+            result.putParcelableArray(
+                Intent.EXTRA_CHOOSER_CUSTOM_ACTIONS,
+                customActionFactory.getCustomActions(Random.nextInt(5))
+            )
+        }
 
         // Update alternate intent if the chooser intent has one.
-        extras?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java)?.let { chooserIntent ->
-            if (chooserIntent.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS)) {
-                chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                    ?.let { targetIntent ->
-                        result.putParcelableArray(
-                            Intent.EXTRA_ALTERNATE_INTENTS,
-                            arrayOf(createAlternateIntent(targetIntent))
-                        )
-                    }
-            }
+        if (chooserIntent.hasExtra(Intent.EXTRA_ALTERNATE_INTENTS)) {
+            chooserIntent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+                ?.let { targetIntent ->
+                    result.putParcelableArray(
+                        Intent.EXTRA_ALTERNATE_INTENTS,
+                        arrayOf(createAlternateIntent(targetIntent))
+                    )
+                }
+        }
 
-            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION)) {
-                result.setModifyShareAction(
-                    context,
-                    chooserIntent.getParcelableExtra(
-                        Intent.EXTRA_INTENT,
-                        Intent::class.java
-                    )?.extraStream?.size ?: -1
-                )
-            }
+        if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION)) {
+            result.setModifyShareAction(
+                context,
+                chooserIntent.getParcelableExtra(
+                    Intent.EXTRA_INTENT,
+                    Intent::class.java
+                )?.extraStream?.size ?: -1
+            )
+        }
 
-            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_TARGETS)) {
-                result.putParcelableArray(
-                    Intent.EXTRA_CHOOSER_TARGETS,
-                    arrayOf(
-                        createCallerTarget(
-                            context,
-                            buildString {
-                                append("Modified Caller Target. Shared URIs:")
-                                chooserIntent.getParcelableExtra(
-                                    Intent.EXTRA_INTENT,
-                                    Intent::class.java
-                                )?.extraStream?.forEach {
-                                    append("\n * $it")
-                                }
+        if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_TARGETS)) {
+            result.putParcelableArray(
+                Intent.EXTRA_CHOOSER_TARGETS,
+                arrayOf(
+                    createCallerTarget(
+                        context,
+                        buildString {
+                            append("Modified Caller Target. Shared URIs:")
+                            chooserIntent.getParcelableExtra(
+                                Intent.EXTRA_INTENT,
+                                Intent::class.java
+                            )?.extraStream?.forEach {
+                                append("\n * $it")
                             }
-                        )
+                        }
                     )
                 )
-            }
-
-            if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER)) {
-                result.putParcelable(
-                    Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
-                    createRefinementIntentSender(context, false)
-                )
-            }
-
-            val latency = chooserIntent.getIntExtra(EXTRA_SELECTION_LATENCY, 0)
-            if (latency > 0) {
-                SystemClock.sleep(latency.toLong())
-            }
+            )
         }
+
+        if (chooserIntent.hasExtra(Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER)) {
+            result.putParcelable(
+                Intent.EXTRA_CHOOSER_REFINEMENT_INTENT_SENDER,
+                createRefinementIntentSender(context, false)
+            )
+        }
+
+        val latency = chooserIntent.getIntExtra(EXTRA_SELECTION_LATENCY, 0)
+        if (latency > 0) {
+            SystemClock.sleep(latency.toLong())
+        }
+
         return result
     }
 
