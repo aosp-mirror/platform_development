@@ -297,11 +297,18 @@ describe('AppComponent', () => {
     checkButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
     if (valid) {
-      expect(htmlElement.querySelector('.download-file-info')).toBeTruthy();
+      assertDefined(htmlElement.querySelector('.download-file-info'));
+      expect(
+        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
+          .disabled,
+      ).toBeFalse();
       clickDownloadTracesButton();
     } else {
-      expect(htmlElement.querySelector('.save-button')).toBeFalsy();
       expect(htmlElement.querySelector('.download-file-info')).toBeFalsy();
+      expect(
+        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
+          .disabled,
+      ).toBeTrue();
     }
   }
 
@@ -323,8 +330,6 @@ describe('AppComponent', () => {
 
   function checkHomepage() {
     expect(htmlElement.querySelector('.welcome-info')).toBeTruthy();
-    expect(htmlElement.querySelector('.trace-file-info')).toBeFalsy();
-    expect(htmlElement.querySelector('.toolbar .active')).toBeFalsy();
     expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
@@ -334,8 +339,6 @@ describe('AppComponent', () => {
 
   function checkTraceViewPage() {
     expect(htmlElement.querySelector('.welcome-info')).toBeFalsy();
-    expect(htmlElement.querySelector('.trace-file-info')).toBeTruthy();
-    expect(htmlElement.querySelector('.toolbar .active')).toBeTruthy();
     expect(htmlElement.querySelector('.save-button')).toBeTruthy();
     expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();

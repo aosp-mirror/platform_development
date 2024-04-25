@@ -57,3 +57,8 @@ rects-view .mat-tab-label-active {
 .mat-select-panel:has(>.select-filter) {
   max-height: 75vh;
 }
+
+body.dark-mode button.mat-raised-button.mat-primary,
+body.dark-mode button.mat-flat-button.mat-primary {
+    color: #ffffff;
+}

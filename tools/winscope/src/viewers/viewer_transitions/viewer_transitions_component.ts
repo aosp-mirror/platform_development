@@ -187,10 +187,6 @@ import {UiData} from './ui_data';
         gap: 5px;
       }
 
-      .selected .status mat-icon {
-        color: white !important;
-      }
-
       .transition-timeline .row svg rect {
         cursor: pointer;
       }

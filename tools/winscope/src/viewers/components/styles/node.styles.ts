@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Color} from 'app/colors';
 import {selectedElementStyle} from './selected_element.styles';
 
 export const nodeStyles =
@@ -31,28 +32,33 @@ export const nodeStyles =
 
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
-        background: #03ff35;
+        background: ${Color.ADDED_ELEMENT_BACKGROUND};
+        color: ${Color.TEXT_DEFAULT};
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
-        background: #ff6b6b;
-    }
-
-    .node:hover:not(.selected) {
-        background-color: rgba(127, 127, 127, 0.5)
+        background: ${Color.DELETED_ELEMENT_BACKGROUND};
+        color: ${Color.TEXT_DEFAULT};
     }
 
     .node:not(.selected).modified {
-        background: cyan;
+        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
+        color: ${Color.TEXT_DEFAULT};
+    }
+
+    .node:hover:not(.selected) {
+        background-color: ${Color.HOVER_ELEMENT_BACKGROUND};
     }
 
     .node.addedMove:after,
     .node.deletedMove:after {
         content: 'moved';
+        font: 14px 'Roboto', sans-serif;
         margin: 0 5px;
-        background: #448aff;
+        background: ${Color.CHIP_BLUE};
         border-radius: 5px;
+        height: fit-content;
         padding: 3px;
         color: white;
     }
@@ -92,7 +98,7 @@ export const nodeInnerItemStyles = `
         height: 5px;
         width: 5px;
         border-radius: 50%;
-        background-color: #9b9b9b;
+        background-color: ${Color.TEXT_GRAY};
     }
 
     .icon-wrapper, .description {
@@ -120,7 +126,6 @@ export const nodeInnerItemStyles = `
         padding-left: 6px;
         min-height: 24px;
         width: 24px;
-        align-content: center;
     }
 
     .icon-button {
@@ -129,6 +134,7 @@ export const nodeInnerItemStyles = `
         display: inline-block;
         vertical-align: middle;
         color: inherit;
+        cursor: pointer;
     }
 
     .expand-tree-btn {
@@ -138,16 +144,16 @@ export const nodeInnerItemStyles = `
     }
 
     .expand-tree-btn.modified {
-        background: cyan;
+        background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
     }
 
     .expand-tree-btn.deleted,
     .expand-tree-btn.deletedMove {
-        background: #ff6b6b;
+        background: ${Color.DELETED_ELEMENT_BACKGROUND};
     }
 
     .expand-tree-btn.added,
     .expand-tree-btn.addedMove {
-        background: #03ff35;
+        background: ${Color.ADDED_ELEMENT_BACKGROUND};
     }
 `;
