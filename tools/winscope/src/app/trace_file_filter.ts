@@ -166,7 +166,7 @@ export class TraceFileFilter {
     const unzippedLegacyFiles: TraceFile[] = [];
 
     for (const file of legacyFiles) {
-      if (FileUtils.isZipFile(file.file)) {
+      if (await FileUtils.isZipFile(file.file)) {
         try {
           const subFiles = await FileUtils.unzipFile(file.file);
           const subTraceFiles = subFiles.map((subFile) => {
