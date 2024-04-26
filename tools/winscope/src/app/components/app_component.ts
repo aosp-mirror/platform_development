@@ -36,6 +36,7 @@ import {globalConfig} from 'common/global_config';
 import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
+import {UrlUtils} from 'common/url_utils';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
 import {
@@ -76,8 +77,8 @@ import {UploadTracesComponent} from './upload_traces_component';
   selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
-      <div class="horizontal-align vertical-align fixed">
-        <span class="app-title">Winscope</span>
+      <div class="horizontal-align vertical-align">
+        <img class="app-title fixed" [src]="getLogoUrl()"/>
       </div>
 
       <div class="horizontal-align vertical-align">
@@ -226,6 +227,9 @@ import {UploadTracesComponent} from './upload_traces_component';
         gap: 10px;
         justify-content: space-between;
         min-height: 64px;
+      }
+      .app-title {
+        height: 100%;
       }
       .welcome-info {
         margin: 16px 0 6px 0;
@@ -479,6 +483,13 @@ export class AppComponent implements WinscopeEventListener {
 
   getLoadedTraceTypes(): TraceType[] {
     return this.tracePipeline.getTraces().mapTrace((trace) => trace.type);
+  }
+
+  getLogoUrl(): string {
+    const logoPath = this.isDarkModeOn
+      ? 'logo_dark_mode.svg'
+      : 'logo_light_mode.svg';
+    return UrlUtils.getRootUrl() + logoPath;
   }
 
   setDarkMode(enabled: boolean) {
