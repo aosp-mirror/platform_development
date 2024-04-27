@@ -79,6 +79,26 @@ describe('TracePipeline', () => {
     );
   });
 
+  it('can load valid gzipped file', async () => {
+    expect(tracePipeline.getTraces().getSize()).toEqual(0);
+
+    const gzippedFile = await UnitTestUtils.getFixtureFile(
+      'traces/WindowManager.pb.gz',
+    );
+
+    await loadFiles([gzippedFile], FilesSource.TEST);
+    await expectLoadResult(1, []);
+
+    expect(tracePipeline.getTraces().getSize()).toEqual(1);
+
+    const traceEntries = await TracesUtils.extractEntries(
+      tracePipeline.getTraces(),
+    );
+    expect(traceEntries.get(TraceType.WINDOW_MANAGER)?.length).toBeGreaterThan(
+      0,
+    );
+  });
+
   it('can set download archive filename based on files source', async () => {
     await loadFiles([validSfFile]);
     await expectLoadResult(1, []);
