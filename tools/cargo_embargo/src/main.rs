@@ -34,6 +34,7 @@ use crate::config::Config;
 use crate::config::PackageConfig;
 use crate::config::PackageVariantConfig;
 use crate::config::VariantConfig;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
@@ -52,7 +53,6 @@ use std::collections::VecDeque;
 use std::env;
 use std::fs::{read_to_string, write, File};
 use std::io::{Read, Write};
-use std::os::fd::{FromRawFd, OwnedFd};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -82,18 +82,38 @@ pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     .collect()
 });
 
+/// This map tracks Rust crates that have special rules.mk modules that were not
+/// generated automatically by this script. Examples include compiler builtins
+/// and other foundational libraries. It also tracks the location of rules.mk
+/// build files for crates that are not under external/rust/crates.
+pub static RULESMK_RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+    [
+        ("liballoc", "trusty/user/base/lib/liballoc-rust"),
+        ("libcompiler_builtins", "trusty/user/base/lib/libcompiler_builtins-rust"),
+        ("libcore", "trusty/user/base/lib/libcore-rust"),
+        ("libhashbrown", "trusty/user/base/lib/libhashbrown-rust"),
+        ("libpanic_abort", "trusty/user/base/lib/libpanic_abort-rust"),
+        ("libstd", "trusty/user/base/lib/libstd-rust"),
+        ("libstd_detect", "trusty/user/base/lib/libstd_detect-rust"),
+        ("libunwind", "trusty/user/base/lib/libunwind-rust"),
+    ]
+    .into_iter()
+    .collect()
+});
+
 /// Given a proposed module name, returns `None` if it is blocked by the given config, or
 /// else apply any name overrides and returns the name to use.
 fn override_module_name(
     module_name: &str,
     blocklist: &[String],
     module_name_overrides: &BTreeMap<String, String>,
+    rename_map: &BTreeMap<&str, &str>,
 ) -> Option<String> {
     if blocklist.iter().any(|blocked_name| blocked_name == module_name) {
         None
     } else if let Some(overridden_name) = module_name_overrides.get(module_name) {
         Some(overridden_name.to_string())
-    } else if let Some(renamed) = RENAME_MAP.get(module_name) {
+    } else if let Some(renamed) = rename_map.get(module_name) {
         Some(renamed.to_string())
     } else {
         Some(module_name.to_string())
@@ -331,7 +351,7 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
         }
     }
 
-    write_all_bp(&cfg, crates, &package_out_files)
+    write_all_build_files(&cfg, crates, &package_out_files)
 }
 
 /// Input is indexed by variant, then all crates for that variant.
@@ -352,7 +372,7 @@ fn group_by_package(crates: Vec<Vec<Crate>>) -> BTreeMap<PathBuf, Vec<Vec<Crate>
     module_by_package
 }
 
-fn write_all_bp(
+fn write_all_build_files(
     cfg: &Config,
     crates: Vec<Vec<Crate>>,
     package_out_files: &BTreeMap<String, Vec<Vec<PathBuf>>>,
@@ -362,10 +382,10 @@ fn write_all_bp(
 
     let num_variants = cfg.variants.len();
     let empty_package_out_files = vec![vec![]; num_variants];
-    // Write an Android.bp file per package.
+    // Write a build file per package.
     for (package_dir, crates) in module_by_package {
         let package_name = &crates.iter().flatten().next().unwrap().package_name;
-        write_android_bp(
+        write_build_files(
             cfg,
             package_name,
             package_dir,
@@ -379,7 +399,7 @@ fn write_all_bp(
 
 /// Runs the given command, and returns its standard output and standard error as a string.
 fn run_cargo(cmd: &mut Command) -> Result<String> {
-    let (pipe_read, pipe_write) = pipe()?;
+    let (pipe_read, pipe_write) = pipe2(OFlag::O_CLOEXEC)?;
     cmd.stdout(pipe_write.try_clone()?).stderr(pipe_write).stdin(Stdio::null());
     debug!("Running: {:?}\n", cmd);
     let mut child = cmd.spawn()?;
@@ -402,13 +422,6 @@ fn run_cargo(cmd: &mut Command) -> Result<String> {
     }
 
     Ok(output)
-}
-
-/// Creates a new pipe and returns the file descriptors for each end of it.
-fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
-    let (a, b) = pipe2(OFlag::O_CLOEXEC)?;
-    // SAFETY: We just created the file descriptors, so we own them.
-    unsafe { Ok((OwnedFd::from_raw_fd(a), OwnedFd::from_raw_fd(b))) }
 }
 
 /// The raw output from running `cargo metadata`, `cargo build` and other commands.
@@ -499,10 +512,36 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
     Ok(CargoOutput { cargo_metadata, cargo_out })
 }
 
-/// Create the Android.bp file for `package_dir`.
+/// Read and return license and other header lines from a build file.
+///
+/// Skips initial comment lines, then returns all lines before the first line
+/// starting with `rust_`, `genrule {`, or `LOCAL_DIR`.
+///
+/// If `path` could not be read, return a placeholder license TODO line.
+fn read_license_header(path: &Path) -> Result<String> {
+    // Keep the old license header.
+    match std::fs::read_to_string(path) {
+        Ok(s) => Ok(s
+            .lines()
+            .skip_while(|l| l.starts_with("//") || l.starts_with('#'))
+            .take_while(|l| {
+                !l.starts_with("rust_")
+                    && !l.starts_with("genrule {")
+                    && !l.starts_with("LOCAL_DIR")
+            })
+            .collect::<Vec<&str>>()
+            .join("\n")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            Ok("// DO NOT SUBMIT: Add license before submitting.\n".to_string())
+        }
+        Err(e) => Err(anyhow!("error when reading {path:?}: {e}")),
+    }
+}
+
+/// Create the build file for `package_dir`.
 ///
 /// `crates` and `out_files` are both indexed by variant.
-fn write_android_bp(
+fn write_build_files(
     cfg: &Config,
     package_name: &str,
     package_dir: PathBuf,
@@ -510,23 +549,9 @@ fn write_android_bp(
     out_files: &[Vec<PathBuf>],
 ) -> Result<()> {
     assert_eq!(crates.len(), out_files.len());
-    let bp_path = package_dir.join("Android.bp");
-
-    // Keep the old license header.
-    let license_section = match std::fs::read_to_string(&bp_path) {
-        Ok(s) => s
-            .lines()
-            .skip_while(|l| l.starts_with("//"))
-            .take_while(|l| !l.starts_with("rust_") && !l.starts_with("genrule {"))
-            .collect::<Vec<&str>>()
-            .join("\n"),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            "// DO NOT SUBMIT: Add license before submitting.\n".to_string()
-        }
-        Err(e) => bail!("error when reading {bp_path:?}: {e}"),
-    };
 
     let mut bp_contents = String::new();
+    let mut mk_contents = String::new();
     for (variant_index, variant_config) in cfg.variants.iter().enumerate() {
         let variant_crates = &crates[variant_index];
         let def = PackageVariantConfig::default();
@@ -546,13 +571,24 @@ fn write_android_bp(
             }
         }
 
-        bp_contents += &generate_android_bp(
-            variant_config,
-            package_cfg,
-            package_name,
-            variant_crates,
-            &out_files[variant_index],
-        )?;
+        if variant_config.generate_androidbp {
+            bp_contents += &generate_android_bp(
+                variant_config,
+                package_cfg,
+                package_name,
+                variant_crates,
+                &out_files[variant_index],
+            )?;
+        }
+        if variant_config.generate_rulesmk {
+            mk_contents += &generate_rules_mk(
+                variant_config,
+                package_cfg,
+                package_name,
+                variant_crates,
+                &out_files[variant_index],
+            )?;
+        }
     }
 
     let def = PackageConfig::default();
@@ -563,13 +599,29 @@ fn write_android_bp(
         bp_contents += "\n";
     }
     if !bp_contents.is_empty() {
+        let output_path = package_dir.join("Android.bp");
         let bp_contents = "// This file is generated by cargo_embargo.\n".to_owned()
-            + "// Do not modify this file as most changes will be overridden on upgrade.\n"
+            + "// Do not modify this file after the first \"rust_*\" or \"genrule\" module\n"
+            + "// because the changes will be overridden on upgrade.\n"
             + "// Content before the first \"rust_*\" or \"genrule\" module is preserved.\n\n"
-            + license_section.trim()
+            + read_license_header(&output_path)?.trim()
             + "\n"
             + &bp_contents;
-        write_format_android_bp(&bp_path, &bp_contents, package_cfg.patch.as_deref())?;
+        write_format_android_bp(&output_path, &bp_contents, package_cfg.patch.as_deref())?;
+    }
+    if !mk_contents.is_empty() {
+        let output_path = package_dir.join("rules.mk");
+        let mk_contents = "# This file is generated by cargo_embargo.\n".to_owned()
+            + "# Do not modify this file after the LOCAL_DIR line\n"
+            + "# because the changes will be overridden on upgrade.\n"
+            + "# Content before the first line starting with LOCAL_DIR is preserved.\n"
+            + read_license_header(&output_path)?.trim()
+            + "\n"
+            + &mk_contents;
+        File::create(&output_path)?.write_all(mk_contents.as_bytes())?;
+        if let Some(patch) = package_cfg.rulesmk_patch.as_deref() {
+            apply_patch_file(&output_path, patch)?;
+        }
     }
 
     Ok(())
@@ -599,6 +651,7 @@ fn generate_android_bp(
             &format!("copy_{}_build_out", package_name),
             &cfg.module_blocklist,
             &cfg.module_name_overrides,
+            &RENAME_MAP,
         ) {
             m.props.set("name", module_name.clone());
             m.props.set("srcs", vec!["out/*"]);
@@ -639,6 +692,65 @@ fn generate_android_bp(
     Ok(bp_contents)
 }
 
+/// Generates and returns a Trusty rules.mk file for the given set of crates.
+fn generate_rules_mk(
+    cfg: &VariantConfig,
+    package_cfg: &PackageVariantConfig,
+    package_name: &str,
+    crates: &[Crate],
+    out_files: &[PathBuf],
+) -> Result<String> {
+    let out_files = if package_cfg.copy_out && !out_files.is_empty() {
+        out_files.iter().map(|f| f.file_name().unwrap().to_str().unwrap().to_string()).collect()
+    } else {
+        vec![]
+    };
+
+    let crates: Vec<_> = crates
+        .iter()
+        .filter(|c| {
+            if c.types.contains(&CrateType::Bin) {
+                eprintln!("WARNING: skipped generation of rules.mk for binary crate: {}", c.name);
+                false
+            } else if c.types.iter().any(|t| t.is_test()) {
+                // Test build file generation is not yet implemented
+                eprintln!("WARNING: skipped generation of rules.mk for test crate: {}", c.name);
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
+    let [crate_] = &crates[..] else {
+        bail!(
+            "Expected exactly one library crate for package {package_name} when generating \
+               rules.mk, found: {crates:?}"
+        );
+    };
+    crate_to_rulesmk(crate_, cfg, package_cfg, &out_files).with_context(|| {
+        format!(
+            "failed to generate rules.mk for crate \"{}\" with package name \"{}\"",
+            crate_.name, crate_.package_name
+        )
+    })
+}
+
+/// Apply patch from `patch_path` to file `output_path`.
+///
+/// Warns but still returns ok if the patch did not cleanly apply,
+fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
+    let patch_output = Command::new("patch")
+        .arg("-s")
+        .arg(output_path)
+        .arg(patch_path)
+        .output()
+        .context("Running patch")?;
+    if !patch_output.status.success() {
+        eprintln!("WARNING: failed to apply patch {:?}", patch_path);
+    }
+    Ok(())
+}
+
 /// Writes the given contents to the given `Android.bp` file, formats it with `bpfmt`, and applies
 /// the patch if there is one.
 fn write_format_android_bp(
@@ -659,15 +771,7 @@ fn write_format_android_bp(
     }
 
     if let Some(patch_path) = patch_path {
-        let patch_output = Command::new("patch")
-            .arg("-s")
-            .arg(bp_path)
-            .arg(patch_path)
-            .output()
-            .context("Running patch")?;
-        if !patch_output.status.success() {
-            eprintln!("WARNING: failed to apply patch {:?}", patch_path);
-        }
+        apply_patch_file(bp_path, patch_path)?;
         // Re-run bpfmt after the patch so
         let bpfmt_output = Command::new("bpfmt")
             .arg("-w")
@@ -740,9 +844,12 @@ fn crate_to_bp_modules(
         };
 
         let mut m = BpModule::new(module_type.clone());
-        let Some(module_name) =
-            override_module_name(&module_name, &cfg.module_blocklist, &cfg.module_name_overrides)
-        else {
+        let Some(module_name) = override_module_name(
+            &module_name,
+            &cfg.module_blocklist,
+            &cfg.module_name_overrides,
+            &RENAME_MAP,
+        ) else {
             continue;
         };
         if matches!(
@@ -837,6 +944,7 @@ fn crate_to_bp_modules(
                     &module_name,
                     &package_cfg.dep_blocklist,
                     &cfg.module_name_overrides,
+                    &RENAME_MAP,
                 ) {
                     result.push(module_name);
                 }
@@ -915,9 +1023,117 @@ fn crate_to_bp_modules(
     Ok(modules)
 }
 
+/// Convert a `Crate` into a rules.mk file.
+///
+/// If messy business logic is necessary, prefer putting it here.
+fn crate_to_rulesmk(
+    crate_: &Crate,
+    cfg: &VariantConfig,
+    package_cfg: &PackageVariantConfig,
+    out_files: &[String],
+) -> Result<String> {
+    let mut contents = String::new();
+
+    contents += "LOCAL_DIR := $(GET_LOCAL_DIR)\n";
+    contents += "MODULE := $(LOCAL_DIR)\n";
+    contents += &format!("MODULE_CRATE_NAME := {}\n", crate_.name);
+
+    if !crate_.types.is_empty() {
+        contents += "MODULE_RUST_CRATE_TYPES :=";
+        for crate_type in &crate_.types {
+            contents += match crate_type {
+                CrateType::Lib => " rlib",
+                CrateType::StaticLib => " staticlib",
+                CrateType::ProcMacro => " proc-macro",
+                _ => bail!("Cannot generate rules.mk for crate type {crate_type:?}"),
+            };
+        }
+        contents += "\n";
+    }
+
+    contents += &format!("MODULE_SRCS := $(LOCAL_DIR)/{}\n", crate_.main_src.display());
+
+    if !out_files.is_empty() {
+        contents += &format!("OUT_FILES := {}\n", out_files.join(" "));
+        contents += "BUILD_OUT_FILES := $(addprefix $(call TOBUILDDIR,$(MODULE))/,$(OUT_FILES))\n";
+        contents += "$(BUILD_OUT_FILES): $(call TOBUILDDIR,$(MODULE))/% : $(MODULE)/out/%\n";
+        contents += "\t@echo copying $^ to $@\n";
+        contents += "\t@$(MKDIR)\n";
+        contents += "\t@cp $^ $@\n\n";
+        contents += "MODULE_RUST_ENV += OUT_DIR=$(call TOBUILDDIR,$(MODULE))\n\n";
+        contents += "MODULE_SRCDEPS += $(BUILD_OUT_FILES)\n\n";
+        contents += "OUT_FILES :=\n";
+        contents += "BUILD_OUT_FILES :=\n";
+        contents += "\n";
+    }
+
+    // crate dependencies without lib- prefix
+    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.lib_name.clone()).collect();
+    if package_cfg.no_std {
+        contents += "MODULE_ADD_IMPLICIT_DEPS := false\n";
+        library_deps.push("compiler_builtins".to_string());
+        library_deps.push("core".to_string());
+        if package_cfg.alloc {
+            library_deps.push("alloc".to_string());
+        }
+    }
+
+    contents += &format!("MODULE_RUST_EDITION := {}\n", crate_.edition);
+
+    let mut flags = Vec::new();
+    if !crate_.cap_lints.is_empty() {
+        flags.push(crate_.cap_lints.clone());
+    }
+    flags.extend(crate_.codegens.iter().map(|codegen| format!("-C {}", codegen)));
+    flags.extend(crate_.features.iter().map(|feat| format!("--cfg 'feature=\"{feat}\"'")));
+    flags.extend(
+        crate_
+            .cfgs
+            .iter()
+            .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+            .chain(cfg.extra_cfg.iter())
+            .map(|cfg| format!("--cfg '{cfg}'")),
+    );
+    if !flags.is_empty() {
+        contents += "MODULE_RUSTFLAGS += \\\n\t";
+        contents += &flags.join(" \\\n\t");
+        contents += "\n\n";
+    }
+
+    let mut library_deps: Vec<String> = library_deps
+        .into_iter()
+        .flat_map(|dep| {
+            override_module_name(
+                &format!("lib{dep}"),
+                &package_cfg.dep_blocklist,
+                &cfg.module_name_overrides,
+                &RULESMK_RENAME_MAP,
+            )
+        })
+        .map(|dep| {
+            // Rewrite dependency name to module path for Trusty build system
+            if let Some(dep) = dep.strip_prefix("lib") {
+                format!("external/rust/crates/{dep}")
+            } else {
+                dep
+            }
+        })
+        .collect();
+    library_deps.sort();
+    library_deps.dedup();
+    contents += "MODULE_LIBRARY_DEPS := \\\n\t";
+    contents += &library_deps.join(" \\\n\t");
+    contents += "\n\n";
+
+    contents += "include make/library.mk\n";
+    Ok(contents)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::matchers::eq;
+    use googletest::prelude::assert_that;
     use std::env::{current_dir, set_current_dir};
     use std::fs::{self, read_to_string};
     use std::path::PathBuf;
@@ -999,7 +1215,7 @@ mod tests {
                 .unwrap();
             }
 
-            assert_eq!(output, expected_output);
+            assert_that!(output, eq(expected_output));
 
             set_current_dir(old_current_dir).unwrap();
         }

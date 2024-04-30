@@ -16,10 +16,9 @@
 
 use super::{Crate, CrateType, Extern, ExternType};
 use crate::config::VariantConfig;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
 /// `cfg` strings for dependencies which should be considered enabled. It would be better to parse
@@ -124,20 +123,24 @@ fn parse_cargo_metadata(
         let package_dir = package_dir_from_id(&package.id)?;
 
         for target in &package.targets {
-            let [target_kind] = target.kind.deref() else {
-                bail!("Target kind had unexpected length: {:?}", target.kind);
-            };
-            if ![
-                TargetKind::Bin,
-                TargetKind::Cdylib,
-                TargetKind::Lib,
-                TargetKind::ProcMacro,
-                TargetKind::Rlib,
-                TargetKind::Staticlib,
-                TargetKind::Test,
-            ]
-            .contains(target_kind)
-            {
+            let target_kinds = target
+                .kind
+                .clone()
+                .into_iter()
+                .filter(|kind| {
+                    [
+                        TargetKind::Bin,
+                        TargetKind::Cdylib,
+                        TargetKind::Lib,
+                        TargetKind::ProcMacro,
+                        TargetKind::Rlib,
+                        TargetKind::Staticlib,
+                        TargetKind::Test,
+                    ]
+                    .contains(kind)
+                })
+                .collect::<Vec<_>>();
+            if target_kinds.is_empty() {
                 // Only binaries, libraries and integration tests are supported.
                 continue;
             }
@@ -146,14 +149,14 @@ fn parse_cargo_metadata(
             // https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md
             // for background.
             let target_name = target.name.replace('-', "_");
-            let target_triple = if *target_kind == TargetKind::ProcMacro {
+            let target_triple = if target_kinds == [TargetKind::ProcMacro] {
                 None
             } else {
                 Some("x86_64-unknown-linux-gnu".to_string())
             };
             // Don't generate an entry for integration tests, they will be covered by the test case
             // below.
-            if *target_kind != TargetKind::Test {
+            if target_kinds != [TargetKind::Test] {
                 crates.push(Crate {
                     name: target_name.clone(),
                     package_name: package.name.to_owned(),
@@ -168,7 +171,7 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
-                        *target_kind,
+                        &target_kinds,
                         false,
                     )?,
                     ..Default::default()
@@ -190,7 +193,7 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
-                        *target_kind,
+                        &target_kinds,
                         true,
                     )?,
                     ..Default::default()
@@ -205,7 +208,7 @@ fn get_externs(
     package: &PackageMetadata,
     packages: &[PackageMetadata],
     features: &[String],
-    target_kind: TargetKind,
+    target_kinds: &[TargetKind],
     test: bool,
 ) -> Result<Vec<Extern>> {
     let mut externs = package
@@ -226,7 +229,7 @@ fn get_externs(
 
     // If there is a library target and this is a binary or integration test, add the library as an
     // extern.
-    if matches!(target_kind, TargetKind::Bin | TargetKind::Test) {
+    if matches!(target_kinds, [TargetKind::Bin] | [TargetKind::Test]) {
         for target in &package.targets {
             if target.kind.contains(&TargetKind::Lib) {
                 let lib_name = target.name.replace('-', "_");
@@ -268,14 +271,22 @@ fn make_extern(packages: &[PackageMetadata], dependency: &DependencyMetadata) ->
     Ok(Extern { name, lib_name, extern_type })
 }
 
-/// Given a package ID like
-/// `"either 1.8.1 (path+file:///usr/local/google/home/qwandor/aosp/external/rust/crates/either)"`,
-/// returns the path to the package, e.g.
-/// `"/usr/local/google/home/qwandor/aosp/external/rust/crates/either"`.
+/// Given a Cargo package ID, returns the path.
+///
+/// Extracts `"/path/to/crate"` from
+/// `"path+file:///path/to/crate#1.2.3"`. See
+/// https://doc.rust-lang.org/cargo/reference/pkgid-spec.html for
+/// information on Cargo package ID specifications.
 fn package_dir_from_id(id: &str) -> Result<PathBuf> {
-    const URI_MARKER: &str = "(path+file://";
-    let uri_start = id.find(URI_MARKER).ok_or_else(|| anyhow!("Invalid package ID {}", id))?;
-    Ok(PathBuf::from(id[uri_start + URI_MARKER.len()..id.len() - 1].to_string()))
+    const PREFIX: &str = "path+file://";
+    const SEPARATOR: char = '#';
+    let Some(stripped) = id.strip_prefix(PREFIX) else {
+        bail!("Invalid package ID {id:?}, expected it to start with {PREFIX:?}");
+    };
+    let Some(idx) = stripped.rfind(SEPARATOR) else {
+        bail!("Invalid package ID {id:?}, expected it to contain {SEPARATOR:?}");
+    };
+    Ok(PathBuf::from(stripped[..idx].to_string()))
 }
 
 fn split_src_path<'a>(src_path: &'a Path, package_dir: &Path) -> &'a Path {
@@ -344,7 +355,18 @@ mod tests {
     use super::*;
     use crate::config::Config;
     use crate::tests::testdata_directories;
+    use googletest::matchers::eq;
+    use googletest::prelude::assert_that;
     use std::fs::{read_to_string, File};
+
+    #[test]
+    fn extract_package_dir_from_id() -> Result<()> {
+        assert_eq!(
+            package_dir_from_id("path+file:///path/to/crate#1.2.3")?,
+            PathBuf::from("/path/to/crate")
+        );
+        Ok(())
+    }
 
     #[test]
     fn resolve_multi_level_feature_dependencies() {
@@ -419,6 +441,20 @@ mod tests {
 
     #[test]
     fn parse_metadata() {
+        /// Remove anything before "external/rust/crates/" from the
+        /// `package_dir` field. This makes the test robust since you
+        /// can use `cargo metadata` to regenerate the test files and
+        /// you don't have to care about where your AOSP checkout
+        /// lives.
+        fn normalize_package_dir(mut c: Crate) -> Crate {
+            const EXTERNAL_RUST_CRATES: &str = "external/rust/crates/";
+            let package_dir = c.package_dir.to_str().unwrap();
+            if let Some(idx) = package_dir.find(EXTERNAL_RUST_CRATES) {
+                c.package_dir = PathBuf::from(format!(".../{}", &package_dir[idx..]));
+            }
+            c
+        }
+
         for testdata_directory_path in testdata_directories() {
             let cfg = Config::from_json_str(
                 &read_to_string(testdata_directory_path.join("cargo_embargo.json"))
@@ -432,10 +468,13 @@ mod tests {
             )
             .unwrap();
             let cargo_metadata_path = testdata_directory_path.join("cargo.metadata");
-            let expected_crates: Vec<Vec<Crate>> = serde_json::from_reader(
+            let expected_crates: Vec<Vec<Crate>> = serde_json::from_reader::<_, Vec<Vec<Crate>>>(
                 File::open(testdata_directory_path.join("crates.json")).unwrap(),
             )
-            .unwrap();
+            .unwrap()
+            .into_iter()
+            .map(|crates: Vec<Crate>| crates.into_iter().map(normalize_package_dir).collect())
+            .collect();
 
             let crates = cfg
                 .variants
@@ -448,9 +487,12 @@ mod tests {
                         variant_cfg,
                     )
                     .unwrap()
+                    .into_iter()
+                    .map(normalize_package_dir)
+                    .collect::<Vec<Crate>>()
                 })
-                .collect::<Vec<_>>();
-            assert_eq!(crates, expected_crates);
+                .collect::<Vec<Vec<Crate>>>();
+            assert_that!(format!("{crates:#?}"), eq(format!("{expected_crates:#?}")));
         }
     }
 }

@@ -30,8 +30,14 @@ namespace header_checker {
 namespace repr {
 
 
-static constexpr char DEFAULT_ARCH[] = "arm64";
+using ModeTagLevel = std::pair<std::string_view, utils::ApiLevel>;
 
+
+static constexpr char DEFAULT_ARCH[] = "arm64";
+static constexpr utils::ApiLevel MIN_MODE_TAG_LEVEL = 0;
+static constexpr utils::ApiLevel MAX_MODE_TAG_LEVEL = 1000000;
+static const std::set<std::string_view> KNOWN_MODE_TAGS{"apex", "llndk",
+                                                        "systemapi"};
 
 inline std::string GetIntroducedArchTag(const std::string &arch) {
   return "introduced-" + arch + "=";
@@ -55,12 +61,39 @@ void VersionScriptParser::SetApiLevelMap(utils::ApiLevelMap api_level_map) {
 }
 
 
+static std::optional<ModeTagLevel> ParseModeTag(std::string_view tag,
+                                                utils::ApiLevel default_level) {
+  std::vector<std::string_view> split_tag = utils::Split(tag, "=");
+  utils::ApiLevel level = default_level;
+  if (split_tag.size() == 2) {
+    auto level = utils::ParseInt(std::string(split_tag[1]));
+    if (level.has_value()) {
+      return {{split_tag[0], level.value()}};
+    }
+  } else if (split_tag.size() == 1) {
+    return {{split_tag[0], default_level}};
+  }
+  return {};
+}
+
+
+bool VersionScriptParser::AddModeTag(std::string_view mode_tag) {
+  auto parsed_mode_tag = ParseModeTag(mode_tag, MAX_MODE_TAG_LEVEL);
+  if (parsed_mode_tag.has_value()) {
+    included_mode_tags_[std::string(parsed_mode_tag->first)] =
+        parsed_mode_tag->second;
+    return true;
+  }
+  return false;
+}
+
+
 VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
-    const std::string &line) {
+    const std::string &line, const ParsedTags &initial_value) {
   static const char *const POSSIBLE_ARCHES[] = {
       "arm", "arm64", "x86", "x86_64", "mips", "mips64"};
 
-  ParsedTags result;
+  ParsedTags result = initial_value;
 
   std::string_view line_view(line);
   std::string::size_type comment_pos = line_view.find('#');
@@ -138,14 +171,47 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
       result.has_weak_tag_ = true;
       continue;
     }
+
+    auto mode_tag = ParseModeTag(tag, MIN_MODE_TAG_LEVEL);
+    if (mode_tag.has_value() &&
+        (KNOWN_MODE_TAGS.count(mode_tag->first) > 0 ||
+         included_mode_tags_.count(mode_tag->first) > 0)) {
+      result.mode_tags_[std::string(mode_tag->first)] = mode_tag->second;
+    }
   }
 
   return result;
 }
 
 
-bool VersionScriptParser::IsSymbolExported(
-    const VersionScriptParser::ParsedTags &tags) {
+bool VersionScriptParser::MatchModeTags(const ParsedTags &tags) {
+  if (included_mode_tags_.empty()) {
+    // Include all tags if the user does not specify the option.
+    return true;
+  }
+  for (const auto &mode_tag : tags.mode_tags_) {
+    auto included_mode_tag = included_mode_tags_.find(mode_tag.first);
+    if (included_mode_tag != included_mode_tags_.end() &&
+        included_mode_tag->second >= mode_tag.second) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+bool VersionScriptParser::MatchIntroducedTags(const ParsedTags &tags) {
+  if (tags.has_future_tag_ && api_level_ < utils::FUTURE_API_LEVEL) {
+    return false;
+  }
+  if (tags.has_introduced_tags_ && api_level_ < tags.introduced_) {
+    return false;
+  }
+  return true;
+}
+
+
+bool VersionScriptParser::IsSymbolExported(const ParsedTags &tags) {
   if (tags.has_excluded_tags_) {
     return false;
   }
@@ -154,20 +220,24 @@ bool VersionScriptParser::IsSymbolExported(
     return false;
   }
 
-  if (tags.has_future_tag_) {
-    return api_level_ == utils::FUTURE_API_LEVEL;
+  if (tags.mode_tags_.empty()) {
+    return MatchIntroducedTags(tags);
   }
 
-  if (tags.has_introduced_tags_) {
-    return api_level_ >= tags.introduced_;
+  switch (mode_tag_policy_) {
+    case MatchTagAndApi:
+      return MatchModeTags(tags) && MatchIntroducedTags(tags);
+    case MatchTagOnly:
+      return MatchModeTags(tags);
   }
-
-  return true;
+  // Unreachable
+  return false;
 }
 
 
-bool VersionScriptParser::ParseSymbolLine(const std::string &line,
-                                          bool is_in_extern_cpp) {
+bool VersionScriptParser::ParseSymbolLine(
+    const std::string &line, bool is_in_extern_cpp,
+    const ParsedTags &version_block_tags) {
   // The symbol name comes before the ';'.
   std::string::size_type pos = line.find(";");
   if (pos == std::string::npos) {
@@ -177,7 +247,7 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
 
   std::string symbol(utils::Trim(line.substr(0, pos)));
 
-  ParsedTags tags = ParseSymbolTags(line);
+  ParsedTags tags = ParseSymbolTags(line, version_block_tags);
   if (!IsSymbolExported(tags)) {
     return true;
   }
@@ -209,7 +279,8 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
 }
 
 
-bool VersionScriptParser::ParseVersionBlock(bool ignore_symbols) {
+bool VersionScriptParser::ParseVersionBlock(bool ignore_symbols,
+                                            const ParsedTags &tags) {
   static const std::regex EXTERN_CPP_PATTERN(R"(extern\s*"[Cc]\+\+"\s*\{)");
 
   LineScope scope = LineScope::GLOBAL;
@@ -250,7 +321,7 @@ bool VersionScriptParser::ParseVersionBlock(bool ignore_symbols) {
 
     // Parse symbol line
     if (!ignore_symbols) {
-      if (!ParseSymbolLine(line, is_in_extern_cpp)) {
+      if (!ParseSymbolLine(line, is_in_extern_cpp, tags)) {
         return false;
       }
     }
@@ -285,8 +356,8 @@ std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
     bool exclude_symbol_version = utils::HasMatchingGlobPattern(
         excluded_symbol_versions_, version.c_str());
 
-    ParsedTags tags = ParseSymbolTags(line);
-    if (!ParseVersionBlock(exclude_symbol_version || !IsSymbolExported(tags))) {
+    ParsedTags tags = ParseSymbolTags(line, ParsedTags());
+    if (!ParseVersionBlock(exclude_symbol_version, tags)) {
       return nullptr;
     }
   }
