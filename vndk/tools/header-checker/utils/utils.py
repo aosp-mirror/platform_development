@@ -29,7 +29,11 @@ BUILTIN_HEADERS_DIR = (
 SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
-VENDOR_SUFFIX = '.vendor'
+KNOWN_ABI_DUMP_EXTS = {
+    SOURCE_ABI_DUMP_EXT,
+    SO_EXT + '.apex' + SOURCE_ABI_DUMP_EXT_END,
+    SO_EXT + '.llndk' + SOURCE_ABI_DUMP_EXT_END,
+}
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
 DEFAULT_CFLAGS = ['-std=gnu99']
@@ -83,6 +87,14 @@ class Arch(object):
         return self.arch + arch_variant + cpu_variant
 
 
+def _strip_dump_name_ext(filename):
+    """Remove .so*.lsdump from a file name."""
+    for ext in KNOWN_ABI_DUMP_EXTS:
+        if filename.endswith(ext) and len(filename) > len(ext):
+            return filename[:-len(ext)]
+    raise ValueError(f'{filename} has an unknown file name extension.')
+
+
 def _validate_dump_content(dump_path):
     """Make sure that the dump contains relative source paths."""
     with open(dump_path, 'r') as f:
@@ -102,13 +114,14 @@ def _validate_dump_content(dump_path):
 
 
 def copy_reference_dump(lib_path, reference_dump_dir):
-    reference_dump_path = os.path.join(
-        reference_dump_dir, os.path.basename(lib_path))
-    os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     _validate_dump_content(lib_path)
-    shutil.copyfile(lib_path, reference_dump_path)
-    print('Created abi dump at', reference_dump_path)
-    return reference_dump_path
+    ref_dump_name = (_strip_dump_name_ext(os.path.basename(lib_path)) +
+                     SOURCE_ABI_DUMP_EXT)
+    ref_dump_path = os.path.join(reference_dump_dir, ref_dump_name)
+    os.makedirs(reference_dump_dir, exist_ok=True)
+    shutil.copyfile(lib_path, ref_dump_path)
+    print(f'Created abi dump at {ref_dump_path}')
+    return ref_dump_path
 
 
 def run_header_abi_dumper(input_path, output_path, cflags=tuple(),
@@ -197,7 +210,7 @@ def _get_module_variant_dir_name(tag, arch_cpu_str):
 
     For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
     """
-    if tag in ('LLNDK', 'NDK', 'PLATFORM'):
+    if tag in ('LLNDK', 'NDK', 'PLATFORM', 'APEX'):
         return f'android_{arch_cpu_str}_shared'
     if tag == 'VENDOR':
         return f'android_vendor_{arch_cpu_str}_shared'
@@ -230,11 +243,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, arches, lsdump_filter):
                 continue
             tag, path = (x.strip() for x in line.split(':', 1))
             dir_path, filename = os.path.split(path)
-            if not filename.endswith(SOURCE_ABI_DUMP_EXT):
-                continue
-            libname = filename[:-len(SOURCE_ABI_DUMP_EXT)]
-            if not libname:
-                continue
+            libname = _strip_dump_name_ext(filename)
             if not lsdump_filter(tag, libname):
                 continue
             # dir_path may contain soong config hash.

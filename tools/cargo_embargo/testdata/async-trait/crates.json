@@ -3,7 +3,7 @@
     {
       "name": "async_trait",
       "package_name": "async-trait",
-      "version": "0.1.73",
+      "version": "0.1.74",
       "types": ["proc-macro"],
       "target": null,
       "features": [],

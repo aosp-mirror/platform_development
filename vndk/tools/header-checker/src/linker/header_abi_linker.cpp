@@ -37,6 +37,7 @@
 
 
 using namespace header_checker;
+using header_checker::repr::ModeTagPolicy;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
@@ -81,9 +82,19 @@ static llvm::cl::list<std::string> excluded_symbol_tags(
     "exclude-symbol-tag", llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::list<std::string> included_symbol_tags(
+    "include-symbol-tag",
+    llvm::cl::desc("Filter the symbols in the version script by mode tag, "
+                   "such as llndk, apex, and systemapi. The format is "
+                   "<tag>=<level> or <tag>. If this option is not specified, "
+                   "all mode tags are included."),
+    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
 static llvm::cl::opt<std::string> api(
-    "api", llvm::cl::desc("<api>"), llvm::cl::Optional,
-    llvm::cl::init("current"),
+    "api",
+    llvm::cl::desc("Filter the symbols in the version script by comparing "
+                   "\"introduced\" tags and the specified API level."),
+    llvm::cl::Optional, llvm::cl::init("current"),
     llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> api_map(
@@ -91,6 +102,18 @@ static llvm::cl::opt<std::string> api_map(
     llvm::cl::desc("Specify the path to the json file that maps codenames to "
                    "API levels."),
     llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<ModeTagPolicy> symbol_tag_policy(
+    "symbol-tag-policy",
+    llvm::cl::desc("Specify how to match -include-symbol-tag."),
+    llvm::cl::values(clEnumValN(ModeTagPolicy::MatchTagAndApi, "MatchTagAndApi",
+                                "If a symbol has mode tags, match both the "
+                                "mode tags and the \"introduced\" tag."),
+                     clEnumValN(ModeTagPolicy::MatchTagOnly, "MatchTagOnly",
+                                "If a symbol has mode tags, match the mode "
+                                "tags and ignore the \"introduced\" tag.")),
+    llvm::cl::init(ModeTagPolicy::MatchTagAndApi),
+    llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> arch(
     "arch", llvm::cl::desc("<arch>"), llvm::cl::Optional,
@@ -128,23 +151,17 @@ static llvm::cl::opt<std::size_t> sources_per_thread(
 
 class HeaderAbiLinker {
  public:
-  HeaderAbiLinker(
-      const std::vector<std::string> &dump_files,
-      const std::vector<std::string> &exported_header_dirs,
-      const std::string &version_script,
-      const std::string &so_file,
-      const std::string &linked_dump,
-      const std::string &arch,
-      const std::string &api,
-      const utils::ApiLevelMap &api_level_map,
-      const std::vector<std::string> &excluded_symbol_versions,
-      const std::vector<std::string> &excluded_symbol_tags)
-      : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
-        version_script_(version_script), so_file_(so_file),
-        out_dump_name_(linked_dump),
-        arch_(arch), api_(api), api_level_map_(api_level_map),
-        excluded_symbol_versions_(excluded_symbol_versions),
-        excluded_symbol_tags_(excluded_symbol_tags) {}
+  HeaderAbiLinker(const std::vector<std::string> &dump_files,
+                  const std::vector<std::string> &exported_header_dirs,
+                  repr::VersionScriptParser &version_script_parser,
+                  const std::string &version_script, const std::string &so_file,
+                  const std::string &linked_dump)
+      : dump_files_(dump_files),
+        exported_header_dirs_(exported_header_dirs),
+        version_script_parser_(version_script_parser),
+        version_script_(version_script),
+        so_file_(so_file),
+        out_dump_name_(linked_dump) {}
 
   bool LinkAndDump();
 
@@ -187,14 +204,10 @@ class HeaderAbiLinker {
  private:
   const std::vector<std::string> &dump_files_;
   const std::vector<std::string> &exported_header_dirs_;
+  repr::VersionScriptParser &version_script_parser_;
   const std::string &version_script_;
   const std::string &so_file_;
   const std::string &out_dump_name_;
-  const std::string &arch_;
-  const std::string &api_;
-  const utils::ApiLevelMap &api_level_map_;
-  const std::vector<std::string> &excluded_symbol_versions_;
-  const std::vector<std::string> &excluded_symbol_tags_;
 
   std::set<std::string> exported_headers_;
 
@@ -429,30 +442,13 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  std::optional<utils::ApiLevel> api_level = api_level_map_.Parse(api_);
-  if (!api_level) {
-    llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
-    return false;
-  }
-
   std::ifstream stream(version_script_, std::ios_base::in);
   if (!stream) {
     llvm::errs() << "Failed to open version script file\n";
     return false;
   }
 
-  repr::VersionScriptParser parser;
-  parser.SetArch(arch_);
-  parser.SetApiLevel(api_level.value());
-  parser.SetApiLevelMap(api_level_map_);
-  for (auto &&version : excluded_symbol_versions_) {
-    parser.AddExcludedSymbolVersion(version);
-  }
-  for (auto &&tag : excluded_symbol_tags_) {
-    parser.AddExcludedSymbolTag(tag);
-  }
-
-  version_script_symbols_ = parser.Parse(stream);
+  version_script_symbols_ = version_script_parser_.Parse(stream);
   if (!version_script_symbols_) {
     llvm::errs() << "Failed to parse version script file\n";
     return false;
@@ -477,6 +473,47 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
   return true;
 }
 
+static bool InitializeVersionScriptParser(repr::VersionScriptParser &parser) {
+  utils::ApiLevelMap api_level_map;
+  if (!api_map.empty()) {
+    std::ifstream stream(api_map);
+    if (!stream) {
+      llvm::errs() << "Failed to open " << api_map << "\n";
+      return false;
+    }
+    if (!api_level_map.Load(stream)) {
+      llvm::errs() << "Failed to load " << api_map << "\n";
+      return false;
+    }
+  }
+
+  std::optional<utils::ApiLevel> api_level = api_level_map.Parse(api);
+  if (!api_level) {
+    llvm::errs() << "-api must be \"current\", an integer, or a codename in "
+                    "-api-map\n";
+    return false;
+  }
+
+  parser.SetArch(arch);
+  parser.SetApiLevel(api_level.value());
+  parser.SetApiLevelMap(api_level_map);
+  for (auto &&version : excluded_symbol_versions) {
+    parser.AddExcludedSymbolVersion(version);
+  }
+  for (auto &&tag : excluded_symbol_tags) {
+    parser.AddExcludedSymbolTag(tag);
+  }
+  for (auto &&tag : included_symbol_tags) {
+    if (!parser.AddModeTag(tag)) {
+      llvm::errs() << "Failed to parse -include-symbol-tag " << tag << "\n";
+      return false;
+    }
+  }
+  parser.SetModeTagPolicy(symbol_tag_policy);
+
+  return true;
+}
+
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions(header_linker_category);
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
@@ -486,26 +523,18 @@ int main(int argc, const char **argv) {
     return -1;
   }
 
-  utils::ApiLevelMap api_level_map;
-  if (!api_map.empty()) {
-    std::ifstream stream(api_map);
-    if (!stream) {
-      llvm::errs() << "Failed to open " << api_map << "\n";
-      return -1;
-    }
-    if (!api_level_map.Load(stream)) {
-      llvm::errs() << "Failed to load " << api_map << "\n";
-      return -1;
-    }
+  repr::VersionScriptParser version_script_parser;
+  if (!InitializeVersionScriptParser(version_script_parser)) {
+    return -1;
   }
 
   if (no_filter) {
     static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
 
-  HeaderAbiLinker Linker(dump_files, exported_header_dirs, version_script,
-                         so_file, linked_dump, arch, api, api_level_map,
-                         excluded_symbol_versions, excluded_symbol_tags);
+  HeaderAbiLinker Linker(dump_files, exported_header_dirs,
+                         version_script_parser, version_script, so_file,
+                         linked_dump);
 
   if (!Linker.LinkAndDump()) {
     llvm::errs() << "Failed to link and dump elements\n";
