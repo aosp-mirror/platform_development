@@ -33,6 +33,9 @@ export abstract class AbstractParser<T> implements Parser<T> {
   protected traceProcessor: WasmEngineProxy;
   protected realToBootTimeOffsetNs?: bigint;
   protected timestampConverter: ParserTimestampConverter;
+
+  protected queryTimestampsSql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
+
   private timestamps: Timestamp[] | undefined;
   private lengthEntries = 0;
   private traceFile: TraceFile;
@@ -107,8 +110,8 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return this.realToBootTimeOffsetNs;
   }
 
-  private async queryBootTimeTimestamps(): Promise<Array<bigint>> {
-    const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
+  protected async queryBootTimeTimestamps(): Promise<Array<bigint>> {
+    const sql = this.queryTimestampsSql;
     const result = await this.traceProcessor.query(sql).waitAllRows();
     const timestamps: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
@@ -121,9 +124,7 @@ export abstract class AbstractParser<T> implements Parser<T> {
   // (timestamp parameter).
   // The timestamp parameter must be a non-zero timestamp queried/provided by TP,
   // otherwise the TO_REALTIME() SQL function might return invalid values.
-  private async queryRealToBootTimeOffset(
-    bootTimeNs: bigint,
-  ): Promise<bigint> {
+  private async queryRealToBootTimeOffset(bootTimeNs: bigint): Promise<bigint> {
     const sql = `
       SELECT TO_REALTIME(${bootTimeNs}) as realtime;
     `;

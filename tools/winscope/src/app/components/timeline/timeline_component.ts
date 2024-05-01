@@ -35,6 +35,7 @@ import {
   Validators,
 } from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
@@ -76,12 +77,13 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
       </div>
       <expanded-timeline
         [timelineData]="timelineData"
+        [store]="store"
         (onTracePositionUpdate)="updatePosition($event)"
         (onScrollEvent)="updateScrollEvent($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
-    <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
+    <div id="toggle" [style.background-color]="getAppBackgroundColor()" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
       <button
         mat-icon-button
         [class]="TOGGLE_BUTTON_CLASS"
@@ -94,7 +96,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
     </div>
       <div class="navbar" #collapsedTimeline>
         <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
-          <div id="time-selector">
+          <div id="time-selector" [style.background-color]="getNavbarBlockColor()">
             <form [formGroup]="timestampForm" class="time-selector-form">
               <mat-form-field
                 class="time-input human"
@@ -140,7 +142,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                 </div>
               </mat-form-field>
             </form>
-            <div class="time-controls">
+            <div class="time-controls" [style.background-color]="getNavbarInnerBlockColor()">
               <button
                 mat-icon-button
                 id="prev_entry_button"
@@ -170,7 +172,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     *ngFor="let trace of sortedAvailableTraces"
                     [value]="trace"
                     [style]="{
-                      color: '#6983FF',
+                      color: getTraceSelectorTextColor(),
                       opacity: isOptionDisabled(trace) ? 0.5 : 1.0
                     }"
                     [disabled]="isOptionDisabled(trace)"
@@ -188,7 +190,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     </button>
                   </div>
                 </div>
-                <mat-select-trigger class="shown-selection">
+                <mat-select-trigger class="shown-selection" [style.background-color]="getNavbarBlockColor()">
                   <div class="filter-header">
                     <span class="mat-body-2"> Filter </span>
                     <mat-icon class="material-symbols-outlined">expand_circle_up</mat-icon>
@@ -217,6 +219,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
             [selectedTraces]="selectedTraces"
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
+            [store]="store"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
             id="mini-timeline"
@@ -253,7 +256,6 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         border-right: 0px;
         border-top-left-radius: 6px;
         border-top-right-radius: 6px;
-        background-color: #fafafa;
       }
       .navbar {
         display: flex;
@@ -272,7 +274,6 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         align-items: center;
         justify-content: center;
         border-radius: 10px;
-        background-color: #EEEFF0;
         margin-left: 0.5rem;
         height: 116px;
         width: 282px;
@@ -313,7 +314,6 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         padding-right: 2px;
       }
       #time-selector .time-controls {
-        background-color: #DDDDDD;
         border-radius: 10px;
         margin: 0.5rem;
         display: flex;
@@ -333,10 +333,6 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         height: 18px;
         line-height: 18px;
         display: flex;
-      }
-      .time-selector-form .mat-icon,
-      .shown-selection .filter-header .mat-icon {
-        color: #444746;
       }
       .shown-selection .trace-icon {
         font-size: 18px;
@@ -382,7 +378,6 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
       #trace-selector .shown-selection {
         height: 116px;
         border-radius: 10px;
-        background-color: #EEEFF0;
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
@@ -819,6 +814,30 @@ export class TimelineComponent
     ).getUTCOffset();
   }
 
+  getAppBackgroundColor(): string {
+    return this.isDarkMode()
+      ? Color.APP_BACKGROUND_DARK_MODE
+      : Color.APP_BACKGROUND_LIGHT_MODE;
+  }
+
+  getNavbarBlockColor(): string {
+    return this.isDarkMode()
+      ? Color.NAVBAR_BLOCK_DARK_MODE
+      : Color.NAVBAR_BLOCK_LIGHT_MODE;
+  }
+
+  getNavbarInnerBlockColor(): string {
+    return this.isDarkMode()
+      ? Color.NAVBAR_INNER_BLOCK_DARK_MODE
+      : Color.NAVBAR_INNER_BLOCK_LIGHT_MODE;
+  }
+
+  getTraceSelectorTextColor(): string {
+    return this.isDarkMode()
+      ? Color.TRACE_SELECTOR_TEXT_DARK_MODE
+      : Color.TRACE_SELECTOR_TEXT_LIGHT_MODE;
+  }
+
   private updateTimeInputValuesToCurrentTimestamp() {
     const currentTimestampNs =
       this.getCurrentTracePosition().timestamp.getValueNs();
@@ -877,5 +896,9 @@ export class TimelineComponent
   private validateNsFormat(control: FormControl): ValidationErrors | null {
     const valid = TimestampUtils.isNsFormat(control.value ?? '');
     return !valid ? {invalidInput: control.value} : null;
+  }
+
+  private isDarkMode(): boolean {
+    return this.store?.get('dark-mode') === 'true';
   }
 }

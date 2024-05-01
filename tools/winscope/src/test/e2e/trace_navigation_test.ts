@@ -63,7 +63,6 @@ describe('Trace navigation', () => {
       toolbar.element(by.css('.file-descriptor')),
       toolbar.element(by.css('.upload-new')),
       toolbar.element(by.css('.save-button')),
-      toolbar.element(by.css('.trace-file-info')),
       toolbar.element(by.css('.documentation')),
       toolbar.element(by.css('.report-bug')),
       toolbar.element(by.css('.dark-mode')),

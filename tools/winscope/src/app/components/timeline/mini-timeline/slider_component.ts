@@ -60,7 +60,7 @@ import {Transformer} from './transformer';
     `
       #timeline-slider-box {
         position: relative;
-        margin: 5px 0;
+        margin-bottom: 5px;
       }
 
       #timeline-slider-box,
@@ -79,11 +79,11 @@ import {Transformer} from './transformer';
 
       .background.line {
         width: 100%;
-        background: ${Color.GUIDE_BAR_LIGHT};
+        background: ${Color.GUIDE_BAR};
       }
 
       .selection.line {
-        background: ${Color.SELECTOR_COLOR};
+        background: ${Color.TIME_SELECTOR_COLOR};
       }
 
       .slider {
@@ -95,13 +95,13 @@ import {Transformer} from './transformer';
 
       .handle {
         flex-grow: 1;
-        background: ${Color.SELECTION_BACKGROUND};
+        background: ${Color.TIME_SELECTION_BACKGROUND};
         cursor: grab;
       }
 
       .cropper {
         width: 5px;
-        background: ${Color.SELECTOR_COLOR};
+        background: ${Color.TIME_SELECTOR_COLOR};
       }
 
       .cropper.left,
@@ -309,4 +309,4 @@ export class SliderComponent {
   }
 }
 
-export const MIN_SLIDER_WIDTH = 50;
+export const MIN_SLIDER_WIDTH = 30;

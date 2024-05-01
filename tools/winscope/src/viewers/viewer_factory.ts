@@ -15,7 +15,7 @@
  */
 
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {Viewer} from './viewer';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
@@ -34,9 +34,6 @@ import {
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
-  // Note:
-  // the final order of tabs/views in the UI corresponds the order of the
-  // respective viewers below
   static readonly VIEWERS = [
     ViewerSurfaceFlinger,
     ViewerWindowManager,
@@ -47,10 +44,10 @@ class ViewerFactory {
     ViewerProtoLog,
     ViewerScreenRecording,
     ViewerScreenshot,
-    ViewerTransitions,
     ViewerViewCaptureLauncherActivity,
     ViewerViewCaptureTaskbarDragLayer,
     ViewerViewCaptureTaskbarOverlayDragLayer,
+    ViewerTransitions,
   ];
 
   createViewers(traces: Traces, storage: Storage): Viewer[] {
@@ -67,7 +64,15 @@ class ViewerFactory {
       }
     }
 
-    return viewers;
+    // Note:
+    // the final order of tabs/views in the UI corresponds the order of the
+    // respective viewers below
+    return viewers.sort((a, b) =>
+      TraceTypeUtils.compareByDisplayOrder(
+        a.getDependencies()[0],
+        b.getDependencies()[0],
+      ),
+    );
   }
 }
 

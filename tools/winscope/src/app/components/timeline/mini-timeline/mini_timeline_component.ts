@@ -24,8 +24,10 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
+import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
@@ -35,26 +37,27 @@ import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
 import {MiniTimelineDrawerImpl} from './drawer/mini_timeline_drawer_impl';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
+import {MIN_SLIDER_WIDTH} from './slider_component';
 import {Transformer} from './transformer';
 
 @Component({
   selector: 'mini-timeline',
   template: `
-    <div id="mini-timeline-wrapper" #miniTimelineWrapper>
-      <canvas #canvas id="mini-timeline-canvas"></canvas>
-      <div class="zoom-control-wrapper">
+    <div class="mini-timeline-outer-wrapper">
+      <div class="zoom-buttons" [style.background-color]="getZoomButtonsBackgroundColor()">
+        <button mat-icon-button id="zoom-in-btn" (click)="zoomIn()">
+          <mat-icon>zoom_in</mat-icon>
+        </button>
+        <button mat-icon-button id="zoom-out-btn" (click)="zoomOut()">
+          <mat-icon>zoom_out</mat-icon>
+        </button>
+        <button mat-icon-button id="reset-zoom-btn" (click)="resetZoom()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+      <div id="mini-timeline-wrapper" #miniTimelineWrapper>
+        <canvas #canvas id="mini-timeline-canvas"></canvas>
         <div class="zoom-control">
-          <div class="zoom-buttons">
-            <button mat-icon-button id="reset-zoom-btn" (click)="resetZoom()">
-              <mat-icon>refresh</mat-icon>
-            </button>
-            <button mat-icon-button id="zoom-in-btn" (click)="zoomIn()">
-              <mat-icon>zoom_in</mat-icon>
-            </button>
-            <button mat-icon-button id="zoom-out-btn" (click)="zoomOut()">
-              <mat-icon>zoom_out</mat-icon>
-            </button>
-          </div>
           <slider
             [fullRange]="timelineData.getFullTimeRange()"
             [zoomRange]="timelineData.getZoomRange()"
@@ -67,35 +70,33 @@ import {Transformer} from './transformer';
   `,
   styles: [
     `
+      .mini-timeline-outer-wrapper {
+        display: inline-flex;
+        width: 100%;
+        min-height: 5em;
+        height: 100%;
+      }
+      .zoom-buttons {
+        width: fit-content;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .zoom-buttons button {
+        width: fit-content;
+      }
       #mini-timeline-wrapper {
         width: 100%;
         min-height: 5em;
         height: 100%;
       }
-      .zoom-control-wrapper {
-        margin-top: -25px;
-        margin-left: -80px;
-        padding-right: 30px;
-      }
       .zoom-control {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        justify-items: center;
-        gap: 23px;
+        padding-right: ${MIN_SLIDER_WIDTH / 2}px;
+        margin-top: -10px;
       }
       .zoom-control slider {
         flex-grow: 1;
-      }
-      .zoom-buttons {
-        z-index: 20;
-        position: relative;
-        left: 120px;
-        display: flex;
-        background-color: #f8f9fa;
-      }
-      .zoom-buttons .mat-icon-button {
-        width: 28px;
       }
     `,
   ],
@@ -106,6 +107,7 @@ export class MiniTimelineComponent {
   @Input() selectedTraces: TraceType[] | undefined;
   @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
+  @Input() store: PersistentStore | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onSeekTimestampUpdate = new EventEmitter<
@@ -163,6 +165,12 @@ export class MiniTimelineComponent {
     } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
+  }
+
+  getZoomButtonsBackgroundColor(): string {
+    return this.store?.get('dark-mode') === 'true'
+      ? Color.APP_BACKGROUND_DARK_MODE
+      : Color.APP_BACKGROUND_LIGHT_MODE;
   }
 
   getTracesToShow(): Traces {

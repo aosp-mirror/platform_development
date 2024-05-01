@@ -104,11 +104,11 @@ export class TraceTypeUtils {
     TraceType.TRANSACTIONS,
     TraceType.TRANSACTIONS_LEGACY,
     TraceType.PROTO_LOG,
-    TraceType.TRANSITION,
     TraceType.VIEW_CAPTURE,
     TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
     TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
     TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+    TraceType.TRANSITION,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {

@@ -93,7 +93,10 @@ export class LoadedParsers {
 
     if (this.perfettoParsers.size > 0) {
       const file: TraceFile = this.perfettoParsers.values().next().value.file;
-      const filenameInArchive = FileUtils.removeDirFromFileName(file.file.name);
+      let filenameInArchive = FileUtils.removeDirFromFileName(file.file.name);
+      if (FileUtils.getFileExtension(file.file) === undefined) {
+        filenameInArchive += '.perfetto-trace';
+      }
       const archiveFile = new File([file.file], filenameInArchive);
       archiveFiles.push(archiveFile);
     }
@@ -103,8 +106,11 @@ export class LoadedParsers {
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
           ? TRACE_INFO[traceType].downloadArchiveDir + '/'
           : '';
-      const filenameInArchive =
+      let filenameInArchive =
         archiveDir + FileUtils.removeDirFromFileName(file.file.name);
+      if (FileUtils.getFileExtension(file.file) === undefined) {
+        filenameInArchive += TRACE_INFO[traceType].legacyExt;
+      }
       const archiveFile = new File([file.file], filenameInArchive);
       archiveFiles.push(archiveFile);
     });
