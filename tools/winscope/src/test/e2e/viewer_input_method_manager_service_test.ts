@@ -29,7 +29,7 @@ describe('Viewer Input Method Manager Service', () => {
   it('processes trace from zip and navigates correctly', async () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
-      'Input Method Manager Service',
+      'IME system_server',
       viewerSelector,
     );
     await E2eTestUtils.checkTimelineTraceSelector({

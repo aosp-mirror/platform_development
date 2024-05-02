@@ -350,7 +350,7 @@ class E2eTestUtils {
     // discards some traces due to old data
     expect(text).not.toContain('ProtoLog');
     expect(text).not.toContain('IME Service');
-    expect(text).not.toContain('IME Manager Service');
+    expect(text).not.toContain('IME system_server');
     expect(text).not.toContain('IME Clients');
     expect(text).not.toContain('wm_log.winscope');
     expect(text).not.toContain('ime_trace_service.winscope');

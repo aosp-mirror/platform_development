@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {TRACE_INFO} from 'app/trace_info';
 import {Traces} from 'trace/traces';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
@@ -33,7 +34,7 @@ class ViewerInputMethodClients extends ViewerInputMethod {
       ViewType.TAB,
       this.getDependencies(),
       this.htmlElement,
-      'Input Method Clients',
+      TRACE_INFO[TraceType.INPUT_METHOD_CLIENTS].name,
       TraceType.INPUT_METHOD_CLIENTS,
     );
   }

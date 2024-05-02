@@ -29,7 +29,7 @@ describe('Viewer Input Method Clients', () => {
   it('processes trace from zip and navigates correctly', async () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
-      'Input Method Clients',
+      'IME Clients',
       viewerSelector,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
