@@ -23,6 +23,12 @@ export enum MessageType {
   FILES,
 }
 
+export enum TimestampType {
+  UNKNOWN = 0,
+  CLOCK_BOOTTIME,
+  CLOCK_REALTIME,
+}
+
 export interface Message {
   type: MessageType;
 }
@@ -41,6 +47,7 @@ export class MessageBugReport implements Message {
   constructor(
     public file: File,
     public timestampNs?: bigint,
+    public timestampType?: TimestampType,
     public issueId?: string,
   ) {}
 }
@@ -48,11 +55,19 @@ export class MessageBugReport implements Message {
 export class MessageTimestamp implements Message {
   type = MessageType.TIMESTAMP;
 
-  constructor(public timestampNs: bigint, public sections?: string[]) {}
+  constructor(
+    public timestampNs: bigint,
+    public timestampType?: TimestampType,
+    public sections?: string[],
+  ) {}
 }
 
 export class MessageFiles implements Message {
   type = MessageType.FILES;
 
-  constructor(public files: File[], public timestampNs?: bigint) {}
+  constructor(
+    public files: File[],
+    public timestampNs?: bigint,
+    public timestampType?: TimestampType,
+  ) {}
 }
