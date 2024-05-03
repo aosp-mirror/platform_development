@@ -44,6 +44,7 @@ rects-view .mat-tab-label {
     min-width: 60px;
     height: 32px;
     font-size: 12px;
+    pointer-events: none;
 }
 
 rects-view .mat-tab-body {
