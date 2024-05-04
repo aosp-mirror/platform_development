@@ -123,6 +123,10 @@ $(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_module_lib_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):module-lib-data/api-versions.xml)
 
+# ======= Lint module-lib API XML (complete API) ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_module_lib_complete_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):module-lib-data/api-versions-complete.xml)
+
 # ======= Lint module-lib Annotations zip (complete API) ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-module-lib.zip)/sdk-annotations-module-lib.zip
 $(call dist-for-goals,sdk,$(full_target):module-lib-data/annotations.zip)
@@ -130,6 +134,10 @@ $(call dist-for-goals,sdk,$(full_target):module-lib-data/annotations.zip)
 # ======= Lint system-server API XML (non-updatable APIs only) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_server_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):system-server-data/api-versions.xml)
+
+# ======= Lint system-server API XML (complete API) ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_server_complete_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):system-server-data/api-versions-complete.xml)
 
 # ======= Lint system-server Annotations zip (complete API) ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system-server.zip)/sdk-annotations-system-server.zip
