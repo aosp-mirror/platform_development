@@ -117,35 +117,20 @@ import {Distance2D} from './types3d';
         *ngIf="internalDisplays.length > 0"
         (selectedTabChange)="blurTab()"
         dynamicHeight>
-        <mat-tab label="Displays">
+        <mat-tab [label]="groupLabel">
           <div class="display-button-container display-name-buttons">
             <button
               #tooltip="matTooltip"
               *ngFor="let display of internalDisplays"
               [color]="getDisplayButtonColor(display.groupId)"
-              [matTooltip]="display.name"
+              [matTooltip]="getDisplayButtonTooltip(display, displayButtonText)"
               [matTooltipDisabled]="shouldDisableTooltip(displayButtonText)"
+              matTooltipClass="multline-tooltip"
               (mouseenter)="shouldDisableTooltip(displayButtonText) ? tooltip.disabled = true : tooltip.disabled = false"
               (mouseleave)="tooltip.disabled = true"
               mat-raised-button
               (click)="onDisplayIdChange(display)">
               <span #displayButtonText> {{ display.name }} </span>
-            </button>
-          </div>
-        </mat-tab>
-        <mat-tab *ngIf="isStackBased" label="Stacks">
-          <div class="display-button-container stack-buttons">
-            <button
-              *ngFor="let groupId of internalGroupIds"
-              #tooltip="matTooltip"
-              [color]="getStackButtonColor(groupId)"
-              (mouseenter)="tooltip.disabled = false"
-              (mouseleave)="tooltip.disabled = true"
-              [matTooltip]="getStackButtonTooltip(groupId)"
-              matTooltipClass="multline-tooltip"
-              mat-raised-button
-              (click)="onGroupIdChange(groupId)">
-              {{ getStackButtonLabel(groupId) }}
             </button>
           </div>
         </mat-tab>
@@ -253,19 +238,18 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = 'title';
   @Input() zoomFactor = 1;
   @Input() store?: PersistentStore;
-  @Input() isStackBased = false;
   @Input() rects: UiRect[] = [];
   @Input() miniRects: UiRect[] | undefined;
   @Input() displays: DisplayIdentifier[] = [];
   @Input() highlightedItem = '';
+  @Input() groupLabel = 'Displays';
+  @Input() isStackBased = false;
 
-  private stackSelected = false;
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
   private storeKeyShowOnlyVisibleState = '';
   private storeKeyZSpacingFactor = '';
   private internalDisplays: DisplayIdentifier[] = [];
-  private internalGroupIds = new Set<number>();
   private internalHighlightedItem = '';
   private currentDisplay: DisplayIdentifier | undefined;
   private mapper3d: Mapper3D;
@@ -311,7 +295,6 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.internalDisplays.length > 0
         ? this.getFirstDisplayWithRectsOrFirstDisplay(this.internalDisplays)
         : undefined;
-    this.mapper3d.setCurrentGroupId(this.currentDisplay?.groupId ?? 0);
     this.mapper3d.increaseZoomFactor(this.zoomFactor - 1);
     this.drawLargeRectsAndLabels();
 
@@ -345,11 +328,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
     if (simpleChanges['displays']) {
       this.onDisplaysChange(simpleChanges['displays']);
-      if (this.isStackBased) {
-        this.internalGroupIds = new Set(
-          this.internalDisplays.map((display) => display.groupId),
-        );
-      }
     }
     if (simpleChanges['miniRects']) {
       this.internalMiniRects = simpleChanges['miniRects'].currentValue;
@@ -376,14 +354,12 @@ export class RectsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.stackSelected) {
-      const curr = this.internalDisplays.find(
-        (display) => display.displayId === this.currentDisplay?.displayId,
-      );
-      if (curr) {
-        this.updateCurrentDisplay(curr);
-        return;
-      }
+    const curr = this.internalDisplays.find(
+      (display) => display.displayId === this.currentDisplay?.displayId,
+    );
+    if (curr) {
+      this.updateCurrentDisplay(curr);
+      return;
     }
 
     const displaysWithCurrentGroupId = this.internalDisplays.filter(
@@ -396,22 +372,10 @@ export class RectsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const displayWithCurrentDisplayId = this.internalDisplays.find(
-      (display) => display.displayId === this.currentDisplay?.displayId,
+    this.updateCurrentDisplay(
+      this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
     );
-    if (!displayWithCurrentDisplayId) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithCurrentGroupId),
-      );
-      return;
-    }
-
-    if (
-      displayWithCurrentDisplayId.groupId !== this.mapper3d.getCurrentGroupId()
-    ) {
-      this.updateCurrentDisplay(displayWithCurrentDisplayId);
-      return;
-    }
+    return;
   }
 
   updateControlsFromStore() {
@@ -496,61 +460,31 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onDisplayIdChange(display: DisplayIdentifier) {
-    this.stackSelected = false;
     this.updateCurrentDisplay(display);
   }
 
-  shouldDisableTooltip(buttonText: HTMLElement) {
-    return buttonText.offsetWidth < 200;
+  getDisplayButtonColor(groupId: number) {
+    if (!this.currentDisplay) return 'primary';
+    return this.currentDisplay.groupId === groupId ? 'primary' : 'secondary';
   }
 
-  onGroupIdChange(groupId: number) {
-    this.stackSelected = true;
-    const displaysWithGroupId = this.getDisplaysWithGroupId(groupId);
-    if (
-      this.currentDisplay &&
-      displaysWithGroupId.length > 0 &&
-      !displaysWithGroupId.includes(this.currentDisplay)
-    ) {
-      this.updateCurrentDisplay(
-        this.getFirstDisplayWithRectsOrFirstDisplay(displaysWithGroupId),
+  shouldDisableTooltip(buttonText: HTMLElement): boolean {
+    return !this.isStackBased && buttonText.offsetWidth < 200;
+  }
+
+  getDisplayButtonTooltip(
+    display: DisplayIdentifier,
+    buttonText: HTMLElement,
+  ): string {
+    const hasLongDisplayName = buttonText.offsetWidth >= 200;
+    const displayName = hasLongDisplayName ? display.name + '\n' : '';
+    if (display.groupId === DisplayLayerStack.INVALID_LAYER_STACK) {
+      return (
+        displayName +
+        (this.isStackBased ? 'Invalid layer stack - display off' : '')
       );
     }
-  }
-
-  getDisplayButtonColor(groupId: number): string {
-    if (this.stackSelected) return 'secondary';
-    return this.getButtonColor(groupId);
-  }
-
-  getStackButtonColor(groupId: number): string {
-    if (!this.stackSelected) return 'secondary';
-    return this.getButtonColor(groupId);
-  }
-
-  getStackButtonTooltip(groupId: number): string {
-    const displayNames = this.getDisplaysWithGroupId(groupId)
-      .map((display) => display.name)
-      .join(', ');
-    if (groupId === DisplayLayerStack.INVALID_LAYER_STACK) {
-      return `
-        Invalid layer stack - associated displays off.
-        Displays: ${displayNames}
-      `;
-    }
-    return `
-    Associated displays on.
-    Displays: ${displayNames}
-  `;
-  }
-
-  getStackButtonLabel(groupId: number): string {
-    return (
-      `Stack ${groupId}: ` +
-      this.getDisplaysWithGroupId(groupId)
-        .map((display) => display.name)
-        .join(', ')
-    );
+    return displayName + (this.isStackBased ? 'display on' : '');
   }
 
   onRectClick(event: MouseEvent) {
@@ -594,11 +528,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     return this.mapper3d.getZSpacingFactor();
   }
 
-  private getButtonColor(groupId: number) {
-    if (!this.currentDisplay) return 'primary';
-    return this.currentDisplay.groupId === groupId ? 'primary' : 'secondary';
-  }
-
   private getFirstDisplayWithRectsOrFirstDisplay(
     displays: DisplayIdentifier[],
   ): DisplayIdentifier {
@@ -615,12 +544,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.currentDisplay = display;
     this.mapper3d.setCurrentGroupId(display.groupId);
     this.drawLargeRectsAndLabels();
-  }
-
-  private getDisplaysWithGroupId(groupId: number): DisplayIdentifier[] {
-    return assertDefined(
-      this.internalDisplays.filter((display) => display.groupId === groupId),
-    );
   }
 
   private findClickedRectId(event: MouseEvent): string | undefined {
