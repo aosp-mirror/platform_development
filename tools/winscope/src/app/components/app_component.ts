@@ -313,7 +313,7 @@ export class AppComponent implements WinscopeEventListener {
   title = 'winscope';
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
-  crossToolProtocol = new CrossToolProtocol();
+  crossToolProtocol: CrossToolProtocol;
   states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
@@ -358,6 +358,9 @@ export class AppComponent implements WinscopeEventListener {
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
     this.tracePipeline = new TracePipeline();
+    this.crossToolProtocol = new CrossToolProtocol(
+      this.tracePipeline.getTimestampConverter(),
+    );
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,

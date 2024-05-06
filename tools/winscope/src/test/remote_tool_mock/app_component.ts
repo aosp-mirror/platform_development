@@ -15,7 +15,7 @@
  */
 
 import {ChangeDetectorRef, Component, Inject} from '@angular/core';
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertUnreachable} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {TimeUtils} from 'common/time_utils';
 import {
@@ -25,6 +25,7 @@ import {
   MessagePing,
   MessageTimestamp,
   MessageType,
+  TimestampType,
 } from 'cross_tool/messages';
 
 @Component({
@@ -60,20 +61,26 @@ import {
     <p>Send timestamp [ns]</p>
     <input class="input-timestamp" type="number" id="name" name="name"/>
     <input
-        class="button-send-timestamp"
+        class="button-send-realtime-timestamp"
         type="button"
         value="Send"
-        (click)="onButtonSendTimestampClick()"/>
-
+        (click)="onButtonSendRealtimeTimestampClick()"/>
+    <input
+        class="button-send-boottime-timestamp"
+        type="button"
+        value="Send"
+        (click)="onButtonSendBoottimeTimestampClick()"/>
     <hr/>
-    <p>Received timestamp:</p>
-    <p class="paragraph-received-timestamp"></p>
+    <p>Received realtime timestamp:</p>
+    <p class="paragraph-received-realtime-timestamp"></p>
+    <p>Received boottime timestamp:</p>
+    <p class="paragraph-received-boottime-timestamp"></p>
   `,
 })
 export class AppComponent {
   static readonly TARGET = 'http://localhost:8080';
   static readonly TIMESTAMP_IN_BUGREPORT_MESSAGE = 1670509911000000000n;
-  static readonly TIMESTAMP_IN_FILES_MESSAGE = 1659107090338700812n;
+  static readonly TIMESTAMP_IN_FILES_MESSAGE = 15725894416n;
 
   private winscope: Window | null = null;
   private isWinscopeUp = false;
@@ -102,11 +109,24 @@ export class AppComponent {
     this.sendFiles([file]);
   }
 
-  onButtonSendTimestampClick() {
+  onButtonSendRealtimeTimestampClick() {
     const inputTimestampElement = assertDefined(
       document.querySelector('.input-timestamp'),
     ) as HTMLInputElement;
-    this.sendTimestamp(BigInt(inputTimestampElement.value));
+    this.sendTimestamp(
+      BigInt(inputTimestampElement.value),
+      TimestampType.CLOCK_REALTIME,
+    );
+  }
+
+  onButtonSendBoottimeTimestampClick() {
+    const inputTimestampElement = assertDefined(
+      document.querySelector('.input-timestamp'),
+    ) as HTMLInputElement;
+    this.sendTimestamp(
+      BigInt(inputTimestampElement.value),
+      TimestampType.CLOCK_BOOTTIME,
+    );
   }
 
   private openWinscope() {
@@ -160,18 +180,22 @@ export class AppComponent {
     this.printStatus('SENDING FILES');
 
     assertDefined(this.winscope).postMessage(
-      new MessageFiles(files, AppComponent.TIMESTAMP_IN_FILES_MESSAGE),
+      new MessageFiles(
+        files,
+        AppComponent.TIMESTAMP_IN_FILES_MESSAGE,
+        TimestampType.CLOCK_BOOTTIME,
+      ),
       AppComponent.TARGET,
     );
 
     this.printStatus('SENT FILES');
   }
 
-  private sendTimestamp(value: bigint) {
+  private sendTimestamp(value: bigint, type: TimestampType) {
     this.printStatus('SENDING TIMESTAMP');
 
     assertDefined(this.winscope).postMessage(
-      new MessageTimestamp(value),
+      new MessageTimestamp(value, type),
       AppComponent.TARGET,
     );
 
@@ -224,9 +248,28 @@ export class AppComponent {
   }
 
   private onMessageTimestampReceived(message: MessageTimestamp) {
-    const paragraph = document.querySelector(
-      '.paragraph-received-timestamp',
-    ) as HTMLParagraphElement;
+    let paragraph: HTMLParagraphElement | undefined;
+
+    const timestampType = assertDefined(message.timestampType);
+    switch (timestampType) {
+      case TimestampType.UNKNOWN:
+        throw Error("Winscope shouldn't send timestamps with UNKNOWN type");
+      case TimestampType.CLOCK_BOOTTIME: {
+        paragraph = document.querySelector(
+          '.paragraph-received-boottime-timestamp',
+        ) as HTMLParagraphElement;
+        break;
+      }
+      case TimestampType.CLOCK_REALTIME: {
+        paragraph = document.querySelector(
+          '.paragraph-received-realtime-timestamp',
+        ) as HTMLParagraphElement;
+        break;
+      }
+      default:
+        assertUnreachable(timestampType);
+    }
+
     paragraph.textContent = message.timestampNs.toString();
     this.changeDetectorRef.detectChanges();
   }

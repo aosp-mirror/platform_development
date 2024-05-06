@@ -18,11 +18,6 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Cross-Tool Protocol', () => {
-  const TIMESTAMP_IN_BUGREPORT_MESSAGE = '1670509911000000000';
-  const TIMESTAMP_IN_FILES_MESSAGE = '1659107090338700812';
-  const TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE = '1670509912000000000';
-  const TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL = '1670509913000000000';
-
   beforeEach(async () => {
     await browser.restart();
 
@@ -37,7 +32,11 @@ describe('Cross-Tool Protocol', () => {
     await browser.get(E2eTestUtils.REMOTE_TOOL_MOCK_URL);
   });
 
-  it('allows cross-tool communication (open winscope with MessageBugreport)', async () => {
+  it('allows communication with ABT', async () => {
+    const TIMESTAMP_IN_BUGREPORT_MESSAGE = '1670509911000000000';
+    const TIMESTAMP_FROM_ABT_TO_WINSCOPE = '1670509912000000000';
+    const TIMESTAMP_FROM_WINSCOPE = '1670509913000000000';
+
     await openWinscopeTabFromRemoteTool();
     await waitWinscopeTabIsOpen();
 
@@ -50,14 +49,21 @@ describe('Cross-Tool Protocol', () => {
     await checkWinscopeRenderedAllViewTabs();
     await checkWinscopeTimestamp(TIMESTAMP_IN_BUGREPORT_MESSAGE);
 
-    await sendTimestampToWinscope(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
-    await checkWinscopeTimestamp(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+    await sendRealtimeTimestampToWinscope(TIMESTAMP_FROM_ABT_TO_WINSCOPE);
+    await checkWinscopeTimestamp(TIMESTAMP_FROM_ABT_TO_WINSCOPE);
 
-    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
-    await checkRemoteToolTimestamp(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE);
+    await checkRemoteToolRealtimeTimestamp(TIMESTAMP_FROM_WINSCOPE);
   });
 
-  it('allows cross-tool communication (open winscope with MessageFiles)', async () => {
+  it('allows communication with Perfetto', async () => {
+    // real-to-boottime offset = 1659107074601779989
+    const TIMESTAMP_IN_FILES_MESSAGE_REALTIME = '1659107090327674405';
+    const TIMESTAMP_FROM_PERFETTO_BOOTTIME = '15795654466';
+    const TIMESTAMP_FROM_PERFETTO_REALTIME = '1659107090397434455';
+    const TIMESTAMP_FROM_WINSCOPE_BOOTTIME = '15970486213';
+    const TIMESTAMP_FROM_WINSCOPE_REALTIME = '1659107090572266202';
+
     await openWinscopeTabFromRemoteTool();
     await waitWinscopeTabIsOpen();
 
@@ -66,13 +72,13 @@ describe('Cross-Tool Protocol', () => {
 
     await clickWinscopeViewTracesButton();
     await checkWinscopeRenderedSurfaceFlingerView();
-    await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE);
+    await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
 
-    await sendTimestampToWinscope(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
-    await checkWinscopeTimestamp(TIMESTAMP_FROM_REMOTE_TOOL_TO_WINSCOPE);
+    await sendBoottimeTimestampToWinscope(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+    await checkWinscopeTimestamp(TIMESTAMP_FROM_PERFETTO_REALTIME);
 
-    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
-    await checkRemoteToolTimestamp(TIMESTAMP_FROM_WINSCOPE_TO_REMOTE_TOOL);
+    await sendTimestampToRemoteTool(TIMESTAMP_FROM_WINSCOPE_REALTIME);
+    await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_WINSCOPE_BOOTTIME);
   });
 
   async function openWinscopeTabFromRemoteTool() {
@@ -155,11 +161,19 @@ describe('Cross-Tool Protocol', () => {
     expect(actualTabParagraphs.sort()).toEqual(expectedTabParagraphs.sort());
   }
 
-  async function sendTimestampToWinscope(value: string) {
+  async function sendRealtimeTimestampToWinscope(value: string) {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const inputElement = element(by.css('.input-timestamp'));
     await inputElement.sendKeys(value);
-    const buttonElement = element(by.css('.button-send-timestamp'));
+    const buttonElement = element(by.css('.button-send-realtime-timestamp'));
+    await buttonElement.click();
+  }
+
+  async function sendBoottimeTimestampToWinscope(value: string) {
+    await browser.switchTo().window(await getWindowHandleRemoteToolMock());
+    const inputElement = element(by.css('.input-timestamp'));
+    await inputElement.sendKeys(value);
+    const buttonElement = element(by.css('.button-send-boottime-timestamp'));
     await buttonElement.click();
   }
 
@@ -173,9 +187,20 @@ describe('Cross-Tool Protocol', () => {
     await E2eTestUtils.checkWinscopeNsTimestamp(expectedValue);
   }
 
-  async function checkRemoteToolTimestamp(expectedValue: string) {
+  async function checkRemoteToolRealtimeTimestamp(expectedValue: string) {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
-    const paragraphElement = element(by.css('.paragraph-received-timestamp'));
+    const paragraphElement = element(
+      by.css('.paragraph-received-realtime-timestamp'),
+    );
+    const actualValue = await paragraphElement.getText();
+    expect(actualValue).toEqual(expectedValue);
+  }
+
+  async function checkRemoteToolBoottimeTimestamp(expectedValue: string) {
+    await browser.switchTo().window(await getWindowHandleRemoteToolMock());
+    const paragraphElement = element(
+      by.css('.paragraph-received-boottime-timestamp'),
+    );
     const actualValue = await paragraphElement.getText();
     expect(actualValue).toEqual(expectedValue);
   }

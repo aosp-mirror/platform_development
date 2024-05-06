@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
@@ -55,7 +56,7 @@ export class Mediator {
   private viewers: Viewer[] = [];
   private focusedTabView: undefined | View;
   private areViewersLoaded = false;
-  private lastRemoteToolRealNsReceived: bigint | undefined;
+  private lastRemoteToolDeferredTimestampReceived?: () => Timestamp | undefined;
   private currentProgressListener?: ProgressListener;
 
   constructor(
@@ -164,8 +165,10 @@ export class Mediator {
           event.files,
           FilesSource.REMOTE_TOOL,
         );
-        if (event.timestampNs !== undefined) {
-          await this.processRemoteToolTimestampReceived(event.timestampNs);
+        if (event.deferredTimestamp) {
+          await this.processRemoteToolDeferredTimestampReceived(
+            event.deferredTimestamp,
+          );
         }
       },
     );
@@ -173,7 +176,9 @@ export class Mediator {
     await event.visit(
       WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED,
       async (event) => {
-        await this.processRemoteToolTimestampReceived(event.timestampNs);
+        await this.processRemoteToolDeferredTimestampReceived(
+          event.deferredTimestamp,
+        );
       },
     );
 
@@ -280,20 +285,18 @@ export class Mediator {
     });
   }
 
-  private async processRemoteToolTimestampReceived(timestampNs: bigint) {
-    const timestamp = this.tracePipeline
-      .getTimestampConverter()
-      .tryMakeTimestampFromRealNs(timestampNs);
-    if (timestamp === undefined) {
-      console.warn(
-        'Cannot apply new timestamp received from remote tool, as Winscope is only accepting elapsed timestamps for the loaded traces.',
-      );
-      return;
-    }
-    this.lastRemoteToolRealNsReceived = timestamp.getValueNs();
+  private async processRemoteToolDeferredTimestampReceived(
+    deferredTimestamp: () => Timestamp | undefined,
+  ) {
+    this.lastRemoteToolDeferredTimestampReceived = deferredTimestamp;
 
     if (!this.areViewersLoaded) {
       return; // apply timestamp later when traces are visualized
+    }
+
+    const timestamp = deferredTimestamp();
+    if (!timestamp) {
+      return;
     }
 
     const position = this.timelineData.makePositionFromActiveTrace(timestamp);
@@ -340,10 +343,6 @@ export class Mediator {
       this.tracePipeline.getTimestampConverter(),
     );
 
-    this.crossToolProtocol.setTimestampConverter(
-      this.tracePipeline.getTimestampConverter(),
-    );
-
     this.viewers = new ViewerFactory().createViewers(
       this.tracePipeline.getTraces(),
       this.storage,
@@ -383,10 +382,9 @@ export class Mediator {
   }
 
   private getInitialTracePosition(): TracePosition | undefined {
-    if (this.lastRemoteToolRealNsReceived !== undefined) {
-      const lastRemoteToolTimestamp = this.tracePipeline
-        .getTimestampConverter()
-        .tryMakeTimestampFromRealNs(this.lastRemoteToolRealNsReceived);
+    if (this.lastRemoteToolDeferredTimestampReceived) {
+      const lastRemoteToolTimestamp =
+        this.lastRemoteToolDeferredTimestampReceived();
       if (lastRemoteToolTimestamp) {
         return this.timelineData.makePositionFromActiveTrace(
           lastRemoteToolTimestamp,
@@ -426,9 +424,8 @@ export class Mediator {
     this.timelineData.clear();
     this.viewers = [];
     this.areViewersLoaded = false;
-    this.lastRemoteToolRealNsReceived = undefined;
+    this.lastRemoteToolDeferredTimestampReceived = undefined;
     this.focusedTabView = undefined;
-    this.crossToolProtocol?.setTimestampConverter(undefined);
     await this.appComponent.onWinscopeEvent(new ViewersUnloaded());
   }
 

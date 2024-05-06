@@ -116,7 +116,9 @@ describe('Mediator', () => {
       new WinscopeEventEmitterStub(),
       new WinscopeEventListenerStub(),
     );
-    crossToolProtocol = new CrossToolProtocol();
+    crossToolProtocol = new CrossToolProtocol(
+      tracePipeline.getTimestampConverter(),
+    );
     appComponent = new WinscopeEventListenerStub();
     timelineComponent = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),
@@ -342,7 +344,7 @@ describe('Mediator', () => {
       // receive timestamp
       resetSpyCalls();
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
       );
       checkTracePositionUpdateEvents(
         [viewerStub0, viewerOverlay, timelineComponent],
@@ -352,35 +354,11 @@ describe('Mediator', () => {
       // receive timestamp
       resetSpyCalls();
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(TIMESTAMP_11.getValueNs()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
       );
       checkTracePositionUpdateEvents(
         [viewerStub0, viewerOverlay, timelineComponent],
         POSITION_11,
-      );
-    });
-
-    it('propagates trace position update according to timezone', async () => {
-      const timezoneInfo: TimezoneInfo = {
-        timezone: 'Asia/Kolkata',
-        locale: 'en-US',
-        utcOffsetMs: 19800000,
-      };
-      const converter = new TimestampConverter(timezoneInfo, 0n);
-      spyOn(tracePipeline, 'getTimestampConverter').and.returnValue(converter);
-      await loadFiles();
-      await loadTraceView();
-
-      // receive timestamp
-      resetSpyCalls();
-
-      const expectedPosition = TracePosition.fromTimestamp(
-        converter.makeTimestampFromRealNs(10n),
-      );
-      await mediator.onWinscopeEvent(new RemoteToolTimestampReceived(10n));
-      checkTracePositionUpdateEvents(
-        [viewerStub0, viewerOverlay, timelineComponent],
-        expectedPosition,
       );
     });
 
@@ -392,7 +370,7 @@ describe('Mediator', () => {
       // receive timestamp
       resetSpyCalls();
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
       );
       checkTracePositionUpdateEvents([
         viewerStub0,
@@ -406,13 +384,13 @@ describe('Mediator', () => {
       tracePipeline.getTimestampConverter().makeTimestampFromRealNs(0n);
       // keep timestamp for later
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(TIMESTAMP_10.getValueNs()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_10),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       // keep timestamp for later (replace previous one)
       await mediator.onWinscopeEvent(
-        new RemoteToolTimestampReceived(TIMESTAMP_11.getValueNs()),
+        new RemoteToolTimestampReceived(() => TIMESTAMP_11),
       );
       expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
