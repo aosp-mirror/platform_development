@@ -63,7 +63,6 @@ interface Tab {
           class="tab">
           <mat-icon
             class="icon"
-            [matTooltip]="TRACE_INFO[tab.view.traceType].name"
             [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
             {{ TRACE_INFO[tab.view.traceType].icon }}
           </mat-icon>

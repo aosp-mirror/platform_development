@@ -27,9 +27,12 @@ class AdditionalContentProvider : ContentProvider() {
         val cursor = MatrixCursor(arrayOf(AdditionalContentContract.Columns.URI))
         val chooserIntent =
             queryArgs?.getParcelable(Intent.EXTRA_INTENT, Intent::class.java) ?: return cursor
+        val count = runCatching {
+            uri.getQueryParameter(PARAM_COUNT)?.toInt()
+        }.getOrNull() ?: ImageContentProvider.IMAGE_COUNT
         // Images are img1 ... img8
-        val uris = Array(ImageContentProvider.IMAGE_COUNT) { idx ->
-            ImageContentProvider.makeItemUri(idx + 1, "image/jpeg")
+        val uris = Array(count) { idx ->
+            ImageContentProvider.makeItemUri(idx, "image/jpeg")
         }
         val callingPackage = getCallingPackage()
         for (u in uris) {
@@ -158,6 +161,7 @@ class AdditionalContentProvider : ContentProvider() {
         val ADDITIONAL_CONTENT_URI = Uri.parse("content://com.android.sharetest.additionalcontent")
         val CURSOR_START_POSITION = "com.android.sharetest.CURSOR_START_POS"
         val EXTRA_SELECTION_LATENCY = "latency"
+        val PARAM_COUNT = "count"
     }
 }
 

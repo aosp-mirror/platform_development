@@ -81,9 +81,10 @@ class ImageContentProvider : ContentProvider() {
 
     companion object {
         fun makeItemUri(idx: Int, mimeType: String): Uri =
-            Uri.parse("${URI_PREFIX}img$idx.jpg")
+            Uri.parse("${URI_PREFIX}img${(idx % IMAGE_COUNT) + 1}.jpg")
                     .buildUpon()
                     .appendQueryParameter(PARAM_TYPE, mimeType)
+                    .appendQueryParameter("index", idx.toString())
                     .build()
 
         const val IMAGE_COUNT = 8
