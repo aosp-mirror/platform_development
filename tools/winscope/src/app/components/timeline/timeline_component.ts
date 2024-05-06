@@ -200,7 +200,11 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     <mat-icon
                       class="trace-icon"
                       *ngFor="let selectedTrace of getSelectedTracesToShow()"
-                      [style]="{color: TRACE_INFO[selectedTrace].color}">
+                      [style]="{color: TRACE_INFO[selectedTrace].color}"
+                      [matTooltip]="TRACE_INFO[selectedTrace].name"
+                      #tooltip="matTooltip"
+                      (mouseenter)="tooltip.disabled = false"
+                      (mouseleave)="tooltip.disabled = true">
                       {{ TRACE_INFO[selectedTrace].icon }}
                     </mat-icon>
                     <mat-icon

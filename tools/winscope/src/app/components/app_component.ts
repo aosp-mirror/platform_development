@@ -29,7 +29,6 @@ import {Title} from '@angular/platform-browser';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
-import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
@@ -319,7 +318,6 @@ export class AppComponent implements WinscopeEventListener {
   dataLoaded = false;
   showDataLoadedElements = false;
   collapsedTimelineHeight = 0;
-  TRACE_INFO = TRACE_INFO;
   isEditingFilename = false;
   store = new PersistentStore();
   viewers: Viewer[] = [];
