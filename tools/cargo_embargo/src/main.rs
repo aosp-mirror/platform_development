@@ -296,7 +296,9 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
         }
     } else {
         let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
-        write(cargo_out_path, &cargo_output.cargo_out)?;
+        if cfg.run_cargo {
+            write(cargo_out_path, &cargo_output.cargo_out)?;
+        }
         write(cargo_metadata_path, &cargo_output.cargo_metadata)?;
         cargo_output
     };
