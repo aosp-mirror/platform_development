@@ -24,6 +24,7 @@ import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {
+  ActiveTraceChanged,
   AppFilesCollected,
   AppFilesUploaded,
   AppInitialized,
@@ -434,8 +435,8 @@ describe('Mediator', () => {
 
       const view = viewerStub0.getViews()[0];
       await mediator.onWinscopeEvent(new TabbedViewSwitched(view));
-      expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-        new TabbedViewSwitched(view),
+      expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+        new ActiveTraceChanged(view.traceType),
       );
     });
 
@@ -472,12 +473,15 @@ describe('Mediator', () => {
     await mediator.onWinscopeEvent(
       new TabbedViewSwitched(viewerStub1.getViews()[0]),
     );
-    checkTracePositionUpdateEvents([
-      viewerStub1,
-      viewerOverlay,
-      timelineComponent,
-      crossToolProtocol,
-    ]);
+    checkTracePositionUpdateEvents(
+      [viewerStub1, viewerOverlay, timelineComponent, crossToolProtocol],
+      undefined,
+      undefined,
+      true,
+    );
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
+      new ActiveTraceChanged(viewerStub1.getViews()[0].traceType),
+    );
 
     // Position update -> update only visible viewers
     // Note: overlay viewer is considered always visible
@@ -489,6 +493,17 @@ describe('Mediator', () => {
       timelineComponent,
       crossToolProtocol,
     ]);
+  });
+
+  it('notifies timeline of explicit change in active trace', async () => {
+    expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
+
+    await mediator.onWinscopeEvent(
+      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
+    );
+    expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
+      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
+    );
   });
 
   async function loadFiles(files = inputFiles) {
@@ -537,6 +552,7 @@ describe('Mediator', () => {
     listenersToBeNotified: WinscopeEventListener[],
     position?: TracePosition,
     crossToolProtocolPosition = position,
+    multipleTimelineEvents = false,
   ) {
     const event = makeExpectedTracePositionUpdate(position);
     const crossToolProtocolEvent =
@@ -548,7 +564,11 @@ describe('Mediator', () => {
       if (isVisible) {
         const expected =
           listener === crossToolProtocol ? crossToolProtocolEvent : event;
-        expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
+        if (multipleTimelineEvents && listener === timelineComponent) {
+          expect(listener.onWinscopeEvent).toHaveBeenCalledWith(expected);
+        } else {
+          expect(listener.onWinscopeEvent).toHaveBeenCalledOnceWith(expected);
+        }
       } else {
         expect(listener.onWinscopeEvent).not.toHaveBeenCalled();
       }

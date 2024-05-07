@@ -320,13 +320,22 @@ export class RectsComponent implements OnInit, OnDestroy {
         this.drawLargeRectsAndLabels();
       }
     }
+    let displayChange = false;
+    if (simpleChanges['displays']) {
+      const curr: DisplayIdentifier[] = simpleChanges['displays'].currentValue;
+      const prev: DisplayIdentifier[] | null =
+        simpleChanges['displays'].previousValue;
+      displayChange =
+        curr.length > 0 &&
+        !curr.every((d, index) => d.displayId === prev?.at(index)?.displayId);
+    }
     if (simpleChanges['rects']) {
       this.internalRects = simpleChanges['rects'].currentValue;
-      if (!simpleChanges['displays']) {
+      if (!displayChange) {
         this.drawLargeRectsAndLabels();
       }
     }
-    if (simpleChanges['displays']) {
+    if (displayChange) {
       this.onDisplaysChange(simpleChanges['displays']);
     }
     if (simpleChanges['miniRects']) {
@@ -461,6 +470,11 @@ export class RectsComponent implements OnInit, OnDestroy {
 
   onDisplayIdChange(display: DisplayIdentifier) {
     this.updateCurrentDisplay(display);
+    const event = new CustomEvent(ViewerEvents.RectGroupIdChange, {
+      bubbles: true,
+      detail: {groupId: display.groupId},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   getDisplayButtonColor(groupId: number) {
@@ -584,6 +598,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     // We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
     // work directly with three.js's meshes.
     if (this.internalMiniRects) {
+      const largeRectGroupId = this.mapper3d.getCurrentGroupId();
+      this.mapper3d.setCurrentGroupId(this.internalMiniRects[0]?.groupId);
       this.mapper3d.setRects(this.internalMiniRects);
       this.mapper3d.decreaseZoomFactor(this.zoomFactor - 1);
       this.miniRectsCanvas?.draw(this.mapper3d.computeScene());
@@ -594,6 +610,8 @@ export class RectsComponent implements OnInit, OnDestroy {
         this.miniRectsCanvasElement.style.width = '25%';
         this.miniRectsCanvasElement.style.height = '25%';
       }
+
+      this.mapper3d.setCurrentGroupId(largeRectGroupId);
     }
   }
 

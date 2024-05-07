@@ -119,10 +119,10 @@ describe('TimelineData', () => {
     timelineData.setPosition(position1000);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
-    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
+    timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
-    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
   });
 
@@ -133,19 +133,12 @@ describe('TimelineData', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    timelineData.setActiveViewTraceTypes([]);
-    expect(timelineData.getCurrentPosition()).toEqual(position9);
-
-    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(timelineData.getCurrentPosition()).toEqual(position11);
-
-    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
-    timelineData.setActiveViewTraceTypes([
-      TraceType.SURFACE_FLINGER,
-      TraceType.WINDOW_MANAGER,
-    ]);
+    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
+    expect(timelineData.getCurrentPosition()).toEqual(position11);
+
+    timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
   });
 
@@ -256,7 +249,7 @@ describe('TimelineData', () => {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
 
     {
-      timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
+      timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
       const position = timelineData.makePositionFromActiveTrace(time100);
       expect(position.timestamp).toEqual(time100);
       expect(position.entry).toEqual(
@@ -265,7 +258,7 @@ describe('TimelineData', () => {
     }
 
     {
-      timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+      timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
       const position = timelineData.makePositionFromActiveTrace(time100);
       expect(position.timestamp).toEqual(time100);
       expect(position.entry).toEqual(
@@ -330,7 +323,7 @@ describe('TimelineData', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
-    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
 
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
   });

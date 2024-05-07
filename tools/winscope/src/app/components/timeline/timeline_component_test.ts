@@ -41,7 +41,11 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {ExpandedTimelineToggled, WinscopeEvent} from 'messaging/winscope_event';
+import {
+  ActiveTraceChanged,
+  ExpandedTimelineToggled,
+  WinscopeEvent,
+} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
@@ -231,7 +235,7 @@ describe('TimelineComponent', () => {
     ]);
 
     // setting same trace as active does not affect selected traces
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.activeViewTraceType = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
@@ -240,7 +244,7 @@ describe('TimelineComponent', () => {
       TraceType.SURFACE_FLINGER,
     ]);
 
-    component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
+    component.activeViewTraceType = TraceType.TRANSACTIONS;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.TRANSACTIONS,
@@ -250,7 +254,7 @@ describe('TimelineComponent', () => {
       TraceType.TRANSACTIONS,
     ]);
 
-    component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
+    component.activeViewTraceType = TraceType.WINDOW_MANAGER;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.WINDOW_MANAGER,
@@ -261,7 +265,7 @@ describe('TimelineComponent', () => {
       TraceType.WINDOW_MANAGER,
     ]);
 
-    component.activeViewTraceTypes = [TraceType.PROTO_LOG];
+    component.activeViewTraceType = TraceType.PROTO_LOG;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(timelineComponent.selectedTraces).toEqual([
@@ -272,7 +276,7 @@ describe('TimelineComponent', () => {
     ]);
 
     // setting active trace that is already selected does not affect selection
-    component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
+    component.activeViewTraceType = TraceType.TRANSACTIONS;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.TRANSACTIONS,
@@ -290,16 +294,36 @@ describe('TimelineComponent', () => {
     fixture.detectChanges();
     const timelineComponent = assertDefined(component.timeline);
 
-    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.activeViewTraceType = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
     );
 
-    component.activeViewTraceTypes = undefined;
+    component.activeViewTraceType = undefined;
     fixture.detectChanges();
     expect(timelineComponent.internalActiveTrace).toEqual(
       TraceType.SURFACE_FLINGER,
+    );
+  });
+
+  it('handles ActiveTraceChanged event', async () => {
+    loadSfWmTraces();
+    fixture.detectChanges();
+    const timelineComponent = assertDefined(component.timeline);
+
+    component.activeViewTraceType = TraceType.SURFACE_FLINGER;
+    fixture.detectChanges();
+    expect(timelineComponent.internalActiveTrace).toEqual(
+      TraceType.SURFACE_FLINGER,
+    );
+
+    await timelineComponent.onWinscopeEvent(
+      new ActiveTraceChanged(TraceType.WINDOW_MANAGER),
+    );
+    fixture.detectChanges();
+    expect(timelineComponent.internalActiveTrace).toEqual(
+      TraceType.WINDOW_MANAGER,
     );
   });
 
@@ -425,7 +449,7 @@ describe('TimelineComponent', () => {
     );
     expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
 
-    component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
+    component.activeViewTraceType = TraceType.WINDOW_MANAGER;
     assertDefined(component.timeline).internalActiveTrace =
       TraceType.WINDOW_MANAGER;
     fixture.detectChanges();
@@ -739,7 +763,7 @@ describe('TimelineComponent', () => {
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
     ]);
-    secondHost.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
+    secondHost.activeViewTraceType = TraceType.WINDOW_MANAGER;
     secondFixture.detectChanges();
   });
 
@@ -823,7 +847,7 @@ describe('TimelineComponent', () => {
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
     ];
-    hostComponent.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    hostComponent.activeViewTraceType = TraceType.SURFACE_FLINGER;
     timelineData.setPosition(position100);
     hostFixture.detectChanges();
   }
@@ -846,7 +870,7 @@ describe('TimelineComponent', () => {
       TraceType.SCREEN_RECORDING,
       TraceType.PROTO_LOG,
     ];
-    hostComponent.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    hostComponent.activeViewTraceType = TraceType.SURFACE_FLINGER;
     hostFixture.detectChanges();
   }
 
@@ -904,14 +928,14 @@ describe('TimelineComponent', () => {
     selector: 'host-component',
     template: `
       <timeline
-        [activeViewTraceTypes]="activeViewTraceTypes"
+        [activeViewTraceType]="activeViewTraceType"
         [timelineData]="timelineData"
         [availableTraces]="availableTraces"
         [store]="store"></timeline>
     `,
   })
   class TestHostComponent {
-    activeViewTraceTypes: TraceType[] | undefined;
+    activeViewTraceType: TraceType | undefined;
     timelineData = new TimelineData();
     availableTraces: TraceType[] = [];
     store = new PersistentStore();
