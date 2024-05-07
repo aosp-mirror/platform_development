@@ -39,16 +39,7 @@ interface Tab {
 @Component({
   selector: 'trace-view',
   template: `
-    <div class="overlay">
-      <div class="draggable-container" cdkDrag cdkDragBoundary=".overlay">
-        <!--
-        TODO:
-        this draggable div is a temporary hack. We should remove the div and move the cdkDrag
-        directives into the overlay view (e.g. ViewerScreenReocordingComponent) as soon as the new
-        Angular's directive composition API is available
-        (https://github.com/angular/angular/issues/8785).
-         -->
-      </div>
+    <div class="overlay-container">
     </div>
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
@@ -79,22 +70,6 @@ interface Tab {
     `
       .tab.active {
         opacity: 100%;
-      }
-
-      .overlay {
-        z-index: 30;
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      .overlay .draggable-container {
-        position: absolute;
-        right: 0;
-        top: 20vh;
       }
 
       .header-items-wrapper {
@@ -218,9 +193,7 @@ export class TraceViewComponent
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
       const container = assertDefined(
-        this.elementRef.nativeElement.querySelector(
-          '.overlay .draggable-container',
-        ),
+        this.elementRef.nativeElement.querySelector('.overlay-container'),
       );
       container.appendChild(view.htmlElement);
     });
