@@ -100,38 +100,46 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar
 
-# ======= Lint API XML ===========
+# ======= Lint API XML (complete API) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_public_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
 $(call dist-for-goals,sdk,$(full_target):data/api-versions.xml)
 
-# ======= Lint Annotations zip ===========
+# ======= Lint Annotations zip (complete API) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/sdk-annotations.zip
 $(eval $(call copy-one-file,$(call intermediates-dir-for,ETC,sdk-annotations.zip)/sdk-annotations.zip,$(full_target)))
 ALL_SDK_FILES += $(full_target)
 $(call dist-for-goals,sdk,$(full_target):data/annotations.zip)
 
-# ======= Lint system API XML ===========
+# ======= Lint system API XML (complete API) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
 
-# ======= Lint system Annotations zip ===========
+# ======= Lint system Annotations zip (complete API) ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system.zip)/sdk-annotations-system.zip
 $(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 
-# ======= Lint module-lib API XML ===========
+# ======= Lint module-lib API XML (non-updatable APIs only) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_module_lib_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):module-lib-data/api-versions.xml)
 
-# ======= Lint module-lib Annotations zip ===========
+# ======= Lint module-lib API XML (complete API) ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_module_lib_complete_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):module-lib-data/api-versions-complete.xml)
+
+# ======= Lint module-lib Annotations zip (complete API) ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-module-lib.zip)/sdk-annotations-module-lib.zip
 $(call dist-for-goals,sdk,$(full_target):module-lib-data/annotations.zip)
 
-# ======= Lint system-server API XML ===========
+# ======= Lint system-server API XML (non-updatable APIs only) ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_server_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):system-server-data/api-versions.xml)
 
-# ======= Lint system-server Annotations zip ===========
+# ======= Lint system-server API XML (complete API) ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_server_complete_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):system-server-data/api-versions-complete.xml)
+
+# ======= Lint system-server Annotations zip (complete API) ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system-server.zip)/sdk-annotations-system-server.zip
 $(call dist-for-goals,sdk,$(full_target):system-server-data/annotations.zip)
 

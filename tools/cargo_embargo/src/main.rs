@@ -296,7 +296,9 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
         }
     } else {
         let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
-        write(cargo_out_path, &cargo_output.cargo_out)?;
+        if cfg.run_cargo {
+            write(cargo_out_path, &cargo_output.cargo_out)?;
+        }
         write(cargo_metadata_path, &cargo_output.cargo_metadata)?;
         cargo_output
     };
@@ -477,9 +479,23 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
 
     let mut cargo_out = String::new();
     if cfg.run_cargo {
+        let envs = if cfg.extra_cfg.is_empty() {
+            vec![]
+        } else {
+            vec![(
+                "RUSTFLAGS",
+                cfg.extra_cfg
+                    .iter()
+                    .map(|cfg_flag| format!("--cfg {}", cfg_flag))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            )]
+        };
+
         // cargo build
         cargo_out += &run_cargo(
             Command::new("cargo")
+                .envs(envs.clone())
                 .args(["build", "--target", default_target])
                 .args(verbose_args)
                 .args(target_dir_args)
@@ -491,6 +507,7 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
             // cargo build --tests
             cargo_out += &run_cargo(
                 Command::new("cargo")
+                    .envs(envs.clone())
                     .args(["build", "--target", default_target, "--tests"])
                     .args(verbose_args)
                     .args(target_dir_args)
@@ -500,6 +517,7 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
             // cargo test -- --list
             cargo_out += &run_cargo(
                 Command::new("cargo")
+                    .envs(envs)
                     .args(["test", "--target", default_target])
                     .args(target_dir_args)
                     .args(&workspace_args)
