@@ -38,7 +38,7 @@ export const hierarchyTreeNodeDataViewStyles = `
     }
 
     .tree-view-chip.tree-view-chip-gpu {
-        background-color: ${Color.CHIP_ORANGE};
+        background-color: ${Color.CHIP_GREEN};
     }
 
     .tree-view-chip.tree-view-chip-hwc {
