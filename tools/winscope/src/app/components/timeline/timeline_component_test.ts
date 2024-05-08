@@ -16,12 +16,7 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DebugElement,
-  ViewChild,
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -222,109 +217,109 @@ describe('TimelineComponent', () => {
   });
 
   it('processes active trace input and updates selected traces', () => {
-    loadSfWmTraces();
+    loadAllTraces();
     fixture.detectChanges();
+
     const timelineComponent = assertDefined(component.timeline);
+    const nextEntryButton = assertDefined(
+      htmlElement.querySelector('#next_entry_button'),
+    ) as HTMLElement;
+    const prevEntryButton = assertDefined(
+      htmlElement.querySelector('#prev_entry_button'),
+    ) as HTMLElement;
+
     timelineComponent.selectedTraces = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.SURFACE_FLINGER,
-    );
-    expect(timelineComponent.selectedTraces).toEqual([
-      TraceType.SURFACE_FLINGER,
-    ]);
+    checkActiveTraceSurfaceFlinger(nextEntryButton, prevEntryButton);
 
     // setting same trace as active does not affect selected traces
     component.activeViewTraceType = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.SURFACE_FLINGER,
-    );
     expect(timelineComponent.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
     ]);
+    checkActiveTraceSurfaceFlinger(nextEntryButton, prevEntryButton);
 
-    component.activeViewTraceType = TraceType.TRANSACTIONS;
+    component.activeViewTraceType = TraceType.SCREEN_RECORDING;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.TRANSACTIONS,
-    );
     expect(timelineComponent.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
+      TraceType.SCREEN_RECORDING,
     ]);
+    testCurrentTimestampOnButtonClick(prevEntryButton, position110, 110n);
 
     component.activeViewTraceType = TraceType.WINDOW_MANAGER;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.WINDOW_MANAGER,
-    );
     expect(timelineComponent.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
+      TraceType.SCREEN_RECORDING,
       TraceType.WINDOW_MANAGER,
     ]);
+    checkActiveTraceWindowManager(nextEntryButton, prevEntryButton);
 
     component.activeViewTraceType = TraceType.PROTO_LOG;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(timelineComponent.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
+      TraceType.SCREEN_RECORDING,
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
     ]);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position100, 100n);
+    checkActiveTraceHasOneEntry(nextEntryButton, prevEntryButton);
 
     // setting active trace that is already selected does not affect selection
-    component.activeViewTraceType = TraceType.TRANSACTIONS;
+    component.activeViewTraceType = TraceType.SCREEN_RECORDING;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.TRANSACTIONS,
-    );
     expect(timelineComponent.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
+      TraceType.SCREEN_RECORDING,
       TraceType.WINDOW_MANAGER,
       TraceType.PROTO_LOG,
     ]);
+    testCurrentTimestampOnButtonClick(nextEntryButton, position110, 110n);
+    checkActiveTraceHasOneEntry(nextEntryButton, prevEntryButton);
   });
 
   it('handles undefined active trace input', () => {
     loadSfWmTraces();
     fixture.detectChanges();
-    const timelineComponent = assertDefined(component.timeline);
+    const nextEntryButton = assertDefined(
+      htmlElement.querySelector('#next_entry_button'),
+    ) as HTMLElement;
+    const prevEntryButton = assertDefined(
+      htmlElement.querySelector('#prev_entry_button'),
+    ) as HTMLElement;
 
     component.activeViewTraceType = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.SURFACE_FLINGER,
-    );
+    checkActiveTraceSurfaceFlinger(nextEntryButton, prevEntryButton);
 
     component.activeViewTraceType = undefined;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.SURFACE_FLINGER,
-    );
+    checkActiveTraceSurfaceFlinger(nextEntryButton, prevEntryButton);
   });
 
   it('handles ActiveTraceChanged event', async () => {
     loadSfWmTraces();
     fixture.detectChanges();
     const timelineComponent = assertDefined(component.timeline);
+    const nextEntryButton = assertDefined(
+      htmlElement.querySelector('#next_entry_button'),
+    ) as HTMLElement;
+    const prevEntryButton = assertDefined(
+      htmlElement.querySelector('#prev_entry_button'),
+    ) as HTMLElement;
 
     component.activeViewTraceType = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.SURFACE_FLINGER,
-    );
+    checkActiveTraceSurfaceFlinger(nextEntryButton, prevEntryButton);
 
     await timelineComponent.onWinscopeEvent(
       new ActiveTraceChanged(TraceType.WINDOW_MANAGER),
     );
     fixture.detectChanges();
-    expect(timelineComponent.internalActiveTrace).toEqual(
-      TraceType.WINDOW_MANAGER,
-    );
+    checkActiveTraceWindowManager(nextEntryButton, prevEntryButton);
   });
 
   it('updates trace selection using selector', async () => {
@@ -399,21 +394,21 @@ describe('TimelineComponent', () => {
     );
 
     const nextEntryButton = assertDefined(
-      fixture.debugElement.query(By.css('#next_entry_button')),
+      htmlElement.querySelector('#next_entry_button'),
     );
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeFalsy();
 
     timelineData.setPosition(position90);
     fixture.detectChanges();
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeFalsy();
 
     timelineData.setPosition(position110);
     fixture.detectChanges();
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeTruthy();
 
     timelineData.setPosition(position112);
     fixture.detectChanges();
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeTruthy();
   });
 
   it('prev button disabled if no prev entry', () => {
@@ -424,37 +419,37 @@ describe('TimelineComponent', () => {
       100n,
     );
     const prevEntryButton = assertDefined(
-      fixture.debugElement.query(By.css('#prev_entry_button')),
+      htmlElement.querySelector('#prev_entry_button'),
     );
-    expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
+    expect(prevEntryButton.getAttribute('disabled')).toBeTruthy();
 
     timelineData.setPosition(position90);
     fixture.detectChanges();
-    expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeTruthy();
+    expect(prevEntryButton.getAttribute('disabled')).toBeTruthy();
 
     timelineData.setPosition(position110);
     fixture.detectChanges();
-    expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(prevEntryButton.getAttribute('disabled')).toBeFalsy();
 
     timelineData.setPosition(position112);
     fixture.detectChanges();
-    expect(prevEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(prevEntryButton.getAttribute('disabled')).toBeFalsy();
   });
 
   it('next button enabled for different active viewers', () => {
     loadSfWmTraces();
 
     const nextEntryButton = assertDefined(
-      fixture.debugElement.query(By.css('#next_entry_button')),
+      htmlElement.querySelector('#next_entry_button'),
     );
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeFalsy();
 
     component.activeViewTraceType = TraceType.WINDOW_MANAGER;
-    assertDefined(component.timeline).internalActiveTrace =
+    assertDefined(component.timeline).activeViewTraceType =
       TraceType.WINDOW_MANAGER;
     fixture.detectChanges();
 
-    expect(nextEntryButton.nativeElement.getAttribute('disabled')).toBeFalsy();
+    expect(nextEntryButton.getAttribute('disabled')).toBeFalsy();
   });
 
   it('changes timestamp on next entry button press', () => {
@@ -466,8 +461,8 @@ describe('TimelineComponent', () => {
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
     const nextEntryButton = assertDefined(
-      fixture.debugElement.query(By.css('#next_entry_button')),
-    );
+      htmlElement.querySelector('#next_entry_button'),
+    ) as HTMLElement;
 
     testCurrentTimestampOnButtonClick(nextEntryButton, position105, 110n);
 
@@ -491,8 +486,8 @@ describe('TimelineComponent', () => {
         ?.timestamp.getValueNs(),
     ).toEqual(100n);
     const prevEntryButton = assertDefined(
-      fixture.debugElement.query(By.css('#prev_entry_button')),
-    );
+      htmlElement.querySelector('#prev_entry_button'),
+    ) as HTMLElement;
 
     // In this state we are already on the first entry at timestamp 100, so
     // there is no entry to move to before and we just don't update the timestamp
@@ -855,7 +850,12 @@ describe('TimelineComponent', () => {
   function loadAllTraces(hostComponent = component, hostFixture = fixture) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [time100, time110, time112])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [
+        time90,
+        time101,
+        time110,
+        time112,
+      ])
       .setTimestamps(TraceType.SCREEN_RECORDING, [time110])
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();
@@ -875,14 +875,15 @@ describe('TimelineComponent', () => {
   }
 
   function testCurrentTimestampOnButtonClick(
-    button: DebugElement,
+    button: HTMLElement,
     pos: TracePosition,
     expectedNs: bigint,
   ) {
     const timelineData = assertDefined(component.timelineData);
     timelineData.setPosition(pos);
     fixture.detectChanges();
-    button.nativeElement.click();
+    button.click();
+    fixture.detectChanges();
     expect(timelineData.getCurrentPosition()?.timestamp.getValueNs()).toEqual(
       expectedNs,
     );
@@ -922,6 +923,41 @@ describe('TimelineComponent', () => {
     );
     (matOptions.item(index) as HTMLElement).click();
     fixture.detectChanges();
+  }
+
+  function checkActiveTraceSurfaceFlinger(
+    nextEntryButton: HTMLElement,
+    prevEntryButton: HTMLElement,
+  ) {
+    testCurrentTimestampOnButtonClick(prevEntryButton, position110, 100n);
+    expect(prevEntryButton.getAttribute('disabled')).toEqual('true');
+    expect(nextEntryButton.getAttribute('disabled')).toBeNull();
+    testCurrentTimestampOnButtonClick(nextEntryButton, position100, 110n);
+    expect(prevEntryButton.getAttribute('disabled')).toBeNull();
+    expect(nextEntryButton.getAttribute('disabled')).toEqual('true');
+  }
+
+  function checkActiveTraceWindowManager(
+    nextEntryButton: HTMLElement,
+    prevEntryButton: HTMLElement,
+  ) {
+    testCurrentTimestampOnButtonClick(prevEntryButton, position90, 90n);
+    expect(prevEntryButton.getAttribute('disabled')).toEqual('true');
+    expect(nextEntryButton.getAttribute('disabled')).toBeNull();
+    testCurrentTimestampOnButtonClick(nextEntryButton, position90, 101n);
+    expect(prevEntryButton.getAttribute('disabled')).toBeNull();
+    expect(nextEntryButton.getAttribute('disabled')).toBeNull();
+    testCurrentTimestampOnButtonClick(nextEntryButton, position110, 112n);
+    expect(prevEntryButton.getAttribute('disabled')).toBeNull();
+    expect(nextEntryButton.getAttribute('disabled')).toEqual('true');
+  }
+
+  function checkActiveTraceHasOneEntry(
+    nextEntryButton: HTMLElement,
+    prevEntryButton: HTMLElement,
+  ) {
+    expect(prevEntryButton.getAttribute('disabled')).toEqual('true');
+    expect(nextEntryButton.getAttribute('disabled')).toEqual('true');
   }
 
   @Component({
