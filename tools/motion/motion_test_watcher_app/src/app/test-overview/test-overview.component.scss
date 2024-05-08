@@ -1,0 +1,45 @@
+:host {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+}
+
+.wrapper {
+  position: relative;
+  margin: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+
+  border-radius: 12px;
+  border: 1px solid #c4c6d0;
+}
+
+.label {
+  position: absolute;
+  top: -12px;
+  padding: 0 16px;
+  background: var(--mat-app-background-color);
+}
+
+.tag {
+  border-radius: 10px;
+  padding: 4px 8px;
+  color: white;
+
+  &.PASSED {
+    background-color: green;
+  }
+
+  &.MISSING_REFERENCE {
+    background-color: red;
+  }
+
+  &.updated {
+    background-color: gray;
+  }
+
+  &.FAILED {
+    background-color: red;
+  }
+}
