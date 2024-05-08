@@ -345,7 +345,7 @@ describe('PresenterTransactions', () => {
     await setUpTestEnvironment();
     expect(
       assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2022-08-03, 06:19:01.051480997');
+    ).toEqual('2022-08-03, 06:19:01.051');
   });
 
   async function setUpTestEnvironment() {

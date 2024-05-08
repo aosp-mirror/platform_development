@@ -27,7 +27,7 @@ export interface TimezoneInfo {
 }
 
 export interface TimestampFormatter {
-  format(timestamp: Timestamp, hideNs?: boolean): string;
+  format(timestamp: Timestamp): string;
 }
 
 export class Timestamp {
@@ -70,7 +70,7 @@ export class Timestamp {
     return new Timestamp(this.getValueNs() / n, this.formatter);
   }
 
-  format(hideNs = false): string {
-    return this.formatter.format(this, hideNs);
+  format(): string {
+    return this.formatter.format(this);
   }
 }

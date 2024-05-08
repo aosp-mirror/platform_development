@@ -58,7 +58,7 @@ describe('Perfetto ParserProtolog', () => {
     );
     expect(
       assertDefined(message.getChildByName('timestamp')).formattedValue(),
-    ).toEqual('2024-04-23, 10:06:57.780323315');
+    ).toEqual('2024-04-23, 10:06:57.780');
     expect(
       assertDefined(message.getChildByName('tag')).formattedValue(),
     ).toEqual('MySecondGroup');
