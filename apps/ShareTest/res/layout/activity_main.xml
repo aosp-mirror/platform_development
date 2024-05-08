@@ -64,6 +64,14 @@
                 android:text="Include Alternate Share Text Intent"
                 />
 
+            <CheckBox
+                android:id="@+id/image_size_metadata"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Report image size in metadata"
+                />
+
             <TextView
                 android:id="@+id/media_type_header"
                 android:layout_width="match_parent"
@@ -298,6 +306,43 @@
                 />
             </RadioGroup>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/subtitle"
+                android:text="Average metadata latency"
+                />
+
+            <RadioGroup
+                android:id="@+id/image_query_latency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton
+                    android:id="@+id/image_query_latency_none"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="None"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_50"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="50ms"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_200"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="200ms"
+                    />
+                <RadioButton
+                    android:id="@+id/image_query_latency_800"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800ms"
+                    />
+            </RadioGroup>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
