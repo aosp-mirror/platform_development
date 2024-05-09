@@ -229,8 +229,8 @@ $ python3 utils/create_reference_dumps.py -l libfoo \
   --ref-dump-dir /path/to/abi-dumps
 ```
 
-You may specify `-products` if you don't want to create the ABI dumps for
-all architectures. For example, with `-products aosp_arm`, the command creates
+You may specify `--product` if you don't want to create the ABI dumps for
+all architectures. For example, with `--product aosp_arm`, the command creates
 dumps for 32-bit arm only.
 
 #### Configure Cross-Version ABI Check
