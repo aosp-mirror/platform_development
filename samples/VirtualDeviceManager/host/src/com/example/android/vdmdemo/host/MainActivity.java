@@ -21,6 +21,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -31,6 +32,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -49,6 +51,7 @@ public class MainActivity extends Hilt_MainActivity {
     private GridView mLauncher = null;
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
+    private PermissionHelper mPermissionHelper = null;
 
     private final ServiceConnection mServiceConnection =
             new ServiceConnection() {
@@ -69,7 +72,8 @@ public class MainActivity extends Hilt_MainActivity {
                 }
             };
 
-    @Inject PreferenceController mPreferenceController;
+    @Inject
+    PreferenceController mPreferenceController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -129,20 +133,48 @@ public class MainActivity extends Hilt_MainActivity {
                     }
                     return true;
                 });
+        mPermissionHelper = new PermissionHelper(this);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        if (mPermissionHelper.hasStreamingPermissionOrRequest(
+                (permissions) -> requestPermissions(permissions,
+                        PermissionHelper.STREAMING_PERMISSION_REQUEST_ID))) {
+            bindVdmService();
+        }
+    }
+
+    private void bindVdmService() {
         Intent intent = new Intent(this, VdmService.class);
+        Log.i(TAG, "Starting Vdm Host service");
         startForegroundService(intent);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PermissionHelper.STREAMING_PERMISSION_REQUEST_ID) {
+            String streamingPermission = mPermissionHelper.getStreamingPermission();
+            for (int i = 0; i < permissions.length; i++) {
+                if (streamingPermission.equals(permissions[i])
+                        && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    bindVdmService();
+                    return;
+                }
+            }
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
-        mVdmService.setVirtualDeviceListener(null);
+        if (mVdmService != null) {
+            mVdmService.setVirtualDeviceListener(null);
+        }
         unbindService(mServiceConnection);
     }
 
