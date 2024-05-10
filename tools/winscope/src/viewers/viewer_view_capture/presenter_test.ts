@@ -25,7 +25,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
@@ -33,10 +33,12 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
+import {ViewerViewCaptureLauncher} from './viewer_view_capture';
 
 describe('PresenterViewCapture', () => {
-  let parser: Parser<HierarchyTreeNode>;
-  let trace: Trace<HierarchyTreeNode>;
+  let parsers: Array<Parser<HierarchyTreeNode>>;
+  let traces: Traces;
+  let traceTaskbar: Trace<HierarchyTreeNode>;
   let uiData: UiData;
   let presenter: Presenter;
   let positionUpdate: TracePositionUpdate;
@@ -44,23 +46,35 @@ describe('PresenterViewCapture', () => {
   let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
-    parser = (await UnitTestUtils.getParser(
+    parsers = (await UnitTestUtils.getParsers(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
-    )) as Parser<HierarchyTreeNode>;
+    )) as Array<Parser<HierarchyTreeNode>>;
 
-    trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
-      .setParser(parser)
-      .build();
-
-    const firstEntry = trace.getEntry(0);
+    traces = new Traces();
+    for (const parser of parsers) {
+      traces.setTrace(
+        parser.getTraceType(),
+        new TraceBuilder<HierarchyTreeNode>()
+          .setType(parser.getTraceType())
+          .setParser(parser)
+          .build(),
+      );
+    }
+    traceTaskbar = assertDefined(
+      traces.getTrace(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
+    );
+    const firstEntry = traceTaskbar.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
+
+    const traceLauncherActivity = assertDefined(
+      traces.getTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+    );
+    const firstEntryLauncherActivity = traceLauncherActivity.getEntry(0);
     secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      trace.getEntry(23),
+      firstEntryLauncherActivity,
     );
 
     const firstEntryDataTree = await firstEntry.getValue();
-
     selectedTree = UiHierarchyTreeNode.from(
       assertDefined(
         firstEntryDataTree.findDfs(
@@ -73,43 +87,71 @@ describe('PresenterViewCapture', () => {
   });
 
   beforeEach(() => {
-    presenter = createPresenter(trace);
+    presenter = createPresenter(traces);
+  });
+
+  it('initializes active trace type', () => {
+    expect(presenter.getActiveTraceType()).toEqual(
+      TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+    );
   });
 
   it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
+      .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
       .setEntries([])
       .setParserCustomQueryResult(
         CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
         'the_package_name',
       )
       .build();
-    const presenter = createPresenter(emptyTrace);
+    const emptyTraces = new Traces();
+    emptyTraces.setTrace(emptyTrace.type, emptyTrace);
+    const presenter = createPresenter(emptyTraces);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
       TimestampConverterUtils.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
-    expect(uiData.tree).toBeFalsy();
+    expect(uiData.trees).toBeFalsy();
   });
 
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
+    expect(uiData.rects.length).toEqual(17);
     expect(uiData.highlightedItem?.length).toEqual(0);
 
     const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
     expect(hierarchyOpts).toBeTruthy();
     const propertyOpts = Object.keys(uiData.propertiesUserOptions);
     expect(propertyOpts).toBeTruthy();
-    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
+    expect(assertDefined(uiData.trees).length === 1).toBeTrue();
+    expect(
+      assertDefined(uiData.trees)[0].getAllChildren().length > 0,
+    ).toBeTrue();
+    expect(uiData.windows).toEqual([
+      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
+      {displayId: 22, groupId: 22, name: 'Taskbar'},
+    ]);
+
+    await presenter.onAppEvent(secondPositionUpdate);
+    expect(uiData.rects.length).toEqual(168);
+    expect(assertDefined(uiData.trees).length === 2).toBeTrue();
+    expect(
+      assertDefined(uiData.trees).every(
+        (tree) => tree.getAllChildren().length > 0,
+      ),
+    ).toBeTrue();
+    expect(uiData.windows).toEqual([
+      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
+      {displayId: 22, groupId: 22, name: 'Taskbar'},
+    ]);
   });
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
+    expect(uiData.rects.length).toEqual(17);
     expect(uiData.rects[0].x).toEqual(0);
     expect(uiData.rects[0].y).toEqual(0);
     expect(uiData.rects[0].w).toEqual(1080);
@@ -131,7 +173,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].name,
+      uiData.trees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
 
     const userOptions: UserOptions = {
@@ -152,17 +194,15 @@ describe('PresenterViewCapture', () => {
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
       // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].name,
+      uiData.trees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
   it('simplifies names in hierarchy tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-
-    expect(
-      // TaskbarDragLayer -> TaskbarView
-      uiData.tree?.getAllChildren()[0].getDisplayName(),
-    ).toEqual('TaskbarView@80213537');
+    expect(uiData.trees?.at(0)?.getAllChildren()[0].getDisplayName()).toEqual(
+      'TaskbarView@80213537',
+    );
 
     const userOptions: UserOptions = {
       showDiff: {
@@ -180,10 +220,9 @@ describe('PresenterViewCapture', () => {
     };
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    expect(
-      // TaskbarDragLayer -> TaskbarScrimView
-      uiData.tree?.getAllChildren()[0].getDisplayName(),
-    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
+    expect(uiData.trees?.at(0)?.getAllChildren()[0].getDisplayName()).toEqual(
+      'com.android.launcher3.taskbar.TaskbarView@80213537',
+    );
   });
 
   it('filters hierarchy tree', async () => {
@@ -207,7 +246,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> BubbleBarView if filter works as expected
-      uiData.tree?.getAllChildren()[0].name,
+      uiData.trees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
@@ -244,7 +283,7 @@ describe('PresenterViewCapture', () => {
   it('after highlighting a node, updates properties tree on position update', async () => {
     await presenter.onAppEvent(positionUpdate);
     const selectedTree = assertDefined(
-      assertDefined(uiData.tree).findDfs(
+      assertDefined(uiData.trees?.at(0)).findDfs(
         UiTreeUtils.makeIdMatchFilter(
           'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
         ),
@@ -264,7 +303,7 @@ describe('PresenterViewCapture', () => {
       assertDefined(
         propertiesTree.getChildByName('translationY'),
       ).formattedValue(),
-    ).toEqual('-9');
+    ).toEqual('0');
   });
 
   it('after highlighting a rect, updates properties tree on position update', async () => {
@@ -285,7 +324,7 @@ describe('PresenterViewCapture', () => {
       assertDefined(
         propertiesTree.getChildByName('translationY'),
       ).formattedValue(),
-    ).toEqual('-9');
+    ).toEqual('0');
   });
 
   it('updates properties tree', async () => {
@@ -305,7 +344,7 @@ describe('PresenterViewCapture', () => {
       },
     };
 
-    const entry = trace.getEntry(21);
+    const entry = traceTaskbar.getEntry(21);
     const update = TracePositionUpdate.fromTraceEntry(entry);
 
     await presenter.onAppEvent(update);
@@ -355,12 +394,9 @@ describe('PresenterViewCapture', () => {
     ).toEqual(1);
   });
 
-  function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
-    const traces = new Traces();
-    const traceType = parser.getTraceType();
-    traces.setTrace(traceType, trace);
+  function createPresenter(traces: Traces): Presenter {
     return new Presenter(
-      traceType as ViewCaptureTraceType,
+      ViewerViewCaptureLauncher.DEPENDENCIES,
       traces,
       new MockStorage(),
       (newData: UiData) => {

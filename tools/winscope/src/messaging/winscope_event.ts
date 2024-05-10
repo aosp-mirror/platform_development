@@ -37,6 +37,7 @@ export enum WinscopeEventType {
   VIEWERS_LOADED,
   VIEWERS_UNLOADED,
   EXPANDED_TIMELINE_TOGGLED,
+  ACTIVE_TRACE_CHANGED,
 }
 
 interface TypeMap {
@@ -55,6 +56,7 @@ interface TypeMap {
   [WinscopeEventType.VIEWERS_LOADED]: ViewersLoaded;
   [WinscopeEventType.VIEWERS_UNLOADED]: ViewersUnloaded;
   [WinscopeEventType.EXPANDED_TIMELINE_TOGGLED]: ExpandedTimelineToggled;
+  [WinscopeEventType.ACTIVE_TRACE_CHANGED]: ActiveTraceChanged;
 }
 
 export abstract class WinscopeEvent {
@@ -189,6 +191,13 @@ export class ViewersUnloaded extends WinscopeEvent {
 export class ExpandedTimelineToggled extends WinscopeEvent {
   override readonly type = WinscopeEventType.EXPANDED_TIMELINE_TOGGLED;
   constructor(readonly isTimelineExpanded: boolean) {
+    super();
+  }
+}
+
+export class ActiveTraceChanged extends WinscopeEvent {
+  override readonly type = WinscopeEventType.ACTIVE_TRACE_CHANGED;
+  constructor(readonly traceType: TraceType) {
     super();
   }
 }

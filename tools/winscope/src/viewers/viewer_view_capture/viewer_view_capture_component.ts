@@ -30,16 +30,18 @@ import {UiData} from './ui_data';
     <div class="card-grid">
       <rects-view
         class="rects-view"
-        title="View Hierarchy Sketch"
+        title="Hierarchy Sketch"
         [store]="store"
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
-        [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
+        [displays]="inputData?.windows ?? []"
+        groupLabel="Windows"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree"
+        [subtrees]="inputData?.trees"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"

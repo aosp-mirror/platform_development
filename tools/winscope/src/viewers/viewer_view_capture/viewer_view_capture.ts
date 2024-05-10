@@ -15,7 +15,11 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {
+  ActiveTraceChanged,
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
 import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
@@ -24,7 +28,7 @@ import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-export class ViewerViewCapture implements Viewer {
+abstract class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: ViewCaptureTraceType[] = [
     TraceType.VIEW_CAPTURE,
   ];
@@ -37,7 +41,7 @@ export class ViewerViewCapture implements Viewer {
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
     this.presenter = new Presenter(
-      this.getDependencies()[0],
+      this.getDependencies(),
       traces,
       storage,
       (data: UiData) => {
@@ -100,13 +104,22 @@ export class ViewerViewCapture implements Viewer {
         this.switchToSurfaceFlingerView();
       },
     );
+    this.htmlElement.addEventListener(
+      ViewerEvents.RectGroupIdChange,
+      async (event) => {
+        this.presenter.onWindowChange((event as CustomEvent).detail.groupId);
+        await this.emitAppEvent(
+          new ActiveTraceChanged((event as CustomEvent).detail.groupId),
+        );
+      },
+    );
 
     this.view = new View(
       ViewType.TAB,
       this.getDependencies(),
       this.htmlElement,
       this.getTitle(),
-      this.getDependencies()[0],
+      this.getActiveTraceType(),
     );
   }
 
@@ -132,41 +145,25 @@ export class ViewerViewCapture implements Viewer {
     return ViewerViewCapture.DEPENDENCIES;
   }
 
-  private getTitle(): string {
-    switch (this.getDependencies()[0]) {
-      case TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER:
-        return 'View Capture - Taskbar';
-      case TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER:
-        return 'View Capture - Taskbar Overlay';
-      default:
-        return 'View Capture - Nexuslauncher';
-    }
+  private getActiveTraceType(): TraceType {
+    return this.presenter.getActiveTraceType();
   }
+
+  protected abstract getTitle(): string;
 }
 
-export class ViewerViewCaptureLauncherActivity extends ViewerViewCapture {
+export class ViewerViewCaptureLauncher extends ViewerViewCapture {
   static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
     TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-  ];
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureLauncherActivity.DEPENDENCIES;
-  }
-}
-
-export class ViewerViewCaptureTaskbarDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
     TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-  ];
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureTaskbarDragLayer.DEPENDENCIES;
-  }
-}
-
-export class ViewerViewCaptureTaskbarOverlayDragLayer extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
     TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
   ];
+
   override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureTaskbarOverlayDragLayer.DEPENDENCIES;
+    return ViewerViewCaptureLauncher.DEPENDENCIES;
+  }
+
+  protected override getTitle(): string {
+    return 'View Capture - Launcher';
   }
 }

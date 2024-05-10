@@ -446,18 +446,12 @@ export class TimelineComponent
   readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
   readonly MAX_SELECTED_TRACES = 3;
 
-  @Input() set activeViewTraceTypes(types: TraceType[] | undefined) {
-    if (!types) {
+  @Input() set activeViewTraceType(type: TraceType | undefined) {
+    if (type === undefined) {
       return;
     }
 
-    if (types.length !== 1) {
-      throw Error(
-        "Timeline component doesn't support viewers with dependencies length !== 1",
-      );
-    }
-
-    this.internalActiveTrace = types[0];
+    this.internalActiveTrace = type;
 
     if (!this.selectedTraces.includes(this.internalActiveTrace)) {
       // Create new object to make sure we trigger an update on Mini Timeline child component
@@ -602,6 +596,9 @@ export class TimelineComponent
   async onWinscopeEvent(event: WinscopeEvent) {
     await event.visit(WinscopeEventType.TRACE_POSITION_UPDATE, async () => {
       this.updateTimeInputValuesToCurrentTimestamp();
+    });
+    await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
+      this.activeViewTraceType = event.traceType;
     });
   }
 
