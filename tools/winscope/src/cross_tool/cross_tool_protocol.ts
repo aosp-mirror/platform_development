@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import {assertDefined, assertUnreachable} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {Timestamp} from 'common/time';
 import {RemoteToolTimestampConverter} from 'common/timestamp_converter';
 import {
   RemoteToolFilesReceived,
@@ -34,10 +36,13 @@ import {
   MessagePong,
   MessageTimestamp,
   MessageType,
+  TimestampType,
 } from './messages';
 import {OriginAllowList} from './origin_allow_list';
 
 class RemoteTool {
+  timestampType?: TimestampType;
+
   constructor(readonly window: Window, readonly origin: string) {}
 }
 
@@ -46,9 +51,11 @@ export class CrossToolProtocol
 {
   private remoteTool?: RemoteTool;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  private timestampConverter: RemoteToolTimestampConverter | undefined;
+  private timestampConverter: RemoteToolTimestampConverter;
 
-  constructor() {
+  constructor(timestampConverter: RemoteToolTimestampConverter) {
+    this.timestampConverter = timestampConverter;
+
     window.addEventListener('message', async (event) => {
       await this.onMessageReceived(event);
     });
@@ -58,27 +65,25 @@ export class CrossToolProtocol
     this.emitEvent = callback;
   }
 
-  setTimestampConverter(converter: RemoteToolTimestampConverter | undefined) {
-    this.timestampConverter = converter;
-  }
-
   async onWinscopeEvent(event: WinscopeEvent) {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        if (!this.remoteTool) {
+        if (!this.remoteTool || !this.remoteTool.timestampType) {
           return;
         }
 
-        const timestamp =
-          this.timestampConverter?.tryMakeTimestampForRemoteTool(
-            event.position.timestamp,
-          );
-        if (timestamp === undefined) {
+        const timestampNs = this.getTimestampNsForRemoteTool(
+          event.position.timestamp,
+        );
+        if (timestampNs === undefined) {
           return;
         }
 
-        const message = new MessageTimestamp(timestamp.getValueNs());
+        const message = new MessageTimestamp(
+          timestampNs,
+          this.remoteTool.timestampType,
+        );
         this.remoteTool.window.postMessage(message, this.remoteTool.origin);
         console.log('Cross-tool protocol sent timestamp message:', message);
       },
@@ -145,18 +150,102 @@ export class CrossToolProtocol
   }
 
   private async onMessageBugreportReceived(message: MessageBugReport) {
+    this.setRemoteToolTimestampTypeIfNeeded(message.timestampType);
+    const deferredTimestamp = this.makeDeferredTimestampForWinscope(
+      message.timestampNs,
+    );
     await this.emitEvent(
-      new RemoteToolFilesReceived([message.file], message.timestampNs),
+      new RemoteToolFilesReceived([message.file], deferredTimestamp),
     );
   }
 
   private async onMessageFilesReceived(message: MessageFiles) {
+    this.setRemoteToolTimestampTypeIfNeeded(message.timestampType);
+    const deferredTimestamp = this.makeDeferredTimestampForWinscope(
+      message.timestampNs,
+    );
     await this.emitEvent(
-      new RemoteToolFilesReceived(message.files, message.timestampNs),
+      new RemoteToolFilesReceived(message.files, deferredTimestamp),
     );
   }
 
   private async onMessageTimestampReceived(message: MessageTimestamp) {
-    await this.emitEvent(new RemoteToolTimestampReceived(message.timestampNs));
+    this.setRemoteToolTimestampTypeIfNeeded(message.timestampType);
+    const deferredTimestamp = this.makeDeferredTimestampForWinscope(
+      message.timestampNs,
+    );
+    await this.emitEvent(
+      new RemoteToolTimestampReceived(assertDefined(deferredTimestamp)),
+    );
+  }
+
+  private setRemoteToolTimestampTypeIfNeeded(type: TimestampType | undefined) {
+    const remoteTool = assertDefined(this.remoteTool);
+
+    if (remoteTool.timestampType !== undefined) {
+      return;
+    }
+
+    // Default to CLOCK_REALTIME for backward compatibility.
+    // The initial protocol's version didn't provide an explicit timestamp type
+    // and all timestamps were supposed to be CLOCK_REALTIME.
+    remoteTool.timestampType = type ?? TimestampType.CLOCK_REALTIME;
+  }
+
+  private getTimestampNsForRemoteTool(
+    timestamp: Timestamp,
+  ): bigint | undefined {
+    const timestampType = this.remoteTool?.timestampType;
+    switch (timestampType) {
+      case undefined:
+        return undefined;
+      case TimestampType.UNKNOWN:
+        return undefined;
+      case TimestampType.CLOCK_BOOTTIME:
+        return this.timestampConverter.tryGetBootTimeNs(timestamp);
+      case TimestampType.CLOCK_REALTIME:
+        return this.timestampConverter.tryGetRealTimeNs(timestamp);
+      default:
+        assertUnreachable(timestampType);
+    }
+  }
+
+  // Make a deferred timestamp: a lambda meant to be executed at a later point to create a
+  // timestamp. The lambda is needed to defer timestamp creation to the point where traces
+  // are loaded into TracePipeline and TimestampConverter is properly initialized and ready
+  // to instantiate timestamps.
+  private makeDeferredTimestampForWinscope(
+    timestampNs: bigint | undefined,
+  ): (() => Timestamp | undefined) | undefined {
+    const timestampType = assertDefined(this.remoteTool?.timestampType);
+
+    if (timestampNs === undefined || timestampType === undefined) {
+      return undefined;
+    }
+
+    switch (timestampType) {
+      case TimestampType.UNKNOWN:
+        return undefined;
+      case TimestampType.CLOCK_BOOTTIME:
+        return () => {
+          try {
+            return this.timestampConverter.makeTimestampFromBootTimeNs(
+              timestampNs,
+            );
+          } catch (error) {
+            return undefined;
+          }
+        };
+      case TimestampType.CLOCK_REALTIME:
+        return () => {
+          try {
+            return this.timestampConverter.makeTimestampFromRealNs(timestampNs);
+          } catch (error) {
+            return undefined;
+          }
+        };
+      default:
+        assertUnreachable(timestampType);
+    }
   }
 }

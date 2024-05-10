@@ -172,7 +172,7 @@ export class TracePipeline {
   clear() {
     this.loadedParsers.clear();
     this.traces = new Traces();
-    this.timestampConverter = new TimestampConverter(UTC_TIMEZONE_INFO);
+    this.timestampConverter.clear();
     this.downloadArchiveFilename = undefined;
   }
 

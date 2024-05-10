@@ -112,7 +112,10 @@ export class RemoteToolDownloadStart extends WinscopeEvent {
 export class RemoteToolFilesReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_FILES_RECEIVED;
 
-  constructor(readonly files: File[], readonly timestampNs?: bigint) {
+  constructor(
+    readonly files: File[],
+    readonly deferredTimestamp?: () => Timestamp | undefined,
+  ) {
     super();
   }
 }
@@ -120,7 +123,7 @@ export class RemoteToolFilesReceived extends WinscopeEvent {
 export class RemoteToolTimestampReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED;
 
-  constructor(readonly timestampNs: bigint) {
+  constructor(readonly deferredTimestamp: () => Timestamp | undefined) {
     super();
   }
 }

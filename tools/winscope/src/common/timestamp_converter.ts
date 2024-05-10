@@ -79,7 +79,10 @@ export interface ComponentTimestampConverter {
 }
 
 export interface RemoteToolTimestampConverter {
-  tryMakeTimestampForRemoteTool(timestamp: Timestamp): Timestamp | undefined;
+  makeTimestampFromBootTimeNs(valueNs: bigint): Timestamp;
+  makeTimestampFromRealNs(valueNs: bigint): Timestamp;
+  tryGetBootTimeNs(timestamp: Timestamp): bigint | undefined;
+  tryGetRealTimeNs(timestamp: Timestamp): bigint | undefined;
 }
 
 export class TimestampConverter
@@ -120,9 +123,6 @@ export class TimestampConverter
         : utcValueNs;
     const utcOffsetNs = localNs - utcValueNs;
     this.utcOffset.initialize(utcOffsetNs);
-    console.warn(
-      'Failed to initialized timezone offset due to invalid time difference.',
-    );
   }
 
   setRealToMonotonicTimeOffsetNs(ns: bigint) {
@@ -161,13 +161,6 @@ export class TimestampConverter
     return this.makeRealTimestamp(valueNs);
   }
 
-  tryMakeTimestampFromRealNs(valueNs: bigint): Timestamp | undefined {
-    if (!this.canMakeRealTimestamps()) {
-      return undefined;
-    }
-    return this.makeRealTimestamp(valueNs);
-  }
-
   makeTimestampFromHuman(timestampHuman: string): Timestamp {
     if (TimestampUtils.isHumanElapsedTimeFormat(timestampHuman)) {
       return this.makeTimestampfromHumanElapsed(timestampHuman);
@@ -200,11 +193,21 @@ export class TimestampConverter
     }
   }
 
-  tryMakeTimestampForRemoteTool(timestamp: Timestamp): Timestamp | undefined {
-    if (this.canMakeRealTimestamps()) {
-      return timestamp;
+  tryGetBootTimeNs(timestamp: Timestamp): bigint | undefined {
+    if (
+      this.createdTimestampType !== TimestampType.REAL ||
+      this.realToBootTimeOffsetNs === undefined
+    ) {
+      return undefined;
     }
-    return undefined;
+    return timestamp.getValueNs() - this.realToBootTimeOffsetNs;
+  }
+
+  tryGetRealTimeNs(timestamp: Timestamp): bigint | undefined {
+    if (this.createdTimestampType !== TimestampType.REAL) {
+      return undefined;
+    }
+    return timestamp.getValueNs();
   }
 
   validateHumanInput(timestampHuman: string, context = this): boolean {
@@ -212,6 +215,13 @@ export class TimestampConverter
       return TimestampUtils.isHumanRealTimestampFormat(timestampHuman);
     }
     return TimestampUtils.isHumanElapsedTimeFormat(timestampHuman);
+  }
+
+  clear() {
+    this.createdTimestampType = undefined;
+    this.realToBootTimeOffsetNs = undefined;
+    this.realToMonotonicTimeOffsetNs = undefined;
+    this.utcOffset.clear();
   }
 
   private canMakeRealTimestamps(): boolean {
