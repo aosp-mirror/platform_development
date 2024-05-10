@@ -83,7 +83,7 @@ import {Transformer} from './transformer';
       }
 
       .selection.line {
-        background: ${Color.TIME_SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .slider {
@@ -95,13 +95,13 @@ import {Transformer} from './transformer';
 
       .handle {
         flex-grow: 1;
-        background: ${Color.TIME_SELECTION_BACKGROUND};
+        background: var(--slider-background-color);
         cursor: grab;
       }
 
       .cropper {
         width: 5px;
-        background: ${Color.TIME_SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .cropper.left,

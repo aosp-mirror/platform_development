@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import {Color} from 'app/colors';
-
 export const selectedElementStyle = `
     .selected {
-        color: ${Color.TEXT_DEFAULT};
-        background-color: ${Color.SELECTED_ELEMENT_BACKGROUND};
+        background-color: var(--selected-element-color);
     }
 `;

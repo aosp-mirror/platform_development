@@ -193,7 +193,7 @@ import {LoadProgressComponent} from './load_progress_component';
         flex-grow: 1;
       }
       .no-visualization {
-        background-color: #fff5bf;
+        background-color: var(--warning-background-color);
       }
       .info-icon, .warning-icon {
         flex-shrink: 0;

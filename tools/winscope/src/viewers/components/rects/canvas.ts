@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Color} from 'app/colors';
 import {TransformMatrix} from 'common/geometry_types';
 import * as THREE from 'three';
 import {
@@ -32,30 +31,32 @@ import {
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
-  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(
-    Color.SELECTED_ELEMENT_BACKGROUND,
+  private static readonly RECT_COLOR_HIGHLIGHTED_LIGHT_MODE = new THREE.Color(
+    0x5f718a,
+  );
+  private static readonly RECT_COLOR_HIGHLIGHTED_DARK_MODE = new THREE.Color(
+    0x8ea9cf,
   );
   private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
   private static readonly RECT_EDGE_COLOR = 0x000000;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
   private static readonly LABEL_CIRCLE_COLOR = 0x000000;
-  private static readonly LABEL_LINE_COLOR = 0x000000;
-  private static readonly LABEL_LINE_COLOR_HIGHLIGHTED = 0x808080;
+  private static readonly LABEL_LINE_COLOR = 0x808080;
+  private static readonly LABEL_LINE_COLOR_HIGHLIGHTED = 0x000000;
   private static readonly OPACITY_REGULAR = 0.75;
   private static readonly OPACITY_OVERSIZED = 0.25;
 
-  private canvasRects: HTMLCanvasElement;
-  private canvasLabels?: HTMLElement;
   private camera?: THREE.OrthographicCamera;
   private scene?: THREE.Scene;
   private renderer?: THREE.WebGLRenderer;
   private labelRenderer?: CSS2DRenderer;
   private clickableObjects: THREE.Object3D[] = [];
 
-  constructor(canvasRects: HTMLCanvasElement, canvasLabels?: HTMLElement) {
-    this.canvasRects = canvasRects;
-    this.canvasLabels = canvasLabels;
-  }
+  constructor(
+    private canvasRects: HTMLCanvasElement,
+    private canvasLabels?: HTMLElement,
+    private isDarkMode = () => false,
+  ) {}
 
   draw(scene: Scene3D) {
     // Must set 100% width and height so the HTML element expands to the parent's
@@ -166,7 +167,7 @@ export class Canvas {
   private drawRects(rects: Rect3D[]) {
     this.clickableObjects = [];
     rects.forEach((rect) => {
-      const rectMesh = Canvas.makeRectMesh(rect);
+      const rectMesh = Canvas.makeRectMesh(rect, this.isDarkMode());
       const transform = Canvas.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
 
@@ -220,7 +221,7 @@ export class Canvas {
     div.appendChild(spanPlaceholder);
 
     div.style.marginTop = '5px';
-    if (label.isHighlighted) {
+    if (!label.isHighlighted) {
       div.style.color = 'gray';
     }
     div.style.pointerEvents = 'auto';
@@ -260,7 +261,7 @@ export class Canvas {
     );
   }
 
-  private static makeRectMesh(rect: Rect3D): THREE.Mesh {
+  private static makeRectMesh(rect: Rect3D, isDarkMode: boolean): THREE.Mesh {
     const rectShape = Canvas.createRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
     const rectBorders = Canvas.createRectBorders(rect, rectGeometry);
@@ -274,7 +275,7 @@ export class Canvas {
     const mesh = new THREE.Mesh(
       rectGeometry,
       new THREE.MeshBasicMaterial({
-        color: Canvas.getColor(rect),
+        color: Canvas.getColor(rect, isDarkMode),
         opacity,
         transparent: true,
       }),
@@ -345,7 +346,7 @@ export class Canvas {
       );
   }
 
-  private static getColor(rect: Rect3D): THREE.Color {
+  private static getColor(rect: Rect3D, isDarkMode: boolean): THREE.Color {
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
@@ -362,7 +363,9 @@ export class Canvas {
         return new THREE.Color(darkness, darkness, darkness);
       }
       case ColorType.HIGHLIGHTED: {
-        return Canvas.RECT_COLOR_HIGHLIGHTED;
+        return isDarkMode
+          ? Canvas.RECT_COLOR_HIGHLIGHTED_DARK_MODE
+          : Canvas.RECT_COLOR_HIGHLIGHTED_LIGHT_MODE;
       }
       case ColorType.HAS_CONTENT: {
         return Canvas.RECT_COLOR_HAS_CONTENT;

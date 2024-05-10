@@ -24,10 +24,8 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStore} from 'common/persistent_store';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
@@ -44,7 +42,7 @@ import {Transformer} from './transformer';
   selector: 'mini-timeline',
   template: `
     <div class="mini-timeline-outer-wrapper">
-      <div class="zoom-buttons" [style.background-color]="getZoomButtonsBackgroundColor()">
+      <div class="zoom-buttons">
         <button mat-icon-button id="zoom-in-btn" (click)="zoomIn()">
           <mat-icon>zoom_in</mat-icon>
         </button>
@@ -82,6 +80,7 @@ import {Transformer} from './transformer';
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        background-color: var(--drawer-color);
       }
       .zoom-buttons button {
         width: fit-content;
@@ -107,7 +106,6 @@ export class MiniTimelineComponent {
   @Input() selectedTraces: TraceType[] | undefined;
   @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
-  @Input() store: PersistentStore | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onSeekTimestampUpdate = new EventEmitter<
@@ -165,12 +163,6 @@ export class MiniTimelineComponent {
     } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
-  }
-
-  getZoomButtonsBackgroundColor(): string {
-    return this.store?.get('dark-mode') === 'true'
-      ? Color.APP_BACKGROUND_DARK_MODE
-      : Color.APP_BACKGROUND_LIGHT_MODE;
   }
 
   getTracesToShow(): Traces {
