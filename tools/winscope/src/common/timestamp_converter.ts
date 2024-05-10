@@ -40,21 +40,16 @@ class RealTimestampFormatter implements TimestampFormatter {
     this.utcOffset = value;
   }
 
-  format(timestamp: Timestamp, hideNs?: boolean | undefined): string {
+  format(timestamp: Timestamp): string {
     const timestampNanos =
       timestamp.getValueNs() + (this.utcOffset.getValueNs() ?? 0n);
     const ms = timestampNanos / 1000000n;
-    const extraNanos = timestampNanos % 1000000n;
     const formattedTimestamp = new Date(Number(ms))
       .toISOString()
       .replace('Z', '')
       .replace('T', ', ');
 
-    if (hideNs) {
-      return formattedTimestamp;
-    } else {
-      return `${formattedTimestamp}${extraNanos.toString().padStart(6, '0')}`;
-    }
+    return formattedTimestamp;
   }
 }
 const REAL_TIMESTAMP_FORMATTER_UTC = new RealTimestampFormatter(
@@ -62,9 +57,9 @@ const REAL_TIMESTAMP_FORMATTER_UTC = new RealTimestampFormatter(
 );
 
 class ElapsedTimestampFormatter {
-  format(timestamp: Timestamp, hideNs = false): string {
+  format(timestamp: Timestamp): string {
     const timestampNanos = timestamp.getValueNs();
-    return TimestampUtils.formatElapsedNs(timestampNanos, hideNs);
+    return TimestampUtils.formatElapsedNs(timestampNanos);
   }
 }
 const ELAPSED_TIMESTAMP_FORMATTER = new ElapsedTimestampFormatter();

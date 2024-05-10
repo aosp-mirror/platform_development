@@ -104,7 +104,7 @@ export class TimestampUtils {
     return ts1;
   }
 
-  static formatElapsedNs(timestampNanos: bigint, hideNs = false): string {
+  static formatElapsedNs(timestampNanos: bigint): string {
     let leftNanos = timestampNanos;
     const parts: Array<{value: bigint; unit: string}> = TIME_UNITS.slice()
       .reverse()
@@ -116,10 +116,6 @@ export class TimestampUtils {
         leftNanos = leftNanos % BigInt(nanosInUnit);
         return {value: amountOfUnit, unit};
       });
-
-    if (hideNs) {
-      parts.pop();
-    }
 
     // Remove all 0ed units at start
     while (parts.length > 1 && parts[0].value === 0n) {
