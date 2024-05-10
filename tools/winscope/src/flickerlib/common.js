@@ -18,105 +18,117 @@
 // as clean es6 modules rather than having them be commonjs modules
 
 // WM
-const WindowManagerTrace = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.WindowManagerTrace;
-const WindowManagerState = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.WindowManagerState;
-const Activity = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.Activity;
-const Configuration = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.Configuration;
-const ConfigurationContainer = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.windows.ConfigurationContainer;
-const DisplayArea = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.DisplayArea;
-const DisplayContent = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.DisplayContent;
-const KeyguardControllerState = require('flicker').com.android.server.wm.
-    traces.common.windowmanager.windows.KeyguardControllerState;
-const RootWindowContainer = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.windows.RootWindowContainer;
-const Task = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.Task;
-const TaskFragment = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.TaskFragment;
-const WindowConfiguration = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.windows.WindowConfiguration;
-const WindowContainer = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowContainer;
-const WindowLayoutParams= require('flicker').com.android.server.wm.traces.
-    common.windowmanager.windows.WindowLayoutParams;
-const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.
-    common.windowmanager.windows.WindowManagerPolicy;
-const WindowState = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowState;
-const WindowToken = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowToken;
+const WindowManagerTrace =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerTrace;
+const WindowManagerState =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerState;
+const WindowManagerTraceEntryBuilder =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerTraceEntryBuilder;
+const Activity = require('flickerlib/flicker').android.tools.common.traces.wm.Activity;
+const Configuration = require('flickerlib/flicker').android.tools.common.traces.wm.Configuration;
+const ConfigurationContainer =
+  require('flickerlib/flicker').android.tools.common.traces.wm.ConfigurationContainer;
+const DisplayArea = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayArea;
+const DisplayContent = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayContent;
+const DisplayCutout = require('flickerlib/flicker').android.tools.common.traces.wm.DisplayCutout;
+const KeyguardControllerState =
+  require('flickerlib/flicker').android.tools.common.traces.wm.KeyguardControllerState;
+const RootWindowContainer =
+  require('flickerlib/flicker').android.tools.common.traces.wm.RootWindowContainer;
+const Task = require('flickerlib/flicker').android.tools.common.traces.wm.Task;
+const TaskFragment = require('flickerlib/flicker').android.tools.common.traces.wm.TaskFragment;
+const WindowConfiguration =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowConfiguration;
+const WindowContainer =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowContainer;
+const WindowLayoutParams =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowLayoutParams;
+const WindowManagerPolicy =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WindowManagerPolicy;
+const WindowState = require('flickerlib/flicker').android.tools.common.traces.wm.WindowState;
+const WindowToken = require('flickerlib/flicker').android.tools.common.traces.wm.WindowToken;
 
 // SF
-const Layer = require('flicker').com.android.server.wm.traces.common.
-    layers.Layer;
-const BaseLayerTraceEntry = require('flicker').com.android.server.wm.traces.common.
-    layers.BaseLayerTraceEntry;
-const LayerTraceEntry = require('flicker').com.android.server.wm.traces.common.
-    layers.LayerTraceEntry;
-const LayerTraceEntryBuilder = require('flicker').com.android.server.wm.traces.
-    common.layers.LayerTraceEntryBuilder;
-const LayersTrace = require('flicker').com.android.server.wm.traces.common.
-    layers.LayersTrace;
-const Matrix22 = require('flicker').com.android.server.wm.traces.common
-    .Matrix22;
-const Matrix33 = require('flicker').com.android.server.wm.traces.common
-    .Matrix33;
-const Transform = require('flicker').com.android.server.wm.traces.common.
-    layers.Transform;
-const Display = require('flicker').com.android.server.wm.traces.common.
-    layers.Display;
+const HwcCompositionType =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.HwcCompositionType;
+const Layer = require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Layer;
+const LayerProperties =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerProperties;
+const LayerTraceEntry =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntry;
+const LayerTraceEntryBuilder =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayerTraceEntryBuilder;
+const LayersTrace =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.LayersTrace;
+const Transform =
+  require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Transform;
+const Display = require('flickerlib/flicker').android.tools.common.traces.surfaceflinger.Display;
+const Region = require('flickerlib/flicker').android.tools.common.datatypes.Region;
+
+// Event Log
+const EventLog = require('flickerlib/flicker').android.tools.common.traces.events.EventLog;
+const CujEvent = require('flickerlib/flicker').android.tools.common.traces.events.CujEvent;
+const CujType = require('flickerlib/flicker').android.tools.common.traces.events.CujType;
+const Event = require('flickerlib/flicker').android.tools.common.traces.events.Event;
+const FlickerEvent = require('flickerlib/flicker').android.tools.common.traces.events.FlickerEvent;
+const FocusEvent = require('flickerlib/flicker').android.tools.common.traces.events.FocusEvent;
+const EventLogParser =
+  require('flickerlib/flicker').android.tools.common.parsers.events.EventLogParser;
+const CujTrace = require('flickerlib/flicker').android.tools.common.parsers.events.CujTrace;
+const Cuj = require('flickerlib/flicker').android.tools.common.parsers.events.Cuj;
+
+// Transitions
+const Transition = require('flickerlib/flicker').android.tools.common.traces.wm.Transition;
+const TransitionType = require('flickerlib/flicker').android.tools.common.traces.wm.TransitionType;
+const TransitionChange =
+  require('flickerlib/flicker').android.tools.common.traces.wm.TransitionChange;
+const TransitionsTrace =
+  require('flickerlib/flicker').android.tools.common.traces.wm.TransitionsTrace;
+const ShellTransitionData =
+  require('flickerlib/flicker').android.tools.common.traces.wm.ShellTransitionData;
+const WmTransitionData =
+  require('flickerlib/flicker').android.tools.common.traces.wm.WmTransitionData;
 
 // Common
-const Size = require('flicker').com.android.server.wm.traces.common.Size;
-const ActiveBuffer = require('flicker').com.android.server.wm.traces.common
-    .ActiveBuffer;
-const Color3 = require('flicker').com.android.server.wm.traces.common.Color3;
-const Color = require('flicker').com.android.server.wm.traces.common.Color;
-const Point = require('flicker').com.android.server.wm.traces.common.Point;
-const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
-const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
-const Region = require('flicker').com.android.server.wm.traces.common.region.Region;
+const Size = require('flickerlib/flicker').android.tools.common.datatypes.Size;
+const ActiveBuffer = require('flickerlib/flicker').android.tools.common.datatypes.ActiveBuffer;
+const Color = require('flickerlib/flicker').android.tools.common.datatypes.Color;
+const Insets = require('flickerlib/flicker').android.tools.common.datatypes.Insets;
+const Matrix33 = require('flickerlib/flicker').android.tools.common.datatypes.Matrix33;
+const PlatformConsts = require('flickerlib/flicker').android.tools.common.PlatformConsts;
+const Rotation = require('flickerlib/flicker').android.tools.common.Rotation;
+const Point = require('flickerlib/flicker').android.tools.common.datatypes.Point;
+const PointF = require('flickerlib/flicker').android.tools.common.datatypes.PointF;
+const Rect = require('flickerlib/flicker').android.tools.common.datatypes.Rect;
+const RectF = require('flickerlib/flicker').android.tools.common.datatypes.RectF;
+const WindowingMode = require('flickerlib/flicker').android.tools.common.traces.wm.WindowingMode;
+const CrossPlatform = require('flickerlib/flicker').android.tools.common.CrossPlatform;
+const Timestamp = require('flickerlib/flicker').android.tools.common.Timestamp;
+const TimestampFactory = require('flickerlib/flicker').android.tools.common.TimestampFactory;
 
-//Tags
-const Tag = require('flicker').com.android.server.wm.traces.common.tags.Tag;
-const TagState = require('flicker').com.android.server.wm.traces.common.tags.TagState;
-const TagTrace = require('flicker').com.android.server.wm.traces.common.tags.TagTrace;
+const NoCache = require('flickerlib/flicker').android.tools.common.NoCache;
 
-//Errors
-const Error = require('flicker').com.android.server.wm.traces.common.errors.Error;
-const ErrorState = require('flicker').com.android.server.wm.traces.common.errors.ErrorState;
-const ErrorTrace = require('flicker').com.android.server.wm.traces.common.errors.ErrorTrace;
-
-// Service
-const TaggingEngine = require('flicker').com.android.server.wm.traces.common.service.TaggingEngine;
-
-const EMPTY_BUFFER = new ActiveBuffer(0, 0, 0, 0);
-const EMPTY_COLOR3 = new Color3(-1, -1, -1);
-const EMPTY_COLOR = new Color(-1, -1, -1, 0);
-const EMPTY_RECT = new Rect(0, 0, 0, 0);
-const EMPTY_RECTF = new RectF(0, 0, 0, 0);
-const EMPTY_POINT = new Point(0, 0);
-const EMPTY_MATRIX22 = new Matrix22(0, 0, 0, 0, 0, 0);
-const EMPTY_MATRIX33 = new Matrix33(0, 0, 0, 0, 0, 0);
+const EMPTY_SIZE = Size.Companion.EMPTY;
+const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
+const EMPTY_COLOR = Color.Companion.EMPTY;
+const EMPTY_INSETS = Insets.Companion.EMPTY;
+const EMPTY_RECT = Rect.Companion.EMPTY;
+const EMPTY_RECTF = RectF.Companion.EMPTY;
+const EMPTY_POINT = Point.Companion.EMPTY;
+const EMPTY_POINTF = PointF.Companion.EMPTY;
+const EMPTY_MATRIX33 = Matrix33.Companion.identity(0, 0);
 const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX33);
 
 function toSize(proto) {
   if (proto == null) {
-    return EMPTY_BOUNDS;
+    return EMPTY_SIZE;
   }
   const width = proto.width ?? proto.w ?? 0;
   const height = proto.height ?? proto.h ?? 0;
   if (width || height) {
     return new Size(width, height);
   }
-  return EMPTY_BOUNDS;
+  return EMPTY_SIZE;
 }
 
 function toActiveBuffer(proto) {
@@ -131,27 +143,17 @@ function toActiveBuffer(proto) {
   return EMPTY_BUFFER;
 }
 
-function toColor3(proto) {
+function toColor(proto, hasAlpha = true) {
   if (proto == null) {
     return EMPTY_COLOR;
   }
   const r = proto.r ?? 0;
   const g = proto.g ?? 0;
   const b = proto.b ?? 0;
-  if (r || g || b) {
-    return new Color3(r, g, b);
+  let a = proto.a;
+  if (a === null && !hasAlpha) {
+    a = 1;
   }
-  return EMPTY_COLOR3;
-}
-
-function toColor(proto) {
-  if (proto == null) {
-    return EMPTY_COLOR;
-  }
-  const r = proto.r ?? 0;
-  const g = proto.g ?? 0;
-  const b = proto.b ?? 0;
-  const a = proto.a ?? 0;
   if (r || g || b || a) {
     return new Color(r, g, b, a);
   }
@@ -168,6 +170,49 @@ function toPoint(proto) {
     return new Point(x, y);
   }
   return EMPTY_POINT;
+}
+
+function toPointF(proto) {
+  if (proto == null) {
+    return null;
+  }
+  const x = proto.x ?? 0;
+  const y = proto.y ?? 0;
+  if (x || y) {
+    return new PointF(x, y);
+  }
+  return EMPTY_POINTF;
+}
+
+function toInsets(proto) {
+  if (proto == null) {
+    return EMPTY_INSETS;
+  }
+
+  const left = proto?.left ?? 0;
+  const top = proto?.top ?? 0;
+  const right = proto?.right ?? 0;
+  const bottom = proto?.bottom ?? 0;
+  if (left || top || right || bottom) {
+    return new Insets(left, top, right, bottom);
+  }
+  return EMPTY_INSETS;
+}
+
+function toCropRect(proto) {
+  if (proto == null) return EMPTY_RECT;
+
+  const right = proto.right || 0;
+  const left = proto.left || 0;
+  const bottom = proto.bottom || 0;
+  const top = proto.top || 0;
+
+  // crop (0,0) (-1,-1) means no crop
+  if (right == -1 && left == 0 && bottom == -1 && top == 0) EMPTY_RECT;
+
+  if (right - left <= 0 || bottom - top <= 0) return EMPTY_RECT;
+
+  return Rect.Companion.from(left, top, right, bottom);
 }
 
 function toRect(proto) {
@@ -237,22 +282,6 @@ function toTransform(proto) {
   return EMPTY_TRANSFORM;
 }
 
-function toMatrix22(proto) {
-  if (proto == null) {
-    return EMPTY_MATRIX22;
-  }
-  const dsdx = proto.dsdx ?? 0;
-  const dtdx = proto.dtdx ?? 0;
-  const dsdy = proto.dsdy ?? 0;
-  const dtdy = proto.dtdy ?? 0;
-
-  if (dsdx || dtdx || dsdy || dtdy) {
-    return new Matrix22(dsdx, dtdx, dsdy, dtdy);
-  }
-
-  return EMPTY_MATRIX22;
-}
-
 export {
   Activity,
   Configuration,
@@ -260,6 +289,7 @@ export {
   DisplayArea,
   DisplayContent,
   KeyguardControllerState,
+  DisplayCutout,
   RootWindowContainer,
   Task,
   TaskFragment,
@@ -271,43 +301,69 @@ export {
   WindowManagerPolicy,
   WindowManagerTrace,
   WindowManagerState,
+  WindowManagerTraceEntryBuilder,
   // SF
-  BaseLayerTraceEntry,
+  HwcCompositionType,
   Layer,
+  LayerProperties,
   LayerTraceEntry,
   LayerTraceEntryBuilder,
   LayersTrace,
   Transform,
-  Matrix22,
   Matrix33,
   Display,
-  // Tags
-  Tag,
-  TagState,
-  TagTrace,
-  // Errors
-  Error,
-  ErrorState,
-  ErrorTrace,
+  // Eventlog
+  EventLog,
+  CujEvent,
+  CujType,
+  Event,
+  FlickerEvent,
+  FocusEvent,
+  EventLogParser,
+  CujTrace,
+  Cuj,
+  // Transitions
+  Transition,
+  TransitionType,
+  TransitionChange,
+  TransitionsTrace,
+  ShellTransitionData,
+  WmTransitionData,
   // Common
   Size,
   ActiveBuffer,
   Color,
-  Color3,
+  Insets,
+  PlatformConsts,
   Point,
   Rect,
   RectF,
   Region,
+  Rotation,
+  WindowingMode,
+  CrossPlatform,
+  Timestamp,
+  TimestampFactory,
+  NoCache,
   // Service
-  TaggingEngine,
   toSize,
   toActiveBuffer,
   toColor,
-  toColor3,
+  toCropRect,
+  toInsets,
   toPoint,
+  toPointF,
   toRect,
   toRectF,
   toRegion,
-  toMatrix22,
   toTransform,
+  // Constants
+  EMPTY_BUFFER,
+  EMPTY_COLOR,
+  EMPTY_RECT,
+  EMPTY_RECTF,
+  EMPTY_POINT,
+  EMPTY_POINTF,
+  EMPTY_MATRIX33,
+  EMPTY_TRANSFORM,
 };

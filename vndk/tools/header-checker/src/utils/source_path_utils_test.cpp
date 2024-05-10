@@ -14,12 +14,73 @@
 
 #include "utils/source_path_utils.h"
 
+#include <android-base/file.h>
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <vector>
 
 namespace header_checker {
 namespace utils {
 
+TEST(SourcePathUtilsTest, CollectAllExportedHeaders) {
+  TemporaryDir temp_dir;
+  std::error_code ec;
+  // Prepare a header directory containing links, hidden files, etc.
+  const std::filesystem::path header_dir =
+      std::filesystem::path(temp_dir.path) / "include";
+  ASSERT_TRUE(std::filesystem::create_directory(header_dir, ec));
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path header = header_dir / "header.h";
+  ASSERT_TRUE(android::base::WriteStringToFile("// test", header));
+
+  const std::filesystem::path no_ext_header = header_dir / "header";
+  ASSERT_TRUE(android::base::WriteStringToFile("// test", no_ext_header));
+
+  const std::filesystem::path subdir = header_dir / "subdir";
+  ASSERT_TRUE(std::filesystem::create_directory(subdir, ec));
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path subdir_link = header_dir / "subdir_link";
+  std::filesystem::create_directory_symlink(subdir, subdir_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path hidden_subdir_link = header_dir / ".subdir_link";
+  std::filesystem::create_directory_symlink(subdir, hidden_subdir_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path header_link = subdir / "header_link.h";
+  std::filesystem::create_symlink(header, header_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path hidden_header_link = subdir / ".header_link.h";
+  std::filesystem::create_symlink(header, hidden_header_link, ec);
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path non_header_link = subdir / "header_link.txt";
+  std::filesystem::create_symlink(header, non_header_link, ec);
+  ASSERT_FALSE(ec);
+  // Prepare a header directory like libc++.
+  const std::filesystem::path libcxx_dir =
+      std::filesystem::path(temp_dir.path) / "libcxx" / "include";
+  ASSERT_TRUE(std::filesystem::create_directories(libcxx_dir, ec));
+  ASSERT_FALSE(ec);
+
+  const std::filesystem::path libcxx_header = libcxx_dir / "array";
+  ASSERT_TRUE(android::base::WriteStringToFile("// test", libcxx_header));
+  // Test the function.
+  std::vector<std::string> exported_header_dirs{header_dir, libcxx_dir};
+  std::vector<RootDir> root_dirs{{header_dir, "include"},
+                                 {libcxx_dir, "libcxx"}};
+  std::set<std::string> headers =
+      CollectAllExportedHeaders(exported_header_dirs, root_dirs);
+
+  std::set<std::string> expected_headers{
+      "include/header.h", "include/subdir/header_link.h",
+      "include/subdir_link/header_link.h", "libcxx/array"};
+  ASSERT_EQ(headers, expected_headers);
+}
 
 TEST(SourcePathUtilsTest, NormalizeAbsolutePaths) {
   const std::vector<std::string> args{"/root/dir"};

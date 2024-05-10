@@ -225,4 +225,8 @@
     <string name="scancard">Scan SD card</string>
     <string name="numsongs"># of albums</string>
     <string name="insertbutton">Insert %1s albums</string>
+
+    <!-- HttpEngineActivity -->
+    <string name="urlText">Enter a URL</string>
+    <string name="postText">Enter post data (leave it blank for GET request)</string>
 </resources>

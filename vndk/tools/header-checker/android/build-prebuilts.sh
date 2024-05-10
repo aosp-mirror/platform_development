@@ -17,20 +17,36 @@
 usage() {
     echo "Usage: $(basename "$0") [build_target]..."
     echo "    Build all targets if build_target is not specified."
-    echo "    Supported build targets for macOS: ${MACOS_SOONG_BINARIES[*]}"
-    echo "    Supported build targets for Linux: ${LINUX_SOONG_BINARIES[*]}"
+    echo "    Supported build targets:" \
+         "${VALID_SOONG_BINARIES[@]}" "${VALID_SOONG_TESTS[@]}"
 }
 
-valid_build_target () {
-    for i in "${VALID_SOONG_BINARIES[@]}"; do
-        if [ "$i" = "$1" ]; then
-            return 0
-        fi
+in_array () {
+    value="$1"
+    shift
+    for i in "$@"; do
+        [ "$i" = "${value}" ] && return 0
     done
     return 1
 }
 
-SOONG_BINARIES=()
+VALID_SOONG_BINARIES=(
+    "bindgen"
+    "cxx_extractor"
+    "header-abi-linker"
+    "header-abi-dumper"
+    "header-abi-diff"
+    "ide_query_cc_analyzer"
+    "proto_metadata_plugin"
+    "protoc_extractor"
+    "versioner"
+)
+
+VALID_SOONG_TESTS=(
+    "header-checker-unittests"
+)
+
+BUILD_TARGETS=()
 
 while [ $# -gt 0 ]; do
     case $1 in
@@ -38,8 +54,8 @@ while [ $# -gt 0 ]; do
             usage
             exit 0
             ;;
-        *) # Add specified build targets into SOONG_BINARIES
-            SOONG_BINARIES+=("$1")
+        *) # Add specified build targets into BUILD_TARGETS
+            BUILD_TARGETS+=("$1")
             ;;
     esac
     shift
@@ -49,55 +65,33 @@ set -ex
 
 source "$(dirname "$0")/envsetup.sh"
 
-UNAME="$(uname)"
-case "${UNAME}" in
-Linux)
-    OS='linux'
-    ;;
-Darwin)
-    OS='darwin'
-    ;;
-*)
-    echo "error: Unknown uname: ${UNAME}"
+if [ "$(uname)" != "Linux" ]; then
+    echo "error: Unsupported uname: $(uname)"
     exit 1
-    ;;
-esac
-
-LINUX_SOONG_BINARIES=(
-    "bindgen"
-    "cxx_extractor"
-    "header-abi-linker"
-    "header-abi-dumper"
-    "header-abi-diff"
-    "proto_metadata_plugin"
-    "protoc_extractor"
-    "versioner"
-)
-
-MACOS_SOONG_BINARIES=(
-    "versioner"
-)
+fi
 
 # Targets to be built
-if [ "${OS}" = "darwin" ]; then
-    VALID_SOONG_BINARIES=("${MACOS_SOONG_BINARIES[@]}")
-else
-    VALID_SOONG_BINARIES=("${LINUX_SOONG_BINARIES[@]}")
-fi
-
-if [ "${#SOONG_BINARIES[@]}" -eq 0 ]; then
-    # SOONG_BINARIES is empty, so there must be no commandline argument, thus we
-    # build everything.
-    SOONG_BINARIES=("${VALID_SOONG_BINARIES[@]}")
-fi
+SOONG_BINARIES=()
+SOONG_TESTS=()
 
 # Check if all specified targets are valid
-for name in "${SOONG_BINARIES[@]}"; do
-  if ! valid_build_target "${name}"; then
-    echo "build_target ${name} is not one of the supported targets: ${VALID_SOONG_BINARIES[*]}"
-    exit 1
-  fi
+for name in "${BUILD_TARGETS[@]}"; do
+    if in_array "${name}" "${VALID_SOONG_BINARIES[@]}"; then
+        SOONG_BINARIES+=("${name}")
+    elif in_array "${name}" "${VALID_SOONG_TESTS[@]}"; then
+        SOONG_TESTS+=("${name}")
+    else
+        echo "build_target ${name} is not one of the supported targets:" \
+             "${VALID_SOONG_BINARIES[@]}" "${VALID_SOONG_TESTS[@]}"
+        exit 1
+    fi
 done
+
+if [ "${#BUILD_TARGETS[@]}" -eq 0 ]; then
+    # Build everything by default.
+    SOONG_BINARIES=("${VALID_SOONG_BINARIES[@]}")
+    SOONG_TESTS=("${VALID_SOONG_TESTS[@]}")
+fi
 
 if [ -z "${OUT_DIR}" ]; then
     echo "error: Must set OUT_DIR"
@@ -108,7 +102,7 @@ TOP=$(pwd)
 
 # Setup Soong configuration
 SOONG_OUT="${OUT_DIR}/soong"
-SOONG_HOST_OUT="${OUT_DIR}/soong/host/${OS}-x86"
+SOONG_HOST_OUT="${OUT_DIR}/soong/host/linux-x86"
 rm -rf "${SOONG_OUT}"
 mkdir -p "${SOONG_OUT}"
 cat > "${SOONG_OUT}/soong.variables" << __EOF__
@@ -127,25 +121,23 @@ for name in "${SOONG_BINARIES[@]}"; do
     binaries+=("${SOONG_HOST_OUT}/bin/${name}")
 done
 
-libs=()
-if [ "${OS}" = "darwin" ]; then
-    libs+=("${SOONG_HOST_OUT}/lib64/libc++abi_host.dylib")
-fi
-
 # Build binaries and shared libs
-build/soong/soong_ui.bash --make-mode --skip-config --soong-only "${binaries[@]}" "${libs[@]}"
+build/soong/soong_ui.bash --make-mode --skip-config --soong-only \
+  "${binaries[@]}" "${SOONG_TESTS[@]}"
 
 # Copy binaries and shared libs
 SOONG_DIST="${SOONG_OUT}/dist"
 mkdir -p "${SOONG_DIST}/bin"
-cp "${binaries[@]}" "${SOONG_DIST}/bin"
+if [ -n "${binaries}" ]; then
+    cp "${binaries[@]}" "${SOONG_DIST}/bin"
+fi
 cp -R "${SOONG_HOST_OUT}/lib64" "${SOONG_DIST}"
 # create symlink lib -> lib64 as toolchain libraries have a RUNPATH pointing to
 # $ORIGIN/../lib instead of lib64
 ln -s "lib64" "${SOONG_DIST}/lib"
 
 # Copy clang header and share files
-CLANG_DIR="prebuilts/clang/host/${OS}-x86/${LLVM_PREBUILTS_VERSION}"
+CLANG_DIR="prebuilts/clang/host/linux-x86/${LLVM_PREBUILTS_VERSION}"
 CLANG_LIB_DIR="${CLANG_DIR}/lib/clang/${LLVM_RELEASE_VERSION}"
 CLANG_LIB_DIR_OUT="${SOONG_DIST}/lib/clang/${LLVM_RELEASE_VERSION}"
 mkdir -p "${CLANG_LIB_DIR_OUT}"
@@ -156,20 +148,9 @@ ln -s "lib/clang/${LLVM_RELEASE_VERSION}/include" "${SOONG_DIST}/clang-headers"
 # Normalize library file names.  All library file names must match their soname.
 function extract_soname () {
     local file="$1"
-
-    case "${OS}" in
-    linux)
-        readelf -d "${file}" | \
-            grep '(SONAME)\s*Library soname: \[.*\]$' -o | \
-            sed 's/(SONAME)\s*Library soname: \[\(.*\)\]$/\1/g'
-        ;;
-    darwin)
-        local install_path="$(otool -D "${file}" | sed -n 2p)"
-        if [ -n "${install_path}" ]; then
-            basename "${install_path}"
-        fi
-        ;;
-    esac
+    readelf -d "${file}" | \
+        grep '(SONAME)\s*Library soname: \[.*\]$' -o | \
+        sed 's/(SONAME)\s*Library soname: \[\(.*\)\]$/\1/g'
 }
 
 for file in "${SOONG_OUT}/dist/lib"*"/"*; do
@@ -180,12 +161,12 @@ for file in "${SOONG_OUT}/dist/lib"*"/"*; do
 done
 
 # Package binaries and shared libs
-(
-    cd "${SOONG_OUT}/dist"
+if [ -z "${DIST_DIR}" ]; then
+    echo "DIST_DIR is empty. Skip zipping binaries."
+else
+    pushd "${SOONG_OUT}/dist"
     zip -qryX build-prebuilts.zip *
-)
-
-if [ -n "${DIST_DIR}" ]; then
+    popd
     mkdir -p "${DIST_DIR}" || true
     cp "${SOONG_OUT}/dist/build-prebuilts.zip" "${DIST_DIR}/"
 fi

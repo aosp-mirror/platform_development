@@ -76,15 +76,26 @@ bool JsonObjectRef::GetBool(const std::string &key) const {
 }
 
 int64_t JsonObjectRef::GetInt(const std::string &key) const {
-  return Get(key, json_0, &Json::Value::isIntegral).asInt64();
+  return Get(key, json_0, &Json::Value::isInt64).asInt64();
 }
 
 uint64_t JsonObjectRef::GetUint(const std::string &key) const {
-  return Get(key, json_0, &Json::Value::isIntegral).asUInt64();
+  return Get(key, json_0, &Json::Value::isUInt64).asUInt64();
+}
+
+const Json::Value &JsonObjectRef::GetIntegralValue(
+    const std::string &key) const {
+  return Get(key, json_0, &Json::Value::isIntegral);
 }
 
 std::string JsonObjectRef::GetString(const std::string &key) const {
   return Get(key, json_empty_string, &Json::Value::isString).asString();
+}
+
+std::string JsonObjectRef::GetString(const std::string &key,
+                                     const std::string &default_value) const {
+  return Get(key, Json::Value(default_value), &Json::Value::isString)
+      .asString();
 }
 
 JsonObjectRef JsonObjectRef::GetObject(const std::string &key) const {
@@ -202,13 +213,18 @@ void JsonIRReader::ReadTemplateInfo(const JsonObjectRef &type_decl,
 
 void JsonIRReader::ReadTypeInfo(const JsonObjectRef &type_decl,
                                 TypeIR *type_ir) {
-  type_ir->SetLinkerSetKey(type_decl.GetString("linker_set_key"));
+  // LinkableMessageIR
   type_ir->SetSourceFile(type_decl.GetString("source_file"));
+  type_ir->SetLinkerSetKey(type_decl.GetString("linker_set_key"));
+  // TypeIR
   type_ir->SetName(type_decl.GetString("name"));
-  type_ir->SetReferencedType(type_decl.GetString("referenced_type"));
-  type_ir->SetSelfType(type_decl.GetString("self_type"));
   type_ir->SetSize(type_decl.GetUint("size"));
   type_ir->SetAlignment(type_decl.GetUint("alignment"));
+  type_ir->SetSelfType(
+      type_decl.GetString("self_type", type_ir->GetLinkerSetKey()));
+  // ReferencesOtherType
+  type_ir->SetReferencedType(
+      type_decl.GetString("referenced_type", type_ir->GetSelfType()));
 }
 
 void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
@@ -216,7 +232,8 @@ void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
   for (auto &&field : record_type.GetObjects("fields")) {
     RecordFieldIR record_field_ir(
         field.GetString("field_name"), field.GetString("referenced_type"),
-        field.GetUint("field_offset"), GetAccess(field));
+        field.GetUint("field_offset"), GetAccess(field),
+        field.GetBool("is_bit_field"), field.GetUint("bit_width"));
     record_ir->AddRecordField(std::move(record_field_ir));
   }
 }
@@ -248,9 +265,13 @@ void JsonIRReader::ReadVTableLayout(const JsonObjectRef &record_type,
 void JsonIRReader::ReadEnumFields(const JsonObjectRef &enum_type,
                                   EnumTypeIR *enum_ir) {
   for (auto &&field : enum_type.GetObjects("enum_fields")) {
-    EnumFieldIR enum_field_ir(field.GetString("name"),
-                              field.GetInt("enum_field_value"));
-    enum_ir->AddEnumField(std::move(enum_field_ir));
+    std::string name = field.GetString("name");
+    const Json::Value &value = field.GetIntegralValue("enum_field_value");
+    if (value.isUInt64()) {
+      enum_ir->AddEnumField(EnumFieldIR(name, value.asUInt64()));
+    } else {
+      enum_ir->AddEnumField(EnumFieldIR(name, value.asInt64()));
+    }
   }
 }
 
@@ -310,13 +331,16 @@ EnumTypeIR JsonIRReader::EnumTypeJsonToIR(const JsonObjectRef &enum_type) {
 void JsonIRReader::ReadGlobalVariables(const JsonObjectRef &tu) {
   for (auto &&global_variable : tu.GetObjects("global_vars")) {
     GlobalVarIR global_variable_ir;
+    // GlobalVarIR
     global_variable_ir.SetName(global_variable.GetString("name"));
     global_variable_ir.SetAccess(GetAccess(global_variable));
+    // LinkableMessageIR
     global_variable_ir.SetSourceFile(global_variable.GetString("source_file"));
-    global_variable_ir.SetReferencedType(
-        global_variable.GetString("referenced_type"));
     global_variable_ir.SetLinkerSetKey(
         global_variable.GetString("linker_set_key"));
+    // ReferencesOtherType
+    global_variable_ir.SetReferencedType(global_variable.GetString(
+        "referenced_type", global_variable_ir.GetLinkerSetKey()));
     module_->AddGlobalVariable(std::move(global_variable_ir));
   }
 }

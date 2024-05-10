@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_native_tools_libraries",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -57,5 +58,25 @@ python_test_host {
     ],
     libs: [
         "pyfakefs",
-    ]
+    ],
+}
+
+python_test_host {
+    name: "gdbclient_test",
+    srcs: [
+        "gdbclient.py",
+        "gdbclient_test.py",
+    ],
+    libs: [
+        "adb_py",
+        "gdbrunner",
+    ],
+    test_options: {
+        unit_test: true,
+    },
+    version: {
+        py3: {
+            embedded_launcher: true,
+        },
+    },
 }

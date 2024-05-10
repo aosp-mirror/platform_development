@@ -14,119 +14,222 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
+import {shortenName} from '../mixin';
 
 import {
-    Configuration,
-    ConfigurationContainer,
-    toRect,
-    WindowConfiguration,
-    WindowContainer,
-    WindowContainerChild,
- } from "../common"
+  Configuration,
+  ConfigurationContainer,
+  toRect,
+  WindowConfiguration,
+  WindowContainer,
+} from '../common';
 
-import Activity from "./Activity"
-import DisplayArea from "./DisplayArea"
-import DisplayContent from "./DisplayContent"
-import Task from "./Task"
-import TaskFragment from "./TaskFragment"
-import WindowState from "./WindowState"
-import WindowToken from "./WindowToken"
+import {Activity} from './Activity';
+import {DisplayArea} from './DisplayArea';
+import {DisplayContent} from './DisplayContent';
+import {Task} from './Task';
+import {TaskFragment} from './TaskFragment';
+import {WindowState, WindowStateUtils} from './WindowState';
+import {WindowToken} from './WindowToken';
 
-WindowContainer.fromProto = function (
-    proto: any,
-    protoChildren: any[],
-    isActivityInTree: boolean,
-    nameOverride: string = null,
-    identifierOverride: string = null,
-    tokenOverride = null,
-): WindowContainer {
-    if (proto == null) {
-        return null;
-    }
+WindowContainer.fromProto = (
+  proto: any,
+  protoChildren: any[],
+  isActivityInTree: boolean,
+  nextSeq: () => number,
+  nameOverride: string | null = null,
+  identifierOverride: string | null = null,
+  tokenOverride: any = null,
+  visibleOverride: boolean | null = null
+): WindowContainer => {
+  if (proto == null) {
+    return null;
+  }
 
-    const children = protoChildren
-        .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        .filter(it => it != null);
+  const containerOrder = nextSeq();
+  const children = protoChildren
+    .filter((it) => it != null)
+    .map((it) => WindowContainer.childrenFromProto(it, isActivityInTree, nextSeq))
+    .filter((it) => it != null);
 
-    const identifier = identifierOverride ?? proto.identifier;
-    var name = nameOverride ?? identifier?.title ?? "";
-    var token = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? "";
+  const identifier: any = identifierOverride ?? proto.identifier;
+  const name: string = nameOverride ?? identifier?.title ?? '';
+  const token: string = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? '';
 
-    const config = createConfigurationContainer(proto.configurationContainer);
-    const entry = new WindowContainer(
-        name,
-        token,
-        proto.orientation,
-        proto.surfaceControl?.layerId ?? 0,
-        proto.visible,
-        config,
-        children
-    );
+  const config = createConfigurationContainer(proto.configurationContainer);
+  const entry = new WindowContainer(
+    name,
+    token,
+    proto.orientation,
+    proto.surfaceControl?.layerId ?? 0,
+    visibleOverride ?? proto.visible,
+    config,
+    children,
+    containerOrder
+  );
 
-    addAttributes(entry, proto);
-    return entry;
-}
+  addAttributes(entry, proto);
+  return entry;
+};
 
 function addAttributes(entry: WindowContainer, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
-WindowContainer.childrenFromProto = function(proto: any, isActivityInTree: Boolean): WindowContainerChild {
-    return DisplayContent.fromProto(proto.displayContent, isActivityInTree) ??
-        DisplayArea.fromProto(proto.displayArea, isActivityInTree) ??
-        Task.fromProto(proto.task, isActivityInTree) ??
-        TaskFragment.fromProto(proto.taskFragment, isActivityInTree) ??
-        Activity.fromProto(proto.activity) ??
-        WindowToken.fromProto(proto.windowToken, isActivityInTree) ??
-        WindowState.fromProto(proto.window, isActivityInTree) ??
-        WindowContainer.fromProto(proto.windowContainer);
-}
+type WindowContainerChildType =
+  | DisplayContent
+  | DisplayArea
+  | Task
+  | TaskFragment
+  | Activity
+  | WindowToken
+  | WindowState
+  | WindowContainer;
 
-function createConfigurationContainer(proto: any): ConfigurationContainer {
-    const entry = new ConfigurationContainer(
-        createConfiguration(proto?.overrideConfiguration ?? null),
-        createConfiguration(proto?.fullConfiguration ?? null),
-        createConfiguration(proto?.mergedOverrideConfiguration ?? null)
+WindowContainer.childrenFromProto = (
+  proto: any,
+  isActivityInTree: boolean,
+  nextSeq: () => number
+): WindowContainerChildType => {
+  if (proto.displayContent !== null) {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.displayContent.rootDisplayArea.windowContainer,
+      /* protoChildren */ proto.displayContent.rootDisplayArea.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.displayContent.displayInfo?.name ?? null
     );
 
-    entry.obj = entry;
-    return entry;
+    return DisplayContent.fromProto(windowContainer, proto.displayContent);
+  }
+
+  if (proto.displayArea !== null) {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.displayArea.windowContainer,
+      /* protoChildren */ proto.displayArea.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.displayArea.name
+    );
+
+    return DisplayArea.fromProto(windowContainer, proto.displayArea);
+  }
+
+  if (proto.task !== null) {
+    const windowContainerProto =
+      proto.task.taskFragment?.windowContainer ?? proto.task.windowContainer;
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ windowContainerProto,
+      /* protoChildren */ windowContainerProto?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq
+    );
+
+    return Task.fromProto(windowContainer, proto.task);
+  }
+
+  if (proto.taskFragment !== null) {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.taskFragment.windowContainer,
+      /* protoChildren */ proto.taskFragment.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq
+    );
+
+    return TaskFragment.fromProto(windowContainer, proto.taskFragment);
+  }
+
+  if (proto.activity !== null) {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.activity.windowToken.windowContainer,
+      /* protoChildren */ proto.activity.windowToken.windowContainer?.children ?? [],
+      /* isActivityInTree */ true,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.activity.name,
+      /* identifierOverride */ proto.activity.identifier
+    );
+
+    return Activity.fromProto(windowContainer, proto.activity);
+  }
+
+  if (proto.windowToken !== null) {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.windowToken.windowContainer,
+      /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.windowToken.hashCode.toString(16),
+      /* identifierOverride */ null,
+      /* tokenOverride */ proto.windowToken.hashCode
+    );
+
+    return WindowToken.fromProto(windowContainer, proto.windowToken);
+  }
+
+  if (proto.window !== null) {
+    const identifierName = WindowStateUtils.getIdentifier(proto.window);
+    const name = WindowStateUtils.getName(identifierName);
+
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.window.windowContainer,
+      /* protoChildren */ proto.window.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ name,
+      /* identifierOverride */ proto.window.identifier
+    );
+
+    return WindowState.fromProto(windowContainer, proto.window, isActivityInTree);
+  }
+
+  if (proto.windowContainer !== null) {
+    return WindowContainer.fromProto(proto.windowContainer, nextSeq);
+  }
+};
+
+function createConfigurationContainer(proto: any): ConfigurationContainer {
+  const entry = ConfigurationContainer.Companion.from(
+    createConfiguration(proto?.overrideConfiguration ?? null),
+    createConfiguration(proto?.fullConfiguration ?? null),
+    createConfiguration(proto?.mergedOverrideConfiguration ?? null)
+  );
+
+  entry.obj = entry;
+  return entry;
 }
 
 function createConfiguration(proto: any): Configuration {
-    if (proto == null) {
-        return null;
-    }
-    var windowConfiguration = null;
+  if (proto == null) {
+    return null;
+  }
+  let windowConfiguration = null;
 
-    if (proto != null && proto.windowConfiguration != null) {
-        windowConfiguration = createWindowConfiguration(proto.windowConfiguration);
-    }
+  if (proto != null && proto.windowConfiguration != null) {
+    windowConfiguration = createWindowConfiguration(proto.windowConfiguration);
+  }
 
-    return new Configuration(
-        windowConfiguration,
-        proto?.densityDpi ?? 0,
-        proto?.orientation ?? 0,
-        proto?.screenHeightDp ?? 0,
-        proto?.screenHeightDp ?? 0,
-        proto?.smallestScreenWidthDp ?? 0,
-        proto?.screenLayout ?? 0,
-        proto?.uiMode ?? 0
-    );
+  return Configuration.Companion.from(
+    windowConfiguration,
+    proto?.densityDpi ?? 0,
+    proto?.orientation ?? 0,
+    proto?.screenHeightDp ?? 0,
+    proto?.screenHeightDp ?? 0,
+    proto?.smallestScreenWidthDp ?? 0,
+    proto?.screenLayout ?? 0,
+    proto?.uiMode ?? 0
+  );
 }
 
 function createWindowConfiguration(proto: any): WindowConfiguration {
-    return new WindowConfiguration(
-        toRect(proto.appBounds),
-        toRect(proto.bounds),
-        toRect(proto.maxBounds),
-        proto.windowingMode,
-        proto.activityType
-    );
+  return WindowConfiguration.Companion.from(
+    toRect(proto.appBounds),
+    toRect(proto.bounds),
+    toRect(proto.maxBounds),
+    proto.windowingMode,
+    proto.activityType
+  );
 }
 
-export default WindowContainer;
+export {WindowContainer};

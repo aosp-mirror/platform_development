@@ -6,7 +6,6 @@
    "linker_set_key" : "_ZTIA2_c",
    "name" : "char[2]",
    "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIA2_c",
    "size" : 2,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   }
@@ -19,15 +18,11 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIc",
    "name" : "char",
-   "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIc",
    "size" : 1
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -125,7 +120,6 @@
    "linker_set_key" : "_ZTIRA2_Kc",
    "name" : "const char (&)[2]",
    "referenced_type" : "_ZTIA2_Kc",
-   "self_type" : "_ZTIRA2_Kc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -134,7 +128,6 @@
    "linker_set_key" : "_ZTIRc",
    "name" : "char &",
    "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIRc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   }
@@ -146,7 +139,6 @@
    "linker_set_key" : "_ZTIPKPKc",
    "name" : "const char *const *",
    "referenced_type" : "_ZTIKPKc",
-   "self_type" : "_ZTIPKPKc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -155,7 +147,6 @@
    "linker_set_key" : "_ZTIPKc",
    "name" : "const char *",
    "referenced_type" : "_ZTIKc",
-   "self_type" : "_ZTIPKc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -164,7 +155,6 @@
    "linker_set_key" : "_ZTIPPc",
    "name" : "char **",
    "referenced_type" : "_ZTIPc",
-   "self_type" : "_ZTIPPc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -173,7 +163,6 @@
    "linker_set_key" : "_ZTIPc",
    "name" : "char *",
    "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIPc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   }
@@ -186,7 +175,6 @@
    "linker_set_key" : "_ZTIA2_Kc",
    "name" : "const char[2]",
    "referenced_type" : "_ZTIA2_c",
-   "self_type" : "_ZTIA2_Kc",
    "size" : 2,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -196,7 +184,6 @@
    "linker_set_key" : "_ZTIKPKPKc",
    "name" : "const char *const *const",
    "referenced_type" : "_ZTIPKPKc",
-   "self_type" : "_ZTIKPKPKc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -206,7 +193,6 @@
    "linker_set_key" : "_ZTIKPKc",
    "name" : "const char *const",
    "referenced_type" : "_ZTIPKc",
-   "self_type" : "_ZTIKPKc",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -216,7 +202,6 @@
    "linker_set_key" : "_ZTIKc",
    "name" : "const char",
    "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIKc",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -225,7 +210,6 @@
    "linker_set_key" : "_ZTIV6Struct",
    "name" : "volatile Struct",
    "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTIV6Struct",
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   }
  ],
@@ -237,7 +221,6 @@
    "linker_set_key" : "_ZTIO6Struct",
    "name" : "Struct &&",
    "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTIO6Struct",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   },
@@ -246,7 +229,6 @@
    "linker_set_key" : "_ZTIOV6Struct",
    "name" : "volatile Struct &&",
    "referenced_type" : "_ZTIV6Struct",
-   "self_type" : "_ZTIOV6Struct",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/function_extensions/include/extensions.h"
   }

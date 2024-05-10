@@ -14,35 +14,28 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { TaskFragment } from "../common"
-import WindowContainer from "./WindowContainer"
+import {TaskFragment, WindowContainer} from '../common';
+import {shortenName} from '../mixin';
 
-TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskFragment {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
-            /* isActivityInTree */ isActivityInTree);
-        const entry = new TaskFragment(
-            proto.activityType,
-            proto.displayId,
-            proto.minWidth,
-            proto.minHeight,
-            windowContainer
-        );
+TaskFragment.fromProto = (windowContainer: WindowContainer, proto: any): TaskFragment => {
+  const entry = new TaskFragment(
+    proto.activityType,
+    proto.displayId,
+    proto.minWidth,
+    proto.minHeight,
+    windowContainer
+  );
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+  addAttributes(entry, proto);
+  return entry;
+};
 
 function addAttributes(entry: TaskFragment, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
-export default TaskFragment;
+export {TaskFragment};

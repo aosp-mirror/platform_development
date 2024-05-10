@@ -147,9 +147,10 @@ void AbiDiffHelper::CompareEnumFields(
       utils::FindCommonElements(old_fields_map, new_fields_map);
   std::vector<EnumFieldDiffIR> enum_field_diffs;
   for (auto &&common_fields : cf) {
-    if (common_fields.first->GetValue() != common_fields.second->GetValue()) {
+    if (common_fields.first->GetSignedValue() !=
+        common_fields.second->GetSignedValue()) {
       EnumFieldDiffIR enum_field_diff_ir(common_fields.first,
-                                                   common_fields.second);
+                                         common_fields.second);
       enum_field_diffs.emplace_back(std::move(enum_field_diff_ir));
     }
   }
@@ -345,6 +346,17 @@ static bool CompareSizeAndAlignment(const TypeIR *old_type,
       old_type->GetAlignment() == new_type->GetAlignment();
 }
 
+DiffStatus AbiDiffHelper::CompareAccess(AccessSpecifierIR old_access,
+                                        AccessSpecifierIR new_access) {
+  if (old_access == new_access) {
+    return DiffStatus::kNoDiff;
+  }
+  if (old_access > new_access) {
+    return DiffStatus::kDirectExt;
+  }
+  return DiffStatus::kDirectDiff;
+}
+
 DiffStatus AbiDiffHelper::CompareCommonRecordFields(
     const RecordFieldIR *old_field, const RecordFieldIR *new_field,
     DiffMessageIR::DiffKind diff_kind) {
@@ -355,18 +367,19 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
   // In case it happens, report an incompatible diff for review.
   if (field_diff_status.IsExtension() ||
       old_field->GetOffset() != new_field->GetOffset() ||
-      // TODO: Should this be an inquality check instead ? Some compilers can
-      // make signatures dependant on absolute values of access specifiers.
-      IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess())) {
+      old_field->IsBitField() != new_field->IsBitField() ||
+      old_field->GetBitWidth() != new_field->GetBitWidth()) {
     field_diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
+  field_diff_status.CombineWith(
+      CompareAccess(old_field->GetAccess(), new_field->GetAccess()));
   return field_diff_status;
 }
 
 // This function filters out the pairs of old and new fields that meet the
 // following conditions:
-//   The old field's (offset, type) is unique in old_fields.
-//   The new field's (offset, type) is unique in new_fields.
+//   The old field's (offset, bit width, type) is unique in old_fields.
+//   The new field's (offset, bit width, type) is unique in new_fields.
 //   The two fields have compatible attributes except the name.
 //
 // This function returns either kNoDiff or kIndirectDiff. It is the status of
@@ -381,6 +394,12 @@ DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
   auto is_less = [](const RecordFieldIR *first, const RecordFieldIR *second) {
     if (first->GetOffset() != second->GetOffset()) {
       return first->GetOffset() < second->GetOffset();
+    }
+    if (first->IsBitField() != second->IsBitField()) {
+      return first->IsBitField() < second->IsBitField();
+    }
+    if (first->GetBitWidth() != second->GetBitWidth()) {
+      return first->GetBitWidth() < second->GetBitWidth();
     }
     return first->GetReferencedType() < second->GetReferencedType();
   };
@@ -441,14 +460,17 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
   // Map names to RecordFieldIR.
   AbiElementMap<const RecordFieldIR *> old_fields_map;
   AbiElementMap<const RecordFieldIR *> new_fields_map;
-  utils::AddToMap(
-      &old_fields_map, old_fields,
-      [](const RecordFieldIR *f) {return f->GetName();},
-      [](const RecordFieldIR *f) {return f;});
-  utils::AddToMap(
-      &new_fields_map, new_fields,
-      [](const RecordFieldIR *f) {return f->GetName();},
-      [](const RecordFieldIR *f) {return f;});
+
+  auto get_field_name = [](const RecordFieldIR *f) -> std::string {
+    return !f->GetName().empty()
+               ? f->GetName()
+               : std::to_string(f->GetOffset()) + "#" + f->GetReferencedType();
+  };
+
+  utils::AddToMap(&old_fields_map, old_fields, get_field_name,
+                  [](const RecordFieldIR *f) { return f; });
+  utils::AddToMap(&new_fields_map, new_fields, get_field_name,
+                  [](const RecordFieldIR *f) { return f; });
   // Compare the fields whose names are not present in both records.
   result.removed_fields =
       utils::FindRemovedElements(old_fields_map, new_fields_map);
@@ -602,8 +624,10 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   record_type_diff_ir->SetName(old_type->GetName());
   record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
 
-  if (IsAccessDowngraded(old_type->GetAccess(), new_type->GetAccess())) {
-    final_diff_status.CombineWith(DiffStatus::kDirectDiff);
+  DiffStatus access_diff_status =
+      CompareAccess(old_type->GetAccess(), new_type->GetAccess());
+  final_diff_status.CombineWith(access_diff_status);
+  if (access_diff_status.HasDiff()) {
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<AccessSpecifierDiffIR>(
             old_type->GetAccess(), new_type->GetAccess()));

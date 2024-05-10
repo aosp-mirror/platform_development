@@ -65,15 +65,11 @@ static inline CompatibilityStatusIR operator&(CompatibilityStatusIR f,
 }
 
 enum AccessSpecifierIR {
+  // Ordered from the least to the most restricted.
   PublicAccess = 1,
   ProtectedAccess = 2,
   PrivateAccess = 3
 };
-
-static inline bool IsAccessDowngraded(AccessSpecifierIR old_access,
-                                      AccessSpecifierIR new_access) {
-  return old_access < new_access;
-}
 
 enum LinkableMessageKind {
   RecordTypeKind,
@@ -334,9 +330,14 @@ class TemplatedArtifactIR {
 class RecordFieldIR : public ReferencesOtherType {
  public:
   RecordFieldIR(const std::string &name, const std::string &type,
-                uint64_t offset, AccessSpecifierIR access)
-      : ReferencesOtherType(type), name_(name), offset_(offset),
-        access_(access) {}
+                uint64_t offset, AccessSpecifierIR access, bool is_bit_field,
+                uint64_t bit_width)
+      : ReferencesOtherType(type),
+        name_(name),
+        offset_(offset),
+        access_(access),
+        is_bit_field_(is_bit_field),
+        bit_width_(bit_width) {}
 
   RecordFieldIR() {}
 
@@ -352,10 +353,16 @@ class RecordFieldIR : public ReferencesOtherType {
     return access_;
   }
 
+  bool IsBitField() const { return is_bit_field_; }
+
+  uint64_t GetBitWidth() const { return bit_width_; }
+
  protected:
   std::string name_;
   uint64_t offset_ = 0;
   AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
+  bool is_bit_field_ = false;
+  uint64_t bit_width_ = 0;
 };
 
 class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
@@ -447,20 +454,29 @@ class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
 
 class EnumFieldIR {
  public:
-  EnumFieldIR(const std::string &name, int value)
-      : name_(name), value_(value) {}
+  EnumFieldIR(const std::string &name, int64_t value)
+      : name_(name), signed_value_(value), is_signed_(true) {}
+
+  EnumFieldIR(const std::string &name, uint64_t value)
+      : name_(name), unsigned_value_(value), is_signed_(false) {}
 
   const std::string &GetName() const {
     return name_;
   }
 
-  int GetValue() const {
-    return value_;
-  }
+  bool IsSigned() const { return is_signed_; }
+
+  int64_t GetSignedValue() const { return signed_value_; }
+
+  uint64_t GetUnsignedValue() const { return unsigned_value_; }
 
  protected:
   std::string name_;
-  int value_ = 0;
+  union {
+    int64_t signed_value_;
+    uint64_t unsigned_value_;
+  };
+  bool is_signed_;
 };
 
 class EnumTypeIR : public TypeIR {
