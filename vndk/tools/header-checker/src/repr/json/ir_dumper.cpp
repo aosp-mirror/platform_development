@@ -81,13 +81,23 @@ void IRToJsonConverter::AddTemplateInfo(
 
 void IRToJsonConverter::AddTypeInfo(JsonObject &type_decl,
                                     const TypeIR *type_ir) {
-  type_decl.Set("linker_set_key", type_ir->GetLinkerSetKey());
+  // LinkableMessageIR
   type_decl.Set("source_file", type_ir->GetSourceFile());
+  const std::string &linker_set_key = type_ir->GetLinkerSetKey();
+  type_decl.Set("linker_set_key", linker_set_key);
+  // TypeIR
   type_decl.Set("name", type_ir->GetName());
   type_decl.Set("size", (uint64_t)type_ir->GetSize());
   type_decl.Set("alignment", (uint64_t)type_ir->GetAlignment());
-  type_decl.Set("referenced_type", type_ir->GetReferencedType());
-  type_decl.Set("self_type", type_ir->GetSelfType());
+  const std::string &self_type = type_ir->GetSelfType();
+  if (self_type != linker_set_key) {
+    type_decl.Set("self_type", self_type);
+  }
+  // ReferencesOtherType
+  const std::string &referenced_type = type_ir->GetReferencedType();
+  if (referenced_type != self_type) {
+    type_decl.Set("referenced_type", referenced_type);
+  }
 }
 
 static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
@@ -96,6 +106,8 @@ static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
   record_field.Set("referenced_type", record_field_ir->GetReferencedType());
   AddAccess(record_field, record_field_ir->GetAccess());
   record_field.Set("field_offset", (uint64_t)record_field_ir->GetOffset());
+  record_field.Set("is_bit_field", record_field_ir->IsBitField());
+  record_field.Set("bit_width", (uint64_t)record_field_ir->GetBitWidth());
   return record_field;
 }
 
@@ -203,7 +215,12 @@ static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   JsonObject enum_field;
   enum_field.Set("name", enum_field_ir->GetName());
   // Never omit enum values.
-  enum_field["enum_field_value"] = Json::Int64(enum_field_ir->GetValue());
+  Json::Value &enum_field_value = enum_field["enum_field_value"];
+  if (enum_field_ir->IsSigned()) {
+    enum_field_value = Json::Int64(enum_field_ir->GetSignedValue());
+  } else {
+    enum_field_value = Json::UInt64(enum_field_ir->GetUnsignedValue());
+  }
   return enum_field;
 }
 
@@ -228,11 +245,18 @@ JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
 JsonObject
 IRToJsonConverter::ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   JsonObject global_var;
-  global_var.Set("referenced_type", global_varp->GetReferencedType());
-  global_var.Set("source_file", global_varp->GetSourceFile());
+  // GlobalVarIR
   global_var.Set("name", global_varp->GetName());
-  global_var.Set("linker_set_key", global_varp->GetLinkerSetKey());
   AddAccess(global_var, global_varp->GetAccess());
+  // LinkableMessageIR
+  global_var.Set("source_file", global_varp->GetSourceFile());
+  const std::string &linker_set_key = global_varp->GetLinkerSetKey();
+  global_var.Set("linker_set_key", linker_set_key);
+  // ReferencesOtherType
+  const std::string &referenced_type = global_varp->GetReferencedType();
+  if (linker_set_key != referenced_type) {
+    global_var.Set("referenced_type", referenced_type);
+  }
   return global_var;
 }
 
@@ -368,7 +392,7 @@ static std::string DumpJson(const JsonObject &obj) {
   return Json::writeString(factory, obj);
 }
 
-static void WriteTailTrimmedLinesToFile(const std::string &path,
+static bool WriteTailTrimmedLinesToFile(const std::string &path,
                                         const std::string &output_string) {
   std::ofstream output_file(path);
   size_t line_start = 0;
@@ -384,19 +408,25 @@ static void WriteTailTrimmedLinesToFile(const std::string &path,
     }
     // Only write this line if this line contains non-whitespace characters.
     if (trailing_space_start != line_start) {
-      output_file.write(output_string.data() + line_start,
-                        trailing_space_start - line_start);
-      output_file.write("\n", 1);
+      if (output_file
+              .write(output_string.data() + line_start,
+                     trailing_space_start - line_start)
+              .fail()) {
+        return false;
+      }
+      if (output_file.write("\n", 1).fail()) {
+        return false;
+      }
     }
     line_start = index + 1;
   }
+  return output_file.flush().good();
 }
 
 bool JsonIRDumper::Dump(const ModuleIR &module) {
   DumpModule(module);
   std::string output_string = DumpJson(translation_unit_);
-  WriteTailTrimmedLinesToFile(dump_path_, output_string);
-  return true;
+  return WriteTailTrimmedLinesToFile(dump_path_, output_string);
 }
 
 JsonIRDumper::JsonIRDumper(const std::string &dump_path)

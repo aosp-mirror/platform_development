@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Result suite_name="CTS" suite_plan="cts" suite_build_number="" start_display="" suite_version="">
+    <Build build_model="model" build_device="device" build_id="123456" build_version_sdk="34" build_version_security_patch="2023-06-05" build_board="board" build_type="userdebug" build_version_release="14" build_fingerprint="fingerprint" />
+    <Summary pass="2" failed="0" modules_done="2" modules_total="2" />
+    <Module name="module" abi="armeabi-v7a" done="true" pass="1" total_tests="1">
+        <TestCase name="class">
+            <Test result="pass" name="test"></Test>
+        </TestCase>
+    </Module>
+    <Module name="module" abi="arm64-v8a" done="true" pass="1" total_tests="1">
+        <TestCase name="class">
+            <Test result="pass" name="test"></Test>
+        </TestCase>
+    </Module>
+</Result>

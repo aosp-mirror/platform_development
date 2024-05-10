@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2023 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<configuration description="Config to run cargo_embargo tests.">
+    <test class="com.android.tradefed.testtype.rust.RustBinaryHostTest" >
+        <option name="test-file" value="cargo_embargo.test" />
+        <option name="test-timeout" value="5m" />
+        <!-- Run tests serially, because some of them change the CWD. -->
+        <option name="native-test-flag" value="--test-threads=1" />
+    </test>
+</configuration>

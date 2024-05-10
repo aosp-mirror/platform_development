@@ -14,32 +14,22 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { DisplayArea } from "../common"
-import WindowContainer from "./WindowContainer"
+import {DisplayArea, WindowContainer} from '../common';
+import {shortenName} from '../mixin';
 
-DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): DisplayArea {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
-            /* isActivityInTree */ isActivityInTree,
-            /* nameOverride */ proto.name
-        );
+DisplayArea.fromProto = (windowContainer: WindowContainer, proto: any): DisplayArea => {
+  const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
-        const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
-
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+  addAttributes(entry, proto);
+  return entry;
+};
 
 function addAttributes(entry: DisplayArea, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
-export default DisplayArea;
+export {DisplayArea};

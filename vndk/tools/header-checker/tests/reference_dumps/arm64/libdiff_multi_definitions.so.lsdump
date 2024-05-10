@@ -8,8 +8,6 @@
    "is_unsigned" : true,
    "linker_set_key" : "_ZTIc",
    "name" : "char",
-   "referenced_type" : "_ZTIc",
-   "self_type" : "_ZTIc",
    "size" : 1
   },
   {
@@ -17,15 +15,11 @@
    "is_integral" : true,
    "linker_set_key" : "_ZTIi",
    "name" : "int",
-   "referenced_type" : "_ZTIi",
-   "self_type" : "_ZTIi",
    "size" : 4
   },
   {
    "linker_set_key" : "_ZTIv",
-   "name" : "void",
-   "referenced_type" : "_ZTIv",
-   "self_type" : "_ZTIv"
+   "name" : "void"
   }
  ],
  "elf_functions" :
@@ -93,7 +87,6 @@
    "linker_set_key" : "_ZTIP18DefinedInOneHeader",
    "name" : "DefinedInOneHeader *",
    "referenced_type" : "_ZTI18DefinedInOneHeader",
-   "self_type" : "_ZTIP18DefinedInOneHeader",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
@@ -102,7 +95,6 @@
    "linker_set_key" : "_ZTIP6Opaque",
    "name" : "Opaque *",
    "referenced_type" : "_ZTI6Opaque",
-   "self_type" : "_ZTIP6Opaque",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
@@ -111,7 +103,6 @@
    "linker_set_key" : "_ZTIP6Struct",
    "name" : "Struct *",
    "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTIP6Struct",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
@@ -132,8 +123,6 @@
    "alignment" : 1,
    "linker_set_key" : "_ZTI18DefinedInOneHeader",
    "name" : "DefinedInOneHeader",
-   "referenced_type" : "_ZTI18DefinedInOneHeader",
-   "self_type" : "_ZTI18DefinedInOneHeader",
    "size" : 1,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"
   },
@@ -148,8 +137,6 @@
    ],
    "linker_set_key" : "_ZTI6Struct",
    "name" : "Struct",
-   "referenced_type" : "_ZTI6Struct",
-   "self_type" : "_ZTI6Struct",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
@@ -164,7 +151,6 @@
    ],
    "linker_set_key" : "_ZTI6Struct",
    "name" : "Struct",
-   "referenced_type" : "_ZTI6Struct#ODR:/link_to_def2.h.sdump",
    "self_type" : "_ZTI6Struct#ODR:/link_to_def2.h.sdump",
    "size" : 8,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"

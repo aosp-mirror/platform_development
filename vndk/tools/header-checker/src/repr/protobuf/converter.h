@@ -307,6 +307,10 @@ inline void SetIRToProtobufRecordField(
   record_field_protobuf->set_access(
       AccessIRToProtobuf(record_field_ir->GetAccess()));
   record_field_protobuf->set_field_offset(record_field_ir->GetOffset());
+  if (record_field_ir->IsBitField()) {
+    record_field_protobuf->set_is_bit_field(true);
+    record_field_protobuf->set_bit_width(record_field_ir->GetBitWidth());
+  }
 }
 
 inline bool SetIRToProtobufBaseSpecifier(
@@ -356,7 +360,11 @@ inline bool SetIRToProtobufEnumField(
     return true;
   }
   enum_field_protobuf->set_name(enum_field_ir->GetName());
-  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetValue());
+  // The "enum_field_value" in the .proto is a signed 64-bit integer. An
+  // unsigned integer >= (1 << 63) is represented with a negative integer in the
+  // dump file. Despite the wrong representation, the diff result isn't affected
+  // because every integer has a unique representation.
+  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetSignedValue());
   return true;
 }
 

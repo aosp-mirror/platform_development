@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { WindowToken } from "../common"
-import WindowContainer from "./WindowContainer"
+import {WindowContainer, WindowToken} from '../common';
+import {shortenName} from '../mixin';
 
-WindowToken.fromProto = function (proto: any, isActivityInTree: Boolean): WindowToken {
-    if (proto == null) {
-        return null;
-    }
+WindowToken.fromProto = (windowContainer: WindowContainer, proto: any): WindowToken => {
+  const entry = new WindowToken(windowContainer);
+  entry.kind = entry.constructor.name;
+  entry.proto = proto;
+  entry.proto.configurationContainer = proto.windowContainer?.configurationContainer;
+  entry.proto.surfaceControl = proto.windowContainer?.surfaceControl;
+  entry.shortName = shortenName(entry.name);
+  return entry;
+};
 
-    const windowContainer = WindowContainer.fromProto(
-        /* proto */ proto.windowContainer,
-        /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
-        /* isActivityInTree */ isActivityInTree,
-        /* nameOverride */ null,
-        /* identifierOverride */ null,
-        /* tokenOverride */ proto.hashCode
-    );
-    const entry = new WindowToken(windowContainer);
-    entry.kind = entry.constructor.name;
-    entry.proto = proto;
-    entry.shortName = shortenName(entry.name);
-    return entry;
-}
-
-export default WindowToken;
+export {WindowToken};

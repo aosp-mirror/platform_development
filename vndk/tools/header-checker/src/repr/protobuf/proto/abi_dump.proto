@@ -79,11 +79,12 @@ message ParamDecl {
 }
 
 message RecordFieldDecl {
-  // For future additions.
   optional string referenced_type = 1;
   optional uint64 field_offset = 2;
   optional string field_name = 3;
   optional AccessSpecifier access = 4 [default = public_access];
+  optional bool is_bit_field = 5;
+  optional uint64 bit_width = 6;
 }
 
 message EnumFieldDecl {

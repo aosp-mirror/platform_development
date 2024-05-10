@@ -14,83 +14,73 @@
  * limitations under the License.
  */
 
+import {
+  HwcCompositionType,
+  Layer,
+  LayerProperties,
+  Rect,
+  toActiveBuffer,
+  toColor,
+  toCropRect,
+  toRectF,
+  toRegion,
+} from '../common';
+import {shortenName} from '../mixin';
+import {Transform} from './Transform';
 
-import { Layer, Rect, toActiveBuffer, toColor, toRect, toRectF, toRegion } from "../common"
-import { shortenName } from '../mixin'
-import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
-import Transform from './Transform'
+Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
+  const visibleRegion = toRegion(proto.visibleRegion);
+  const activeBuffer = toActiveBuffer(proto.activeBuffer);
+  const bounds = toRectF(proto.bounds);
+  const color = toColor(proto.color);
+  const screenBounds = toRectF(proto.screenBounds);
+  const transform = Transform.fromProto(proto.transform, proto.position);
+  const bufferTransform = Transform.fromProto(proto.bufferTransform, /* position */ null);
+  const crop: Rect = toCropRect(proto.crop);
 
-Layer.fromProto = function (proto: any): Layer {
-    const visibleRegion = toRegion(proto.visibleRegion)
-    const activeBuffer = toActiveBuffer(proto.activeBuffer)
-    const bounds = toRectF(proto.bounds)
-    const color = toColor(proto.color)
-    const screenBounds = toRectF(proto.screenBounds)
-    const sourceBounds = toRectF(proto.sourceBounds)
-    const transform = Transform.fromProto(proto.transform, proto.position)
-    const bufferTransform = Transform.fromProto(proto.bufferTransform, /* position */ null)
-    const hwcCrop = toRectF(proto.hwcCrop)
-    const hwcFrame = toRect(proto.hwcFrame)
-    let crop: Rect
-    if (proto.crop) {
-        crop = toRect(proto.crop)
-    };
+  const properties = new LayerProperties(
+    visibleRegion,
+    activeBuffer,
+    /* flags */ proto.flags,
+    bounds,
+    color,
+    /* isOpaque */ proto.isOpaque,
+    /* shadowRadius */ proto.shadowRadius,
+    /* cornerRadius */ proto.cornerRadius,
+    screenBounds,
+    transform,
+    /* effectiveScalingMode */ proto.effectiveScalingMode,
+    bufferTransform,
+    /* hwcCompositionType */ new HwcCompositionType(proto.hwcCompositionType),
+    /* backgroundBlurRadius */ proto.backgroundBlurRadius,
+    crop,
+    /* isRelativeOf */ proto.isRelativeOf,
+    /* zOrderRelativeOfId */ proto.zOrderRelativeOf,
+    /* stackId */ proto.layerStack,
+    excludesCompositionState
+  );
 
-    const entry = new Layer(
-        proto.name ?? ``,
-        proto.id,
-        proto.parent,
-        proto.z,
-        visibleRegion,
-        activeBuffer,
-        proto.flags,
-        bounds,
-        color,
-        proto.isOpaque,
-        proto.shadowRadius,
-        proto.cornerRadius,
-        proto.type ?? ``,
-        screenBounds,
-        transform,
-        sourceBounds,
-        proto.currFrame,
-        proto.effectiveScalingMode,
-        bufferTransform,
-        proto.hwcCompositionType,
-        hwcCrop,
-        hwcFrame,
-        proto.backgroundBlurRadius,
-        crop,
-        proto.isRelativeOf,
-        proto.zOrderRelativeOf,
-        proto.layerStack
-    );
+  const entry = new Layer(
+    /* name */ proto.name ?? ``,
+    /* id */ proto.id,
+    /*parentId */ proto.parent,
+    /* z */ proto.z,
+    /* currFrameString */ `${proto.currFrame}`,
+    properties
+  );
 
-    addAttributes(entry, proto);
-    return entry
-}
+  addAttributes(entry, proto);
+  return entry;
+};
 
 function addAttributes(entry: Layer, proto: any) {
-    entry.kind = `${entry.id}`;
-    entry.shortName = shortenName(entry.name);
-    entry.proto = proto;
-    entry.rect = entry.bounds;
-    entry.rect.transform = entry.transform;
-    entry.rect.ref = entry;
-    entry.rect.label = entry.name;
-    entry.chips = [];
-    updateChips(entry);
+  entry.kind = `${entry.id}`;
+  entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.rect = entry.bounds;
+  entry.rect.transform = entry.transform;
+  entry.rect.ref = entry;
+  entry.rect.label = entry.name;
 }
 
-function updateChips(entry) {
-    if ((entry.zOrderRelativeOf || -1) !== -1) {
-        entry.chips.push(RELATIVE_Z_CHIP);
-    }
-    if (entry.hwcCompositionType === 'CLIENT') {
-        entry.chips.push(GPU_CHIP);
-    } else if (entry.hwcCompositionType === 'DEVICE' || entry.hwcCompositionType === 'SOLID_COLOR') {
-        entry.chips.push(HWC_CHIP);
-    }
-}
-
-export default Layer;
+export {Layer};

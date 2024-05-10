@@ -2,6 +2,7 @@
 //
 
 package {
+    default_team: "trendy_team_platform_build",
     // See: http://go/android-license-faq
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
@@ -11,4 +12,30 @@ java_binary {
     name: "monkey",
     srcs: ["**/*.java"],
     wrapper: "monkey.sh",
+}
+
+android_test {
+    // This test does not need to run on device. It's a regular Java unit test. But it needs to
+    // access some framework code like MotionEvent, KeyEvent, InputDevice, etc, which is currently
+    // not available for the host.
+    // Therefore, we are relying on 'android_test' here until ravenwood is ready.
+    name: "monkey_test",
+    srcs: ["**/*.java",
+           "**/*.kt",
+    ],
+
+    kotlincflags: [
+        "-Werror",
+    ],
+
+    static_libs: [
+        "androidx.test.runner",
+    ],
+
+    libs: [
+        "junit",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
 }

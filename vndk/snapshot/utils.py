@@ -181,7 +181,7 @@ def get_latest_vndk_bid(branch):
     Returns:
       string: bid of the latest green build
     """
-    ab_tool_path = '/google/data/ro/projects/android/ab'
+    ab_tool_path = '/google/bin/releases/android/ab/ab.par'
     cmd = [
         ab_tool_path, 'lkgb', '--branch', branch, '--target', 'vndk'
     ]

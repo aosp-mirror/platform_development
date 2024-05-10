@@ -14,67 +14,79 @@
  * limitations under the License.
  */
 
-import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
-import Layer from './Layer'
-import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER } from '../treeview/Chips'
+import {ElapsedTimestamp, RealTimestamp} from 'common/time';
+import {TimeUtils} from 'common/time_utils';
+import {
+  Display,
+  LayerTraceEntry,
+  LayerTraceEntryBuilder,
+  toRect,
+  toSize,
+  toTransform,
+} from '../common';
+import {getPropertiesForDisplay} from '../mixin';
+import {Layer} from './Layer';
 
-LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
-        timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
-    const layers = protos.map(it => Layer.fromProto(it));
-    const displays = (displayProtos || []).map(it => newDisplay(it));
-    const builder = new LayerTraceEntryBuilder(timestamp, layers, displays, hwcBlob, where);
-    const entry: LayerTraceEntry = builder.build();
+LayerTraceEntry.fromProto = (
+  protos: object[],
+  displayProtos: object[],
+  elapsedTimestamp: bigint,
+  vSyncId: number,
+  hwcBlob: string,
+  where = '',
+  realToElapsedTimeOffsetNs: bigint | undefined = undefined,
+  useElapsedTime = false,
+  excludesCompositionState = false
+): LayerTraceEntry => {
+  const layers = protos.map((it) => Layer.fromProto(it, excludesCompositionState));
+  const displays = (displayProtos || []).map((it) => newDisplay(it));
+  const builder = new LayerTraceEntryBuilder()
+    .setDuplicateLayerCallback(() => {})
+    .setElapsedTimestamp(`${elapsedTimestamp}`)
+    .setLayers(layers)
+    .setDisplays(displays)
+    .setVSyncId(`${vSyncId}`)
+    .setHwcBlob(hwcBlob)
+    .setWhere(where)
+    .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`);
 
-    updateChildren(entry);
-    addAttributes(entry, protos);
-    return entry;
-}
+  const entry: LayerTraceEntry = builder.build();
 
-function addAttributes(entry: LayerTraceEntry, protos: any) {
-    entry.kind = "entry"
-    // There no JVM/JS translation for Longs yet
-    entry.timestampMs = entry.timestamp.toString()
-    entry.rects = entry.visibleLayers
-        .sort((a, b) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
-        .map(it => it.rect);
+  addAttributes(entry, protos, realToElapsedTimeOffsetNs === undefined || useElapsedTime);
+  return entry;
+};
 
-    // Avoid parsing the entry root because it is an array of layers
-    // containing all trace information, this slows down the property tree.
-    // Instead parse only key properties for debugging
-    const entryIds = {}
-    protos.forEach(it =>
-        entryIds[it.id] = `\nparent=${it.parent}\ntype=${it.type}\nname=${it.name}`
-    );
-    entry.proto = entryIds;
+function addAttributes(entry: LayerTraceEntry, protos: object[], useElapsedTime = false) {
+  entry.kind = 'entry';
+  // Avoid parsing the entry root because it is an array of layers
+  // containing all trace information, this slows down the property tree.
+  // Instead parse only key properties for debugging
+  const newObj = getPropertiesForDisplay(entry);
+  if (newObj.rects) delete newObj.rects;
+  if (newObj.flattenedLayers) delete newObj.flattenedLayers;
+  if (newObj.physicalDisplays) delete newObj.physicalDisplays;
+  if (newObj.physicalDisplayBounds) delete newObj.physicalDisplayBounds;
+  if (newObj.isVisible) delete newObj.isVisible;
+  entry.proto = newObj;
+  if (useElapsedTime || entry.clockTimestamp === undefined) {
+    entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
     entry.shortName = entry.name;
-    entry.chips = [];
-    entry.isVisible = true;
-}
-
-function updateChildren(entry: LayerTraceEntry) {
-    entry.flattenedLayers.forEach(it => {
-        if (it.isVisible) {
-            it.chips.push(VISIBLE_CHIP);
-        }
-        if (it.zOrderRelativeOf) {
-            it.chips.push(RELATIVE_Z_PARENT_CHIP);
-        }
-        if (it.isMissing) {
-            it.chips.push(MISSING_LAYER);
-        }
-    });
+  } else {
+    entry.name = TimeUtils.format(new RealTimestamp(entry.clockTimestamp));
+    entry.shortName = entry.name;
+  }
 }
 
 function newDisplay(proto: any): Display {
-    return new Display(
-        proto.id,
-        proto.name,
-        proto.layerStack,
-        toSize(proto.size),
-        toRect(proto.layerStackSpaceRect),
-        toTransform(proto.transform),
-        proto.isVirtual
-    )
+  return new Display(
+    `${proto.id}`,
+    proto.name,
+    proto.layerStack,
+    toSize(proto.size),
+    toRect(proto.layerStackSpaceRect),
+    toTransform(proto.transform),
+    proto.isVirtual
+  );
 }
 
-export default LayerTraceEntry;
+export {LayerTraceEntry};
