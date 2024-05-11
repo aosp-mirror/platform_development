@@ -22,7 +22,7 @@ export class TimeDuration {
     return this.timeDiffNs;
   }
 
-  format(hideNs = false): string {
-    return TimestampUtils.formatElapsedNs(this.timeDiffNs, hideNs);
+  format(): string {
+    return TimestampUtils.formatElapsedNs(this.timeDiffNs);
   }
 }

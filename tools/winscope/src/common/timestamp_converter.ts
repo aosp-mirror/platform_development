@@ -40,21 +40,16 @@ class RealTimestampFormatter implements TimestampFormatter {
     this.utcOffset = value;
   }
 
-  format(timestamp: Timestamp, hideNs?: boolean | undefined): string {
+  format(timestamp: Timestamp): string {
     const timestampNanos =
       timestamp.getValueNs() + (this.utcOffset.getValueNs() ?? 0n);
     const ms = timestampNanos / 1000000n;
-    const extraNanos = timestampNanos % 1000000n;
     const formattedTimestamp = new Date(Number(ms))
       .toISOString()
       .replace('Z', '')
       .replace('T', ', ');
 
-    if (hideNs) {
-      return formattedTimestamp;
-    } else {
-      return `${formattedTimestamp}${extraNanos.toString().padStart(6, '0')}`;
-    }
+    return formattedTimestamp;
   }
 }
 const REAL_TIMESTAMP_FORMATTER_UTC = new RealTimestampFormatter(
@@ -62,9 +57,9 @@ const REAL_TIMESTAMP_FORMATTER_UTC = new RealTimestampFormatter(
 );
 
 class ElapsedTimestampFormatter {
-  format(timestamp: Timestamp, hideNs = false): string {
+  format(timestamp: Timestamp): string {
     const timestampNanos = timestamp.getValueNs();
-    return TimestampUtils.formatElapsedNs(timestampNanos, hideNs);
+    return TimestampUtils.formatElapsedNs(timestampNanos);
   }
 }
 const ELAPSED_TIMESTAMP_FORMATTER = new ElapsedTimestampFormatter();
@@ -84,7 +79,10 @@ export interface ComponentTimestampConverter {
 }
 
 export interface RemoteToolTimestampConverter {
-  tryMakeTimestampForRemoteTool(timestamp: Timestamp): Timestamp | undefined;
+  makeTimestampFromBootTimeNs(valueNs: bigint): Timestamp;
+  makeTimestampFromRealNs(valueNs: bigint): Timestamp;
+  tryGetBootTimeNs(timestamp: Timestamp): bigint | undefined;
+  tryGetRealTimeNs(timestamp: Timestamp): bigint | undefined;
 }
 
 export class TimestampConverter
@@ -125,9 +123,6 @@ export class TimestampConverter
         : utcValueNs;
     const utcOffsetNs = localNs - utcValueNs;
     this.utcOffset.initialize(utcOffsetNs);
-    console.warn(
-      'Failed to initialized timezone offset due to invalid time difference.',
-    );
   }
 
   setRealToMonotonicTimeOffsetNs(ns: bigint) {
@@ -166,13 +161,6 @@ export class TimestampConverter
     return this.makeRealTimestamp(valueNs);
   }
 
-  tryMakeTimestampFromRealNs(valueNs: bigint): Timestamp | undefined {
-    if (!this.canMakeRealTimestamps()) {
-      return undefined;
-    }
-    return this.makeRealTimestamp(valueNs);
-  }
-
   makeTimestampFromHuman(timestampHuman: string): Timestamp {
     if (TimestampUtils.isHumanElapsedTimeFormat(timestampHuman)) {
       return this.makeTimestampfromHumanElapsed(timestampHuman);
@@ -205,11 +193,21 @@ export class TimestampConverter
     }
   }
 
-  tryMakeTimestampForRemoteTool(timestamp: Timestamp): Timestamp | undefined {
-    if (this.canMakeRealTimestamps()) {
-      return timestamp;
+  tryGetBootTimeNs(timestamp: Timestamp): bigint | undefined {
+    if (
+      this.createdTimestampType !== TimestampType.REAL ||
+      this.realToBootTimeOffsetNs === undefined
+    ) {
+      return undefined;
     }
-    return undefined;
+    return timestamp.getValueNs() - this.realToBootTimeOffsetNs;
+  }
+
+  tryGetRealTimeNs(timestamp: Timestamp): bigint | undefined {
+    if (this.createdTimestampType !== TimestampType.REAL) {
+      return undefined;
+    }
+    return timestamp.getValueNs();
   }
 
   validateHumanInput(timestampHuman: string, context = this): boolean {
@@ -217,6 +215,13 @@ export class TimestampConverter
       return TimestampUtils.isHumanRealTimestampFormat(timestampHuman);
     }
     return TimestampUtils.isHumanElapsedTimeFormat(timestampHuman);
+  }
+
+  clear() {
+    this.createdTimestampType = undefined;
+    this.realToBootTimeOffsetNs = undefined;
+    this.realToMonotonicTimeOffsetNs = undefined;
+    this.utcOffset.clear();
   }
 
   private canMakeRealTimestamps(): boolean {

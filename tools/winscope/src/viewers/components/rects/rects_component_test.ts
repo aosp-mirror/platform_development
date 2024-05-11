@@ -25,6 +25,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {Canvas} from './canvas';
@@ -159,6 +160,10 @@ describe('RectsComponent', () => {
     const container = assertDefined(
       htmlElement.querySelector('.display-name-buttons'),
     );
+    let groupId = 0;
+    htmlElement.addEventListener(ViewerEvents.RectGroupIdChange, (event) => {
+      groupId = (event as CustomEvent).detail.groupId;
+    });
     const button = Array.from(container.querySelectorAll('button'))[1];
     button.click();
     fixture.detectChanges();
@@ -167,6 +172,7 @@ describe('RectsComponent', () => {
       ['secondary', 'primary', 'secondary'],
       '.display-name-buttons',
     );
+    expect(groupId).toEqual(1);
   });
 
   it('tracks selected display', () => {
@@ -246,6 +252,18 @@ describe('RectsComponent', () => {
     );
   });
 
+  it('draws mini rects with non-present group id', () => {
+    fixture.detectChanges();
+    const inputRect = makeRectWithGroupId(0);
+    const miniRect = makeRectWithGroupId(2);
+    component.rects = [inputRect];
+    component.displays = [{displayId: 10, groupId: 0, name: 'Display 0'}];
+    component.miniRects = [miniRect];
+    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
   function checkButtons(
     buttonValues: string[],
     buttonColors: string[],
@@ -271,15 +289,6 @@ describe('RectsComponent', () => {
       htmlElement.querySelector(selector),
     ) as HTMLInputElement;
     box.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-  }
-
-  function findAndClickTab(index: number) {
-    const tabs = Array.from(
-      htmlElement.querySelectorAll('.grouping-tabs mat-tab'),
-    );
-    const tab = assertDefined(tabs[index]) as HTMLElement;
-    tab.click();
     fixture.detectChanges();
   }
 
@@ -329,13 +338,15 @@ describe('RectsComponent', () => {
         [store]="store"
         [rects]="rects"
         [isStackBased]="isStackBased"
-        [displays]="displays"></rects-view>
+        [displays]="displays"
+        [miniRects]="miniRects"></rects-view>
     `,
   })
   class TestHostComponent {
     store = new PersistentStore();
     rects: UiRect[] = [];
     displays: DisplayIdentifier[] = [];
+    miniRects: UiRect[] = [];
     isStackBased = false;
 
     @ViewChild(RectsComponent)

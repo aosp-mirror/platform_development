@@ -122,7 +122,7 @@ describe('ParserProtoLog', () => {
       {
         'message':
           'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
-        'ts': '2022-06-20, 12:12:05.377266486',
+        'ts': '2022-06-20, 12:12:05.377',
         'tag': 'WindowManager',
         'level': 'DEBUG',
         'at': 'com/android/server/wm/InsetsSourceProvider.java',
@@ -141,7 +141,7 @@ describe('ParserProtoLog', () => {
       ],
       {
         'message': 'Starting activity when config will change = false',
-        'ts': '2024-02-29, 08:53:26.399529939',
+        'ts': '2024-02-29, 08:53:26.399',
         'tag': 'WindowManager',
         'level': 'VERBOSE',
         'at': 'com/android/server/wm/ActivityStarter.java',
@@ -160,7 +160,7 @@ describe('ParserProtoLog', () => {
       ],
       {
         'message': 'SURFACE isColorSpaceAgnostic=true: NotificationShade',
-        'ts': '2022-11-21, 18:05:09.777144978',
+        'ts': '2022-11-21, 18:05:09.777',
         'tag': 'WindowManager',
         'level': 'INFO',
         'at': 'com/android/server/wm/WindowSurfaceController.java',

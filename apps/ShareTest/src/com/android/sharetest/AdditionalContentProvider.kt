@@ -30,9 +30,12 @@ class AdditionalContentProvider : ContentProvider() {
         val count = runCatching {
             uri.getQueryParameter(PARAM_COUNT)?.toInt()
         }.getOrNull() ?: ImageContentProvider.IMAGE_COUNT
+        val includeSize = runCatching {
+            uri.getQueryParameter(PARAM_SIZE_META).toBoolean()
+        }.getOrDefault(true)
         // Images are img1 ... img8
         val uris = Array(count) { idx ->
-            ImageContentProvider.makeItemUri(idx, "image/jpeg")
+            ImageContentProvider.makeItemUri(idx, "image/jpeg", includeSize)
         }
         val callingPackage = getCallingPackage()
         for (u in uris) {
@@ -162,6 +165,7 @@ class AdditionalContentProvider : ContentProvider() {
         val CURSOR_START_POSITION = "com.android.sharetest.CURSOR_START_POS"
         val EXTRA_SELECTION_LATENCY = "latency"
         val PARAM_COUNT = "count"
+        val PARAM_SIZE_META = "ismeta"
     }
 }
 

@@ -75,6 +75,7 @@ class ShareTestActivity : Activity() {
     private lateinit var altIntentCheck: CheckBox
     private lateinit var callerTargetCheck: CheckBox
     private lateinit var selectionLatencyGroup: RadioGroup
+    private lateinit var imageSizeMetadataCheck: CheckBox
     private val customActionFactory = CustomActionFactory(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,6 +136,7 @@ class ShareTestActivity : Activity() {
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
         mediaTypeHeader = requireViewById(R.id.media_type_header)
         selectionLatencyGroup = requireViewById(R.id.selection_latency)
+        imageSizeMetadataCheck = requireViewById(R.id.image_size_metadata)
         mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
@@ -178,6 +180,21 @@ class ShareTestActivity : Activity() {
         requireViewById<RadioGroup>(R.id.image_get_type_latency).check(
             R.id.image_get_type_latency_none
         )
+
+        requireViewById<RadioGroup>(R.id.image_query_latency).let { radioGroup ->
+            radioGroup.setOnCheckedChangeListener {
+                    _,
+                    checkedId,
+                ->
+                ImageContentProvider.queryLatency = when (checkedId) {
+                    R.id.image_query_latency_50 -> 50
+                    R.id.image_query_latency_200 -> 200
+                    R.id.image_query_latency_800 -> 800
+                    else -> 0
+                }
+            }
+            radioGroup.check(R.id.image_query_latency_none)
+        }
 
         requireViewById<RadioGroup>(R.id.image_load_failure_rate).setOnCheckedChangeListener {
                 _,
@@ -259,7 +276,11 @@ class ShareTestActivity : Activity() {
 
         when (mediaSelection.checkedRadioButtonId) {
             R.id.one_image -> share.apply {
-                val sharedUri = makeItemUri(imageIndex, mimeTypes[imageIndex % mimeTypes.size])
+                val sharedUri = makeItemUri(
+                    imageIndex,
+                    mimeTypes[imageIndex % mimeTypes.size],
+                    imageSizeMetadataCheck.isChecked
+                )
                 putExtra(Intent.EXTRA_STREAM, sharedUri)
                 clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(sharedUri))
                 type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
@@ -268,7 +289,11 @@ class ShareTestActivity : Activity() {
             R.id.many_images -> share.apply {
                 val imageUris = ArrayList(
                     (0 until IMAGE_COUNT).map { idx ->
-                        makeItemUri(idx, mimeTypes[idx % mimeTypes.size])
+                        makeItemUri(
+                            idx,
+                            mimeTypes[idx % mimeTypes.size],
+                            imageSizeMetadataCheck.isChecked
+                        )
                     })
                 action = Intent.ACTION_SEND_MULTIPLE
                 clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(imageUris[0])).apply {
@@ -365,6 +390,10 @@ class ShareTestActivity : Activity() {
                 .appendQueryParameter(
                     AdditionalContentProvider.PARAM_COUNT,
                     ADDITIONAL_ITEM_COUNT.toString(),
+                )
+                .appendQueryParameter(
+                    AdditionalContentProvider.PARAM_SIZE_META,
+                    imageSizeMetadataCheck.isChecked.toString(),
                 )
                 .build()
             chooserIntent.putExtra(

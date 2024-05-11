@@ -50,7 +50,6 @@ import {
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {MockStorage} from 'test/unit/mock_storage';
-import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {
@@ -58,7 +57,7 @@ import {
   TRACES,
 } from 'trace_collection/trace_collection_utils';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
-import {View, Viewer} from 'viewers/viewer';
+import {Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
@@ -188,7 +187,6 @@ import {UploadTracesComponent} from './upload_traces_component';
         <timeline
           *ngIf="dataLoaded"
           [timelineData]="timelineData"
-          [activeViewTraceTypes]="activeView?.dependencies"
           [availableTraces]="getLoadedTraceTypes()"
           [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
@@ -313,7 +311,7 @@ export class AppComponent implements WinscopeEventListener {
   title = 'winscope';
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
-  crossToolProtocol = new CrossToolProtocol();
+  crossToolProtocol: CrossToolProtocol;
   states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
@@ -322,14 +320,12 @@ export class AppComponent implements WinscopeEventListener {
   store = new PersistentStore();
   viewers: Viewer[] = [];
 
-  isDarkModeOn!: boolean;
+  isDarkModeOn = false;
   changeDetectorRef: ChangeDetectorRef;
   snackbarOpener: SnackBarOpener;
   tracePipeline: TracePipeline;
   mediator: Mediator;
   currentTimestamp?: Timestamp;
-  activeView?: View;
-  activeTrace?: Trace<object>;
   filenameFormControl = new FormControl(
     'winscope',
     Validators.compose([
@@ -358,6 +354,9 @@ export class AppComponent implements WinscopeEventListener {
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
     this.tracePipeline = new TracePipeline();
+    this.crossToolProtocol = new CrossToolProtocol(
+      this.tracePipeline.getTimestampConverter(),
+    );
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,
@@ -552,11 +551,6 @@ export class AppComponent implements WinscopeEventListener {
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
-      this.activeView = event.newFocusedView;
-      this.activeTrace = this.getActiveTrace(event.newFocusedView);
-    });
-
     await event.visit(WinscopeEventType.VIEWERS_LOADED, async (event) => {
       this.viewers = event.viewers;
       this.filenameFormControl.setValue(
@@ -581,7 +575,6 @@ export class AppComponent implements WinscopeEventListener {
       this.dataLoaded = false;
       this.showDataLoadedElements = false;
       this.pageTitle.setTitle('Winscope');
-      this.activeView = undefined;
       this.changeDetectorRef.detectChanges();
     });
   }
@@ -592,15 +585,5 @@ export class AppComponent implements WinscopeEventListener {
 
   dumpsUploaded() {
     return !this.timelineData.hasMoreThanOneDistinctTimestamp();
-  }
-
-  private getActiveTrace(view: View): Trace<object> | undefined {
-    let activeTrace: Trace<object> | undefined;
-    this.tracePipeline.getTraces().forEachTrace((trace) => {
-      if (trace.type === view.dependencies[0]) {
-        activeTrace = trace;
-      }
-    });
-    return activeTrace;
   }
 }

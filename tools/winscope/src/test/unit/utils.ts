@@ -77,10 +77,56 @@ class UnitTestUtils {
       converter,
       initializeRealToElapsedTimeOffsetNs,
     );
+    return parsers[0];
+  }
+
+  static async getParsers(
+    filename: string,
+    converter = UnitTestUtils.getTimestampConverter(),
+    initializeRealToElapsedTimeOffsetNs = true,
+  ): Promise<Array<Parser<object>>> {
+    const file = new TraceFile(
+      await UnitTestUtils.getFixtureFile(filename),
+      undefined,
+    );
+    const fileAndParsers = await new LegacyParserFactory().createParsers(
+      [file],
+      converter,
+      undefined,
+      undefined,
+    );
+
+    if (initializeRealToElapsedTimeOffsetNs) {
+      const monotonicOffset = fileAndParsers
+        .find(
+          (fileAndParser) =>
+            fileAndParser.parser.getRealToMonotonicTimeOffsetNs() !== undefined,
+        )
+        ?.parser.getRealToMonotonicTimeOffsetNs();
+      if (monotonicOffset !== undefined) {
+        converter.setRealToMonotonicTimeOffsetNs(monotonicOffset);
+      }
+      const bootTimeOffset = fileAndParsers
+        .find(
+          (fileAndParser) =>
+            fileAndParser.parser.getRealToBootTimeOffsetNs() !== undefined,
+        )
+        ?.parser.getRealToBootTimeOffsetNs();
+      if (bootTimeOffset !== undefined) {
+        converter.setRealToBootTimeOffsetNs(bootTimeOffset);
+      }
+    }
+
+    const parsers = fileAndParsers.map((fileAndParser) => {
+      fileAndParser.parser.createTimestamps();
+      return fileAndParser.parser;
+    });
+
     expect(parsers.length)
       .withContext(`Should have been able to create a parser for ${filename}`)
       .toBeGreaterThanOrEqual(1);
-    return parsers[0];
+
+    return parsers;
   }
 
   static async getPerfettoParser<T extends TraceType>(
@@ -255,49 +301,6 @@ class UnitTestUtils {
   private static async getTraceEntry<T>(filename: string, index = 0) {
     const parser = (await UnitTestUtils.getParser(filename)) as Parser<T>;
     return parser.getEntry(index);
-  }
-
-  private static async getParsers(
-    filename: string,
-    converter: TimestampConverter,
-    initializeRealToElapsedTimeOffsetNs = true,
-  ): Promise<Array<Parser<object>>> {
-    const file = new TraceFile(
-      await UnitTestUtils.getFixtureFile(filename),
-      undefined,
-    );
-    const fileAndParsers = await new LegacyParserFactory().createParsers(
-      [file],
-      converter,
-      undefined,
-      undefined,
-    );
-
-    if (initializeRealToElapsedTimeOffsetNs) {
-      const monotonicOffset = fileAndParsers
-        .find(
-          (fileAndParser) =>
-            fileAndParser.parser.getRealToMonotonicTimeOffsetNs() !== undefined,
-        )
-        ?.parser.getRealToMonotonicTimeOffsetNs();
-      if (monotonicOffset !== undefined) {
-        converter.setRealToMonotonicTimeOffsetNs(monotonicOffset);
-      }
-      const bootTimeOffset = fileAndParsers
-        .find(
-          (fileAndParser) =>
-            fileAndParser.parser.getRealToBootTimeOffsetNs() !== undefined,
-        )
-        ?.parser.getRealToBootTimeOffsetNs();
-      if (bootTimeOffset !== undefined) {
-        converter.setRealToBootTimeOffsetNs(bootTimeOffset);
-      }
-    }
-
-    return fileAndParsers.map((fileAndParser) => {
-      fileAndParser.parser.createTimestamps();
-      return fileAndParser.parser;
-    });
   }
 }
 

@@ -72,7 +72,7 @@ describe('PresenterTransitions', () => {
     expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:25.428925648',
+      '2023-11-21, 13:30:25.428',
     );
   });
 });
