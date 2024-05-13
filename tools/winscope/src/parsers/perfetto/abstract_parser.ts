@@ -26,6 +26,7 @@ import {
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
@@ -52,12 +53,19 @@ export abstract class AbstractParser<T> implements Parser<T> {
   }
 
   async parse() {
+    const module = this.getStdLibModuleName();
+    if (module) {
+      await this.traceProcessor.query(`INCLUDE PERFETTO MODULE ${module};`);
+    }
+
     this.bootTimeTimestampsNs = await this.queryBootTimeTimestamps();
     this.lengthEntries = this.bootTimeTimestampsNs.length;
     assertTrue(
       this.lengthEntries > 0,
       () =>
-        `Trace processor tables don't contain entries of type ${this.getTraceType()}`,
+        `Perfetto trace has no '${
+          TRACE_INFO[this.getTraceType()].name
+        }' entries`,
     );
 
     let lastNonZeroTimestamp: bigint | undefined;
@@ -137,6 +145,10 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
     const real = result.iter({}).get('realtime') as bigint;
     return real - bootTimeNs;
+  }
+
+  protected getStdLibModuleName(): string | undefined {
+    return undefined;
   }
 
   protected abstract getTableName(): string;

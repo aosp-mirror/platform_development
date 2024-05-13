@@ -123,7 +123,7 @@ import {UiData} from './ui_data';
             <div class="time">
               <button
                 mat-button
-                [color]="isCurrentEntry(i) ? 'secondary' : 'primary'"
+                color="primary"
                 (click)="onTimestampClicked(entry.time)">
                 {{ entry.time.formattedValue() }}
               </button>

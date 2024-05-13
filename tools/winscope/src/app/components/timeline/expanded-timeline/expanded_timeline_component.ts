@@ -23,12 +23,10 @@ import {
   QueryList,
   ViewChildren,
 } from '@angular/core';
-import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
-import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
-import {PersistentStore} from 'common/persistent_store';
 import {Trace} from 'trace/trace';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -41,9 +39,8 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
         *ngFor="let trace of getTracesSortedByDisplayOrder(); trackBy: trackTraceByType"
-        class="timeline row"
-        [style.border-bottom]="'1px solid ' + getTimelineSidebarColor()">
-        <div class="icon-wrapper" [style.background-color]="getTimelineSidebarColor()">
+        class="timeline row">
+        <div class="icon-wrapper">
           <mat-icon
             class="icon"
             [matTooltip]="TRACE_INFO[trace.type].name"
@@ -75,7 +72,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           class="single-timeline">
         </single-timeline>
 
-        <div class="icon-wrapper" [style.background-color]="getTimelineSidebarColor()">
+        <div class="icon-wrapper">
           <mat-icon class="icon placeholder-icon"></mat-icon>
         </div>
       </div>
@@ -106,6 +103,9 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
         justify-content: center;
         width: 100%;
       }
+      .timeline.row {
+        border-bottom: 1px solid var(--drawer-block-primary);
+      }
       .timeline .single-timeline {
         flex-grow: 1;
       }
@@ -116,6 +116,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
         align-self: stretch;
         display: flex;
         justify-content: center;
+        background-color: var(--drawer-block-primary);
       }
       .icon {
         margin: 1rem;
@@ -133,7 +134,6 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 })
 export class ExpandedTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
-  @Input() store: PersistentStore | undefined;
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
 
@@ -191,11 +191,5 @@ export class ExpandedTimelineComponent {
       timeline.getCanvas().style.width = 'auto';
       timeline.getCanvas().style.height = 'auto';
     }
-  }
-
-  getTimelineSidebarColor() {
-    return this.store?.get('dark-mode') === 'true'
-      ? Color.TIMELINE_SIDEBAR_DARK_MODE
-      : Color.TIMELINE_SIDEBAR_LIGHT_MODE;
   }
 }

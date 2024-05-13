@@ -33,18 +33,15 @@ export const nodeStyles =
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
         background: ${Color.ADDED_ELEMENT_BACKGROUND};
-        color: ${Color.TEXT_DEFAULT};
     }
 
     .node:not(.selected).deleted,
     .node:not(.selected).deletedMove {
         background: ${Color.DELETED_ELEMENT_BACKGROUND};
-        color: ${Color.TEXT_DEFAULT};
     }
 
     .node:not(.selected).modified {
         background: ${Color.MODIFIED_ELEMENT_BACKGROUND};
-        color: ${Color.TEXT_DEFAULT};
     }
 
     .node:hover:not(.selected) {

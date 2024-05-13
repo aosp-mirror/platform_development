@@ -15,7 +15,6 @@
  */
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
@@ -29,6 +28,7 @@ import {
   WinscopeEventEmitter,
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {TRACE_INFO} from 'trace/trace_info';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab {

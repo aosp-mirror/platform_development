@@ -15,10 +15,11 @@
  */
 
 import {Color} from 'app/colors';
-import {TRACE_INFO} from 'app/trace_info';
 import {Point} from 'common/geometry_types';
+import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
+import {TRACE_INFO} from 'trace/trace_info';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {CanvasMouseHandlerImpl} from './canvas_mouse_handler_impl';
 import {DraggableCanvasObject} from './draggable_canvas_object';
@@ -35,6 +36,81 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
   private activePointer: DraggableCanvasObject;
+  private static readonly MARKER_CLICK_REGION_WIDTH = 2;
+
+  constructor(
+    public canvas: HTMLCanvasElement,
+    private inputGetter: () => MiniTimelineDrawerInput,
+    private onPointerPositionDragging: (pos: Timestamp) => void,
+    private onPointerPositionChanged: (pos: Timestamp) => void,
+    private onUnhandledClick: (pos: Timestamp) => void,
+  ) {
+    const ctx = canvas.getContext('2d');
+
+    if (ctx === null) {
+      throw Error('MiniTimeline canvas context was null!');
+    }
+
+    this.ctx = ctx;
+
+    const onUnhandledClickInternal = async (
+      mousePoint: Point,
+      button: number,
+    ) => {
+      if (button === MouseEventButton.SECONDARY) {
+        return;
+      }
+      let pointX = mousePoint.x;
+
+      if (mousePoint.y < this.getMarkerHeight()) {
+        pointX =
+          this.getInput().bookmarks.find((bm) => {
+            const diff = mousePoint.x - bm;
+            return diff > 0 && diff < this.getMarkerMaxWidth();
+          }) ?? mousePoint.x;
+      }
+
+      this.onUnhandledClick(this.getInput().transformer.untransform(pointX));
+    };
+    this.handler = new CanvasMouseHandlerImpl(
+      this,
+      'pointer',
+      onUnhandledClickInternal,
+    );
+
+    this.activePointer = new DraggableCanvasObjectImpl(
+      this,
+      () => this.getSelectedPosition(),
+      (ctx: CanvasRenderingContext2D, position: number) => {
+        const barWidth = 3;
+        const triangleHeight = this.getMarkerHeight();
+
+        ctx.beginPath();
+        ctx.moveTo(position - triangleHeight, 0);
+        ctx.lineTo(position + triangleHeight, 0);
+        ctx.lineTo(position + barWidth / 2, triangleHeight);
+        ctx.lineTo(position + barWidth / 2, this.getHeight());
+        ctx.lineTo(position - barWidth / 2, this.getHeight());
+        ctx.lineTo(position - barWidth / 2, triangleHeight);
+        ctx.closePath();
+      },
+      {
+        fillStyle: Color.ACTIVE_POINTER,
+        fill: true,
+      },
+      (x) => {
+        const input = this.getInput();
+        input.selectedPosition = x;
+        this.onPointerPositionDragging(input.transformer.untransform(x));
+      },
+      (x) => {
+        const input = this.getInput();
+        input.selectedPosition = x;
+        this.onPointerPositionChanged(input.transformer.untransform(x));
+      },
+      () => this.getUsableRange(),
+    );
+  }
 
   getXScale() {
     return this.ctx.getTransform().m11;
@@ -64,68 +140,48 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     return this.inputGetter().transform(this.getUsableRange());
   }
 
-  constructor(
-    public canvas: HTMLCanvasElement,
-    private inputGetter: () => MiniTimelineDrawerInput,
-    private onPointerPositionDragging: (pos: Timestamp) => void,
-    private onPointerPositionChanged: (pos: Timestamp) => void,
-    private onUnhandledClick: (pos: Timestamp) => void,
-  ) {
-    const ctx = canvas.getContext('2d');
-
-    if (ctx === null) {
-      throw Error('MiniTimeline canvas context was null!');
+  getClickRange(clickPos: Point) {
+    const markerHeight = this.getMarkerHeight();
+    if (clickPos.y > markerHeight) {
+      return {
+        from: clickPos.x - MiniTimelineDrawerImpl.MARKER_CLICK_REGION_WIDTH,
+        to: clickPos.x + MiniTimelineDrawerImpl.MARKER_CLICK_REGION_WIDTH,
+      };
     }
-
-    this.ctx = ctx;
-
-    const onUnhandledClickInternal = async (mousePoint: Point) => {
-      this.onUnhandledClick(
-        this.getInput().transformer.untransform(mousePoint.x),
-      );
+    const markerMaxWidth = this.getMarkerMaxWidth();
+    return {
+      from: clickPos.x - markerMaxWidth,
+      to: clickPos.x + markerMaxWidth,
     };
-    this.handler = new CanvasMouseHandlerImpl(
-      this,
-      'pointer',
-      onUnhandledClickInternal,
-    );
-
-    this.activePointer = new DraggableCanvasObjectImpl(
-      this,
-      () => this.getSelectedPosition(),
-      (ctx: CanvasRenderingContext2D, position: number) => {
-        const barWidth = 3;
-        const triangleHeight = this.getPointerWidth() / 2;
-
-        ctx.beginPath();
-        ctx.moveTo(position - triangleHeight, 0);
-        ctx.lineTo(position + triangleHeight, 0);
-        ctx.lineTo(position + barWidth / 2, triangleHeight);
-        ctx.lineTo(position + barWidth / 2, this.getHeight());
-        ctx.lineTo(position - barWidth / 2, this.getHeight());
-        ctx.lineTo(position - barWidth / 2, triangleHeight);
-        ctx.closePath();
-      },
-      {
-        fillStyle: Color.ACTIVE_POINTER,
-        fill: true,
-      },
-      (x) => {
-        const input = this.getInput();
-        input.selectedPosition = x;
-        this.onPointerPositionDragging(input.transformer.untransform(x));
-      },
-      (x) => {
-        const input = this.getInput();
-        input.selectedPosition = x;
-        this.onPointerPositionChanged(input.transformer.untransform(x));
-      },
-      () => this.getUsableRange(),
-    );
   }
 
   getSelectedPosition() {
     return this.getInput().selectedPosition;
+  }
+
+  drawBookmarks() {
+    this.getBookmarks().forEach((position) => {
+      const flagWidth = this.getMarkerMaxWidth();
+      const flagHeight = this.getMarkerHeight();
+      const barWidth = 2;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(position - barWidth / 2, 0);
+      this.ctx.lineTo(position + flagWidth, 0);
+      this.ctx.lineTo(position + (flagWidth * 5) / 6, flagHeight / 2);
+      this.ctx.lineTo(position + flagWidth, flagHeight);
+      this.ctx.lineTo(position + barWidth / 2, flagHeight);
+      this.ctx.lineTo(position + barWidth / 2, this.getHeight());
+      this.ctx.lineTo(position - barWidth / 2, this.getHeight());
+      this.ctx.closePath();
+
+      this.ctx.fillStyle = Color.BOOKMARK;
+      this.ctx.fill();
+    });
+  }
+
+  getBookmarks(): number[] {
+    return this.getInput().bookmarks;
   }
 
   async getTimelineEntries(): Promise<TimelineEntries> {
@@ -151,11 +207,20 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   async draw() {
     this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
     await this.drawTraceLines();
+    this.drawBookmarks();
     this.activePointer.draw(this.ctx);
   }
 
   private getPointerWidth() {
     return this.getHeight() / 6;
+  }
+
+  private getMarkerMaxWidth() {
+    return (this.getPointerWidth() * 2) / 3;
+  }
+
+  private getMarkerHeight() {
+    return this.getPointerWidth() / 2;
   }
 
   private async drawTraceLines() {

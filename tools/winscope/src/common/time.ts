@@ -18,6 +18,12 @@ export const INVALID_TIME_NS = 0n;
 
 export class TimeRange {
   constructor(readonly from: Timestamp, readonly to: Timestamp) {}
+
+  containsTimestamp(ts: Timestamp): boolean {
+    const min = this.from.getValueNs();
+    const max = this.to.getValueNs();
+    return ts.getValueNs() >= min && ts.getValueNs() <= max;
+  }
 }
 
 export interface TimezoneInfo {

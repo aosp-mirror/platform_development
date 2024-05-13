@@ -16,6 +16,7 @@
 
 import {Transformer} from 'app/components/timeline/mini-timeline/transformer';
 import {Segment} from 'app/components/timeline/segment';
+import {TimeRange} from 'common/time';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineDrawerOutput} from './mini_timeline_drawer_output';
 
@@ -35,6 +36,7 @@ export class MiniCanvasDrawerData {
     public selection: Segment,
     private timelineEntriesGetter: () => Promise<TimelineEntries>,
     public transformer: Transformer,
+    public bookmarks: number[],
   ) {}
 
   private entries: TimelineEntries | undefined = undefined;
@@ -49,10 +51,10 @@ export class MiniCanvasDrawerData {
   toOutput(): MiniTimelineDrawerOutput {
     return new MiniTimelineDrawerOutput(
       this.transformer.untransform(this.selectedPosition),
-      {
-        from: this.transformer.untransform(this.selection.from),
-        to: this.transformer.untransform(this.selection.to),
-      },
+      new TimeRange(
+        this.transformer.untransform(this.selection.from),
+        this.transformer.untransform(this.selection.to),
+      ),
     );
   }
 }

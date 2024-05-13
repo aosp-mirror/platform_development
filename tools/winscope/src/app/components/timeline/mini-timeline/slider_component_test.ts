@@ -67,14 +67,8 @@ describe('SliderComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.fullRange = {
-      from: time100,
-      to: time200,
-    };
-    component.zoomRange = {
-      from: time125,
-      to: time175,
-    };
+    component.fullRange = new TimeRange(time100, time200);
+    component.zoomRange = new TimeRange(time125, time175);
     component.currentPosition = TracePosition.fromTimestamp(time150);
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
 
@@ -103,14 +97,8 @@ describe('SliderComponent', () => {
   });
 
   it('has min width', () => {
-    component.fullRange = {
-      from: time100,
-      to: time200,
-    };
-    component.zoomRange = {
-      from: time125,
-      to: time126,
-    };
+    component.fullRange = new TimeRange(time100, time200);
+    component.zoomRange = new TimeRange(time125, time126);
 
     fixture.detectChanges();
     component.ngOnChanges({
@@ -318,10 +306,7 @@ describe('SliderComponent', () => {
   }));
 
   it('cannot slide left cropper past right cropper', fakeAsync(() => {
-    component.zoomRange = {
-      from: time125,
-      to: time125,
-    };
+    component.zoomRange = new TimeRange(time125, time125);
     fixture.detectChanges();
 
     const initialZoom = assertDefined(component.zoomRange);
@@ -349,10 +334,7 @@ describe('SliderComponent', () => {
   }));
 
   it('cannot slide right cropper past left cropper', fakeAsync(() => {
-    component.zoomRange = {
-      from: time125,
-      to: time125,
-    };
+    component.zoomRange = new TimeRange(time125, time125);
     fixture.detectChanges();
 
     const initialZoom = assertDefined(component.zoomRange);

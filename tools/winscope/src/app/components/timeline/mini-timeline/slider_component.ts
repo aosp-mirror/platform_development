@@ -83,7 +83,7 @@ import {Transformer} from './transformer';
       }
 
       .selection.line {
-        background: ${Color.TIME_SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .slider {
@@ -95,13 +95,13 @@ import {Transformer} from './transformer';
 
       .handle {
         flex-grow: 1;
-        background: ${Color.TIME_SELECTION_BACKGROUND};
+        background: var(--slider-background-color);
         cursor: grab;
       }
 
       .cropper {
         width: 5px;
-        background: ${Color.TIME_SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .cropper.left,
@@ -245,7 +245,7 @@ export class SliderComponent {
           assertDefined(this.zoomRange).from.getValueNs()),
     );
 
-    this.onZoomChanged.emit({from, to});
+    this.onZoomChanged.emit(new TimeRange(from, to));
   }
 
   startMoveLeft(e: any) {
@@ -267,7 +267,7 @@ export class SliderComponent {
       }
       const to = assertDefined(this.zoomRange).to;
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 
@@ -297,7 +297,7 @@ export class SliderComponent {
         to = assertDefined(this.zoomRange).from;
       }
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 
