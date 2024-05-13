@@ -103,12 +103,13 @@ pub enum TargetKind {
 pub fn parse_cargo_metadata_str(cargo_metadata: &str, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     let metadata =
         serde_json::from_str(cargo_metadata).context("failed to parse cargo metadata")?;
-    parse_cargo_metadata(&metadata, &cfg.features, cfg.tests)
+    parse_cargo_metadata(&metadata, &cfg.features, &cfg.extra_cfg, cfg.tests)
 }
 
 fn parse_cargo_metadata(
     metadata: &WorkspaceMetadata,
     features: &Option<Vec<String>>,
+    cfgs: &[String],
     include_tests: bool,
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
@@ -174,6 +175,7 @@ fn parse_cargo_metadata(
                         &target_kinds,
                         false,
                     )?,
+                    cfgs: cfgs.to_owned(),
                     ..Default::default()
                 });
             }
@@ -196,6 +198,7 @@ fn parse_cargo_metadata(
                         &target_kinds,
                         true,
                     )?,
+                    cfgs: cfgs.to_owned(),
                     ..Default::default()
                 });
             }
