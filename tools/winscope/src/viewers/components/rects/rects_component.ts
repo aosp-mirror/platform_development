@@ -262,6 +262,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
 
+  private static readonly ZOOM_SCROLL_RATIO = 0.3;
+
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {
     this.mapper3d = new Mapper3D();
     this.resizeObserver = new ResizeObserver((entries) => {
@@ -437,10 +439,10 @@ export class RectsComponent implements OnInit, OnDestroy {
     if ((event.target as HTMLElement).className === 'large-rects-canvas') {
       if (event.deltaY > 0) {
         Analytics.Navigation.logZoom('scroll', 'rects', 'out');
-        this.doZoomOut();
+        this.doZoomOut(RectsComponent.ZOOM_SCROLL_RATIO);
       } else {
         Analytics.Navigation.logZoom('scroll', 'rects', 'in');
-        this.doZoomIn();
+        this.doZoomIn(RectsComponent.ZOOM_SCROLL_RATIO);
       }
     }
   }
@@ -583,13 +585,13 @@ export class RectsComponent implements OnInit, OnDestroy {
     return this.largeRectsCanvas?.getClickedRectId(x, y, z);
   }
 
-  private doZoomIn() {
-    this.mapper3d.increaseZoomFactor();
+  private doZoomIn(ratio = 1) {
+    this.mapper3d.increaseZoomFactor(ratio);
     this.drawLargeRectsAndLabels();
   }
 
-  private doZoomOut() {
-    this.mapper3d.decreaseZoomFactor();
+  private doZoomOut(ratio = 1) {
+    this.mapper3d.decreaseZoomFactor(ratio);
     this.drawLargeRectsAndLabels();
   }
 
