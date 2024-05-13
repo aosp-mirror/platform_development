@@ -15,11 +15,13 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {UserOptions} from 'viewers/common/user_options';
+import {UserOption, UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 
@@ -44,7 +46,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
           [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange()"
+          (ngModelChange)="onUserOptionChange(userOptions[option])"
           >{{ userOptions[option].name }}</mat-checkbox
         >
       </div>
@@ -182,7 +184,12 @@ export class HierarchyComponent {
     this.onHighlightedItemChange(pinnedItem);
   }
 
-  onUserOptionChange() {
+  onUserOptionChange(option: UserOption) {
+    Analytics.Navigation.logHierarchySettingsChanged(
+      option.name,
+      option.enabled,
+      TRACE_INFO[this.dependencies[0]].name,
+    );
     const event = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},

@@ -146,9 +146,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           matTooltip="Documentation"
           class="documentation"
-          (click)="
-            goToLink('https://source.android.com/docs/core/graphics/tracing-win-transitions')
-          ">
+          (click)="goToDocumentation()">
           <mat-icon>menu_book</mat-icon>
         </button>
 
@@ -156,7 +154,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           class="report-bug"
           matTooltip="Report bug"
-          (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
+          (click)="goToBuganizer()">
           <mat-icon>bug_report</mat-icon>
         </button>
 
@@ -164,7 +162,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           class="dark-mode"
           matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
-          (click)="setDarkMode(!isDarkModeOn)">
+          (click)="toggleDarkMode()">
           <mat-icon>
             {{ isDarkModeOn ? 'brightness_5' : 'brightness_4' }}
           </mat-icon>
@@ -523,6 +521,7 @@ export class AppComponent implements WinscopeEventListener {
   }
 
   async onRefreshDumpsButtonClick() {
+    Analytics.Tracing.logRefreshDumps();
     await this.mediator.onWinscopeEvent(new AppRefreshDumpsRequest());
   }
 
@@ -579,11 +578,30 @@ export class AppComponent implements WinscopeEventListener {
     });
   }
 
-  goToLink(url: string) {
-    window.open(url, '_blank');
+  goToDocumentation() {
+    Analytics.Help.logDocumentationOpened();
+    this.goToLink(
+      'https://source.android.com/docs/core/graphics/tracing-win-transitions',
+    );
+  }
+
+  goToBuganizer() {
+    Analytics.Help.logBuganizerOpened();
+    this.goToLink('https://b.corp.google.com/issues/new?component=909476');
+  }
+
+  toggleDarkMode() {
+    if (!this.isDarkModeOn) {
+      Analytics.Settings.logDarkModeEnabled();
+    }
+    this.setDarkMode(!this.isDarkModeOn);
   }
 
   dumpsUploaded() {
     return !this.timelineData.hasMoreThanOneDistinctTimestamp();
+  }
+
+  private goToLink(url: string) {
+    window.open(url, '_blank');
   }
 }

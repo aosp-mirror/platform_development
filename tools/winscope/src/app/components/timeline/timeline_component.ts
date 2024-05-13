@@ -42,6 +42,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {StringUtils} from 'common/string_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
+import {Analytics} from 'logging/analytics';
 import {
   ExpandedTimelineToggled,
   TracePositionUpdate,
@@ -116,6 +117,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     [matTooltip]="getCopyHumanTimeTooltip()"
                     matTooltipClass="multline-tooltip"
                     [cdkCopyToClipboard]="getHumanTime()"
+                    (cdkCopyToClipboardCopied)="onTimeCopied('human')"
                     matSuffix>
                     <mat-icon>content_copy</mat-icon>
                   </button>
@@ -139,6 +141,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     [matTooltip]="getCopyPositionTooltip(selectedNsFormControl.value)"
                     matTooltipClass="multline-tooltip"
                     [cdkCopyToClipboard]="selectedNsFormControl.value"
+                    (cdkCopyToClipboardCopied)="onTimeCopied('ns')"
                     matSuffix>
                     <mat-icon>content_copy</mat-icon>
                   </button>
@@ -618,6 +621,9 @@ export class TimelineComponent
   async toggleExpand() {
     this.expanded = !this.expanded;
     this.changeDetectorRef.detectChanges();
+    if (this.expanded) {
+      Analytics.Navigation.logExpandedTimelineOpened();
+    }
     await this.emitEvent(new ExpandedTimelineToggled(this.expanded));
   }
 
@@ -759,6 +765,8 @@ export class TimelineComponent
     const timestamp = assertDefined(
       timelineData.getTimestampConverter(),
     ).makeTimestampFromHuman(input);
+
+    Analytics.Navigation.logTimeInput('human');
     await this.updatePosition(
       timelineData.makePositionFromActiveTrace(timestamp),
     );
@@ -775,6 +783,8 @@ export class TimelineComponent
     const timestamp = assertDefined(
       timelineData.getTimestampConverter(),
     ).makeTimestampFromNs(StringUtils.parseBigIntStrippingUnit(target.value));
+
+    Analytics.Navigation.logTimeInput('ns');
     await this.updatePosition(
       timelineData.makePositionFromActiveTrace(timestamp),
     );
@@ -820,6 +830,10 @@ export class TimelineComponent
 
   getHumanTime(): string {
     return this.getCurrentTracePosition().timestamp.format();
+  }
+
+  onTimeCopied(type: 'ns' | 'human') {
+    Analytics.Navigation.logTimeCopied(type);
   }
 
   getUTCOffset(): string {
@@ -920,6 +934,9 @@ export class TimelineComponent
       !this.selectedTraces.includes(clickedType) &&
       !storedTraces.includes(clickedType)
     ) {
+      Analytics.Navigation.logTraceTimelineDeselected(
+        TRACE_INFO[clickedType].name,
+      );
       storedTraces.push(clickedType);
     }
 

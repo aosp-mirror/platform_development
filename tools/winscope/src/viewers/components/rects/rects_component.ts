@@ -415,6 +415,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onSeparationSliderChange(factor: number) {
+    Analytics.Navigation.logRectSettingsChanged('z spacing', factor);
     this.store?.add(this.storeKeyZSpacingFactor, `${factor}`);
     this.mapper3d.setZSpacingFactor(factor);
     this.drawLargeRectsAndLabels();
@@ -426,7 +427,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   resetCamera() {
-    Analytics.Navigation.logZoom('reset');
+    Analytics.Navigation.logZoom('reset', 'rects');
     this.mapper3d.resetCamera();
     this.drawLargeRectsAndLabels();
   }
@@ -435,10 +436,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   onScroll(event: WheelEvent) {
     if ((event.target as HTMLElement).className === 'large-rects-canvas') {
       if (event.deltaY > 0) {
-        Analytics.Navigation.logZoom('scroll', 'out');
+        Analytics.Navigation.logZoom('scroll', 'rects', 'out');
         this.doZoomOut();
       } else {
-        Analytics.Navigation.logZoom('scroll', 'in');
+        Analytics.Navigation.logZoom('scroll', 'rects', 'in');
         this.doZoomIn();
       }
     }
@@ -461,16 +462,17 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onZoomInClick() {
-    Analytics.Navigation.logZoom('button', 'in');
+    Analytics.Navigation.logZoom('button', 'rects', 'in');
     this.doZoomIn();
   }
 
   onZoomOutClick() {
-    Analytics.Navigation.logZoom('button', 'out');
+    Analytics.Navigation.logZoom('button', 'rects', 'out');
     this.doZoomOut();
   }
 
   onShowOnlyVisibleModeChange(enabled: boolean) {
+    Analytics.Navigation.logRectSettingsChanged('only visible', enabled);
     this.store?.add(this.storeKeyShowOnlyVisibleState, `${enabled}`);
     this.mapper3d.setShowOnlyVisibleMode(enabled);
     this.drawLargeRectsAndLabels();
