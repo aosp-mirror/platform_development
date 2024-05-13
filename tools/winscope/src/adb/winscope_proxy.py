@@ -61,7 +61,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '1.3.0'
+VERSION = '1.4.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -88,10 +88,11 @@ function is_perfetto_tracing_session_running {{
 }}
 
 function is_any_perfetto_data_source_available {{
-    if is_perfetto_data_source_available android.surfaceflinger.layers || \
+    if is_perfetto_data_source_available android.inputmethod || \
+       is_perfetto_data_source_available android.protolog || \
+       is_perfetto_data_source_available android.surfaceflinger.layers || \
        is_perfetto_data_source_available android.surfaceflinger.transactions || \
-       is_perfetto_data_source_available com.android.wm.shell.transition || \
-       is_perfetto_data_source_available android.protolog; then
+       is_perfetto_data_source_available com.android.wm.shell.transition; then
         return 0
     else
         return 1
@@ -185,6 +186,29 @@ class TraceTarget:
         self.files = files
         self.trace_start = trace_start
         self.trace_stop = trace_stop
+
+
+IME_TRACE_START_COMMAND = f"""
+if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.inputmethod"
+    }}
+}}
+EOF
+    echo 'IME tracing (perfetto) configured to start along the other perfetto traces'
+else
+    su root ime tracing start
+    echo "IME tracing (legacy) started."
+fi
+"""
+IME_TRACE_STOP_COMMAND = """
+if ! is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    su root ime tracing stop >/dev/null 2>&1
+    echo "IME tracing (legacy) stopped."
+fi
+"""
 
 
 # Order of files matters as they will be expected in that order and decoded in that order
@@ -292,18 +316,18 @@ fi
     ),
     "ime_trace_clients": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
-        'su root ime tracing start\necho "Clients IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
+        IME_TRACE_START_COMMAND,
+        IME_TRACE_STOP_COMMAND,
     ),
    "ime_trace_service": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
-        'su root ime tracing start\necho "Service IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
+        IME_TRACE_START_COMMAND,
+        IME_TRACE_STOP_COMMAND,
     ),
     "ime_trace_managerservice": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
-        'su root ime tracing start\necho "ManagerService IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
+        IME_TRACE_START_COMMAND,
+        IME_TRACE_STOP_COMMAND,
     ),
     "wayland_trace": TraceTarget(
         WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),
