@@ -57,7 +57,6 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
-import {TimelineUtils} from './timeline_utils';
 
 @Component({
   selector: 'timeline',
@@ -560,10 +559,10 @@ export class TimelineComponent
       const trace = assertDefined(
         timelineData.getTraces().getTrace(initialTraceToCropZoom),
       );
-      this.initialZoom = {
-        from: trace.getEntry(0).getTimestamp(),
-        to: timelineData.getFullTimeRange().to,
-      };
+      this.initialZoom = new TimeRange(
+        trace.getEntry(0).getTimestamp(),
+        timelineData.getFullTimeRange().to,
+      );
     }
   }
 
@@ -837,17 +836,14 @@ export class TimelineComponent
 
   toggleBookmarkCurrentPosition(event: PointerEvent) {
     const currentTimestamp = this.getCurrentTracePosition().timestamp;
-    this.toggleBookmarkRange({
-      from: currentTimestamp,
-      to: currentTimestamp,
-    });
+    this.toggleBookmarkRange(new TimeRange(currentTimestamp, currentTimestamp));
     event.stopPropagation();
   }
 
   toggleBookmarkRange(range: TimeRange, rangeContainsBookmark?: boolean) {
     if (rangeContainsBookmark === undefined) {
       rangeContainsBookmark = this.bookmarks.some((bookmark) =>
-        TimelineUtils.rangeContainsTimestamp(range, bookmark),
+        range.containsTimestamp(bookmark),
       );
     }
     const clickedNs = (range.from.getValueNs() + range.to.getValueNs()) / 2n;

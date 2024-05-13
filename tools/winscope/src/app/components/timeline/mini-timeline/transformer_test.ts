@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
+import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {Transformer} from './transformer';
 
 describe('Transformer', () => {
   it('can transform', () => {
-    const fromRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(1689763211000000000n),
-      to: TimestampConverterUtils.makeRealTimestamp(1689763571000000000n),
-    };
+    const fromRange = new TimeRange(
+      TimestampConverterUtils.makeRealTimestamp(1689763211000000000n),
+      TimestampConverterUtils.makeRealTimestamp(1689763571000000000n),
+    );
     const toRange = {
       from: 100,
       to: 1100,
@@ -69,10 +70,10 @@ describe('Transformer', () => {
   });
 
   it('can untransform', () => {
-    const fromRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(1689763211000000000n),
-      to: TimestampConverterUtils.makeRealTimestamp(1689763571000000000n),
-    };
+    const fromRange = new TimeRange(
+      TimestampConverterUtils.makeRealTimestamp(1689763211000000000n),
+      TimestampConverterUtils.makeRealTimestamp(1689763571000000000n),
+    );
     const toRange = {
       from: 100,
       to: 1100,

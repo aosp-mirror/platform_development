@@ -245,7 +245,7 @@ export class SliderComponent {
           assertDefined(this.zoomRange).from.getValueNs()),
     );
 
-    this.onZoomChanged.emit({from, to});
+    this.onZoomChanged.emit(new TimeRange(from, to));
   }
 
   startMoveLeft(e: any) {
@@ -267,7 +267,7 @@ export class SliderComponent {
       }
       const to = assertDefined(this.zoomRange).to;
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 
@@ -297,7 +297,7 @@ export class SliderComponent {
         to = assertDefined(this.zoomRange).from;
       }
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 

@@ -65,15 +65,6 @@ export class TimelineUtils {
     );
     const finishTime = converter.makeTimestampFromNs(finishTimeNs);
 
-    return {
-      from: startTime,
-      to: finishTime,
-    };
-  }
-
-  static rangeContainsTimestamp(range: TimeRange, ts: Timestamp): boolean {
-    const min = range.from.getValueNs();
-    const max = range.to.getValueNs();
-    return ts.getValueNs() >= min && ts.getValueNs() <= max;
+    return new TimeRange(startTime, finishTime);
   }
 }

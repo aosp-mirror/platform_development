@@ -37,6 +37,7 @@ import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -686,10 +687,9 @@ describe('TimelineComponent', () => {
   it('sets initial zoom of mini timeline from first non-SR viewer to end of all traces', () => {
     loadAllTraces();
     const timelineComponent = assertDefined(component.timeline);
-    expect(timelineComponent.initialZoom).toEqual({
-      from: time100,
-      to: time112,
-    });
+    expect(timelineComponent.initialZoom).toEqual(
+      new TimeRange(time100, time112),
+    );
   });
 
   it('stores manual trace deselection and applies on new load', async () => {

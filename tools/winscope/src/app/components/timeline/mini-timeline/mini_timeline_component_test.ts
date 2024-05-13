@@ -115,10 +115,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('resets zoom on reset zoom button click', () => {
-    const expectedZoomRange = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const expectedZoomRange = new TimeRange(timestamp15, timestamp16);
     timelineData.setZoom(expectedZoomRange);
 
     let zoomRange = timelineData.getZoomRange();
@@ -157,10 +154,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('shows zoom controls when zoomed in', () => {
-    const zoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const zoom = new TimeRange(timestamp15, timestamp16);
     timelineData.setZoom(zoom);
 
     fixture.detectChanges();
@@ -181,10 +175,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('loads with initial zoom', () => {
-    const initialZoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const initialZoom = new TimeRange(timestamp15, timestamp16);
     component.initialZoom = initialZoom;
     fixture.detectChanges();
     const timelineData = assertDefined(component.timelineData);
@@ -195,10 +186,7 @@ describe('MiniTimelineComponent', () => {
 
   it('updates timelineData on zoom changed', () => {
     fixture.detectChanges();
-    const zoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const zoom = new TimeRange(timestamp15, timestamp16);
     assertDefined(component.miniTimelineComponent).onZoomChanged(zoom);
     fixture.detectChanges();
     expect(timelineData.getZoomRange()).toBe(zoom);
@@ -246,10 +234,7 @@ describe('MiniTimelineComponent', () => {
 
   it('moving slider around updates zoom', fakeAsync(() => {
     fixture.detectChanges();
-    const initialZoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const initialZoom = new TimeRange(timestamp15, timestamp16);
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
     fixture.detectChanges();
 
@@ -279,10 +264,7 @@ describe('MiniTimelineComponent', () => {
     );
     fixture.detectChanges();
 
-    let initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
+    let initialZoom = new TimeRange(timestamp10, timestamp1000);
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
@@ -350,10 +332,7 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    let initialZoom = {
-      from: timestamp700,
-      to: timestamp810,
-    };
+    let initialZoom = new TimeRange(timestamp700, timestamp810);
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
@@ -426,10 +405,7 @@ describe('MiniTimelineComponent', () => {
     );
     fixture.detectChanges();
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
@@ -461,10 +437,7 @@ describe('MiniTimelineComponent', () => {
     );
     fixture.detectChanges();
 
-    let initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
+    let initialZoom = new TimeRange(timestamp10, timestamp1000);
     const miniTimelineComponent = assertDefined(
       component.miniTimelineComponent,
     );
@@ -508,10 +481,7 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    let initialZoom = {
-      from: timestamp700,
-      to: timestamp810,
-    };
+    let initialZoom = new TimeRange(timestamp700, timestamp810);
     const miniTimelineComponent = assertDefined(
       component.miniTimelineComponent,
     );
@@ -555,10 +525,7 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
     const miniTimelineComponent = assertDefined(
       component.miniTimelineComponent,
     );
@@ -591,10 +558,7 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
     fixture.detectChanges();
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
     fixture.detectChanges();
@@ -645,7 +609,7 @@ describe('MiniTimelineComponent', () => {
     (options.item(0) as HTMLElement).click();
 
     expect(spy).toHaveBeenCalledWith({
-      range: {from: timestamp10, to: timestamp10},
+      range: new TimeRange(timestamp10, timestamp10),
       rangeContainsBookmark: false,
     });
   });
@@ -669,7 +633,7 @@ describe('MiniTimelineComponent', () => {
     (options.item(0) as HTMLElement).click();
 
     expect(spy).toHaveBeenCalledWith({
-      range: {from: timestamp10, to: timestamp10},
+      range: new TimeRange(timestamp10, timestamp10),
       rangeContainsBookmark: true,
     });
   });

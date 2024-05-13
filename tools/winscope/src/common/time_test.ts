@@ -15,6 +15,7 @@
  */
 
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TimeRange} from './time';
 import {TIME_UNIT_TO_NANO} from './time_units';
 
 describe('Timestamp', () => {
@@ -221,6 +222,49 @@ describe('Timestamp', () => {
           NOV_10_2022 + 1n,
         ).format(),
       ).toEqual('2022-11-10, 05:30:00.000');
+    });
+  });
+});
+
+describe('TimeRange', () => {
+  describe('containsTimestamp', () => {
+    const range = new TimeRange(
+      TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(10n),
+      TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(600n),
+    );
+
+    it('returns true for range containing timestamp', () => {
+      expect(
+        range.containsTimestamp(
+          TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(10n),
+        ),
+      ).toBeTrue();
+
+      expect(
+        range.containsTimestamp(
+          TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(600n),
+        ),
+      ).toBeTrue();
+
+      expect(
+        range.containsTimestamp(
+          TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(300n),
+        ),
+      ).toBeTrue();
+    });
+
+    it('returns false for range not containing timestamp', () => {
+      expect(
+        range.containsTimestamp(
+          TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(0n),
+        ),
+      ).toBeFalse();
+
+      expect(
+        range.containsTimestamp(
+          TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(601n),
+        ),
+      ).toBeFalse();
     });
   });
 });

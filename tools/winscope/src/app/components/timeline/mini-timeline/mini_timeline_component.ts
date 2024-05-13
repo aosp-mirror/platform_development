@@ -32,7 +32,6 @@ import {Analytics} from 'logging/analytics';
 import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
-import {TimelineUtils} from '../timeline_utils';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
 import {MiniTimelineDrawerImpl} from './drawer/mini_timeline_drawer_impl';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
@@ -159,10 +158,10 @@ export class MiniTimelineComponent {
       usableRange,
       assertDefined(this.timelineData?.getTimestampConverter()),
     );
-    this.lastRightClickTimeRange = {
-      from: transformer.untransform(clickRange.from),
-      to: transformer.untransform(clickRange.to),
-    };
+    this.lastRightClickTimeRange = new TimeRange(
+      transformer.untransform(clickRange.from),
+      transformer.untransform(clickRange.to),
+    );
   }
 
   ngAfterViewInit(): void {
@@ -330,10 +329,7 @@ export class MiniTimelineComponent {
       newTo = fullRange.to;
     }
 
-    this.onZoomChanged({
-      from: newFrom,
-      to: newTo,
-    });
+    this.onZoomChanged(new TimeRange(newFrom, newTo));
   }
 
   @HostListener('wheel', ['$event'])
@@ -360,8 +356,7 @@ export class MiniTimelineComponent {
     this.onToggleBookmark.emit({
       range: this.lastRightClickTimeRange,
       rangeContainsBookmark: this.bookmarks.some((bookmark) => {
-        return TimelineUtils.rangeContainsTimestamp(
-          assertDefined(this.lastRightClickTimeRange),
+        return assertDefined(this.lastRightClickTimeRange).containsTimestamp(
           bookmark,
         );
       }),
@@ -374,8 +369,7 @@ export class MiniTimelineComponent {
     }
 
     const rangeContainsBookmark = this.bookmarks.some((bookmark) => {
-      return TimelineUtils.rangeContainsTimestamp(
-        assertDefined(this.lastRightClickTimeRange),
+      return assertDefined(this.lastRightClickTimeRange).containsTimestamp(
         bookmark,
       );
     });
@@ -510,9 +504,6 @@ export class MiniTimelineComponent {
       newTo = fullRange.to;
     }
 
-    this.onZoomChanged({
-      from: newFrom,
-      to: newTo,
-    });
+    this.onZoomChanged(new TimeRange(newFrom, newTo));
   }
 }
