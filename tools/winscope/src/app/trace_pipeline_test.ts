@@ -220,6 +220,9 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
+        "Trace processor tables don't contain entries of type 10",
+        "Trace processor tables don't contain entries of type 11",
+        "Trace processor tables don't contain entries of type 12",
         "Trace processor tables don't contain entries of type 1",
         "Trace processor tables don't contain entries of type 4",
         "Trace processor tables don't contain entries of type 16",

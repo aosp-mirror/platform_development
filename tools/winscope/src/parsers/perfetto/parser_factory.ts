@@ -20,6 +20,9 @@ import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {InvalidPerfettoTrace} from 'messaging/user_warnings';
+import {ParserInputMethodClients} from 'parsers/input_method/perfetto/parser_input_method_clients';
+import {ParserInputMethodManagerService} from 'parsers/input_method/perfetto/parser_input_method_manager_service';
+import {ParserInputMethodService} from 'parsers/input_method/perfetto/parser_input_method_service';
 import {ParserProtolog} from 'parsers/protolog/perfetto/parser_protolog';
 import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
 import {ParserTransactions} from 'parsers/transactions/perfetto/parser_transactions';
@@ -34,6 +37,9 @@ import {
 
 export class ParserFactory {
   private static readonly PARSERS = [
+    ParserInputMethodClients,
+    ParserInputMethodManagerService,
+    ParserInputMethodService,
     ParserSurfaceFlinger,
     ParserTransactions,
     ParserTransitions,
