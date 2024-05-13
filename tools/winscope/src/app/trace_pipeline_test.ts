@@ -220,13 +220,13 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
-        "Trace processor tables don't contain entries of type 10",
-        "Trace processor tables don't contain entries of type 11",
-        "Trace processor tables don't contain entries of type 12",
-        "Trace processor tables don't contain entries of type 1",
-        "Trace processor tables don't contain entries of type 4",
-        "Trace processor tables don't contain entries of type 16",
-        "Trace processor tables don't contain entries of type 8",
+        "Perfetto trace has no 'IME Clients' entries",
+        "Perfetto trace has no 'IME system_server' entries",
+        "Perfetto trace has no 'IME Service' entries",
+        "Perfetto trace has no 'Surface Flinger' entries",
+        "Perfetto trace has no 'Transactions' entries",
+        "Perfetto trace has no 'Transitions' entries",
+        "Perfetto trace has no 'ProtoLog' entries",
       ]),
     ]);
   });

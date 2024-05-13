@@ -26,6 +26,7 @@ import {
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
@@ -62,7 +63,9 @@ export abstract class AbstractParser<T> implements Parser<T> {
     assertTrue(
       this.lengthEntries > 0,
       () =>
-        `Trace processor tables don't contain entries of type ${this.getTraceType()}`,
+        `Perfetto trace has no '${
+          TRACE_INFO[this.getTraceType()].name
+        }' entries`,
     );
 
     let lastNonZeroTimestamp: bigint | undefined;

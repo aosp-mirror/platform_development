@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TRACE_INFO} from 'app/trace_info';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 
 export interface TraceConfiguration {
