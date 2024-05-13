@@ -273,7 +273,6 @@ describe('Mediator', () => {
     const timezoneInfo: TimezoneInfo = {
       timezone: 'Asia/Kolkata',
       locale: 'en-US',
-      utcOffsetMs: 19800000,
     };
     const converter = new TimestampConverter(timezoneInfo, 0n);
     spyOn(tracePipeline, 'getTimestampConverter').and.returnValue(converter);

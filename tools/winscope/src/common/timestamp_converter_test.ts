@@ -50,7 +50,7 @@ describe('TimestampConverter', () => {
       testRealToBootTimeOffsetNs,
     );
 
-    it('can create real-formatted timestamp without offset set', () => {
+    it('can create real-formatted timestamp without real-time offset set', () => {
       const timestamp = new TimestampConverter(
         TimestampConverterUtils.UTC_TIMEZONE_INFO,
       ).makeTimestampFromRealNs(testRealNs);
@@ -105,6 +105,9 @@ describe('TimestampConverter', () => {
     converterWithMonotonicOffset.setRealToMonotonicTimeOffsetNs(
       testMonotonicTimeOffsetNs,
     );
+    converterWithMonotonicOffset.initializeUTCOffset(
+      converterWithMonotonicOffset.makeTimestampFromRealNs(testRealNs),
+    );
 
     const converterWithBootTimeOffset = new TimestampConverter(
       TimestampConverterUtils.ASIA_TIMEZONE_INFO,
@@ -112,11 +115,19 @@ describe('TimestampConverter', () => {
     converterWithBootTimeOffset.setRealToBootTimeOffsetNs(
       testRealToBootTimeOffsetNs,
     );
+    converterWithBootTimeOffset.initializeUTCOffset(
+      converterWithBootTimeOffset.makeTimestampFromRealNs(testRealNs),
+    );
 
-    it('can create real-formatted timestamp without offset set', () => {
-      const timestamp = new TimestampConverter(
+    it('can create real-formatted timestamp without real-time offset set', () => {
+      const converter = new TimestampConverter(
         TimestampConverterUtils.ASIA_TIMEZONE_INFO,
-      ).makeTimestampFromRealNs(testRealNs);
+      );
+      converter.initializeUTCOffset(
+        converter.makeTimestampFromRealNs(testRealNs),
+      );
+
+      const timestamp = converter.makeTimestampFromRealNs(testRealNs);
       expect(timestamp.getValueNs()).toBe(testRealNs);
       expect(timestamp.format()).toEqual('2022-07-31, 10:25:41.051');
     });
@@ -149,53 +160,60 @@ describe('TimestampConverter', () => {
 
     describe('adds correct offset for different timezones', () => {
       it('creates correct real-formatted timestamps for different timezones', () => {
+        const londonConverter = new TimestampConverter(
+          {
+            timezone: 'Europe/London',
+            locale: 'en-US',
+          },
+          0n,
+        );
+        londonConverter.initializeUTCOffset(
+          londonConverter.makeTimestampFromRealNs(testRealNs),
+        );
         expect(
-          new TimestampConverter(
-            {
-              timezone: 'Europe/London',
-              locale: 'en-US',
-              utcOffsetMs: 3600000,
-            },
-            0n,
-          )
-            .makeTimestampFromRealNs(testRealNs)
-            .format(),
+          londonConverter.makeTimestampFromRealNs(testRealNs).format(),
         ).toEqual('2022-07-31, 05:55:41.051');
+
+        const zurichConverter = new TimestampConverter(
+          {
+            timezone: 'Europe/Zurich',
+            locale: 'en-US',
+          },
+          0n,
+        );
+        zurichConverter.initializeUTCOffset(
+          zurichConverter.makeTimestampFromRealNs(testRealNs),
+        );
         expect(
-          new TimestampConverter(
-            {
-              timezone: 'Europe/Zurich',
-              locale: 'en-US',
-              utcOffsetMs: 7200000,
-            },
-            0n,
-          )
-            .makeTimestampFromRealNs(testRealNs)
-            .format(),
+          zurichConverter.makeTimestampFromRealNs(testRealNs).format(),
         ).toEqual('2022-07-31, 06:55:41.051');
+
+        const westCoastConverter = new TimestampConverter(
+          {
+            timezone: 'America/Los_Angeles',
+            locale: 'en-US',
+          },
+          0n,
+        );
+        westCoastConverter.initializeUTCOffset(
+          westCoastConverter.makeTimestampFromRealNs(testRealNs),
+        );
         expect(
-          new TimestampConverter(
-            {
-              timezone: 'America/Los_Angeles',
-              locale: 'en-US',
-              utcOffsetMs: -25200000,
-            },
-            0n,
-          )
-            .makeTimestampFromRealNs(testRealNs)
-            .format(),
+          westCoastConverter.makeTimestampFromRealNs(testRealNs).format(),
         ).toEqual('2022-07-30, 21:55:41.051');
+
+        const indiaConverter = new TimestampConverter(
+          {
+            timezone: 'Asia/Kolkata',
+            locale: 'en-US',
+          },
+          0n,
+        );
+        indiaConverter.initializeUTCOffset(
+          indiaConverter.makeTimestampFromRealNs(testRealNs),
+        );
         expect(
-          new TimestampConverter(
-            {
-              timezone: 'Asia/Kolkata',
-              locale: 'en-US',
-              utcOffsetMs: 19800000,
-            },
-            0n,
-          )
-            .makeTimestampFromRealNs(testRealNs)
-            .format(),
+          indiaConverter.makeTimestampFromRealNs(testRealNs).format(),
         ).toEqual('2022-07-31, 10:25:41.051');
       });
     });
@@ -453,6 +471,9 @@ describe('TimestampConverter', () => {
       TimestampConverterUtils.ASIA_TIMEZONE_INFO,
     );
     converter.setRealToMonotonicTimeOffsetNs(testMonotonicTimeOffsetNs);
+    converter.initializeUTCOffset(
+      converter.makeTimestampFromRealNs(testRealNs),
+    );
 
     it('makeTimestampFromHumanReal', () => {
       const NOV_10_2022 = 1668038400000n * MILLISECOND;
