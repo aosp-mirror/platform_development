@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-export const selectedElementStyle = `
-    .selected {
-        background-color: var(--selected-element-color);
-    }
-`;
+// https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+export enum MouseEventButton {
+  MAIN = 0, // usually left mouse button
+  AUXILIARY = 1, // usually middle mouse button
+  SECONDARY = 2, // usually right mouse button
+}

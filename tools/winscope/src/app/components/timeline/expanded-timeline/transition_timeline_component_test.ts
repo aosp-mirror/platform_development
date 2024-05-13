@@ -26,6 +26,7 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {Rect} from 'common/rect';
+import {TimeRange} from 'common/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -121,10 +122,7 @@ describe('TransitionTimelineComponent', () => {
       ])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(10n),
-      to: TimestampConverterUtils.makeRealTimestamp(110n),
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -195,10 +193,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time60])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -248,10 +243,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
     component.selectedEntry = component.trace.getEntry(0);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
@@ -306,10 +298,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -388,10 +377,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time60])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -464,10 +450,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10, time35])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -527,10 +510,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time35])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
@@ -579,11 +559,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([time10])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: time10,
-      to: time110,
-    };
-
+    component.selectionRange = new TimeRange(time10, time110);
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
     fixture.detectChanges();
@@ -618,10 +594,7 @@ describe('TransitionTimelineComponent', () => {
       .setTimestamps([TimestampConverterUtils.makeRealTimestamp(10n)])
       .build();
     component.traceEntries = transitions;
-    component.selectionRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(10n),
-      to: TimestampConverterUtils.makeRealTimestamp(110n),
-    };
+    component.selectionRange = new TimeRange(time10, time110);
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();

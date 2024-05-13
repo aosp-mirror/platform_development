@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
@@ -290,10 +291,7 @@ describe('TimelineData', () => {
       timelineData.getSelectionTimeRange(),
     );
 
-    timelineData.setSelectionTimeRange({
-      from: timestamp0,
-      to: timestamp5,
-    });
+    timelineData.setSelectionTimeRange(new TimeRange(timestamp0, timestamp5));
 
     expect(timelineData.getSelectionTimeRange()).toBe(
       timelineData.getSelectionTimeRange(),
@@ -309,10 +307,7 @@ describe('TimelineData', () => {
 
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
 
-    timelineData.setZoom({
-      from: timestamp0,
-      to: timestamp5,
-    });
+    timelineData.setZoom(new TimeRange(timestamp0, timestamp5));
 
     expect(timelineData.getZoomRange()).toBe(timelineData.getZoomRange());
   });

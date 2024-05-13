@@ -35,7 +35,6 @@ import {
   Validators,
 } from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Color} from 'app/colors';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
@@ -77,13 +76,12 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
       </div>
       <expanded-timeline
         [timelineData]="timelineData"
-        [store]="store"
         (onTracePositionUpdate)="updatePosition($event)"
         (onScrollEvent)="updateScrollEvent($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
-    <div id="toggle" [style.background-color]="getAppBackgroundColor()" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
+    <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
       <button
         mat-icon-button
         [class]="TOGGLE_BUTTON_CLASS"
@@ -96,7 +94,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
     </div>
       <div class="navbar" #collapsedTimeline>
         <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
-          <div id="time-selector" [style.background-color]="getNavbarBlockColor()">
+          <div id="time-selector">
             <form [formGroup]="timestampForm" class="time-selector-form">
               <mat-form-field
                 class="time-input human"
@@ -128,7 +126,12 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                 appearance="fill"
                 (keydown.enter)="onKeydownEnterNanosecondsTimeInputField($event)"
                 (change)="onNanosecondsInputTimeChange($event)">
-                <mat-icon class="material-symbols-outlined" matPrefix>timer</mat-icon>
+                <mat-icon
+                  class="bookmark-icon"
+                  [class.material-symbols-outlined]="!currentPositionBookmarked()"
+                  matTooltip="bookmark timestamp"
+                  (click)="toggleBookmarkCurrentPosition($event)"
+                  matPrefix>flag</mat-icon>
                 <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
                 <div class="field-suffix" matSuffix>
                   <button
@@ -142,7 +145,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                 </div>
               </mat-form-field>
             </form>
-            <div class="time-controls" [style.background-color]="getNavbarInnerBlockColor()">
+            <div class="time-controls">
               <button
                 mat-icon-button
                 id="prev_entry_button"
@@ -172,7 +175,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     *ngFor="let trace of sortedAvailableTraces"
                     [value]="trace"
                     [style]="{
-                      color: getTraceSelectorTextColor(),
+                      color: 'var(--blue-text-color)',
                       opacity: isOptionDisabled(trace) ? 0.5 : 1.0
                     }"
                     [disabled]="isOptionDisabled(trace)"
@@ -190,7 +193,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
                     </button>
                   </div>
                 </div>
-                <mat-select-trigger class="shown-selection" [style.background-color]="getNavbarBlockColor()">
+                <mat-select-trigger class="shown-selection">
                   <div class="filter-header">
                     <span class="mat-body-2"> Filter </span>
                     <mat-icon class="material-symbols-outlined">expand_circle_up</mat-icon>
@@ -223,9 +226,11 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
             [selectedTraces]="selectedTraces"
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
-            [store]="store"
+            [bookmarks]="bookmarks"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
+            (onRemoveAllBookmarks)="removeAllBookmarks()"
+            (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
@@ -260,6 +265,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         border-right: 0px;
         border-top-left-radius: 6px;
         border-top-right-radius: 6px;
+        background-color: var(--drawer-color);
       }
       .navbar {
         display: flex;
@@ -281,6 +287,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         margin-left: 0.5rem;
         height: 116px;
         width: 282px;
+        background-color: var(--drawer-block-primary);
       }
       #time-selector .mat-form-field-wrapper {
         width: 100%;
@@ -294,6 +301,9 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         padding: 0;
         display: flex;
         align-items: center;
+      }
+      .bookmark-icon {
+        cursor: pointer;
       }
       .time-selector-form {
         display: flex;
@@ -324,6 +334,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         flex-direction: row;
         justify-content: space-between;
         width: 90%;
+        background-color: var(--drawer-block-secondary);
       }
       #time-selector .mat-icon-button {
         width: 24px;
@@ -386,6 +397,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         justify-content: center;
         flex-wrap: wrap;
         align-content: flex-start;
+        background-color: var(--drawer-block-primary);
       }
       #trace-selector .filter-header {
         padding-top: 4px;
@@ -489,6 +501,7 @@ export class TimelineComponent
   TRACE_INFO = TRACE_INFO;
   isInputFormFocused = false;
   storeKeyDeselectedTraces = 'miniTimeline.deselectedTraces';
+  bookmarks: Timestamp[] = [];
 
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -546,10 +559,10 @@ export class TimelineComponent
       const trace = assertDefined(
         timelineData.getTraces().getTrace(initialTraceToCropZoom),
       );
-      this.initialZoom = {
-        from: trace.getEntry(0).getTimestamp(),
-        to: timelineData.getFullTimeRange().to,
-      };
+      this.initialZoom = new TimeRange(
+        trace.getEntry(0).getTimestamp(),
+        timelineData.getFullTimeRange().to,
+      );
     }
   }
 
@@ -815,28 +828,47 @@ export class TimelineComponent
     ).getUTCOffset();
   }
 
-  getAppBackgroundColor(): string {
-    return this.isDarkMode()
-      ? Color.APP_BACKGROUND_DARK_MODE
-      : Color.APP_BACKGROUND_LIGHT_MODE;
+  currentPositionBookmarked(): boolean {
+    const currentTimestampNs =
+      this.getCurrentTracePosition().timestamp.getValueNs();
+    return this.bookmarks.some((bm) => bm.getValueNs() === currentTimestampNs);
   }
 
-  getNavbarBlockColor(): string {
-    return this.isDarkMode()
-      ? Color.NAVBAR_BLOCK_DARK_MODE
-      : Color.NAVBAR_BLOCK_LIGHT_MODE;
+  toggleBookmarkCurrentPosition(event: PointerEvent) {
+    const currentTimestamp = this.getCurrentTracePosition().timestamp;
+    this.toggleBookmarkRange(new TimeRange(currentTimestamp, currentTimestamp));
+    event.stopPropagation();
   }
 
-  getNavbarInnerBlockColor(): string {
-    return this.isDarkMode()
-      ? Color.NAVBAR_INNER_BLOCK_DARK_MODE
-      : Color.NAVBAR_INNER_BLOCK_LIGHT_MODE;
+  toggleBookmarkRange(range: TimeRange, rangeContainsBookmark?: boolean) {
+    if (rangeContainsBookmark === undefined) {
+      rangeContainsBookmark = this.bookmarks.some((bookmark) =>
+        range.containsTimestamp(bookmark),
+      );
+    }
+    const clickedNs = (range.from.getValueNs() + range.to.getValueNs()) / 2n;
+    if (rangeContainsBookmark) {
+      const closestBookmark = this.bookmarks.reduce((prev, curr) => {
+        if (clickedNs - curr.getValueNs() < 0) return prev;
+        return Math.abs(Number(curr.getValueNs() - clickedNs)) <
+          Math.abs(Number(prev.getValueNs() - clickedNs))
+          ? curr
+          : prev;
+      });
+      this.bookmarks = this.bookmarks.filter(
+        (bm) => bm.getValueNs() !== closestBookmark.getValueNs(),
+      );
+    } else {
+      this.bookmarks = this.bookmarks.concat([
+        assertDefined(
+          this.timelineData?.getTimestampConverter(),
+        ).makeTimestampFromNs(clickedNs),
+      ]);
+    }
   }
 
-  getTraceSelectorTextColor(): string {
-    return this.isDarkMode()
-      ? Color.TRACE_SELECTOR_TEXT_DARK_MODE
-      : Color.TRACE_SELECTOR_TEXT_LIGHT_MODE;
+  removeAllBookmarks() {
+    this.bookmarks = [];
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {
@@ -897,9 +929,5 @@ export class TimelineComponent
   private validateNsFormat(control: FormControl): ValidationErrors | null {
     const valid = TimestampUtils.isNsFormat(control.value ?? '');
     return !valid ? {invalidInput: control.value} : null;
-  }
-
-  private isDarkMode(): boolean {
-    return this.store?.get('dark-mode') === 'true';
   }
 }

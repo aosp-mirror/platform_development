@@ -39,7 +39,10 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   constructor(
     private drawer: MiniTimelineDrawer,
     private defaultCursor = 'auto',
-    private onUnhandledMouseDown: (point: Point) => void = (point) => {},
+    private onUnhandledMouseDown: (point: Point, button: number) => void = (
+      point,
+      button,
+    ) => {},
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {
       this.handleMouseMove(event);
@@ -81,7 +84,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     if (clickedObject !== undefined) {
       this.draggingObject = clickedObject;
     } else {
-      this.onUnhandledMouseDown(mousePoint);
+      this.onUnhandledMouseDown(mousePoint, e.button);
     }
     this.updateCursor(mousePoint);
   }

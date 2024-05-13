@@ -27,6 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
+import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
@@ -258,10 +259,10 @@ describe('DefaultTimelineRowComponent', () => {
         TimestampConverterUtils.makeRealTimestamp(70n),
       ])
       .build();
-    component.selectionRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(low),
-      to: TimestampConverterUtils.makeRealTimestamp(high),
-    };
+    component.selectionRange = new TimeRange(
+      TimestampConverterUtils.makeRealTimestamp(low),
+      TimestampConverterUtils.makeRealTimestamp(high),
+    );
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
   }
 

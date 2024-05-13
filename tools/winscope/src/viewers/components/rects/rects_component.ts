@@ -274,14 +274,18 @@ export class RectsComponent implements OnInit, OnDestroy {
       this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
+    const isDarkMode = () => this.store?.get('dark-mode') === 'true';
+
     this.largeRectsCanvasElement = canvasContainer.querySelector(
       '.large-rects-canvas',
     )! as HTMLCanvasElement;
-    this.largeRectsLabelsElement =
-      canvasContainer.querySelector('.large-rects-labels') ?? undefined;
+    this.largeRectsLabelsElement = assertDefined(
+      canvasContainer.querySelector('.large-rects-labels'),
+    ) as HTMLElement;
     this.largeRectsCanvas = new Canvas(
       this.largeRectsCanvasElement,
-      this.largeRectsLabelsElement!,
+      this.largeRectsLabelsElement,
+      isDarkMode,
     );
     this.largeRectsCanvasElement.addEventListener('mousedown', (event) =>
       this.onCanvasMouseDown(event),
@@ -301,7 +305,11 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.miniRectsCanvasElement = canvasContainer.querySelector(
       '.mini-rects-canvas',
     )! as HTMLCanvasElement;
-    this.miniRectsCanvas = new Canvas(this.miniRectsCanvasElement);
+    this.miniRectsCanvas = new Canvas(
+      this.miniRectsCanvasElement,
+      undefined,
+      isDarkMode,
+    );
     if (this.miniRects) {
       this.drawMiniRects();
     }

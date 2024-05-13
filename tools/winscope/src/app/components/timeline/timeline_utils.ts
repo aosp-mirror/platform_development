@@ -65,9 +65,6 @@ export class TimelineUtils {
     );
     const finishTime = converter.makeTimestampFromNs(finishTimeNs);
 
-    return {
-      from: startTime,
-      to: finishTime,
-    };
+    return new TimeRange(startTime, finishTime);
   }
 }

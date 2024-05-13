@@ -15,7 +15,8 @@
  */
 
 import {DragDropModule} from '@angular/cdk/drag-drop';
-import {ChangeDetectionStrategy} from '@angular/core';
+import {CdkMenuModule} from '@angular/cdk/menu';
+import {ChangeDetectionStrategy, Component, ViewChild} from '@angular/core';
 import {ComponentFixture, fakeAsync, TestBed} from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
@@ -27,6 +28,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {TimeRange, Timestamp} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {dragElement} from 'test/utils';
@@ -36,8 +38,8 @@ import {MiniTimelineComponent} from './mini_timeline_component';
 import {SliderComponent} from './slider_component';
 
 describe('MiniTimelineComponent', () => {
-  let fixture: ComponentFixture<MiniTimelineComponent>;
-  let component: MiniTimelineComponent;
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
 
@@ -66,14 +68,15 @@ describe('MiniTimelineComponent', () => {
         ReactiveFormsModule,
         BrowserAnimationsModule,
         DragDropModule,
+        CdkMenuModule,
       ],
-      declarations: [MiniTimelineComponent, SliderComponent],
+      declarations: [TestHostComponent, MiniTimelineComponent, SliderComponent],
     })
       .overrideComponent(MiniTimelineComponent, {
         set: {changeDetection: ChangeDetectionStrategy.Default},
       })
       .compileComponents();
-    fixture = TestBed.createComponent(MiniTimelineComponent);
+    fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
@@ -100,19 +103,19 @@ describe('MiniTimelineComponent', () => {
 
   it('redraws on resize', () => {
     fixture.detectChanges();
-    const spy = spyOn(assertDefined(component.drawer), 'draw');
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    const spy = spyOn(assertDefined(miniTimelineComponent.drawer), 'draw');
     expect(spy).not.toHaveBeenCalled();
 
-    component.onResize({} as Event);
+    miniTimelineComponent.onResize({} as Event);
 
     expect(spy).toHaveBeenCalled();
   });
 
   it('resets zoom on reset zoom button click', () => {
-    const expectedZoomRange = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const expectedZoomRange = new TimeRange(timestamp15, timestamp16);
     timelineData.setZoom(expectedZoomRange);
 
     let zoomRange = timelineData.getZoomRange();
@@ -151,10 +154,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('shows zoom controls when zoomed in', () => {
-    const zoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const zoom = new TimeRange(timestamp15, timestamp16);
     timelineData.setZoom(zoom);
 
     fixture.detectChanges();
@@ -175,10 +175,7 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('loads with initial zoom', () => {
-    const initialZoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
+    const initialZoom = new TimeRange(timestamp15, timestamp16);
     component.initialZoom = initialZoom;
     fixture.detectChanges();
     const timelineData = assertDefined(component.timelineData);
@@ -187,25 +184,27 @@ describe('MiniTimelineComponent', () => {
     expect(zoomRange.to).toEqual(initialZoom.to);
   });
 
-  it('updates timelinedata on zoom changed', () => {
-    const zoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
-    component.onZoomChanged(zoom);
+  it('updates timelineData on zoom changed', () => {
+    fixture.detectChanges();
+    const zoom = new TimeRange(timestamp15, timestamp16);
+    assertDefined(component.miniTimelineComponent).onZoomChanged(zoom);
+    fixture.detectChanges();
     expect(timelineData.getZoomRange()).toBe(zoom);
   });
 
   it('creates an appropriately sized canvas', () => {
     fixture.detectChanges();
-    const canvas = component.getCanvas();
+    const canvas = assertDefined(component.miniTimelineComponent).getCanvas();
     expect(canvas.width).toBeGreaterThan(100);
     expect(canvas.height).toBeGreaterThan(10);
   });
 
   it('getTracesToShow returns traces targeted by selectedTraces', () => {
+    fixture.detectChanges();
     const selectedTraces = assertDefined(component.selectedTraces);
-    const traces = component.getTracesToShow();
+    const traces = assertDefined(
+      component.miniTimelineComponent,
+    ).getTracesToShow();
     const types: TraceType[] = [];
     traces.forEachTrace((trace) => {
       types.push(trace.type);
@@ -222,7 +221,8 @@ describe('MiniTimelineComponent', () => {
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS,
     ];
-    const traces = component
+    fixture.detectChanges();
+    const traces = assertDefined(component.miniTimelineComponent)
       .getTracesToShow()
       .mapTrace((trace, type) => trace.type);
     expect(traces).toEqual([
@@ -233,12 +233,9 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('moving slider around updates zoom', fakeAsync(() => {
-    const initialZoom = {
-      from: timestamp15,
-      to: timestamp16,
-    };
-    component.onZoomChanged(initialZoom);
-
+    fixture.detectChanges();
+    const initialZoom = new TimeRange(timestamp15, timestamp16);
+    assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
     fixture.detectChanges();
 
     const slider = htmlElement.querySelector('.slider .handle');
@@ -265,12 +262,10 @@ describe('MiniTimelineComponent', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    fixture.detectChanges();
 
-    let initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
-    component.onZoomChanged(initialZoom);
+    let initialZoom = new TimeRange(timestamp10, timestamp1000);
+    assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
     const cursorPos = position800.timestamp.getValueNs();
@@ -337,11 +332,8 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    let initialZoom = {
-      from: timestamp700,
-      to: timestamp810,
-    };
-    component.onZoomChanged(initialZoom);
+    let initialZoom = new TimeRange(timestamp700, timestamp810);
+    assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
     const cursorPos = position800.timestamp.getValueNs();
@@ -411,12 +403,10 @@ describe('MiniTimelineComponent', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    fixture.detectChanges();
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
-    component.onZoomChanged(initialZoom);
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
+    assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
 
     timelineData.setPosition(position800);
     fixture.detectChanges();
@@ -445,17 +435,18 @@ describe('MiniTimelineComponent', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    fixture.detectChanges();
 
-    let initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
-    component.onZoomChanged(initialZoom);
+    let initialZoom = new TimeRange(timestamp10, timestamp1000);
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    miniTimelineComponent.onZoomChanged(initialZoom);
 
     fixture.detectChanges();
 
     for (let i = 0; i < 10; i++) {
-      component.onScroll({
+      miniTimelineComponent.onScroll({
         deltaY: -200,
         deltaX: 0,
         x: 10, // scrolling on pos
@@ -490,16 +481,16 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    let initialZoom = {
-      from: timestamp700,
-      to: timestamp810,
-    };
-    component.onZoomChanged(initialZoom);
+    let initialZoom = new TimeRange(timestamp700, timestamp810);
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    miniTimelineComponent.onZoomChanged(initialZoom);
 
     fixture.detectChanges();
 
     for (let i = 0; i < 10; i++) {
-      component.onScroll({
+      miniTimelineComponent.onScroll({
         deltaY: 200,
         deltaX: 0,
         x: 10, // scrolling on pos
@@ -534,13 +525,13 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
-    component.onZoomChanged(initialZoom);
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    miniTimelineComponent.onZoomChanged(initialZoom);
 
-    component.onScroll({
+    miniTimelineComponent.onScroll({
       deltaY: 1000,
       deltaX: 0,
       x: 10, // scrolling on pos
@@ -567,18 +558,17 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
 
-    const initialZoom = {
-      from: timestamp10,
-      to: timestamp1000,
-    };
-    component.onZoomChanged(initialZoom);
+    const initialZoom = new TimeRange(timestamp10, timestamp1000);
+    fixture.detectChanges();
+    assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
+    fixture.detectChanges();
 
     component.expandedTimelineScrollEvent = {
       deltaY: 1000,
       deltaX: 0,
       x: 10, // scrolling on pos
+      target: component.miniTimelineComponent?.getCanvas(),
     } as unknown as WheelEvent;
-
     fixture.detectChanges();
 
     const finalZoom = timelineData.getZoomRange();
@@ -586,4 +576,123 @@ describe('MiniTimelineComponent', () => {
     expect(finalZoom.from.getValueNs()).toBe(initialZoom.from.getValueNs());
     expect(finalZoom.to.getValueNs()).toBe(initialZoom.to.getValueNs());
   });
+
+  it('opens context menu', () => {
+    fixture.detectChanges();
+    expect(document.querySelector('.context-menu')).toBeFalsy();
+
+    assertDefined(component.miniTimelineComponent)
+      .getCanvas()
+      .dispatchEvent(new MouseEvent('contextmenu'));
+    fixture.detectChanges();
+
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const options = menu.querySelectorAll('.context-menu-item');
+    expect(options.length).toEqual(2);
+  });
+
+  it('adds bookmark', () => {
+    fixture.detectChanges();
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    const spy = spyOn(miniTimelineComponent.onToggleBookmark, 'emit');
+
+    miniTimelineComponent
+      .getCanvas()
+      .dispatchEvent(new MouseEvent('contextmenu'));
+    fixture.detectChanges();
+
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const options = menu.querySelectorAll('.context-menu-item');
+    expect(options.item(0).textContent).toContain('Add bookmark');
+    (options.item(0) as HTMLElement).click();
+
+    expect(spy).toHaveBeenCalledWith({
+      range: new TimeRange(timestamp10, timestamp10),
+      rangeContainsBookmark: false,
+    });
+  });
+
+  it('removes bookmark', () => {
+    component.bookmarks = [timestamp10];
+    fixture.detectChanges();
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    const spy = spyOn(miniTimelineComponent.onToggleBookmark, 'emit');
+
+    miniTimelineComponent
+      .getCanvas()
+      .dispatchEvent(new MouseEvent('contextmenu'));
+    fixture.detectChanges();
+
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const options = menu.querySelectorAll('.context-menu-item');
+    expect(options.item(0).textContent).toContain('Remove bookmark');
+    (options.item(0) as HTMLElement).click();
+
+    expect(spy).toHaveBeenCalledWith({
+      range: new TimeRange(timestamp10, timestamp10),
+      rangeContainsBookmark: true,
+    });
+  });
+
+  it('removes all bookmarks', () => {
+    component.bookmarks = [timestamp10, timestamp1000];
+    fixture.detectChanges();
+    const miniTimelineComponent = assertDefined(
+      component.miniTimelineComponent,
+    );
+    const spy = spyOn(miniTimelineComponent.onRemoveAllBookmarks, 'emit');
+
+    miniTimelineComponent
+      .getCanvas()
+      .dispatchEvent(new MouseEvent('contextmenu'));
+    fixture.detectChanges();
+
+    const menu = assertDefined(document.querySelector('.context-menu'));
+    const options = menu.querySelectorAll('.context-menu-item');
+    expect(options.item(1).textContent).toContain('Remove all bookmarks');
+    (options.item(1) as HTMLElement).click();
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('redraws only bookmarks if they are the only thing to change', () => {
+    fixture.detectChanges();
+    const drawer = assertDefined(component.miniTimelineComponent?.drawer);
+    const drawBookmarksSpy = spyOn(drawer, 'drawBookmarks');
+    const drawSpy = spyOn(drawer, 'draw');
+
+    component.bookmarks = [timestamp10];
+    fixture.detectChanges();
+
+    expect(drawBookmarksSpy).toHaveBeenCalled();
+    expect(drawSpy).not.toHaveBeenCalled();
+  });
+
+  @Component({
+    selector: 'host-component',
+    template: `
+      <mini-timeline
+        [timelineData]="timelineData"
+        [currentTracePosition]="currentTracePosition"
+        [selectedTraces]="selectedTraces"
+        [initialZoom]="initialZoom"
+        [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
+        [bookmarks]="bookmarks"></mini-timeline>
+    `,
+  })
+  class TestHostComponent {
+    timelineData = new TimelineData();
+    currentTracePosition: TracePosition | undefined;
+    selectedTraces: TraceType[] = [];
+    initialZoom: TimeRange | undefined;
+    expandedTimelineScrollEvent: WheelEvent | undefined;
+    bookmarks: Timestamp[] = [];
+
+    @ViewChild(MiniTimelineComponent)
+    miniTimelineComponent: MiniTimelineComponent | undefined;
+  }
 });
