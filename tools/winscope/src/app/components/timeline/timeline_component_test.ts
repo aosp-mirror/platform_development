@@ -34,7 +34,6 @@ import {
   MatDrawerContent,
 } from 'app/components/bottomnav/bottom_drawer_component';
 import {TimelineData} from 'app/timeline_data';
-import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TimeRange} from 'common/time';
@@ -45,6 +44,7 @@ import {
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {DefaultTimelineRowComponent} from './expanded-timeline/default_timeline_row_component';

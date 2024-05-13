@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {TRACE_INFO} from 'app/trace_info';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';

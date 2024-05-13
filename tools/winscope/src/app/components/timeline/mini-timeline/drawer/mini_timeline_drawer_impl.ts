@@ -15,11 +15,11 @@
  */
 
 import {Color} from 'app/colors';
-import {TRACE_INFO} from 'app/trace_info';
 import {Point} from 'common/geometry_types';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
+import {TRACE_INFO} from 'trace/trace_info';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {CanvasMouseHandlerImpl} from './canvas_mouse_handler_impl';
 import {DraggableCanvasObject} from './draggable_canvas_object';

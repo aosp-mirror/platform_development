@@ -24,8 +24,8 @@ import {FileAndParser} from 'parsers/file_and_parser';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
-import {TRACE_INFO} from './trace_info';
 
 export class LoadedParsers {
   static readonly MAX_ALLOWED_TIME_GAP_BETWEEN_TRACES_NS = BigInt(
