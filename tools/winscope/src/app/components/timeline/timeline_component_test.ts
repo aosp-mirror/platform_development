@@ -193,15 +193,11 @@ describe('TimelineComponent', () => {
     const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
     const spyPrevEntry = spyOn(timelineComponent, 'moveToPreviousEntry');
 
-    timelineComponent.handleKeyboardEvent(
-      new KeyboardEvent('keydown', {key: 'ArrowRight'}),
-    );
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
     fixture.detectChanges();
     expect(spyNextEntry).not.toHaveBeenCalled();
 
-    timelineComponent.handleKeyboardEvent(
-      new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
-    );
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
     fixture.detectChanges();
     expect(spyPrevEntry).not.toHaveBeenCalled();
   });
@@ -508,7 +504,6 @@ describe('TimelineComponent', () => {
     testCurrentTimestampOnButtonClick(prevEntryButton, position90, 90n);
   });
 
-  //TODO(b/304982982): find a way to test via dom interactions, not calling listener directly
   it('performs expected action on arrow key press depending on input form focus', () => {
     loadSfWmTraces();
     const timelineComponent = assertDefined(component.timeline);
@@ -516,31 +511,26 @@ describe('TimelineComponent', () => {
     const spyNextEntry = spyOn(timelineComponent, 'moveToNextEntry');
     const spyPrevEntry = spyOn(timelineComponent, 'moveToPreviousEntry');
 
-    timelineComponent.handleKeyboardEvent(
-      new KeyboardEvent('keydown', {key: 'ArrowRight'}),
-    );
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowRight'}));
+    fixture.detectChanges();
     expect(spyNextEntry).toHaveBeenCalled();
 
     const formElement = htmlElement.querySelector('.time-input input');
     const focusInEvent = new FocusEvent('focusin');
     Object.defineProperty(focusInEvent, 'target', {value: formElement});
-    timelineComponent.handleFocusInEvent(focusInEvent);
+    document.dispatchEvent(focusInEvent);
     fixture.detectChanges();
 
-    timelineComponent.handleKeyboardEvent(
-      new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
-    );
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
     fixture.detectChanges();
     expect(spyPrevEntry).not.toHaveBeenCalled();
 
     const focusOutEvent = new FocusEvent('focusout');
     Object.defineProperty(focusOutEvent, 'target', {value: formElement});
-    timelineComponent.handleFocusOutEvent(focusOutEvent);
+    document.dispatchEvent(focusOutEvent);
     fixture.detectChanges();
 
-    timelineComponent.handleKeyboardEvent(
-      new KeyboardEvent('keydown', {key: 'ArrowLeft'}),
-    );
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}));
     fixture.detectChanges();
     expect(spyPrevEntry).toHaveBeenCalled();
   });

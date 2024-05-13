@@ -57,6 +57,7 @@ import {Transformer} from './transformer';
         <canvas
           #canvas
           id="mini-timeline-canvas"
+          (mousemove)="trackMousePos($event)"
           (contextmenu)="recordClickPosition($event)"
           [cdkContextMenuTriggerFor]="timeline_context_menu"
           #menuTrigger = "cdkContextMenuTriggerFor"
@@ -142,6 +143,7 @@ export class MiniTimelineComponent {
   }
 
   drawer: MiniTimelineDrawer | undefined = undefined;
+  private lastMousePosX: number | undefined;
   private lastMoves: WheelEvent[] = [];
   private lastRightClickTimeRange: TimeRange | undefined;
 
@@ -163,6 +165,9 @@ export class MiniTimelineComponent {
       transformer.untransform(clickRange.to),
     );
   }
+
+  private static readonly SLIDER_HORIZONTAL_STEP = 30;
+  private static readonly SENSITIVITY_FACTOR = 5;
 
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
@@ -231,6 +236,37 @@ export class MiniTimelineComponent {
     this.drawer?.draw();
   }
 
+  trackMousePos(event: MouseEvent) {
+    this.lastMousePosX = event.offsetX;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  async handleKeyboardEvent(event: KeyboardEvent) {
+    if (event.code === 'KeyA') {
+      this.updateSliderPosition(-MiniTimelineComponent.SLIDER_HORIZONTAL_STEP);
+    }
+    if (event.code === 'KeyD') {
+      this.updateSliderPosition(MiniTimelineComponent.SLIDER_HORIZONTAL_STEP);
+    }
+
+    if (event.code !== 'KeyW' && event.code !== 'KeyS') {
+      return;
+    }
+
+    const timelineData = assertDefined(this.timelineData);
+    const zoomRange = timelineData.getZoomRange();
+
+    let zoomTo = this.currentTracePosition?.timestamp;
+    if (this.lastMousePosX !== undefined) {
+      zoomTo = new Transformer(
+        zoomRange,
+        assertDefined(this.drawer).getUsableRange(),
+        assertDefined(timelineData.getTimestampConverter()),
+      ).untransform(this.lastMousePosX);
+    }
+    event.code === 'KeyW' ? this.zoomIn(zoomTo) : this.zoomOut(zoomTo);
+  }
+
   onZoomChanged(zoom: TimeRange) {
     const timelineData = assertDefined(this.timelineData);
     timelineData.setZoom(zoom);
@@ -245,12 +281,12 @@ export class MiniTimelineComponent {
 
   zoomIn(zoomOn?: Timestamp) {
     Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'in');
-    this.zoom({nominator: 3n, denominator: 4n}, zoomOn);
+    this.zoom({nominator: 6n, denominator: 7n}, zoomOn);
   }
 
   zoomOut(zoomOn?: Timestamp) {
     Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'out');
-    this.zoom({nominator: 5n, denominator: 4n}, zoomOn);
+    this.zoom({nominator: 8n, denominator: 7n}, zoomOn);
   }
 
   zoom(
@@ -337,7 +373,7 @@ export class MiniTimelineComponent {
     const moveDirection = this.getMoveDirection(event);
 
     if (
-      (event.target as any)?.id === 'mini-timeline-canvas' &&
+      (event.target as HTMLElement)?.id === 'mini-timeline-canvas' &&
       event.deltaY !== 0 &&
       moveDirection === 'y'
     ) {
@@ -473,7 +509,12 @@ export class MiniTimelineComponent {
   }
 
   private updateHorizontalScroll(event: WheelEvent) {
-    const scrollAmount = event.deltaX;
+    const scrollAmount =
+      event.deltaX / MiniTimelineComponent.SENSITIVITY_FACTOR;
+    this.updateSliderPosition(scrollAmount);
+  }
+
+  private updateSliderPosition(step: number) {
     const timelineData = assertDefined(this.timelineData);
     const fullRange = timelineData.getFullTimeRange();
     const zoomRange = timelineData.getZoomRange();
@@ -485,8 +526,9 @@ export class MiniTimelineComponent {
       assertDefined(timelineData.getTimestampConverter()),
     );
     const shiftAmount = transformer
-      .untransform(usableRange.from + scrollAmount)
+      .untransform(usableRange.from + step)
       .minus(zoomRange.from.getValueNs());
+
     let newFrom = zoomRange.from.add(shiftAmount.getValueNs());
     let newTo = zoomRange.to.add(shiftAmount.getValueNs());
 

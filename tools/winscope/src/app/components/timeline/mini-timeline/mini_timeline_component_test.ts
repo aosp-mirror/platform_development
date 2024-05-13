@@ -50,6 +50,8 @@ describe('MiniTimelineComponent', () => {
   const timestamp700 = TimestampConverterUtils.makeRealTimestamp(700n);
   const timestamp810 = TimestampConverterUtils.makeRealTimestamp(810n);
   const timestamp1000 = TimestampConverterUtils.makeRealTimestamp(1000n);
+  const timestamp2000 = TimestampConverterUtils.makeRealTimestamp(2000n);
+  const timestamp4000 = TimestampConverterUtils.makeRealTimestamp(4000n);
 
   const position800 = TracePosition.fromTimestamp(
     TimestampConverterUtils.makeRealTimestamp(800n),
@@ -92,7 +94,7 @@ describe('MiniTimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
     component.timelineData = timelineData;
-    expect(timelineData.getCurrentPosition()).toBeTruthy();
+    expect(timelineData.getCurrentPosition()).toBeDefined();
     component.currentTracePosition = timelineData.getCurrentPosition()!;
     component.selectedTraces = [TraceType.SURFACE_FLINGER];
   });
@@ -126,11 +128,10 @@ describe('MiniTimelineComponent', () => {
 
     fixture.detectChanges();
 
-    const zoomButton = htmlElement.querySelector(
-      'button#reset-zoom-btn',
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('button#reset-zoom-btn'),
     ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
-    assertDefined(zoomButton).click();
+    zoomButton.click();
 
     zoomRange = timelineData.getZoomRange();
     fullRange = timelineData.getFullTimeRange();
@@ -138,19 +139,15 @@ describe('MiniTimelineComponent', () => {
   });
 
   it('show zoom controls when zoomed out', () => {
-    const zoomControlDiv = htmlElement.querySelector('.zoom-control');
-    expect(zoomControlDiv).toBeTruthy();
-    expect(
-      window.getComputedStyle(assertDefined(zoomControlDiv)).visibility,
-    ).toBe('visible');
-
-    const zoomButton = htmlElement.querySelector(
-      'button#reset-zoom-btn',
-    ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(zoomButton)).visibility).toBe(
-      'visible',
+    const zoomControlDiv = assertDefined(
+      htmlElement.querySelector('.zoom-control'),
     );
+    expect(window.getComputedStyle(zoomControlDiv).visibility).toBe('visible');
+
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('button#reset-zoom-btn'),
+    ) as HTMLButtonElement;
+    expect(window.getComputedStyle(zoomButton).visibility).toBe('visible');
   });
 
   it('shows zoom controls when zoomed in', () => {
@@ -159,19 +156,15 @@ describe('MiniTimelineComponent', () => {
 
     fixture.detectChanges();
 
-    const zoomControlDiv = htmlElement.querySelector('.zoom-control');
-    expect(zoomControlDiv).toBeTruthy();
-    expect(
-      window.getComputedStyle(assertDefined(zoomControlDiv)).visibility,
-    ).toBe('visible');
-
-    const zoomButton = htmlElement.querySelector(
-      'button#reset-zoom-btn',
-    ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(zoomButton)).visibility).toBe(
-      'visible',
+    const zoomControlDiv = assertDefined(
+      htmlElement.querySelector('.zoom-control'),
     );
+    expect(window.getComputedStyle(zoomControlDiv).visibility).toBe('visible');
+
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('button#reset-zoom-btn'),
+    ) as HTMLButtonElement;
+    expect(window.getComputedStyle(zoomButton).visibility).toBe('visible');
   });
 
   it('loads with initial zoom', () => {
@@ -238,13 +231,10 @@ describe('MiniTimelineComponent', () => {
     assertDefined(component.miniTimelineComponent).onZoomChanged(initialZoom);
     fixture.detectChanges();
 
-    const slider = htmlElement.querySelector('.slider .handle');
-    expect(slider).toBeTruthy();
-    expect(window.getComputedStyle(assertDefined(slider)).visibility).toEqual(
-      'visible',
-    );
+    const slider = assertDefined(htmlElement.querySelector('.slider .handle'));
+    expect(window.getComputedStyle(slider).visibility).toEqual('visible');
 
-    dragElement(fixture, assertDefined(slider), 100, 8);
+    dragElement(fixture, slider, 100, 8);
 
     const finalZoom = timelineData.getZoomRange();
     expect(finalZoom).not.toBe(initialZoom);
@@ -272,29 +262,15 @@ describe('MiniTimelineComponent', () => {
 
     fixture.detectChanges();
 
-    const zoomButton = htmlElement.querySelector(
-      '#zoom-in-btn',
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('#zoom-in-btn'),
     ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
 
     for (let i = 0; i < 10; i++) {
       zoomButton.click();
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
-      expect(finalZoom).not.toBe(initialZoom);
-      expect(finalZoom.from.getValueNs()).toBeGreaterThanOrEqual(
-        Number(initialZoom.from.getValueNs()),
-      );
-      expect(finalZoom.to.getValueNs()).toBeLessThanOrEqual(
-        Number(initialZoom.to.getValueNs()),
-      );
-      expect(
-        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
-      ).toBeLessThan(
-        Number(
-          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
-        ),
-      );
+      checkZoomDifference(initialZoom, finalZoom);
 
       // center to get closer to cursor or stay on cursor
       const curCenter = finalZoom.from
@@ -340,29 +316,15 @@ describe('MiniTimelineComponent', () => {
 
     fixture.detectChanges();
 
-    const zoomButton = htmlElement.querySelector(
-      '#zoom-out-btn',
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('#zoom-out-btn'),
     ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
 
     for (let i = 0; i < 10; i++) {
       zoomButton.click();
       fixture.detectChanges();
       const finalZoom = timelineData.getZoomRange();
-      expect(finalZoom).not.toBe(initialZoom);
-      expect(finalZoom.from.getValueNs()).toBeLessThanOrEqual(
-        Number(initialZoom.from.getValueNs()),
-      );
-      expect(finalZoom.to.getValueNs()).toBeGreaterThanOrEqual(
-        Number(initialZoom.to.getValueNs()),
-      );
-      expect(
-        finalZoom.to.minus(finalZoom.from.getValueNs()).getValueNs(),
-      ).toBeGreaterThan(
-        Number(
-          initialZoom.to.minus(initialZoom.from.getValueNs()).getValueNs(),
-        ),
-      );
+      checkZoomDifference(finalZoom, initialZoom);
 
       // center to get closer to cursor or stay on cursor unless we reach the edge
       const curCenter = finalZoom.from
@@ -411,10 +373,9 @@ describe('MiniTimelineComponent', () => {
     timelineData.setPosition(position800);
     fixture.detectChanges();
 
-    const zoomButton = htmlElement.querySelector(
-      '#zoom-out-btn',
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('#zoom-out-btn'),
     ) as HTMLButtonElement;
-    expect(zoomButton).toBeTruthy();
 
     zoomButton.click();
     fixture.detectChanges();
@@ -671,6 +632,111 @@ describe('MiniTimelineComponent', () => {
     expect(drawBookmarksSpy).toHaveBeenCalled();
     expect(drawSpy).not.toHaveBeenCalled();
   });
+
+  it('zooms in/out on KeyW/KeyS press', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [
+        timestamp1000,
+        timestamp2000,
+        timestamp4000,
+      ])
+      .build();
+
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+
+    const initialZoom = new TimeRange(timestamp1000, timestamp2000);
+    component.initialZoom = initialZoom;
+    fixture.detectChanges();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyW'}));
+    fixture.detectChanges();
+
+    const zoomedIn = timelineData.getZoomRange();
+    checkZoomDifference(initialZoom, zoomedIn);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyS'}));
+    fixture.detectChanges();
+
+    const zoomedOut = timelineData.getZoomRange();
+    checkZoomDifference(zoomedOut, zoomedIn);
+  });
+
+  it('moves right/left on KeyD/KeyA press', () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.SURFACE_FLINGER, [
+        timestamp1000,
+        timestamp2000,
+        timestamp4000,
+      ])
+      .build();
+
+    assertDefined(component.timelineData).initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+
+    const initialZoom = new TimeRange(timestamp1000, timestamp2000);
+    component.initialZoom = initialZoom;
+    fixture.detectChanges();
+
+    while (timelineData.getZoomRange().to !== timestamp4000) {
+      document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyD'}));
+      fixture.detectChanges();
+      const zoomRange = timelineData.getZoomRange();
+      const increase =
+        zoomRange.from.getValueNs() - initialZoom.from.getValueNs();
+      expect(increase).toBeGreaterThan(0);
+      expect(zoomRange.to.getValueNs()).toEqual(
+        initialZoom.to.getValueNs() + increase,
+      );
+    }
+
+    // cannot move past end of trace
+    const finalZoom = timelineData.getZoomRange();
+    document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyD'}));
+    fixture.detectChanges();
+    expect(timelineData.getZoomRange()).toEqual(finalZoom);
+
+    while (timelineData.getZoomRange().from !== timestamp1000) {
+      document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA'}));
+      fixture.detectChanges();
+      const zoomRange = timelineData.getZoomRange();
+      const decrease =
+        finalZoom.from.getValueNs() - zoomRange.from.getValueNs();
+      expect(decrease).toBeGreaterThan(0);
+      expect(zoomRange.to.getValueNs()).toEqual(
+        finalZoom.to.getValueNs() - decrease,
+      );
+    }
+
+    // cannot move before start of trace
+    document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyA'}));
+    fixture.detectChanges();
+    expect(timelineData.getZoomRange()).toEqual(initialZoom);
+  });
+
+  function checkZoomDifference(
+    biggerRange: TimeRange,
+    smallerRange: TimeRange,
+  ) {
+    expect(biggerRange).not.toBe(smallerRange);
+    expect(smallerRange.from.getValueNs()).toBeGreaterThanOrEqual(
+      Number(biggerRange.from.getValueNs()),
+    );
+    expect(smallerRange.to.getValueNs()).toBeLessThanOrEqual(
+      Number(biggerRange.to.getValueNs()),
+    );
+    expect(
+      smallerRange.to.minus(smallerRange.from.getValueNs()).getValueNs(),
+    ).toBeLessThan(
+      Number(biggerRange.to.minus(biggerRange.from.getValueNs()).getValueNs()),
+    );
+  }
 
   @Component({
     selector: 'host-component',
