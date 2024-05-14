@@ -20,11 +20,16 @@ import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
 import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {CanvasMouseHandlerImpl} from './canvas_mouse_handler_impl';
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {DraggableCanvasObjectImpl} from './draggable_canvas_object_impl';
-import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
+import {
+  MiniCanvasDrawerData,
+  TimelineTrace,
+  TimelineTraces,
+} from './mini_canvas_drawer_data';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
 
@@ -36,6 +41,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
   private activePointer: DraggableCanvasObject;
+  private lastMousePoint: Point | undefined;
   private static readonly MARKER_CLICK_REGION_WIDTH = 2;
 
   constructor(
@@ -43,7 +49,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     private inputGetter: () => MiniTimelineDrawerInput,
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
-    private onUnhandledClick: (pos: Timestamp) => void,
+    private onUnhandledClick: (pos: Timestamp, trace?: TraceType) => void,
   ) {
     const ctx = canvas.getContext('2d');
 
@@ -56,6 +62,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const onUnhandledClickInternal = async (
       mousePoint: Point,
       button: number,
+      trace?: TraceType,
     ) => {
       if (button === MouseEventButton.SECONDARY) {
         return;
@@ -70,7 +77,10 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
           }) ?? mousePoint.x;
       }
 
-      this.onUnhandledClick(this.getInput().transformer.untransform(pointX));
+      this.onUnhandledClick(
+        this.getInput().transformer.untransform(pointX),
+        trace,
+      );
     };
     this.handler = new CanvasMouseHandlerImpl(
       this,
@@ -184,8 +194,8 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     return this.getInput().bookmarks;
   }
 
-  async getTimelineEntries(): Promise<TimelineEntries> {
-    return await this.getInput().getTimelineEntries();
+  async getTimelineTraces(): Promise<TimelineTraces> {
+    return await this.getInput().getTimelineTraces();
   }
 
   getPadding(): Padding {
@@ -209,6 +219,30 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     await this.drawTraceLines();
     this.drawBookmarks();
     this.activePointer.draw(this.ctx);
+    this.drawHoverCursor();
+  }
+
+  async updateHover(mousePoint: Point | undefined) {
+    this.lastMousePoint = mousePoint;
+    await this.draw();
+  }
+
+  async getTraceClicked(mousePoint: Point): Promise<TraceType | undefined> {
+    const timelineTraces = await this.getTimelineTraces();
+    const innerHeight = this.getInnerHeight();
+    const lineHeight = this.getLineHeight(timelineTraces, innerHeight);
+    let fromTop = this.getPadding().top + innerHeight - lineHeight;
+
+    for (const trace of timelineTraces.keys()) {
+      if (
+        this.pointWithinTimeline(mousePoint.y, fromTop, fromTop + lineHeight)
+      ) {
+        return trace;
+      }
+      fromTop -= this.fromTopStep(lineHeight);
+    }
+
+    return undefined;
   }
 
   private getPointerWidth() {
@@ -224,44 +258,111 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   }
 
   private async drawTraceLines() {
-    const timelineEntries = await this.getTimelineEntries();
+    const timelineTraces = await this.getTimelineTraces();
     const innerHeight = this.getInnerHeight();
-    const lineHeight =
-      innerHeight / (Math.max(timelineEntries.size - 10, 0) + 12);
-
+    const lineHeight = this.getLineHeight(timelineTraces, innerHeight);
     let fromTop = this.getPadding().top + innerHeight - lineHeight;
 
-    timelineEntries.forEach((entries, traceType) => {
-      this.ctx.globalAlpha = 0.7;
-      this.ctx.fillStyle = TRACE_INFO[traceType].color;
-      this.ctx.strokeStyle = 'blue';
-
-      for (const entry of entries.points) {
-        const width = 5;
-        this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
+    timelineTraces.forEach((timelineTrace, traceType) => {
+      if (
+        this.inputGetter().timelineData.getActiveViewTraceType() === traceType
+      ) {
+        this.fillActiveTimelineBackground(fromTop, lineHeight);
+      } else if (
+        this.lastMousePoint?.y &&
+        this.pointWithinTimeline(this.lastMousePoint?.y, fromTop, lineHeight)
+      ) {
+        this.fillHoverTimelineBackground(fromTop, lineHeight);
       }
 
-      for (const entry of entries.segments) {
-        const width = Math.max(entry.to - entry.from, 3);
-        this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
-      }
+      this.drawTraceEntries(traceType, timelineTrace, fromTop, lineHeight);
 
-      this.ctx.fillStyle = Color.ACTIVE_POINTER;
-      if (entries.activePoint) {
-        const entry = entries.activePoint;
-        const width = 5;
-        this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
-      }
-
-      if (entries.activeSegment) {
-        const entry = entries.activeSegment;
-        const width = Math.max(entry.to - entry.from, 3);
-        this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
-      }
-
-      this.ctx.globalAlpha = 1.0;
-
-      fromTop -= (lineHeight * 4) / 3;
+      fromTop -= this.fromTopStep(lineHeight);
     });
+  }
+
+  private drawTraceEntries(
+    traceType: TraceType,
+    timelineTrace: TimelineTrace,
+    fromTop: number,
+    lineHeight: number,
+  ) {
+    this.ctx.globalAlpha = 0.7;
+    this.ctx.fillStyle = TRACE_INFO[traceType].color;
+    this.ctx.strokeStyle = 'blue';
+
+    for (const entry of timelineTrace.points) {
+      const width = 5;
+      this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
+    }
+
+    for (const entry of timelineTrace.segments) {
+      const width = Math.max(entry.to - entry.from, 3);
+      this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+    }
+
+    this.ctx.fillStyle = Color.ACTIVE_POINTER;
+    if (timelineTrace.activePoint) {
+      const entry = timelineTrace.activePoint;
+      const width = 5;
+      this.ctx.fillRect(entry - width / 2, fromTop, width, lineHeight);
+    }
+
+    if (timelineTrace.activeSegment) {
+      const entry = timelineTrace.activeSegment;
+      const width = Math.max(entry.to - entry.from, 3);
+      this.ctx.fillRect(entry.from, fromTop, width, lineHeight);
+    }
+
+    this.ctx.globalAlpha = 1.0;
+  }
+
+  private drawHoverCursor() {
+    if (!this.lastMousePoint) {
+      return;
+    }
+    const hoverWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.lastMousePoint.x - hoverWidth / 2, 0);
+    this.ctx.lineTo(this.lastMousePoint.x + hoverWidth / 2, 0);
+    this.ctx.lineTo(this.lastMousePoint.x + hoverWidth / 2, this.getHeight());
+    this.ctx.lineTo(this.lastMousePoint.x - hoverWidth / 2, this.getHeight());
+    this.ctx.closePath();
+
+    this.ctx.globalAlpha = 0.4;
+    this.ctx.fillStyle = Color.ACTIVE_POINTER;
+    this.ctx.fill();
+    this.ctx.globalAlpha = 1.0;
+  }
+
+  private fromTopStep(lineHeight: number): number {
+    return (lineHeight * 4) / 3;
+  }
+
+  private fillActiveTimelineBackground(fromTop: number, lineHeight: number) {
+    this.ctx.globalAlpha = 1.0;
+    this.ctx.fillStyle = '#eeeff0';
+    this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
+  }
+
+  private fillHoverTimelineBackground(fromTop: number, lineHeight: number) {
+    this.ctx.globalAlpha = 1.0;
+    this.ctx.fillStyle = '#E8F0FE';
+    this.ctx.fillRect(0, fromTop, this.getUsableRange().to, lineHeight);
+  }
+
+  private getLineHeight(
+    timelineTraces: TimelineTraces,
+    innerHeight: number,
+  ): number {
+    return innerHeight / (Math.max(timelineTraces.size - 10, 0) + 12);
+  }
+
+  private pointWithinTimeline(
+    point: number,
+    from: number,
+    to: number,
+  ): boolean {
+    return point > from && point <= from + to;
   }
 }

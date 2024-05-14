@@ -133,6 +133,7 @@ export class MiniTimelineComponent {
     range: TimeRange;
     rangeContainsBookmark: boolean;
   }>();
+  @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
 
   @ViewChild('miniTimelineWrapper', {static: false})
   miniTimelineWrapper: ElementRef | undefined;
@@ -179,12 +180,19 @@ export class MiniTimelineComponent {
       );
     };
 
+    const onClickCallback = (timestamp: Timestamp, trace?: TraceType) => {
+      if (trace !== undefined) {
+        this.onTraceClicked.emit(trace);
+      }
+      updateTimestampCallback(timestamp);
+    };
+
     this.drawer = new MiniTimelineDrawerImpl(
       this.getCanvas(),
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),
       updateTimestampCallback,
-      updateTimestampCallback,
+      onClickCallback,
     );
 
     if (this.initialZoom !== undefined) {
