@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 export interface UserOptions {
-  [key: string]: {
-    name: string;
-    enabled: boolean;
-    tooltip?: string;
-    isUnavailable?: boolean;
-  };
+  [key: string]: UserOption;
+}
+
+export interface UserOption {
+  name: string;
+  enabled: boolean;
+  tooltip?: string;
+  isUnavailable?: boolean;
 }
