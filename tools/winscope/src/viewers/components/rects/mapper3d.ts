@@ -72,13 +72,13 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor(times = 1) {
-    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * times;
+  increaseZoomFactor(ratio = 1) {
+    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor(times = 1) {
-    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * times;
+  decreaseZoomFactor(ratio = 1) {
+    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * ratio;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 

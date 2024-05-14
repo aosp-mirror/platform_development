@@ -101,13 +101,7 @@ export class TimestampConverter
     private timezoneInfo: TimezoneInfo,
     private realToMonotonicTimeOffsetNs?: bigint,
     private realToBootTimeOffsetNs?: bigint,
-  ) {
-    if (timezoneInfo.utcOffsetMs !== undefined) {
-      this.utcOffset.initialize(
-        BigInt(timezoneInfo.utcOffsetMs * TIME_UNIT_TO_NANO.ms),
-      );
-    }
-  }
+  ) {}
 
   initializeUTCOffset(timestamp: Timestamp) {
     if (
@@ -324,5 +318,4 @@ export class TimestampConverter
 export const UTC_TIMEZONE_INFO = {
   timezone: 'UTC',
   locale: 'en-US',
-  utcOffsetMs: 0,
 };

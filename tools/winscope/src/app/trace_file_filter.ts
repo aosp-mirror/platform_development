@@ -99,15 +99,7 @@ export class TraceFileFilter {
       timezoneStartIndex,
     );
 
-    let utcOffsetMs = undefined;
-    const timeOffsetIndex = fileData.indexOf('[persist.sys.time.offset]');
-    if (timeOffsetIndex !== -1) {
-      utcOffsetMs = Number(
-        this.extractValueFromRawBugReport(fileData, timeOffsetIndex),
-      );
-    }
-
-    return {timezone, locale: 'en-US', utcOffsetMs};
+    return {timezone, locale: 'en-US'};
   }
 
   private extractValueFromRawBugReport(

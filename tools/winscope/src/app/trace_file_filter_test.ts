@@ -148,28 +148,6 @@ describe('TraceFileFilter', () => {
       expect(result.timezoneInfo).toEqual({
         timezone: 'Asia/Kolkata',
         locale: 'en-US',
-        utcOffsetMs: 19800000,
-      });
-      expect(warnings).toEqual([]);
-    });
-
-    it('identifies timezone information from bugreport codename file without time offset', async () => {
-      const legacyFile = makeTraceFile(
-        'proto/window_CRITICAL.proto',
-        bugreportArchive,
-      );
-      const bugreportFiles = [
-        await makeBugreportMainEntryTraceFile(),
-        await makeBugreportCodenameNoTimeOffsetTraceFile(),
-        legacyFile,
-      ];
-      const result = await filter.filter(bugreportFiles, notificationListener);
-      expect(result.legacy).toEqual([legacyFile]);
-      expect(result.perfetto).toBeUndefined();
-      expect(result.timezoneInfo).toEqual({
-        timezone: 'Asia/Kolkata',
-        locale: 'en-US',
-        utcOffsetMs: undefined,
       });
       expect(warnings).toEqual([]);
     });
@@ -280,14 +258,6 @@ describe('TraceFileFilter', () => {
     const file = await UnitTestUtils.getFixtureFile(
       'traces/winscope.zip',
       'FS/data/misc/wmtrace/winscope.zip',
-    );
-    return new TraceFile(file, bugreportArchive);
-  }
-
-  async function makeBugreportCodenameNoTimeOffsetTraceFile(): Promise<TraceFile> {
-    const file = await UnitTestUtils.getFixtureFile(
-      'bugreports/bugreport-codename_beta-no-time-offset-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
     );
     return new TraceFile(file, bugreportArchive);
   }

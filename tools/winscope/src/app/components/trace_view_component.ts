@@ -18,6 +18,7 @@ import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {
   TabbedViewSwitched,
   WinscopeEvent,
@@ -221,6 +222,7 @@ export class TraceViewComponent
 
     this.currentActiveTab = tab;
 
+    Analytics.Navigation.logTabSwitched(TRACE_INFO[tab.view.traceType].name);
     await this.emitAppEvent(new TabbedViewSwitched(tab.view));
   }
 }

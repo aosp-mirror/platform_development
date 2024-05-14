@@ -275,17 +275,17 @@ export class MiniTimelineComponent {
   }
 
   resetZoom() {
-    Analytics.Navigation.logZoom('reset');
+    Analytics.Navigation.logZoom('reset', 'timeline');
     this.onZoomChanged(assertDefined(this.timelineData).getFullTimeRange());
   }
 
   zoomIn(zoomOn?: Timestamp) {
-    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'in');
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'timeline', 'in');
     this.zoom({nominator: 6n, denominator: 7n}, zoomOn);
   }
 
   zoomOut(zoomOn?: Timestamp) {
-    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'out');
+    Analytics.Navigation.logZoom(this.getZoomSource(zoomOn), 'timeline', 'out');
     this.zoom({nominator: 8n, denominator: 7n}, zoomOn);
   }
 

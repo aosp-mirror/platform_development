@@ -21,13 +21,125 @@ import {TraceType} from 'trace/trace_type';
 
 /* eslint-disable no-undef */
 export class Analytics {
+  private static GLOBAL_EXCEPTION = 'global_exception';
+  private static DARK_MODE_ENABLED = 'dark_mode_enabled';
+  private static DOCUMENTATION_OPENED = 'documentation_opened';
+  private static BUGANIZER_OPENED = 'buganizer_opened';
+  private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
+  private static PROPERTIES_SETTINGS = 'properties_settings';
+  private static RECT_SETTINGS = 'rect_settings';
+  private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TIME_COPIED = 'time_copied';
+  private static TIME_INPUT = 'time_input';
+  private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
+  private static TRACE_TIMELINE_DESELECTED = 'trace_timeline_deselected';
   private static TRACING_LOADED_EVENT = 'tracing_trace_loaded';
   private static TRACING_COLLECT_DUMP = 'tracing_collect_dump';
   private static TRACING_COLLECT_TRACE = 'tracing_collect_trace';
   private static TRACING_OPEN_FROM_ABT = 'tracing_from_abt';
   private static USER_WARNING = 'user_warning';
-  private static GLOBAL_EXCEPTION = 'global_exception';
+
+  static Error = class {
+    static logGlobalException(description: string) {
+      Analytics.doLogEvent(Analytics.GLOBAL_EXCEPTION, {
+        description,
+      } as Gtag.CustomParams);
+    }
+  };
+
+  static Help = class {
+    static logDocumentationOpened() {
+      Analytics.doLogEvent(Analytics.DOCUMENTATION_OPENED);
+    }
+
+    static logBuganizerOpened() {
+      Analytics.doLogEvent(Analytics.BUGANIZER_OPENED);
+    }
+  };
+
+  static Settings = class {
+    static logDarkModeEnabled() {
+      Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
+    }
+  };
+
+  static Navigation = class {
+    static logExpandedTimelineOpened() {
+      Analytics.doLogEvent(Analytics.EXPANDED_TIMELINE_OPENED);
+    }
+
+    static logHierarchySettingsChanged(
+      option: string,
+      value: boolean,
+      traceType: string,
+    ) {
+      Analytics.doLogEvent(Analytics.HIERARCHY_SETTINGS, {
+        option,
+        value,
+        traceType,
+      } as Gtag.CustomParams);
+    }
+
+    static logPropertiesSettingsChanged(
+      option: string,
+      value: boolean,
+      traceType: string,
+    ) {
+      Analytics.doLogEvent(Analytics.PROPERTIES_SETTINGS, {
+        option,
+        value,
+        traceType,
+      } as Gtag.CustomParams);
+    }
+
+    static logRectSettingsChanged(
+      option: 'only visible' | 'z spacing',
+      value: string | number | boolean,
+    ) {
+      Analytics.doLogEvent(Analytics.RECT_SETTINGS, {
+        option,
+        value,
+      } as Gtag.CustomParams);
+    }
+
+    static logTabSwitched(tabTraceType: string) {
+      Analytics.doLogEvent(Analytics.TRACE_TAB_SWITCHED, {
+        type: tabTraceType,
+      } as Gtag.CustomParams);
+    }
+
+    static logTimeCopied(type: 'ns' | 'human') {
+      Analytics.doLogEvent(Analytics.TIME_COPIED, {
+        type,
+      } as Gtag.CustomParams);
+    }
+
+    static logTimeInput(type: 'ns' | 'human') {
+      Analytics.doLogEvent(Analytics.TIME_INPUT, {
+        type,
+      } as Gtag.CustomParams);
+    }
+
+    static logTraceTimelineDeselected(type: string) {
+      Analytics.doLogEvent(Analytics.TRACE_TIMELINE_DESELECTED, {
+        type,
+      } as Gtag.CustomParams);
+    }
+
+    static logZoom(
+      type: 'scroll' | 'button' | 'reset',
+      component: 'rects' | 'timeline',
+      direction?: 'in' | 'out',
+    ) {
+      Analytics.doLogEvent(Analytics.NAVIGATION_ZOOM_EVENT, {
+        direction,
+        component,
+        type,
+      } as Gtag.CustomParams);
+    }
+  };
 
   static Tracing = class {
     static logTraceLoaded(parser: Parser<object>) {
@@ -56,31 +168,15 @@ export class Analytics {
     static logOpenFromABT() {
       Analytics.doLogEvent(Analytics.TRACING_OPEN_FROM_ABT);
     }
-  };
 
-  static Navigation = class {
-    static logZoom(
-      type: 'scroll' | 'button' | 'reset',
-      direction?: 'in' | 'out',
-    ) {
-      Analytics.doLogEvent(Analytics.NAVIGATION_ZOOM_EVENT, {
-        direction,
-        type,
-      } as Gtag.CustomParams);
+    static logRefreshDumps() {
+      Analytics.doLogEvent(Analytics.REFRESH_DUMPS);
     }
   };
 
   static UserNotification = class {
     static logUserWarning(description: string) {
       Analytics.doLogEvent(Analytics.USER_WARNING, {
-        description,
-      } as Gtag.CustomParams);
-    }
-  };
-
-  static Error = class {
-    static logGlobalException(description: string) {
-      Analytics.doLogEvent(Analytics.GLOBAL_EXCEPTION, {
         description,
       } as Gtag.CustomParams);
     }
