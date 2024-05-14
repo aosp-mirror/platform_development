@@ -32,10 +32,10 @@ import {
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
   private static readonly RECT_COLOR_HIGHLIGHTED_LIGHT_MODE = new THREE.Color(
-    0x5f718a,
+    0xd2e3fc, // Keep in sync with :not(.dark-mode) --selected-element-color in material-theme.scss
   );
   private static readonly RECT_COLOR_HIGHLIGHTED_DARK_MODE = new THREE.Color(
-    0x8ea9cf,
+    0x5f718a, // Keep in sync with .dark-mode --selected-element-color in material-theme.scss
   );
   private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
   private static readonly RECT_EDGE_COLOR = 0x000000;
