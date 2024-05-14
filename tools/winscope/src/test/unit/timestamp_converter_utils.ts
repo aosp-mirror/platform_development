@@ -14,55 +14,57 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/time';
+import {Timestamp, TimezoneInfo} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 
-export class TimestampConverterUtils {
-  static readonly ASIA_TIMEZONE_INFO = {
+class TimestampConverterTestUtils {
+  readonly ASIA_TIMEZONE_INFO: TimezoneInfo = {
     timezone: 'Asia/Kolkata',
     locale: 'en-US',
-    utcOffsetMs: 19800000,
   };
-  static readonly UTC_TIMEZONE_INFO = {
+  readonly UTC_TIMEZONE_INFO: TimezoneInfo = {
     timezone: 'UTC',
     locale: 'en-US',
-    utcOffsetMs: 0,
   };
 
-  static readonly TIMESTAMP_CONVERTER_WITH_UTC_OFFSET = new TimestampConverter(
-    TimestampConverterUtils.ASIA_TIMEZONE_INFO,
+  readonly TIMESTAMP_CONVERTER = new TimestampConverter(
+    this.UTC_TIMEZONE_INFO,
     0n,
     0n,
   );
 
-  static readonly TIMESTAMP_CONVERTER = new TimestampConverter(
-    TimestampConverterUtils.UTC_TIMEZONE_INFO,
+  readonly TIMESTAMP_CONVERTER_WITH_UTC_OFFSET = new TimestampConverter(
+    this.ASIA_TIMEZONE_INFO,
     0n,
     0n,
   );
 
-  private static readonly TIMESTAMP_CONVERTER_NO_RTE_OFFSET =
-    new TimestampConverter({
-      timezone: 'UTC',
-      locale: 'en-US',
-      utcOffsetMs: 0,
-    });
+  private readonly TIMESTAMP_CONVERTER_NO_RTE_OFFSET = new TimestampConverter({
+    timezone: 'UTC',
+    locale: 'en-US',
+  });
 
-  static makeRealTimestamp(valueNs: bigint): Timestamp {
-    return TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromRealNs(
+  constructor() {
+    this.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.initializeUTCOffset(
+      this.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(0n),
+    );
+  }
+
+  makeRealTimestamp(valueNs: bigint): Timestamp {
+    return this.TIMESTAMP_CONVERTER.makeTimestampFromRealNs(valueNs);
+  }
+
+  makeRealTimestampWithUTCOffset(valueNs: bigint): Timestamp {
+    return this.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
       valueNs,
     );
   }
 
-  static makeRealTimestampWithUTCOffset(valueNs: bigint): Timestamp {
-    return TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET.makeTimestampFromRealNs(
-      valueNs,
-    );
-  }
-
-  static makeElapsedTimestamp(valueNs: bigint): Timestamp {
-    return TimestampConverterUtils.TIMESTAMP_CONVERTER_NO_RTE_OFFSET.makeTimestampFromMonotonicNs(
+  makeElapsedTimestamp(valueNs: bigint): Timestamp {
+    return this.TIMESTAMP_CONVERTER_NO_RTE_OFFSET.makeTimestampFromMonotonicNs(
       valueNs,
     );
   }
 }
+
+export const TimestampConverterUtils = new TimestampConverterTestUtils();

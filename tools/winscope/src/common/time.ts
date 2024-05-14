@@ -29,7 +29,6 @@ export class TimeRange {
 export interface TimezoneInfo {
   timezone: string;
   locale: string;
-  utcOffsetMs: number | undefined;
 }
 
 export interface TimestampFormatter {
