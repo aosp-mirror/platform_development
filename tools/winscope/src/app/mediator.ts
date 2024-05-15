@@ -223,6 +223,10 @@ export class Mediator {
       this.timelineData.setActiveViewTraceType(event.traceType);
       await this.timelineComponent?.onWinscopeEvent(event);
     });
+
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      await this.timelineComponent?.onWinscopeEvent(event);
+    });
   }
 
   private async loadFiles(files: File[], source: FilesSource) {

@@ -39,6 +39,7 @@ export class MiniTimelineDrawerInput {
     public traces: Traces,
     public timelineData: TimelineData,
     public bookmarks: Timestamp[],
+    public isDarkMode: boolean,
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {

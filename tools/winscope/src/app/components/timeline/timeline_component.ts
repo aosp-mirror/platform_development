@@ -233,6 +233,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
             [bookmarks]="bookmarks"
+            [store]="store"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
             (onRemoveAllBookmarks)="removeAllBookmarks()"
@@ -624,6 +625,13 @@ export class TimelineComponent
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
       await this.miniTimeline?.drawer?.draw();
       this.activeViewTraceType = event.traceType;
+    });
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      const activeTraceType = this.timelineData?.getActiveViewTraceType();
+      if (activeTraceType === undefined) {
+        return;
+      }
+      await this.miniTimeline?.drawer?.draw();
     });
   }
 
