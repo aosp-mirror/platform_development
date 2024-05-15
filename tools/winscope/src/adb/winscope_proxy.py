@@ -61,7 +61,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '1.4.0'
+VERSION = '2.0.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -188,29 +188,6 @@ class TraceTarget:
         self.trace_stop = trace_stop
 
 
-IME_TRACE_START_COMMAND = f"""
-if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
-    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
-data_sources: {{
-    config {{
-        name: "android.inputmethod"
-    }}
-}}
-EOF
-    echo 'IME tracing (perfetto) configured to start along the other perfetto traces'
-else
-    su root ime tracing start
-    echo "IME tracing (legacy) started."
-fi
-"""
-IME_TRACE_STOP_COMMAND = """
-if ! is_flag_set windowing_tools/android.tracing.perfetto_ime; then
-    su root ime tracing stop >/dev/null 2>&1
-    echo "IME tracing (legacy) stopped."
-fi
-"""
-
-
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "view_capture_trace": TraceTarget(
@@ -314,20 +291,31 @@ if ! is_perfetto_data_source_available android.protolog && \
 fi
         """
     ),
-    "ime_trace_clients": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
-        IME_TRACE_START_COMMAND,
-        IME_TRACE_STOP_COMMAND,
-    ),
-   "ime_trace_service": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
-        IME_TRACE_START_COMMAND,
-        IME_TRACE_STOP_COMMAND,
-    ),
-    "ime_trace_managerservice": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
-        IME_TRACE_START_COMMAND,
-        IME_TRACE_STOP_COMMAND,
+    "ime": TraceTarget(
+        [WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
+         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
+         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice")],
+         f"""
+if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.inputmethod"
+    }}
+}}
+EOF
+    echo 'IME tracing (perfetto) configured to start along the other perfetto traces'
+else
+    su root ime tracing start
+    echo "IME tracing (legacy) started."
+fi
+""",
+    """
+if ! is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    su root ime tracing stop >/dev/null 2>&1
+    echo "IME tracing (legacy) stopped."
+fi
+"""
     ),
     "wayland_trace": TraceTarget(
         WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),

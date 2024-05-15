@@ -435,19 +435,16 @@ export class AppComponent implements WinscopeEventListener {
       {
         window_dump: {
           name: 'Window Manager',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         layers_dump: {
           name: 'Surface Flinger',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         screenshot: {
           name: 'Screenshot',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
