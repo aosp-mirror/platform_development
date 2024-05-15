@@ -30,6 +30,7 @@ import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extens
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
 import {TracePipeline} from 'app/trace_pipeline';
+import {AppStorage} from 'common/app_storage';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
 import {PersistentStore} from 'common/persistent_store';
@@ -50,7 +51,6 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {
@@ -424,7 +424,7 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     this.traceConfigStorage =
-      globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+      globalConfig.MODE === 'PROD' ? localStorage : new AppStorage();
 
     this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',

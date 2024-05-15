@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export class MockStorage implements Storage {
+export class AppStorage implements Storage {
   private store: {[key: string]: string} = {};
 
   [name: string]: any;

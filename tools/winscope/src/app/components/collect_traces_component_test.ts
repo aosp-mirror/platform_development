@@ -23,9 +23,9 @@ import {MatListModule} from '@angular/material/list';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {MockStorage} from 'test/unit/mock_storage';
 import {
   TraceConfigurationMap,
   TRACES,
@@ -67,7 +67,7 @@ describe('CollectTracesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.isAdbProxy = true;
-    component.storage = new MockStorage();
+    component.storage = new AppStorage();
     component.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
       TRACES['default'],
