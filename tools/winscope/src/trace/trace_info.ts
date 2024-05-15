@@ -111,6 +111,13 @@ export const TRACE_INFO: TraceInfoMap = {
     downloadArchiveDir: 'sysui',
     legacyExt: '.winscope',
   },
+  [TraceType.VIEW_CAPTURE]: {
+    name: 'View Capture',
+    icon: VIEW_CAPTURE_ICON,
+    color: '#137333',
+    downloadArchiveDir: 'vc',
+    legacyExt: '.vc',
+  },
   [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: {
     name: 'View Capture - Nexuslauncher',
     icon: VIEW_CAPTURE_ICON,

@@ -150,7 +150,7 @@ export class Presenter {
             this.previousEntry == null;
         }
 
-        this.uiData = new UiData();
+        this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 

@@ -33,7 +33,7 @@ export class ImeUiData {
   hierarchyTableProperties: TableProperties | undefined;
   additionalProperties: ImeAdditionalProperties | undefined;
 
-  constructor(dependencies?: TraceType[]) {
-    this.dependencies = dependencies ?? [];
+  constructor(dependencies: TraceType[]) {
+    this.dependencies = dependencies;
   }
 }
