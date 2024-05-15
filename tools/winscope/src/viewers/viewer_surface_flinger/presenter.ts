@@ -163,7 +163,7 @@ export class Presenter {
             this.previousEntry === undefined;
         }
 
-        this.uiData = new UiData();
+        this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
