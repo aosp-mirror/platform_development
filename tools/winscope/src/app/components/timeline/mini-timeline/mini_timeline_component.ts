@@ -217,11 +217,7 @@ export class MiniTimelineComponent {
         this.updateHorizontalScroll(event);
       }
     } else if (this.drawer !== undefined) {
-      if (changes['bookmarks'] && Object.keys(changes).length === 1) {
-        this.drawer.drawBookmarks();
-      } else {
-        this.drawer.draw();
-      }
+      this.drawer.draw();
     }
   }
 
