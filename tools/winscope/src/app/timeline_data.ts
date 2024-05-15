@@ -156,6 +156,10 @@ export class TimelineData {
     this.activeViewTraceType = type;
   }
 
+  getActiveViewTraceType() {
+    return this.activeViewTraceType;
+  }
+
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');

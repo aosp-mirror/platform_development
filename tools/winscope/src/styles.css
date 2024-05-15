@@ -90,5 +90,5 @@ body.dark-mode button.mat-flat-button.mat-primary {
 }
 
 .context-menu-item:hover {
-  background-color: var(--context-menu-hover);
+  background-color: var(--hover-element-color);
 }

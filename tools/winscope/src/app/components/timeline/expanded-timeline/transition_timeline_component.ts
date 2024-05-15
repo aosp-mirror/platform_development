@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {TimelineUtils} from 'app/components/timeline/timeline_utils';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -41,8 +32,10 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
       class="transition-timeline"
       matTooltip="Some or all transitions will not be rendered in timeline due to unknown dispatch time"
       [matTooltipDisabled]="shouldNotRenderEntries.length === 0"
+      [style.background-color]="getBackgroundColor()"
+      (click)="onTimelineClick($event)"
       #wrapper>
-      <canvas #canvas></canvas>
+      <canvas id="canvas" #canvas></canvas>
     </div>
   `,
   styles: [
@@ -50,25 +43,17 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
       .transition-timeline {
         height: 4rem;
       }
+      .transition-timeline:hover {
+        background-color: var(--hover-element-color);
+        cursor: pointer;
+      }
     `,
   ],
 })
 export class TransitionTimelineComponent extends AbstractTimelineRowComponent<PropertyTreeNode> {
-  @Input() color = '#AF5CF7';
+  @Input() selectedEntry: TraceEntry<PropertyTreeNode> | undefined;
   @Input() trace: Trace<PropertyTreeNode> | undefined;
   @Input() traceEntries: PropertyTreeNode[] | undefined;
-  @Input() selectedEntry: TraceEntry<PropertyTreeNode> | undefined;
-  @Input() selectionRange: TimeRange | undefined;
-  @Input() timestampConverter: ComponentTimestampConverter | undefined;
-
-  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
-
-  @ViewChild('canvas', {static: false}) override canvasRef:
-    | ElementRef
-    | undefined;
-  @ViewChild('wrapper', {static: false}) override wrapperRef:
-    | ElementRef
-    | undefined;
 
   hoveringEntry?: TraceEntry<PropertyTreeNode>;
   rowsToUse = new Map<number, number>();

@@ -14,28 +14,19 @@
  * limitations under the License.
  */
 
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {Rect} from 'common/rect';
-import {TimeRange, Timestamp} from 'common/time';
-import {ComponentTimestampConverter} from 'common/timestamp_converter';
+import {Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
-import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 
 @Component({
   selector: 'single-timeline',
   template: `
-    <div class="single-timeline" #wrapper>
-      <canvas #canvas></canvas>
+    <div class="single-timeline" (click)="onTimelineClick($event)" [style.background-color]="getBackgroundColor()" #wrapper>
+      <canvas id="canvas" #canvas></canvas>
     </div>
   `,
   styles: [
@@ -44,24 +35,16 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
         height: 2rem;
         padding: 1rem 0;
       }
+      .single-timeline:hover {
+        background-color: var(--hover-element-color);
+        cursor: pointer;
+      }
     `,
   ],
 })
 export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}> {
-  @Input() color = '#AF5CF7';
-  @Input() trace: Trace<{}> | undefined;
   @Input() selectedEntry: TraceEntry<{}> | undefined;
-  @Input() selectionRange: TimeRange | undefined;
-  @Input() timestampConverter: ComponentTimestampConverter | undefined;
-
-  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
-
-  @ViewChild('canvas', {static: false}) override canvasRef:
-    | ElementRef
-    | undefined;
-  @ViewChild('wrapper', {static: false}) override wrapperRef:
-    | ElementRef
-    | undefined;
+  @Input() trace: Trace<{}> | undefined;
 
   hoveringEntry?: Timestamp;
 
