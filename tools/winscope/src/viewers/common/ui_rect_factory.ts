@@ -48,6 +48,7 @@ class UiRectFactory {
           ),
         )
         .setDepth(traceRect.depth)
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }
@@ -74,6 +75,7 @@ class UiRectFactory {
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(traceRect.isVisible)
         .setDepth(assertDefined(traceRect.depth))
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }

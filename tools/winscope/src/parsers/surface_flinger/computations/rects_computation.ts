@@ -77,6 +77,12 @@ class RectSfFactory {
     const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
     const boundsRect = Rect.from(bounds);
 
+    let opacity = layer
+      .getEagerPropertyByName('color')
+      ?.getChildByName('a')
+      ?.getValue();
+    if (isVisible && opacity === undefined) opacity = 0;
+
     return new TraceRectBuilder()
       .setX(boundsRect.x)
       .setY(boundsRect.y)
@@ -100,6 +106,7 @@ class RectSfFactory {
       .setIsDisplay(false)
       .setIsVirtual(false)
       .setDepth(absoluteZ)
+      .setOpacity(opacity)
       .build();
   }
 }

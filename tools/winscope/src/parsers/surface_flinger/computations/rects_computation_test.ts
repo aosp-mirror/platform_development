@@ -75,6 +75,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             zOrderPath: [0, 2],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -94,6 +95,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(0)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -126,6 +128,7 @@ describe('RectsComputation', () => {
         .setDepth(2)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -161,6 +164,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -175,6 +179,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -194,6 +199,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -210,6 +216,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(1)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -322,6 +329,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0, 1],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -336,6 +344,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 2, bottom: 2},
             zOrderPath: [0, 0, 0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -355,6 +364,7 @@ describe('RectsComputation', () => {
         .setDepth(1)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -371,6 +381,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -406,6 +417,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0, 1],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -420,6 +432,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 2, bottom: 2},
             zOrderPath: [0, 1, 0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -439,6 +452,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -455,6 +469,7 @@ describe('RectsComputation', () => {
         .setDepth(1)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),

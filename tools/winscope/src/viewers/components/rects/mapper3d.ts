@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {
@@ -156,6 +157,12 @@ class Mapper3D {
     );
   }
 
+  isShadedByOpacity(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) === ShadingMode.OPACITY
+    );
+  }
+
   private compareDepth(a: UiRect, b: UiRect): number {
     return a.depth > b.depth ? -1 : 1;
   }
@@ -227,8 +234,9 @@ class Mapper3D {
 
       let darkFactor = 0;
       if (rect2d.isVisible) {
-        darkFactor =
-          (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
+        darkFactor = this.isShadedByOpacity()
+          ? assertDefined(rect2d.opacity)
+          : (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
       } else {
         darkFactor =
           (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
@@ -268,9 +276,15 @@ class Mapper3D {
       return ColorType.EMPTY;
     }
     if (rect2d.hasContent === true) {
+      if (this.isShadedByOpacity()) {
+        return ColorType.HAS_CONTENT_AND_OPACITY;
+      }
       return ColorType.HAS_CONTENT;
     }
     if (rect2d.isVisible) {
+      if (this.isShadedByOpacity()) {
+        return ColorType.VISIBLE_WITH_OPACITY;
+      }
       return ColorType.VISIBLE;
     }
     return ColorType.NOT_VISIBLE;

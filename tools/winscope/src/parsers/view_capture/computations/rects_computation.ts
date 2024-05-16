@@ -52,6 +52,8 @@ class RectVcFactory {
       node.getEagerPropertyByName('height'),
     ).getValue();
 
+    const nodeAlpha = node.getEagerPropertyByName('alpha')?.getValue() ?? 0;
+
     const rectLeft =
       leftShift +
       (nodeLeft + nodeTranslationX) * scaleX +
@@ -76,6 +78,7 @@ class RectVcFactory {
       .setIsDisplay(false)
       .setIsVirtual(false)
       .setDepth(depth * RectVcFactory.DEPTH_MAGNIFICATION)
+      .setOpacity(nodeAlpha)
       .build();
 
     return rect;

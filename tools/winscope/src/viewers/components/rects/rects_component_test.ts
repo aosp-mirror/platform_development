@@ -255,15 +255,23 @@ describe('RectsComponent', () => {
     fixture.detectChanges();
 
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
+    updateShadingMode(ShadingMode.WIRE_FRAME, ShadingMode.OPACITY);
 
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(3);
     const sceneGradient = assertDefined(spy.calls.first().args.at(0));
     const sceneWireFrame = assertDefined(spy.calls.argsFor(1).at(0));
+    const sceneOpacity = assertDefined(spy.calls.mostRecent().args.at(0));
+
     expect(sceneGradient.rects[0].colorType).toEqual(ColorType.VISIBLE);
     expect(sceneGradient.rects[0].darkFactor).toEqual(1);
 
     expect(sceneWireFrame.rects[0].colorType).toEqual(ColorType.EMPTY);
     expect(sceneWireFrame.rects[0].darkFactor).toEqual(1);
+
+    expect(sceneOpacity.rects[0].colorType).toEqual(
+      ColorType.VISIBLE_WITH_OPACITY,
+    );
+    expect(sceneOpacity.rects[0].darkFactor).toEqual(0.5);
   });
 
   it('uses stored rects view settings', () => {
@@ -451,6 +459,7 @@ describe('RectsComponent', () => {
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)
+      .setOpacity(0.5)
       .build();
   }
 
@@ -473,7 +482,11 @@ describe('RectsComponent', () => {
     displays: DisplayIdentifier[] = [];
     miniRects: UiRect[] = [];
     isStackBased = false;
-    shadingModes = [ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME];
+    shadingModes = [
+      ShadingMode.GRADIENT,
+      ShadingMode.WIRE_FRAME,
+      ShadingMode.OPACITY,
+    ];
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

@@ -60,5 +60,9 @@ export class ViewerWindowManagerComponent {
   @Input() store: PersistentStore | undefined;
   @Input() active = false;
   TraceType = TraceType;
-  shadingModes = [ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME];
+  shadingModes = [
+    ShadingMode.GRADIENT,
+    ShadingMode.OPACITY,
+    ShadingMode.WIRE_FRAME,
+  ];
 }

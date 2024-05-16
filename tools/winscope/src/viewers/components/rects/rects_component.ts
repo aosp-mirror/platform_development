@@ -59,6 +59,7 @@ import {Distance2D, ShadingMode} from './types3d';
             (click)="onShadingModeButtonClicked()" #shadingModeButton>
             <mat-icon *ngIf="mapper3d.isWireFrame()" class="material-symbols-outlined" aria-hidden="true"> deployed_code </mat-icon>
             <mat-icon *ngIf="mapper3d.isShadedByGradient()" svgIcon="cube_partial_shade"></mat-icon>
+            <mat-icon *ngIf="mapper3d.isShadedByOpacity()" svgIcon="cube_full_shade"></mat-icon>
           </button>
           <button
             color="accent"

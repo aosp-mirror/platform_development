@@ -284,9 +284,17 @@ export class Canvas {
         }),
       );
     } else {
-      const opacity = rect.isOversized
-        ? Canvas.OPACITY_OVERSIZED
-        : Canvas.OPACITY_REGULAR;
+      let opacity: number | undefined;
+      if (
+        rect.colorType === ColorType.VISIBLE_WITH_OPACITY ||
+        rect.colorType === ColorType.HAS_CONTENT_AND_OPACITY
+      ) {
+        opacity = rect.darkFactor;
+      } else {
+        opacity = rect.isOversized
+          ? Canvas.OPACITY_OVERSIZED
+          : Canvas.OPACITY_REGULAR;
+      }
       mesh = new THREE.Mesh(
         rectGeometry,
         new THREE.MeshBasicMaterial({
@@ -378,6 +386,10 @@ export class Canvas {
         // green (darkness depends on z order)
         return Canvas.getVisibleRectColor(rect.darkFactor);
       }
+      case ColorType.VISIBLE_WITH_OPACITY: {
+        // same green for all rects - rect.darkFactor determines opacity
+        return Canvas.getVisibleRectColor(0.7);
+      }
       case ColorType.NOT_VISIBLE: {
         // gray (darkness depends on z order)
         const lower = 120;
@@ -389,6 +401,9 @@ export class Canvas {
         return isDarkMode
           ? Canvas.RECT_COLOR_HIGHLIGHTED_DARK_MODE
           : Canvas.RECT_COLOR_HIGHLIGHTED_LIGHT_MODE;
+      }
+      case ColorType.HAS_CONTENT_AND_OPACITY: {
+        return Canvas.RECT_COLOR_HAS_CONTENT;
       }
       case ColorType.HAS_CONTENT: {
         return Canvas.RECT_COLOR_HAS_CONTENT;

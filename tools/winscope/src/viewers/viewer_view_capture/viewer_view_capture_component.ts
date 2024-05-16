@@ -66,5 +66,9 @@ import {UiData} from './ui_data';
 export class ViewerViewCaptureComponent {
   @Input() inputData: UiData | undefined;
   @Input() store: PersistentStore | undefined;
-  shadingModes = [ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME];
+  shadingModes = [
+    ShadingMode.GRADIENT,
+    ShadingMode.OPACITY,
+    ShadingMode.WIRE_FRAME,
+  ];
 }
