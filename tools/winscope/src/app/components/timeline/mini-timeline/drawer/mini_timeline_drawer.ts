@@ -21,7 +21,6 @@ import {CanvasMouseHandler} from './canvas_mouse_handler';
 
 export interface MiniTimelineDrawer {
   draw(): Promise<void>;
-  drawBookmarks(): void;
   updateHover(mousePoint: Point | undefined): Promise<void>;
   getTraceClicked(mousePoint: Point): Promise<TraceType | undefined>;
   getXScale(): number;
