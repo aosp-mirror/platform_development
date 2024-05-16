@@ -26,6 +26,7 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
@@ -123,6 +124,7 @@ export class MiniTimelineComponent {
   @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
   @Input() bookmarks: Timestamp[] = [];
+  @Input() store: PersistentStore | undefined;
 
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onSeekTimestampUpdate = new EventEmitter<
@@ -133,6 +135,7 @@ export class MiniTimelineComponent {
     range: TimeRange;
     rangeContainsBookmark: boolean;
   }>();
+  @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
 
   @ViewChild('miniTimelineWrapper', {static: false})
   miniTimelineWrapper: ElementRef | undefined;
@@ -179,12 +182,19 @@ export class MiniTimelineComponent {
       );
     };
 
+    const onClickCallback = (timestamp: Timestamp, trace?: TraceType) => {
+      if (trace !== undefined) {
+        this.onTraceClicked.emit(trace);
+      }
+      updateTimestampCallback(timestamp);
+    };
+
     this.drawer = new MiniTimelineDrawerImpl(
       this.getCanvas(),
       () => this.getMiniCanvasDrawerInput(),
       (position) => this.onSeekTimestampUpdate.emit(position),
       updateTimestampCallback,
-      updateTimestampCallback,
+      onClickCallback,
     );
 
     if (this.initialZoom !== undefined) {
@@ -438,6 +448,7 @@ export class MiniTimelineComponent {
       this.getTracesToShow(),
       timelineData,
       this.bookmarks,
+      this.store?.get('dark-mode') === 'true',
     );
   }
 

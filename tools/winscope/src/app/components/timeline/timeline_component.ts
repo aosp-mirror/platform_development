@@ -44,6 +44,7 @@ import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
 import {
+  ActiveTraceChanged,
   ExpandedTimelineToggled,
   TracePositionUpdate,
   WinscopeEvent,
@@ -58,6 +59,7 @@ import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
+import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
 
 @Component({
   selector: 'timeline',
@@ -79,6 +81,7 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
         [timelineData]="timelineData"
         (onTracePositionUpdate)="updatePosition($event)"
         (onScrollEvent)="updateScrollEvent($event)"
+        (onTraceClicked)="onTimelineTraceClicked($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
@@ -230,10 +233,12 @@ import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
             [bookmarks]="bookmarks"
+            [store]="store"
             (onTracePositionUpdate)="updatePosition($event)"
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
             (onRemoveAllBookmarks)="removeAllBookmarks()"
             (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
+            (onTraceClicked)="onTimelineTraceClicked($event)"
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
@@ -485,6 +490,10 @@ export class TimelineComponent
     | ElementRef
     | undefined;
 
+  @ViewChild('miniTimeline') private miniTimeline:
+    | MiniTimelineComponent
+    | undefined;
+
   videoUrl: SafeUrl | undefined;
 
   internalActiveTrace: TraceType | undefined = undefined;
@@ -614,7 +623,15 @@ export class TimelineComponent
       this.updateTimeInputValuesToCurrentTimestamp();
     });
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
+      await this.miniTimeline?.drawer?.draw();
       this.activeViewTraceType = event.traceType;
+    });
+    await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
+      const activeTraceType = this.timelineData?.getActiveViewTraceType();
+      if (activeTraceType === undefined) {
+        return;
+      }
+      await this.miniTimeline?.drawer?.draw();
     });
   }
 
@@ -883,6 +900,11 @@ export class TimelineComponent
 
   removeAllBookmarks() {
     this.bookmarks = [];
+  }
+
+  async onTimelineTraceClicked(trace: TraceType) {
+    await this.emitEvent(new ActiveTraceChanged(trace));
+    this.changeDetectorRef.detectChanges();
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {

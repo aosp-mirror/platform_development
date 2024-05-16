@@ -59,27 +59,46 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('applies filter correctly', () => {
-    const trigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
-    ) as HTMLElement;
-    trigger.click();
+    openSelectPanel();
 
-    const selectComponent = assertDefined(component.selectWithFilterComponent);
-    expect(selectComponent.filteredOptions).toEqual(['1', '2', '3']);
+    const options = getOptions();
+    checkHiddenOptions(options, []);
 
-    const inputEl = assertDefined(
-      document.querySelector('.mat-select-panel .select-filter input'),
+    const inputEl = getFilterInput();
+    dispatchInput(inputEl, '2');
+    checkHiddenOptions(options, [0, 1]);
+
+    dispatchInput(inputEl, '');
+    checkHiddenOptions(options, []);
+  });
+
+  it('maintains selection even if filtered out', () => {
+    const spy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
     );
+    openSelectPanel();
 
-    (inputEl as HTMLInputElement).value = '2';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    expect(selectComponent.filteredOptions).toEqual(['2']);
+    const options = getOptions();
+    checkHiddenOptions(options, []);
 
-    (inputEl as HTMLInputElement).value = '';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
+    (options.item(0) as HTMLElement).click();
     fixture.detectChanges();
-    expect(selectComponent.filteredOptions).toEqual(['1', '2', '3']);
+    checkSelectValue(spy, ['0']);
+
+    const inputEl = getFilterInput();
+
+    dispatchInput(inputEl, '2');
+    checkHiddenOptions(options, [0, 1]);
+
+    (options.item(2) as HTMLElement).click();
+    checkSelectValue(spy, ['0', '2']);
+
+    dispatchInput(inputEl, '');
+    checkHiddenOptions(options, []);
+
+    (options.item(1) as HTMLElement).click();
+    checkSelectValue(spy, ['0', '1', '2']);
   });
 
   it('applies selection correctly', () => {
@@ -87,58 +106,92 @@ describe('SelectWithFilterComponent', () => {
       assertDefined(component.selectWithFilterComponent).selectChange,
       'emit',
     );
-    const trigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
-    ) as HTMLElement;
-    trigger.click();
+    openSelectPanel();
 
-    const option1 = assertDefined(
-      document.querySelector('.mat-select-panel .mat-option'),
-    ) as HTMLElement;
+    const options = getOptions();
 
-    option1.click();
-    expect(spy).toHaveBeenCalled();
-    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(['1']);
+    (options.item(0) as HTMLElement).click();
+    checkSelectValue(spy, ['0']);
 
-    option1.click();
-    expect(spy).toHaveBeenCalled();
-    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual([]);
+    (options.item(0) as HTMLElement).click();
+    checkSelectValue(spy, []);
   });
 
   it('resets filter on close', async () => {
-    const trigger = assertDefined(
-      htmlElement.querySelector('.mat-select-trigger'),
-    ) as HTMLElement;
-    trigger.click();
+    openSelectPanel();
 
-    const selectComponent = assertDefined(component.selectWithFilterComponent);
-    expect(selectComponent.filteredOptions).toEqual(['1', '2', '3']);
+    const options = getOptions();
+    checkHiddenOptions(options, []);
 
-    const inputEl = assertDefined(
-      document.querySelector('.mat-select-panel .select-filter input'),
-    );
-
-    (inputEl as HTMLInputElement).value = 'A';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    expect(selectComponent.filteredOptions).toEqual([]);
+    const inputEl = getFilterInput();
+    dispatchInput(inputEl, 'A');
+    checkHiddenOptions(options, [0, 1, 2]);
 
     (document.querySelector('.cdk-overlay-backdrop') as HTMLElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(selectComponent.filterString).toEqual('');
-    expect(selectComponent.filteredOptions).toEqual(['1', '2', '3']);
+
+    openSelectPanel();
+    checkHiddenOptions(getOptions(), []);
   });
 
   @Component({
     selector: 'host-component',
-    template: ` <select-with-filter [label]="label" [options]="allOptions"> </select-with-filter> `,
+    template: `
+      <select-with-filter
+        [label]="label"
+        [options]="allOptions"></select-with-filter>
+    `,
   })
   class TestHostComponent {
     label = 'TEST FILTER';
-    allOptions = ['1', '2', '3'];
+    allOptions = ['0', '1', '2'];
 
     @ViewChild(SelectWithFilterComponent)
     selectWithFilterComponent: SelectWithFilterComponent | undefined;
+  }
+
+  function openSelectPanel() {
+    const trigger = assertDefined(
+      htmlElement.querySelector('.mat-select-trigger'),
+    ) as HTMLElement;
+    trigger.click();
+  }
+
+  function getOptions(): NodeList {
+    return document.querySelectorAll('.mat-select-panel .mat-option');
+  }
+
+  function checkHiddenOptions(options: NodeList, hidden: number[]) {
+    expect(options.length).toEqual(3);
+    options.forEach((option, index) => {
+      expect(option.textContent).toContain(`${index}`);
+      if (hidden.includes(index)) {
+        expect((option as HTMLElement).className).toContain('hidden-option');
+      } else {
+        expect((option as HTMLElement).className).not.toContain(
+          'hidden-option',
+        );
+      }
+    });
+  }
+
+  function getFilterInput(): HTMLInputElement {
+    return assertDefined(
+      document.querySelector('.mat-select-panel .select-filter input'),
+    ) as HTMLInputElement;
+  }
+
+  function dispatchInput(inputEl: HTMLInputElement, input: string) {
+    inputEl.value = input;
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function checkSelectValue(spy: jasmine.Spy, expected: string[]) {
+    expect(spy).toHaveBeenCalled();
+    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(
+      expected,
+    );
   }
 });

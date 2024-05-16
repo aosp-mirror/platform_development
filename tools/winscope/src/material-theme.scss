@@ -80,7 +80,7 @@ body:not(.dark-mode) {
   @include background-color($light-theme);
   --blue-text-color: #{map.get(mat.$indigo-palette, A200)};
   @include border-color($light-theme);
-  --context-menu-hover: #E8F0FE;
+  --hover-element-color: #E8F0FE;
   --current-element-color: #7b9ccc;
   --drawer-block-primary: #EEEFF0;
   --drawer-block-secondary: #DDDDDD;
@@ -99,7 +99,7 @@ body.dark-mode {
   @include background-color($dark-theme);
   --blue-text-color: #b8e3fd;
   @include border-color($dark-theme);
-  --context-menu-hover: #4e5767;
+  --hover-element-color: #4e5767;
   --current-element-color: #365179;
   --drawer-block-primary: #696563;
   --drawer-block-secondary: #5e5b5a;

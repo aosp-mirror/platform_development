@@ -38,6 +38,7 @@ export enum WinscopeEventType {
   VIEWERS_UNLOADED,
   EXPANDED_TIMELINE_TOGGLED,
   ACTIVE_TRACE_CHANGED,
+  DARK_MODE_TOGGLED,
 }
 
 interface TypeMap {
@@ -57,6 +58,7 @@ interface TypeMap {
   [WinscopeEventType.VIEWERS_UNLOADED]: ViewersUnloaded;
   [WinscopeEventType.EXPANDED_TIMELINE_TOGGLED]: ExpandedTimelineToggled;
   [WinscopeEventType.ACTIVE_TRACE_CHANGED]: ActiveTraceChanged;
+  [WinscopeEventType.DARK_MODE_TOGGLED]: DarkModeToggled;
 }
 
 export abstract class WinscopeEvent {
@@ -201,6 +203,13 @@ export class ExpandedTimelineToggled extends WinscopeEvent {
 export class ActiveTraceChanged extends WinscopeEvent {
   override readonly type = WinscopeEventType.ACTIVE_TRACE_CHANGED;
   constructor(readonly traceType: TraceType) {
+    super();
+  }
+}
+
+export class DarkModeToggled extends WinscopeEvent {
+  override readonly type = WinscopeEventType.DARK_MODE_TOGGLED;
+  constructor(readonly isDarkMode: boolean) {
     super();
   }
 }

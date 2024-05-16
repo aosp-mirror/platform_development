@@ -45,6 +45,7 @@ import {
   AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
+  DarkModeToggled,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
@@ -435,19 +436,16 @@ export class AppComponent implements WinscopeEventListener {
       {
         window_dump: {
           name: 'Window Manager',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         layers_dump: {
           name: 'Surface Flinger',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         screenshot: {
           name: 'Screenshot',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
@@ -487,10 +485,11 @@ export class AppComponent implements WinscopeEventListener {
     return UrlUtils.getRootUrl() + logoPath;
   }
 
-  setDarkMode(enabled: boolean) {
+  async setDarkMode(enabled: boolean) {
     document.body.classList.toggle('dark-mode', enabled);
     this.store.add('dark-mode', `${enabled}`);
     this.isDarkModeOn = enabled;
+    await this.mediator.onWinscopeEvent(new DarkModeToggled(enabled));
   }
 
   onPencilIconClick() {
