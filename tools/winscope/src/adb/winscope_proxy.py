@@ -274,6 +274,9 @@ if is_perfetto_data_source_available android.protolog && \
 data_sources: {{
     config {{
         name: "android.protolog"
+        protolog_config: {{
+            tracing_mode: ENABLE_ALL
+        }}
     }}
 }}
 EOF
