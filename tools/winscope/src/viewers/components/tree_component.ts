@@ -23,8 +23,8 @@ import {
   Output,
   SimpleChanges,
 } from '@angular/core';
-import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TraceType} from 'trace/trace_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -97,7 +97,7 @@ export class TreeComponent {
   @Input() dependencies: TraceType[] = [];
 
   @Input() node?: UiPropertyTreeNode | UiHierarchyTreeNode;
-  @Input() store: AppStorage | undefined;
+  @Input() store: InMemoryStorage | undefined;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItem = '';
@@ -150,7 +150,7 @@ export class TreeComponent {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['node'] && this.node) {
       if (this.node.isRoot() && !this.store) {
-        this.store = new AppStorage();
+        this.store = new InMemoryStorage();
       }
       this.storeKeyCollapsedState = `${this.node.id}.collapsedState`;
       if (this.store) {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
@@ -54,7 +54,7 @@ describe('PresenterTransactions', () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSACTIONS, [])
       .build();
-    presenter = new Presenter(traces, new AppStorage(), (data: UiData) => {
+    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
@@ -354,7 +354,7 @@ describe('PresenterTransactions', () => {
     traces = new Traces();
     traces.setTrace(TraceType.TRANSACTIONS, trace);
 
-    presenter = new Presenter(traces, new AppStorage(), (data: UiData) => {
+    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 

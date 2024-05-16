@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TimezoneInfo} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -141,7 +141,7 @@ describe('Mediator', () => {
       crossToolProtocol,
       appComponent,
       userNotificationsListener,
-      new AppStorage(),
+      new InMemoryStorage(),
     );
     mediator.setTimelineComponent(timelineComponent);
     mediator.setUploadTracesComponent(uploadTracesComponent);
