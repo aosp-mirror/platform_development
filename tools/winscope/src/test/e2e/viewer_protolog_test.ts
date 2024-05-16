@@ -48,12 +48,8 @@ describe('Viewer Protolog', () => {
       icon: 'notes',
       color: 'rgba(64, 165, 138, 1)',
     });
-    await E2eTestUtils.checkFinalRealTimestamp(
-      '2022-11-21, 18:05:18.259191031',
-    );
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21, 18:05:09.777144978',
-    );
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.259');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.777');
 
     await checkSelectFilter(
       '.source-file',
