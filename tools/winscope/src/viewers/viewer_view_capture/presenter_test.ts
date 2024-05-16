@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -398,7 +398,7 @@ describe('PresenterViewCapture', () => {
     return new Presenter(
       ViewerViewCaptureLauncher.DEPENDENCIES,
       traces,
-      new AppStorage(),
+      new InMemoryStorage(),
       (newData: UiData) => {
         uiData = newData;
       },
