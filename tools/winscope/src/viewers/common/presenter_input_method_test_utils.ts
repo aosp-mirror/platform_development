@@ -14,9 +14,9 @@
  * limitations under the License.d
  */
 
+import {AppStorage} from 'common/app_storage';
 import {assertDefined} from 'common/assert_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -296,7 +296,7 @@ export function executePresenterInputMethodTests(
     function createPresenter(traces: Traces): PresenterInputMethod {
       return new PresenterInputMethod(
         traces,
-        new MockStorage(),
+        new AppStorage(),
         [imeTraceType],
         (newData: ImeUiData) => {
           uiData = newData;

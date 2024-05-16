@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {MockStorage} from './mock_storage';
+import {AppStorage} from './app_storage';
 
-describe('MockStorage', () => {
+describe('AppStorage', () => {
   it('can store values', () => {
-    const mockStorage = new MockStorage();
+    const mockStorage = new AppStorage();
 
     mockStorage.setItem('key', 'value');
 
