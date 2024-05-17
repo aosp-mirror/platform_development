@@ -25,6 +25,7 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
 import {TimeRange} from 'common/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
@@ -38,6 +39,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 describe('TransitionTimelineComponent', () => {
   let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
+
   const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
   const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
   const time20 = TimestampConverterUtils.makeRealTimestamp(20n);
@@ -219,32 +221,8 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw selected entry', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time35])
-      .build();
-    component.traceEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
-    component.selectedEntry = component.trace.getEntry(0);
+    setDefaultTraceAndSelectionRange();
+    component.selectedEntry = assertDefined(component.trace).getEntry(0);
 
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
     const drawRectBorderSpy = spyOn(component.canvasDrawer, 'drawRectBorder');
@@ -274,32 +252,7 @@ describe('TransitionTimelineComponent', () => {
   });
 
   it('can draw hovering entry', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time35])
-      .build();
-    component.traceEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
-
+    setDefaultTraceAndSelectionRange();
     const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
 
     fixture.detectChanges();
@@ -570,31 +523,7 @@ describe('TransitionTimelineComponent', () => {
 
   //TODO(b/304982982): test via dom interactions, not calling listener directly
   it('emits scroll event', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time30}],
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time10}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([TimestampConverterUtils.makeRealTimestamp(10n)])
-      .build();
-    component.traceEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
+    setDefaultTraceAndSelectionRange();
 
     fixture.detectChanges();
     await fixture.whenRenderingDone();
@@ -603,4 +532,57 @@ describe('TransitionTimelineComponent', () => {
     component.updateScroll(new WheelEvent('scroll'));
     expect(spy).toHaveBeenCalled();
   });
+
+  it('tracks mouse position', async () => {
+    setDefaultTraceAndSelectionRange();
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    const spy = spyOn(component.onMouseXRatioUpdate, 'emit');
+    const canvas = assertDefined(component.canvasRef).nativeElement;
+
+    const mouseMoveEvent = new MouseEvent('mousemove');
+    Object.defineProperty(mouseMoveEvent, 'target', {value: canvas});
+    Object.defineProperty(mouseMoveEvent, 'offsetX', {value: 100});
+    canvas.dispatchEvent(mouseMoveEvent);
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledWith(100 / canvas.offsetWidth);
+
+    const mouseLeaveEvent = new MouseEvent('mouseleave');
+    canvas.dispatchEvent(mouseLeaveEvent);
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledWith(undefined);
+  });
+
+  function setDefaultTraceAndSelectionRange() {
+    const transitions = [
+      new PropertyTreeBuilder()
+        .setIsRoot(true)
+        .setRootId('TransitionsTraceEntry')
+        .setName('transition')
+        .setChildren([
+          {
+            name: 'wmData',
+            children: [{name: 'finishTimeNs', value: time85}],
+          },
+          {
+            name: 'shellData',
+            children: [{name: 'dispatchTimeNs', value: time35}],
+          },
+          {name: 'aborted', value: false},
+        ])
+        .build(),
+    ];
+    component.trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
+      .setEntries(transitions)
+      .setTimestamps([time35])
+      .build();
+    component.traceEntries = transitions;
+    component.selectionRange = new TimeRange(
+      TimestampConverterUtils.makeRealTimestamp(10n),
+      TimestampConverterUtils.makeRealTimestamp(110n),
+    );
+  }
 });
