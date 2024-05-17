@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -438,7 +438,7 @@ describe('PresenterSurfaceFlinger', () => {
     traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, vcTrace);
     const presenter = new Presenter(
       traces,
-      new MockStorage(),
+      new InMemoryStorage(),
       (newData: UiData) => {
         uiData = newData;
       },
@@ -454,7 +454,7 @@ describe('PresenterSurfaceFlinger', () => {
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
     traces.setTrace(TraceType.SURFACE_FLINGER, trace);
-    return new Presenter(traces, new MockStorage(), (newData: UiData) => {
+    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
       uiData = newData;
     });
   }

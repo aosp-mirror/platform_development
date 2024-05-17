@@ -28,7 +28,8 @@ import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PersistentStore} from 'common/persistent_store';
-import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -121,11 +122,13 @@ describe('PropertiesComponent', () => {
   });
 
   it('renders tree in proto dump upon selected item', () => {
-    component.propertiesTree = TreeNodeUtils.makeUiPropertyNode(
-      'selectedItem',
-      'property',
-      null,
-    );
+    const tree = new PropertyTreeBuilder()
+      .setRootId('selectedItem')
+      .setName('property')
+      .setValue(null)
+      .build();
+    tree.setIsRoot(true);
+    component.propertiesTree = UiPropertyTreeNode.from(tree);
     fixture.detectChanges();
     const treeEl = htmlElement.querySelector('tree-view');
     expect(treeEl).toBeTruthy();

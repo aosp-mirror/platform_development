@@ -169,27 +169,6 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     return this.getInput().selectedPosition;
   }
 
-  drawBookmarks() {
-    this.getBookmarks().forEach((position) => {
-      const flagWidth = this.getMarkerMaxWidth();
-      const flagHeight = this.getMarkerHeight();
-      const barWidth = 2;
-
-      this.ctx.beginPath();
-      this.ctx.moveTo(position - barWidth / 2, 0);
-      this.ctx.lineTo(position + flagWidth, 0);
-      this.ctx.lineTo(position + (flagWidth * 5) / 6, flagHeight / 2);
-      this.ctx.lineTo(position + flagWidth, flagHeight);
-      this.ctx.lineTo(position + barWidth / 2, flagHeight);
-      this.ctx.lineTo(position + barWidth / 2, this.getHeight());
-      this.ctx.lineTo(position - barWidth / 2, this.getHeight());
-      this.ctx.closePath();
-
-      this.ctx.fillStyle = Color.BOOKMARK;
-      this.ctx.fill();
-    });
-  }
-
   getBookmarks(): number[] {
     return this.getInput().bookmarks;
   }
@@ -333,6 +312,27 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     this.ctx.fillStyle = Color.ACTIVE_POINTER;
     this.ctx.fill();
     this.ctx.globalAlpha = 1.0;
+  }
+
+  private drawBookmarks() {
+    this.getBookmarks().forEach((position) => {
+      const flagWidth = this.getMarkerMaxWidth();
+      const flagHeight = this.getMarkerHeight();
+      const barWidth = 2;
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(position - barWidth / 2, 0);
+      this.ctx.lineTo(position + flagWidth, 0);
+      this.ctx.lineTo(position + (flagWidth * 5) / 6, flagHeight / 2);
+      this.ctx.lineTo(position + flagWidth, flagHeight);
+      this.ctx.lineTo(position + barWidth / 2, flagHeight);
+      this.ctx.lineTo(position + barWidth / 2, this.getHeight());
+      this.ctx.lineTo(position - barWidth / 2, this.getHeight());
+      this.ctx.closePath();
+
+      this.ctx.fillStyle = Color.BOOKMARK;
+      this.ctx.fill();
+    });
   }
 
   private fromTopStep(lineHeight: number): number {

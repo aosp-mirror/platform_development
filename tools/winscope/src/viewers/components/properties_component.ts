@@ -76,7 +76,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       <div class="tree-wrapper">
         <tree-view
           [node]="propertiesTree"
-          [store]="store"
           [useStoredExpandedState]="!!store"
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"

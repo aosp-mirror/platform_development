@@ -32,6 +32,7 @@ import {TimelineData} from 'app/timeline_data';
 import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
@@ -50,7 +51,6 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {
@@ -424,7 +424,7 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     this.traceConfigStorage =
-      globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+      globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
 
     this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',

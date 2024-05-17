@@ -620,19 +620,6 @@ describe('MiniTimelineComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('redraws only bookmarks if they are the only thing to change', () => {
-    fixture.detectChanges();
-    const drawer = assertDefined(component.miniTimelineComponent?.drawer);
-    const drawBookmarksSpy = spyOn(drawer, 'drawBookmarks');
-    const drawSpy = spyOn(drawer, 'draw');
-
-    component.bookmarks = [timestamp10];
-    fixture.detectChanges();
-
-    expect(drawBookmarksSpy).toHaveBeenCalled();
-    expect(drawSpy).not.toHaveBeenCalled();
-  });
-
   it('zooms in/out on KeyW/KeyS press', () => {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [

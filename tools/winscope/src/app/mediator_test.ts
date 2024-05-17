@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TimezoneInfo} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -45,7 +46,6 @@ import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventEmitterStub} from 'messaging/winscope_event_emitter_stub';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TracePosition} from 'trace/trace_position';
@@ -141,7 +141,7 @@ describe('Mediator', () => {
       crossToolProtocol,
       appComponent,
       userNotificationsListener,
-      new MockStorage(),
+      new InMemoryStorage(),
     );
     mediator.setTimelineComponent(timelineComponent);
     mediator.setUploadTracesComponent(uploadTracesComponent);
