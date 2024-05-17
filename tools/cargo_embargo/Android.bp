@@ -19,7 +19,7 @@ package {
 
 rust_defaults {
     name: "cargo_embargo.defaults",
-    srcs: ["src/main.rs"],
+    crate_root: "src/main.rs",
     // Disable LTO for faster builds. Don't need the performance here.
     flags: ["-C lto=off"],
     rustlibs: [
