@@ -26,13 +26,14 @@ $typography: mat.define-typography-config(
 
 $light-primary: mat.define-palette(mat.$blue-palette, 700);
 $dark-primary: mat.define-palette(mat.$blue-palette, 400);
-$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$light-accent: mat.define-palette(mat.$grey-palette, 700);
+$dark-accent: mat.define-palette(mat.$grey-palette, 500);
 $warn: mat.define-palette(mat.$red-palette);
 
 $light-theme: mat.define-light-theme((
  color: (
    primary: $light-primary,
-   accent: $accent,
+   accent: $light-accent,
    warn: $warn,
  ),
  density: 0,
@@ -42,7 +43,7 @@ $light-theme: mat.define-light-theme((
 $dark-theme: mat.define-dark-theme((
   color: (
     primary: $dark-primary,
-    accent: $accent,
+    accent: $dark-accent,
     warn: $warn,
   )
 ));

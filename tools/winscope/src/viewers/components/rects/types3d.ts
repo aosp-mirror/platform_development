@@ -21,6 +21,12 @@ export enum ColorType {
   NOT_VISIBLE,
   HIGHLIGHTED,
   HAS_CONTENT,
+  EMPTY,
+}
+
+export enum ShadingMode {
+  WIRE_FRAME = 'Wire frame',
+  GRADIENT = 'Shaded by gradient',
 }
 
 export class Distance2D {

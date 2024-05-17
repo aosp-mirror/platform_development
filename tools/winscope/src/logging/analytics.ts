@@ -95,7 +95,7 @@ export class Analytics {
     }
 
     static logRectSettingsChanged(
-      option: 'only visible' | 'z spacing',
+      option: 'only visible' | 'z spacing' | 'shading mode',
       value: string | number | boolean,
     ) {
       Analytics.doLogEvent(Analytics.RECT_SETTINGS, {

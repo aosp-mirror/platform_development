@@ -24,6 +24,7 @@ import {
   Point3D,
   Rect3D,
   Scene3D,
+  ShadingMode,
 } from './types3d';
 
 class Mapper3D {
@@ -47,6 +48,8 @@ class Mapper3D {
   private panScreenDistance = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
   private currentGroupId = 0; // default stack id is usually 0
+  private shadingModeIndex = 0;
+  private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
 
   setRects(rects: UiRect[]) {
     this.rects = rects;
@@ -87,9 +90,13 @@ class Mapper3D {
     this.panScreenDistance.dy += distance.dy;
   }
 
-  resetCamera() {
+  resetToOrthogonalState() {
     this.cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
     this.zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
+  }
+
+  resetCamera() {
+    this.resetToOrthogonalState();
     this.zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
     this.panScreenDistance.dx = 0;
     this.panScreenDistance.dy = 0;
@@ -109,6 +116,44 @@ class Mapper3D {
 
   setCurrentGroupId(id: number) {
     this.currentGroupId = id;
+  }
+
+  setAllowedShadingModes(modes: ShadingMode[]) {
+    this.allowedShadingModes = modes;
+  }
+
+  setShadingMode(newMode: ShadingMode) {
+    const newModeIndex = this.allowedShadingModes.findIndex(
+      (m) => m === newMode,
+    );
+    if (newModeIndex !== -1) {
+      this.shadingModeIndex = newModeIndex;
+    }
+  }
+
+  getShadingMode(): ShadingMode {
+    return this.allowedShadingModes[this.shadingModeIndex];
+  }
+
+  updateShadingMode() {
+    this.shadingModeIndex =
+      this.shadingModeIndex < this.allowedShadingModes.length - 1
+        ? this.shadingModeIndex + 1
+        : 0;
+  }
+
+  isWireFrame(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) ===
+      ShadingMode.WIRE_FRAME
+    );
+  }
+
+  isShadedByGradient(): boolean {
+    return (
+      this.allowedShadingModes.at(this.shadingModeIndex) ===
+      ShadingMode.GRADIENT
+    );
   }
 
   private compareDepth(a: UiRect, b: UiRect): number {
@@ -138,7 +183,6 @@ class Mapper3D {
 
   private selectRectsToDraw(rects: UiRect[]): UiRect[] {
     rects = rects.filter((rect) => rect.groupId === this.currentGroupId);
-
     if (this.showOnlyVisibleMode) {
       rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
     }
@@ -181,10 +225,15 @@ class Mapper3D {
         (Mapper3D.Z_SPACING_MAX * rect2d.depth +
           computeAntiZFightingOffset(rect2d.depth));
 
-      const darkFactor = rect2d.isVisible
-        ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
-        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
+      let darkFactor = 0;
+      if (rect2d.isVisible) {
+        darkFactor =
+          (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
+      } else {
+        darkFactor =
+          (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
           nonVisibleRectsTotal;
+      }
 
       const rect = {
         id: rect2d.id,
@@ -212,17 +261,19 @@ class Mapper3D {
   }
 
   private getColorType(rect2d: UiRect): ColorType {
-    let colorType: ColorType;
     if (this.highlightedRectId === rect2d.id && rect2d.isClickable) {
-      colorType = ColorType.HIGHLIGHTED;
-    } else if (rect2d.hasContent === true) {
-      colorType = ColorType.HAS_CONTENT;
-    } else if (rect2d.isVisible) {
-      colorType = ColorType.VISIBLE;
-    } else {
-      colorType = ColorType.NOT_VISIBLE;
+      return ColorType.HIGHLIGHTED;
     }
-    return colorType;
+    if (this.isWireFrame()) {
+      return ColorType.EMPTY;
+    }
+    if (rect2d.hasContent === true) {
+      return ColorType.HAS_CONTENT;
+    }
+    if (rect2d.isVisible) {
+      return ColorType.VISIBLE;
+    }
+    return ColorType.NOT_VISIBLE;
   }
 
   private getMaxDisplaySize(rects2d: UiRect[]): Size {
