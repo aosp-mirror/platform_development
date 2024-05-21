@@ -22,6 +22,7 @@ import {TraceType} from 'trace/trace_type';
 /* eslint-disable no-undef */
 export class Analytics {
   private static GLOBAL_EXCEPTION = 'global_exception';
+  private static CROSS_TOOL_SYNC = 'cross_tool_sync';
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
   private static BUGANIZER_OPENED = 'buganizer_opened';
@@ -63,6 +64,11 @@ export class Analytics {
     static logDarkModeEnabled() {
       Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
     }
+    static logCrossToolSync(value: boolean) {
+      Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
+        value,
+      } as Gtag.CustomParams);
+    }
   };
 
   static Navigation = class {
@@ -95,7 +101,7 @@ export class Analytics {
     }
 
     static logRectSettingsChanged(
-      option: 'only visible' | 'z spacing',
+      option: 'only visible' | 'z spacing' | 'shading mode',
       value: string | number | boolean,
     ) {
       Analytics.doLogEvent(Analytics.RECT_SETTINGS, {

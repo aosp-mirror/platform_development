@@ -62,6 +62,7 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     'translationX',
     'translationY',
     'visibility',
+    'alpha',
   ];
   private static readonly DENYLIST_PROPERTIES = ['children'];
 

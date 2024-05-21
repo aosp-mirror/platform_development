@@ -62,6 +62,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(false)
       .setDepth(0)
+      .setOpacity(0.5)
       .build();
 
     const expectedUiRect2 = new UiRectBuilder()
@@ -80,6 +81,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(false)
       .setDepth(1)
+      .setOpacity(0.5)
       .build();
 
     const expectedRects: UiRect[] = [expectedUiRect1, expectedUiRect2];
@@ -107,6 +109,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(false)
       .setDepth(1)
+      .setOpacity(0.5)
       .build();
 
     const expectedUiRect2 = new UiRectBuilder()
@@ -125,6 +128,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(false)
       .setDepth(0)
+      .setOpacity(0.5)
       .build();
 
     const expectedRects: UiRect[] = [expectedUiRect1, expectedUiRect2];
@@ -151,6 +155,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(true)
       .setDepth(1)
+      .setOpacity(0.5)
       .build();
 
     const expectedVcUiRect2 = new UiRectBuilder()
@@ -169,6 +174,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVirtual(false)
       .setHasContent(true)
       .setDepth(0)
+      .setOpacity(0.5)
       .build();
 
     const expectedRects: UiRect[] = [expectedVcUiRect1, expectedVcUiRect2];
@@ -195,6 +201,7 @@ describe('UI_RECT_FACTORY', () => {
       .setIsVisible(true)
       .setIsDisplay(false)
       .setIsVirtual(false)
+      .setOpacity(0.5)
       .build();
 
     node.setRects([rect]);

@@ -16,6 +16,7 @@
 import {Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {ShadingMode} from 'viewers/components/rects/types3d';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -29,7 +30,8 @@ import {UiData} from './ui_data';
         [store]="store"
         [rects]="inputData?.rects ?? []"
         [displays]="inputData?.displays ?? []"
-        [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
+        [shadingModes]="shadingModes"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
@@ -58,4 +60,9 @@ export class ViewerWindowManagerComponent {
   @Input() store: PersistentStore | undefined;
   @Input() active = false;
   TraceType = TraceType;
+  shadingModes = [
+    ShadingMode.GRADIENT,
+    ShadingMode.OPACITY,
+    ShadingMode.WIRE_FRAME,
+  ];
 }

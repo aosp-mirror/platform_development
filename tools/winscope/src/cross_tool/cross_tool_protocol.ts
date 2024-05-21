@@ -52,6 +52,7 @@ export class CrossToolProtocol
   private remoteTool?: RemoteTool;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private timestampConverter: RemoteToolTimestampConverter;
+  private allowTimestampSync = true;
 
   constructor(timestampConverter: RemoteToolTimestampConverter) {
     this.timestampConverter = timestampConverter;
@@ -69,7 +70,11 @@ export class CrossToolProtocol
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        if (!this.remoteTool || !this.remoteTool.timestampType) {
+        if (
+          !this.remoteTool ||
+          !this.remoteTool.timestampType ||
+          !this.allowTimestampSync
+        ) {
           return;
         }
 
@@ -88,6 +93,18 @@ export class CrossToolProtocol
         console.log('Cross-tool protocol sent timestamp message:', message);
       },
     );
+  }
+
+  isConnected() {
+    return this.remoteTool !== undefined;
+  }
+
+  setAllowTimestampSync(value: boolean) {
+    this.allowTimestampSync = value;
+  }
+
+  getAllowTimestampSync() {
+    return this.allowTimestampSync;
   }
 
   private async onMessageReceived(event: MessageEvent) {
@@ -170,6 +187,9 @@ export class CrossToolProtocol
   }
 
   private async onMessageTimestampReceived(message: MessageTimestamp) {
+    if (!this.allowTimestampSync) {
+      return;
+    }
     this.setRemoteToolTimestampTypeIfNeeded(message.timestampType);
     const deferredTimestamp = this.makeDeferredTimestampForWinscope(
       message.timestampNs,

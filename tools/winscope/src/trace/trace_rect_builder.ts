@@ -32,6 +32,7 @@ export class TraceRectBuilder {
   isDisplay: boolean | undefined;
   isVirtual: boolean | undefined;
   depth: number | undefined;
+  opacity: number | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -98,6 +99,11 @@ export class TraceRectBuilder {
     return this;
   }
 
+  setOpacity(value: number) {
+    this.opacity = value;
+    return this;
+  }
+
   build(): TraceRect {
     if (this.x === undefined) {
       throw Error('x not set');
@@ -161,6 +167,7 @@ export class TraceRectBuilder {
       this.isDisplay,
       this.isVirtual,
       this.depth,
+      this.opacity,
     );
   }
 }
