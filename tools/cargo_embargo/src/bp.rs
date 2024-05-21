@@ -111,6 +111,7 @@ impl BpProperties {
             "crate_name",
             "cargo_env_compat",
             "cargo_pkg_version",
+            "crate_root",
             "srcs",
             "test_suites",
             "auto_gen_config",
