@@ -16672,6 +16672,27 @@
       "16": "SOURCE_CLASS_JOYSTICK"
     }
   },
+  "android.view.InputDevice.Source": {
+    "flag": true,
+    "values": {
+      "0": "SOURCE_UNKNOWN",
+      "257": "SOURCE_KEYBOARD",
+      "513": "SOURCE_DPAD",
+      "1025": "SOURCE_GAMEPAD",
+      "4098": "SOURCE_TOUCHSCREEN",
+      "8194": "SOURCE_MOUSE",
+      "16386": "SOURCE_STYLUS",
+      "49154": "SOURCE_BLUETOOTH_STYLUS",
+      "65540": "SOURCE_TRACKBALL",
+      "131076": "SOURCE_MOUSE_RELATIVE",
+      "1048584": "SOURCE_TOUCHPAD",
+      "2097152": "SOURCE_TOUCH_NAVIGATION",
+      "4194304": "SOURCE_ROTARY_ENCODER",
+      "16777232": "SOURCE_JOYSTICK",
+      "33554433": "SOURCE_HDMI",
+      "67108864": "SOURCE_SENSOR"
+    }
+  },
   "android.view.InputWindowHandle.InputConfigFlags": {
     "flag": true,
     "values": {
@@ -16737,6 +16758,146 @@
       "2": "IME_SHOW_FAILED"
     }
   },
+  "android.view.KeyEvent.Action": {
+    "flag": false,
+    "values": {
+      "0": "ACTION_DOWN",
+      "1": "ACTION_UP",
+      "2": "ACTION_MULTIPLE"
+    }
+  },
+  "android.view.KeyEvent.Flag": {
+    "flag": true,
+    "values": {
+      "1": "FLAG_WOKE_HERE",
+      "2": "FLAG_SOFT_KEYBOARD",
+      "4": "FLAG_KEEP_TOUCH_MODE",
+      "8": "FLAG_FROM_SYSTEM",
+      "16": "FLAG_EDITOR_ACTION",
+      "32": "FLAG_CANCELED",
+      "64": "FLAG_VIRTUAL_HARD_KEY",
+      "128": "FLAG_LONG_PRESS",
+      "256": "FLAG_CANCELED_LONG_PRESS",
+      "512": "FLAG_TRACKING",
+      "1024": "FLAG_FALLBACK",
+      "2048": "FLAG_IS_ACCESSIBILITY_EVENT",
+      "536870912": "FLAG_PREDISPATCH",
+      "1073741824": "FLAG_START_TRACKING",
+      "-2147483648": "FLAG_TAINTED"
+    }
+  },
+  "android.view.KeyEvent.MetaState": {
+    "flag": true,
+    "values": {
+      "256": "META_CAP_LOCKED",
+      "512": "META_ALT_LOCKED",
+      "1024": "META_SYM_LOCKED",
+      "2048": "META_SELECTING",
+      "2": "META_ALT_ON",
+      "16": "META_ALT_LEFT_ON",
+      "32": "META_ALT_RIGHT_ON",
+      "1": "META_SHIFT_ON",
+      "64": "META_SHIFT_LEFT_ON",
+      "128": "META_SHIFT_RIGHT_ON",
+      "4": "META_SYM_ON",
+      "8": "META_FUNCTION_ON",
+      "4096": "META_CTRL_ON",
+      "8192": "META_CTRL_LEFT_ON",
+      "16384": "META_CTRL_RIGHT_ON",
+      "65536": "META_META_ON",
+      "131072": "META_META_LEFT_ON",
+      "262144": "META_META_RIGHT_ON",
+      "1048576": "META_CAPS_LOCK_ON",
+      "2097152": "META_NUM_LOCK_ON",
+      "4194304": "META_SCROLL_LOCK_ON"
+    }
+  },
+  "android.view.MotionEvent.ActionMasked": {
+    "flag": false,
+    "values": {
+      "0": "ACTION_DOWN",
+      "1": "ACTION_UP",
+      "2": "ACTION_MOVE",
+      "3": "ACTION_CANCEL",
+      "4": "ACTION_OUTSIDE",
+      "5": "ACTION_POINTER_DOWN",
+      "6": "ACTION_POINTER_UP",
+      "7": "ACTION_HOVER_MOVE",
+      "8": "ACTION_SCROLL",
+      "9": "ACTION_HOVER_ENTER",
+      "10": "ACTION_HOVER_EXIT",
+      "11": "ACTION_BUTTON_PRESS",
+      "12": "ACTION_BUTTON_RELEASE"
+    }
+  },
+  "android.view.MotionEvent.Axis": {
+    "flag": false,
+    "values": {
+      "0": "AXIS_X",
+      "1": "AXIS_Y",
+      "2": "AXIS_PRESSURE",
+      "3": "AXIS_SIZE",
+      "4": "AXIS_TOUCH_MAJOR",
+      "5": "AXIS_TOUCH_MINOR",
+      "6": "AXIS_TOOL_MAJOR",
+      "7": "AXIS_TOOL_MINOR",
+      "8": "AXIS_ORIENTATION",
+      "9": "AXIS_VSCROLL",
+      "10": "AXIS_HSCROLL",
+      "11": "AXIS_Z",
+      "12": "AXIS_RX",
+      "13": "AXIS_RY",
+      "14": "AXIS_RZ",
+      "15": "AXIS_HAT_X",
+      "16": "AXIS_HAT_Y",
+      "17": "AXIS_LTRIGGER",
+      "18": "AXIS_RTRIGGER",
+      "19": "AXIS_THROTTLE",
+      "20": "AXIS_RUDDER",
+      "21": "AXIS_WHEEL",
+      "22": "AXIS_GAS",
+      "23": "AXIS_BRAKE",
+      "24": "AXIS_DISTANCE",
+      "25": "AXIS_TILT",
+      "26": "AXIS_SCROLL",
+      "27": "AXIS_RELATIVE_X",
+      "28": "AXIS_RELATIVE_Y",
+      "32": "AXIS_GENERIC_1",
+      "33": "AXIS_GENERIC_2",
+      "34": "AXIS_GENERIC_3",
+      "35": "AXIS_GENERIC_4",
+      "36": "AXIS_GENERIC_5",
+      "37": "AXIS_GENERIC_6",
+      "38": "AXIS_GENERIC_7",
+      "39": "AXIS_GENERIC_8",
+      "40": "AXIS_GENERIC_9",
+      "41": "AXIS_GENERIC_10",
+      "42": "AXIS_GENERIC_11",
+      "43": "AXIS_GENERIC_12",
+      "44": "AXIS_GENERIC_13",
+      "45": "AXIS_GENERIC_14",
+      "46": "AXIS_GENERIC_15",
+      "47": "AXIS_GENERIC_16",
+      "48": "AXIS_GESTURE_X_OFFSET",
+      "49": "AXIS_GESTURE_Y_OFFSET",
+      "50": "AXIS_GESTURE_SCROLL_X_DISTANCE",
+      "51": "AXIS_GESTURE_SCROLL_Y_DISTANCE",
+      "52": "AXIS_GESTURE_PINCH_SCALE_FACTOR",
+      "53": "AXIS_GESTURE_SWIPE_FINGER_COUNT"
+    }
+  },
+  "android.view.MotionEvent.Button": {
+    "flag": true,
+    "values": {
+      "1": "BUTTON_PRIMARY",
+      "2": "BUTTON_SECONDARY",
+      "4": "BUTTON_TERTIARY",
+      "8": "BUTTON_BACK",
+      "16": "BUTTON_FORWARD",
+      "32": "BUTTON_STYLUS_PRIMARY",
+      "64": "BUTTON_STYLUS_SECONDARY"
+    }
+  },
   "android.view.MotionEvent.Classification": {
     "flag": false,
     "values": {
@@ -16746,6 +16907,20 @@
       "3": "CLASSIFICATION_TWO_FINGER_SWIPE",
       "4": "CLASSIFICATION_MULTI_FINGER_SWIPE",
       "5": "CLASSIFICATION_PINCH"
+    }
+  },
+  "android.view.MotionEvent.Flag": {
+    "flag": true,
+    "values": {
+      "1": "FLAG_WINDOW_IS_OBSCURED",
+      "2": "FLAG_WINDOW_IS_PARTIALLY_OBSCURED",
+      "4": "FLAG_HOVER_EXIT_PENDING",
+      "8": "FLAG_IS_GENERATED_GESTURE",
+      "32": "FLAG_CANCELED",
+      "64": "FLAG_NO_FOCUS_CHANGE",
+      "2048": "FLAG_IS_ACCESSIBILITY_EVENT",
+      "-2147483648": "FLAG_TAINTED",
+      "1073741824": "FLAG_TARGET_ACCESSIBILITY_FOCUS"
     }
   },
   "android.view.MotionEvent.ToolType": {
