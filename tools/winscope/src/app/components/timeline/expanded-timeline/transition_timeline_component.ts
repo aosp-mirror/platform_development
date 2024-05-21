@@ -35,7 +35,10 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
       [style.background-color]="getBackgroundColor()"
       (click)="onTimelineClick($event)"
       #wrapper>
-      <canvas id="canvas" #canvas></canvas>
+      <canvas
+        id="canvas"
+        (mousemove)="trackMousePos($event)"
+        (mouseleave)="onMouseLeave($event)" #canvas></canvas>
     </div>
   `,
   styles: [

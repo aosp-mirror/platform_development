@@ -60,6 +60,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
           (onScrollEvent)="updateScroll($event)"
           (onTraceClicked)="onTraceClicked.emit($event)"
+          (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
           class="single-timeline">
         </transition-timeline>
         <single-timeline
@@ -73,6 +74,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
           (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
           (onScrollEvent)="updateScroll($event)"
           (onTraceClicked)="onTraceClicked.emit($event)"
+          (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
           class="single-timeline">
         </single-timeline>
 
@@ -141,6 +143,9 @@ export class ExpandedTimelineComponent {
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
   @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
+  @Output() readonly onMouseXRatioUpdate = new EventEmitter<
+    number | undefined
+  >();
 
   @ViewChildren(DefaultTimelineRowComponent)
   singleTimelines: QueryList<DefaultTimelineRowComponent> | undefined;
