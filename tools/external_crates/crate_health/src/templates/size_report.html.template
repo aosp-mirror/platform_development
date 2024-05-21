@@ -1,0 +1,6 @@
+<ul>
+  <li>{num_crates} crates</li>
+  <li>{crates_with_single_version} have a single version</li>
+  <li>{crates_with_multiple_versions} have multiple versions</li>
+  <li>{num_dirs} total crate directories</li>
+</ul>
