@@ -36,6 +36,8 @@ import {Transition} from 'trace/transition';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
@@ -60,6 +62,8 @@ describe('ViewerTransitionsComponent', () => {
         TreeNodeComponent,
         PropertyTreeNodeDataViewComponent,
         PropertiesComponent,
+        CollapsedSectionsComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();

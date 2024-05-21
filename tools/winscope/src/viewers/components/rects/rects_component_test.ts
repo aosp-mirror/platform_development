@@ -15,11 +15,13 @@
  */
 
 import {CommonModule} from '@angular/common';
+import {HttpClientModule} from '@angular/common/http';
 import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
@@ -29,6 +31,7 @@ import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {CollapsibleSectionTitleComponent} from '../collapsible_section_title_component';
 import {Canvas} from './canvas';
 import {ColorType, ShadingMode} from './types3d';
 import {UiRectBuilder} from './ui_rect_builder';
@@ -50,8 +53,14 @@ describe('RectsComponent', () => {
         MatRadioModule,
         MatButtonModule,
         MatTooltipModule,
+        MatIconModule,
+        HttpClientModule,
       ],
-      declarations: [TestHostComponent, RectsComponent],
+      declarations: [
+        TestHostComponent,
+        RectsComponent,
+        CollapsibleSectionTitleComponent,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 

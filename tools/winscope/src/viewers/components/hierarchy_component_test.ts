@@ -33,6 +33,7 @@ import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
 
 describe('HierarchyComponent', () => {
@@ -48,6 +49,7 @@ describe('HierarchyComponent', () => {
         TreeComponent,
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
+        CollapsibleSectionTitleComponent,
       ],
       imports: [
         CommonModule,

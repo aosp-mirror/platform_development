@@ -20,12 +20,14 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
@@ -37,11 +39,12 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, MatTooltipModule],
+      imports: [MatDividerModule, MatTooltipModule, MatIconModule],
       declarations: [
         TestHostComponent,
         SurfaceFlingerPropertyGroupsComponent,
         TransformMatrixComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();

@@ -17,11 +17,13 @@
 import {
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
   Inject,
   Input,
   OnDestroy,
   OnInit,
+  Output,
   SimpleChange,
   SimpleChanges,
 } from '@angular/core';
@@ -46,7 +48,10 @@ import {Distance2D, ShadingMode} from './types3d';
   template: `
     <div class="view-controls view-header">
       <div class="title-zoom">
-        <h2 class="mat-title">{{ title.toUpperCase() }}</h2>
+        <collapsible-section-title
+          [title]="title"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+
         <div class="right-btn-container">
           <button
             color="accent"
@@ -173,9 +178,6 @@ import {Distance2D, ShadingMode} from './types3d';
   `,
   styles: [
     `
-      .mat-title {
-        padding-top: 16px;
-      }
       .title-zoom {
         display: flex;
         flex-direction: row;
@@ -279,6 +281,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() groupLabel = 'Displays';
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];

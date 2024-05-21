@@ -15,11 +15,15 @@
  */
 import {Component} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {CoordinatesTableComponent} from './coordinates_table_component';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
 
@@ -30,10 +34,16 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatDividerModule],
+      imports: [
+        MatDividerModule,
+        MatIconModule,
+        MatButtonModule,
+        MatTooltipModule,
+      ],
       declarations: [
         ImeAdditionalPropertiesComponent,
         TestHostComponent,
+        CollapsibleSectionTitleComponent,
         CoordinatesTableComponent,
       ],
     }).compileComponents();

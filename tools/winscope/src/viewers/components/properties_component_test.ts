@@ -30,6 +30,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PersistentStore} from 'common/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -52,6 +53,7 @@ describe('PropertiesComponent', () => {
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
+        CollapsibleSectionTitleComponent,
       ],
       imports: [
         CommonModule,

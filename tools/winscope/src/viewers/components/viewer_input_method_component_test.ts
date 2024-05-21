@@ -30,7 +30,7 @@ describe('ViewerInputMethodComponent', () => {
   let component: ViewerInputMethodComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatIconModule, MatDividerModule],
@@ -41,12 +41,10 @@ describe('ViewerInputMethodComponent', () => {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ViewerInputMethodComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    fixture.detectChanges();
   });
 
   it('can be created', () => {

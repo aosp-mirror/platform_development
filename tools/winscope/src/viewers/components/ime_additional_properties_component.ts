@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -29,7 +36,10 @@ import {selectedElementStyle} from './styles/selected_element.styles';
 @Component({
   selector: 'ime-additional-properties',
   template: `
-    <h2 class="view-header mat-title">WM & SF Properties</h2>
+    <collapsible-section-title
+      class="view-header"
+      title="WM & SF PROPERTIES"
+      (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
     <div class="additional-properties-content" *ngIf="additionalProperties">
       <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
@@ -333,6 +343,8 @@ export class ImeAdditionalPropertiesComponent {
   @Input() additionalProperties: ImeAdditionalProperties | undefined;
   @Input() isImeManagerService: boolean | undefined;
   @Input() highlightedItem: string = '';
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 

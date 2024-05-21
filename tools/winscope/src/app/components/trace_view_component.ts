@@ -93,6 +93,7 @@ interface Tab {
       .trace-view-content {
         height: 100%;
         overflow: auto;
+        background-color: var(--trace-view-background-color);
       }
 
       .tab {
