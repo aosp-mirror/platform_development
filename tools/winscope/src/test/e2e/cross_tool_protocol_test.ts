@@ -81,6 +81,31 @@ describe('Cross-Tool Protocol', () => {
     await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_WINSCOPE_BOOTTIME);
   });
 
+  it('can turn timestamp sync off/on', async () => {
+    // real-to-boottime offset = 1659107074601779989
+    const TIMESTAMP_IN_FILES_MESSAGE_REALTIME = '1659107090327674405';
+    const TIMESTAMP_FROM_PERFETTO_BOOTTIME = '15725894416';
+
+    await openWinscopeTabFromRemoteTool();
+    await waitWinscopeTabIsOpen();
+
+    await sendFilesToWinscope();
+    await checkWinscopeRendersUploadView();
+
+    await clickWinscopeViewTracesButton();
+    await checkWinscopeRenderedSurfaceFlingerView();
+
+    await clickCrossToolSyncButton();
+
+    await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
+    await sendBoottimeTimestampToWinscope(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+    await checkWinscopeTimestamp(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
+
+    await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+    await sendTimestampToRemoteTool(TIMESTAMP_IN_FILES_MESSAGE_REALTIME);
+    await checkRemoteToolBoottimeTimestamp(TIMESTAMP_FROM_PERFETTO_BOOTTIME);
+  });
+
   async function openWinscopeTabFromRemoteTool() {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const buttonElement = element(by.css('.button-open-winscope'));
@@ -215,5 +240,10 @@ describe('Cross-Tool Protocol', () => {
     const handles = await browser.getAllWindowHandles();
     expect(handles.length).toEqual(2);
     return handles[1];
+  }
+
+  async function clickCrossToolSyncButton() {
+    const button = element(by.css('.cross-tool-sync-button'));
+    await button.click();
   }
 });

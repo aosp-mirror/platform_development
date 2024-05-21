@@ -43,6 +43,9 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
   @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onMouseXRatioUpdate = new EventEmitter<
+    number | undefined
+  >();
 
   @ViewChild('canvas', {static: false}) canvasRef: ElementRef | undefined;
   @ViewChild('wrapper', {static: false}) wrapperRef: ElementRef | undefined;
@@ -166,6 +169,15 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
       return;
     }
     this.onTraceClicked.emit(assertDefined(this.trace).type);
+  }
+
+  trackMousePos(event: MouseEvent) {
+    const canvas = event.target as HTMLCanvasElement;
+    this.onMouseXRatioUpdate.emit(event.offsetX / canvas.offsetWidth);
+  }
+
+  onMouseLeave(event: MouseEvent) {
+    this.onMouseXRatioUpdate.emit(undefined);
   }
 
   protected redraw() {

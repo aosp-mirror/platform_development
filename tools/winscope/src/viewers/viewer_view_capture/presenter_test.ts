@@ -274,7 +274,7 @@ describe('PresenterViewCapture', () => {
     expect(propertiesTree.id).toEqual(
       'ViewNode com.android.launcher3.views.DoubleShadowBubbleTextView@124683434',
     );
-    expect(propertiesTree.getAllChildren().length).toEqual(14);
+    expect(propertiesTree.getAllChildren().length).toEqual(15);
     expect(assertDefined(uiData.curatedProperties).translationX).toEqual(
       '19.143',
     );

@@ -15,10 +15,12 @@
  */
 
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
   HostListener,
+  Inject,
   Input,
   Output,
   SimpleChanges,
@@ -59,6 +61,7 @@ import {Transformer} from './transformer';
           #canvas
           id="mini-timeline-canvas"
           (mousemove)="trackMousePos($event)"
+          (mouseleave)="onMouseLeave($event)"
           (contextmenu)="recordClickPosition($event)"
           [cdkContextMenuTriggerFor]="timeline_context_menu"
           #menuTrigger = "cdkContextMenuTriggerFor"
@@ -67,9 +70,9 @@ import {Transformer} from './transformer';
           <slider
             [fullRange]="timelineData.getFullTimeRange()"
             [zoomRange]="timelineData.getZoomRange()"
-            [currentPosition]="timelineData.getCurrentPosition()"
+            [currentPosition]="currentTracePosition"
             [timestampConverter]="timelineData.getTimestampConverter()"
-            (onZoomChanged)="onZoomChanged($event)"></slider>
+            (onZoomChanged)="onSliderZoomChanged($event)"></slider>
         </div>
       </div>
     </div>
@@ -123,6 +126,7 @@ export class MiniTimelineComponent {
   @Input() selectedTraces: TraceType[] | undefined;
   @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
+  @Input() expandedTimelineMouseXRatio: number | undefined;
   @Input() bookmarks: Timestamp[] = [];
   @Input() store: PersistentStore | undefined;
 
@@ -147,8 +151,13 @@ export class MiniTimelineComponent {
 
   drawer: MiniTimelineDrawer | undefined = undefined;
   private lastMousePosX: number | undefined;
+  private hoverTimestamp: Timestamp | undefined;
   private lastMoves: WheelEvent[] = [];
   private lastRightClickTimeRange: TimeRange | undefined;
+
+  constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+  ) {}
 
   recordClickPosition(event: MouseEvent) {
     event.preventDefault();
@@ -205,7 +214,7 @@ export class MiniTimelineComponent {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['expandedTimelineScrollEvent']?.currentValue !== undefined) {
+    if (changes['expandedTimelineScrollEvent']?.currentValue) {
       const event = changes['expandedTimelineScrollEvent'].currentValue;
       const moveDirection = this.getMoveDirection(event);
 
@@ -216,6 +225,13 @@ export class MiniTimelineComponent {
       if (event.deltaX !== 0 && moveDirection === 'x') {
         this.updateHorizontalScroll(event);
       }
+    } else if (this.drawer && changes['expandedTimelineMouseXRatio']) {
+      const mouseXRatio: number | undefined =
+        changes['expandedTimelineMouseXRatio'].currentValue;
+      this.lastMousePosX = mouseXRatio
+        ? mouseXRatio * this.drawer.getWidth()
+        : undefined;
+      this.updateHoverTimestamp();
     } else if (this.drawer !== undefined) {
       this.drawer.draw();
     }
@@ -244,6 +260,25 @@ export class MiniTimelineComponent {
 
   trackMousePos(event: MouseEvent) {
     this.lastMousePosX = event.offsetX;
+    this.updateHoverTimestamp();
+  }
+
+  onMouseLeave(event: MouseEvent) {
+    this.lastMousePosX = undefined;
+    this.updateHoverTimestamp();
+  }
+
+  updateHoverTimestamp() {
+    if (!this.lastMousePosX) {
+      this.hoverTimestamp = undefined;
+      return;
+    }
+    const timelineData = assertDefined(this.timelineData);
+    this.hoverTimestamp = new Transformer(
+      timelineData.getZoomRange(),
+      assertDefined(this.drawer).getUsableRange(),
+      assertDefined(timelineData.getTimestampConverter()),
+    ).untransform(this.lastMousePosX);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -259,17 +294,7 @@ export class MiniTimelineComponent {
       return;
     }
 
-    const timelineData = assertDefined(this.timelineData);
-    const zoomRange = timelineData.getZoomRange();
-
-    let zoomTo = this.currentTracePosition?.timestamp;
-    if (this.lastMousePosX !== undefined) {
-      zoomTo = new Transformer(
-        zoomRange,
-        assertDefined(this.drawer).getUsableRange(),
-        assertDefined(timelineData.getTimestampConverter()),
-      ).untransform(this.lastMousePosX);
-    }
+    const zoomTo = this.hoverTimestamp;
     event.code === 'KeyW' ? this.zoomIn(zoomTo) : this.zoomOut(zoomTo);
   }
 
@@ -278,6 +303,12 @@ export class MiniTimelineComponent {
     timelineData.setZoom(zoom);
     timelineData.setSelectionTimeRange(zoom);
     this.drawer?.draw();
+    this.changeDetectorRef.detectChanges();
+  }
+
+  onSliderZoomChanged(zoom: TimeRange) {
+    this.onZoomChanged(zoom);
+    this.updateHoverTimestamp();
   }
 
   resetZoom() {
@@ -309,56 +340,43 @@ export class MiniTimelineComponent {
       .times(zoomRatio.nominator)
       .div(zoomRatio.denominator);
 
-    const cursorPosition = timelineData.getCurrentPosition()?.timestamp;
+    const cursorPosition = this.currentTracePosition?.timestamp;
     const currentMiddle = currentZoomRange.from
       .add(currentZoomRange.to.getValueNs())
       .div(2n);
 
     let newFrom: Timestamp;
     let newTo: Timestamp;
+
+    let zoomTowards = currentMiddle;
     if (zoomOn === undefined) {
-      let zoomTowards = currentMiddle;
       if (cursorPosition !== undefined && cursorPosition.in(currentZoomRange)) {
         zoomTowards = cursorPosition;
       }
-
-      let leftAdjustment;
-      let rightAdjustment;
-      if (zoomTowards.getValueNs() < currentMiddle.getValueNs()) {
-        leftAdjustment = currentZoomWidth.times(0n);
-        rightAdjustment = currentZoomWidth
-          .times(zoomRatio.denominator - zoomRatio.nominator)
-          .div(zoomRatio.denominator);
-      } else {
-        leftAdjustment = currentZoomWidth
-          .times(zoomRatio.denominator - zoomRatio.nominator)
-          .div(zoomRatio.denominator);
-        rightAdjustment = currentZoomWidth.times(0n);
-      }
-
-      newFrom = currentZoomRange.from.add(leftAdjustment.getValueNs());
-      newTo = currentZoomRange.to.minus(rightAdjustment.getValueNs());
-      const newMiddle = newFrom.add(newTo.getValueNs()).div(2n);
-
-      if (
-        (zoomTowards.getValueNs() <= currentMiddle.getValueNs() &&
-          newMiddle.getValueNs() < zoomTowards.getValueNs()) ||
-        (zoomTowards.getValueNs() >= currentMiddle.getValueNs() &&
-          newMiddle.getValueNs() > zoomTowards.getValueNs())
-      ) {
-        // Moved past middle, so ensure cursor is in the middle
-        newFrom = zoomTowards.minus(zoomToWidth.div(2n).getValueNs());
-        newTo = zoomTowards.add(zoomToWidth.div(2n).getValueNs());
-      }
-    } else {
-      newFrom = zoomOn.minus(zoomToWidth.div(2n).getValueNs());
-      newTo = zoomOn.add(zoomToWidth.div(2n).getValueNs());
+    } else if (zoomOn.in(currentZoomRange)) {
+      zoomTowards = zoomOn;
     }
+
+    newFrom = zoomTowards.minus(
+      zoomToWidth
+        .times(
+          zoomTowards.minus(currentZoomRange.from.getValueNs()).getValueNs(),
+        )
+        .div(currentZoomWidth.getValueNs())
+        .getValueNs(),
+    );
+
+    newTo = zoomTowards.add(
+      zoomToWidth
+        .times(currentZoomRange.to.minus(zoomTowards.getValueNs()).getValueNs())
+        .div(currentZoomWidth.getValueNs())
+        .getValueNs(),
+    );
 
     if (newFrom.getValueNs() < fullRange.from.getValueNs()) {
       newTo = TimestampUtils.min(
         fullRange.to,
-        newTo.add(fullRange.from.minus(newFrom.getValueNs()).getValueNs()),
+        newFrom.add(zoomToWidth.getValueNs()),
       );
       newFrom = fullRange.from;
     }
@@ -366,7 +384,7 @@ export class MiniTimelineComponent {
     if (newTo.getValueNs() > fullRange.to.getValueNs()) {
       newFrom = TimestampUtils.max(
         fullRange.from,
-        newFrom.minus(newTo.minus(fullRange.to.getValueNs()).getValueNs()),
+        fullRange.to.minus(zoomToWidth.getValueNs()),
       );
       newTo = fullRange.to;
     }
@@ -497,21 +515,17 @@ export class MiniTimelineComponent {
   }
 
   private updateZoomByScrollEvent(event: WheelEvent) {
-    const timelineData = assertDefined(this.timelineData);
-    const canvas = event.target as HTMLCanvasElement;
-    const xPosInCanvas = event.x - canvas.offsetLeft;
-    const zoomRange = timelineData.getZoomRange();
-
-    const zoomTo = new Transformer(
-      zoomRange,
-      assertDefined(this.drawer).getUsableRange(),
-      assertDefined(timelineData.getTimestampConverter()),
-    ).untransform(xPosInCanvas);
-
+    if (!this.hoverTimestamp) {
+      const canvas = event.target as HTMLCanvasElement;
+      const drawer = assertDefined(this.drawer);
+      this.lastMousePosX =
+        (drawer.getWidth() * event.offsetX) / canvas.offsetWidth;
+      this.updateHoverTimestamp();
+    }
     if (event.deltaY < 0) {
-      this.zoomIn(zoomTo);
+      this.zoomIn(this.hoverTimestamp);
     } else {
-      this.zoomOut(zoomTo);
+      this.zoomOut(this.hoverTimestamp);
     }
   }
 
@@ -554,5 +568,6 @@ export class MiniTimelineComponent {
     }
 
     this.onZoomChanged(new TimeRange(newFrom, newTo));
+    this.updateHoverTimestamp();
   }
 }

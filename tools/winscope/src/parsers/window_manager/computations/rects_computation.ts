@@ -59,6 +59,12 @@ class RectWmFactory {
       container.getEagerPropertyByName('isComputedVisible')?.getValue() ??
       false;
 
+    const alpha =
+      container
+        .getEagerPropertyByName('attributes')
+        ?.getChildByName('alpha')
+        ?.getValue() ?? 1;
+
     const frame = container
       .getEagerPropertyByName('windowFrames')
       ?.getChildByName('frame');
@@ -84,6 +90,7 @@ class RectWmFactory {
       .setIsDisplay(false)
       .setIsVirtual(false)
       .setDepth(absoluteZ)
+      .setOpacity(alpha)
       .build();
   }
 }

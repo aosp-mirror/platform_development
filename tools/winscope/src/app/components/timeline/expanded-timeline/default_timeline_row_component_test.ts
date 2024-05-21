@@ -248,6 +248,29 @@ describe('DefaultTimelineRowComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('tracks mouse position', async () => {
+    setTraceAndSelectionRange(10n, 110n);
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    const spy = spyOn(component.onMouseXRatioUpdate, 'emit');
+    const canvas = assertDefined(component.canvasRef).nativeElement;
+
+    const mouseMoveEvent = new MouseEvent('mousemove');
+    Object.defineProperty(mouseMoveEvent, 'target', {value: canvas});
+    Object.defineProperty(mouseMoveEvent, 'offsetX', {value: 100});
+    canvas.dispatchEvent(mouseMoveEvent);
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledWith(100 / canvas.offsetWidth);
+
+    const mouseLeaveEvent = new MouseEvent('mouseleave');
+    canvas.dispatchEvent(mouseLeaveEvent);
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledWith(undefined);
+  });
+
   function setTraceAndSelectionRange(low: bigint, high: bigint) {
     component.trace = new TraceBuilder<{}>()
       .setType(TraceType.TRANSITION)

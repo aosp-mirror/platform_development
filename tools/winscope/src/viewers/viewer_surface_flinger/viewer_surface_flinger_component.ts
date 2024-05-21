@@ -16,6 +16,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {ShadingMode} from 'viewers/components/rects/types3d';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -31,7 +32,8 @@ import {UiData} from './ui_data';
         [isStackBased]="true"
         [rects]="inputData?.rects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displays]="inputData?.displays ?? []"></rects-view>
+        [displays]="inputData?.displays ?? []"
+        [shadingModes]="shadingModes"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
@@ -62,4 +64,9 @@ export class ViewerSurfaceFlingerComponent {
   @Input() store: PersistentStore | undefined;
   @Input() active = false;
   TraceType = TraceType;
+  shadingModes = [
+    ShadingMode.GRADIENT,
+    ShadingMode.OPACITY,
+    ShadingMode.WIRE_FRAME,
+  ];
 }

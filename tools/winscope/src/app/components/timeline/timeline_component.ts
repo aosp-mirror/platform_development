@@ -82,6 +82,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         (onTracePositionUpdate)="updatePosition($event)"
         (onScrollEvent)="updateScrollEvent($event)"
         (onTraceClicked)="onTimelineTraceClicked($event)"
+        (onMouseXRatioUpdate)="updateExpandedTimelineMouseXRatio($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
@@ -232,6 +233,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             [selectedTraces]="selectedTraces"
             [initialZoom]="initialZoom"
             [expandedTimelineScrollEvent]="expandedTimelineScrollEvent"
+            [expandedTimelineMouseXRatio]="expandedTimelineMouseXRatio"
             [bookmarks]="bookmarks"
             [store]="store"
             (onTracePositionUpdate)="updatePosition($event)"
@@ -518,6 +520,7 @@ export class TimelineComponent
   private expanded = false;
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private expandedTimelineScrollEvent: WheelEvent | undefined;
+  private expandedTimelineMouseXRatio: number | undefined;
   private seekTracePosition?: TracePosition;
 
   constructor(
@@ -822,6 +825,10 @@ export class TimelineComponent
 
   updateScrollEvent(event: WheelEvent) {
     this.expandedTimelineScrollEvent = event;
+  }
+
+  updateExpandedTimelineMouseXRatio(mouseXRatio: number | undefined) {
+    this.expandedTimelineMouseXRatio = mouseXRatio;
   }
 
   getCopyPositionTooltip(position: string): string {
