@@ -62,7 +62,7 @@ describe('PresenterTransitions', () => {
       outputUiData = data;
     });
 
-    const entry = trace.getEntry(0);
+    const entry = trace.getEntry(1);
     await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
 
     expect(outputUiData.entries.length).toEqual(4);

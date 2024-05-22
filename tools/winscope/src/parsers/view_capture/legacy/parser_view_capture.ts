@@ -17,13 +17,13 @@
 import {assertDefined} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {ParsingUtils} from 'parsers/legacy/parsing_utils';
-import {com} from 'protos/viewcapture/latest/static';
+import {com} from 'protos/viewcapture/udc/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ParserViewCaptureWindow} from './parser_view_capture_window';
-import {ExportedData} from './vc_tampered_protos';
+import {ExportedData} from './tampered_protos';
 
 export class ParserViewCapture {
   private readonly windowParsers: Array<Parser<HierarchyTreeNode>> = [];
