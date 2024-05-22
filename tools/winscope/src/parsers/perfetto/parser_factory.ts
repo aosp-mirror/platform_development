@@ -27,6 +27,7 @@ import {ParserProtolog} from 'parsers/protolog/perfetto/parser_protolog';
 import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
 import {ParserTransactions} from 'parsers/transactions/perfetto/parser_transactions';
 import {ParserTransitions} from 'parsers/transitions/perfetto/parser_transitions';
+import {ParserViewCapture} from 'parsers/view_capture/perfetto/parser_view_capture';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {
@@ -40,10 +41,11 @@ export class ParserFactory {
     ParserInputMethodClients,
     ParserInputMethodManagerService,
     ParserInputMethodService,
+    ParserProtolog,
     ParserSurfaceFlinger,
     ParserTransactions,
     ParserTransitions,
-    ParserProtolog,
+    ParserViewCapture,
   ];
   private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
   private static traceProcessor?: WasmEngineProxy;
@@ -94,7 +96,11 @@ export class ParserFactory {
           timestampConverter,
         );
         await parser.parse();
-        parsers.push(parser);
+        if (parser instanceof ParserViewCapture) {
+          parsers.push(...parser.getWindowParsers());
+        } else {
+          parsers.push(parser);
+        }
         hasFoundParser = true;
       } catch (error) {
         // skip current parser
