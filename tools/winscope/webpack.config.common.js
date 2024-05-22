@@ -36,10 +36,10 @@ module.exports = {
     rules: [
       {
         test: /^((?!test).)*\.ts$/,
-        include: [path.resolve("src")],
+        include: [path.resolve('src')],
         loader: '@ephesoft/webpack.istanbul.loader', // Must be first loader
-        options: { esModules: true },
-        enforce: "post",
+        options: {esModules: true},
+        enforce: 'post',
       },
       {
         test: /\.ts$/,
