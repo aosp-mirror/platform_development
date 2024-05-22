@@ -18,50 +18,40 @@ import {assertDefined} from 'common/assert_utils';
 import {HierarchyTreeBuilder} from 'parsers/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
-  protected override buildIdentifierToChildMap(
-    nodes: PropertiesProvider[],
-  ): Map<string | number, PropertiesProvider[]> {
-    const map = nodes.reduce((map, node) => {
-      const nodeProperties = node.getEagerProperties();
+  protected override buildIdentifierToChildrenMap(
+    views: PropertiesProvider[],
+  ): Map<string | number, readonly HierarchyTreeNode[]> {
+    const map = views.reduce((map, view) => {
+      const viewProperties = view.getEagerProperties();
+      const viewNode = this.makeNode(
+        viewProperties.id,
+        viewProperties.name,
+        view,
+      );
       const hashcode = assertDefined(
-        nodeProperties.getChildByName('hashcode'),
+        viewProperties.getChildByName('hashcode'),
       ).getValue();
-      map.set(hashcode, [node]);
+      map.set(hashcode, [viewNode]);
       return map;
-    }, new Map<string, PropertiesProvider[]>());
+    }, new Map<string, HierarchyTreeNode[]>());
     return map;
   }
 
-  protected override makeRootChildren(
-    children: PropertiesProvider[],
-    identifierToChild: Map<string | number, PropertiesProvider[]>,
-  ): readonly HierarchyTreeNode[] {
-    const rootChildrenHashcodes = assertDefined(
-      assertDefined(this.root).getEagerProperties().getChildByName('children'),
-    )
-      .getAllChildren()
-      .map((child) => child.getValue());
-
-    const rootNodes = children.filter((node) => {
-      return rootChildrenHashcodes.includes(
-        assertDefined(
-          node.getEagerProperties().getChildByName('hashcode'),
-        ).getValue(),
-      );
-    });
-    return rootNodes.map((layer) => {
-      return this.buildSubtree(layer, identifierToChild);
-    });
-  }
-
-  protected override getIdentifierValue(identifier: PropertyTreeNode): number {
-    return identifier.getValue();
-  }
-
-  protected override getSubtreeName(propertyTreeName: string): string {
-    return propertyTreeName;
+  protected override updateChildren(
+    node: HierarchyTreeNode,
+    identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
+    isRoot?: boolean,
+  ): void {
+    const childHashcodes =
+      node.getEagerPropertyByName('children')?.getAllChildren() ?? [];
+    for (const hashcode of childHashcodes) {
+      const child = identifierToChildren.get(hashcode.getValue())?.at(0);
+      if (child) {
+        this.setParentChildRelationship(node, child);
+        this.updateChildren(child, identifierToChildren);
+      }
+    }
   }
 }
