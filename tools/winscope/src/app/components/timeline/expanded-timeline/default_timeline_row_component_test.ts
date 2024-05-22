@@ -27,6 +27,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
+import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {waitToBeCalled} from 'test/utils';
@@ -247,6 +248,29 @@ describe('DefaultTimelineRowComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('tracks mouse position', async () => {
+    setTraceAndSelectionRange(10n, 110n);
+
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+
+    const spy = spyOn(component.onMouseXRatioUpdate, 'emit');
+    const canvas = assertDefined(component.canvasRef).nativeElement;
+
+    const mouseMoveEvent = new MouseEvent('mousemove');
+    Object.defineProperty(mouseMoveEvent, 'target', {value: canvas});
+    Object.defineProperty(mouseMoveEvent, 'offsetX', {value: 100});
+    canvas.dispatchEvent(mouseMoveEvent);
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalledWith(100 / canvas.offsetWidth);
+
+    const mouseLeaveEvent = new MouseEvent('mouseleave');
+    canvas.dispatchEvent(mouseLeaveEvent);
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledWith(undefined);
+  });
+
   function setTraceAndSelectionRange(low: bigint, high: bigint) {
     component.trace = new TraceBuilder<{}>()
       .setType(TraceType.TRANSITION)
@@ -258,10 +282,10 @@ describe('DefaultTimelineRowComponent', () => {
         TimestampConverterUtils.makeRealTimestamp(70n),
       ])
       .build();
-    component.selectionRange = {
-      from: TimestampConverterUtils.makeRealTimestamp(low),
-      to: TimestampConverterUtils.makeRealTimestamp(high),
-    };
+    component.selectionRange = new TimeRange(
+      TimestampConverterUtils.makeRealTimestamp(low),
+      TimestampConverterUtils.makeRealTimestamp(high),
+    );
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
   }
 

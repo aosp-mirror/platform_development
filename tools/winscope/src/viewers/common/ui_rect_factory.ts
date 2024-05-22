@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TraceRect} from 'trace/trace_rect';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
@@ -47,11 +48,15 @@ class UiRectFactory {
           ),
         )
         .setDepth(traceRect.depth)
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }
 
-  makeVcUiRects(hierarchyRoot: HierarchyTreeNode): UiRect[] {
+  makeVcUiRects(
+    hierarchyRoot: HierarchyTreeNode,
+    traceType: TraceType,
+  ): UiRect[] {
     const traceRects = this.extractRects(hierarchyRoot);
     return traceRects.map((traceRect) => {
       return new UiRectBuilder()
@@ -64,12 +69,13 @@ class UiRectFactory {
         .setIsVisible(traceRect.isVisible)
         .setIsDisplay(traceRect.isDisplay)
         .setId(traceRect.id)
-        .setGroupId(traceRect.groupId)
+        .setGroupId(traceType)
         .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(true)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(traceRect.isVisible)
         .setDepth(assertDefined(traceRect.depth))
+        .setOpacity(traceRect.opacity)
         .build();
     });
   }

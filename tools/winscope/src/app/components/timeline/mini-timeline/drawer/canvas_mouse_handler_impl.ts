@@ -16,6 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
+import {TraceType} from 'trace/trace_type';
 import {
   CanvasMouseHandler,
   DragListener,
@@ -39,19 +40,23 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
   constructor(
     private drawer: MiniTimelineDrawer,
     private defaultCursor = 'auto',
-    private onUnhandledMouseDown: (point: Point) => void = (point) => {},
+    private onUnhandledMouseDown: (
+      point: Point,
+      button: number,
+      trace?: TraceType,
+    ) => void = (point, button) => {},
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {
       this.handleMouseMove(event);
     });
-    this.drawer.canvas.addEventListener('mousedown', (event) => {
-      this.handleMouseDown(event);
+    this.drawer.canvas.addEventListener('mousedown', async (event) => {
+      await this.handleMouseDown(event);
     });
     this.drawer.canvas.addEventListener('mouseup', (event) => {
       this.handleMouseUp(event);
     });
     this.drawer.canvas.addEventListener('mouseout', (event) => {
-      this.handleMouseUp(event);
+      this.handleMouseOut(event);
     });
   }
 
@@ -72,7 +77,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     this.draggableObjects.unshift(draggableObject);
   }
 
-  private handleMouseDown(e: MouseEvent) {
+  private async handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     const mousePoint = this.getPos(e);
@@ -81,7 +86,8 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     if (clickedObject !== undefined) {
       this.draggingObject = clickedObject;
     } else {
-      this.onUnhandledMouseDown(mousePoint);
+      const trace = await this.drawer.getTraceClicked(mousePoint);
+      this.onUnhandledMouseDown(mousePoint, e.button, trace);
     }
     this.updateCursor(mousePoint);
   }
@@ -96,9 +102,16 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
       if (onDragCallback !== undefined) {
         onDragCallback(mousePoint.x, mousePoint.y);
       }
+    } else {
+      this.drawer.updateHover(mousePoint);
     }
 
     this.updateCursor(mousePoint);
+  }
+
+  private handleMouseOut(e: MouseEvent) {
+    this.drawer.updateHover(undefined);
+    this.handleMouseUp(e);
   }
 
   private handleMouseUp(e: MouseEvent) {

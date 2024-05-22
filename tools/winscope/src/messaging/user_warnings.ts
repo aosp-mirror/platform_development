@@ -63,7 +63,7 @@ export class TraceHasOldData extends UserWarning {
       : undefined;
     return (
       `${this.descriptor}: discarded because data is old` +
-      (this.timeGap ? `der than ${elapsedTime?.format(true)}` : '')
+      (this.timeGap ? `der than ${elapsedTime?.format()}` : '')
     );
   }
 }

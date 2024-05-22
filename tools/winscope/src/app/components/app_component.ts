@@ -29,10 +29,10 @@ import {Title} from '@angular/platform-browser';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {Mediator} from 'app/mediator';
 import {TimelineData} from 'app/timeline_data';
-import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
 import {FileUtils} from 'common/file_utils';
 import {globalConfig} from 'common/global_config';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
@@ -46,12 +46,11 @@ import {
   AppRefreshDumpsRequest,
   AppResetRequest,
   AppTraceViewRequest,
+  DarkModeToggled,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {MockStorage} from 'test/unit/mock_storage';
-import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 import {
@@ -59,7 +58,7 @@ import {
   TRACES,
 } from 'trace_collection/trace_collection_utils';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
-import {View, Viewer} from 'viewers/viewer';
+import {Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
@@ -83,6 +82,15 @@ import {UploadTracesComponent} from './upload_traces_component';
 
       <div class="horizontal-align vertical-align">
         <div *ngIf="showDataLoadedElements" class="file-descriptor vertical-align">
+          <button
+            mat-icon-button
+            *ngIf="showCrossToolSyncButton()"
+            [matTooltip]="getCrossToolSyncTooltip()"
+            class="cross-tool-sync-button"
+            (click)="onCrossToolSyncButtonClick()"
+            [color]="getCrossToolSyncButtonColor()">
+            <mat-icon class="material-symbols-outlined">cloud_sync</mat-icon>
+          </button>
           <span *ngIf="!isEditingFilename" class="download-file-info mat-body-2">
             {{ filenameFormControl.value }}
           </span>
@@ -136,7 +144,6 @@ import {UploadTracesComponent} from './upload_traces_component';
         </button>
         <button
           *ngIf="showDataLoadedElements"
-          color="primary"
           mat-icon-button
           matTooltip="Upload or collect new trace"
           class="upload-new"
@@ -148,9 +155,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           matTooltip="Documentation"
           class="documentation"
-          (click)="
-            goToLink('https://source.android.com/docs/core/graphics/tracing-win-transitions')
-          ">
+          (click)="goToDocumentation()">
           <mat-icon>menu_book</mat-icon>
         </button>
 
@@ -158,7 +163,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           class="report-bug"
           matTooltip="Report bug"
-          (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
+          (click)="goToBuganizer()">
           <mat-icon>bug_report</mat-icon>
         </button>
 
@@ -166,7 +171,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           mat-icon-button
           class="dark-mode"
           matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
-          (click)="setDarkMode(!isDarkModeOn)">
+          (click)="toggleDarkMode()">
           <mat-icon>
             {{ isDarkModeOn ? 'brightness_5' : 'brightness_4' }}
           </mat-icon>
@@ -189,7 +194,6 @@ import {UploadTracesComponent} from './upload_traces_component';
         <timeline
           *ngIf="dataLoaded"
           [timelineData]="timelineData"
-          [activeViewTraceTypes]="activeView?.dependencies"
           [availableTraces]="getLoadedTraceTypes()"
           [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
@@ -314,24 +318,21 @@ export class AppComponent implements WinscopeEventListener {
   title = 'winscope';
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
-  crossToolProtocol = new CrossToolProtocol();
+  crossToolProtocol: CrossToolProtocol;
   states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
   collapsedTimelineHeight = 0;
-  TRACE_INFO = TRACE_INFO;
   isEditingFilename = false;
   store = new PersistentStore();
   viewers: Viewer[] = [];
 
-  isDarkModeOn!: boolean;
+  isDarkModeOn = false;
   changeDetectorRef: ChangeDetectorRef;
   snackbarOpener: SnackBarOpener;
   tracePipeline: TracePipeline;
   mediator: Mediator;
   currentTimestamp?: Timestamp;
-  activeView?: View;
-  activeTrace?: Trace<object>;
   filenameFormControl = new FormControl(
     'winscope',
     Validators.compose([
@@ -360,6 +361,9 @@ export class AppComponent implements WinscopeEventListener {
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
     this.tracePipeline = new TracePipeline();
+    this.crossToolProtocol = new CrossToolProtocol(
+      this.tracePipeline.getTimestampConverter(),
+    );
     this.mediator = new Mediator(
       this.tracePipeline,
       this.timelineData,
@@ -428,7 +432,7 @@ export class AppComponent implements WinscopeEventListener {
     }
 
     this.traceConfigStorage =
-      globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+      globalConfig.MODE === 'PROD' ? localStorage : new InMemoryStorage();
 
     this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
@@ -440,19 +444,16 @@ export class AppComponent implements WinscopeEventListener {
       {
         window_dump: {
           name: 'Window Manager',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         layers_dump: {
           name: 'Surface Flinger',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         screenshot: {
           name: 'Screenshot',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
@@ -492,10 +493,11 @@ export class AppComponent implements WinscopeEventListener {
     return UrlUtils.getRootUrl() + logoPath;
   }
 
-  setDarkMode(enabled: boolean) {
+  async setDarkMode(enabled: boolean) {
     document.body.classList.toggle('dark-mode', enabled);
     this.store.add('dark-mode', `${enabled}`);
     this.isDarkModeOn = enabled;
+    await this.mediator.onWinscopeEvent(new DarkModeToggled(enabled));
   }
 
   onPencilIconClick() {
@@ -526,6 +528,7 @@ export class AppComponent implements WinscopeEventListener {
   }
 
   async onRefreshDumpsButtonClick() {
+    Analytics.Tracing.logRefreshDumps();
     await this.mediator.onWinscopeEvent(new AppRefreshDumpsRequest());
   }
 
@@ -554,11 +557,6 @@ export class AppComponent implements WinscopeEventListener {
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
-    await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
-      this.activeView = event.newFocusedView;
-      this.activeTrace = this.getActiveTrace(event.newFocusedView);
-    });
-
     await event.visit(WinscopeEventType.VIEWERS_LOADED, async (event) => {
       this.viewers = event.viewers;
       this.filenameFormControl.setValue(
@@ -583,26 +581,65 @@ export class AppComponent implements WinscopeEventListener {
       this.dataLoaded = false;
       this.showDataLoadedElements = false;
       this.pageTitle.setTitle('Winscope');
-      this.activeView = undefined;
       this.changeDetectorRef.detectChanges();
     });
   }
 
-  goToLink(url: string) {
-    window.open(url, '_blank');
+  goToDocumentation() {
+    Analytics.Help.logDocumentationOpened();
+    this.goToLink(
+      'https://source.android.com/docs/core/graphics/tracing-win-transitions',
+    );
+  }
+
+  goToBuganizer() {
+    Analytics.Help.logBuganizerOpened();
+    this.goToLink('https://b.corp.google.com/issues/new?component=909476');
+  }
+
+  toggleDarkMode() {
+    if (!this.isDarkModeOn) {
+      Analytics.Settings.logDarkModeEnabled();
+    }
+    this.setDarkMode(!this.isDarkModeOn);
   }
 
   dumpsUploaded() {
     return !this.timelineData.hasMoreThanOneDistinctTimestamp();
   }
 
-  private getActiveTrace(view: View): Trace<object> | undefined {
-    let activeTrace: Trace<object> | undefined;
-    this.tracePipeline.getTraces().forEachTrace((trace) => {
-      if (trace.type === view.dependencies[0]) {
-        activeTrace = trace;
-      }
-    });
-    return activeTrace;
+  showCrossToolSyncButton() {
+    return this.crossToolProtocol.isConnected();
+  }
+
+  getCrossToolSyncTooltip() {
+    const currStatus = this.crossToolProtocol.getAllowTimestampSync();
+
+    return `Cross Tool Sync ${this.translateStatus(
+      currStatus,
+    )} (Click to turn ${this.translateStatus(!currStatus)})`;
+  }
+
+  onCrossToolSyncButtonClick() {
+    this.crossToolProtocol.setAllowTimestampSync(
+      !this.crossToolProtocol.getAllowTimestampSync(),
+    );
+    Analytics.Settings.logCrossToolSync(
+      this.crossToolProtocol.getAllowTimestampSync(),
+    );
+  }
+
+  getCrossToolSyncButtonColor() {
+    return this.crossToolProtocol.getAllowTimestampSync()
+      ? 'primary'
+      : 'accent';
+  }
+
+  private goToLink(url: string) {
+    window.open(url, '_blank');
+  }
+
+  private translateStatus(status: boolean) {
+    return status ? 'ON' : 'OFF';
   }
 }

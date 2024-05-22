@@ -87,7 +87,7 @@ import {UiData} from './ui_data';
           <div class="time">
             <button
               mat-button
-              [color]="isCurrentMessage(i) ? 'secondary' : 'primary'"
+              color="primary"
               (click)="onTimestampClicked(message.time)">
               {{ message.time.formattedValue() }}
             </button>

@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -54,7 +54,7 @@ describe('PresenterTransactions', () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSACTIONS, [])
       .build();
-    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
+    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
@@ -345,7 +345,7 @@ describe('PresenterTransactions', () => {
     await setUpTestEnvironment();
     expect(
       assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2022-08-03, 06:19:01.051480997');
+    ).toEqual('2022-08-03, 06:19:01.051');
   });
 
   async function setUpTestEnvironment() {
@@ -354,7 +354,7 @@ describe('PresenterTransactions', () => {
     traces = new Traces();
     traces.setTrace(TraceType.TRANSACTIONS, trace);
 
-    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
+    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 

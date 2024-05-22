@@ -84,6 +84,9 @@ describe('RectsComputation', () => {
       windowFrames: {
         frame: {left: 0, top: 0, right: 1, bottom: 1},
       },
+      attributes: {
+        alpha: 0.5,
+      },
     } as com.android.server.wm.IWindowStateProto);
 
     state1Node.addOrReplaceChild(
@@ -94,6 +97,9 @@ describe('RectsComputation', () => {
         isComputedVisible: false,
         windowFrames: {
           frame: {left: 0, top: 0, right: 2, bottom: 2},
+        },
+        attributes: {
+          alpha: 0.5,
         },
       } as com.android.server.wm.IWindowStateProto),
     );
@@ -113,6 +119,7 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setIsDisplay(false)
         .setIsVirtual(false)
+        .setOpacity(0.5)
         .build(),
 
       new TraceRectBuilder()
@@ -128,6 +135,7 @@ describe('RectsComputation', () => {
         .setIsVisible(false)
         .setIsDisplay(false)
         .setIsVirtual(false)
+        .setOpacity(0.5)
         .build(),
     ];
 

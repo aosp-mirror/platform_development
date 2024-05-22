@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UserOptions} from 'viewers/common/user_options';
+import {UserOption, UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 
@@ -42,7 +45,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
           [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange()"
+          (ngModelChange)="onUserOptionChange(userOptions[option])"
           [matTooltip]="userOptions[option].tooltip ?? ''"
           >{{ userOptions[option].name }}</mat-checkbox
         >
@@ -73,7 +76,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       <div class="tree-wrapper">
         <tree-view
           [node]="propertiesTree"
-          [store]="store"
           [useStoredExpandedState]="!!store"
           [itemsClickable]="true"
           [highlightedItem]="highlightedProperty"
@@ -170,7 +172,12 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onUserOptionChange() {
+  onUserOptionChange(option: UserOption) {
+    Analytics.Navigation.logPropertiesSettingsChanged(
+      option.name,
+      option.enabled,
+      TRACE_INFO[assertDefined(this.traceType)].name,
+    );
     const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},

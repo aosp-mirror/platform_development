@@ -47,6 +47,8 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import com.android.sharetest.ImageContentProvider.Companion.IMAGE_COUNT
+import com.android.sharetest.ImageContentProvider.Companion.makeItemUri
 import kotlin.random.Random
 
 private const val TYPE_IMAGE = "Image"
@@ -56,6 +58,7 @@ private const val TYPE_IMG_VIDEO = "Image / Video Mix"
 private const val TYPE_IMG_PDF = "Image / PDF Mix"
 private const val TYPE_VIDEO_PDF = "Video / PDF Mix"
 private const val TYPE_ALL = "All Type Mix"
+private const val ADDITIONAL_ITEM_COUNT = 1_000
 
 @RequiresApi(34)
 class ShareTestActivity : Activity() {
@@ -72,6 +75,7 @@ class ShareTestActivity : Activity() {
     private lateinit var altIntentCheck: CheckBox
     private lateinit var callerTargetCheck: CheckBox
     private lateinit var selectionLatencyGroup: RadioGroup
+    private lateinit var imageSizeMetadataCheck: CheckBox
     private val customActionFactory = CustomActionFactory(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +85,7 @@ class ShareTestActivity : Activity() {
         val container = requireViewById<View>(R.id.container)
         ViewCompat.setOnApplyWindowInsetsListener(container) { v, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updateLayoutParams<MarginLayoutParams>{
+            v.updateLayoutParams<MarginLayoutParams> {
                 leftMargin = insets.left
                 topMargin = insets.top
                 rightMargin = insets.right
@@ -132,6 +136,7 @@ class ShareTestActivity : Activity() {
         mediaTypeSelection = requireViewById(R.id.media_type_selection)
         mediaTypeHeader = requireViewById(R.id.media_type_header)
         selectionLatencyGroup = requireViewById(R.id.selection_latency)
+        imageSizeMetadataCheck = requireViewById(R.id.image_size_metadata)
         mediaSelection = requireViewById<RadioGroup>(R.id.media_selection).apply {
             setOnCheckedChangeListener { _, id -> updateMediaTypesList(id) }
             check(R.id.no_media)
@@ -175,6 +180,21 @@ class ShareTestActivity : Activity() {
         requireViewById<RadioGroup>(R.id.image_get_type_latency).check(
             R.id.image_get_type_latency_none
         )
+
+        requireViewById<RadioGroup>(R.id.image_query_latency).let { radioGroup ->
+            radioGroup.setOnCheckedChangeListener {
+                    _,
+                    checkedId,
+                ->
+                ImageContentProvider.queryLatency = when (checkedId) {
+                    R.id.image_query_latency_50 -> 50
+                    R.id.image_query_latency_200 -> 200
+                    R.id.image_query_latency_800 -> 800
+                    else -> 0
+                }
+            }
+            radioGroup.check(R.id.image_query_latency_none)
+        }
 
         requireViewById<RadioGroup>(R.id.image_load_failure_rate).setOnCheckedChangeListener {
                 _,
@@ -252,25 +272,32 @@ class ShareTestActivity : Activity() {
 
         val mimeTypes = getSelectedContentTypes()
 
-        val imageUris = ArrayList(
-            (1..ImageContentProvider.IMAGE_COUNT).map { idx ->
-                ImageContentProvider.makeItemUri(idx, mimeTypes[idx % mimeTypes.size])
-            })
-
-        val imageIndex = Random.nextInt(ImageContentProvider.IMAGE_COUNT)
+        val imageIndex = Random.nextInt(ADDITIONAL_ITEM_COUNT)
 
         when (mediaSelection.checkedRadioButtonId) {
             R.id.one_image -> share.apply {
-                val sharedUri = imageUris[imageIndex]
+                val sharedUri = makeItemUri(
+                    imageIndex,
+                    mimeTypes[imageIndex % mimeTypes.size],
+                    imageSizeMetadataCheck.isChecked
+                )
                 putExtra(Intent.EXTRA_STREAM, sharedUri)
                 clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(sharedUri))
                 type = if (mimeTypes.size == 1) mimeTypes[0] else "*/*"
             }
 
             R.id.many_images -> share.apply {
+                val imageUris = ArrayList(
+                    (0 until IMAGE_COUNT).map { idx ->
+                        makeItemUri(
+                            idx,
+                            mimeTypes[idx % mimeTypes.size],
+                            imageSizeMetadataCheck.isChecked
+                        )
+                    })
                 action = Intent.ACTION_SEND_MULTIPLE
                 clipData = ClipData("", arrayOf("image/jpg"), ClipData.Item(imageUris[0])).apply {
-                    for (i in 1 until ImageContentProvider.IMAGE_COUNT) {
+                    for (i in 1 until IMAGE_COUNT) {
                         addItem(ClipData.Item(imageUris[i]))
                     }
                 }
@@ -358,14 +385,23 @@ class ShareTestActivity : Activity() {
             chooserIntent.putExtra(Intent.EXTRA_METADATA_TEXT, metadata.text)
         }
         if (shareouselCheck.isChecked) {
+            val additionalContentUri = AdditionalContentProvider.ADDITIONAL_CONTENT_URI
+                .buildUpon()
+                .appendQueryParameter(
+                    AdditionalContentProvider.PARAM_COUNT,
+                    ADDITIONAL_ITEM_COUNT.toString(),
+                )
+                .appendQueryParameter(
+                    AdditionalContentProvider.PARAM_SIZE_META,
+                    imageSizeMetadataCheck.isChecked.toString(),
+                )
+                .build()
             chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_ADDITIONAL_CONTENT_URI,
-                AdditionalContentProvider.ADDITIONAL_CONTENT_URI,
+                additionalContentUri,
             )
             chooserIntent.putExtra(Intent.EXTRA_CHOOSER_FOCUSED_ITEM_POSITION, 0)
-            chooserIntent.clipData?.addItem(
-                ClipData.Item(AdditionalContentProvider.ADDITIONAL_CONTENT_URI)
-            )
+            chooserIntent.clipData?.addItem(ClipData.Item(additionalContentUri))
             if (mediaSelection.checkedRadioButtonId == R.id.one_image) {
                 chooserIntent.putExtra(
                     AdditionalContentProvider.CURSOR_START_POSITION,

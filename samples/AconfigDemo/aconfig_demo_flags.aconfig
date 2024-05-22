@@ -92,3 +92,19 @@ flag {
     purpose: PURPOSE_BUGFIX
   }
 }
+
+flag {
+  name: "test_mendel_gantry_disintegration"
+  namespace: "gantry"
+  description: "A regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+}
+
+flag {
+  name: "test_mendel_gantry_disintegration_again"
+  namespace: "core_experiments_team_internal"
+  description: "A regular server-side flag moving on new path to gantry"
+  bug: "336346880"
+  is_fixed_read_only: false
+}

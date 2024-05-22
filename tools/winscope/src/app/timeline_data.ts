@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
-import {TimestampUtils} from 'common/timestamp_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -40,7 +39,7 @@ export class TimelineData {
     TraceType,
     TraceEntry<any> | undefined
   >();
-  private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
+  private activeViewTraceType: TraceType | undefined;
   private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
   private timestampConverter: ComponentTimestampConverter | undefined;
 
@@ -86,7 +85,7 @@ export class TimelineData {
       )
       .sort(TraceTypeUtils.compareByDisplayOrder);
     if (types.length > 0) {
-      this.setActiveViewTraceTypes([types[0]]);
+      this.setActiveViewTraceType(types[0]);
     }
   }
 
@@ -108,7 +107,7 @@ export class TimelineData {
       currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
     }
 
-    const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
+    const firstActiveEntry = this.getFirstEntryOfActiveViewTrace();
     if (firstActiveEntry) {
       currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
@@ -137,8 +136,8 @@ export class TimelineData {
 
   makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
     let trace: Trace<{}> | undefined;
-    if (this.activeViewTraceTypes.length > 0) {
-      trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
+    if (this.activeViewTraceType !== undefined) {
+      trace = this.traces.getTrace(this.activeViewTraceType);
     }
 
     if (!trace) {
@@ -153,8 +152,12 @@ export class TimelineData {
     return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
-  setActiveViewTraceTypes(types: TraceType[]) {
-    this.activeViewTraceTypes = types;
+  setActiveViewTraceType(type: TraceType) {
+    this.activeViewTraceType = type;
+  }
+
+  getActiveViewTraceType() {
+    return this.activeViewTraceType;
   }
 
   getFullTimeRange(): TimeRange {
@@ -162,10 +165,10 @@ export class TimelineData {
       throw Error('Trying to get full time range when there are no timestamps');
     }
 
-    const fullTimeRange = {
-      from: this.firstEntry.getTimestamp(),
-      to: this.lastEntry.getTimestamp(),
-    };
+    const fullTimeRange = new TimeRange(
+      this.firstEntry.getTimestamp(),
+      this.lastEntry.getTimestamp(),
+    );
 
     if (
       this.lastReturnedFullTimeRange === undefined ||
@@ -321,7 +324,7 @@ export class TimelineData {
     this.screenRecordingVideo = undefined;
     this.lastReturnedFullTimeRange = undefined;
     this.lastReturnedCurrentEntries.clear();
-    this.activeViewTraceTypes = [];
+    this.activeViewTraceType = undefined;
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
@@ -356,18 +359,14 @@ export class TimelineData {
     return last;
   }
 
-  private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
-    const activeEntries = this.activeViewTraceTypes
-      .filter((it) => this.traces.getTrace(it) !== undefined)
-      .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
-      .filter((trace) => trace.lengthEntries > 0)
-      .map((trace) => trace.getEntry(0))
-      .sort((a, b) => {
-        return TimestampUtils.compareFn(a.getTimestamp(), b.getTimestamp());
-      });
-    if (activeEntries.length === 0) {
+  private getFirstEntryOfActiveViewTrace(): TraceEntry<{}> | undefined {
+    if (this.activeViewTraceType === undefined) {
       return undefined;
     }
-    return activeEntries[0];
+    const trace = this.traces.getTrace(this.activeViewTraceType);
+    if (!trace || trace.lengthEntries === 0) {
+      return undefined;
+    }
+    return trace.getEntry(0);
   }
 }

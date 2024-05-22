@@ -36,7 +36,7 @@ export class UiData {
   curatedProperties: SfCuratedProperties | undefined;
   displayPropertyGroups = true;
 
-  constructor(dependencies?: TraceType[]) {
-    this.dependencies = dependencies ?? [];
+  constructor(dependencies: TraceType[]) {
+    this.dependencies = dependencies;
   }
 }

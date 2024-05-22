@@ -304,7 +304,7 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '1.3';
+  readonly VERSION = '2.0.0';
   state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
@@ -378,9 +378,23 @@ export class ProxyClient {
 
   areVersionsCompatible(proxyVersion: string | null): boolean {
     if (!proxyVersion) return false;
-    const [proxyMajor, proxyMinor, patch] = proxyVersion.split('.');
-    const [clientMajor, clientMinor] = this.VERSION.split('.');
-    return proxyMajor === clientMajor && proxyMinor >= clientMinor;
+    const [proxyMajor, proxyMinor, proxyPatch] = proxyVersion
+      .split('.')
+      .map((s) => Number(s));
+    const [clientMajor, clientMinor, clientPatch] = this.VERSION.split('.').map(
+      (s) => Number(s),
+    );
+
+    if (proxyMajor !== clientMajor) {
+      return false;
+    }
+
+    if (proxyMinor === clientMinor) {
+      // Check patch number to ensure user has deployed latest bug fixes
+      return proxyPatch >= clientPatch;
+    }
+
+    return proxyMinor > clientMinor;
   }
 }
 

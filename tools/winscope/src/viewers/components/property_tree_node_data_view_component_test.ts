@@ -74,7 +74,7 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     fixture.detectChanges();
 
     expect(assertDefined(timestamp).formattedValue()).toEqual(
-      '2022-07-29, 20:34:49.102158832',
+      '2022-07-29, 20:34:49.102',
     );
   });
 });

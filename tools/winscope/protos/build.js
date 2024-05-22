@@ -15,7 +15,7 @@
  */
 const {exec} = require('child_process');
 
-const ANDROID_BUILD_TOP = __dirname + '/../../../../../main';
+const ANDROID_BUILD_TOP = __dirname + '/../../../../';
 const WINSCOPE_TOP = __dirname + '/..';
 const PERFETTO_TOP = ANDROID_BUILD_TOP + '/external/perfetto';
 const OUT_TOP = __dirname + '/../deps_build/protos';
@@ -30,6 +30,9 @@ async function build() {
         buildProtos([
             '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
         ], 'ime/udc'),
+        buildProtos([
+            'ime/latest/wrapper.proto',
+        ], 'ime/latest'),
 
         // ProtoLog
         buildProtos([

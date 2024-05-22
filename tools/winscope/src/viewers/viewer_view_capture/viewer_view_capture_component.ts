@@ -17,6 +17,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {ShadingMode} from 'viewers/components/rects/types3d';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
@@ -30,16 +31,19 @@ import {UiData} from './ui_data';
     <div class="card-grid">
       <rects-view
         class="rects-view"
-        title="View Hierarchy Sketch"
+        title="Hierarchy Sketch"
         [store]="store"
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
-        [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
+        [highlightedItem]="inputData?.highlightedItem ?? ''"
+        [displays]="inputData?.windows ?? []"
+        groupLabel="Windows"
+        [shadingModes]="shadingModes"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree"
+        [subtrees]="inputData?.trees"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -62,4 +66,9 @@ import {UiData} from './ui_data';
 export class ViewerViewCaptureComponent {
   @Input() inputData: UiData | undefined;
   @Input() store: PersistentStore | undefined;
+  shadingModes = [
+    ShadingMode.GRADIENT,
+    ShadingMode.OPACITY,
+    ShadingMode.WIRE_FRAME,
+  ];
 }

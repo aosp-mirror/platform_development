@@ -24,12 +24,12 @@ use std::path::{Path, PathBuf};
 /// `cfg` strings for dependencies which should be considered enabled. It would be better to parse
 /// them properly, but this is good enough in practice so far.
 const ENABLED_CFGS: [&str; 6] = [
-    r#"cfg(unix)"#,
-    r#"cfg(not(windows))"#,
-    r#"cfg(any(unix, target_os = "wasi"))"#,
-    r#"cfg(not(all(target_family = "wasm", target_os = "unknown")))"#,
-    r#"cfg(not(target_family = "wasm"))"#,
-    r#"cfg(any(target_os = "linux", target_os = "android"))"#,
+    r#"unix"#,
+    r#"not(windows)"#,
+    r#"any(unix, target_os = "wasi")"#,
+    r#"not(all(target_family = "wasm", target_os = "unknown"))"#,
+    r#"not(target_family = "wasm")"#,
+    r#"any(target_os = "linux", target_os = "android")"#,
 ];
 
 /// `cargo metadata` output.
@@ -39,7 +39,7 @@ pub struct WorkspaceMetadata {
     pub workspace_members: Vec<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq)]
 pub struct PackageMetadata {
     pub name: String,
     pub version: String,
@@ -62,17 +62,20 @@ pub struct DependencyMetadata {
 
 impl DependencyMetadata {
     /// Returns whether the dependency should be included when the given features are enabled.
-    fn enabled(&self, features: &[String]) -> bool {
+    fn enabled(&self, features: &[String], cfgs: &[String]) -> bool {
         if let Some(target) = &self.target {
-            if !ENABLED_CFGS.contains(&target.as_str()) {
-                return false;
+            if target.starts_with("cfg(") && target.ends_with(')') {
+                let target_cfg = &target[4..target.len() - 1];
+                if !ENABLED_CFGS.contains(&target_cfg) && !cfgs.contains(&target_cfg.to_string()) {
+                    return false;
+                }
             }
         }
         !self.optional || features.contains(&format!("dep:{}", self.name))
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq)]
 #[allow(dead_code)]
 pub struct TargetMetadata {
     pub crate_types: Vec<CrateType>,
@@ -103,12 +106,13 @@ pub enum TargetKind {
 pub fn parse_cargo_metadata_str(cargo_metadata: &str, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     let metadata =
         serde_json::from_str(cargo_metadata).context("failed to parse cargo metadata")?;
-    parse_cargo_metadata(&metadata, &cfg.features, cfg.tests)
+    parse_cargo_metadata(&metadata, &cfg.features, &cfg.extra_cfg, cfg.tests)
 }
 
 fn parse_cargo_metadata(
     metadata: &WorkspaceMetadata,
     features: &Option<Vec<String>>,
+    cfgs: &[String],
     include_tests: bool,
 ) -> Result<Vec<Crate>> {
     let mut crates = Vec::new();
@@ -171,9 +175,11 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
+                        cfgs,
                         &target_kinds,
                         false,
                     )?,
+                    cfgs: cfgs.to_owned(),
                     ..Default::default()
                 });
             }
@@ -193,9 +199,11 @@ fn parse_cargo_metadata(
                         package,
                         &metadata.packages,
                         &features,
+                        cfgs,
                         &target_kinds,
                         true,
                     )?,
+                    cfgs: cfgs.to_owned(),
                     ..Default::default()
                 });
             }
@@ -208,6 +216,7 @@ fn get_externs(
     package: &PackageMetadata,
     packages: &[PackageMetadata],
     features: &[String],
+    cfgs: &[String],
     target_kinds: &[TargetKind],
     test: bool,
 ) -> Result<Vec<Extern>> {
@@ -216,7 +225,7 @@ fn get_externs(
         .iter()
         .filter_map(|dependency| {
             // Kind is None for normal dependencies, as opposed to dev dependencies.
-            if dependency.enabled(features)
+            if dependency.enabled(features, cfgs)
                 && dependency.kind.as_deref() != Some("build")
                 && (dependency.kind.is_none() || test)
             {
@@ -436,6 +445,139 @@ mod tests {
         assert_eq!(
             resolve_features(&None, &package_features, &dependencies),
             vec!["default".to_string(), "dep:optionaldep".to_string(), "optionaldep".to_string()]
+        );
+    }
+
+    #[test]
+    fn get_externs_cfg() {
+        let package = PackageMetadata {
+            name: "test_package".to_string(),
+            dependencies: vec![
+                DependencyMetadata {
+                    name: "alwayslib".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: None,
+                    rename: None,
+                },
+                DependencyMetadata {
+                    name: "unixlib".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: Some("cfg(unix)".to_string()),
+                    rename: None,
+                },
+                DependencyMetadata {
+                    name: "windowslib".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: Some("cfg(windows)".to_string()),
+                    rename: None,
+                },
+            ],
+            features: [].into_iter().collect(),
+            targets: vec![],
+            ..Default::default()
+        };
+        let packages = vec![
+            package.clone(),
+            PackageMetadata {
+                name: "alwayslib".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "alwayslib".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            PackageMetadata {
+                name: "unixlib".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "unixlib".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            PackageMetadata {
+                name: "windowslib".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "windowslib".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+        ];
+        assert_eq!(
+            get_externs(&package, &packages, &[], &[], &[], false).unwrap(),
+            vec![
+                Extern {
+                    name: "alwayslib".to_string(),
+                    lib_name: "alwayslib".to_string(),
+                    extern_type: ExternType::Rust
+                },
+                Extern {
+                    name: "unixlib".to_string(),
+                    lib_name: "unixlib".to_string(),
+                    extern_type: ExternType::Rust
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn get_externs_extra_cfg() {
+        let package = PackageMetadata {
+            name: "test_package".to_string(),
+            dependencies: vec![
+                DependencyMetadata {
+                    name: "foolib".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: Some("cfg(foo)".to_string()),
+                    rename: None,
+                },
+                DependencyMetadata {
+                    name: "barlib".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: Some("cfg(bar)".to_string()),
+                    rename: None,
+                },
+            ],
+            features: [].into_iter().collect(),
+            targets: vec![],
+            ..Default::default()
+        };
+        let packages = vec![
+            package.clone(),
+            PackageMetadata {
+                name: "foolib".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "foolib".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            PackageMetadata {
+                name: "barlib".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "barlib".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+        ];
+        assert_eq!(
+            get_externs(&package, &packages, &[], &["foo".to_string()], &[], false).unwrap(),
+            vec![Extern {
+                name: "foolib".to_string(),
+                lib_name: "foolib".to_string(),
+                extern_type: ExternType::Rust
+            },]
         );
     }
 

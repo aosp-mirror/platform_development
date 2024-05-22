@@ -52,6 +52,14 @@ const configDev = {
         {from: 'src/adb/winscope_proxy.py', to: 'winscope_proxy.py'},
         {from: 'src/logo_light_mode.svg', to: 'logo_light_mode.svg'},
         {from: 'src/logo_dark_mode.svg', to: 'logo_dark_mode.svg'},
+        {
+          from: 'src/viewers/components/rects/cube_partial_shade.svg',
+          to: 'cube_partial_shade.svg',
+        },
+        {
+          from: 'src/viewers/components/rects/cube_full_shade.svg',
+          to: 'cube_full_shade.svg',
+        },
       ],
     }),
   ],

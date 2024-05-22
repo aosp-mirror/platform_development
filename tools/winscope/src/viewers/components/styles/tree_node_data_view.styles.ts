@@ -26,7 +26,7 @@ export const hierarchyTreeNodeDataViewStyles = `
         padding: 0 10px;
         border-radius: 10px;
         background-color: #aaa;
-        color: ${Color.TEXT_DEFAULT};
+        color: ${Color.TEXT_BLACK};
     }
 
     .tree-view-chip.tree-view-chip-warn {
@@ -38,7 +38,7 @@ export const hierarchyTreeNodeDataViewStyles = `
     }
 
     .tree-view-chip.tree-view-chip-gpu {
-        background-color: ${Color.CHIP_ORANGE};
+        background-color: ${Color.CHIP_GREEN};
     }
 
     .tree-view-chip.tree-view-chip-hwc {
@@ -67,21 +67,21 @@ export const propertyTreeNodeDataViewStyles = `
         display: flex;
     }
     .value {
-        color: ${Color.TEXT_PURPLE};
+        color: var(--purple-text-color);
     }
     .new {
         display: flex;
     }
     .value.null {
-        color: ${Color.TEXT_DARK_GRAY};
+        color: ${Color.TEXT_GRAY};
     }
     .value.number {
-        color: ${Color.TEXT_BLUE};
+        color: var(--blue-text-color);
     }
     .value.true {
-        color: ${Color.TEXT_GREEN};
+        color: var(--green-text-color);
     }
     .value.false {
-        color: ${Color.TEXT_RED};
+        color: var(--red-text-color);
     }
 `;

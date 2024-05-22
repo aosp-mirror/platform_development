@@ -172,16 +172,40 @@ describe('TracePipeline', () => {
     expect(traces.getTrace(TraceType.INPUT_METHOD_CLIENTS)).toBeDefined();
   });
 
-  it('detects bugreports and extracts utc offset directly', async () => {
-    await testTimezoneOffsetExtraction(
-      'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-    );
-  });
-
   it('detects bugreports and extracts timezone info, then calculates utc offset', async () => {
-    await testTimezoneOffsetExtraction(
-      'bugreports/bugreport-codename_beta-no-time-offset-UPB2.230407.019-2023-05-30-14-33-48.txt',
+    const bugreportFiles = [
+      await UnitTestUtils.getFixtureFile(
+        'bugreports/main_entry.txt',
+        'main_entry.txt',
+      ),
+      await UnitTestUtils.getFixtureFile(
+        'bugreports/bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
+      ),
+      await UnitTestUtils.getFixtureFile(
+        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+        'FS/data/misc/wmtrace/surface_flinger.bp',
+      ),
+    ];
+    const bugreportArchive = new File(
+      [await FileUtils.createZipArchive(bugreportFiles)],
+      'bugreport.zip',
     );
+
+    await loadFiles([bugreportArchive]);
+    await expectLoadResult(1, []);
+
+    const timestampConverter = tracePipeline.getTimestampConverter();
+    expect(timestampConverter);
+    expect(timestampConverter.getUTCOffset()).toEqual('UTC+05:30');
+
+    const expectedTimestamp =
+      TimestampConverterUtils.makeRealTimestampWithUTCOffset(
+        1659107089102062832n,
+      );
+    expect(
+      timestampConverter.makeTimestampFromMonotonicNs(14500282843n),
+    ).toEqual(expectedTimestamp);
   });
 
   it('is robust to corrupted archive', async () => {
@@ -220,10 +244,13 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new InvalidPerfettoTrace('invalid_protolog.perfetto-trace', [
-        "Trace processor tables don't contain entries of type 1",
-        "Trace processor tables don't contain entries of type 4",
-        "Trace processor tables don't contain entries of type 16",
-        "Trace processor tables don't contain entries of type 8",
+        "Perfetto trace has no 'IME Clients' entries",
+        "Perfetto trace has no 'IME system_server' entries",
+        "Perfetto trace has no 'IME Service' entries",
+        "Perfetto trace has no 'Surface Flinger' entries",
+        "Perfetto trace has no 'Transactions' entries",
+        "Perfetto trace has no 'Transitions' entries",
+        "Perfetto trace has no 'ProtoLog' entries",
       ]),
     ]);
   });
@@ -404,41 +431,5 @@ describe('TracePipeline', () => {
   ) {
     expect(warnings).toEqual(expectedWarnings);
     expect(tracePipeline.getTraces().getSize()).toEqual(numberOfTraces);
-  }
-
-  async function testTimezoneOffsetExtraction(codenameFileName: string) {
-    const bugreportFiles = [
-      await UnitTestUtils.getFixtureFile(
-        'bugreports/main_entry.txt',
-        'main_entry.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        codenameFileName,
-        'bugreport-codename_beta-UPB2.230407.019-2023-05-30-14-33-48.txt',
-      ),
-      await UnitTestUtils.getFixtureFile(
-        'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
-        'FS/data/misc/wmtrace/surface_flinger.bp',
-      ),
-    ];
-    const bugreportArchive = new File(
-      [await FileUtils.createZipArchive(bugreportFiles)],
-      'bugreport.zip',
-    );
-
-    await loadFiles([bugreportArchive]);
-    await expectLoadResult(1, []);
-
-    const timestampConverter = tracePipeline.getTimestampConverter();
-    expect(timestampConverter);
-    expect(timestampConverter.getUTCOffset()).toEqual('UTC+05:30');
-
-    const expectedTimestamp =
-      TimestampConverterUtils.makeRealTimestampWithUTCOffset(
-        1659107089102062832n,
-      );
-    expect(
-      timestampConverter.makeTimestampFromMonotonicNs(14500282843n),
-    ).toEqual(expectedTimestamp);
   }
 });

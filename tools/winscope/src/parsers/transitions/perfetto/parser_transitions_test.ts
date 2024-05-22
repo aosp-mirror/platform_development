@@ -60,13 +60,13 @@ describe('Perfetto ParserTransitions', () => {
       expect(entry.getChildByName('id')?.getValue()).toEqual(32n);
       expect(
         wmDataNode.getChildByName('createTimeNs')?.formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.428925648');
+      ).toEqual('2023-11-21, 13:30:25.428');
       expect(wmDataNode.getChildByName('sendTimeNs')?.formattedValue()).toEqual(
-        '2023-11-21, 13:30:25.441880645',
+        '2023-11-21, 13:30:25.441',
       );
       expect(
         wmDataNode.getChildByName('finishTimeNs')?.formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.970252716');
+      ).toEqual('2023-11-21, 13:30:25.970');
       expect(entry.getChildByName('merged')?.getValue()).toBeFalse();
       expect(entry.getChildByName('played')?.getValue()).toBeTrue();
       expect(entry.getChildByName('aborted')?.getValue()).toBeFalse();
@@ -75,7 +75,7 @@ describe('Perfetto ParserTransitions', () => {
         assertDefined(
           wmDataNode.getChildByName('startingWindowRemoveTimeNs'),
         ).formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.565127512');
+      ).toEqual('2023-11-21, 13:30:25.565');
       expect(
         assertDefined(
           wmDataNode.getChildByName('startTransactionId'),
@@ -111,7 +111,7 @@ describe('Perfetto ParserTransitions', () => {
         assertDefined(
           shellDataNode.getChildByName('dispatchTimeNs'),
         ).formattedValue(),
-      ).toEqual('2023-11-21, 13:30:25.448299306');
+      ).toEqual('2023-11-21, 13:30:25.448');
       expect(shellDataNode.getChildByName('mergeRequestTime')).toBeUndefined();
       expect(shellDataNode.getChildByName('mergeTime')).toBeUndefined();
       expect(shellDataNode.getChildByName('abortTimeNs')).toBeUndefined();

@@ -296,7 +296,9 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
         }
     } else {
         let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
-        write(cargo_out_path, &cargo_output.cargo_out)?;
+        if cfg.run_cargo {
+            write(cargo_out_path, &cargo_output.cargo_out)?;
+        }
         write(cargo_metadata_path, &cargo_output.cargo_metadata)?;
         cargo_output
     };
@@ -914,9 +916,8 @@ fn crate_to_bp_modules(
             }
         }
 
-        let mut srcs = vec![crate_.main_src.to_string_lossy().to_string()];
-        srcs.extend(extra_srcs.iter().cloned());
-        m.props.set("srcs", srcs);
+        m.props.set("crate_root", crate_.main_src.clone());
+        m.props.set_if_nonempty("srcs", extra_srcs.to_owned());
 
         m.props.set("edition", crate_.edition.clone());
         m.props.set_if_nonempty("features", crate_.features.clone());
@@ -927,7 +928,6 @@ fn crate_to_bp_modules(
                 .clone()
                 .into_iter()
                 .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
-                .chain(cfg.extra_cfg.clone().into_iter())
                 .collect(),
         );
 
@@ -1107,7 +1107,6 @@ fn crate_to_rulesmk(
             .cfgs
             .iter()
             .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
-            .chain(cfg.extra_cfg.iter())
             .map(|cfg| format!("--cfg '{cfg}'")),
     );
     if !flags.is_empty() {
@@ -1285,7 +1284,7 @@ mod tests {
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libname".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
-                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("crate_root".to_string(), BpValue::String("".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
@@ -1328,7 +1327,7 @@ mod tests {
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libash_rust".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
-                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("crate_root".to_string(), BpValue::String("".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()

@@ -26,6 +26,7 @@ export const ViewerEvents = {
   RectsDblClick: 'RectsDblClick',
   MiniRectsDblClick: 'MiniRectsDblClick',
   TimestampClick: 'TimestampClick',
+  RectGroupIdChange: 'RectGroupIdChange',
 };
 
 export class RectDblClickDetail {

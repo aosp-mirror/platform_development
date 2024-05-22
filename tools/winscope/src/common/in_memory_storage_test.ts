@@ -14,27 +14,14 @@
  * limitations under the License.
  */
 
-export class MockStorage implements Storage {
-  private store: {[key: string]: string} = {};
+import {InMemoryStorage} from './in_memory_storage';
 
-  [name: string]: any;
-  get length(): number {
-    return Object.keys(this.store).length;
-  }
+describe('InMemoryStorage', () => {
+  it('can store values', () => {
+    const mockStorage = new InMemoryStorage();
 
-  clear(): void {
-    throw new Error('Method not implemented.');
-  }
-  getItem(key: string): string | null {
-    return this.store[key];
-  }
-  key(index: number): string | null {
-    return Object.keys(this.store)[index];
-  }
-  removeItem(key: string): void {
-    delete this.store[key];
-  }
-  setItem(key: string, value: string): void {
-    this.store[key] = value;
-  }
-}
+    mockStorage.setItem('key', 'value');
+
+    expect(mockStorage.getItem('key')).toBe('value');
+  });
+});

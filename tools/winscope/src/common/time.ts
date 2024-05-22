@@ -18,16 +18,21 @@ export const INVALID_TIME_NS = 0n;
 
 export class TimeRange {
   constructor(readonly from: Timestamp, readonly to: Timestamp) {}
+
+  containsTimestamp(ts: Timestamp): boolean {
+    const min = this.from.getValueNs();
+    const max = this.to.getValueNs();
+    return ts.getValueNs() >= min && ts.getValueNs() <= max;
+  }
 }
 
 export interface TimezoneInfo {
   timezone: string;
   locale: string;
-  utcOffsetMs: number | undefined;
 }
 
 export interface TimestampFormatter {
-  format(timestamp: Timestamp, hideNs?: boolean): string;
+  format(timestamp: Timestamp): string;
 }
 
 export class Timestamp {
@@ -70,7 +75,7 @@ export class Timestamp {
     return new Timestamp(this.getValueNs() / n, this.formatter);
   }
 
-  format(hideNs = false): string {
-    return this.formatter.format(this, hideNs);
+  format(): string {
+    return this.formatter.format(this);
   }
 }

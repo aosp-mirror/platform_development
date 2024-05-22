@@ -15,10 +15,10 @@
  */
 
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {
   TabbedViewSwitched,
   WinscopeEvent,
@@ -29,6 +29,7 @@ import {
   WinscopeEventEmitter,
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {TRACE_INFO} from 'trace/trace_info';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab {
@@ -39,16 +40,7 @@ interface Tab {
 @Component({
   selector: 'trace-view',
   template: `
-    <div class="overlay">
-      <div class="draggable-container" cdkDrag cdkDragBoundary=".overlay">
-        <!--
-        TODO:
-        this draggable div is a temporary hack. We should remove the div and move the cdkDrag
-        directives into the overlay view (e.g. ViewerScreenReocordingComponent) as soon as the new
-        Angular's directive composition API is available
-        (https://github.com/angular/angular/issues/8785).
-         -->
-      </div>
+    <div class="overlay-container">
     </div>
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
@@ -63,7 +55,6 @@ interface Tab {
           class="tab">
           <mat-icon
             class="icon"
-            [matTooltip]="TRACE_INFO[tab.view.traceType].name"
             [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
             {{ TRACE_INFO[tab.view.traceType].icon }}
           </mat-icon>
@@ -80,22 +71,6 @@ interface Tab {
     `
       .tab.active {
         opacity: 100%;
-      }
-
-      .overlay {
-        z-index: 30;
-        position: fixed;
-        top: 0px;
-        left: 0px;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      .overlay .draggable-container {
-        position: absolute;
-        right: 0;
-        top: 20vh;
       }
 
       .header-items-wrapper {
@@ -219,9 +194,7 @@ export class TraceViewComponent
     views.forEach((view) => {
       view.htmlElement.style.pointerEvents = 'all';
       const container = assertDefined(
-        this.elementRef.nativeElement.querySelector(
-          '.overlay .draggable-container',
-        ),
+        this.elementRef.nativeElement.querySelector('.overlay-container'),
       );
       container.appendChild(view.htmlElement);
     });
@@ -249,6 +222,7 @@ export class TraceViewComponent
 
     this.currentActiveTab = tab;
 
+    Analytics.Navigation.logTabSwitched(TRACE_INFO[tab.view.traceType].name);
     await this.emitAppEvent(new TabbedViewSwitched(tab.view));
   }
 }

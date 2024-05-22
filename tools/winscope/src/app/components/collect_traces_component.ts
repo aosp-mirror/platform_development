@@ -562,18 +562,7 @@ export class CollectTracesComponent
     const tracesFromCollection: string[] = [];
     const tracingConfig = assertDefined(this.traceConfig);
     const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
-      const traceConfig = tracingConfig[traceKey];
-      if (traceConfig.isTraceCollection) {
-        traceConfig.config?.enableConfigs.forEach(
-          (innerTrace: EnableConfiguration) => {
-            if (innerTrace.enabled) {
-              tracesFromCollection.push(innerTrace.key);
-            }
-          },
-        );
-        return false;
-      }
-      return traceConfig.run;
+      return tracingConfig[traceKey].run;
     });
     requested.push(...tracesFromCollection);
     requested.push('perfetto_trace'); // always start/stop/fetch perfetto trace
@@ -594,12 +583,7 @@ export class CollectTracesComponent
     const tracingConfig = assertDefined(this.traceConfig);
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
-      if (
-        !trace.isTraceCollection &&
-        trace.run &&
-        trace.config &&
-        trace.config.enableConfigs
-      ) {
+      if (trace.run && trace.config && trace.config.enableConfigs) {
         trace.config.enableConfigs.forEach((con: EnableConfiguration) => {
           if (con.enabled) {
             req.push(con.key);

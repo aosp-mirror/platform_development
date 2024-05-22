@@ -24,7 +24,11 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
+import {
+  MiniCanvasDrawerData,
+  TimelineTrace,
+  TimelineTraces,
+} from './mini_canvas_drawer_data';
 
 export class MiniTimelineDrawerInput {
   constructor(
@@ -34,6 +38,8 @@ export class MiniTimelineDrawerInput {
     public zoomRange: TimeRange,
     public traces: Traces,
     public timelineData: TimelineData,
+    public bookmarks: Timestamp[],
+    public isDarkMode: boolean,
   ) {}
 
   transform(mapToRange: Segment): MiniCanvasDrawerData {
@@ -53,21 +59,14 @@ export class MiniTimelineDrawerInput {
         return this.transformTracesTimestamps(transformer);
       },
       transformer,
+      this.transformBookmarks(transformer),
     );
   }
 
   private async transformTracesTimestamps(
     transformer: Transformer,
-  ): Promise<TimelineEntries> {
-    const transformedTraceSegments = new Map<
-      TraceType,
-      {
-        points: number[];
-        segments: Segment[];
-        activePoint: number | undefined;
-        activeSegment: Segment | undefined;
-      }
-    >();
+  ): Promise<TimelineTraces> {
+    const transformedTraceSegments = new Map<TraceType, TimelineTrace>();
 
     this.traces.forEachTrace((trace, type) => {
       const activeEntry = this.timelineData.findCurrentEntryFor(
@@ -110,6 +109,12 @@ export class MiniTimelineDrawerInput {
     return trace
       .mapEntry((entry) => this.transformTransitionEntry(transformer, entry))
       .filter((it) => it !== undefined) as Segment[];
+  }
+
+  private transformBookmarks(transformer: Transformer): number[] {
+    return this.bookmarks.map((bookmarkedTimestamp) =>
+      transformer.transform(bookmarkedTimestamp),
+    );
   }
 
   private transformTransitionEntry(
