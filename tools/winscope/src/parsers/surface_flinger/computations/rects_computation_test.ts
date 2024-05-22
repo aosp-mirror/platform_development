@@ -275,7 +275,7 @@ describe('RectsComputation', () => {
     expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
   });
 
-  it('makes display rects with unknown name', () => {
+  it('makes display rects with unknown or empty name', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -286,6 +286,13 @@ describe('RectsComputation', () => {
             layerStack: 0,
             layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
             transform: Transform.EMPTY,
+          },
+          {
+            id: 1,
+            layerStack: 0,
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
+            transform: Transform.EMPTY,
+            name: '',
           },
         ],
       })
@@ -302,6 +309,21 @@ describe('RectsComputation', () => {
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsVirtual(false)
+        .build(),
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(5)
+        .setId('Display - 1')
+        .setName('Unknown Display (2)')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
