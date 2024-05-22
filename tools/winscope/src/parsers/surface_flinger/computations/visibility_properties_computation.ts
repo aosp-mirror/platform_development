@@ -95,11 +95,14 @@ export class VisibilityPropertiesComputation implements Computation {
           const cornerRadiusOther =
             other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
 
-          return (
+          const isCovered =
             cornerRadiusOther <= 0 ||
             (cornerRadiusOther ===
               layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-              0)
+              0);
+          return (
+            isCovered &&
+            this.getColor(other)?.getChildByName('a')?.getValue() === 1
           );
         })
         .map((other) => other.id);
