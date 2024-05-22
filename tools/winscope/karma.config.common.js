@@ -22,6 +22,7 @@ module.exports = (config) => {
     frameworks: ['jasmine', 'webpack'],
     plugins: [
       'karma-webpack',
+      'karma-coverage',
       'karma-chrome-launcher',
       'karma-jasmine',
       'karma-sourcemap-loader',
@@ -40,8 +41,18 @@ module.exports = (config) => {
         served: true,
       },
     ],
+    reporters: ['progress', 'coverage'],
     preprocessors: {
       'src/main_unit_test.ts': ['webpack', 'sourcemap'],
+      // source files, that you wanna generate coverage for
+      // do not include tests or libraries
+      // (these files will be instrumented by Istanbul)
+      'src/**/!(*test).ts': ['coverage'],
+    },
+    // optionally, configure the reporter
+    coverageReporter: {
+      type: 'html',
+      dir: 'coverage/'
     },
     webpack: webpackConfig,
   });
