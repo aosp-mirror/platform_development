@@ -182,4 +182,11 @@ export const TRACE_INFO: TraceInfoMap = {
     downloadArchiveDir: 'input',
     legacyExt: '.winscope',
   },
+  [TraceType.INPUT_KEY_EVENT]: {
+    name: 'Key Events',
+    icon: INPUT_ICON,
+    color: '#4079ec',
+    downloadArchiveDir: 'input',
+    legacyExt: '.winscope',
+  },
 };

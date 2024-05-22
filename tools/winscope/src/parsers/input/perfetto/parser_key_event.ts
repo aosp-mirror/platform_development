@@ -28,17 +28,17 @@ import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builde
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
-export class ParserMotionEvent extends AbstractInputEventParser {
+export class ParserKeyEvent extends AbstractInputEventParser {
 
-  private static readonly MotionEventField =
-    AbstractInputEventParser.WrapperProto.fields['motionEvent'];
+  private static readonly KeyEventField =
+    AbstractInputEventParser.WrapperProto.fields['keyEvent'];
 
-  private static readonly MOTION_EVENT_OPS = [
-    new SetFormatters(ParserMotionEvent.MotionEventField),
-    new TranslateIntDef(ParserMotionEvent.MotionEventField),
+  private static readonly KEY_EVENT_OPS = [
+    new SetFormatters(ParserKeyEvent.KeyEventField),
+    new TranslateIntDef(ParserKeyEvent.KeyEventField),
   ];
 
-  private motionEventTransformer: FakeProtoTransformer;
+  private keyEventTransformer: FakeProtoTransformer;
 
   constructor(
     traceFile: TraceFile,
@@ -47,63 +47,61 @@ export class ParserMotionEvent extends AbstractInputEventParser {
   ) {
     super(traceFile, traceProcessor, timestampConverter);
 
-    this.motionEventTransformer = new FakeProtoTransformer(
-      assertDefined(ParserMotionEvent.MotionEventField.tamperedMessageType),
+    this.keyEventTransformer = new FakeProtoTransformer(
+      assertDefined(ParserKeyEvent.KeyEventField.tamperedMessageType),
     );
   }
 
   override getTraceType(): TraceType {
-    return TraceType.INPUT_MOTION_EVENT;
+    return TraceType.INPUT_KEY_EVENT;
   }
 
   override async getEntry(index: number): Promise<PropertyTreeNode> {
-    const motionEvent = await this.getMotionEventProto(index);
+    const keyEvent = await this.getKeyEventProto(index);
     const events = perfetto.protos.InputEventWrapper.create({
-      motionEvent,
-      windowDispatchEvents: await this.getDispatchEvents(motionEvent.eventId),
+      keyEvent,
+      windowDispatchEvents: await this.getDispatchEvents(keyEvent.eventId),
     });
-    return this.makeMotionPropertiesTree(events);
+    return this.makeKeyPropertiesTree(events);
   }
 
-  private async getMotionEventProto(
+  private async getKeyEventProto(
     index: number,
-  ): Promise<perfetto.protos.AndroidMotionEvent> {
-    let motionEventProto = await Utils.queryEntry(
+  ): Promise<perfetto.protos.AndroidKeyEvent> {
+    let keyEventProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
       this.entryIndexToRowIdMap,
       index,
     );
 
-    motionEventProto = this.motionEventTransformer.transform(motionEventProto);
-    return motionEventProto;
+    keyEventProto = this.keyEventTransformer.transform(keyEventProto);
+    return keyEventProto;
   }
 
   protected override getTableName(): string {
-    return 'android_motion_events';
+    return 'android_key_events';
   }
 
   protected override getStdLibModuleName(): string | undefined {
     return 'android.input';
   }
 
-  private makeMotionPropertiesTree(
+  private makeKeyPropertiesTree(
     entryProto: perfetto.protos.InputEventWrapper,
   ): PropertyTreeNode {
     const tree = new PropertyTreeBuilderFromProto()
       .setData(entryProto)
-      .setRootId('AndroidMotionEvent')
+      .setRootId('AndroidKeyEvent')
       .setRootName('entry')
       .build();
 
-    ParserMotionEvent.MOTION_EVENT_OPS.forEach((operation) => {
-      operation.apply(assertDefined(tree.getChildByName('motionEvent')));
+    ParserKeyEvent.KEY_EVENT_OPS.forEach((operation) => {
+      operation.apply(assertDefined(tree.getChildByName('keyEvent')));
     });
-
     this.processDispatchEventsTree(
       assertDefined(tree.getChildByName('windowDispatchEvents')),
     );
-
     return tree;
   }
 }

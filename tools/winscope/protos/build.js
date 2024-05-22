@@ -83,7 +83,7 @@ async function build() {
         // Input
         buildProtos([
             '../../../../external/perfetto/protos/perfetto/trace/android/android_input_event.proto',
-            'input/latest/motion_event_wrapper.proto',
+            'input/latest/input_event_wrapper.proto',
         ], 'input/latest'),
 
         // Test proto fields

@@ -20,7 +20,10 @@ package perfetto.protos;
 
 import "protos/perfetto/trace/android/android_input_event.proto";
 
-message MotionEventWrapper {
-  optional AndroidMotionEvent motion_event = 1;
-  repeated AndroidWindowInputDispatchEvent window_dispatch_events = 2;
+message InputEventWrapper {
+  oneof input_event {
+    AndroidMotionEvent motion_event = 1;
+    AndroidKeyEvent key_event = 2;
+  }
+  repeated AndroidWindowInputDispatchEvent window_dispatch_events = 3;
 }

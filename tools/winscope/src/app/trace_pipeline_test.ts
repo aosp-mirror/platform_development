@@ -253,6 +253,7 @@ describe('TracePipeline', () => {
         'Perfetto trace has no Transitions entries',
         'Perfetto trace has no ViewCapture windows',
         'Perfetto trace has no Motion Events entries',
+        'Perfetto trace has no Key Events entries',
       ]),
     ]);
   });
