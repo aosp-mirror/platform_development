@@ -191,7 +191,6 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
      */
     public void stop() {
         synchronized (mLock) {
-            mRemoteIo.removeMessageConsumer(this);
             if (mIsPlaying) {
                 mIsPlaying = false;
                 mRemoteIo.sendMessage(RemoteEvent.newBuilder().setStopAudioInput(
@@ -204,12 +203,13 @@ public final class AudioInjector implements Consumer<RemoteEvent> {
             mAudioTracks.clear();
 
             if (mAudioManager != null) {
+                mRemoteIo.removeMessageConsumer(this);
                 mAudioManager.unregisterAudioRecordingCallback(mAudioRecordingCallback);
 
                 if (mAudioPolicy != null) {
                     mAudioManager.unregisterAudioPolicy(mAudioPolicy);
                 }
-
+                mAudioManager = null;
             }
         }
     }

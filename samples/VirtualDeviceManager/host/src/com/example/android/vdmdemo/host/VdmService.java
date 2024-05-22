@@ -94,7 +94,6 @@ public final class VdmService extends Hilt_VdmService {
             "com.example.android.vdmdemo.host.VdmService.LOCKDOWN";
     private int mRecordingAudioSessionId;
     private int mPlaybackAudioSessionId;
-    private PermissionHelper mPermissionHelper;
 
     /** Provides an instance of this service to bound clients. */
     public class LocalBinder extends Binder {
@@ -245,7 +244,6 @@ public final class VdmService extends Hilt_VdmService {
             mVirtualDeviceManager.registerVirtualDeviceListener(
                     Executors.newSingleThreadExecutor(), mVirtualDeviceListener);
         }
-        mPermissionHelper = new PermissionHelper(this);
     }
 
     @Override
@@ -332,11 +330,6 @@ public final class VdmService extends Hilt_VdmService {
                 createVirtualDevice(associationInfo);
                 return;
             }
-        }
-
-        if (!mPermissionHelper.hasStreamingPermission()) {
-            Log.w(TAG, "Missing streaming permission");
-            return;
         }
 
         @SuppressLint("MissingPermission")
