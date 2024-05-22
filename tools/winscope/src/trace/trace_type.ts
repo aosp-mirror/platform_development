@@ -40,6 +40,7 @@ export enum TraceType {
   TEST_TRACE_STRING,
   TEST_TRACE_NUMBER,
   VIEW_CAPTURE,
+  INPUT_MOTION_EVENT,
 }
 
 export type ImeTraceType =
@@ -69,6 +70,7 @@ export interface TraceEntryTypeMap {
   [TraceType.TEST_TRACE_STRING]: string;
   [TraceType.TEST_TRACE_NUMBER]: number;
   [TraceType.VIEW_CAPTURE]: HierarchyTreeNode;
+  [TraceType.INPUT_MOTION_EVENT]: PropertyTreeNode;
 }
 
 export class TraceTypeUtils {
