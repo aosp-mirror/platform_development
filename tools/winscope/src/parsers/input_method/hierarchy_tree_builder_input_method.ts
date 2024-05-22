@@ -37,7 +37,7 @@ export class HierarchyTreeBuilderInputMethod extends HierarchyTreeBuilder {
     return map;
   }
 
-  protected override updateChildren(
+  protected override assignParentChildRelationships(
     node: HierarchyTreeNode,
     identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
     isRoot?: boolean,

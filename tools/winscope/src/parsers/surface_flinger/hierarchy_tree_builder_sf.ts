@@ -57,7 +57,7 @@ export class HierarchyTreeBuilderSf extends HierarchyTreeBuilder {
     return map;
   }
 
-  protected override updateChildren(
+  protected override assignParentChildRelationships(
     root: HierarchyTreeNode,
     identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
     isRoot?: boolean,

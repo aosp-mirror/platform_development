@@ -66,7 +66,7 @@ export abstract class HierarchyTreeBuilder {
   ): HierarchyTreeNode {
     const rootProperties = root.getEagerProperties();
     const node = this.makeNode(rootProperties.id, rootProperties.name, root);
-    this.updateChildren(node, identifierToChildren, true);
+    this.assignParentChildRelationships(node, identifierToChildren, true);
     return node;
   }
 
@@ -90,7 +90,7 @@ export abstract class HierarchyTreeBuilder {
     nodes: PropertiesProvider[],
   ): Map<string | number, readonly HierarchyTreeNode[]>;
 
-  protected abstract updateChildren(
+  protected abstract assignParentChildRelationships(
     node: HierarchyTreeNode,
     identifierToChildren: Map<string | number, readonly HierarchyTreeNode[]>,
     isRoot?: boolean,

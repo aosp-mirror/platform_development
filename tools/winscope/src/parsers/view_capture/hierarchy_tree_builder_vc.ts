@@ -39,7 +39,7 @@ export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
     return map;
   }
 
-  protected override updateChildren(
+  protected override assignParentChildRelationships(
     node: HierarchyTreeNode,
     identifierToChildren: Map<string | number, HierarchyTreeNode[]>,
     isRoot?: boolean,
@@ -50,7 +50,7 @@ export class HierarchyTreeBuilderVc extends HierarchyTreeBuilder {
       const child = identifierToChildren.get(hashcode.getValue())?.at(0);
       if (child) {
         this.setParentChildRelationship(node, child);
-        this.updateChildren(child, identifierToChildren);
+        this.assignParentChildRelationships(child, identifierToChildren);
       }
     }
   }
