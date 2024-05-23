@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {CollapsedSectionsComponent} from './collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
 import {PropertiesComponent} from './properties_component';
 import {ViewerInputMethodComponent} from './viewer_input_method_component';
@@ -33,13 +39,21 @@ describe('ViewerInputMethodComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatIconModule, MatDividerModule],
+      imports: [
+        MatIconModule,
+        MatDividerModule,
+        MatButtonModule,
+        MatTooltipModule,
+        FormsModule,
+      ],
       declarations: [
         ViewerInputMethodComponent,
         HierarchyComponent,
         PropertiesComponent,
+        CollapsedSectionsComponent,
+        CollapsibleSectionTitleComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(ViewerInputMethodComponent);
     component = fixture.componentInstance;
