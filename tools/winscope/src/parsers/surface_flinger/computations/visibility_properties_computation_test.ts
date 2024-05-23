@@ -574,6 +574,189 @@ describe('VisibilityPropertiesComputation', () => {
     ).toBeUndefined();
   });
 
+  it('distinguishes occluding and partially occluding layers by alpha', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setProperties({
+        displays: [
+          {
+            layerStack: 0,
+            layerStackSpaceRect: {left: 0, right: 5, top: 0, bottom: 5},
+          },
+        ],
+      })
+      .setChildren([
+        {
+          id: 1,
+          name: 'occludedLayer',
+          properties: {
+            id: 1,
+            name: 'occludedLayer',
+            parent: -1,
+            children: [],
+            layerStack: 0,
+            isOpaque: true,
+            z: 0,
+            screenBounds: {left: 0, top: 0, bottom: 1, right: 1},
+            visibleRegion: {rect: [{left: 0, top: 0, bottom: 1, right: 1}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            cornerRadius: 0,
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 2,
+          name: 'occludingLayer',
+          properties: {
+            id: 2,
+            name: 'occludingLayer',
+            parent: -1,
+            children: [],
+            layerStack: 0,
+            isOpaque: true,
+            z: 1,
+            screenBounds: {left: 0, top: 0, bottom: 2, right: 2},
+            visibleRegion: {rect: [{left: 0, top: 0, bottom: 2, right: 2}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            cornerRadius: 0,
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+          } as android.surfaceflinger.ILayerProto,
+        },
+        {
+          id: 3,
+          name: 'partiallyOccludingLayer',
+          properties: {
+            id: 3,
+            name: 'partiallyOccludingLayer',
+            parent: -1,
+            children: [],
+            layerStack: 0,
+            isOpaque: true,
+            z: 2,
+            screenBounds: {left: 0, top: 0, bottom: 2, right: 2},
+            visibleRegion: {rect: [{left: 0, top: 0, bottom: 2, right: 2}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            cornerRadius: 0,
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 0.5},
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+          } as android.surfaceflinger.ILayerProto,
+        },
+      ])
+      .build();
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+
+    const occludedLayer = assertDefined(
+      hierarchyRoot.getChildByName('occludedLayer'),
+    );
+    const occludingLayer = assertDefined(
+      hierarchyRoot.getChildByName('occludingLayer'),
+    );
+    const partiallyOccludingLayer = assertDefined(
+      hierarchyRoot.getChildByName('partiallyOccludingLayer'),
+    );
+
+    expect(
+      assertDefined(
+        occludedLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
+    ).toBeFalse();
+    expect(
+      occludedLayer.getEagerPropertyByName('occludedBy')?.getAllChildren()
+        .length,
+    ).toEqual(1);
+    expect(
+      occludedLayer
+        .getEagerPropertyByName('occludedBy')
+        ?.getChildByName('0')
+        ?.getValue(),
+    ).toEqual('2 occludingLayer');
+    expect(
+      occludedLayer
+        .getEagerPropertyByName('partiallyOccludedBy')
+        ?.getAllChildren().length,
+    ).toEqual(1);
+    expect(
+      occludedLayer
+        .getEagerPropertyByName('partiallyOccludedBy')
+        ?.getChildByName('0')
+        ?.getValue(),
+    ).toEqual('3 partiallyOccludingLayer');
+    expect(
+      occludedLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
+
+    expect(
+      assertDefined(
+        occludingLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
+    ).toBeTrue();
+    expect(
+      occludingLayer.getEagerPropertyByName('occludedBy')?.getValue(),
+    ).toEqual([]);
+    expect(
+      occludingLayer
+        .getEagerPropertyByName('partiallyOccludedBy')
+        ?.getAllChildren().length,
+    ).toEqual(1);
+    expect(
+      occludingLayer
+        .getEagerPropertyByName('partiallyOccludedBy')
+        ?.getChildByName('0')
+        ?.getValue(),
+    ).toEqual('3 partiallyOccludingLayer');
+    expect(
+      occludingLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
+
+    expect(
+      assertDefined(
+        partiallyOccludingLayer.getEagerPropertyByName('isComputedVisible'),
+      ).getValue(),
+    ).toBeTrue();
+    expect(
+      partiallyOccludingLayer.getEagerPropertyByName('occludedBy')?.getValue(),
+    ).toEqual([]);
+    expect(
+      partiallyOccludingLayer
+        .getEagerPropertyByName('partiallyOccludedBy')
+        ?.getValue(),
+    ).toEqual([]);
+    expect(
+      partiallyOccludingLayer.getEagerPropertyByName('visibilityReason'),
+    ).toBeUndefined();
+  });
+
   it('adds partiallyOccludedBy layers and updates isVisible', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
