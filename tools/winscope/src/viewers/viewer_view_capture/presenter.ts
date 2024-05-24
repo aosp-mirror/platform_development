@@ -44,6 +44,12 @@ import {SimplifyNamesVc} from './operations/simplify_names';
 import {UiData} from './ui_data';
 
 export class Presenter {
+  static readonly VIEW_CAPTURE_TRACE_TYPES: TraceType[] = [
+    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
+  ];
+
   private static readonly DENYLIST_PROPERTY_NAMES = [
     'children',
     'isComputedVisible',
@@ -445,6 +451,10 @@ export class Presenter {
   async onPropertiesFilterChange(filterString: string) {
     this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
+  }
+
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return this.viewCaptureTraces;
   }
 
   private updateHighlightedItem(id: string) {
