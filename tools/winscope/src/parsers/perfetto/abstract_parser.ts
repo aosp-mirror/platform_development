@@ -34,13 +34,12 @@ export abstract class AbstractParser<T> implements Parser<T> {
   protected traceProcessor: WasmEngineProxy;
   protected realToBootTimeOffsetNs?: bigint;
   protected timestampConverter: ParserTimestampConverter;
+  protected entryIndexToRowIdMap: number[] = [];
 
-  protected queryTimestampsSql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
-
-  private timestamps: Timestamp[] | undefined;
   private lengthEntries = 0;
   private traceFile: TraceFile;
   private bootTimeTimestampsNs: Array<bigint> = [];
+  private timestamps: Timestamp[] | undefined;
 
   constructor(
     traceFile: TraceFile,
@@ -58,14 +57,16 @@ export abstract class AbstractParser<T> implements Parser<T> {
       await this.traceProcessor.query(`INCLUDE PERFETTO MODULE ${module};`);
     }
 
-    this.bootTimeTimestampsNs = await this.queryBootTimeTimestamps();
+    this.entryIndexToRowIdMap = await this.buildEntryIndexToRowIdMap();
+    const rowBootTimeTimestampsNs = await this.queryRowBootTimeTimestamps();
+    this.bootTimeTimestampsNs = this.entryIndexToRowIdMap.map(
+      (rowId) => rowBootTimeTimestampsNs[rowId],
+    );
     this.lengthEntries = this.bootTimeTimestampsNs.length;
     assertTrue(
       this.lengthEntries > 0,
       () =>
-        `Perfetto trace has no '${
-          TRACE_INFO[this.getTraceType()].name
-        }' entries`,
+        `Perfetto trace has no ${TRACE_INFO[this.getTraceType()].name} entries`,
     );
 
     let lastNonZeroTimestamp: bigint | undefined;
@@ -118,8 +119,25 @@ export abstract class AbstractParser<T> implements Parser<T> {
     return this.realToBootTimeOffsetNs;
   }
 
-  protected async queryBootTimeTimestamps(): Promise<Array<bigint>> {
-    const sql = this.queryTimestampsSql;
+  protected async buildEntryIndexToRowIdMap(): Promise<AbsoluteEntryIndex[]> {
+    const sqlRowIdAndTimestamp = `
+     SELECT DISTINCT tbl.id AS id, tbl.ts
+     FROM ${this.getTableName()} AS tbl
+     ORDER BY tbl.ts;
+   `;
+    const result = await this.traceProcessor
+      .query(sqlRowIdAndTimestamp)
+      .waitAllRows();
+    const entryIndexToRowId: AbsoluteEntryIndex[] = [];
+    for (const it = result.iter({}); it.valid(); it.next()) {
+      const rowId = Number(it.get('id') as bigint);
+      entryIndexToRowId.push(rowId);
+    }
+    return entryIndexToRowId;
+  }
+
+  async queryRowBootTimeTimestamps(): Promise<Array<bigint>> {
+    const sql = `SELECT ts FROM ${this.getTableName()} ORDER BY id;`;
     const result = await this.traceProcessor.query(sql).waitAllRows();
     const timestamps: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {

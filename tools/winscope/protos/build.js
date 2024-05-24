@@ -67,7 +67,7 @@ async function build() {
         // ViewCapture
         buildProtos([
             '../../../../frameworks/libs/systemui/viewcapturelib/src/com/android/app/viewcapture/proto/view_capture.proto'
-        ], 'viewcapture/latest'),
+        ], 'viewcapture/udc'),
 
         // WindowManager
         buildProtos([

@@ -20,7 +20,10 @@ import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {com} from 'protos/viewcapture/latest/static';
+import {RectsComputation} from 'parsers/view_capture/computations/rects_computation';
+import {VisibilityComputation} from 'parsers/view_capture/computations/visibility_computation';
+import {SetRootTransformProperties} from 'parsers/view_capture/operations/set_root_transform_properties';
+import {com} from 'protos/viewcapture/udc/static';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
   CustomQueryParserResultTypeMap,
@@ -40,11 +43,8 @@ import {PropertiesProviderBuilder} from 'trace/tree_node/properties_provider_bui
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {RectsComputation} from './computations/rects_computation';
-import {VisibilityComputation} from './computations/visibility_computation';
 import {HierarchyTreeBuilderVc} from './hierarchy_tree_builder_vc';
-import {SetRootTransformProperties} from './operations/set_root_transform_properties';
-import {NodeField} from './vc_tampered_protos';
+import {NodeField} from './tampered_protos';
 
 export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   private static readonly EAGER_PROPERTIES = [

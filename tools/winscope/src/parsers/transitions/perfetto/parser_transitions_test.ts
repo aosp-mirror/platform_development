@@ -44,16 +44,16 @@ describe('Perfetto ParserTransitions', () => {
 
     it('provides timestamps', () => {
       const expected = [
+        TimestampConverterUtils.makeRealTimestamp(1700572945845474854n),
         TimestampConverterUtils.makeRealTimestamp(1700573425448299306n),
         TimestampConverterUtils.makeRealTimestamp(1700573426522433299n),
-        TimestampConverterUtils.makeRealTimestamp(1700573433040642612n),
       ];
       const actual = assertDefined(parser.getTimestamps()).slice(0, 3);
       expect(actual).toEqual(expected);
     });
 
     it('decodes transition properties', async () => {
-      const entry = await parser.getEntry(0);
+      const entry = await parser.getEntry(1);
       const wmDataNode = assertDefined(entry.getChildByName('wmData'));
       const shellDataNode = assertDefined(entry.getChildByName('shellData'));
 

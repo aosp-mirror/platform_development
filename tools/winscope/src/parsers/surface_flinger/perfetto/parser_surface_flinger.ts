@@ -120,6 +120,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
     let snapshotProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
+      this.entryIndexToRowIdMap,
       index,
     );
     snapshotProto =
@@ -141,6 +142,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         return Utils.queryVsyncId(
           this.traceProcessor,
           this.getTableName(),
+          this.entryIndexToRowIdMap,
           entriesRange,
         );
       })
@@ -155,10 +157,10 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
         )
         GROUP BY id;
       `;
-        const querResult = await this.traceProcessor.query(sql).waitAllRows();
+        const queryResult = await this.traceProcessor.query(sql).waitAllRows();
         const result: CustomQueryParserResultTypeMap[CustomQueryType.SF_LAYERS_ID_AND_NAME] =
           [];
-        for (const it = querResult.iter({}); it.valid(); it.next()) {
+        for (const it = queryResult.iter({}); it.valid(); it.next()) {
           const idAndName = it.get('id_and_name') as string;
           const indexDelimiter = idAndName.indexOf(',');
           assertTrue(
@@ -278,7 +280,7 @@ export class ParserSurfaceFlinger extends AbstractParser<HierarchyTreeNode> {
       FROM
           surfaceflinger_layer as sfl
           INNER JOIN args ON sfl.arg_set_id = args.arg_set_id
-      WHERE snapshot_id = ${index};
+      WHERE snapshot_id = ${this.entryIndexToRowIdMap[index]};
     `;
     const result = await this.traceProcessor.query(sql).waitAllRows();
 

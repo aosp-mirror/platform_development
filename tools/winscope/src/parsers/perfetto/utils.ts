@@ -15,7 +15,7 @@
  */
 
 import {assertTrue} from 'common/assert_utils';
-import {EntriesRange} from 'trace/trace';
+import {AbsoluteEntryIndex, EntriesRange} from 'trace/trace';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
 
@@ -23,11 +23,13 @@ export class Utils {
   static async queryEntry(
     traceProcessor: WasmEngineProxy,
     tableName: string,
-    index: number,
+    entryIndexToRowIdMap: number[],
+    entryIndex: AbsoluteEntryIndex,
   ): Promise<FakeProto> {
+    const rowId = entryIndexToRowIdMap[entryIndex];
     const sql = `
       SELECT
-          tbl.id AS trace_entry_id,
+          tbl.id,
           args.key,
           args.value_type,
           args.int_value,
@@ -35,7 +37,7 @@ export class Utils {
           args.real_value
       FROM ${tableName} AS tbl
       INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
-      WHERE trace_entry_id = ${index};
+      WHERE tbl.id = ${rowId};
     `;
     const result = await traceProcessor.query(sql).waitAllRows();
 
@@ -55,25 +57,38 @@ export class Utils {
   static async queryVsyncId(
     traceProcessor: WasmEngineProxy,
     tableName: string,
+    entryIndexToRowIdMap: number[],
     entriesRange: EntriesRange,
   ): Promise<Array<bigint>> {
+    let minRowId = Number.MAX_VALUE;
+    let maxRowId = Number.MIN_VALUE;
+    for (
+      let entryIndex = entriesRange.start;
+      entryIndex < entriesRange.end;
+      ++entryIndex
+    ) {
+      const rowId = entryIndexToRowIdMap[entryIndex];
+      minRowId = Math.min(minRowId, rowId);
+      maxRowId = Math.max(maxRowId, rowId);
+    }
+
     const sql = `
       SELECT
-        tbl.id as entry_index,
+        tbl.id,
         args.key,
         args.value_type,
         args.int_value
       FROM ${tableName} AS tbl
       INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
       WHERE
-        entry_index BETWEEN ${entriesRange.start} AND ${entriesRange.end - 1}
+        tbl.id BETWEEN ${minRowId} AND ${maxRowId}
         AND args.key = 'vsync_id'
-        ORDER BY entry_index;
+        ORDER BY tbl.id;
     `;
 
     const result = await traceProcessor.query(sql).waitAllRows();
 
-    const values: Array<bigint> = [];
+    const vsyncIdOrderedByRow: Array<bigint> = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
       const value = it.get('int_value') as bigint | undefined;
       const valueType = it.get('value_type') as string;
@@ -81,8 +96,20 @@ export class Utils {
         valueType === 'uint' || valueType === 'int',
         () => 'expected vsyncid to have integer type',
       );
-      values.push(value ?? -1n);
+      vsyncIdOrderedByRow.push(value ?? -1n);
     }
-    return values;
+
+    const vsyncIdOrderedByEntry: Array<bigint> = [];
+    for (
+      let entryIndex = entriesRange.start;
+      entryIndex < entriesRange.end;
+      ++entryIndex
+    ) {
+      const rowId = entryIndexToRowIdMap[entryIndex];
+      const vsyncId = vsyncIdOrderedByRow[rowId - minRowId];
+      vsyncIdOrderedByEntry.push(vsyncId);
+    }
+
+    return vsyncIdOrderedByEntry;
   }
 }
