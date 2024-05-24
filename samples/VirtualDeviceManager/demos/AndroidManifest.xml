@@ -71,6 +71,11 @@
             android:exported="true"
             android:label="@string/vibration_demo" />
 
+        <activity
+            android:name=".StylusDemoActivity"
+            android:exported="true"
+            android:label="@string/stylus_demo" />
+
     </application>
     <!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:demos) -->
 </manifest>

@@ -18,7 +18,11 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
-import {TabbedViewSwitchRequest, WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
 import {TraceType} from 'trace/trace_type';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
@@ -94,7 +98,7 @@ describe('TraceViewComponent', () => {
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
         type: WinscopeEventType.TABBED_VIEW_SWITCHED,
-      } as WinscopeEvent)
+      } as WinscopeEvent),
     );
 
     (tabButtons[0] as HTMLButtonElement).click();
@@ -102,7 +106,7 @@ describe('TraceViewComponent', () => {
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
         type: WinscopeEventType.TABBED_VIEW_SWITCHED,
-      } as WinscopeEvent)
+      } as WinscopeEvent),
     );
   });
 
@@ -115,14 +119,18 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    await component.onWinscopeEvent(new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER));
+    await component.onWinscopeEvent(
+      new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER),
+    );
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    await component.onWinscopeEvent(new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER));
+    await component.onWinscopeEvent(
+      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
+    );
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
@@ -141,17 +149,19 @@ describe('TraceViewComponent', () => {
     expect(emitAppEvent).toHaveBeenCalledWith(
       jasmine.objectContaining({
         type: WinscopeEventType.TABBED_VIEW_SWITCHED,
-      } as WinscopeEvent)
+      } as WinscopeEvent),
     );
   });
 
   const getVisibleTabContents = () => {
     const contents: HTMLElement[] = [];
-    htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {
-      if ((content as HTMLElement).style.display !== 'none') {
-        contents.push(content as HTMLElement);
-      }
-    });
+    htmlElement
+      .querySelectorAll('.trace-view-content div')
+      .forEach((content) => {
+        if ((content as HTMLElement).style.display !== 'none') {
+          contents.push(content as HTMLElement);
+        }
+      });
     return contents;
   };
 });

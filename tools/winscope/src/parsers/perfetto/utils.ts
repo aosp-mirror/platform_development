@@ -23,7 +23,7 @@ export class Utils {
   static async queryEntry(
     traceProcessor: WasmEngineProxy,
     tableName: string,
-    index: number
+    index: number,
   ): Promise<FakeProto> {
     const sql = `
       SELECT
@@ -46,7 +46,7 @@ export class Utils {
         it.get('value_type') as string,
         it.get('int_value') as bigint | undefined,
         it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
+        it.get('string_value') as string | undefined,
       );
     }
     return builder.build();
@@ -55,7 +55,7 @@ export class Utils {
   static async queryVsyncId(
     traceProcessor: WasmEngineProxy,
     tableName: string,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<Array<bigint>> {
     const sql = `
       SELECT
@@ -79,7 +79,7 @@ export class Utils {
       const valueType = it.get('value_type') as string;
       assertTrue(
         valueType === 'uint' || valueType === 'int',
-        () => 'expected vsyncid to have integer type'
+        () => 'expected vsyncid to have integer type',
       );
       values.push(value ?? -1n);
     }

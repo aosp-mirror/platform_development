@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
 @Component({
@@ -26,13 +26,14 @@ import {UiData} from './ui_data';
       <rects-view
         class="rects-view"
         title="Windows"
+        [store]="store"
         [rects]="inputData?.rects ?? []"
-        [displayIds]="inputData?.displayIds ?? []"
+        [displays]="inputData?.displays ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree ?? null"
+        [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -42,29 +43,19 @@ import {UiData} from './ui_data';
       <properties-view
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"
+        [propertiesTree]="inputData?.propertiesTree"
+        [traceType]="${TraceType.WINDOW_MANAGER}"
         [highlightedProperty]="inputData?.highlightedProperty ?? ''"
-        [isProtoDump]="true"></properties-view>
+        [store]="store"
+        [isProtoDump]="false"
+        placeholderText="No selected item."></properties-view>
     </div>
   `,
-  styles: [
-    `
-      .rects-view,
-      .hierarchy-view,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
-    `,
-  ],
+  styles: [viewerCardStyle],
 })
 export class ViewerWindowManagerComponent {
-  @Input() inputData?: UiData;
-  @Input() store: PersistentStore = new PersistentStore();
+  @Input() inputData: UiData | undefined;
+  @Input() store: PersistentStore | undefined;
   @Input() active = false;
-  TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
 }
