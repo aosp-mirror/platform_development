@@ -205,6 +205,19 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(timestamp).toEqual('20ns');
   });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.properties-view',
+      'SELECTED TRANSITION',
+    );
+  });
 });
 
 function makeUiData(): UiData {

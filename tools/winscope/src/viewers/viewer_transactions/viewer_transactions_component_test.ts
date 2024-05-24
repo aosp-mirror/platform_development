@@ -33,12 +33,14 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {UnitTestUtils} from 'test/unit/utils';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
+import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {Events} from './events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
@@ -69,6 +71,7 @@ describe('ViewerTransactionsComponent', () => {
           SelectWithFilterComponent,
           CollapsedSectionsComponent,
           CollapsibleSectionTitleComponent,
+          PropertiesComponent,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
@@ -260,6 +263,19 @@ describe('ViewerTransactionsComponent', () => {
       logTimestampButton.click();
 
       expect(timestamp).toEqual('1ns');
+    });
+
+    it('creates collapsed sections with no buttons', () => {
+      UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    });
+
+    it('handles properties section collapse/expand', () => {
+      UnitTestUtils.checkSectionCollapseAndExpand(
+        htmlElement,
+        fixture,
+        '.properties-view',
+        'PROPERTIES - PROTO DUMP',
+      );
     });
 
     function makeUiData(selectedEntryIndex: number): UiData {

@@ -25,9 +25,11 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {UnitTestUtils} from 'test/unit/utils';
 import {CollapsedSectionsComponent} from './collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
+import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
 import {PropertiesComponent} from './properties_component';
 import {ViewerInputMethodComponent} from './viewer_input_method_component';
 
@@ -50,6 +52,7 @@ describe('ViewerInputMethodComponent', () => {
         ViewerInputMethodComponent,
         HierarchyComponent,
         PropertiesComponent,
+        ImeAdditionalPropertiesComponent,
         CollapsedSectionsComponent,
         CollapsibleSectionTitleComponent,
       ],
@@ -70,8 +73,46 @@ describe('ViewerInputMethodComponent', () => {
     expect(hierarchyView).toBeTruthy();
   });
 
+  it('creates additional properties view', () => {
+    const additionalProperties = htmlElement.querySelector(
+      '.ime-additional-properties',
+    );
+    expect(additionalProperties).toBeTruthy();
+  });
+
   it('creates properties view', () => {
     const propertiesView = htmlElement.querySelector('.properties-view');
     expect(propertiesView).toBeTruthy();
+  });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles hierarchy section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.hierarchy-view',
+      'HIERARCHY',
+    );
+  });
+
+  it('handles ime additional properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.ime-additional-properties',
+      'WM & SF PROPERTIES',
+    );
+  });
+
+  it('handles properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.properties-view',
+      'PROPERTIES',
+    );
   });
 });

@@ -199,10 +199,22 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
     ).toContain('null');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
   @Component({
     selector: 'host-component',
     template: `
-      <surface-flinger-property-groups [properties]="properties"></surface-flinger-property-groups>
+      <surface-flinger-property-groups
+        [properties]="properties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></surface-flinger-property-groups>
     `,
   })
   class TestHostComponent {
@@ -260,5 +272,11 @@ describe('SurfaceFlingerPropertyGroupsComponent', () => {
       hasInputChannel: false,
       ignoreDestinationFrame: true,
     };
+
+    collapseButtonClicked = false;
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

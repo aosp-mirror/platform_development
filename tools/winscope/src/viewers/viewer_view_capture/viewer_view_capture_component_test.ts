@@ -28,6 +28,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {UnitTestUtils} from 'test/unit/utils';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
@@ -40,7 +41,7 @@ describe('ViewerViewCaptureComponent', () => {
   let component: ViewerViewCaptureComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [
@@ -63,9 +64,6 @@ describe('ViewerViewCaptureComponent', () => {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(ViewerViewCaptureComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
@@ -89,5 +87,36 @@ describe('ViewerViewCaptureComponent', () => {
   it('creates properties view', () => {
     const propertiesView = htmlElement.querySelector('.properties-view');
     expect(propertiesView).toBeTruthy();
+  });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles rects section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.rects-view',
+      'SKETCH',
+    );
+  });
+
+  it('handles hierarchy section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.hierarchy-view',
+      'HIERARCHY',
+    );
+  });
+
+  it('handles properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.properties-view',
+      'PROPERTIES',
+    );
   });
 });

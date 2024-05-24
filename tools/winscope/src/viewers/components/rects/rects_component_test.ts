@@ -377,6 +377,20 @@ describe('RectsComponent', () => {
     expect(miniRectsScene.rects[1].topLeft.z).toEqual(5);
   });
 
+  it('handles collapse button click', () => {
+    fixture.detectChanges();
+    const spy = spyOn(
+      assertDefined(component.rectsComponent).collapseButtonClicked,
+      'emit',
+    );
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
+
   function checkButtons(
     buttonValues: string[],
     buttonColors: string[],

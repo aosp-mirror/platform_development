@@ -136,13 +136,24 @@ describe('ImeAdditionalPropertiesComponent', () => {
     expect(button.className).toContain('selected');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
   @Component({
     selector: 'host-component',
     template: `
       <ime-additional-properties
         [highlightedItem]="highlightedItem"
         [isImeManagerService]="isImeManagerService"
-        [additionalProperties]="additionalProperties"></ime-additional-properties>
+        [additionalProperties]="additionalProperties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></ime-additional-properties>
     `,
   })
   class TestHostComponent {
@@ -191,6 +202,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     );
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
+    collapseButtonClicked = false;
 
     onHighlightedNodeChange = (event: Event) => {
       this.highlightedItem = (event as CustomEvent).detail.node.id;
@@ -206,5 +218,9 @@ describe('ImeAdditionalPropertiesComponent', () => {
         event as CustomEvent
       ).detail.selectedItem.name;
     };
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

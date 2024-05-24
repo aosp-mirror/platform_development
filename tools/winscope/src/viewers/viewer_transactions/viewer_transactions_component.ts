@@ -313,17 +313,6 @@ class ViewerTransactionsComponent {
     this.emitEvent(Events.EntryClicked, index);
   }
 
-  onUserOptionChange() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.PropertiesUserOptionsChange,
-      {
-        bubbles: true,
-        detail: {userOptions: this.uiData.propertiesUserOptions},
-      },
-    );
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
   onGoToCurrentTimeClick() {
     if (this.uiData.currentEntryIndex !== undefined && this.scrollComponent) {
       this.scrollComponent.scrollToIndex(this.uiData.currentEntryIndex);

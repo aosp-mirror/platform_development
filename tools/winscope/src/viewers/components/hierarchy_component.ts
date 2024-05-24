@@ -93,7 +93,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         (pinnedItemChange)="onPinnedItemChange($event)"
         (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
 
-      <div class="children">
+      <div class="subtrees">
         <tree-view
           *ngFor="let subtree of subtrees; trackBy: trackById"
           class="childrenTree"
