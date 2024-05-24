@@ -574,7 +574,7 @@ describe('VisibilityPropertiesComputation', () => {
     ).toBeUndefined();
   });
 
-  it('distinguishes occluding and partially occluding layers by alpha', () => {
+  it('distinguishes occluding and covering layers by alpha', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -596,7 +596,6 @@ describe('VisibilityPropertiesComputation', () => {
             parent: -1,
             children: [],
             layerStack: 0,
-            isOpaque: true,
             z: 0,
             screenBounds: {left: 0, top: 0, bottom: 1, right: 1},
             visibleRegion: {rect: [{left: 0, top: 0, bottom: 1, right: 1}]},
@@ -604,6 +603,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             flags: 0,
             color: {r: 0, g: 0, b: 0, a: 1},
+            isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -624,7 +624,6 @@ describe('VisibilityPropertiesComputation', () => {
             parent: -1,
             children: [],
             layerStack: 0,
-            isOpaque: true,
             z: 1,
             screenBounds: {left: 0, top: 0, bottom: 2, right: 2},
             visibleRegion: {rect: [{left: 0, top: 0, bottom: 2, right: 2}]},
@@ -632,6 +631,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             flags: 0,
             color: {r: 0, g: 0, b: 0, a: 1},
+            isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -645,14 +645,13 @@ describe('VisibilityPropertiesComputation', () => {
         },
         {
           id: 3,
-          name: 'partiallyOccludingLayer',
+          name: 'coveringLayer',
           properties: {
             id: 3,
-            name: 'partiallyOccludingLayer',
+            name: 'coveringLayer',
             parent: -1,
             children: [],
             layerStack: 0,
-            isOpaque: true,
             z: 2,
             screenBounds: {left: 0, top: 0, bottom: 2, right: 2},
             visibleRegion: {rect: [{left: 0, top: 0, bottom: 2, right: 2}]},
@@ -660,6 +659,7 @@ describe('VisibilityPropertiesComputation', () => {
             cornerRadius: 0,
             flags: 0,
             color: {r: 0, g: 0, b: 0, a: 0.5},
+            isOpaque: true,
             shadowRadius: 0,
             backgroundBlurRadius: 0,
             transform: {
@@ -682,8 +682,8 @@ describe('VisibilityPropertiesComputation', () => {
     const occludingLayer = assertDefined(
       hierarchyRoot.getChildByName('occludingLayer'),
     );
-    const partiallyOccludingLayer = assertDefined(
-      hierarchyRoot.getChildByName('partiallyOccludingLayer'),
+    const coveringLayer = assertDefined(
+      hierarchyRoot.getChildByName('coveringLayer'),
     );
 
     expect(
@@ -702,16 +702,18 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getValue(),
     ).toEqual('2 occludingLayer');
     expect(
-      occludedLayer
-        .getEagerPropertyByName('partiallyOccludedBy')
-        ?.getAllChildren().length,
+      coveringLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
+    ).toEqual([]);
+    expect(
+      occludedLayer.getEagerPropertyByName('coveredBy')?.getAllChildren()
+        .length,
     ).toEqual(1);
     expect(
       occludedLayer
-        .getEagerPropertyByName('partiallyOccludedBy')
+        .getEagerPropertyByName('coveredBy')
         ?.getChildByName('0')
         ?.getValue(),
-    ).toEqual('3 partiallyOccludingLayer');
+    ).toEqual('3 coveringLayer');
     expect(
       occludedLayer.getEagerPropertyByName('visibilityReason'),
     ).toBeUndefined();
@@ -725,35 +727,38 @@ describe('VisibilityPropertiesComputation', () => {
       occludingLayer.getEagerPropertyByName('occludedBy')?.getValue(),
     ).toEqual([]);
     expect(
-      occludingLayer
-        .getEagerPropertyByName('partiallyOccludedBy')
-        ?.getAllChildren().length,
+      coveringLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
+    ).toEqual([]);
+    expect(
+      occludingLayer.getEagerPropertyByName('coveredBy')?.getAllChildren()
+        .length,
     ).toEqual(1);
     expect(
       occludingLayer
-        .getEagerPropertyByName('partiallyOccludedBy')
+        .getEagerPropertyByName('coveredBy')
         ?.getChildByName('0')
         ?.getValue(),
-    ).toEqual('3 partiallyOccludingLayer');
+    ).toEqual('3 coveringLayer');
     expect(
       occludingLayer.getEagerPropertyByName('visibilityReason'),
     ).toBeUndefined();
 
     expect(
       assertDefined(
-        partiallyOccludingLayer.getEagerPropertyByName('isComputedVisible'),
+        coveringLayer.getEagerPropertyByName('isComputedVisible'),
       ).getValue(),
     ).toBeTrue();
     expect(
-      partiallyOccludingLayer.getEagerPropertyByName('occludedBy')?.getValue(),
+      coveringLayer.getEagerPropertyByName('occludedBy')?.getValue(),
     ).toEqual([]);
     expect(
-      partiallyOccludingLayer
-        .getEagerPropertyByName('partiallyOccludedBy')
-        ?.getValue(),
+      coveringLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
     expect(
-      partiallyOccludingLayer.getEagerPropertyByName('visibilityReason'),
+      coveringLayer.getEagerPropertyByName('coveredBy')?.getValue(),
+    ).toEqual([]);
+    expect(
+      coveringLayer.getEagerPropertyByName('visibilityReason'),
     ).toBeUndefined();
   });
 
