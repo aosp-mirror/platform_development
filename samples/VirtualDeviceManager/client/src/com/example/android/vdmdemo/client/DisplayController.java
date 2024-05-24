@@ -78,7 +78,7 @@ final class DisplayController {
         if (mVideoManager != null) {
             mVideoManager.stop();
         }
-        mVideoManager = VideoManager.createDecoder(mDisplayId, mRemoteIo);
+        mVideoManager = VideoManager.createDisplayDecoder(mDisplayId, mRemoteIo);
         mVideoManager.startDecoding(surface, width, height);
         mDisplayCapabilities =
                 RemoteEvent.newBuilder()

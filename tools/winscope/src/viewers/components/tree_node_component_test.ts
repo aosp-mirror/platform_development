@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {Component, ViewChild} from '@angular/core';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {assertDefined} from 'common/assert_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
+import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {TreeNodeComponent} from './tree_node_component';
-import {TreeNodeDataViewComponent} from './tree_node_data_view_component';
 
 describe('TreeNodeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -26,10 +35,14 @@ describe('TreeNodeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatIconModule],
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeNodeComponent, TreeNodeDataViewComponent, TestHostComponent],
-      schemas: [NO_ERRORS_SCHEMA],
+      declarations: [
+        TreeNodeComponent,
+        HierarchyTreeNodeDataViewComponent,
+        PropertyTreeNodeDataViewComponent,
+        TestHostComponent,
+      ],
+      imports: [MatIconModule, MatTooltipModule],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
@@ -42,61 +55,72 @@ describe('TreeNodeComponent', () => {
   });
 
   it('can generate data view component', () => {
-    component.treeNodeComponent.isPropertiesTreeNode = jasmine.createSpy().and.returnValue(false);
+    component.treeNodeComponent.isPropertyTreeNode = jasmine
+      .createSpy()
+      .and.returnValue(false);
     fixture.detectChanges();
-    const treeNodeDataView = htmlElement.querySelector('tree-node-data-view');
+    const treeNodeDataView = htmlElement.querySelector(
+      'hierarchy-tree-node-data-view',
+    );
     expect(treeNodeDataView).toBeTruthy();
   });
 
   it('can trigger tree toggle on click of chevron', () => {
-    component.treeNodeComponent.showChevron = jasmine.createSpy().and.returnValue(true);
+    component.treeNodeComponent.showChevron = jasmine
+      .createSpy()
+      .and.returnValue(true);
     fixture.detectChanges();
 
     const spy = spyOn(component.treeNodeComponent.toggleTreeChange, 'emit');
-    const toggleButton = htmlElement.querySelector('.toggle-tree-btn');
-    expect(toggleButton).toBeTruthy();
+    const toggleButton = assertDefined(
+      htmlElement.querySelector('.toggle-tree-btn'),
+    );
     (toggleButton as HTMLButtonElement).click();
     expect(spy).toHaveBeenCalled();
   });
 
   it('can trigger tree expansion on click of expand tree button', () => {
     const spy = spyOn(component.treeNodeComponent.expandTreeChange, 'emit');
-    const expandButton = htmlElement.querySelector('.expand-tree-btn');
-    expect(expandButton).toBeTruthy();
+    const expandButton = assertDefined(
+      htmlElement.querySelector('.expand-tree-btn'),
+    );
     (expandButton as HTMLButtonElement).click();
     expect(spy).toHaveBeenCalled();
   });
 
   it('can trigger node pin on click of star', () => {
-    component.treeNodeComponent.showPinNodeIcon = jasmine.createSpy().and.returnValue(true);
+    component.treeNodeComponent.showPinNodeIcon = jasmine
+      .createSpy()
+      .and.returnValue(true);
     fixture.detectChanges();
 
     const spy = spyOn(component.treeNodeComponent.pinNodeChange, 'emit');
-    const pinNodeButton = htmlElement.querySelector('.pin-node-btn');
-    expect(pinNodeButton).toBeTruthy();
+    const pinNodeButton = assertDefined(
+      htmlElement.querySelector('.pin-node-btn'),
+    );
     (pinNodeButton as HTMLButtonElement).click();
-    expect(spy).toHaveBeenCalledWith(component.item);
+    expect(spy).toHaveBeenCalledWith(component.node);
   });
 
   @Component({
     selector: 'host-component',
     template: `
       <tree-node
-        [item]="item"
-        [isCollapsed]="false"
+        [node]="node"
+        [isExpanded]="false"
         [isPinned]="false"
         [isInPinnedSection]="false"
-        [hasChildren]="true"
         [isSelected]="isSelected"></tree-node>
     `,
   })
   class TestHostComponent {
-    item = {
-      kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: '4',
-      children: [{stableId: 'child'}],
-    };
+    node = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('4')
+        .setChildren([{id: 1, name: 'Child 1'}])
+        .build(),
+    );
 
     isSelected = false;
 

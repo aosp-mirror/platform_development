@@ -15,7 +15,11 @@
  */
 
 class ScreenRecordingTraceEntry {
-  constructor(public videoTimeSeconds: number, public videoData: Blob) {}
+  constructor(
+    public videoTimeSeconds: number,
+    public videoData: Blob,
+    public isImage: boolean = false,
+  ) {}
 }
 
 export {ScreenRecordingTraceEntry};

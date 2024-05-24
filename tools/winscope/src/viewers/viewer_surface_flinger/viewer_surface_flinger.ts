@@ -27,9 +27,11 @@ import {UiData} from './ui_data';
 
 class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
+  private readonly view: View;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-surface-flinger');
@@ -38,39 +40,77 @@ class ViewerSurfaceFlinger implements Viewer {
       (this.htmlElement as any).inputData = uiData;
     });
 
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
-      this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyPinnedChange,
+      (event) =>
+        this.presenter.onPinnedItemChange(
+          (event as CustomEvent).detail.pinnedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
-      this.presenter.updateHighlightedItem(`${(event as CustomEvent).detail.id}`)
+      this.presenter.onHighlightedItemChange(
+        `${(event as CustomEvent).detail.id}`,
+      ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedPropertyChange, (event) =>
-      this.presenter.updateHighlightedProperty(`${(event as CustomEvent).detail.id}`)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HighlightedPropertyChange,
+      (event) =>
+        this.presenter.onHighlightedPropertyChange(
+          `${(event as CustomEvent).detail.id}`,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
-      this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyUserOptionsChange,
+      async (event) =>
+        await this.presenter.onHierarchyUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) =>
-      this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString)
+    this.htmlElement.addEventListener(
+      ViewerEvents.HierarchyFilterChange,
+      async (event) =>
+        await this.presenter.onHierarchyFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) =>
-      this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions)
+    this.htmlElement.addEventListener(
+      ViewerEvents.PropertiesUserOptionsChange,
+      async (event) =>
+        await this.presenter.onPropertiesUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.PropertiesFilterChange, (event) =>
-      this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString)
+    this.htmlElement.addEventListener(
+      ViewerEvents.PropertiesFilterChange,
+      async (event) =>
+        await this.presenter.onPropertiesFilterChange(
+          (event as CustomEvent).detail.filterString,
+        ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
-      this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
+    this.htmlElement.addEventListener(
+      ViewerEvents.SelectedTreeChange,
+      async (event) =>
+        await this.presenter.onSelectedHierarchyTreeChange(
+          (event as CustomEvent).detail.selectedItem,
+        ),
     );
     this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
       if (
         (event as CustomEvent).detail.clickedRectId.includes(
-          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME
+          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME,
         )
       ) {
         this.switchToNexusLauncherViewer();
       }
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Surface Flinger',
+      TraceType.SURFACE_FLINGER,
+    );
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -83,19 +123,13 @@ class ViewerSurfaceFlinger implements Viewer {
 
   // TODO: Make this generic by package name once TraceType is not explicitly defined
   async switchToNexusLauncherViewer() {
-    await this.emitAppEvent(new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY));
+    await this.emitAppEvent(
+      new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+    );
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Surface Flinger',
-        TraceType.SURFACE_FLINGER
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {

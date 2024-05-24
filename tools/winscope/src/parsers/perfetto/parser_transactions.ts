@@ -13,8 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
-import {TransactionsTraceFileProto, winscopeJson} from 'parsers/proto_types';
+import {TimestampFactory} from 'common/timestamp_factory';
+import {AddDefaults} from 'parsers/operations/add_defaults';
+import {SetFormatters} from 'parsers/operations/set_formatters';
+import {TamperedMessageType} from 'parsers/tampered_message_type';
+import {TranslateChanges} from 'parsers/transactions/operations/translate_changes';
+import root from 'protos/transactions/latest/json';
+import {perfetto} from 'protos/transactions/latest/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -23,32 +31,58 @@ import {
 import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {AbstractParser} from './abstract_parser';
-import {FakeProto} from './fake_proto_builder';
 import {FakeProtoTransformer} from './fake_proto_transformer';
 import {Utils} from './utils';
 
-export class ParserTransactions extends AbstractParser<object> {
-  private protoTransformer = new FakeProtoTransformer(
-    winscopeJson,
-    'WinscopeTraceData',
-    'transactions'
-  );
+export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
+  private static readonly TransactionsTraceFileProto =
+    TamperedMessageType.tamper(
+      root.lookupType('perfetto.protos.TransactionTraceFile'),
+    );
+  private static readonly TransactionsTraceEntryField =
+    ParserTransactions.TransactionsTraceFileProto.fields['entry'];
 
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
+  private static readonly OPERATIONS = [
+    new AddDefaults(ParserTransactions.TransactionsTraceEntryField),
+    new SetFormatters(ParserTransactions.TransactionsTraceEntryField),
+    new TranslateChanges(),
+  ];
+
+  private protoTransformer: FakeProtoTransformer;
+
+  constructor(
+    traceFile: TraceFile,
+    traceProcessor: WasmEngineProxy,
+    timestampFactory: TimestampFactory,
+  ) {
+    super(traceFile, traceProcessor, timestampFactory);
+
+    this.protoTransformer = new FakeProtoTransformer(
+      assertDefined(
+        ParserTransactions.TransactionsTraceEntryField.tamperedMessageType,
+      ),
+    );
   }
 
   override getTraceType(): TraceType {
     return TraceType.TRANSACTIONS;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<object> {
-    let entryProto = await Utils.queryEntry(this.traceProcessor, this.getTableName(), index);
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
+    let entryProto = await Utils.queryEntry(
+      this.traceProcessor,
+      this.getTableName(),
+      index,
+    );
     entryProto = this.protoTransformer.transform(entryProto);
-    entryProto = this.decodeWhatBitsetFields(entryProto);
-    return entryProto;
+    return this.makePropertiesTree(entryProto);
   }
 
   protected override getTableName(): string {
@@ -57,59 +91,31 @@ export class ParserTransactions extends AbstractParser<object> {
 
   override async customQuery<Q extends CustomQueryType>(
     type: Q,
-    entriesRange: EntriesRange
+    entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        return Utils.queryVsyncId(this.traceProcessor, this.getTableName(), entriesRange);
+        return Utils.queryVsyncId(
+          this.traceProcessor,
+          this.getTableName(),
+          entriesRange,
+        );
       })
       .getResult();
   }
 
-  private decodeWhatBitsetFields(transactionTraceEntry: FakeProto): FakeProto {
-    const decodeBitset32 = (bitset: number, EnumProto: any) => {
-      return Object.keys(EnumProto).filter((key) => {
-        const value = EnumProto[key];
-        return (bitset & value) !== 0;
-      });
-    };
+  private makePropertiesTree(
+    entryProto: perfetto.protos.TransactionTraceEntry,
+  ): PropertyTreeNode {
+    const tree = new PropertyTreeBuilderFromProto()
+      .setData(entryProto)
+      .setRootId('TransactionsTraceEntry')
+      .setRootName('entry')
+      .build();
 
-    const concatBitsetTokens = (tokens: string[]) => {
-      if (tokens.length === 0) {
-        return '0';
-      }
-      return tokens.join(' | ');
-    };
-
-    const LayerStateChangesLsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
-      .ChangesLsb;
-    const LayerStateChangesMsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
-      .ChangesMsb;
-    const DisplayStateChangesEnum = (TransactionsTraceFileProto?.parent as any).DisplayState
-      .Changes;
-
-    transactionTraceEntry.transactions.forEach((transactionState: any) => {
-      transactionState.layerChanges.forEach((layerState: any) => {
-        layerState.what = concatBitsetTokens(
-          decodeBitset32(Number(layerState.what), LayerStateChangesLsbEnum).concat(
-            decodeBitset32(Number(layerState.what >> 32n), LayerStateChangesMsbEnum)
-          )
-        );
-      });
-
-      transactionState.displayChanges.forEach((displayState: any) => {
-        displayState.what = concatBitsetTokens(
-          decodeBitset32(Number(displayState.what), DisplayStateChangesEnum)
-        );
-      });
+    ParserTransactions.OPERATIONS.forEach((operation) => {
+      operation.apply(tree);
     });
-
-    transactionTraceEntry?.addedDisplays?.forEach((displayState: any) => {
-      displayState.what = concatBitsetTokens(
-        decodeBitset32(Number(displayState.what), DisplayStateChangesEnum)
-      );
-    });
-
-    return transactionTraceEntry;
+    return tree;
   }
 }

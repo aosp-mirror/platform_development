@@ -27,7 +27,7 @@ export class FakeProtoBuilder {
     valueType: string,
     intValue: bigint | undefined,
     realValue: number | undefined,
-    stringValue: string | undefined
+    stringValue: string | undefined,
   ): FakeProtoBuilder {
     const keyCamelCase = key
       .split('.')
@@ -48,8 +48,8 @@ export class FakeProtoBuilder {
     valueType: string,
     intValue: bigint | undefined,
     realValue: number | undefined,
-    stringValue: string | undefined
-  ): any {
+    stringValue: string | undefined,
+  ): string | bigint | number | boolean | null | undefined {
     switch (valueType) {
       case 'bool':
         return Boolean(intValue);
@@ -64,7 +64,7 @@ export class FakeProtoBuilder {
       case 'uint':
         return intValue;
       default:
-      // do nothing
+        throw new Error(`Unsupported type ${valueType}`);
     }
   }
 }
