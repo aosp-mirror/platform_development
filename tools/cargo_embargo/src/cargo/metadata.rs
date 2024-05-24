@@ -71,7 +71,8 @@ impl DependencyMetadata {
                 }
             }
         }
-        !self.optional || features.contains(&format!("dep:{}", self.name))
+        let name = self.rename.as_ref().unwrap_or(&self.name);
+        !self.optional || features.contains(&format!("dep:{}", name))
     }
 }
 
@@ -578,6 +579,88 @@ mod tests {
                 lib_name: "foolib".to_string(),
                 extern_type: ExternType::Rust
             },]
+        );
+    }
+
+    #[test]
+    fn get_externs_rename() {
+        let package = PackageMetadata {
+            name: "test_package".to_string(),
+            dependencies: vec![
+                DependencyMetadata {
+                    name: "foo".to_string(),
+                    kind: None,
+                    optional: false,
+                    target: None,
+                    rename: Some("foo2".to_string()),
+                },
+                DependencyMetadata {
+                    name: "bar".to_string(),
+                    kind: None,
+                    optional: true,
+                    target: None,
+                    rename: None,
+                },
+                DependencyMetadata {
+                    name: "bar".to_string(),
+                    kind: None,
+                    optional: true,
+                    target: None,
+                    rename: Some("baz".to_string()),
+                },
+            ],
+            ..Default::default()
+        };
+        let packages = vec![
+            package.clone(),
+            PackageMetadata {
+                name: "foo".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "foo".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            PackageMetadata {
+                name: "bar".to_string(),
+                targets: vec![TargetMetadata {
+                    name: "bar".to_string(),
+                    kind: vec![TargetKind::Lib],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+        ];
+        assert_eq!(
+            get_externs(&package, &packages, &["dep:bar".to_string()], &[], &[], false).unwrap(),
+            vec![
+                Extern {
+                    name: "bar".to_string(),
+                    lib_name: "bar".to_string(),
+                    extern_type: ExternType::Rust
+                },
+                Extern {
+                    name: "foo2".to_string(),
+                    lib_name: "foo".to_string(),
+                    extern_type: ExternType::Rust
+                },
+            ]
+        );
+        assert_eq!(
+            get_externs(&package, &packages, &["dep:baz".to_string()], &[], &[], false).unwrap(),
+            vec![
+                Extern {
+                    name: "baz".to_string(),
+                    lib_name: "bar".to_string(),
+                    extern_type: ExternType::Rust
+                },
+                Extern {
+                    name: "foo2".to_string(),
+                    lib_name: "foo".to_string(),
+                    extern_type: ExternType::Rust
+                },
+            ]
         );
     }
 

@@ -114,6 +114,7 @@ async function buildProtos(protoPaths, outSubdir) {
         'pbjs',
         '--force-long',
         '--target static-module',
+        `--root ${outSubdir.replace('/', '')}`,
         `--out ${outDir}/static.js`,
         `--path ${PERFETTO_TOP}`,
         `--path ${WINSCOPE_TOP}`,
