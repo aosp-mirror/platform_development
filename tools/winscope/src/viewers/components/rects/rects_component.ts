@@ -109,8 +109,8 @@ import {Distance2D, ShadingMode} from './types3d';
               (input)="onRotationSliderChange($event.value)"
               (focus)="$event.target.blur()"
               color="accent"
-              (mousedown)="onInteractionStart(spacingSlider)"
-              (mouseup)="onInteractionEnd(spacingSlider)" #rotationSlider></mat-slider>
+              (mousedown)="onInteractionStart(rotationSlider)"
+              (mouseup)="onInteractionEnd(rotationSlider)" #rotationSlider></mat-slider>
           </div>
           <div class="slider-container">
             <p class="slider-label mat-body-1">Spacing</p>

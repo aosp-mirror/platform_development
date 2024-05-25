@@ -75,6 +75,7 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
     let entryProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
+      this.entryIndexToRowIdMap,
       index,
     );
     entryProto = this.protoTransformer.transform(entryProto);
@@ -94,6 +95,7 @@ export class ParserTransactions extends AbstractParser<PropertyTreeNode> {
         return Utils.queryVsyncId(
           this.traceProcessor,
           this.getTableName(),
+          this.entryIndexToRowIdMap,
           entriesRange,
         );
       })

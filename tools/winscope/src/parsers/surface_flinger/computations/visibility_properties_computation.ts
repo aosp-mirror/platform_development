@@ -95,14 +95,11 @@ export class VisibilityPropertiesComputation implements Computation {
           const cornerRadiusOther =
             other.getEagerPropertyByName('cornerRadius')?.getValue() ?? 0;
 
-          const isCovered =
+          return (
             cornerRadiusOther <= 0 ||
             (cornerRadiusOther ===
               layer.getEagerPropertyByName('cornerRadius')?.getValue() ??
-              0);
-          return (
-            isCovered &&
-            this.getColor(other)?.getChildByName('a')?.getValue() === 1
+              0)
           );
         })
         .map((other) => other.id);
@@ -169,7 +166,7 @@ export class VisibilityPropertiesComputation implements Computation {
         ),
       );
 
-      this.getDefinedValue(layer, 'isOpaque')
+      this.isOpaque(layer)
         ? opaqueLayers.push(layer)
         : transparentLayers.push(layer);
     }
@@ -410,6 +407,14 @@ export class VisibilityPropertiesComputation implements Computation {
   private hasZeroAlpha(layer: HierarchyTreeNode): boolean {
     const alpha = this.getColor(layer)?.getChildByName('a')?.getValue() ?? 0;
     return alpha === 0;
+  }
+
+  private isOpaque(layer: HierarchyTreeNode): boolean {
+    const alpha = this.getColor(layer)?.getChildByName('a')?.getValue();
+    if (alpha !== 1) {
+      return false;
+    }
+    return this.getDefinedValue(layer, 'isOpaque');
   }
 
   private isActiveBufferEmpty(buffer: PropertyTreeNode | undefined): boolean {

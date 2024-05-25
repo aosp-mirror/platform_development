@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/viewcapture/latest/json';
+import root from 'protos/viewcapture/udc/json';
 
 export const ExportedData = TamperedMessageType.tamper(
   root.lookupType('com.android.app.viewcapture.data.ExportedData'),
