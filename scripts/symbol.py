@@ -20,6 +20,7 @@ The information can include symbol names, offsets, and source locations.
 """
 
 import atexit
+import json
 import glob
 import os
 import platform
@@ -292,7 +293,7 @@ def CallLlvmSymbolizerForSet(lib, unique_addrs):
     return None
 
   cmd = [ToolPath("llvm-symbolizer"), "--functions", "--inlines",
-      "--demangle", "--obj=" + symbols, "--output-style=GNU"]
+      "--demangle", "--obj=" + symbols, "--output-style=JSON"]
   child = _PIPE_ADDR2LINE_CACHE.GetProcess(cmd)
 
   for addr in addrs:
@@ -300,20 +301,12 @@ def CallLlvmSymbolizerForSet(lib, unique_addrs):
       child.stdin.write("0x%s\n" % addr)
       child.stdin.flush()
       records = []
-      first = True
-      while True:
-        symbol = child.stdout.readline().strip()
-        if not symbol:
-          break
-        location = child.stdout.readline().strip()
-        records.append((symbol, location))
-        if first:
-          # Write a blank line as a sentinel so we know when to stop
-          # reading inlines from the output.
-          # The blank line will cause llvm-symbolizer to emit a blank line.
-          child.stdin.write("\n")
-          child.stdin.flush()
-          first = False
+      json_result = json.loads(child.stdout.readline().strip())
+      for symbol in json_result["Symbol"]:
+        function_name = symbol["FunctionName"]
+        # GNU style location: file_name:line_num
+        location = ("%s:%s" % (symbol["FileName"], symbol["Line"]))
+        records.append((function_name, location))
     except IOError as e:
       # Remove the / in front of the library name to match other output.
       records = [(None, lib[1:] + "  ***Error: " + str(e))]
