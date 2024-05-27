@@ -247,10 +247,10 @@ describe('TracePipeline', () => {
         'Perfetto trace has no IME Clients entries',
         'Perfetto trace has no IME system_server entries',
         'Perfetto trace has no IME Service entries',
-        'Perfetto trace has no ProtoLog entries',
         'Perfetto trace has no Surface Flinger entries',
         'Perfetto trace has no Transactions entries',
         'Perfetto trace has no Transitions entries',
+        'Perfetto trace has no ProtoLog entries',
       ]),
     ]);
   });
