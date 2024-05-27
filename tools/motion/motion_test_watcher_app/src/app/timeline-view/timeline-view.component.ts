@@ -100,7 +100,15 @@ export class TimelineViewComponent
         this.canvas?.nativeElement?.width ?? 1,
         this.recordedMotion.timeline,
       );
-      this.features = [...this.recordedMotion.features];
+
+      function recursiveFeatures(feature: Feature): Feature[] {
+        return [feature, ...feature.subFeatures.flatMap(it => recursiveFeatures(it))];
+      }
+
+      this.features = this.recordedMotion.features.flatMap((it) =>
+        recursiveFeatures(it),
+      );
+
 
       this._recordingInputDisposer.addListener(
         this.recordedMotion.videoSource,
