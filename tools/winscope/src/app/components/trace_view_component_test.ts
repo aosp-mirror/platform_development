@@ -23,11 +23,21 @@ import {
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {TraceViewComponent} from './trace_view_component';
 
 describe('TraceViewComponent', () => {
+  const traceSf = new TraceBuilder<object>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setEntries([])
+    .build();
+  const traceWm = new TraceBuilder<object>()
+    .setType(TraceType.WINDOW_MANAGER)
+    .setEntries([])
+    .build();
+
   let fixture: ComponentFixture<TraceViewComponent>;
   let component: TraceViewComponent;
   let htmlElement: HTMLElement;
@@ -42,8 +52,8 @@ describe('TraceViewComponent', () => {
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub('Title0', 'Content0', [TraceType.SURFACE_FLINGER]),
-      new ViewerStub('Title1', 'Content1', [TraceType.WINDOW_MANAGER]),
+      new ViewerStub('Title0', 'Content0', traceSf),
+      new ViewerStub('Title1', 'Content1', traceWm),
     ];
     component.ngOnChanges();
     fixture.detectChanges();

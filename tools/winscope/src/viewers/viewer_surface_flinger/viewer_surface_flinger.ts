@@ -17,8 +17,10 @@
 import {FunctionUtils} from 'common/function_utils';
 import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -28,15 +30,21 @@ import {UiData} from './ui_data';
 class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
+  private readonly trace: Trace<HierarchyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    storage: Storage,
+  ) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
-    this.presenter = new Presenter(traces, storage, (uiData: UiData) => {
+    this.presenter = new Presenter(trace, traces, storage, (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
     });
 
@@ -108,10 +116,9 @@ class ViewerSurfaceFlinger implements Viewer {
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       'Surface Flinger',
-      TraceType.SURFACE_FLINGER,
     );
   }
 
@@ -134,8 +141,8 @@ class ViewerSurfaceFlinger implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerSurfaceFlinger.DEPENDENCIES;
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return [this.trace];
   }
 }
 

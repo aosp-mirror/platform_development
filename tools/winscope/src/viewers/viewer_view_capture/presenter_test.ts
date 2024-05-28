@@ -33,7 +33,7 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
-import {ViewerViewCaptureLauncher} from './viewer_view_capture';
+import {ViewerViewCapture} from './viewer_view_capture';
 
 describe('PresenterViewCapture', () => {
   let parsers: Array<Parser<HierarchyTreeNode>>;
@@ -396,7 +396,7 @@ describe('PresenterViewCapture', () => {
 
   function createPresenter(traces: Traces): Presenter {
     return new Presenter(
-      ViewerViewCaptureLauncher.DEPENDENCIES,
+      ViewerViewCapture.DEPENDENCIES,
       traces,
       new InMemoryStorage(),
       (newData: UiData) => {

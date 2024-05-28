@@ -120,12 +120,13 @@ export class Presenter {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
     this.traces = traces;
-    this.trace = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
+    this.trace = trace;
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
     this.copyUiDataAndNotifyView();

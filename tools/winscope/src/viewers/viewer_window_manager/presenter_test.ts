@@ -378,8 +378,13 @@ describe('PresenterWindowManager', () => {
   const createPresenter = (trace: Trace<HierarchyTreeNode>): Presenter => {
     const traces = new Traces();
     traces.setTrace(TraceType.WINDOW_MANAGER, trace);
-    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    return new Presenter(
+      trace,
+      traces,
+      new InMemoryStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      },
+    );
   };
 });

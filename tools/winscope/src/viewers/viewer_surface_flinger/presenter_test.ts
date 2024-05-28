@@ -34,7 +34,7 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 describe('PresenterSurfaceFlinger', () => {
-  let trace: Trace<HierarchyTreeNode>;
+  let traceSf: Trace<HierarchyTreeNode>;
   let positionUpdate: TracePositionUpdate;
   let secondPositionUpdate: TracePositionUpdate;
   let positionUpdateMultiDisplayEntry: TracePositionUpdate;
@@ -43,7 +43,7 @@ describe('PresenterSurfaceFlinger', () => {
   let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
-    trace = new TraceBuilder<HierarchyTreeNode>()
+    traceSf = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([
         await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
@@ -51,13 +51,13 @@ describe('PresenterSurfaceFlinger', () => {
       ])
       .build();
 
-    const firstEntry = trace.getEntry(0);
+    const firstEntry = traceSf.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
     positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(
-      trace.getEntry(1),
+      traceSf.getEntry(1),
     );
     secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      trace.getEntry(2),
+      traceSf.getEntry(2),
     );
 
     const firstEntryDataTree = await firstEntry.getValue();
@@ -75,7 +75,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   beforeEach(() => {
-    presenter = createPresenter(trace);
+    presenter = createPresenter(traceSf);
   });
 
   it('is robust to empty trace', async () => {
@@ -426,7 +426,7 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('updates view capture package names', async () => {
-    const vcTrace = new TraceBuilder<HierarchyTreeNode>()
+    const traceVc = new TraceBuilder<HierarchyTreeNode>()
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
       .setParserCustomQueryResult(
         CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
@@ -434,9 +434,10 @@ describe('PresenterSurfaceFlinger', () => {
       )
       .build();
     const traces = new Traces();
-    traces.setTrace(TraceType.SURFACE_FLINGER, trace);
-    traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, vcTrace);
+    traces.setTrace(TraceType.SURFACE_FLINGER, traceSf);
+    traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, traceVc);
     const presenter = new Presenter(
+      traceSf,
       traces,
       new InMemoryStorage(),
       (newData: UiData) => {
@@ -444,7 +445,7 @@ describe('PresenterSurfaceFlinger', () => {
       },
     );
 
-    const firstEntry = trace.getEntry(0);
+    const firstEntry = traceSf.getEntry(0);
     const positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
 
     await presenter.onAppEvent(positionUpdate);
@@ -454,8 +455,13 @@ describe('PresenterSurfaceFlinger', () => {
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
     traces.setTrace(TraceType.SURFACE_FLINGER, trace);
-    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    return new Presenter(
+      trace,
+      traces,
+      new InMemoryStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      },
+    );
   }
 });

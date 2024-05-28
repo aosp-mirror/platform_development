@@ -40,32 +40,32 @@ interface Tab {
 @Component({
   selector: 'trace-view',
   template: `
-    <div class="overlay-container">
-    </div>
-    <div class="header-items-wrapper">
-      <nav mat-tab-nav-bar class="tabs-navigation-bar">
-        <a
-          *ngFor="let tab of tabs; last as isLast"
-          mat-tab-link
-          [active]="isCurrentActiveTab(tab)"
-          [class.active]="isCurrentActiveTab(tab)"
-          (click)="onTabClick(tab)"
-          (focus)="$event.target.blur()"
-          [class.last]="isLast"
-          class="tab">
-          <mat-icon
-            class="icon"
-            [style]="{color: TRACE_INFO[tab.view.traceType].color, marginRight: '0.5rem'}">
-            {{ TRACE_INFO[tab.view.traceType].icon }}
-          </mat-icon>
-          <span>
+      <div class="overlay-container">
+      </div>
+      <div class="header-items-wrapper">
+          <nav mat-tab-nav-bar class="tabs-navigation-bar">
+              <a
+                      *ngFor="let tab of tabs; last as isLast"
+                      mat-tab-link
+                      [active]="isCurrentActiveTab(tab)"
+                      [class.active]="isCurrentActiveTab(tab)"
+                      (click)="onTabClick(tab)"
+                      (focus)="$event.target.blur()"
+                      [class.last]="isLast"
+                      class="tab">
+                  <mat-icon
+                          class="icon"
+                          [style]="{color: TRACE_INFO[tab.view.traces[0].type].color, marginRight: '0.5rem'}">
+                      {{ TRACE_INFO[tab.view.traces[0].type].icon }}
+                  </mat-icon>
+                  <span>
             {{ tab.view.title }}
           </span>
-        </a>
-      </nav>
-    </div>
-    <mat-divider></mat-divider>
-    <div class="trace-view-content"></div>
+              </a>
+          </nav>
+      </div>
+      <mat-divider></mat-divider>
+      <div class="trace-view-content"></div>
   `,
   styles: [
     `
@@ -135,8 +135,10 @@ export class TraceViewComponent
     await event.visit(
       WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST,
       async (event) => {
-        const tab = this.tabs.find(
-          (tab) => tab.view.traceType === event.newFocusedViewId,
+        const tab = this.tabs.find((tab) =>
+          tab.view.traces.some(
+            (trace) => trace.type === event.newFocusedViewId,
+          ),
         );
         if (tab) {
           await this.showTab(tab);
@@ -222,7 +224,9 @@ export class TraceViewComponent
 
     this.currentActiveTab = tab;
 
-    Analytics.Navigation.logTabSwitched(TRACE_INFO[tab.view.traceType].name);
+    Analytics.Navigation.logTabSwitched(
+      TRACE_INFO[tab.view.traces[0].type].name,
+    );
     await this.emitAppEvent(new TabbedViewSwitched(tab.view));
   }
 }

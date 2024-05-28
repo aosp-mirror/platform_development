@@ -31,8 +31,9 @@ describe('PresenterTransitions', () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
       .build();
+    const trace = assertDefined(traces.getTrace(TraceType.TRANSITION));
     let outputUiData: UiData | undefined;
-    const presenter = new Presenter(traces, (data: UiData) => {
+    const presenter = new Presenter(trace, traces, (data: UiData) => {
       outputUiData = data;
     });
 
@@ -58,7 +59,7 @@ describe('PresenterTransitions', () => {
     traces.setTrace(TraceType.TRANSITION, trace);
 
     let outputUiData = UiData.EMPTY;
-    const presenter = new Presenter(traces, (data: UiData) => {
+    const presenter = new Presenter(trace, traces, (data: UiData) => {
       outputUiData = data;
     });
 

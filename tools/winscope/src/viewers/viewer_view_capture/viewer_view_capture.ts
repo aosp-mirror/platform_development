@@ -21,16 +21,21 @@ import {
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-abstract class ViewerViewCapture implements Viewer {
+export class ViewerViewCapture implements Viewer {
   static readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE,
+    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
+    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
+    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
   ];
 
   private readonly htmlElement: HTMLElement;
@@ -41,7 +46,7 @@ abstract class ViewerViewCapture implements Viewer {
   constructor(traces: Traces, storage: Storage) {
     this.htmlElement = document.createElement('viewer-view-capture');
     this.presenter = new Presenter(
-      this.getDependencies(),
+      ViewerViewCapture.DEPENDENCIES,
       traces,
       storage,
       (data: UiData) => {
@@ -116,10 +121,9 @@ abstract class ViewerViewCapture implements Viewer {
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
-      this.getTitle(),
-      this.getActiveTraceType(),
+      TRACE_INFO[TraceType.VIEW_CAPTURE].name,
     );
   }
 
@@ -141,29 +145,7 @@ abstract class ViewerViewCapture implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCapture.DEPENDENCIES;
-  }
-
-  private getActiveTraceType(): TraceType {
-    return this.presenter.getActiveTraceType();
-  }
-
-  protected abstract getTitle(): string;
-}
-
-export class ViewerViewCaptureLauncher extends ViewerViewCapture {
-  static override readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-  ];
-
-  override getDependencies(): ViewCaptureTraceType[] {
-    return ViewerViewCaptureLauncher.DEPENDENCIES;
-  }
-
-  protected override getTitle(): string {
-    return 'View Capture - Launcher';
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return this.presenter.getTraces();
   }
 }
