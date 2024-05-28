@@ -55,6 +55,7 @@ import {
   WinscopeEventEmitter,
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {Trace} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -189,10 +190,10 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                     (click)="applyNewTraceSelection(trace)">
                     <mat-icon
                       [style]="{
-                        color: TRACE_INFO[trace].color
+                        color: TRACE_INFO[trace.type].color
                       }"
-                    >{{ TRACE_INFO[trace].icon }}</mat-icon>
-                    {{ TRACE_INFO[trace].name }}
+                    >{{ TRACE_INFO[trace.type].icon }}</mat-icon>
+                    {{ TRACE_INFO[trace.type].name }}
                   </mat-option>
                   <div class="actions">
                     <button mat-flat-button color="primary" (click)="traceSelector.close()">
@@ -210,12 +211,12 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                     <mat-icon
                       class="trace-icon"
                       *ngFor="let selectedTrace of getSelectedTracesToShow()"
-                      [style]="{color: TRACE_INFO[selectedTrace].color}"
-                      [matTooltip]="TRACE_INFO[selectedTrace].name"
+                      [style]="{color: TRACE_INFO[selectedTrace.type].color}"
+                      [matTooltip]="TRACE_INFO[selectedTrace.type].name"
                       #tooltip="matTooltip"
                       (mouseenter)="tooltip.disabled = false"
                       (mouseleave)="tooltip.disabled = true">
-                      {{ TRACE_INFO[selectedTrace].icon }}
+                      {{ TRACE_INFO[selectedTrace.type].icon }}
                     </mat-icon>
                     <mat-icon
                       class="trace-icon"
@@ -468,12 +469,12 @@ export class TimelineComponent
   readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
   readonly MAX_SELECTED_TRACES = 3;
 
-  @Input() set activeViewTraceType(type: TraceType | undefined) {
-    if (type === undefined) {
+  @Input() set activeTrace(trace: Trace<object> | undefined) {
+    if (!trace) {
       return;
     }
 
-    this.internalActiveTrace = type;
+    this.internalActiveTrace = trace;
 
     if (!this.selectedTraces.includes(this.internalActiveTrace)) {
       // Create new object to make sure we trigger an update on Mini Timeline child component
@@ -483,7 +484,6 @@ export class TimelineComponent
   }
 
   @Input() timelineData: TimelineData | undefined;
-  @Input() availableTraces: TraceType[] = [];
   @Input() store: PersistentStore | undefined;
 
   @Output() readonly collapsedTimelineSizeChanged = new EventEmitter<number>();
@@ -498,11 +498,11 @@ export class TimelineComponent
 
   videoUrl: SafeUrl | undefined;
 
-  internalActiveTrace: TraceType | undefined = undefined;
+  internalActiveTrace: Trace<object> | undefined = undefined;
   initialZoom: TimeRange | undefined = undefined;
-  selectedTraces: TraceType[] = [];
-  sortedAvailableTraces: TraceType[] = [];
-  selectedTracesFormControl = new FormControl<TraceType[]>([]);
+  selectedTraces: Array<Trace<object>> = [];
+  sortedAvailableTraces: Array<Trace<object>> = [];
+  selectedTracesFormControl = new FormControl<Array<Trace<object>>>([]);
   selectedTimeFormControl = new FormControl('undefined');
   selectedNsFormControl = new FormControl(
     'undefined',
@@ -549,33 +549,32 @@ export class TimelineComponent
       );
     }
 
-    this.sortedAvailableTraces = this.availableTraces.sort((a, b) =>
-      TraceTypeUtils.compareByDisplayOrder(a, b),
-    ); // to display in fixed order corresponding to viewer tabs
+    // sorted to be displayed in order corresponding to viewer tabs
+    this.sortedAvailableTraces =
+      this.timelineData
+        ?.getTraces()
+        .mapTrace((trace) => trace)
+        .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type)) ??
+      [];
 
-    const storedDeselectedTraces = this.getStoredDeselectedTraces();
-    this.selectedTraces = this.sortedAvailableTraces.filter(
-      (availableTrace) => {
-        return !storedDeselectedTraces.includes(availableTrace);
-      },
-    );
-    this.selectedTracesFormControl = new FormControl<TraceType[]>(
+    const storedDeselectedTraces = this.getStoredDeselectedTraceTypes();
+    this.selectedTraces = this.sortedAvailableTraces.filter((trace) => {
+      return !storedDeselectedTraces.includes(trace.type);
+    });
+    this.selectedTracesFormControl = new FormControl<Array<Trace<object>>>(
       this.selectedTraces,
     );
 
-    const initialTraceToCropZoom = this.sortedAvailableTraces.find((type) => {
+    const initialTraceToCropZoom = this.sortedAvailableTraces.find((trace) => {
       return (
-        type !== TraceType.SCREEN_RECORDING &&
-        TraceTypeUtils.isTraceTypeWithViewer(type) &&
-        timelineData.getTraces().getTrace(type)
+        trace.type !== TraceType.SCREEN_RECORDING &&
+        TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
+        trace.lengthEntries > 0
       );
     });
-    if (initialTraceToCropZoom !== undefined) {
-      const trace = assertDefined(
-        timelineData.getTraces().getTrace(initialTraceToCropZoom),
-      );
+    if (initialTraceToCropZoom) {
       this.initialZoom = new TimeRange(
-        trace.getEntry(0).getTimestamp(),
+        initialTraceToCropZoom.getEntry(0).getTimestamp(),
         timelineData.getFullTimeRange().to,
       );
     }
@@ -614,7 +613,7 @@ export class TimelineComponent
     return position;
   }
 
-  getSelectedTracesToShow(): TraceType[] {
+  getSelectedTracesToShow(): Array<Trace<object>> {
     const sortedSelectedTraces = this.getSelectedTracesSortedByDisplayOrder();
     return sortedSelectedTraces.length > 8
       ? sortedSelectedTraces.slice(0, 7)
@@ -627,10 +626,10 @@ export class TimelineComponent
     });
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
       await this.miniTimeline?.drawer?.draw();
-      this.activeViewTraceType = event.traceType;
+      this.activeTrace = event.trace;
     });
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
-      const activeTraceType = this.timelineData?.getActiveViewTraceType();
+      const activeTraceType = this.timelineData?.getActiveViewTrace();
       if (activeTraceType === undefined) {
         return;
       }
@@ -663,14 +662,14 @@ export class TimelineComponent
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
-  isOptionDisabled(trace: TraceType) {
+  isOptionDisabled(trace: Trace<object>) {
     return this.internalActiveTrace === trace;
   }
 
-  applyNewTraceSelection(clickedType: TraceType) {
+  applyNewTraceSelection(clickedTrace: Trace<object>) {
     this.selectedTraces =
       this.selectedTracesFormControl.value ?? this.sortedAvailableTraces;
-    this.updateStoredDeselectedTraces(clickedType);
+    this.updateStoredDeselectedTraceTypes(clickedTrace);
   }
 
   @HostListener('document:focusin', ['$event'])
@@ -711,14 +710,7 @@ export class TimelineComponent
   }
 
   hasPrevEntry(): boolean {
-    if (this.internalActiveTrace === undefined) {
-      return false;
-    }
-    if (
-      assertDefined(this.timelineData)
-        .getTraces()
-        .getTrace(this.internalActiveTrace) === undefined
-    ) {
+    if (!this.internalActiveTrace) {
       return false;
     }
     return (
@@ -729,14 +721,7 @@ export class TimelineComponent
   }
 
   hasNextEntry(): boolean {
-    if (this.internalActiveTrace === undefined) {
-      return false;
-    }
-    if (
-      assertDefined(this.timelineData)
-        .getTraces()
-        .getTrace(this.internalActiveTrace) === undefined
-    ) {
+    if (!this.internalActiveTrace) {
       return false;
     }
     return (
@@ -747,7 +732,7 @@ export class TimelineComponent
   }
 
   async moveToPreviousEntry() {
-    if (this.internalActiveTrace === undefined) {
+    if (!this.internalActiveTrace) {
       return;
     }
     const timelineData = assertDefined(this.timelineData);
@@ -909,7 +894,7 @@ export class TimelineComponent
     this.bookmarks = [];
   }
 
-  async onTimelineTraceClicked(trace: TraceType) {
+  async onTimelineTraceClicked(trace: Trace<object>) {
     await this.emitEvent(new ActiveTraceChanged(trace));
     this.changeDetectorRef.detectChanges();
   }
@@ -933,43 +918,46 @@ export class TimelineComponent
     this.selectedNsFormControl.setValue(`${currentTimestampNs} ns`);
   }
 
-  private getSelectedTracesSortedByDisplayOrder(): TraceType[] {
+  private getSelectedTracesSortedByDisplayOrder(): Array<Trace<object>> {
     return this.selectedTraces
       .slice()
-      .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a, b));
+      .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type));
   }
 
-  private getStoredDeselectedTraces(): TraceType[] {
+  private getStoredDeselectedTraceTypes(): TraceType[] {
     const storedDeselectedTraces = this.store?.get(
       this.storeKeyDeselectedTraces,
     );
     return JSON.parse(storedDeselectedTraces ?? '[]');
   }
 
-  private updateStoredDeselectedTraces(clickedType: TraceType) {
+  private updateStoredDeselectedTraceTypes(clickedTrace: Trace<object>) {
     if (!this.store) {
       return;
     }
 
-    let storedTraces = this.getStoredDeselectedTraces();
+    let storedDeselected = this.getStoredDeselectedTraceTypes();
     if (
-      this.selectedTraces.includes(clickedType) &&
-      storedTraces.includes(clickedType)
+      this.selectedTraces.includes(clickedTrace) &&
+      storedDeselected.includes(clickedTrace.type)
     ) {
-      storedTraces = storedTraces.filter(
-        (storedTrace) => storedTrace !== clickedType,
+      storedDeselected = storedDeselected.filter(
+        (stored) => stored !== clickedTrace.type,
       );
     } else if (
-      !this.selectedTraces.includes(clickedType) &&
-      !storedTraces.includes(clickedType)
+      !this.selectedTraces.includes(clickedTrace) &&
+      !storedDeselected.includes(clickedTrace.type)
     ) {
       Analytics.Navigation.logTraceTimelineDeselected(
-        TRACE_INFO[clickedType].name,
+        TRACE_INFO[clickedTrace.type].name,
       );
-      storedTraces.push(clickedType);
+      storedDeselected.push(clickedTrace.type);
     }
 
-    this.store.add(this.storeKeyDeselectedTraces, JSON.stringify(storedTraces));
+    this.store.add(
+      this.storeKeyDeselectedTraces,
+      JSON.stringify(storedDeselected),
+    );
   }
 
   private validateNsFormat(control: FormControl): ValidationErrors | null {
