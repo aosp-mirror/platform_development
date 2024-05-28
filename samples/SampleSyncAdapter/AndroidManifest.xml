@@ -50,7 +50,7 @@
     <uses-permission
         android:name="android.permission.WRITE_SOCIAL_STREAM" />
 
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15" />
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="15" />
 
     <application
         android:icon="@drawable/icon"
