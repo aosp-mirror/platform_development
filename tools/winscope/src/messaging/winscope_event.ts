@@ -16,7 +16,7 @@
 
 import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
-import {TraceEntry} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -202,7 +202,7 @@ export class ExpandedTimelineToggled extends WinscopeEvent {
 
 export class ActiveTraceChanged extends WinscopeEvent {
   override readonly type = WinscopeEventType.ACTIVE_TRACE_CHANGED;
-  constructor(readonly traceType: TraceType) {
+  constructor(readonly trace: Trace<object>) {
     super();
   }
 }

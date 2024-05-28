@@ -419,7 +419,7 @@ describe('Mediator', () => {
       const view = viewerStub0.getViews()[0];
       await mediator.onWinscopeEvent(new TabbedViewSwitched(view));
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-        new ActiveTraceChanged(view.traces[0].type),
+        new ActiveTraceChanged(view.traces[0]),
       );
     });
 
@@ -463,7 +463,7 @@ describe('Mediator', () => {
       true,
     );
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-      new ActiveTraceChanged(viewerStub1.getViews()[0].traces[0].type),
+      new ActiveTraceChanged(viewerStub1.getViews()[0].traces[0]),
     );
 
     // Position update -> update only visible viewers
@@ -478,14 +478,12 @@ describe('Mediator', () => {
     ]);
   });
 
-  it('notifies timeline of explicit change in active trace', async () => {
+  it('notifies timeline of active trace change', async () => {
     expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
-    await mediator.onWinscopeEvent(
-      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
-    );
+    await mediator.onWinscopeEvent(new ActiveTraceChanged(traceWm));
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
+      new ActiveTraceChanged(traceWm),
     );
   });
 

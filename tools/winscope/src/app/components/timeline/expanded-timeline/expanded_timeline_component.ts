@@ -38,44 +38,44 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div
-        *ngFor="let trace of getTracesSortedByDisplayOrder(); trackBy: trackTraceByType"
-        class="timeline row">
+          *ngFor="let trace of getTracesSortedByDisplayOrder(); trackBy: trackTraceByType"
+          class="timeline row">
         <div class="icon-wrapper">
           <mat-icon
-            class="icon"
-            [matTooltip]="TRACE_INFO[trace.type].name"
-            [style]="{color: TRACE_INFO[trace.type].color}">
+              class="icon"
+              [matTooltip]="TRACE_INFO[trace.type].name"
+              [style]="{color: TRACE_INFO[trace.type].color}">
             {{ TRACE_INFO[trace.type].icon }}
           </mat-icon>
         </div>
         <transition-timeline
-          *ngIf="trace.type === TraceType.TRANSITION"
-          [color]="TRACE_INFO[trace.type].color"
-          [trace]="trace"
-          [traceEntries]="timelineData.getTransitions()"
-          [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
-          [selectionRange]="timelineData.getSelectionTimeRange()"
-          [timestampConverter]="timelineData.getTimestampConverter()"
-          [isActive]="isActiveTraceType(trace.type)"
-          (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
-          (onScrollEvent)="updateScroll($event)"
-          (onTraceClicked)="onTraceClicked.emit($event)"
-          (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
-          class="single-timeline">
+            *ngIf="trace.type === TraceType.TRANSITION"
+            [color]="TRACE_INFO[trace.type].color"
+            [trace]="trace"
+            [traceEntries]="timelineData.getTransitions()"
+            [selectedEntry]="timelineData.findCurrentEntryFor(trace)"
+            [selectionRange]="timelineData.getSelectionTimeRange()"
+            [timestampConverter]="timelineData.getTimestampConverter()"
+            [isActive]="isActiveTrace(trace)"
+            (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
+            (onScrollEvent)="updateScroll($event)"
+            (onTraceClicked)="onTraceClicked.emit($event)"
+            (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
+            class="single-timeline">
         </transition-timeline>
         <single-timeline
-          *ngIf="trace.type !== TraceType.TRANSITION"
-          [color]="TRACE_INFO[trace.type].color"
-          [trace]="trace"
-          [selectedEntry]="timelineData.findCurrentEntryFor(trace.type)"
-          [selectionRange]="timelineData.getSelectionTimeRange()"
-          [timestampConverter]="timelineData.getTimestampConverter()"
-          [isActive]="isActiveTraceType(trace.type)"
-          (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
-          (onScrollEvent)="updateScroll($event)"
-          (onTraceClicked)="onTraceClicked.emit($event)"
-          (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
-          class="single-timeline">
+            *ngIf="trace.type !== TraceType.TRANSITION"
+            [color]="TRACE_INFO[trace.type].color"
+            [trace]="trace"
+            [selectedEntry]="timelineData.findCurrentEntryFor(trace)"
+            [selectionRange]="timelineData.getSelectionTimeRange()"
+            [timestampConverter]="timelineData.getTimestampConverter()"
+            [isActive]="isActiveTrace(trace)"
+            (onTracePositionUpdate)="onTracePositionUpdate.emit($event)"
+            (onScrollEvent)="updateScroll($event)"
+            (onTraceClicked)="onTraceClicked.emit($event)"
+            (onMouseXRatioUpdate)="onMouseXRatioUpdate.emit($event)"
+            class="single-timeline">
         </single-timeline>
 
         <div class="icon-wrapper">
@@ -142,7 +142,7 @@ export class ExpandedTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
-  @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
+  @Output() readonly onTraceClicked = new EventEmitter<Trace<object>>();
   @Output() readonly onMouseXRatioUpdate = new EventEmitter<
     number | undefined
   >();
@@ -178,8 +178,8 @@ export class ExpandedTimelineComponent {
     this.onScrollEvent.emit(event);
   }
 
-  isActiveTraceType(type: TraceType) {
-    return type === this.timelineData?.getActiveViewTraceType();
+  isActiveTrace(trace: Trace<object>) {
+    return trace === this.timelineData?.getActiveViewTrace();
   }
 
   private resizeCanvases() {
