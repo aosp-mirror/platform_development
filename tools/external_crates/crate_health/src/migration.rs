@@ -27,7 +27,7 @@ use crate::{
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
-    &["*.bp", "cargo_embargo.json", "patches", "METADATA"];
+    &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
