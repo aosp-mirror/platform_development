@@ -20,7 +20,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -57,7 +57,7 @@ describe('HierarchyComponent', () => {
       ],
       imports: [
         CommonModule,
-        MatCheckboxModule,
+        MatButtonModule,
         MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
@@ -105,22 +105,25 @@ describe('HierarchyComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy(); //renders at least one view control option
+    const button = htmlElement.querySelector('.view-controls .user-option');
+    expect(button).toBeTruthy(); //renders at least one view control option
   });
 
-  it('disables checkboxes if option unavailable', () => {
-    let box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-    expect((box as HTMLInputElement).disabled).toBeFalse();
+  it('disables option if unavailable', () => {
+    let option = assertDefined(
+      htmlElement.querySelector('.view-controls .user-option'),
+    );
+    expect((option as HTMLButtonElement).disabled).toBeFalse();
 
     component.userOptions['showDiff'].isUnavailable = true;
     fixture.detectChanges();
-    box = htmlElement.querySelector('.view-controls input');
-    expect((box as HTMLInputElement).disabled).toBeTrue();
+    option = assertDefined(
+      htmlElement.querySelector('.view-controls .user-option'),
+    );
+    expect((option as HTMLInputElement).disabled).toBeTrue();
   });
 
-  it('updates tree on user option checkbox change', () => {
+  it('updates tree on user option change', () => {
     let options: UserOptions | undefined;
     htmlElement.addEventListener(
       ViewerEvents.HierarchyUserOptionsChange,
@@ -129,7 +132,7 @@ describe('HierarchyComponent', () => {
       },
     );
     const box = assertDefined(
-      htmlElement.querySelector('.view-controls input'),
+      htmlElement.querySelector('.view-controls .user-option'),
     ) as HTMLInputElement;
     box.checked = true;
     box.click();
@@ -225,7 +228,7 @@ describe('HierarchyComponent', () => {
       },
     );
     const inputEl = assertDefined(
-      htmlElement.querySelector('.title-filter input'),
+      htmlElement.querySelector('.title-section input'),
     ) as HTMLInputElement;
 
     inputEl.value = 'Root';

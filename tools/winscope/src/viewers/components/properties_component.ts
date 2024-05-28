@@ -32,38 +32,48 @@ import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOption, UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
+import {searchBoxStyle} from './styles/search_box.styles';
+import {userOptionStyle} from './styles/user_option.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'properties-view',
   template: `
     <div class="view-header">
-      <div class="title-filter">
-        <collapsible-section-title
+      <div class="title-section">
+       <collapsible-section-title
           class="properties-title"
-          [class.padded-title]="hasUserOptions()"
+          [class.padded-title]="!hasUserOptions()"
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
 
-        <mat-form-field *ngIf="showFilter" (keydown.enter)="$event.target.blur()">
-          <mat-label>Filter...</mat-label>
+        <mat-form-field *ngIf="showFilter" class="search-box" (keydown.enter)="$event.target.blur()">
+          <mat-label>Search</mat-label>
+
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
 
-      <div class="view-controls">
-        <mat-checkbox
+      <div class="view-controls" *ngIf="hasUserOptions()">
+        <button
           *ngFor="let option of objectKeys(userOptions)"
-          color="primary"
-          [(ngModel)]="userOptions[option].enabled"
-          [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange(userOptions[option])"
-          [matTooltip]="userOptions[option].tooltip ?? ''"
-          >{{ userOptions[option].name }}</mat-checkbox
-        >
+          mat-flat-button
+          [color]="getUserOptionButtonColor(userOptions[option])"
+          [disabled]="userOptions[option].isUnavailable"
+          [class.not-enabled]="!userOptions[option].enabled"
+          class="user-option"
+          [style.cursor]="'pointer'"
+          (click)="onUserOptionChange(userOptions[option])">
+          <span class="user-option-label" [class.with-chip]="!!userOptions[option].chip">
+            <span> {{userOptions[option].name}} </span>
+            <div *ngIf="userOptions[option].chip" class="user-option-chip"> {{userOptions[option].chip.short}} </div>
+            <mat-icon  class="material-symbols-outlined" *ngIf="userOptions[option].icon"> {{userOptions[option].icon}} </mat-icon>
+          </span>
+        </button>
       </div>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="hasUserOptions()"></mat-divider>
 
     <ng-container *ngIf="showViewCaptureFormat()">
       <view-capture-property-groups
@@ -91,25 +101,10 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       .view-header {
         display: flex;
         flex-direction: column;
-        margin-bottom: 12px;
-      }
-
-      .title-filter {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
       }
 
       .padded-title {
-        padding-bottom: 16px;
-      }
-
-      .view-controls {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
+        padding-bottom: 8px;
       }
 
       .property-groups {
@@ -121,17 +116,17 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-      }
-
-      .tree-wrapper {
-        overflow: auto;
+        padding: 0px 12px;
       }
 
       .placeholder-text {
-        padding-top: 4px;
+        padding: 8px 12px;
       }
     `,
     nodeStyles,
+    searchBoxStyle,
+    userOptionStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
@@ -172,6 +167,7 @@ export class PropertiesComponent {
   }
 
   onUserOptionChange(option: UserOption) {
+    option.enabled = !option.enabled;
     Analytics.Navigation.logPropertiesSettingsChanged(
       option.name,
       option.enabled,
@@ -200,5 +196,9 @@ export class PropertiesComponent {
 
   showPropertiesTree(): boolean {
     return !!this.propertiesTree && !this.showViewCaptureFormat();
+  }
+
+  getUserOptionButtonColor(option: UserOption) {
+    return option.enabled ? 'primary' : undefined;
   }
 }

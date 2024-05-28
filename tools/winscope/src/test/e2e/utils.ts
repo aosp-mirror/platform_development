@@ -163,7 +163,7 @@ class E2eTestUtils {
 
   static async filterHierarchy(viewer: string, filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${viewer} hierarchy-view .title-filter`,
+      `${viewer} hierarchy-view .title-section`,
       'filter',
       filterString,
     );

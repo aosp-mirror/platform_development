@@ -25,6 +25,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -158,8 +159,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {
@@ -192,8 +194,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {
@@ -233,8 +236,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: true,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {

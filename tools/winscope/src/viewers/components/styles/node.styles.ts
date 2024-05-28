@@ -22,7 +22,7 @@ export const nodeStyles =
     .node {
         position: relative;
         display: inline-flex;
-        padding: 2px 0;
+        padding: 1px 0;
         width: 100%;
     }
 
@@ -120,7 +120,7 @@ export const nodeInnerItemStyles = `
     }
 
     .leaf-node-icon-wrapper {
-        padding-left: 6px;
+        margin-left: 6px;
         min-height: 24px;
         width: 24px;
     }
@@ -136,8 +136,6 @@ export const nodeInnerItemStyles = `
 
     .expand-tree-btn {
         float: right;
-        padding-left: 0;
-        padding-right: 0;
     }
 
     .expand-tree-btn.modified {

@@ -19,12 +19,13 @@ import {HttpClientModule} from '@angular/common/http';
 import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
@@ -47,14 +48,15 @@ describe('RectsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         CommonModule,
-        MatCheckboxModule,
         MatDividerModule,
         MatSliderModule,
-        MatRadioModule,
         MatButtonModule,
         MatTooltipModule,
         MatIconModule,
         HttpClientModule,
+        MatSelectModule,
+        BrowserAnimationsModule,
+        MatFormFieldModule,
       ],
       declarations: [
         TestHostComponent,
@@ -141,48 +143,42 @@ describe('RectsComponent', () => {
     checkSliderUnfocusesOnClick(rotationSlider, 1);
   });
 
-  it('draws display buttons', () => {
+  it('renders display selector', () => {
     component.displays = [
       {displayId: 0, groupId: 0, name: 'Display 0'},
       {displayId: 1, groupId: 1, name: 'Display 1'},
       {displayId: 2, groupId: 2, name: 'Display 2'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
   });
 
-  it('handles display button click', () => {
+  it('handles display change', () => {
     component.displays = [
       {displayId: 0, groupId: 0, name: 'Display 0'},
       {displayId: 1, groupId: 1, name: 'Display 1'},
       {displayId: 2, groupId: 2, name: 'Display 2'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
 
-    const container = assertDefined(
-      htmlElement.querySelector('.display-name-buttons'),
+    const trigger = assertDefined(
+      htmlElement.querySelector('.displays-section .mat-select-trigger'),
     );
+    (trigger as HTMLElement).click();
+    fixture.detectChanges();
+
     let groupId = 0;
     htmlElement.addEventListener(ViewerEvents.RectGroupIdChange, (event) => {
       groupId = (event as CustomEvent).detail.groupId;
     });
-    const button = Array.from(container.querySelectorAll('button'))[1];
-    button.click();
+
+    const option = document
+      .querySelectorAll('.mat-select-panel .mat-option')
+      .item(1);
+    (option as HTMLElement).click();
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['secondary', 'primary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
     expect(groupId).toEqual(1);
   });
 
@@ -192,22 +188,14 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['primary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
 
     component.displays = [
       {displayId: 20, groupId: 2, name: 'Display 1'},
       {displayId: 10, groupId: 1, name: 'Display 0'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 1', 'Display 0'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
   });
 
   it('updates scene on separation slider change', () => {
@@ -308,12 +296,7 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 0, name: 'Display 1'},
     ];
     fixture.detectChanges();
-
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
   });
 
   it('defaults initial selection to first display with non-display rects and groupId non-zero', () => {
@@ -324,12 +307,7 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
   });
 
   it('draws mini rects with non-present group id', () => {
@@ -391,24 +369,11 @@ describe('RectsComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  function checkButtons(
-    buttonValues: string[],
-    buttonColors: string[],
-    selector: string,
-  ) {
-    const displayButtonContainer = assertDefined(
-      htmlElement.querySelector(selector),
+  function checkSelectedDisplay(selectedDisplay: string) {
+    const displaySelect = assertDefined(
+      htmlElement.querySelector('.displays-select'),
     );
-    const buttons = Array.from(
-      displayButtonContainer.querySelectorAll('button'),
-    );
-    expect(buttons.map((it) => it.textContent?.trim())).toEqual(buttonValues);
-
-    for (let i = 0; i < buttonValues.length; i++) {
-      expect((buttons[i] as HTMLButtonElement).outerHTML).toContain(
-        buttonColors[i],
-      );
-    }
+    expect(displaySelect.innerHTML).toContain(selectedDisplay);
   }
 
   function findAndClickElement(selector: string) {
@@ -455,7 +420,7 @@ describe('RectsComponent', () => {
   function updateShowOnlyVisibleMode() {
     const rectsComponent = assertDefined(component.rectsComponent);
     expect(rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
-    findAndClickElement('.top-view-controls .show-only-visible  input');
+    findAndClickElement('.show-only-visible');
     expect(rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
   }
 

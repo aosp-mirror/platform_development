@@ -37,6 +37,7 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
@@ -92,13 +93,19 @@ export class Presenter implements WinscopeEventEmitter {
           name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
           enabled: false,
         },
+        showOnlyNonHidden: {
+          name: 'Show only',
+          icon: 'visibility',
+          enabled: false,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
+          enabled: false,
+        },
         simplifyNames: {
           name: 'Simplify names',
           enabled: true,
-        },
-        onlyVisible: {
-          name: 'Only visible',
-          enabled: false,
         },
       },
       this.storage,
@@ -381,7 +388,7 @@ export class Presenter implements WinscopeEventEmitter {
       }
 
       const predicates = [this.hierarchyFilter];
-      if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
+      if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
         predicates.push(UiTreeUtils.isVisible);
       }
 

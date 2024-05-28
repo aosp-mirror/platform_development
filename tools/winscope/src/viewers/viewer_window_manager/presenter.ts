@@ -29,6 +29,7 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
@@ -71,13 +72,19 @@ export class Presenter {
           enabled: false,
           isUnavailable: false,
         },
+        showOnlyNonHidden: {
+          name: 'Show only',
+          icon: 'visibility',
+          enabled: false,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
+          enabled: false,
+        },
         simplifyNames: {
           name: 'Simplify names',
           enabled: true,
-        },
-        onlyVisible: {
-          name: 'Only visible',
-          enabled: false,
         },
         flat: {
           name: 'Flat',
@@ -340,7 +347,7 @@ export class Presenter {
     }
 
     const predicates = [this.hierarchyFilter];
-    if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
+    if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
     }
 
