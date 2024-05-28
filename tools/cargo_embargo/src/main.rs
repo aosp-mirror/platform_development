@@ -384,16 +384,24 @@ fn write_all_build_files(
 
     let num_variants = cfg.variants.len();
     let empty_package_out_files = vec![vec![]; num_variants];
+    let mut has_error = false;
     // Write a build file per package.
     for (package_dir, crates) in module_by_package {
         let package_name = &crates.iter().flatten().next().unwrap().package_name;
-        write_build_files(
+        if let Err(e) = write_build_files(
             cfg,
             package_name,
             package_dir,
             &crates,
             package_out_files.get(package_name).unwrap_or(&empty_package_out_files),
-        )?;
+        ) {
+            // print the error, but continue to accumulate all of the errors
+            eprintln!("ERROR: {:#}", e);
+            has_error = true;
+        }
+    }
+    if has_error {
+        panic!("Encountered fatal errors that must be fixed.");
     }
 
     Ok(())
@@ -764,7 +772,8 @@ fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
         .output()
         .context("Running patch")?;
     if !patch_output.status.success() {
-        eprintln!("WARNING: failed to apply patch {:?}", patch_path);
+        // These errors will cause the cargo_embargo command to fail, but not yet!
+        return Err(anyhow!("failed to apply patch {patch_path:?}"));
     }
     Ok(())
 }
