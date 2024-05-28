@@ -292,13 +292,14 @@ impl Crate {
                     let entry = entry?;
                     if entry.file_name() == "Android.bp.patch"
                         || entry.file_name() == "Android.bp.diff"
+                        || entry.file_name() == "rules.mk.diff"
                     {
                         continue;
                     }
                     let entry_path = entry.path();
                     println!("  applying {}", entry_path.display());
                     let output = Command::new("patch")
-                        .args(["-p1", "-l"])
+                        .args(["-p1", "-l", "--no-backup-if-mismatch", "-i"])
                         .arg(&entry_path)
                         .current_dir(self.root().join(self.staging_path()))
                         .output()?;
