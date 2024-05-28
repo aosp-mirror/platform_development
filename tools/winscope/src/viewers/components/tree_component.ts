@@ -25,7 +25,6 @@ import {
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {TraceType} from 'trace/trace_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -73,7 +72,6 @@ import {
         [node]="child"
         [store]="store"
         [showNode]="showNode"
-        [dependencies]="dependencies"
         [isFlattened]="isFlattened"
         [useStoredExpandedState]="useStoredExpandedState"
         [initialDepth]="initialDepth + 1"
@@ -90,11 +88,6 @@ import {
 })
 export class TreeComponent {
   isHighlighted = UiTreeUtils.isHighlighted;
-
-  // TODO (b/263779536): this array is passed down from viewers/presenters and is used to generate
-  //  an identifier supposed to be unique for each viewer. Let's just use a proper identifier
-  //  instead. Each viewer/presenter could pass down a random magic number, an UUID, ...
-  @Input() dependencies: TraceType[] = [];
 
   @Input() node?: UiPropertyTreeNode | UiHierarchyTreeNode;
   @Input() store: InMemoryStorage | undefined;
