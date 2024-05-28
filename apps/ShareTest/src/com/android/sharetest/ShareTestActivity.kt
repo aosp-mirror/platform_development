@@ -385,17 +385,23 @@ class ShareTestActivity : Activity() {
             chooserIntent.putExtra(Intent.EXTRA_METADATA_TEXT, metadata.text)
         }
         if (shareouselCheck.isChecked) {
-            val additionalContentUri = AdditionalContentProvider.ADDITIONAL_CONTENT_URI
-                .buildUpon()
-                .appendQueryParameter(
-                    AdditionalContentProvider.PARAM_COUNT,
-                    ADDITIONAL_ITEM_COUNT.toString(),
-                )
-                .appendQueryParameter(
-                    AdditionalContentProvider.PARAM_SIZE_META,
-                    imageSizeMetadataCheck.isChecked.toString(),
-                )
-                .build()
+            val additionalContentUri =
+                AdditionalContentProvider.ADDITIONAL_CONTENT_URI.buildUpon()
+                        .appendQueryParameter(
+                            AdditionalContentProvider.PARAM_COUNT,
+                            ADDITIONAL_ITEM_COUNT.toString(),
+                        )
+                        .appendQueryParameter(
+                            AdditionalContentProvider.PARAM_SIZE_META,
+                            imageSizeMetadataCheck.isChecked.toString(),
+                        )
+                        .also { builder ->
+                            mimeTypes.forEach {
+                                builder.appendQueryParameter(
+                                    AdditionalContentProvider.PARAM_MIME_TYPE, it)
+                            }
+                        }
+                        .build()
             chooserIntent.putExtra(
                 Intent.EXTRA_CHOOSER_ADDITIONAL_CONTENT_URI,
                 additionalContentUri,
