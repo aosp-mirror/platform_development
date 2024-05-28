@@ -58,7 +58,7 @@ export class PropertiesProviderBuilder {
   build(): PropertiesProvider {
     return new PropertiesProvider(
       assertDefined(this.eagerProperties),
-      assertDefined(this.lazyPropertiesStrategy),
+      this.lazyPropertiesStrategy,
       this.commonOperations,
       this.eagerOperations,
       this.lazyOperations,
