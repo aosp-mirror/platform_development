@@ -38,7 +38,7 @@ mod pseudo_crate;
 pub use self::version_match::{CompatibleVersionPair, VersionMatch, VersionPair};
 mod version_match;
 
-pub use self::android_bp::{build_cargo_embargo, generate_android_bps};
+pub use self::android_bp::{build_cargo_embargo, generate_android_bps, maybe_build_cargo_embargo};
 mod android_bp;
 
 pub use self::name_and_version::{
