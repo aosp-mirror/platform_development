@@ -33,9 +33,12 @@ class AdditionalContentProvider : ContentProvider() {
         val includeSize = runCatching {
             uri.getQueryParameter(PARAM_SIZE_META).toBoolean()
         }.getOrDefault(true)
+        val mimeTypes = kotlin.runCatching {
+            uri.getQueryParameters(PARAM_MIME_TYPE)
+        }.getOrNull() ?: listOf("image/jpeg")
         // Images are img1 ... img8
         val uris = Array(count) { idx ->
-            ImageContentProvider.makeItemUri(idx, "image/jpeg", includeSize)
+            ImageContentProvider.makeItemUri(idx, mimeTypes[idx % mimeTypes.size], includeSize)
         }
         val callingPackage = getCallingPackage()
         for (u in uris) {
@@ -166,6 +169,7 @@ class AdditionalContentProvider : ContentProvider() {
         val EXTRA_SELECTION_LATENCY = "latency"
         val PARAM_COUNT = "count"
         val PARAM_SIZE_META = "ismeta"
+        val PARAM_MIME_TYPE = "mimetype"
     }
 }
 
