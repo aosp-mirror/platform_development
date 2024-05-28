@@ -136,13 +136,9 @@ export class TraceViewComponent
       WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST,
       async (event) => {
         const tab = this.tabs.find((tab) =>
-          tab.view.traces.some(
-            (trace) => trace.type === event.newFocusedViewId,
-          ),
+          tab.view.traces.some((trace) => trace === event.newActiveTrace),
         );
-        if (tab) {
-          await this.showTab(tab);
-        }
+        await this.showTab(assertDefined(tab));
       },
     );
   }

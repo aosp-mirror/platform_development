@@ -38,12 +38,14 @@ export class ViewerViewCapture implements Viewer {
     TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
   ];
 
+  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(traces: Traces, storage: Storage) {
+    this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
     this.presenter = new Presenter(
       ViewerViewCapture.DEPENDENCIES,
@@ -136,9 +138,11 @@ export class ViewerViewCapture implements Viewer {
   }
 
   async switchToSurfaceFlingerView() {
-    await this.emitAppEvent(
-      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
-    );
+    const newActiveTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
+    if (!newActiveTrace) {
+      return;
+    }
+    await this.emitAppEvent(new TabbedViewSwitchRequest(newActiveTrace));
   }
 
   getViews(): View[] {

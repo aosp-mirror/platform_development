@@ -429,10 +429,10 @@ describe('Mediator', () => {
       expect(traceViewComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
       await viewerStub0.emitAppEventForTesting(
-        new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE),
+        new TabbedViewSwitchRequest(traceSf),
       );
       expect(traceViewComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-        new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE),
+        new TabbedViewSwitchRequest(traceSf),
       );
     });
   });

@@ -31,6 +31,7 @@ class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
   private readonly trace: Trace<HierarchyTreeNode>;
+  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
@@ -42,6 +43,7 @@ class ViewerSurfaceFlinger implements Viewer {
     storage: Storage,
   ) {
     this.trace = trace;
+    this.traces = traces;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
     this.presenter = new Presenter(trace, traces, storage, (uiData: UiData) => {
@@ -132,9 +134,13 @@ class ViewerSurfaceFlinger implements Viewer {
 
   // TODO: Make this generic by package name once TraceType is not explicitly defined
   async switchToNexusLauncherViewer() {
-    await this.emitAppEvent(
-      new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+    const newActiveTrace = this.traces.getTrace(
+      TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
     );
+    if (!newActiveTrace) {
+      return;
+    }
+    await this.emitAppEvent(new TabbedViewSwitchRequest(newActiveTrace));
   }
 
   getViews(): View[] {
