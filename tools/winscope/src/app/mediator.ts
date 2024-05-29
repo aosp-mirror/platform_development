@@ -191,9 +191,9 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
-      this.timelineData.setActiveViewTraceType(event.newFocusedView.traceType);
+      this.timelineData.setActiveTrace(event.newFocusedView.traces[0]);
       await this.timelineComponent?.onWinscopeEvent(
-        new ActiveTraceChanged(event.newFocusedView.traceType),
+        new ActiveTraceChanged(event.newFocusedView.traces[0]),
       );
       this.focusedTabView = event.newFocusedView;
       await this.propagateTracePosition(
@@ -220,7 +220,7 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
-      this.timelineData.setActiveViewTraceType(event.traceType);
+      this.timelineData.setActiveTrace(event.trace);
       await this.timelineComponent?.onWinscopeEvent(event);
     });
 

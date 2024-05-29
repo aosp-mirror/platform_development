@@ -28,7 +28,7 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
           class="hierarchy-view"
           [tree]="inputData?.tree"
           [subtrees]="inputData?.sfSubtrees ?? []"
-          [dependencies]="inputData?.dependencies ?? []"
+          [dependencies]="inputData ? [inputData.traceType] : []"
           [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
@@ -70,10 +70,6 @@ export class ViewerInputMethodComponent {
   @Input() active = false;
 
   isImeManagerService(): boolean {
-    return (
-      this.inputData?.dependencies.includes(
-        TraceType.INPUT_METHOD_MANAGER_SERVICE,
-      ) ?? false
-    );
+    return this.inputData?.traceType === TraceType.INPUT_METHOD_MANAGER_SERVICE;
   }
 }

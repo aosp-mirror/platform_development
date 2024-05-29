@@ -151,7 +151,7 @@ describe('ViewerTransitionsComponent', () => {
       assertDefined(treeView.querySelector('.placeholder-text')).textContent,
     ).toContain('No selected transition');
 
-    const presenter = new Presenter(traces, (data) => {
+    const presenter = new Presenter(trace, traces, (data) => {
       component.inputData = data;
     });
     const selectedTransitionEntry = assertDefined(
