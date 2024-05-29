@@ -47,9 +47,11 @@ import {WinscopeEventEmitterStub} from 'messaging/winscope_event_emitter_stub';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {ViewerStub} from 'viewers/viewer_stub';
@@ -58,16 +60,20 @@ import {TimelineData} from './timeline_data';
 import {TracePipeline} from './trace_pipeline';
 
 describe('Mediator', () => {
-  const viewerStub0 = new ViewerStub('Title0', undefined, [
-    TraceType.SURFACE_FLINGER,
-  ]);
-  const viewerStub1 = new ViewerStub('Title1', undefined, [
-    TraceType.WINDOW_MANAGER,
-  ]);
+  const traceSf = new TraceBuilder<HierarchyTreeNode>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setEntries([])
+    .build();
+  const traceWm = new TraceBuilder<HierarchyTreeNode>()
+    .setType(TraceType.WINDOW_MANAGER)
+    .setEntries([])
+    .build();
+  const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
+  const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
   const viewerOverlay = new ViewerStub(
     'TitleOverlay',
     undefined,
-    [TraceType.WINDOW_MANAGER],
+    traceWm,
     ViewType.OVERLAY,
   );
 
@@ -413,7 +419,7 @@ describe('Mediator', () => {
       const view = viewerStub0.getViews()[0];
       await mediator.onWinscopeEvent(new TabbedViewSwitched(view));
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-        new ActiveTraceChanged(view.traceType),
+        new ActiveTraceChanged(view.traces[0]),
       );
     });
 
@@ -457,7 +463,7 @@ describe('Mediator', () => {
       true,
     );
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
-      new ActiveTraceChanged(viewerStub1.getViews()[0].traceType),
+      new ActiveTraceChanged(viewerStub1.getViews()[0].traces[0]),
     );
 
     // Position update -> update only visible viewers
@@ -472,14 +478,12 @@ describe('Mediator', () => {
     ]);
   });
 
-  it('notifies timeline of explicit change in active trace', async () => {
+  it('notifies timeline of active trace change', async () => {
     expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalled();
 
-    await mediator.onWinscopeEvent(
-      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
-    );
+    await mediator.onWinscopeEvent(new ActiveTraceChanged(traceWm));
     expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      new ActiveTraceChanged(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
+      new ActiveTraceChanged(traceWm),
     );
   });
 

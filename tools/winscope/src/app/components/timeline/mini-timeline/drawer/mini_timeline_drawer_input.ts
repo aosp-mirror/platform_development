@@ -21,7 +21,6 @@ import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
 import {TimeRange, Timestamp} from 'common/time';
 import {Trace, TraceEntry} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {
@@ -36,7 +35,7 @@ export class MiniTimelineDrawerInput {
     public selectedPosition: Timestamp,
     public selection: TimeRange,
     public zoomRange: TimeRange,
-    public traces: Traces,
+    public traces: Array<Trace<object>>,
     public timelineData: TimelineData,
     public bookmarks: Timestamp[],
     public isDarkMode: boolean,
@@ -66,29 +65,29 @@ export class MiniTimelineDrawerInput {
   private async transformTracesTimestamps(
     transformer: Transformer,
   ): Promise<TimelineTraces> {
-    const transformedTraceSegments = new Map<TraceType, TimelineTrace>();
+    const transformedTraceSegments = new Map<Trace<object>, TimelineTrace>();
 
-    this.traces.forEachTrace((trace, type) => {
-      const activeEntry = this.timelineData.findCurrentEntryFor(
-        trace.type,
-      ) as TraceEntry<PropertyTreeNode>;
+    this.traces.forEach((trace) => {
+      const activeEntry = this.timelineData.findCurrentEntryFor(trace);
 
-      if (type === TraceType.TRANSITION) {
+      if (trace.type === TraceType.TRANSITION) {
         // Transition trace is a special case, with entries with time ranges
-        const transitionTrace = assertDefined(this.traces.getTrace(type));
-        transformedTraceSegments.set(trace.type, {
+        transformedTraceSegments.set(trace, {
           points: [],
           activePoint: undefined,
           segments: this.transformTransitionTraceTimestamps(
             transformer,
-            transitionTrace,
+            trace as Trace<PropertyTreeNode>,
           ),
           activeSegment: activeEntry
-            ? this.transformTransitionEntry(transformer, activeEntry)
+            ? this.transformTransitionEntry(
+                transformer,
+                activeEntry as TraceEntry<PropertyTreeNode>,
+              )
             : undefined,
         });
       } else {
-        transformedTraceSegments.set(trace.type, {
+        transformedTraceSegments.set(trace, {
           points: this.transformTraceTimestamps(transformer, trace),
           activePoint: activeEntry
             ? transformer.transform(activeEntry.getTimestamp())

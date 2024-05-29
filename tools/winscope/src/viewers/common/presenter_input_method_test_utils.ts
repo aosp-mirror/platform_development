@@ -294,10 +294,11 @@ export function executePresenterInputMethodTests(
     }
 
     function createPresenter(traces: Traces): PresenterInputMethod {
+      const trace = assertDefined(traces.getTrace(imeTraceType));
       return new PresenterInputMethod(
+        trace,
         traces,
         new InMemoryStorage(),
-        [imeTraceType],
         (newData: ImeUiData) => {
           uiData = newData;
         },

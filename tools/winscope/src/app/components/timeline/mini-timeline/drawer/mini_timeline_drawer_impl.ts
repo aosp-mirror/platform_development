@@ -19,8 +19,8 @@ import {Point} from 'common/geometry_types';
 import {MouseEventButton} from 'common/mouse_event_button';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
+import {Trace} from 'trace/trace';
 import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType} from 'trace/trace_type';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 import {CanvasMouseHandlerImpl} from './canvas_mouse_handler_impl';
 import {DraggableCanvasObject} from './draggable_canvas_object';
@@ -49,7 +49,10 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     private inputGetter: () => MiniTimelineDrawerInput,
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
-    private onUnhandledClick: (pos: Timestamp, trace?: TraceType) => void,
+    private onUnhandledClick: (
+      pos: Timestamp,
+      trace: Trace<object> | undefined,
+    ) => void,
   ) {
     const ctx = canvas.getContext('2d');
 
@@ -62,7 +65,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const onUnhandledClickInternal = async (
       mousePoint: Point,
       button: number,
-      trace?: TraceType,
+      trace: Trace<object> | undefined,
     ) => {
       if (button === MouseEventButton.SECONDARY) {
         return;
@@ -206,7 +209,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     await this.draw();
   }
 
-  async getTraceClicked(mousePoint: Point): Promise<TraceType | undefined> {
+  async getTraceClicked(mousePoint: Point): Promise<Trace<object> | undefined> {
     const timelineTraces = await this.getTimelineTraces();
     const innerHeight = this.getInnerHeight();
     const lineHeight = this.getLineHeight(timelineTraces, innerHeight);
@@ -242,10 +245,8 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const lineHeight = this.getLineHeight(timelineTraces, innerHeight);
     let fromTop = this.getPadding().top + innerHeight - lineHeight;
 
-    timelineTraces.forEach((timelineTrace, traceType) => {
-      if (
-        this.inputGetter().timelineData.getActiveViewTraceType() === traceType
-      ) {
+    timelineTraces.forEach((timelineTrace, trace) => {
+      if (this.inputGetter().timelineData.getActiveViewTrace() === trace) {
         this.fillActiveTimelineBackground(fromTop, lineHeight);
       } else if (
         this.lastMousePoint?.y &&
@@ -254,20 +255,20 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
         this.fillHoverTimelineBackground(fromTop, lineHeight);
       }
 
-      this.drawTraceEntries(traceType, timelineTrace, fromTop, lineHeight);
+      this.drawTraceEntries(trace, timelineTrace, fromTop, lineHeight);
 
       fromTop -= this.fromTopStep(lineHeight);
     });
   }
 
   private drawTraceEntries(
-    traceType: TraceType,
+    trace: Trace<object>,
     timelineTrace: TimelineTrace,
     fromTop: number,
     lineHeight: number,
   ) {
     this.ctx.globalAlpha = 0.7;
-    this.ctx.fillStyle = TRACE_INFO[traceType].color;
+    this.ctx.fillStyle = TRACE_INFO[trace.type].color;
     this.ctx.strokeStyle = 'blue';
 
     for (const entry of timelineTrace.points) {
