@@ -52,8 +52,7 @@ describe('PresenterViewCapture', () => {
 
     traces = new Traces();
     for (const parser of parsers) {
-      traces.setTrace(
-        parser.getTraceType(),
+      traces.addTrace(
         new TraceBuilder<HierarchyTreeNode>()
           .setType(parser.getTraceType())
           .setParser(parser)
@@ -106,7 +105,7 @@ describe('PresenterViewCapture', () => {
       )
       .build();
     const emptyTraces = new Traces();
-    emptyTraces.setTrace(emptyTrace.type, emptyTrace);
+    emptyTraces.addTrace(emptyTrace);
     const presenter = createPresenter(emptyTraces);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(

@@ -52,11 +52,12 @@ describe('PresenterTransitions', () => {
     );
 
     const trace = new TraceBuilder<PropertyTreeNode>()
+      .setType(TraceType.TRANSITION)
       .setParser(parser)
       .build();
 
     const traces = new Traces();
-    traces.setTrace(TraceType.TRANSITION, trace);
+    traces.addTrace(trace);
 
     let outputUiData = UiData.EMPTY;
     const presenter = new Presenter(trace, traces, (data: UiData) => {
