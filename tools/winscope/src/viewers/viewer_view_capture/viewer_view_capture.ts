@@ -15,16 +15,12 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {
-  ActiveTraceChanged,
-  TabbedViewSwitchRequest,
-  WinscopeEvent,
-} from 'messaging/winscope_event';
+import {ActiveTraceChanged, WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType, ViewCaptureTraceType} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
@@ -32,11 +28,7 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 export class ViewerViewCapture implements Viewer {
-  static readonly DEPENDENCIES: ViewCaptureTraceType[] = [
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-  ];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.VIEW_CAPTURE];
 
   private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
@@ -47,14 +39,9 @@ export class ViewerViewCapture implements Viewer {
   constructor(traces: Traces, storage: Storage) {
     this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
-    this.presenter = new Presenter(
-      ViewerViewCapture.DEPENDENCIES,
-      traces,
-      storage,
-      (data: UiData) => {
-        (this.htmlElement as any).inputData = data;
-      },
-    );
+    this.presenter = new Presenter(traces, storage, (data: UiData) => {
+      (this.htmlElement as any).inputData = data;
+    });
 
     this.htmlElement.addEventListener(
       ViewerEvents.HierarchyPinnedChange,
@@ -107,17 +94,16 @@ export class ViewerViewCapture implements Viewer {
     );
     this.htmlElement.addEventListener(
       ViewerEvents.MiniRectsDblClick,
-      (event) => {
-        this.switchToSurfaceFlingerView();
+      async (event) => {
+        await this.presenter.onMiniRectsDoubleClick();
       },
     );
     this.htmlElement.addEventListener(
       ViewerEvents.RectGroupIdChange,
       async (event) => {
-        this.presenter.onWindowChange((event as CustomEvent).detail.groupId);
-        await this.emitAppEvent(
-          new ActiveTraceChanged((event as CustomEvent).detail.groupId),
-        );
+        const traceId = (event as CustomEvent).detail.groupId;
+        const trace = this.presenter.getViewCaptureTraceFromId(traceId);
+        await this.emitAppEvent(new ActiveTraceChanged(trace));
       },
     );
 
@@ -129,20 +115,12 @@ export class ViewerViewCapture implements Viewer {
     );
   }
 
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
+  }
+
   async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
-  }
-
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async switchToSurfaceFlingerView() {
-    const newActiveTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
-    if (!newActiveTrace) {
-      return;
-    }
-    await this.emitAppEvent(new TabbedViewSwitchRequest(newActiveTrace));
   }
 
   getViews(): View[] {

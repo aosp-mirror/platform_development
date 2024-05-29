@@ -29,7 +29,6 @@ export class UiData {
   constructor(
     readonly rects: UiRect[],
     public windows: DisplayIdentifier[] | undefined,
-    public selectedWindow: TraceType,
     public sfRects: UiRect[] | undefined,
     public trees: UiHierarchyTreeNode[] | undefined,
     public hierarchyUserOptions: UserOptions,

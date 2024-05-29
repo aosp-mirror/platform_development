@@ -15,9 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -49,14 +59,14 @@ import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
-export class Presenter {
+export class Presenter implements WinscopeEventEmitter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
+  private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private readonly traces: Traces;
   private readonly trace: Trace<HierarchyTreeNode>;
   private viewCapturePackageNames: string[] = [];
@@ -130,6 +140,10 @@ export class Presenter {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
     this.copyUiDataAndNotifyView();
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitWinscopeEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -276,6 +290,20 @@ export class Presenter {
     await this.updateSelectedTreeUiData();
   }
 
+  async onRectDoubleClick(rectId: string) {
+    const rectHasViewCapture = this.viewCapturePackageNames.some(
+      (packageName) => rectId.includes(packageName),
+    );
+    if (!rectHasViewCapture) {
+      return;
+    }
+    const newActiveTrace = this.traces.getTrace(TraceType.VIEW_CAPTURE);
+    if (!newActiveTrace) {
+      return;
+    }
+    await this.emitWinscopeEvent(new TabbedViewSwitchRequest(newActiveTrace));
+  }
+
   private updateHighlightedItem(id: string) {
     if (this.highlightedItem === id) {
       this.highlightedItem = '';
@@ -298,9 +326,14 @@ export class Presenter {
   }
 
   private async initializeIfNeeded() {
-    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(
-      this.traces,
-    );
+    const tracesVc = this.traces.getTraces(TraceType.VIEW_CAPTURE);
+    const promisesPackageName = tracesVc.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
+      );
+      return packageAndWindow.packageName;
+    });
+    this.viewCapturePackageNames = await Promise.all(promisesPackageName);
   }
 
   private getDisplays(rects: UiRect[]): DisplayIdentifier[] {

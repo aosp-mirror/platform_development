@@ -429,12 +429,12 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('updates view capture package names', async () => {
     const traceVc = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY)
+      .setType(TraceType.VIEW_CAPTURE)
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'com.google.android.apps.nexuslauncher',
-      )
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'com.google.android.apps.nexuslauncher',
+        windowName: 'not_used',
+      })
       .build();
     const traces = new Traces();
     traces.addTrace(traceSf);

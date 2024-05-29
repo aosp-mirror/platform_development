@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TRACE_INFO} from 'trace/trace_info';
-import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
@@ -38,35 +47,34 @@ import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {SimplifyNamesVc} from './operations/simplify_names';
 import {UiData} from './ui_data';
 
-export class Presenter {
-  static readonly VIEW_CAPTURE_TRACE_TYPES: TraceType[] = [
-    TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER,
-  ];
-
+export class Presenter implements WinscopeEventEmitter {
   private static readonly DENYLIST_PROPERTY_NAMES = [
     'children',
     'isComputedVisible',
   ];
 
+  private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private readonly traces: Traces;
   private readonly surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private readonly viewCaptureTraces: Array<Trace<HierarchyTreeNode>>;
 
   private viewCapturePackageNames: string[] = [];
-  private activeTraceType: TraceType;
   private previousFrameData:
-    | Map<TraceType, TraceEntry<HierarchyTreeNode>>
+    | Map<Trace<HierarchyTreeNode>, TraceEntry<HierarchyTreeNode>>
     | undefined;
-  private selectedHierarchyTree: [TraceType, HierarchyTreeNode] | undefined;
-  private currentHierarchyTrees: Map<TraceType, HierarchyTreeNode> | undefined;
-  private previousHierarchyTrees: Map<TraceType, HierarchyTreeNode> | undefined;
+  private selectedHierarchyTree:
+    | [Trace<HierarchyTreeNode>, HierarchyTreeNode]
+    | undefined;
+  private currentHierarchyTrees:
+    | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>
+    | undefined;
+  private previousHierarchyTrees:
+    | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>
+    | undefined;
   private uiData: UiData | undefined;
   private pinnedItems: UiHierarchyTreeNode[] = [];
   private pinnedIds: string[] = [];
@@ -118,31 +126,17 @@ export class Presenter {
     );
 
   constructor(
-    viewCaptureTraceTypes: TraceType[],
     traces: Traces,
     private readonly storage: Storage,
     private readonly notifyUiDataCallback: (data: UiData) => void,
   ) {
     this.traces = traces;
-    this.viewCaptureTraces = (
-      traces
-        .mapTrace((trace, type) => {
-          if (viewCaptureTraceTypes.includes(type)) {
-            return trace;
-          }
-          return undefined;
-        })
-        .filter((trace) => trace !== undefined) as Array<
-        Trace<HierarchyTreeNode>
-      >
-    ).sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type));
-    this.activeTraceType = this.viewCaptureTraces[0].type;
-    this.windows = this.getWindows();
+    this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
   }
 
-  getActiveTraceType() {
-    return this.activeTraceType;
+  setEmitEvent(callback: EmitEvent) {
+    this.emitWinscopeEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -151,8 +145,14 @@ export class Presenter {
       async (event) => {
         await this.initializeIfNeeded();
 
-        const currHierarchyTrees = new Map<TraceType, HierarchyTreeNode>();
-        const prevEntries = new Map<TraceType, TraceEntry<HierarchyTreeNode>>();
+        const currHierarchyTrees = new Map<
+          Trace<HierarchyTreeNode>,
+          HierarchyTreeNode
+        >();
+        const prevEntries = new Map<
+          Trace<HierarchyTreeNode>,
+          TraceEntry<HierarchyTreeNode>
+        >();
 
         for (const trace of this.viewCaptureTraces) {
           const entry = TraceEntryFinder.findCorrespondingEntry(
@@ -160,10 +160,10 @@ export class Presenter {
             event.position,
           );
           const tree = await entry?.getValue();
-          if (tree) currHierarchyTrees.set(trace.type, tree);
+          if (tree) currHierarchyTrees.set(trace, tree);
 
           if (entry && entry.getIndex() > 0) {
-            prevEntries.set(trace.type, trace.getEntry(entry.getIndex() - 1));
+            prevEntries.set(trace, trace.getEntry(entry.getIndex() - 1));
           }
         }
 
@@ -172,7 +172,7 @@ export class Presenter {
         this.previousFrameData = prevEntries.size > 0 ? prevEntries : undefined;
         this.previousHierarchyTrees =
           prevEntries.size > 0
-            ? new Map<TraceType, HierarchyTreeNode>()
+            ? new Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>()
             : undefined;
 
         if (this.uiData && this.surfaceFlingerTrace) {
@@ -193,14 +193,60 @@ export class Presenter {
     );
   }
 
-  onWindowChange(traceType: TraceType) {
-    this.activeTraceType = traceType;
+  private async initializeIfNeeded() {
+    await this.initializePackageNamesIfNeeded();
+    await this.initializeWindowsIfNeeded();
   }
 
-  private async initializeIfNeeded() {
-    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(
-      this.traces,
-    );
+  private async initializePackageNamesIfNeeded() {
+    if (this.viewCapturePackageNames.length > 0) {
+      return;
+    }
+
+    const promisesPackageName = this.viewCaptureTraces.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
+      );
+      return packageAndWindow.packageName;
+    });
+
+    this.viewCapturePackageNames = await Promise.all(promisesPackageName);
+  }
+
+  private async initializeWindowsIfNeeded() {
+    if (this.windows.length > 0) {
+      return;
+    }
+
+    const shortenAndCapitalizeWindowName = (name: string) => {
+      const lastDot = name.lastIndexOf('.');
+      if (lastDot !== -1) {
+        name = name.substring(lastDot + 1);
+      }
+      if (name.length > 0) {
+        name = name[0].toUpperCase() + name.slice(1);
+      }
+      return name;
+    };
+
+    const promisesWindowName = this.viewCaptureTraces.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
+      );
+      return shortenAndCapitalizeWindowName(packageAndWindow.windowName);
+    });
+    const windowNames = await Promise.all(promisesWindowName);
+
+    this.windows = this.viewCaptureTraces
+      .map((trace, i) => {
+        const traceId = this.getIdFromViewCaptureTrace(trace);
+        return {
+          displayId: traceId,
+          groupId: traceId,
+          name: windowNames[i],
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   private async refreshUI() {
@@ -208,10 +254,11 @@ export class Presenter {
     const vcRects: UiRect[] = [];
     if (this.currentHierarchyTrees) {
       for (const [
-        type,
+        trace,
         hierarchyTree,
       ] of this.currentHierarchyTrees.entries()) {
-        vcRects.push(...UI_RECT_FACTORY.makeVcUiRects(hierarchyTree, type));
+        const groupId = this.getIdFromViewCaptureTrace(trace);
+        vcRects.push(...UI_RECT_FACTORY.makeVcUiRects(hierarchyTree, groupId));
       }
 
       this.pinnedItems = [];
@@ -227,12 +274,12 @@ export class Presenter {
           trees[0],
         ];
       } else {
-        for (const [type, tree] of this.currentHierarchyTrees) {
+        for (const [trace, tree] of this.currentHierarchyTrees) {
           const highlightedNode = tree.findDfs((node) =>
             UiTreeUtils.isHighlighted(node, this.highlightedItem),
           );
           if (highlightedNode) {
-            this.selectedHierarchyTree = [type, highlightedNode];
+            this.selectedHierarchyTree = [trace, highlightedNode];
             break;
           }
         }
@@ -252,7 +299,6 @@ export class Presenter {
     this.uiData = new UiData(
       vcRects,
       this.windows,
-      this.activeTraceType,
       this.uiData?.sfRects,
       trees,
       this.hierarchyUserOptions,
@@ -302,12 +348,14 @@ export class Presenter {
   }
 
   private async formatHierarchyTreesAndUpdatePinnedItems(
-    hierarchyTrees: Map<TraceType, HierarchyTreeNode> | undefined,
+    hierarchyTrees:
+      | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>
+      | undefined,
   ): Promise<UiHierarchyTreeNode[] | undefined> {
     if (!hierarchyTrees) return undefined;
 
     const formattedTrees = [];
-    for (const [type, hierarchyTree] of hierarchyTrees.entries()) {
+    for (const [trace, hierarchyTree] of hierarchyTrees.entries()) {
       const uiTree = UiHierarchyTreeNode.from(hierarchyTree);
       uiTree.forEachNodeDfs((node) => node.setShowHeading(false));
 
@@ -319,10 +367,10 @@ export class Presenter {
         this.hierarchyUserOptions['showDiff']?.enabled &&
         !this.hierarchyUserOptions['showDiff']?.isUnavailable
       ) {
-        let prevTree = this.previousHierarchyTrees?.get(type);
+        let prevTree = this.previousHierarchyTrees?.get(trace);
         if (this.previousHierarchyTrees && !prevTree) {
-          prevTree = await this.previousFrameData?.get(type)?.getValue();
-          if (prevTree) this.previousHierarchyTrees.set(type, prevTree);
+          prevTree = await this.previousFrameData?.get(trace)?.getValue();
+          if (prevTree) this.previousHierarchyTrees.set(trace, prevTree);
         }
         const prevEntryUiTree = prevTree
           ? UiHierarchyTreeNode.from(prevTree)
@@ -453,8 +501,27 @@ export class Presenter {
     await this.updateSelectedTreeUiData();
   }
 
+  async onMiniRectsDoubleClick() {
+    if (!this.surfaceFlingerTrace) {
+      return;
+    }
+    await this.emitWinscopeEvent(
+      new TabbedViewSwitchRequest(this.surfaceFlingerTrace),
+    );
+  }
+
   getTraces(): Array<Trace<HierarchyTreeNode>> {
     return this.viewCaptureTraces;
+  }
+
+  getViewCaptureTraceFromId(id: number): Trace<HierarchyTreeNode> {
+    return assertDefined(this.viewCaptureTraces[id]);
+  }
+
+  private getIdFromViewCaptureTrace(trace: Trace<HierarchyTreeNode>): number {
+    const index = this.viewCaptureTraces.indexOf(trace);
+    assertTrue(index !== -1);
+    return index;
   }
 
   private updateHighlightedItem(id: string) {
@@ -464,17 +531,6 @@ export class Presenter {
       this.highlightedItem = id;
     }
     assertDefined(this.uiData).highlightedItem = this.highlightedItem;
-  }
-
-  private getWindows(): DisplayIdentifier[] {
-    const ids = this.viewCaptureTraces.map((trace) => {
-      return {
-        displayId: trace.type,
-        groupId: trace.type,
-        name: TRACE_INFO[trace.type].name.split('- ')[1],
-      };
-    });
-    return ids.sort((a, b) => a.groupId - b.groupId);
   }
 
   private async updateSelectedTreeUiData() {

@@ -33,7 +33,6 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
-import {ViewerViewCapture} from './viewer_view_capture';
 
 describe('PresenterViewCapture', () => {
   let parsers: Array<Parser<HierarchyTreeNode>>;
@@ -52,21 +51,15 @@ describe('PresenterViewCapture', () => {
 
     traces = new Traces();
     for (const parser of parsers) {
-      traces.addTrace(
-        new TraceBuilder<HierarchyTreeNode>()
-          .setType(parser.getTraceType())
-          .setParser(parser)
-          .build(),
-      );
+      traces.addTrace(Trace.fromParser(parser));
     }
-    traceTaskbar = assertDefined(
-      traces.getTrace(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
-    );
+
+    traceTaskbar = assertDefined(traces.getTraces(TraceType.VIEW_CAPTURE)[0]);
     const firstEntry = traceTaskbar.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
 
     const traceLauncherActivity = assertDefined(
-      traces.getTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+      traces.getTraces(TraceType.VIEW_CAPTURE)[1],
     );
     const firstEntryLauncherActivity = traceLauncherActivity.getEntry(0);
     secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
@@ -89,20 +82,14 @@ describe('PresenterViewCapture', () => {
     presenter = createPresenter(traces);
   });
 
-  it('initializes active trace type', () => {
-    expect(presenter.getActiveTraceType()).toEqual(
-      TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    );
-  });
-
   it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
+      .setType(TraceType.VIEW_CAPTURE)
       .setEntries([])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'the_package_name',
-      )
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'the_package_name',
+        windowName: 'the_window_name',
+      })
       .build();
     const emptyTraces = new Traces();
     emptyTraces.addTrace(emptyTrace);
@@ -121,17 +108,19 @@ describe('PresenterViewCapture', () => {
     expect(uiData.rects.length).toEqual(17);
     expect(uiData.highlightedItem?.length).toEqual(0);
 
-    const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
-    expect(hierarchyOpts).toBeTruthy();
-    const propertyOpts = Object.keys(uiData.propertiesUserOptions);
-    expect(propertyOpts).toBeTruthy();
+    const hierarchyUserOptions = Object.keys(uiData.hierarchyUserOptions);
+    expect(hierarchyUserOptions).toBeTruthy();
+
+    const propertiesUserOptions = Object.keys(uiData.propertiesUserOptions);
+    expect(propertiesUserOptions).toBeTruthy();
+
     expect(assertDefined(uiData.trees).length === 1).toBeTrue();
     expect(
       assertDefined(uiData.trees)[0].getAllChildren().length > 0,
     ).toBeTrue();
     expect(uiData.windows).toEqual([
-      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
-      {displayId: 22, groupId: 22, name: 'Taskbar'},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
+      {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
 
     await presenter.onAppEvent(secondPositionUpdate);
@@ -143,8 +132,8 @@ describe('PresenterViewCapture', () => {
       ),
     ).toBeTrue();
     expect(uiData.windows).toEqual([
-      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
-      {displayId: 22, groupId: 22, name: 'Taskbar'},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
+      {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
   });
 
@@ -394,13 +383,8 @@ describe('PresenterViewCapture', () => {
   });
 
   function createPresenter(traces: Traces): Presenter {
-    return new Presenter(
-      ViewerViewCapture.DEPENDENCIES,
-      traces,
-      new InMemoryStorage(),
-      (newData: UiData) => {
-        uiData = newData;
-      },
-    );
+    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
+      uiData = newData;
+    });
   }
 });
