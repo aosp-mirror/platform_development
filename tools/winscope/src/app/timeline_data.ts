@@ -152,7 +152,7 @@ export class TimelineData {
     this.activeTrace = trace;
   }
 
-  getActiveViewTrace() {
+  getActiveTrace() {
     return this.activeTrace;
   }
 

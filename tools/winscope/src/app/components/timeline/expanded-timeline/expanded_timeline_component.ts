@@ -179,7 +179,7 @@ export class ExpandedTimelineComponent {
   }
 
   isActiveTrace(trace: Trace<object>) {
-    return trace === this.timelineData?.getActiveViewTrace();
+    return trace === this.timelineData?.getActiveTrace();
   }
 
   private resizeCanvases() {
