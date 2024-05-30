@@ -142,7 +142,7 @@ describe('ViewerTransitionsComponent', () => {
     ])) as Parser<PropertyTreeNode>;
     const trace = Trace.fromParser(parser);
     const traces = new Traces();
-    traces.setTrace(TraceType.TRANSITION, trace);
+    traces.addTrace(trace);
 
     let treeView = assertDefined(
       htmlElement.querySelector('.properties-view'),

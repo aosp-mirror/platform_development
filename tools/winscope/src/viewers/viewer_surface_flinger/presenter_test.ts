@@ -44,6 +44,7 @@ describe('PresenterSurfaceFlinger', () => {
 
   beforeAll(async () => {
     traceSf = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
       .setEntries([
         await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
@@ -80,6 +81,7 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
       .setEntries([])
       .build();
     const presenter = createPresenter(emptyTrace);
@@ -427,15 +429,16 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('updates view capture package names', async () => {
     const traceVc = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.VIEW_CAPTURE)
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'com.google.android.apps.nexuslauncher',
-      )
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'com.google.android.apps.nexuslauncher',
+        windowName: 'not_used',
+      })
       .build();
     const traces = new Traces();
-    traces.setTrace(TraceType.SURFACE_FLINGER, traceSf);
-    traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, traceVc);
+    traces.addTrace(traceSf);
+    traces.addTrace(traceVc);
     const presenter = new Presenter(
       traceSf,
       traces,
@@ -454,7 +457,7 @@ describe('PresenterSurfaceFlinger', () => {
 
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
-    traces.setTrace(TraceType.SURFACE_FLINGER, trace);
+    traces.addTrace(trace);
     return new Presenter(
       trace,
       traces,

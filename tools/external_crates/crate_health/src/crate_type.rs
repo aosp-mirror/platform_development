@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    fs::{copy, read_dir, remove_dir_all},
+    fs::{read_dir, remove_dir_all},
     path::{Path, PathBuf},
     process::{Command, Output},
     str::from_utf8,
@@ -112,29 +112,16 @@ impl Crate {
         self.root.join(&self.relpath)
     }
     pub fn android_bp(&self) -> PathBuf {
-        if let Some(d) = self.customization_dir() {
-            d.join("Android.bp.disabled")
-        } else {
-            self.path().join("Android.bp")
-        }
+        self.path().join("Android.bp")
     }
     pub fn cargo_embargo_json(&self) -> PathBuf {
-        if let Some(d) = self.customization_dir() {
-            d.join("cargo_embargo.json")
-        } else {
-            self.path().join("cargo_embargo.json")
-        }
+        self.path().join("cargo_embargo.json")
     }
     pub fn staging_path(&self) -> PathBuf {
         Path::new("out/rust-crate-temporary-build").join(self.staging_dir_name())
     }
-    pub fn customization_dir(&self) -> Option<PathBuf> {
-        self.pseudo_crate.as_ref().map(|pseudo_crate| {
-            pseudo_crate.join("android/customizations").join(self.staging_dir_name())
-        })
-    }
-    pub fn patch_dir(&self) -> Option<PathBuf> {
-        self.customization_dir().map(|p| p.join("patches"))
+    pub fn patch_dir(&self) -> PathBuf {
+        self.path().join("patches")
     }
     pub fn staging_dir_name(&self) -> String {
         if let Some(dirname) = self.relpath.file_name().and_then(|x| x.to_str()) {
@@ -236,82 +223,37 @@ impl Crate {
             remove_dir_all(staging_path_absolute.join(".git"))
                 .with_context(|| "Failed to remove .git".to_string())?;
         }
-        self.copy_customizations()
-    }
-    pub fn copy_customizations(&self) -> Result<()> {
-        if let Some(customization_dir) = self.customization_dir() {
-            let customization_dir_absolute = self.root().join(customization_dir);
-            let staging_path_absolute = self.root().join(self.staging_path());
-            for entry in read_dir(&customization_dir_absolute)
-                .context(format!("Failed to read_dir {}", customization_dir_absolute.display()))?
-            {
-                let entry = entry?;
-                let entry_path = entry.path();
-                let mut filename = entry.file_name().to_os_string();
-                if entry_path.is_dir() {
-                    copy_dir(&entry_path, staging_path_absolute.join(&filename)).context(
-                        format!(
-                            "Failed to copy {} to {}",
-                            entry_path.display(),
-                            staging_path_absolute.display()
-                        ),
-                    )?;
-                } else {
-                    if let Some(extension) = entry_path.extension() {
-                        if extension == "disabled" {
-                            let mut new_filename = entry_path.clone();
-                            new_filename.set_extension("");
-                            filename = new_filename
-                                .file_name()
-                                .context(format!(
-                                    "Failed to get file name for {}",
-                                    new_filename.display()
-                                ))?
-                                .to_os_string();
-                        }
-                    }
-                    copy(&entry_path, staging_path_absolute.join(filename)).context(format!(
-                        "Failed to copy {} to {}",
-                        entry_path.display(),
-                        staging_path_absolute.display()
-                    ))?;
-                }
-            }
-        }
         Ok(())
     }
 
     pub fn apply_patches(&mut self) -> Result<()> {
-        if let Some(patch_dir) = self.patch_dir() {
-            let patch_dir_absolute = self.root().join(patch_dir);
-            if patch_dir_absolute.exists() {
-                println!("Patching {}", self.path().display());
-                for entry in read_dir(&patch_dir_absolute)
-                    .context(format!("Failed to read_dir {}", patch_dir_absolute.display()))?
+        let patch_dir_absolute = self.root().join(self.patch_dir());
+        if patch_dir_absolute.exists() {
+            for entry in read_dir(&patch_dir_absolute)
+                .context(format!("Failed to read_dir {}", patch_dir_absolute.display()))?
+            {
+                let entry = entry?;
+                if entry.file_name() == "Android.bp.patch"
+                    || entry.file_name() == "Android.bp.diff"
+                    || entry.file_name() == "rules.mk.diff"
                 {
-                    let entry = entry?;
-                    if entry.file_name() == "Android.bp.patch"
-                        || entry.file_name() == "Android.bp.diff"
-                    {
-                        continue;
-                    }
-                    let entry_path = entry.path();
-                    println!("  applying {}", entry_path.display());
-                    let output = Command::new("patch")
-                        .args(["-p1", "-l"])
-                        .arg(&entry_path)
-                        .current_dir(self.root().join(self.staging_path()))
-                        .output()?;
-                    if !output.status.success() {
-                        println!(
-                            "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                            entry_path.display(),
-                            from_utf8(&output.stdout)?,
-                            from_utf8(&output.stderr)?
-                        );
-                    }
-                    self.patch_output.push(output);
+                    continue;
                 }
+                let entry_path = entry.path();
+                let output = Command::new("patch")
+                    .args(["-p1", "-l", "--no-backup-if-mismatch", "-i"])
+                    .arg(&entry_path)
+                    .current_dir(self.root().join(self.staging_path()))
+                    .output()?;
+                if !output.status.success() {
+                    println!(
+                        "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
+                        entry_path.display(),
+                        from_utf8(&output.stdout)?,
+                        from_utf8(&output.stderr)?
+                    );
+                }
+                self.patch_output.push(output);
             }
         }
         Ok(())

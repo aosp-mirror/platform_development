@@ -193,7 +193,7 @@ class UnitTestUtils {
     const traces = new Traces();
     parsersArray.forEach((parser) => {
       const trace = Trace.fromParser(parser);
-      traces.setTrace(parser.getTraceType(), trace);
+      traces.addTrace(trace);
     });
 
     const tracesParsers = await new TracesParserFactory().createParsers(

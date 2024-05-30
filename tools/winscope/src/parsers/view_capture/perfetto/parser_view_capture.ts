@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import {assertDefined, assertTrue} from 'common/assert_utils';
+import {assertTrue} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {TraceFile} from 'trace/trace_file';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {ParserViewCaptureWindow} from './parser_view_capture_window';
 
 interface WindowAndPackage {
-  window: string | undefined;
-  package: string | undefined;
+  window: string;
+  package: string;
 }
 
 export class ParserViewCapture {
@@ -61,8 +61,8 @@ export class ParserViewCapture {
           this.traceFile,
           this.traceProcessor,
           this.timestampConverter,
-          assertDefined(windowAndPackage.package),
-          assertDefined(windowAndPackage.window),
+          windowAndPackage.package,
+          windowAndPackage.window,
         ),
     );
 
@@ -76,44 +76,26 @@ export class ParserViewCapture {
 
   private async queryWindowAndPackageNames(): Promise<WindowAndPackage[]> {
     const sql = `
-      SELECT vc.id as id, args.key as key, args.string_value as value
-      FROM android_viewcapture AS vc
-      JOIN args ON vc.arg_set_id = args.arg_set_id
-      WHERE
-        args.key = 'window_name' OR
-        args.key = 'package_name';
+        SELECT DISTINCT GROUP_CONCAT(string_value ORDER BY args.key) AS package_and_window
+        FROM android_viewcapture AS vc
+        JOIN args ON vc.arg_set_id = args.arg_set_id
+        WHERE
+          args.key = 'package_name' OR
+          args.key = 'window_name'
+        GROUP BY vc.id
+        ORDER BY package_and_window;
     `;
+
     const result = await this.traceProcessor.query(sql).waitAllRows();
 
-    const idToNames = new Map<bigint, WindowAndPackage>();
+    const names: WindowAndPackage[] = [];
     for (const it = result.iter({}); it.valid(); it.next()) {
-      const id = it.get('id') as bigint;
-      const key = it.get('key') as string;
-      const value = it.get('value') as string;
-
-      if (idToNames.get(id) === undefined) {
-        idToNames.set(id, {window: undefined, package: undefined});
-      }
-
-      if (key === 'window_name') {
-        assertDefined(idToNames.get(id)).window = value;
-      } else {
-        assertDefined(idToNames.get(id)).package = value;
-      }
+      const packageAndWindow = it.get('package_and_window') as string;
+      const tokens = packageAndWindow.split(',');
+      assertTrue(tokens.length === 2);
+      names.push({package: tokens[0], window: tokens[1]});
     }
 
-    const namesSorted = [...idToNames.values()].sort((a, b) => {
-      const aWindow = assertDefined(a.window);
-      const bWindow = assertDefined(b.window);
-      if (aWindow < bWindow) {
-        return -1;
-      } else if (bWindow < aWindow) {
-        return +1;
-      } else {
-        return 0;
-      }
-    });
-
-    return namesSorted;
+    return names;
   }
 }

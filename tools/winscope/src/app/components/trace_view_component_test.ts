@@ -129,18 +129,14 @@ describe('TraceViewComponent', () => {
     expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    await component.onWinscopeEvent(
-      new TabbedViewSwitchRequest(TraceType.WINDOW_MANAGER),
-    );
+    await component.onWinscopeEvent(new TabbedViewSwitchRequest(traceWm));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
     expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    await component.onWinscopeEvent(
-      new TabbedViewSwitchRequest(TraceType.SURFACE_FLINGER),
-    );
+    await component.onWinscopeEvent(new TabbedViewSwitchRequest(traceSf));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);

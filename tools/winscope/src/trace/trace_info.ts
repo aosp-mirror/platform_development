@@ -118,27 +118,6 @@ export const TRACE_INFO: TraceInfoMap = {
     downloadArchiveDir: 'vc',
     legacyExt: '.vc',
   },
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: {
-    name: 'View Capture - Nexuslauncher',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: {
-    name: 'View Capture - Taskbar',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: {
-    name: 'View Capture - Taskbar Overlay',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
     icon: IME_ICON,

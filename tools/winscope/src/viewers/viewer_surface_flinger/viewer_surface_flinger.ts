@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
-import {TabbedViewSwitchRequest, WinscopeEvent} from 'messaging/winscope_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class ViewerSurfaceFlinger implements Viewer {
+export class ViewerSurfaceFlinger implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
 
   private readonly trace: Trace<HierarchyTreeNode>;
+  private readonly traces: Traces;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
@@ -42,6 +40,7 @@ class ViewerSurfaceFlinger implements Viewer {
     storage: Storage,
   ) {
     this.trace = trace;
+    this.traces = traces;
     this.htmlElement = document.createElement('viewer-surface-flinger');
 
     this.presenter = new Presenter(trace, traces, storage, (uiData: UiData) => {
@@ -104,15 +103,13 @@ class ViewerSurfaceFlinger implements Viewer {
           (event as CustomEvent).detail.node,
         ),
     );
-    this.htmlElement.addEventListener(ViewerEvents.RectsDblClick, (event) => {
-      if (
-        (event as CustomEvent).detail.clickedRectId.includes(
-          ViewCaptureUtils.NEXUS_LAUNCHER_PACKAGE_NAME,
-        )
-      ) {
-        this.switchToNexusLauncherViewer();
-      }
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.RectsDblClick,
+      async (event) => {
+        const rectId = (event as CustomEvent).detail.clickedRectId;
+        await this.presenter.onRectDoubleClick(rectId);
+      },
+    );
 
     this.view = new View(
       ViewType.TAB,
@@ -122,19 +119,12 @@ class ViewerSurfaceFlinger implements Viewer {
     );
   }
 
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
+  }
+
   async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
-  }
-
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  // TODO: Make this generic by package name once TraceType is not explicitly defined
-  async switchToNexusLauncherViewer() {
-    await this.emitAppEvent(
-      new TabbedViewSwitchRequest(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
-    );
   }
 
   getViews(): View[] {
@@ -145,5 +135,3 @@ class ViewerSurfaceFlinger implements Viewer {
     return [this.trace];
   }
 }
-
-export {ViewerSurfaceFlinger};

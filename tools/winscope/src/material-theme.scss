@@ -93,6 +93,7 @@ body:not(.dark-mode) {
   --slider-background-color: #E8F0FE;
   --slider-border-color: #8AB4F8;
   --warning-background-color: #{mat.get-color-from-palette(mat.$amber-palette, 50)};
+  --icon-accent-color: #d9d9d9;
 }
 
 body.dark-mode {
@@ -112,4 +113,5 @@ body.dark-mode {
   --slider-background-color: #8AB4F8;
   --slider-border-color: #E8F0FE;
   --warning-background-color: #{mat.get-color-from-palette(mat.$brown-palette, 700)};
+  --icon-accent-color: #969696;
 }
