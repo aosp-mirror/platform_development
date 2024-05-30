@@ -164,22 +164,18 @@ where
 
 impl VersionMatch<CrateCollection> {
     pub fn copy_customizations(&self) -> Result<()> {
-        println!("Copy customizations");
         for pair in self.compatible_and_eligible() {
             pair.copy_customizations()?;
         }
         Ok(())
     }
     pub fn stage_crates(&mut self) -> Result<()> {
-        println!("Stage crates");
         for pair in self.compatible_and_eligible() {
             pair.dest.stage_crate()?;
         }
         Ok(())
     }
     pub fn apply_patches(&mut self) -> Result<()> {
-        println!("Apply patches");
-
         let (s, d, c) = (&self.source, &mut self.dest, &self.compatibility);
         for (source_key, source_crate) in s.map_field() {
             if source_crate.is_migration_eligible() {
@@ -193,7 +189,6 @@ impl VersionMatch<CrateCollection> {
         Ok(())
     }
     pub fn generate_android_bps(&mut self) -> Result<()> {
-        println!("Generate Android.bp");
         let results = generate_android_bps(self.compatible_and_eligible().map(|pair| pair.dest))?;
         for (nv, output) in results.into_iter() {
             self.dest
