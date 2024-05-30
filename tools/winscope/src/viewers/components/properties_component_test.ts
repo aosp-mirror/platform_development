@@ -34,7 +34,6 @@ import {TraceType} from 'trace/trace_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
-import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
@@ -55,7 +54,6 @@ describe('PropertiesComponent', () => {
         SurfaceFlingerPropertyGroupsComponent,
         TreeComponent,
         TreeNodeComponent,
-        HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
         UserOptionsComponent,

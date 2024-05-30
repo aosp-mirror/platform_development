@@ -53,7 +53,9 @@ class UiRectFactory {
   }
 
   makeVcUiRects(hierarchyRoot: HierarchyTreeNode, groupId: number): UiRect[] {
-    const traceRects = this.extractRects(hierarchyRoot);
+    const traceRects = this.extractRects(hierarchyRoot).filter((traceRect) => {
+      return traceRect.h > 0 && traceRect.w > 0;
+    });
     return traceRects.map((traceRect) => {
       return new UiRectBuilder()
         .setX(traceRect.x)

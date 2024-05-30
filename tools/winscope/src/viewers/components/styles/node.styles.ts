@@ -63,9 +63,16 @@ export const nodeStyles =
 
 // FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `
-    .node + .children:not(.flattened) {
+    .node + .children:not(.flattened):not(.with-gutter) {
         margin-left: 12px;
         padding-left: 11px;
+    }
+
+    .node + .children:not(.flattened).with-gutter {
+        margin-left: 23px;
+    }
+
+    .node + .children:not(.flattened) {
         border-left: 1px solid var(--border-color);
     }
 
@@ -103,8 +110,16 @@ export const nodeInnerItemStyles = `
         display: inline-block;
     }
 
-    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn {
+    .icon-wrapper-show-state {
+      position: absolute;
+    }
+
+    .toggle-tree-btn, .expand-tree-btn, .pin-node-btn, .toggle-rect-show-state-btn {
         padding: 0;
+    }
+
+    .toggle-rect-show-state-btn {
+        transform: scale(0.75);
     }
 
     .pin-node-btn {

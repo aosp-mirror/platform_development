@@ -495,7 +495,7 @@ export abstract class PresenterInputMethod {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
       UiTreeUtils.isNotCalculated,
-      UiTreeUtils.makeDenyListFilter(
+      UiTreeUtils.makeDenyListFilterByName(
         PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES,
       ),
     ];

@@ -15,10 +15,10 @@
  */
 
 import {UiRect} from 'viewers/components/rects/types2d';
+import {RectShowState} from './rect_show_state';
 
 export class RectFilter {
-  private hide: string[] = [];
-  private show: string[] = [];
+  private forcedStates = new Map<string, RectShowState>();
 
   filterRects(
     rects: UiRect[],
@@ -30,39 +30,38 @@ export class RectFilter {
     }
     return rects.filter((rect) => {
       const satisfiesOnlyVisible = rect.isDisplay || rect.isVisible;
-      const isNotHidden = !this.hide.includes(rect.id);
-      const forceShow = this.show.includes(rect.id);
+      const forceHidden = this.forcedStates.get(rect.id) === RectShowState.HIDE;
+      const forceShow = this.forcedStates.get(rect.id) === RectShowState.SHOW;
 
       if (isOnlyVisibleMode && isApplyNonHiddenMode) {
-        return forceShow || (satisfiesOnlyVisible && isNotHidden);
+        return forceShow || (satisfiesOnlyVisible && !forceHidden);
       }
       if (isOnlyVisibleMode) {
         return satisfiesOnlyVisible;
       }
-      return isNotHidden;
+      return !forceHidden;
     });
   }
 
-  getNonHiddenRectIds(allRectIds: string[], filteredRects: UiRect[]): string[] {
-    return allRectIds.filter((rectId) => {
-      const forceHide = this.hide.includes(rectId);
-      const forceShow = this.show.includes(rectId);
-      const isShown = filteredRects.some((r) => r.id === rectId);
-      return !forceHide && (forceShow || isShown);
+  getRectIdToShowState(
+    allRects: UiRect[],
+    shownRects: UiRect[],
+  ): Map<string, RectShowState> {
+    const rectIdToShowState = new Map<string, RectShowState>();
+    allRects.forEach((rect) => {
+      const forcedState = this.forcedStates.get(rect.id);
+      if (forcedState !== undefined) {
+        rectIdToShowState.set(rect.id, forcedState);
+        return;
+      }
+      const isShown = shownRects.some((other) => other.id === rect.id);
+      const showState = isShown ? RectShowState.SHOW : RectShowState.HIDE;
+      rectIdToShowState.set(rect.id, showState);
     });
+    return rectIdToShowState;
   }
 
-  updateRectShowState(id: string, newShowState: boolean) {
-    const newShow = this.show.filter((r) => (newShowState ? true : r !== id));
-    const newHide = this.hide.filter((r) => (newShowState ? r !== id : true));
-
-    if (newShowState && !newShow.includes(id)) {
-      newShow.push(id);
-    } else if (!newShowState && !newHide.includes(id)) {
-      newHide.push(id);
-    }
-
-    this.hide = newHide;
-    this.show = newShow;
+  updateRectShowState(id: string, newShowState: RectShowState) {
+    this.forcedStates.set(id, newShowState);
   }
 }

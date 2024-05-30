@@ -36,6 +36,8 @@ import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {FlattenChildren} from 'viewers/common/operations/flatten_children';
 import {SimplifyNames} from 'viewers/common/operations/simplify_names';
+import {RectFilter} from 'viewers/common/rect_filter';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
@@ -63,6 +65,24 @@ export class Presenter {
   private previousHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTreeName: string | undefined;
+  private allCurrentRects: UiRect[] = [];
+  private rectFilter = new RectFilter();
+  private rectsUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'WmRectsOptions',
+    {
+      applyNonHidden: {
+        name: 'Apply',
+        icon: 'visibility',
+        enabled: true,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    },
+    this.storage,
+  );
   private hierarchyUserOptions: UserOptions =
     PersistentStoreProxy.new<UserOptions>(
       'WmHierarchyOptions',
@@ -158,20 +178,25 @@ export class Presenter {
         }
 
         this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
+        this.uiData.rectsUserOptions = this.rectsUserOptions;
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
         if (this.currentHierarchyTree) {
           this.uiData.highlightedItem = this.highlightedItem;
           this.uiData.highlightedProperty = this.highlightedProperty;
-          this.uiData.rects = UI_RECT_FACTORY.makeUiRects(
+
+          this.allCurrentRects = UI_RECT_FACTORY.makeUiRects(
             this.currentHierarchyTree,
           );
-          this.uiData.displays = this.getDisplays(this.uiData.rects);
+          this.updateRectUiData();
+          this.uiData.displays = this.getDisplays(this.uiData.rectsToDraw);
+
           this.pinnedItems = [];
           this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
             this.currentHierarchyTree,
           );
+
           if (this.highlightedItem !== undefined && this.currentHierarchyTree) {
             const selectedItem = this.currentHierarchyTree.findDfs(
               (node) => node.id === this.highlightedItem,
@@ -232,6 +257,13 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
+  onRectsUserOptionsChange(userOptions: UserOptions) {
+    this.rectsUserOptions = userOptions;
+    this.uiData.rectsUserOptions = this.rectsUserOptions;
+    this.updateRectUiData();
+    this.copyUiDataAndNotifyView();
+  }
+
   async onHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
@@ -258,6 +290,25 @@ export class Presenter {
   async onPropertiesFilterChange(filterString: string) {
     this.propertiesFilter = UiTreeUtils.makePropertyFilter(filterString);
     await this.updateSelectedTreeUiData();
+  }
+
+  async onRectShowStateChange(id: string, newShowState: RectShowState) {
+    this.rectFilter.updateRectShowState(id, newShowState);
+    this.updateRectUiData();
+    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
+      this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
+        this.currentHierarchyTree,
+      );
+    }
+    this.copyUiDataAndNotifyView();
+  }
+
+  private updateRectUiData() {
+    this.uiData.rectsToDraw = this.filterRects(this.allCurrentRects);
+    this.uiData.rectIdToShowState = this.rectFilter.getRectIdToShowState(
+      this.allCurrentRects,
+      this.uiData.rectsToDraw,
+    );
   }
 
   private updateHighlightedItem(id: string) {
@@ -311,6 +362,17 @@ export class Presenter {
     }
     this.copyUiDataAndNotifyView();
   }
+  private filterRects(rects: UiRect[]): UiRect[] {
+    const isOnlyVisibleMode =
+      this.rectsUserOptions['showOnlyVisible']?.enabled ?? false;
+    const isApplyNonHiddenMode =
+      this.rectsUserOptions['applyNonHidden']?.enabled ?? false;
+    return this.rectFilter.filterRects(
+      rects,
+      isOnlyVisibleMode,
+      isApplyNonHiddenMode,
+    );
+  }
 
   private async formatHierarchyTreeAndUpdatePinnedItems(
     hierarchyTree: HierarchyTreeNode | undefined,
@@ -349,6 +411,14 @@ export class Presenter {
     const predicates = [this.hierarchyFilter];
     if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
+    }
+
+    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
+      predicates.push(
+        UiTreeUtils.makeAllowListFilterById(
+          this.uiData.rectsToDraw.map((rect) => rect.id),
+        ),
+      );
     }
 
     formatter
@@ -411,7 +481,7 @@ export class Presenter {
 
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
-      UiTreeUtils.makeDenyListFilter(Presenter.DENYLIST_PROPERTY_NAMES),
+      UiTreeUtils.makeDenyListFilterByName(Presenter.DENYLIST_PROPERTY_NAMES),
     ];
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {

@@ -106,7 +106,7 @@ describe('PresenterViewCapture', () => {
 
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toEqual(17);
+    expect(uiData.vcRectIdToShowState?.size).toEqual(13);
     expect(uiData.highlightedItem?.length).toEqual(0);
 
     const hierarchyUserOptions = Object.keys(uiData.hierarchyUserOptions);
@@ -125,7 +125,7 @@ describe('PresenterViewCapture', () => {
     ]);
 
     await presenter.onAppEvent(secondPositionUpdate);
-    expect(uiData.rects.length).toEqual(168);
+    expect(uiData.vcRectsToDraw.length).toEqual(145);
     expect(assertDefined(uiData.trees).length === 2).toBeTrue();
     expect(
       assertDefined(uiData.trees).every(
@@ -140,11 +140,11 @@ describe('PresenterViewCapture', () => {
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toEqual(17);
-    expect(uiData.rects[0].x).toEqual(0);
-    expect(uiData.rects[0].y).toEqual(0);
-    expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(249);
+    expect(uiData.vcRectsToDraw.length).toEqual(13);
+    expect(uiData.vcRectsToDraw[0].x).toEqual(0);
+    expect(uiData.vcRectsToDraw[0].y).toEqual(0);
+    expect(uiData.vcRectsToDraw[0].w).toEqual(1080);
+    expect(uiData.vcRectsToDraw[0].h).toEqual(249);
   });
 
   it('updates pinned items', async () => {
@@ -260,7 +260,7 @@ describe('PresenterViewCapture', () => {
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );
-    const rect = assertDefined(uiData.rects.at(5));
+    const rect = assertDefined(uiData.vcRectsToDraw.at(5));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(propertiesTree.id).toEqual(

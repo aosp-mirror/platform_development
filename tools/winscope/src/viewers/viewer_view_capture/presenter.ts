@@ -42,6 +42,8 @@ import {VcCuratedProperties} from 'viewers/common/curated_properties';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
+import {RectFilter} from 'viewers/common/rect_filter';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
@@ -81,10 +83,28 @@ export class Presenter implements WinscopeEventEmitter {
   private pinnedIds: string[] = [];
   private highlightedItem: string = '';
   private windows: DisplayIdentifier[] = [];
+  private allCurrentVcRects: UiRect[] = [];
+  private rectFilter = new RectFilter();
 
   private hierarchyFilter: TreeNodeFilter = UiTreeUtils.makeIdFilter('');
   private propertiesFilter: TreeNodeFilter = UiTreeUtils.makePropertyFilter('');
 
+  private rectsUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfRectsOptions',
+    {
+      applyNonHidden: {
+        name: 'Apply',
+        icon: 'visibility',
+        enabled: true,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    },
+    this.storage,
+  );
   private hierarchyUserOptions: UserOptions =
     PersistentStoreProxy.new<UserOptions>(
       'SfHierarchyOptions',
@@ -258,20 +278,31 @@ export class Presenter implements WinscopeEventEmitter {
 
   private async refreshUI() {
     let trees: UiHierarchyTreeNode[] | undefined;
-    const vcRects: UiRect[] = [];
+    this.allCurrentVcRects = [];
+    let vcRectsToDraw: UiRect[] = [];
+    let vcRectIdToShowState: Map<string, RectShowState> | undefined;
+
     if (this.currentHierarchyTrees) {
       for (const [
         trace,
         hierarchyTree,
       ] of this.currentHierarchyTrees.entries()) {
         const groupId = this.getIdFromViewCaptureTrace(trace);
-        vcRects.push(...UI_RECT_FACTORY.makeVcUiRects(hierarchyTree, groupId));
+        this.allCurrentVcRects.push(
+          ...UI_RECT_FACTORY.makeVcUiRects(hierarchyTree, groupId),
+        );
       }
+      vcRectsToDraw = this.filterRects(this.allCurrentVcRects);
+      vcRectIdToShowState = this.rectFilter.getRectIdToShowState(
+        this.allCurrentVcRects,
+        vcRectsToDraw,
+      );
 
       this.pinnedItems = [];
       trees = assertDefined(
         await this.formatHierarchyTreesAndUpdatePinnedItems(
           this.currentHierarchyTrees,
+          vcRectsToDraw,
         ),
       );
 
@@ -304,10 +335,12 @@ export class Presenter implements WinscopeEventEmitter {
     }
 
     this.uiData = new UiData(
-      vcRects,
+      vcRectsToDraw,
+      vcRectIdToShowState,
       this.windows,
       this.uiData?.sfRects,
       trees,
+      this.rectsUserOptions,
       this.hierarchyUserOptions,
       this.propertiesUserOptions,
       this.pinnedItems,
@@ -317,6 +350,18 @@ export class Presenter implements WinscopeEventEmitter {
     );
 
     this.copyUiDataAndNotifyView();
+  }
+
+  private filterRects(rects: UiRect[]): UiRect[] {
+    const isOnlyVisibleMode =
+      this.rectsUserOptions['showOnlyVisible']?.enabled ?? false;
+    const isApplyNonHiddenMode =
+      this.rectsUserOptions['applyNonHidden']?.enabled ?? false;
+    return this.rectFilter.filterRects(
+      rects,
+      isOnlyVisibleMode,
+      isApplyNonHiddenMode,
+    );
   }
 
   private getCuratedProperties(tree: PropertyTreeNode): VcCuratedProperties {
@@ -358,6 +403,7 @@ export class Presenter implements WinscopeEventEmitter {
     hierarchyTrees:
       | Map<Trace<HierarchyTreeNode>, HierarchyTreeNode>
       | undefined,
+    rectsToDraw: UiRect[],
   ): Promise<UiHierarchyTreeNode[] | undefined> {
     if (!hierarchyTrees) return undefined;
 
@@ -390,6 +436,14 @@ export class Presenter implements WinscopeEventEmitter {
       const predicates = [this.hierarchyFilter];
       if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
         predicates.push(UiTreeUtils.isVisible);
+      }
+
+      if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
+        predicates.push(
+          UiTreeUtils.makeAllowListFilterById(
+            rectsToDraw.map((rect) => rect.id),
+          ),
+        );
       }
 
       formatter
@@ -477,22 +531,32 @@ export class Presenter implements WinscopeEventEmitter {
     await this.updateSelectedTreeUiData();
   }
 
+  async onRectsUserOptionsChange(userOptions: UserOptions) {
+    const uiData = assertDefined(this.uiData);
+    this.rectsUserOptions = userOptions;
+    uiData.rectsUserOptions = this.rectsUserOptions;
+    this.updateRectUiData();
+    this.copyUiDataAndNotifyView();
+  }
+
   async onHierarchyUserOptionsChange(userOptions: UserOptions) {
+    const uiData = assertDefined(this.uiData);
     this.hierarchyUserOptions = userOptions;
-    assertDefined(this.uiData).hierarchyUserOptions = this.hierarchyUserOptions;
-    assertDefined(this.uiData).trees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
+      this.currentHierarchyTrees,
+      this.allCurrentVcRects,
+    );
     this.copyUiDataAndNotifyView();
   }
 
   async onHierarchyFilterChange(filterString: string) {
+    const uiData = assertDefined(this.uiData);
     this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
-    assertDefined(this.uiData).trees =
-      await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-      );
+    uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
+      this.currentHierarchyTrees,
+      this.allCurrentVcRects,
+    );
     this.copyUiDataAndNotifyView();
   }
 
@@ -523,6 +587,28 @@ export class Presenter implements WinscopeEventEmitter {
 
   getViewCaptureTraceFromId(id: number): Trace<HierarchyTreeNode> {
     return assertDefined(this.viewCaptureTraces[id]);
+  }
+
+  async onRectShowStateChange(id: string, newShowState: RectShowState) {
+    this.rectFilter.updateRectShowState(id, newShowState);
+    this.updateRectUiData();
+    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
+      assertDefined(this.uiData).trees =
+        await this.formatHierarchyTreesAndUpdatePinnedItems(
+          this.currentHierarchyTrees,
+          this.allCurrentVcRects,
+        );
+    }
+    this.copyUiDataAndNotifyView();
+  }
+
+  private updateRectUiData() {
+    const uiData = assertDefined(this.uiData);
+    uiData.vcRectsToDraw = this.filterRects(this.allCurrentVcRects);
+    uiData.vcRectIdToShowState = this.rectFilter.getRectIdToShowState(
+      this.allCurrentVcRects,
+      uiData.vcRectsToDraw,
+    );
   }
 
   private getIdFromViewCaptureTrace(trace: Trace<HierarchyTreeNode>): number {
@@ -581,7 +667,7 @@ export class Presenter implements WinscopeEventEmitter {
 
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
-      UiTreeUtils.makeDenyListFilter(Presenter.DENYLIST_PROPERTY_NAMES),
+      UiTreeUtils.makeDenyListFilterByName(Presenter.DENYLIST_PROPERTY_NAMES),
     ];
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {

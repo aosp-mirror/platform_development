@@ -24,6 +24,7 @@ import {
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
@@ -87,6 +88,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         [itemsClickable]="true"
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
+        [rectIdToShowState]="rectIdToShowState"
         (highlightedChange)="onHighlightedItemChange($event)"
         (pinnedItemChange)="onPinnedItemChange($event)"
         (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
@@ -94,14 +96,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       <div class="subtrees">
         <tree-view
           *ngFor="let subtree of subtrees; trackBy: trackById"
-          class="childrenTree"
+          class="subtree"
           [node]="subtree"
           [isFlattened]="isFlattened()"
           [useStoredExpandedState]="true"
-          [initialDepth]="1"
           [highlightedItem]="highlightedItem"
           [pinnedItems]="pinnedItems"
           [itemsClickable]="true"
+          [rectIdToShowState]="rectIdToShowState"
           (highlightedChange)="onHighlightedItemChange($event)"
           (pinnedItemChange)="onPinnedItemChange($event)"
           (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
@@ -154,6 +156,7 @@ export class HierarchyComponent {
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
+  @Input() rectIdToShowState?: Map<string, RectShowState>;
 
   @Output() collapseButtonClicked = new EventEmitter();
 

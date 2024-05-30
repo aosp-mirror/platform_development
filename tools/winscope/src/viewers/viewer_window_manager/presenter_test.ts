@@ -86,7 +86,7 @@ describe('PresenterWindowManager', () => {
 
   it('processes trace position update', async () => {
     await presenter.onAppEvent(positionUpdate);
-    const filteredUiDataRectLabels = uiData.rects
+    const filteredUiDataRectLabels = uiData.rectsToDraw
       ?.filter((rect) => rect.isVisible !== undefined)
       .map((rect) => rect.label);
     const hierarchyOpts = uiData.hierarchyUserOptions
@@ -108,24 +108,22 @@ describe('PresenterWindowManager', () => {
   it('disables show diff and generates non-diff tree if no prev entry available', async () => {
     await presenter.onAppEvent(positionUpdate);
 
-    const hierarchyOpts = uiData.hierarchyUserOptions ?? null;
-    expect(hierarchyOpts).toBeTruthy();
-    expect(hierarchyOpts!['showDiff'].isUnavailable).toBeTrue();
+    const hierarchyOpts = assertDefined(uiData.hierarchyUserOptions);
+    expect(hierarchyOpts['showDiff'].isUnavailable).toBeTrue();
 
-    const propertyOpts = uiData.propertiesUserOptions ?? null;
-    expect(propertyOpts).toBeTruthy();
-    expect(propertyOpts!['showDiff'].isUnavailable).toBeTrue();
+    const propertyOpts = assertDefined(uiData.propertiesUserOptions);
+    expect(propertyOpts['showDiff'].isUnavailable).toBeTrue();
 
-    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
   });
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].x).toEqual(0);
-    expect(uiData.rects[0].y).toEqual(0);
-    expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(2400);
+    expect(uiData.rectsToDraw.length).toBeGreaterThan(0);
+    expect(uiData.rectsToDraw[0].x).toEqual(0);
+    expect(uiData.rectsToDraw[0].y).toEqual(0);
+    expect(uiData.rectsToDraw[0].w).toEqual(1080);
+    expect(uiData.rectsToDraw[0].h).toEqual(2400);
   });
 
   it('updates pinned items', async () => {
@@ -269,7 +267,7 @@ describe('PresenterWindowManager', () => {
   it('sets properties tree and associated ui data from rect', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.propertiesTree).toBeUndefined();
-    const rect = assertDefined(uiData.rects.at(5));
+    const rect = assertDefined(uiData.rectsToDraw.at(5));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(propertiesTree.id).toEqual('WindowState e3666ec NotificationShade');

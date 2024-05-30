@@ -35,12 +35,14 @@ import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {UrlUtils} from 'common/url_utils';
 import {Analytics} from 'logging/analytics';
+import {TRACE_INFO} from 'trace/trace_info';
+import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {UserOptions} from 'viewers/common/user_options';
 import {RectDblClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {multlineTooltip} from 'viewers/components/styles/tooltip.styles';
-import {userOptionStyle} from 'viewers/components/styles/user_option.styles';
 import {viewerCardInnerStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Canvas} from './canvas';
 import {Mapper3D} from './mapper3d';
@@ -143,18 +145,13 @@ import {Distance2D, ShadingMode} from './types3d';
         </div>
       </div>
       <div class="filter-controls view-controls">
-        <button
-          mat-flat-button
-          [color]="getShowOnlyVisibleButtonColor()"
-          [class.not-enabled]="!getShowOnlyVisibleMode()"
-          class="show-only-visible user-option"
-          [style.cursor]="'pointer'"
-          (click)="onShowOnlyVisibleModeChange(!getShowOnlyVisibleMode())">
-          <span class="user-option-label with-chip">
-            <span> Show only </span>
-            <div class="user-option-chip"> V </div>
-          </span>
-        </button>
+        <user-options
+          class="block-filter-controls"
+          [userOptions]="userOptions"
+          [eventType]="ViewerEvents.RectsUserOptionsChange"
+          [traceType]="dependencies[0]"
+          [logCallback]="Analytics.Navigation.logRectSettingsChanged">
+        </user-options>
 
         <div class="displays-section">
           <span class="mat-body-1"> {{groupLabel}}: </span>
@@ -222,6 +219,11 @@ import {Distance2D, ShadingMode} from './types3d';
       .filter-controls {
         justify-content: space-between;
       }
+      .block-filter-controls {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+      }
       .displays-section {
         display: flex;
         flex-direction: row;
@@ -274,12 +276,14 @@ import {Distance2D, ShadingMode} from './types3d';
       }
     `,
     multlineTooltip,
-    userOptionStyle,
     iconDividerStyle,
     viewerCardInnerStyle,
   ],
 })
 export class RectsComponent implements OnInit, OnDestroy {
+  Analytics = Analytics;
+  ViewerEvents = ViewerEvents;
+
   @Input() title = 'title';
   @Input() zoomFactor = 1;
   @Input() store?: PersistentStore;
@@ -290,12 +294,13 @@ export class RectsComponent implements OnInit, OnDestroy {
   @Input() groupLabel = 'Displays';
   @Input() isStackBased = false;
   @Input() shadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
+  @Input() userOptions: UserOptions = {};
+  @Input() dependencies: TraceType[] = [];
 
   @Output() collapseButtonClicked = new EventEmitter();
 
   private internalRects: UiRect[] = [];
   private internalMiniRects?: UiRect[];
-  private storeKeyShowOnlyVisibleState = '';
   private storeKeyZSpacingFactor = '';
   private storeKeyShadingMode = '';
   private displayNames: string[] = [];
@@ -467,16 +472,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   updateControlsFromStore() {
-    this.storeKeyShowOnlyVisibleState = `rectsView.${this.title}.showOnlyVisibleState`;
     this.storeKeyZSpacingFactor = `rectsView.${this.title}.zSpacingFactor`;
     this.storeKeyShadingMode = `rectsView.${this.title}.shadingMode`;
-
-    if (
-      assertDefined(this.store).get(this.storeKeyShowOnlyVisibleState) ===
-      'true'
-    ) {
-      this.mapper3d.setShowOnlyVisibleMode(true);
-    }
 
     const storedZSpacingFactor = assertDefined(this.store).get(
       this.storeKeyZSpacingFactor,
@@ -497,7 +494,11 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   onSeparationSliderChange(factor: number) {
-    Analytics.Navigation.logRectSettingsChanged('z spacing', factor);
+    Analytics.Navigation.logRectSettingsChanged(
+      'z spacing',
+      factor,
+      TRACE_INFO[this.dependencies[0]].name,
+    );
     this.store?.add(this.storeKeyZSpacingFactor, `${factor}`);
     this.mapper3d.setZSpacingFactor(factor);
     this.drawLargeRectsAndLabels();
@@ -553,13 +554,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.doZoomOut();
   }
 
-  onShowOnlyVisibleModeChange(enabled: boolean) {
-    Analytics.Navigation.logRectSettingsChanged('only visible', enabled);
-    this.store?.add(this.storeKeyShowOnlyVisibleState, `${enabled}`);
-    this.mapper3d.setShowOnlyVisibleMode(enabled);
-    this.drawLargeRectsAndLabels();
-  }
-
   onDisplayChange(event: MatSelectChange) {
     const displayName = event.value;
     const display = assertDefined(
@@ -606,14 +600,6 @@ export class RectsComponent implements OnInit, OnDestroy {
     );
   }
 
-  getShowOnlyVisibleMode(): boolean {
-    return this.mapper3d.getShowOnlyVisibleMode();
-  }
-
-  getShowOnlyVisibleButtonColor() {
-    return this.getShowOnlyVisibleMode() ? 'primary' : undefined;
-  }
-
   getZSpacingFactor(): number {
     return this.mapper3d.getZSpacingFactor();
   }
@@ -625,7 +611,11 @@ export class RectsComponent implements OnInit, OnDestroy {
   onShadingModeButtonClicked() {
     this.mapper3d.updateShadingMode();
     const newMode = this.mapper3d.getShadingMode();
-    Analytics.Navigation.logRectSettingsChanged('shading mode', newMode);
+    Analytics.Navigation.logRectSettingsChanged(
+      'shading mode',
+      newMode,
+      TRACE_INFO[this.dependencies[0]].name,
+    );
     this.store?.add(this.storeKeyShadingMode, newMode);
     this.drawLargeRectsAndLabels();
   }

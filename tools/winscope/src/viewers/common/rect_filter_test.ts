@@ -16,6 +16,7 @@
 
 import {UiRectBuilder} from 'viewers/components/rects/ui_rect_builder';
 import {RectFilter} from './rect_filter';
+import {RectShowState} from './rect_show_state';
 
 describe('RectFilter', () => {
   let rectFilter: RectFilter;
@@ -23,49 +24,56 @@ describe('RectFilter', () => {
   const visibleRect = makeRect('visibleRect', true);
   const displayRect = makeRect('displayRect', false, true);
   const allRects = [visibleRect, nonVisibleRect, displayRect];
-  const allRectIds = allRects.map((rect) => rect.id);
   const preFilteredRects = [visibleRect, nonVisibleRect];
+  let expectedRectIdToShowState: Map<string, RectShowState>;
 
   beforeEach(() => {
     rectFilter = new RectFilter();
+    expectedRectIdToShowState = new Map([
+      [visibleRect.id, RectShowState.SHOW],
+      [nonVisibleRect.id, RectShowState.SHOW],
+      [displayRect.id, RectShowState.SHOW],
+    ]);
   });
 
-  it('returns non hidden rect ids', () => {
-    expect(rectFilter.getNonHiddenRectIds(allRectIds, allRects)).toEqual(
-      allRectIds,
+  it('creates rect id to show state map', () => {
+    expect(rectFilter.getRectIdToShowState(allRects, allRects)).toEqual(
+      expectedRectIdToShowState,
     );
 
-    // removes rect that is not present in filtered rects
-    expect(
-      rectFilter.getNonHiddenRectIds(allRectIds, preFilteredRects),
-    ).toEqual([visibleRect.id, nonVisibleRect.id]);
+    // sets hide state for rect that is not present in filtered rects
+    expectedRectIdToShowState.set(displayRect.id, RectShowState.HIDE);
+    expect(rectFilter.getRectIdToShowState(allRects, preFilteredRects)).toEqual(
+      expectedRectIdToShowState,
+    );
 
     // keeps rect that is not present in drawn rects but has force-show state
-    rectFilter.updateRectShowState(displayRect.id, true);
-    expect(
-      rectFilter.getNonHiddenRectIds(allRectIds, preFilteredRects),
-    ).toEqual(allRectIds);
+    rectFilter.updateRectShowState(displayRect.id, RectShowState.SHOW);
+    expectedRectIdToShowState.set(displayRect.id, RectShowState.SHOW);
+    expect(rectFilter.getRectIdToShowState(allRects, preFilteredRects)).toEqual(
+      expectedRectIdToShowState,
+    );
   });
 
-  it('updates rect force-show/hide state', () => {
+  it('updates rect forced show state', () => {
     expect(isShown(visibleRect.id)).toBeTrue();
 
-    // robust to same state (true)
-    rectFilter.updateRectShowState(visibleRect.id, true);
+    // robust to same state (RectShowState.SHOW)
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
     expect(isShown(visibleRect.id)).toBeTrue();
 
-    rectFilter.updateRectShowState(visibleRect.id, false);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
     expect(isShown(visibleRect.id)).toBeFalse();
 
-    // robust to same state (false)
-    rectFilter.updateRectShowState(visibleRect.id, false);
+    // robust to same state (RectShowState.HIDE)
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
     expect(isShown(visibleRect.id)).toBeFalse();
 
-    rectFilter.updateRectShowState(visibleRect.id, true);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
     expect(isShown(visibleRect.id)).toBeTrue();
 
     expect(isShown(displayRect.id)).toBeFalse();
-    rectFilter.updateRectShowState(displayRect.id, true);
+    rectFilter.updateRectShowState(displayRect.id, RectShowState.SHOW);
     expect(isShown(displayRect.id)).toBeTrue();
   });
 
@@ -83,20 +91,20 @@ describe('RectFilter', () => {
     );
 
     // does not apply force-hide state
-    rectFilter.updateRectShowState(visibleRect.id, false);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
     expect(rectFilter.filterRects(allRects, true, false)).toEqual(
       filteredRects,
     );
 
     // does not apply force-show state
-    rectFilter.updateRectShowState(nonVisibleRect.id, true);
+    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.SHOW);
     expect(rectFilter.filterRects(allRects, true, false)).toEqual(
       filteredRects,
     );
   });
 
   it('applies show/hide states', () => {
-    rectFilter.updateRectShowState(visibleRect.id, false);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
     const filteredRects = rectFilter.filterRects(allRects, false, true);
     expect(filteredRects).toEqual([nonVisibleRect, displayRect]);
 
@@ -105,31 +113,31 @@ describe('RectFilter', () => {
       filteredRects,
     );
 
-    rectFilter.updateRectShowState(visibleRect.id, true);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.SHOW);
     expect(rectFilter.filterRects(allRects, false, true)).toEqual(allRects);
   });
 
   it('filters non visible rects and applies show/hide states', () => {
     // does not remove force-shown non-visible rect
-    rectFilter.updateRectShowState(nonVisibleRect.id, true);
+    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.SHOW);
     expect(rectFilter.filterRects(allRects, true, true)).toEqual(allRects);
 
     // removes force-hidden visible rect
-    rectFilter.updateRectShowState(visibleRect.id, false);
+    rectFilter.updateRectShowState(visibleRect.id, RectShowState.HIDE);
     const filteredRects = rectFilter.filterRects(allRects, true, true);
     expect(filteredRects).toEqual([nonVisibleRect, displayRect]);
 
     // removes non-visible rect but keeps visible rect that has not had hide/show state applied
-    rectFilter.updateRectShowState(nonVisibleRect.id, false);
+    rectFilter.updateRectShowState(nonVisibleRect.id, RectShowState.HIDE);
     expect(rectFilter.filterRects(allRects, true, true)).toEqual([displayRect]);
   });
 
   function isShown(rectId: string) {
-    const nonHiddenRectIds = rectFilter.getNonHiddenRectIds(
-      allRectIds,
+    const nonHiddenRectIds = rectFilter.getRectIdToShowState(
+      allRects,
       preFilteredRects,
     );
-    return nonHiddenRectIds.includes(rectId);
+    return nonHiddenRectIds.get(rectId) === RectShowState.SHOW;
   }
 
   function makeRect(id: string, isVisible: boolean, isDisplay = false) {

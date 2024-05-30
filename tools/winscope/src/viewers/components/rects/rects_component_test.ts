@@ -28,11 +28,14 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/types2d';
-import {CollapsibleSectionTitleComponent} from '../collapsible_section_title_component';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Canvas} from './canvas';
 import {ColorType, ShadingMode} from './types3d';
 import {UiRectBuilder} from './ui_rect_builder';
@@ -62,6 +65,7 @@ describe('RectsComponent', () => {
         TestHostComponent,
         RectsComponent,
         CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
@@ -228,23 +232,6 @@ describe('RectsComponent', () => {
     expect(sceneAfter.camera.rotationFactor).toEqual(0.5);
   });
 
-  it('updates scene on only visible mode change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    const nonVisibleRect = makeRectWithGroupId(0, false);
-    component.rects = [inputRect, nonVisibleRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
-    fixture.detectChanges();
-
-    updateShowOnlyVisibleMode();
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    const sceneBefore = assertDefined(spy.calls.first().args.at(0));
-    const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
-
-    expect(sceneBefore.rects.length).toEqual(2);
-    expect(sceneAfter.rects.length).toEqual(1);
-  });
-
   it('updates scene on shading mode change', () => {
     const inputRect = makeRectWithGroupId(0);
     component.rects = [inputRect];
@@ -276,7 +263,6 @@ describe('RectsComponent', () => {
 
     updateSeparationSlider();
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
-    updateShowOnlyVisibleMode();
 
     const newFixture = TestBed.createComponent(TestHostComponent);
     newFixture.detectChanges();
@@ -284,7 +270,6 @@ describe('RectsComponent', () => {
       newFixture.componentInstance.rectsComponent,
     );
     expect(newRectsComponent.getZSpacingFactor()).toEqual(0.06);
-    expect(newRectsComponent.getShowOnlyVisibleMode()).toBeTrue();
     expect(newRectsComponent.getShadingMode()).toEqual(ShadingMode.WIRE_FRAME);
   });
 
@@ -417,13 +402,6 @@ describe('RectsComponent', () => {
     expect(rectsComponent.getShadingMode()).toEqual(after);
   }
 
-  function updateShowOnlyVisibleMode() {
-    const rectsComponent = assertDefined(component.rectsComponent);
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
-    findAndClickElement('.show-only-visible');
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
-  }
-
   function makeRectWithGroupId(groupId: number, isVisible = true): UiRect {
     return new UiRectBuilder()
       .setX(0)
@@ -461,7 +439,9 @@ describe('RectsComponent', () => {
         [isStackBased]="isStackBased"
         [displays]="displays"
         [miniRects]="miniRects"
-        [shadingModes]="shadingModes"></rects-view>
+        [shadingModes]="shadingModes"
+        [userOptions]="userOptions"
+        [dependencies]="dependencies"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -475,6 +455,14 @@ describe('RectsComponent', () => {
       ShadingMode.WIRE_FRAME,
       ShadingMode.OPACITY,
     ];
+    userOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    dependencies = [TraceType.SURFACE_FLINGER];
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;
