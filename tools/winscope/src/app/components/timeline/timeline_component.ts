@@ -469,20 +469,6 @@ export class TimelineComponent
   readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
   readonly MAX_SELECTED_TRACES = 3;
 
-  @Input() set activeTrace(trace: Trace<object> | undefined) {
-    if (!trace) {
-      return;
-    }
-
-    this.internalActiveTrace = trace;
-
-    if (!this.selectedTraces.includes(this.internalActiveTrace)) {
-      // Create new object to make sure we trigger an update on Mini Timeline child component
-      this.selectedTraces = [...this.selectedTraces, this.internalActiveTrace];
-      this.selectedTracesFormControl.setValue(this.selectedTraces);
-    }
-  }
-
   @Input() timelineData: TimelineData | undefined;
   @Input() store: PersistentStore | undefined;
 
@@ -492,13 +478,10 @@ export class TimelineComponent
     | ElementRef
     | undefined;
 
-  @ViewChild('miniTimeline') private miniTimeline:
-    | MiniTimelineComponent
-    | undefined;
+  @ViewChild('miniTimeline') miniTimeline: MiniTimelineComponent | undefined;
 
   videoUrl: SafeUrl | undefined;
 
-  internalActiveTrace: Trace<object> | undefined = undefined;
   initialZoom: TimeRange | undefined = undefined;
   selectedTraces: Array<Trace<object>> = [];
   sortedAvailableTraces: Array<Trace<object>> = [];
@@ -626,11 +609,11 @@ export class TimelineComponent
     });
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
       await this.miniTimeline?.drawer?.draw();
-      this.activeTrace = event.trace;
+      this.updateSelectedTraces(event.trace);
     });
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
-      const activeTraceType = this.timelineData?.getActiveViewTrace();
-      if (activeTraceType === undefined) {
+      const activeTrace = this.timelineData?.getActiveTrace();
+      if (activeTrace === undefined) {
         return;
       }
       await this.miniTimeline?.drawer?.draw();
@@ -663,7 +646,7 @@ export class TimelineComponent
   }
 
   isOptionDisabled(trace: Trace<object>) {
-    return this.internalActiveTrace === trace;
+    return this.timelineData?.getActiveTrace() === trace;
   }
 
   applyNewTraceSelection(clickedTrace: Trace<object>) {
@@ -710,43 +693,45 @@ export class TimelineComponent
   }
 
   hasPrevEntry(): boolean {
-    if (!this.internalActiveTrace) {
+    const activeTrace = this.timelineData?.getActiveTrace();
+    if (!activeTrace) {
       return false;
     }
     return (
-      assertDefined(this.timelineData).getPreviousEntryFor(
-        this.internalActiveTrace,
-      ) !== undefined
+      assertDefined(this.timelineData).getPreviousEntryFor(activeTrace) !==
+      undefined
     );
   }
 
   hasNextEntry(): boolean {
-    if (!this.internalActiveTrace) {
+    const activeTrace = this.timelineData?.getActiveTrace();
+    if (!activeTrace) {
       return false;
     }
     return (
-      assertDefined(this.timelineData).getNextEntryFor(
-        this.internalActiveTrace,
-      ) !== undefined
+      assertDefined(this.timelineData).getNextEntryFor(activeTrace) !==
+      undefined
     );
   }
 
   async moveToPreviousEntry() {
-    if (!this.internalActiveTrace) {
+    const activeTrace = this.timelineData?.getActiveTrace();
+    if (!activeTrace) {
       return;
     }
     const timelineData = assertDefined(this.timelineData);
-    timelineData.moveToPreviousEntryFor(this.internalActiveTrace);
+    timelineData.moveToPreviousEntryFor(activeTrace);
     const position = assertDefined(timelineData.getCurrentPosition());
     await this.emitEvent(new TracePositionUpdate(position));
   }
 
   async moveToNextEntry() {
-    if (this.internalActiveTrace === undefined) {
+    const activeTrace = this.timelineData?.getActiveTrace();
+    if (!activeTrace) {
       return;
     }
     const timelineData = assertDefined(this.timelineData);
-    timelineData.moveToNextEntryFor(this.internalActiveTrace);
+    timelineData.moveToNextEntryFor(activeTrace);
     const position = assertDefined(timelineData.getCurrentPosition());
     await this.emitEvent(new TracePositionUpdate(position));
   }
@@ -897,6 +882,18 @@ export class TimelineComponent
   async onTimelineTraceClicked(trace: Trace<object>) {
     await this.emitEvent(new ActiveTraceChanged(trace));
     this.changeDetectorRef.detectChanges();
+  }
+
+  private updateSelectedTraces(trace: Trace<object> | undefined) {
+    if (!trace) {
+      return;
+    }
+
+    if (!this.selectedTraces.includes(trace)) {
+      // Create new object to make sure we trigger an update on Mini Timeline child component
+      this.selectedTraces = [...this.selectedTraces, trace];
+      this.selectedTracesFormControl.setValue(this.selectedTraces);
+    }
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {

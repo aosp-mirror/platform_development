@@ -246,7 +246,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     let fromTop = this.getPadding().top + innerHeight - lineHeight;
 
     timelineTraces.forEach((timelineTrace, trace) => {
-      if (this.inputGetter().timelineData.getActiveViewTrace() === trace) {
+      if (this.inputGetter().timelineData.getActiveTrace() === trace) {
         this.fillActiveTimelineBackground(fromTop, lineHeight);
       } else if (
         this.lastMousePoint?.y &&
