@@ -25,6 +25,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatGridListModule} from '@angular/material/grid-list';
@@ -75,6 +76,7 @@ import {
 } from './components/bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
+import {ShortcutsComponent} from './components/shortcuts_component';
 import {SnackBarComponent} from './components/snack_bar_component';
 import {DefaultTimelineRowComponent} from './components/timeline/expanded-timeline/default_timeline_row_component';
 import {ExpandedTimelineComponent} from './components/timeline/expanded-timeline/expanded_timeline_component';
@@ -132,6 +134,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
     SelectWithFilterComponent,
+    ShortcutsComponent,
   ],
   imports: [
     BrowserModule,
@@ -163,6 +166,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     ClipboardModule,
     ReactiveFormsModule,
     CdkMenuModule,
+    MatDialogModule,
   ],
   providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
