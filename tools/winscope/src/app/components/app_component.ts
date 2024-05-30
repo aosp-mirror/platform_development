@@ -25,6 +25,7 @@ import {
 } from '@angular/core';
 import {createCustomElement} from '@angular/elements';
 import {FormControl, Validators} from '@angular/forms';
+import {MatDialog} from '@angular/material/dialog';
 import {Title} from '@angular/platform-browser';
 import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
 import {Mediator} from 'app/mediator';
@@ -66,6 +67,7 @@ import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_tran
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
 import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager_component';
 import {CollectTracesComponent} from './collect_traces_component';
+import {ShortcutsComponent} from './shortcuts_component';
 import {SnackBarOpener} from './snack_bar_opener';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceViewComponent} from './trace_view_component';
@@ -148,6 +150,14 @@ import {UploadTracesComponent} from './upload_traces_component';
           class="upload-new"
           (click)="onUploadNewButtonClick()">
           <mat-icon class="material-symbols-outlined">upload</mat-icon>
+        </button>
+
+        <button
+          mat-icon-button
+          matTooltip="Shortcuts"
+          class="shortcuts"
+          (click)="openShortcutsPanel()">
+          <mat-icon>keyboard_command_key</mat-icon>
         </button>
 
         <button
@@ -355,6 +365,7 @@ export class AppComponent implements WinscopeEventListener {
     @Inject(SnackBarOpener) snackBar: SnackBarOpener,
     @Inject(Title) private pageTitle: Title,
     @Inject(NgZone) private ngZone: NgZone,
+    @Inject(MatDialog) private dialog: MatDialog,
   ) {
     this.changeDetectorRef = changeDetectorRef;
     this.snackbarOpener = snackBar;
@@ -576,6 +587,13 @@ export class AppComponent implements WinscopeEventListener {
       this.showDataLoadedElements = false;
       this.pageTitle.setTitle('Winscope');
       this.changeDetectorRef.detectChanges();
+    });
+  }
+
+  openShortcutsPanel() {
+    this.dialog.open(ShortcutsComponent, {
+      height: 'fit-content',
+      maxWidth: '860px',
     });
   }
 
