@@ -29,6 +29,7 @@ import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -140,11 +141,89 @@ describe('PresenterViewCapture', () => {
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.vcRectsToDraw.length).toEqual(13);
     expect(uiData.vcRectsToDraw[0].x).toEqual(0);
     expect(uiData.vcRectsToDraw[0].y).toEqual(0);
     expect(uiData.vcRectsToDraw[0].w).toEqual(1080);
     expect(uiData.vcRectsToDraw[0].h).toEqual(249);
+    checkRectUiData(13, 13, 13);
+  });
+
+  it('filters rects by visibility', async () => {
+    const userOptions: UserOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    expect(uiData.rectsUserOptions).toEqual(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(5, 13, 5);
+  });
+
+  it('filters rects by show/hide state', async () => {
+    const userOptions: UserOptions = {
+      applyNonHidden: {
+        name: 'Apply',
+        icon: 'visibility',
+        enabled: false,
+      },
+    };
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.views.IconButtonView@78121542',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(13, 13, 12);
+
+    userOptions['applyNonHidden'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(12, 13, 12);
+  });
+
+  it('handles both visibility and show/hide state in rects', async () => {
+    const userOptions: UserOptions = {
+      applyNonHidden: {
+        name: 'Apply',
+        icon: 'visibility',
+        enabled: false,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(13, 13, 12);
+
+    userOptions['applyNonHidden'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(12, 13, 12);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(4, 13, 4);
+
+    userOptions['applyNonHidden'].enabled = false;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(5, 13, 4);
   });
 
   it('updates pinned items', async () => {
@@ -188,6 +267,88 @@ describe('PresenterViewCapture', () => {
     ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
+  it('filters hierarchy tree by show/hide state', async () => {
+    const userOptions: UserOptions = {
+      showOnlyNonHidden: {
+        name: 'Show only',
+        icon: 'visibility',
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    let children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(6);
+    expect(children[2].name).toEqual(
+      'com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548',
+    );
+
+    userOptions['showOnlyNonHidden'].enabled = true;
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(4);
+    expect(
+      // BubbleBarView -> FrameLayout
+      children[2].name,
+    ).toEqual('android.widget.FrameLayout@227332957');
+
+    expect(children[1].name).toEqual(
+      'com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+    );
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+      RectShowState.HIDE,
+    );
+    children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(3);
+    expect(
+      // TaskbarScrimView -> FrameLayout
+      children[1].name,
+    ).toEqual('android.widget.FrameLayout@227332957');
+  });
+
+  it('handles both visibility and show/hide state in hierarchy tree', async () => {
+    const userOptions: UserOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+      showOnlyNonHidden: {
+        name: 'Show only',
+        icon: 'visibility',
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    let children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(6);
+    expect(children[1].name).toEqual(
+      'com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+    );
+
+    userOptions['showOnlyNonHidden'].enabled = true;
+    userOptions['showOnlyVisible'].enabled = true;
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(3);
+    expect(children[1].name).toEqual('android.widget.FrameLayout@227332957');
+
+    expect(children[0].name).toEqual(
+      'com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+    );
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+      RectShowState.HIDE,
+    );
+    children = assertDefined(uiData.trees?.at(0)?.getAllChildren());
+    expect(children.length).toEqual(2);
+    expect(children[0].name).toEqual('android.widget.FrameLayout@227332957');
+  });
+
   it('simplifies names in hierarchy tree', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.trees?.at(0)?.getAllChildren()[0].getDisplayName()).toEqual(
@@ -216,7 +377,7 @@ describe('PresenterViewCapture', () => {
     );
   });
 
-  it('filters hierarchy tree', async () => {
+  it('filters hierarchy tree by search string', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -390,5 +551,20 @@ describe('PresenterViewCapture', () => {
     return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
       uiData = newData;
     });
+  }
+
+  function checkRectUiData(
+    rectsToDraw: number,
+    allRects: number,
+    shownRects: number,
+  ) {
+    expect(uiData.vcRectsToDraw.length).toEqual(rectsToDraw);
+    const showStates = Array.from(
+      assertDefined(uiData.vcRectIdToShowState).values(),
+    );
+    expect(showStates.length).toEqual(allRects);
+    expect(showStates.filter((s) => s === RectShowState.SHOW).length).toEqual(
+      shownRects,
+    );
   }
 });

@@ -531,7 +531,7 @@ export class Presenter implements WinscopeEventEmitter {
     await this.updateSelectedTreeUiData();
   }
 
-  async onRectsUserOptionsChange(userOptions: UserOptions) {
+  onRectsUserOptionsChange(userOptions: UserOptions) {
     const uiData = assertDefined(this.uiData);
     this.rectsUserOptions = userOptions;
     uiData.rectsUserOptions = this.rectsUserOptions;
@@ -545,7 +545,7 @@ export class Presenter implements WinscopeEventEmitter {
     uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
       this.currentHierarchyTrees,
-      this.allCurrentVcRects,
+      uiData.vcRectsToDraw,
     );
     this.copyUiDataAndNotifyView();
   }
@@ -555,7 +555,7 @@ export class Presenter implements WinscopeEventEmitter {
     this.hierarchyFilter = UiTreeUtils.makeIdFilter(filterString);
     uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
       this.currentHierarchyTrees,
-      this.allCurrentVcRects,
+      uiData.vcRectsToDraw,
     );
     this.copyUiDataAndNotifyView();
   }
@@ -592,12 +592,12 @@ export class Presenter implements WinscopeEventEmitter {
   async onRectShowStateChange(id: string, newShowState: RectShowState) {
     this.rectFilter.updateRectShowState(id, newShowState);
     this.updateRectUiData();
+    const uiData = assertDefined(this.uiData);
     if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
-      assertDefined(this.uiData).trees =
-        await this.formatHierarchyTreesAndUpdatePinnedItems(
-          this.currentHierarchyTrees,
-          this.allCurrentVcRects,
-        );
+      uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
+        this.currentHierarchyTrees,
+        uiData.vcRectsToDraw,
+      );
     }
     this.copyUiDataAndNotifyView();
   }
