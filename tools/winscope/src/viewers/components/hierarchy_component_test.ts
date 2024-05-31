@@ -32,13 +32,13 @@ import {PersistentStore} from 'common/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
+import {UserOptionsComponent} from './user_options_component';
 
 describe('HierarchyComponent', () => {
   let fixture: ComponentFixture<HierarchyComponent>;
@@ -54,6 +54,7 @@ describe('HierarchyComponent', () => {
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       imports: [
         CommonModule,
@@ -107,43 +108,6 @@ describe('HierarchyComponent', () => {
     expect(viewControls).toBeTruthy();
     const button = htmlElement.querySelector('.view-controls .user-option');
     expect(button).toBeTruthy(); //renders at least one view control option
-  });
-
-  it('disables option if unavailable', () => {
-    let option = assertDefined(
-      htmlElement.querySelector('.view-controls .user-option'),
-    );
-    expect((option as HTMLButtonElement).disabled).toBeFalse();
-
-    component.userOptions['showDiff'].isUnavailable = true;
-    fixture.detectChanges();
-    option = assertDefined(
-      htmlElement.querySelector('.view-controls .user-option'),
-    );
-    expect((option as HTMLInputElement).disabled).toBeTrue();
-  });
-
-  it('updates tree on user option change', () => {
-    let options: UserOptions | undefined;
-    htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      (event) => {
-        options = (event as CustomEvent).detail.userOptions;
-      },
-    );
-    const box = assertDefined(
-      htmlElement.querySelector('.view-controls .user-option'),
-    ) as HTMLInputElement;
-    box.checked = true;
-    box.click();
-    fixture.detectChanges();
-    expect(options).toEqual({
-      showDiff: {
-        name: 'Show diff',
-        enabled: true,
-        isUnavailable: false,
-      },
-    });
   });
 
   it('renders initial tree elements', () => {

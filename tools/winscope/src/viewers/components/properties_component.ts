@@ -21,19 +21,16 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UserOption, UserOptions} from 'viewers/common/user_options';
+import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 import {searchBoxStyle} from './styles/search_box.styles';
-import {userOptionStyle} from './styles/user_option.styles';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -54,23 +51,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         </mat-form-field>
       </div>
 
-      <div class="view-controls" *ngIf="hasUserOptions()">
-        <button
-          *ngFor="let option of objectKeys(userOptions)"
-          mat-flat-button
-          [color]="getUserOptionButtonColor(userOptions[option])"
-          [disabled]="userOptions[option].isUnavailable"
-          [class.not-enabled]="!userOptions[option].enabled"
-          class="user-option"
-          [style.cursor]="'pointer'"
-          (click)="onUserOptionChange(userOptions[option])">
-          <span class="user-option-label" [class.with-chip]="!!userOptions[option].chip">
-            <span> {{userOptions[option].name}} </span>
-            <div *ngIf="userOptions[option].chip" class="user-option-chip"> {{userOptions[option].chip.short}} </div>
-            <mat-icon  class="material-symbols-outlined" *ngIf="userOptions[option].icon"> {{userOptions[option].icon}} </mat-icon>
-          </span>
-        </button>
-      </div>
+      <user-options
+        *ngIf="hasUserOptions()"
+        class="view-controls"
+        [userOptions]="userOptions"
+        [eventType]="ViewerEvents.PropertiesUserOptionsChange"
+        [traceType]="traceType"
+        [logCallback]="Analytics.Navigation.logPropertiesSettingsChanged">
+      </user-options>
     </div>
 
     <mat-divider *ngIf="hasUserOptions()"></mat-divider>
@@ -125,14 +113,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
     `,
     nodeStyles,
     searchBoxStyle,
-    userOptionStyle,
     viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
+  Analytics = Analytics;
   CollapsibleSectionType = CollapsibleSectionType;
-  objectKeys = Object.keys;
   filterString = '';
+  ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
   @Input() showFilter = true;
@@ -166,22 +154,8 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onUserOptionChange(option: UserOption) {
-    option.enabled = !option.enabled;
-    Analytics.Navigation.logPropertiesSettingsChanged(
-      option.name,
-      option.enabled,
-      TRACE_INFO[assertDefined(this.traceType)].name,
-    );
-    const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.userOptions},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
   hasUserOptions() {
-    return this.objectKeys(this.userOptions).length > 0;
+    return Object.keys(this.userOptions).length > 0;
   }
 
   showViewCaptureFormat(): boolean {
@@ -196,9 +170,5 @@ export class PropertiesComponent {
 
   showPropertiesTree(): boolean {
     return !!this.propertiesTree && !this.showViewCaptureFormat();
-  }
-
-  getUserOptionButtonColor(option: UserOption) {
-    return option.enabled ? 'primary' : undefined;
   }
 }

@@ -23,16 +23,14 @@ import {
 } from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {UserOption, UserOptions} from 'viewers/common/user_options';
+import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
 import {searchBoxStyle} from './styles/search_box.styles';
-import {userOptionStyle} from './styles/user_option.styles';
 import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
@@ -53,23 +51,13 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
             name="filter" />
         </mat-form-field>
       </div>
-      <div class="view-controls">
-        <button
-          *ngFor="let option of objectKeys(userOptions)"
-          mat-flat-button
-          [color]="getUserOptionButtonColor(userOptions[option])"
-          [disabled]="userOptions[option].isUnavailable"
-          [class.not-enabled]="!userOptions[option].enabled"
-          class="user-option"
-          [style.cursor]="'pointer'"
-          (click)="onUserOptionChange(userOptions[option])">
-          <span class="user-option-label" [class.with-chip]="!!userOptions[option].chip">
-            <span> {{userOptions[option].name}} </span>
-            <div *ngIf="userOptions[option].chip" class="user-option-chip"> {{userOptions[option].chip.short}} </div>
-            <mat-icon  class="material-symbols-outlined" *ngIf="userOptions[option].icon"> {{userOptions[option].icon}} </mat-icon>
-          </span>
-        </button>
-      </div>
+      <user-options
+        class="view-controls"
+        [userOptions]="userOptions"
+        [eventType]="ViewerEvents.HierarchyUserOptionsChange"
+        [traceType]="dependencies[0]"
+        [logCallback]="Analytics.Navigation.logHierarchySettingsChanged">
+      </user-options>
       <properties-table
         *ngIf="tableProperties"
         class="properties-table"
@@ -149,14 +137,14 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
     `,
     nodeStyles,
     searchBoxStyle,
-    userOptionStyle,
     viewerCardInnerStyle,
   ],
 })
 export class HierarchyComponent {
-  objectKeys = Object.keys;
   filterString = '';
   isHighlighted = UiTreeUtils.isHighlighted;
+  ViewerEvents = ViewerEvents;
+  Analytics = Analytics;
 
   @Input() tree: UiHierarchyTreeNode | undefined;
   @Input() subtrees: UiHierarchyTreeNode[] = [];
@@ -187,20 +175,6 @@ export class HierarchyComponent {
     this.onHighlightedItemChange(pinnedItem);
   }
 
-  onUserOptionChange(option: UserOption) {
-    option.enabled = !option.enabled;
-    Analytics.Navigation.logHierarchySettingsChanged(
-      option.name,
-      option.enabled,
-      TRACE_INFO[this.dependencies[0]].name,
-    );
-    const event = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.userOptions},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
   onFilterChange() {
     const event = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
       bubbles: true,
@@ -223,9 +197,5 @@ export class HierarchyComponent {
       detail: {pinnedItem: item},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  getUserOptionButtonColor(option: UserOption) {
-    return option.enabled ? 'primary' : undefined;
   }
 }
