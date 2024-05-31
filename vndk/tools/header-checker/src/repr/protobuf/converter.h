@@ -20,8 +20,6 @@
 #include "repr/protobuf/abi_diff.h"
 #include "repr/protobuf/abi_dump.h"
 
-#include <llvm/Support/raw_ostream.h>
-
 
 namespace header_checker {
 namespace repr {
@@ -190,6 +188,7 @@ inline VTableComponentIR::Kind VTableComponentKindProtobufToIR(
   assert(false);
 }
 
+// Convert IR to the messages defined in abi_dump.proto.
 class IRToProtobufConverter {
  private:
   static bool AddTemplateInformation(
@@ -211,6 +210,21 @@ class IRToProtobufConverter {
                             const EnumTypeIR *enum_ir);
 
  public:
+  static bool ConvertRecordFieldIR(
+      abi_dump::RecordFieldDecl *record_field_protobuf,
+      const RecordFieldIR *record_field_ir);
+
+  static bool ConvertCXXBaseSpecifierIR(
+      abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
+      const CXXBaseSpecifierIR &base_specifier_ir);
+
+  static bool ConvertVTableLayoutIR(
+      abi_dump::VTableLayout *vtable_layout_protobuf,
+      const VTableLayoutIR &vtable_layout_ir);
+
+  static bool ConvertEnumFieldIR(abi_dump::EnumFieldDecl *enum_field_protobuf,
+                                 const EnumFieldIR *enum_field_ir);
+
   static abi_dump::EnumType ConvertEnumTypeIR(const EnumTypeIR *enump);
 
   static abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp);
@@ -257,6 +271,7 @@ class IRToProtobufConverter {
       const ElfObjectIR *elf_object_ir);
 };
 
+// Convert IR to the messages defined in abi_diff.proto.
 class IRDiffToProtobufConverter {
  private:
   static bool AddTypeInfoDiff(
@@ -297,76 +312,6 @@ class IRDiffToProtobufConverter {
   static abi_diff::GlobalVarDeclDiff ConvertGlobalVarDiffIR(
       const GlobalVarDiffIR *global_var_diffp);
 };
-
-inline void SetIRToProtobufRecordField(
-    abi_dump::RecordFieldDecl *record_field_protobuf,
-    const RecordFieldIR *record_field_ir) {
-  record_field_protobuf->set_field_name(record_field_ir->GetName());
-  record_field_protobuf->set_referenced_type(
-      record_field_ir->GetReferencedType());
-  record_field_protobuf->set_access(
-      AccessIRToProtobuf(record_field_ir->GetAccess()));
-  record_field_protobuf->set_field_offset(record_field_ir->GetOffset());
-  if (record_field_ir->IsBitField()) {
-    record_field_protobuf->set_is_bit_field(true);
-    record_field_protobuf->set_bit_width(record_field_ir->GetBitWidth());
-  }
-}
-
-inline bool SetIRToProtobufBaseSpecifier(
-    abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
-    const CXXBaseSpecifierIR &base_specifier_ir) {
-  if (!base_specifier_protobuf) {
-    llvm::errs() << "Protobuf base specifier not valid\n";
-    return false;
-  }
-  base_specifier_protobuf->set_referenced_type(
-      base_specifier_ir.GetReferencedType());
-  base_specifier_protobuf->set_is_virtual(
-      base_specifier_ir.IsVirtual());
-  base_specifier_protobuf->set_access(
-      AccessIRToProtobuf(base_specifier_ir.GetAccess()));
-  return true;
-}
-
-inline bool SetIRToProtobufVTableLayout(
-    abi_dump::VTableLayout *vtable_layout_protobuf,
-    const VTableLayoutIR &vtable_layout_ir) {
-  if (vtable_layout_protobuf == nullptr) {
-    llvm::errs() << "vtable layout protobuf not valid\n";
-    return false;
-  }
-  for (auto &&vtable_component_ir : vtable_layout_ir.GetVTableComponents()) {
-    abi_dump::VTableComponent *added_vtable_component =
-        vtable_layout_protobuf->add_vtable_components();
-    if (!added_vtable_component) {
-      llvm::errs() << "Couldn't add vtable component\n";
-      return false;
-    }
-    added_vtable_component->set_kind(
-        VTableComponentKindIRToProtobuf(vtable_component_ir.GetKind()));
-    added_vtable_component->set_component_value(vtable_component_ir.GetValue());
-    added_vtable_component->set_mangled_component_name(
-        vtable_component_ir.GetName());
-    added_vtable_component->set_is_pure(vtable_component_ir.GetIsPure());
-  }
-  return true;
-}
-
-inline bool SetIRToProtobufEnumField(
-    abi_dump::EnumFieldDecl *enum_field_protobuf,
-    const EnumFieldIR *enum_field_ir) {
-  if (enum_field_protobuf == nullptr) {
-    return true;
-  }
-  enum_field_protobuf->set_name(enum_field_ir->GetName());
-  // The "enum_field_value" in the .proto is a signed 64-bit integer. An
-  // unsigned integer >= (1 << 63) is represented with a negative integer in the
-  // dump file. Despite the wrong representation, the diff result isn't affected
-  // because every integer has a unique representation.
-  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetSignedValue());
-  return true;
-}
 
 
 }  // namespace repr
