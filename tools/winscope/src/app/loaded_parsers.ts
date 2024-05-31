@@ -39,8 +39,8 @@ export class LoadedParsers {
     TraceType.EVENT_LOG,
   ];
 
-  private legacyParsers = new Map<TraceType, FileAndParser>();
-  private perfettoParsers = new Map<TraceType, FileAndParser>();
+  private legacyParsers = new Array<FileAndParser>();
+  private perfettoParsers = new Array<FileAndParser>();
 
   addParsers(
     legacyParsers: FileAndParser[],
@@ -68,6 +68,10 @@ export class LoadedParsers {
     );
 
     this.addLegacyParsers(legacyParsers, userNotificationsListener);
+
+    this.enforceLimitOfSingleScreenshotOrScreenRecordingParser(
+      userNotificationsListener,
+    );
   }
 
   getParsers(): Array<Parser<object>> {
@@ -78,20 +82,24 @@ export class LoadedParsers {
     return fileAndParsers.map((fileAndParser) => fileAndParser.parser);
   }
 
-  remove(type: TraceType) {
-    this.legacyParsers.delete(type);
-    this.perfettoParsers.delete(type);
+  remove(parser: Parser<object>) {
+    this.legacyParsers = this.legacyParsers.filter(
+      (fileAndParser) => fileAndParser.parser !== parser,
+    );
+    this.perfettoParsers = this.perfettoParsers.filter(
+      (fileAndParser) => fileAndParser.parser !== parser,
+    );
   }
 
   clear() {
-    this.legacyParsers.clear();
-    this.perfettoParsers.clear();
+    this.legacyParsers = [];
+    this.perfettoParsers = [];
   }
 
   async makeZipArchive(): Promise<Blob> {
     const archiveFiles: File[] = [];
 
-    if (this.perfettoParsers.size > 0) {
+    if (this.perfettoParsers.length > 0) {
       const file: TraceFile = this.perfettoParsers.values().next().value.file;
       let filenameInArchive = FileUtils.removeDirFromFileName(file.file.name);
       if (FileUtils.getFileExtension(file.file) === undefined) {
@@ -101,7 +109,8 @@ export class LoadedParsers {
       archiveFiles.push(archiveFile);
     }
 
-    this.legacyParsers.forEach(({file, parser}, traceType) => {
+    this.legacyParsers.forEach(({file, parser}) => {
+      const traceType = parser.getTraceType();
       const archiveDir =
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
           ? TRACE_INFO[traceType].downloadArchiveDir + '/'
@@ -169,7 +178,7 @@ export class LoadedParsers {
         )
       ) {
         legacyParsersBeingLoaded.set(parser.getTraceType(), parser);
-        this.legacyParsers.set(parser.getTraceType(), fileAndParser);
+        this.legacyParsers.push(fileAndParser);
       }
     });
   }
@@ -180,24 +189,24 @@ export class LoadedParsers {
   ) {
     // We currently run only one Perfetto TP WebWorker at a time, so Perfetto parsers previously
     // loaded are now invalid and must be removed (previous WebWorker is not running anymore).
-    this.perfettoParsers.clear();
+    this.perfettoParsers = [];
 
     parsers.forEach((parser) => {
-      this.perfettoParsers.set(
-        parser.getTraceType(),
-        new FileAndParser(file, parser),
-      );
+      this.perfettoParsers.push(new FileAndParser(file, parser));
 
       // While transitioning to the Perfetto format, devices might still have old legacy trace files
       // dangling in the disk that get automatically included into bugreports. Hence, Perfetto
       // parsers must always override legacy ones so that dangling legacy files are ignored.
-      const legacyParser = this.legacyParsers.get(parser.getTraceType());
-      if (legacyParser) {
-        userNotificationsListener.onNotifications([
-          new TraceOverridden(legacyParser.parser.getDescriptors().join()),
-        ]);
-        this.legacyParsers.delete(parser.getTraceType());
-      }
+      this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
+        const isOverriddenByPerfettoParser =
+          fileAndParser.parser.getTraceType() === parser.getTraceType();
+        if (isOverriddenByPerfettoParser) {
+          userNotificationsListener.onNotifications([
+            new TraceOverridden(fileAndParser.parser.getDescriptors().join()),
+          ]);
+        }
+        return !isOverriddenByPerfettoParser;
+      });
     });
   }
 
@@ -209,40 +218,18 @@ export class LoadedParsers {
     // While transitioning to the Perfetto format, devices might still have old legacy trace files
     // dangling in the disk that get automatically included into bugreports. Hence, Perfetto parsers
     // must always override legacy ones so that dangling legacy files are ignored.
-    if (this.perfettoParsers.get(newParser.getTraceType())) {
+    const isOverriddenByPerfettoParser = this.perfettoParsers.some(
+      (fileAndParser) =>
+        fileAndParser.parser.getTraceType() === newParser.getTraceType(),
+    );
+    if (isOverriddenByPerfettoParser) {
       userNotificationsListener.onNotifications([
         new TraceOverridden(newParser.getDescriptors().join()),
       ]);
       return false;
     }
 
-    const oldParser = this.legacyParsers.get(newParser.getTraceType())?.parser;
-    const currParser = parsersBeingLoaded.get(newParser.getTraceType());
-    if (!oldParser && !currParser) {
-      return true;
-    }
-
-    if (oldParser && !currParser) {
-      userNotificationsListener.onNotifications([
-        new TraceOverridden(oldParser.getDescriptors().join()),
-      ]);
-      return true;
-    }
-
-    if (
-      currParser &&
-      newParser.getLengthEntries() > currParser.getLengthEntries()
-    ) {
-      userNotificationsListener.onNotifications([
-        new TraceOverridden(currParser.getDescriptors().join()),
-      ]);
-      return true;
-    }
-
-    userNotificationsListener.onNotifications([
-      new TraceOverridden(newParser.getDescriptors().join()),
-    ]);
-    return false;
+    return true;
   }
 
   private filterOutLegacyParsersWithOldData(
@@ -343,49 +330,51 @@ export class LoadedParsers {
     newLegacyParsers: FileAndParser[],
     userNotificationsListener: UserNotificationsListener,
   ): FileAndParser[] {
-    const oldScreenRecordingParser = this.legacyParsers.get(
-      TraceType.SCREEN_RECORDING,
-    )?.parser;
-    const oldScreenshotParser = this.legacyParsers.get(
-      TraceType.SCREENSHOT,
-    )?.parser;
+    const hasOldScreenRecordingParsers = this.legacyParsers.some(
+      (entry) => entry.parser.getTraceType() === TraceType.SCREEN_RECORDING,
+    );
+    const hasNewScreenRecordingParsers = newLegacyParsers.some(
+      (entry) => entry.parser.getTraceType() === TraceType.SCREEN_RECORDING,
+    );
+    const hasScreenRecordingParsers =
+      hasOldScreenRecordingParsers || hasNewScreenRecordingParsers;
 
-    const newScreenRecordingParsers = newLegacyParsers.filter(
+    if (!hasScreenRecordingParsers) {
+      return newLegacyParsers;
+    }
+
+    const oldScreenshotParsers = this.legacyParsers.filter(
       (fileAndParser) =>
-        fileAndParser.parser.getTraceType() === TraceType.SCREEN_RECORDING,
+        fileAndParser.parser.getTraceType() === TraceType.SCREENSHOT,
     );
     const newScreenshotParsers = newLegacyParsers.filter(
       (fileAndParser) =>
         fileAndParser.parser.getTraceType() === TraceType.SCREENSHOT,
     );
 
-    if (oldScreenRecordingParser || newScreenRecordingParsers.length > 0) {
-      newScreenshotParsers.forEach((newScreenshotParser) => {
-        userNotificationsListener.onNotifications([
-          new TraceOverridden(
-            newScreenshotParser.parser.getDescriptors().join(),
-            TraceType.SCREEN_RECORDING,
-          ),
-        ]);
-      });
+    oldScreenshotParsers.forEach((fileAndParser) => {
+      userNotificationsListener.onNotifications([
+        new TraceOverridden(
+          fileAndParser.parser.getDescriptors().join(),
+          TraceType.SCREEN_RECORDING,
+        ),
+      ]);
+      this.remove(fileAndParser.parser);
+    });
 
-      if (oldScreenshotParser) {
-        userNotificationsListener.onNotifications([
-          new TraceOverridden(
-            oldScreenshotParser.getDescriptors().join(),
-            TraceType.SCREEN_RECORDING,
-          ),
-        ]);
-        this.remove(TraceType.SCREENSHOT);
-      }
+    newScreenshotParsers.forEach((newScreenshotParser) => {
+      userNotificationsListener.onNotifications([
+        new TraceOverridden(
+          newScreenshotParser.parser.getDescriptors().join(),
+          TraceType.SCREEN_RECORDING,
+        ),
+      ]);
+    });
 
-      return newLegacyParsers.filter(
-        (fileAndParser) =>
-          fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT,
-      );
-    }
-
-    return newLegacyParsers;
+    return newLegacyParsers.filter(
+      (fileAndParser) =>
+        fileAndParser.parser.getTraceType() !== TraceType.SCREENSHOT,
+    );
   }
 
   private filterOutParsersWithoutOffsetsIfRequired(
@@ -432,6 +421,35 @@ export class LoadedParsers {
     }
 
     return newLegacyParsers;
+  }
+
+  private enforceLimitOfSingleScreenshotOrScreenRecordingParser(
+    userNotificationsListener: UserNotificationsListener,
+  ) {
+    let firstScreenshotOrScreenrecordingParser: Parser<object> | undefined;
+
+    this.legacyParsers = this.legacyParsers.filter((fileAndParser) => {
+      const parser = fileAndParser.parser;
+      if (
+        parser.getTraceType() !== TraceType.SCREENSHOT &&
+        parser.getTraceType() !== TraceType.SCREEN_RECORDING
+      ) {
+        return true;
+      }
+
+      if (firstScreenshotOrScreenrecordingParser) {
+        userNotificationsListener.onNotifications([
+          new TraceOverridden(
+            parser.getDescriptors().join(),
+            firstScreenshotOrScreenrecordingParser.getTraceType(),
+          ),
+        ]);
+        return false;
+      }
+
+      firstScreenshotOrScreenrecordingParser = parser;
+      return true;
+    });
   }
 
   private findLastTimeGapAboveThreshold(

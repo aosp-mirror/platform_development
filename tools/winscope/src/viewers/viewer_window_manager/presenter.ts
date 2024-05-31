@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -110,11 +109,12 @@ export class Presenter {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
-    this.trace = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+    this.trace = trace;
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
     this.copyUiDataAndNotifyView();

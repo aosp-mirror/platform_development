@@ -60,7 +60,7 @@ export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
       FROM
         window_manager_shell_transitions as transitions
         INNER JOIN args ON transitions.arg_set_id = args.arg_set_id
-      WHERE transitions.id = ${index};
+      WHERE transitions.id = ${this.entryIndexToRowIdMap[index]};
     `;
     const result = await this.traceProcessor.query(sql).waitAllRows();
 

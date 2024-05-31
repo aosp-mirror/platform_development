@@ -17,13 +17,13 @@
 import {assertDefined} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {ParsingUtils} from 'parsers/legacy/parsing_utils';
-import {com} from 'protos/viewcapture/latest/static';
+import {com} from 'protos/viewcapture/udc/static';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ParserViewCaptureWindow} from './parser_view_capture_window';
-import {ExportedData} from './vc_tampered_protos';
+import {ExportedData} from './tampered_protos';
 
 export class ParserViewCapture {
   private readonly windowParsers: Array<Parser<HierarchyTreeNode>> = [];
@@ -54,9 +54,9 @@ export class ParserViewCapture {
           new ParserViewCaptureWindow(
             [this.traceFile.getDescriptor()],
             windowData.frameData ?? [],
-            ParserViewCapture.toTraceType(windowData),
             realToBootTimeOffsetNs,
             assertDefined(exportedData.package),
+            assertDefined(windowData.title),
             assertDefined(exportedData.classname),
             this.timestampConverter,
           ),
@@ -70,19 +70,6 @@ export class ParserViewCapture {
 
   getWindowParsers(): Array<Parser<HierarchyTreeNode>> {
     return this.windowParsers;
-  }
-
-  private static toTraceType(
-    windowData: com.android.app.viewcapture.data.IWindowData,
-  ): TraceType {
-    switch (windowData.title) {
-      case '.Taskbar':
-        return TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER;
-      case '.TaskbarOverlay':
-        return TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER;
-      default:
-        return TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY;
-    }
   }
 
   private static readonly MAGIC_NUMBER = [

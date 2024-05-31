@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/viewcapture/latest/json';
-
-export const ExportedData = TamperedMessageType.tamper(
-  root.lookupType('com.android.app.viewcapture.data.ExportedData'),
-);
-
-export const NodeField = assertDefined(
-  ExportedData.fields['windowData'].tamperedMessageType?.fields['frameData']
-    .tamperedMessageType,
-).fields['node'];
+export enum CollapsibleSectionType {
+  RECTS = 'RECTS',
+  HIERARCHY = 'HIERARCHY',
+  PROPERTIES = 'PROPERTIES',
+  CURATED_PROPERTIES = 'CURATED PROPERTIES',
+  IME_ADDITIONAL_PROPERTIES = 'WM & SF PROPERTIES',
+}

@@ -60,6 +60,18 @@ const configDev = {
           from: 'src/viewers/components/rects/cube_full_shade.svg',
           to: 'cube_full_shade.svg',
         },
+        {
+          from: 'src/app/components/trackpad_right_click.svg',
+          to: 'trackpad_right_click.svg',
+        },
+        {
+          from: 'src/app/components/trackpad_vertical_scroll.svg',
+          to: 'trackpad_vertical_scroll.svg',
+        },
+        {
+          from: 'src/app/components/trackpad_horizontal_scroll.svg',
+          to: 'trackpad_horizontal_scroll.svg',
+        },
       ],
     }),
   ],

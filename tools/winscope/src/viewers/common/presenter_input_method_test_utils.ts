@@ -280,11 +280,12 @@ export function executePresenterInputMethodTests(
     function setUpPresenter(traceTypes: TraceType[]) {
       traceTypes.forEach((traceType) => {
         const trace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(traceType)
           .setEntries([assertDefined(entries.get(traceType))])
           .setFrame(0, 0)
           .build();
 
-        traces.setTrace(traceType, trace);
+        traces.addTrace(trace);
       });
       presenter = createPresenter(traces);
 
@@ -294,10 +295,11 @@ export function executePresenterInputMethodTests(
     }
 
     function createPresenter(traces: Traces): PresenterInputMethod {
+      const trace = assertDefined(traces.getTrace(imeTraceType));
       return new PresenterInputMethod(
+        trace,
         traces,
         new InMemoryStorage(),
-        [imeTraceType],
         (newData: ImeUiData) => {
           uiData = newData;
         },

@@ -66,6 +66,7 @@ export class ParserInputMethodManagerService extends AbstractParser<HierarchyTre
     let entryProto = await Utils.queryEntry(
       this.traceProcessor,
       this.getTableName(),
+      this.entryIndexToRowIdMap,
       index,
     );
     entryProto = this.protoTransformer.transform(entryProto);

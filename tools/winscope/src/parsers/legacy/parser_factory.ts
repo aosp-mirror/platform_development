@@ -30,7 +30,7 @@ import {ParserSurfaceFlinger} from 'parsers/surface_flinger/legacy/parser_surfac
 import {ParserTransactions} from 'parsers/transactions/legacy/parser_transactions';
 import {ParserTransitionsShell} from 'parsers/transitions/legacy/parser_transitions_shell';
 import {ParserTransitionsWm} from 'parsers/transitions/legacy/parser_transitions_wm';
-import {ParserViewCapture} from 'parsers/view_capture/parser_view_capture';
+import {ParserViewCapture} from 'parsers/view_capture/legacy/parser_view_capture';
 import {ParserWindowManager} from 'parsers/window_manager/parser_window_manager';
 import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
