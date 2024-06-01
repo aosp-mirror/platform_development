@@ -13,12 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOption, UserOptions} from 'viewers/common/user_options';
@@ -30,11 +38,14 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   template: `
     <div class="view-header">
       <div class="title-filter">
-        <h2 class="properties-title mat-title" [class.padded-title]="hasUserOptions()">{{title.toUpperCase()}}</h2>
+        <collapsible-section-title
+          class="properties-title"
+          [class.padded-title]="hasUserOptions()"
+          [title]="title"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
 
         <mat-form-field *ngIf="showFilter" (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
-
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
@@ -54,14 +65,8 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
 
     <mat-divider></mat-divider>
 
-    <ng-container *ngIf="showSurfaceFlingerPropertyGroups() || showViewCaptureFormat()">
-      <surface-flinger-property-groups
-        *ngIf="showSurfaceFlingerPropertyGroups()"
-        class="property-groups"
-        [properties]="curatedProperties"></surface-flinger-property-groups>
-
+    <ng-container *ngIf="showViewCaptureFormat()">
       <view-capture-property-groups
-        *ngIf="showViewCaptureFormat()"
         class="property-groups"
         [properties]="curatedProperties"></view-capture-property-groups>
 
@@ -69,10 +74,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
     </ng-container>
 
     <div *ngIf="showPropertiesTree()" class="properties-content">
-      <h3 *ngIf="isProtoDump" class="properties-dump-title mat-title">
-        PROTO DUMP
-      </h3>
-
       <div class="tree-wrapper">
         <tree-view
           [node]="propertiesTree"
@@ -100,10 +101,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         justify-content: space-between;
       }
 
-      .mat-title {
-        padding-top: 16px;
-      }
-
       .padded-title {
         padding-bottom: 16px;
       }
@@ -115,15 +112,14 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         column-gap: 10px;
       }
 
+      .property-groups {
+        overflow-y: auto;
+      }
+
       .properties-content {
         flex: 1;
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
-      }
-
-      .property-groups {
-        flex: 2;
         overflow-y: auto;
       }
 
@@ -139,6 +135,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   ],
 })
 export class PropertiesComponent {
+  CollapsibleSectionType = CollapsibleSectionType;
   objectKeys = Object.keys;
   filterString = '';
 
@@ -153,6 +150,8 @@ export class PropertiesComponent {
   @Input() isProtoDump = false;
   @Input() traceType: TraceType | undefined;
   @Input() store: PersistentStore | undefined;
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -196,14 +195,6 @@ export class PropertiesComponent {
       // Todo: Highlight Inline in formatted ViewCapture Properties Component.
       !this.userOptions['showDiff']?.enabled &&
       this.curatedProperties !== undefined
-    );
-  }
-
-  showSurfaceFlingerPropertyGroups(): boolean {
-    return (
-      !!this.curatedProperties &&
-      this.traceType === TraceType.SURFACE_FLINGER &&
-      this.displayPropertyGroups
     );
   }
 

@@ -122,18 +122,27 @@ fn diff(a: &impl AsRef<Path>, b: &impl AsRef<Path>, root: &impl AsRef<Path>) -> 
         .output()?)
 }
 
-pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
-    let output = Command::new("/usr/bin/bash")
-        .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-userdebug && m cargo_embargo bpfmt"])
-        .current_dir(repo_root)
-        .output()
-        .context("Failed to build cargo embargo and bpfmt")?;
-    if !output.status.success() {
-        return Err(anyhow!(
-            "Failed to build cargo embargo and bpfmt.\nstdout:\n{}\nstderr:\n{}",
-            from_utf8(&output.stdout)?,
-            from_utf8(&output.stderr)?
-        ));
+pub fn maybe_build_cargo_embargo(repo_root: &impl AsRef<Path>, force_rebuild: bool) -> Result<()> {
+    if !force_rebuild
+        && repo_root.as_ref().join("out/host/linux-x86/bin/cargo_embargo").exists()
+        && repo_root.as_ref().join("out/host/linux-x86/bin/bpfmt").exists()
+    {
+        Ok(())
+    } else {
+        println!("Rebuilding cargo_embargo");
+        build_cargo_embargo(repo_root)
     }
-    Ok(())
+}
+
+pub fn build_cargo_embargo(repo_root: &impl AsRef<Path>) -> Result<()> {
+    let status = Command::new("/usr/bin/bash")
+        .args(["-c", "source build/envsetup.sh && lunch aosp_cf_x86_64_phone-trunk_staging-eng && m cargo_embargo bpfmt"])
+        .current_dir(repo_root).spawn().context("Failed to spawn build of cargo embargo and bpfmt")?.wait().context("Failed to wait on child process building cargo embargo and bpfmt")?;
+    match status.success() {
+        true => Ok(()),
+        false => Err(anyhow!(
+            "Building cargo embargo and bpfmt failed with exit code {}",
+            status.code().map(|code| { format!("{}", code) }).unwrap_or("(unknown)".to_string())
+        )),
+    }
 }

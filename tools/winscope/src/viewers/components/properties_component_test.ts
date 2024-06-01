@@ -27,9 +27,14 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TraceType} from 'trace/trace_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -52,6 +57,7 @@ describe('PropertiesComponent', () => {
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
+        CollapsibleSectionTitleComponent,
       ],
       imports: [
         CommonModule,
@@ -79,6 +85,7 @@ describe('PropertiesComponent', () => {
         isUnavailable: false,
       },
     };
+    component.traceType = TraceType.SURFACE_FLINGER;
 
     fixture.detectChanges();
   });
@@ -111,14 +118,26 @@ describe('PropertiesComponent', () => {
   });
 
   it('updates tree on user option checkbox change', () => {
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-
-    const spy = spyOn(component, 'onUserOptionChange');
-    (box as HTMLInputElement).checked = true;
-    (box as HTMLInputElement).dispatchEvent(new Event('click'));
+    let options: UserOptions | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.PropertiesUserOptionsChange,
+      (event) => {
+        options = (event as CustomEvent).detail.userOptions;
+      },
+    );
+    const box = assertDefined(
+      htmlElement.querySelector('.view-controls input'),
+    ) as HTMLInputElement;
+    box.checked = true;
+    box.click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(options).toEqual({
+      showDiff: {
+        name: 'Show diff',
+        enabled: true,
+        isUnavailable: false,
+      },
+    });
   });
 
   it('renders tree in proto dump upon selected item', () => {
@@ -134,15 +153,57 @@ describe('PropertiesComponent', () => {
     expect(treeEl).toBeTruthy();
   });
 
-  it('handles change in filter', () => {
-    const inputEl = htmlElement.querySelector('.title-filter input');
-    expect(inputEl).toBeTruthy();
+  it('handles node click', () => {
+    const tree = new PropertyTreeBuilder()
+      .setRootId('selectedItem')
+      .setName('property')
+      .setValue(null)
+      .build();
+    tree.setIsRoot(true);
+    component.propertiesTree = UiPropertyTreeNode.from(tree);
+    fixture.detectChanges();
 
-    const spy = spyOn(component, 'filterTree');
-    (inputEl as HTMLInputElement).value = 'Root';
-    (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
+    let highlightedItem: string | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.HighlightedPropertyChange,
+      (event) => {
+        highlightedItem = (event as CustomEvent).detail.id;
+      },
+    );
+
+    const node = assertDefined(
+      htmlElement.querySelector('tree-node'),
+    ) as HTMLElement;
+    node.click();
+    fixture.detectChanges();
+    expect(highlightedItem).toEqual(tree.id);
+  });
+
+  it('handles change in filter', () => {
+    let filterString: string | undefined;
+    htmlElement.addEventListener(
+      ViewerEvents.PropertiesFilterChange,
+      (event) => {
+        filterString = (event as CustomEvent).detail.filterString;
+      },
+    );
+    const inputEl = assertDefined(
+      htmlElement.querySelector('.title-filter input'),
+    ) as HTMLInputElement;
+
+    inputEl.value = 'Root';
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(filterString).toBe('Root');
+  });
+
+  it('handles collapse button click', () => {
+    const spy = spyOn(component.collapseButtonClicked, 'emit');
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-    expect(component.filterString).toBe('Root');
   });
 });

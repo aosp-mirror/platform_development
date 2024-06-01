@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
 import {TRACE_INFO} from 'trace/trace_info';
@@ -30,7 +37,10 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   template: `
     <div class="view-header">
       <div class="title-filter">
-        <h2 class="hierarchy-title mat-title">HIERARCHY</h2>
+        <collapsible-section-title
+          class="hierarchy-title"
+          title="HIERARCHY"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
         <mat-form-field (keydown.enter)="$event.target.blur()">
           <mat-label>Filter...</mat-label>
           <input
@@ -83,7 +93,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         (pinnedItemChange)="onPinnedItemChange($event)"
         (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
 
-      <div class="children">
+      <div class="subtrees">
         <tree-view
           *ngFor="let subtree of subtrees; trackBy: trackById"
           class="childrenTree"
@@ -102,10 +112,6 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   `,
   styles: [
     `
-      .mat-title {
-        padding-top: 16px;
-      }
-
       .view-header {
         display: flex;
         flex-direction: column;
@@ -161,6 +167,8 @@ export class HierarchyComponent {
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 

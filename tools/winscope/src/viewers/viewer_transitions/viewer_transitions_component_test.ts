@@ -36,6 +36,8 @@ import {Transition} from 'trace/transition';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
@@ -60,6 +62,8 @@ describe('ViewerTransitionsComponent', () => {
         TreeNodeComponent,
         PropertyTreeNodeDataViewComponent,
         PropertiesComponent,
+        CollapsedSectionsComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -142,7 +146,7 @@ describe('ViewerTransitionsComponent', () => {
     ])) as Parser<PropertyTreeNode>;
     const trace = Trace.fromParser(parser);
     const traces = new Traces();
-    traces.setTrace(TraceType.TRANSITION, trace);
+    traces.addTrace(trace);
 
     let treeView = assertDefined(
       htmlElement.querySelector('.properties-view'),
@@ -200,6 +204,19 @@ describe('ViewerTransitionsComponent', () => {
     logTimestampButton.click();
 
     expect(timestamp).toEqual('20ns');
+  });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.properties-view',
+      'SELECTED TRANSITION',
+    );
   });
 });
 

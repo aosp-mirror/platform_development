@@ -61,7 +61,7 @@ export class TimelineData {
         return;
       }
 
-      this.traces.setTrace(type, trace);
+      this.traces.addTrace(trace);
     });
 
     const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
@@ -152,7 +152,7 @@ export class TimelineData {
     this.activeTrace = trace;
   }
 
-  getActiveViewTrace() {
+  getActiveTrace() {
     return this.activeTrace;
   }
 
