@@ -116,7 +116,7 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: VIEW_CAPTURE_ICON,
     color: '#137333',
     downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
+    legacyExt: '.winscope',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',

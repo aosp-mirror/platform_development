@@ -97,16 +97,52 @@ export class LoadedParsers {
   }
 
   async makeZipArchive(): Promise<Blob> {
-    const archiveFiles: File[] = [];
+    const outputFilesSoFar = new Set<File>();
+    const outputFilenameToFiles = new Map<string, File[]>();
+
+    const tryPushOutputFile = (file: File, filename: string) => {
+      // Remove duplicates because some parsers (e.g. view capture) could share the same file
+      if (outputFilesSoFar.has(file)) {
+        return;
+      }
+      outputFilesSoFar.add(file);
+
+      if (outputFilenameToFiles.get(filename) === undefined) {
+        outputFilenameToFiles.set(filename, []);
+      }
+      assertDefined(outputFilenameToFiles.get(filename)).push(file);
+    };
+
+    const makeArchiveFile = (
+      filename: string,
+      file: File,
+      clashCount: number,
+    ): File => {
+      if (clashCount === 0) {
+        return new File([file], filename);
+      }
+
+      const filenameWithoutExt =
+        FileUtils.removeExtensionFromFilename(filename);
+      const extension = FileUtils.getFileExtension(filename);
+
+      if (extension === undefined) {
+        return new File([file], `${filename} (${clashCount})`);
+      }
+
+      return new File(
+        [file],
+        `${filenameWithoutExt} (${clashCount}).${extension}`,
+      );
+    };
 
     if (this.perfettoParsers.length > 0) {
       const file: TraceFile = this.perfettoParsers.values().next().value.file;
-      let filenameInArchive = FileUtils.removeDirFromFileName(file.file.name);
-      if (FileUtils.getFileExtension(file.file) === undefined) {
-        filenameInArchive += '.perfetto-trace';
+      let outputFilename = FileUtils.removeDirFromFileName(file.file.name);
+      if (FileUtils.getFileExtension(file.file.name) === undefined) {
+        outputFilename += '.perfetto-trace';
       }
-      const archiveFile = new File([file.file], filenameInArchive);
-      archiveFiles.push(archiveFile);
+      tryPushOutputFile(file.file, outputFilename);
     }
 
     this.legacyParsers.forEach(({file, parser}) => {
@@ -115,21 +151,23 @@ export class LoadedParsers {
         TRACE_INFO[traceType].downloadArchiveDir.length > 0
           ? TRACE_INFO[traceType].downloadArchiveDir + '/'
           : '';
-      let filenameInArchive =
+      let outputFilename =
         archiveDir + FileUtils.removeDirFromFileName(file.file.name);
-      if (FileUtils.getFileExtension(file.file) === undefined) {
-        filenameInArchive += TRACE_INFO[traceType].legacyExt;
+      if (FileUtils.getFileExtension(file.file.name) === undefined) {
+        outputFilename += TRACE_INFO[traceType].legacyExt;
       }
-      const archiveFile = new File([file.file], filenameInArchive);
-      archiveFiles.push(archiveFile);
+      tryPushOutputFile(file.file, outputFilename);
     });
 
-    // Remove duplicates because some traces (e.g. view capture) could share the same file
-    const uniqueArchiveFiles = archiveFiles.filter(
-      (file, index, fileList) => fileList.indexOf(file) === index,
-    );
+    const archiveFiles = [...outputFilenameToFiles.entries()]
+      .map(([filename, files]) => {
+        return files.map((file, clashCount) =>
+          makeArchiveFile(filename, file, clashCount),
+        );
+      })
+      .flat();
 
-    return await FileUtils.createZipArchive(uniqueArchiveFiles);
+    return await FileUtils.createZipArchive(archiveFiles);
   }
 
   getLatestRealToMonotonicOffset(
