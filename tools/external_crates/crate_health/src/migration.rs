@@ -22,21 +22,16 @@ use copy_dir::copy_dir;
 use glob::glob;
 
 use crate::{
-    ensure_exists_and_empty, most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate,
-    CrateCollection, Migratable, NameAndVersionMap, VersionMatch,
+    most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate, CrateCollection,
+    Migratable, NameAndVersionMap, VersionMatch,
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
-    &["*.bp", "cargo_embargo.json", "patches", "METADATA"];
+    &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.root().join(
-            self.dest
-                .customization_dir()
-                .ok_or(anyhow!("No customization dir for {}", self.dest.path().display()))?,
-        );
-        ensure_exists_and_empty(&dest_dir_absolute)?;
+        let dest_dir_absolute = self.dest.path();
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
@@ -45,7 +40,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     .ok_or(anyhow!("Failed to convert path {} to str", full_pattern.display()))?,
             )? {
                 let entry = entry?;
-                let mut filename = entry
+                let filename = entry
                     .file_name()
                     .context(format!("Failed to get file name for {}", entry.display()))?
                     .to_os_string();
@@ -56,10 +51,9 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                         dest_dir_absolute.display()
                     ))?;
                 } else {
-                    if let Some(extension) = entry.extension() {
-                        if extension == "bp" {
-                            filename.push(".disabled");
-                        }
+                    let dest_file = dest_dir_absolute.join(&filename);
+                    if dest_file.exists() {
+                        return Err(anyhow!("Destination file {} exists", dest_file.display()));
                     }
                     copy(&entry, dest_dir_absolute.join(filename)).context(format!(
                         "Failed to copy {} to {}",
