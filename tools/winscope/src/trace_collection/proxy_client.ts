@@ -78,7 +78,9 @@ class ProxyRequest {
           resolve();
         } else if (this.status === 200) {
           if (
-            this.getResponseHeader('Winscope-Proxy-Version') !== client.VERSION
+            !client.areVersionsCompatible(
+              this.getResponseHeader('Winscope-Proxy-Version'),
+            )
           ) {
             client.setState(ProxyState.INVALID_VERSION);
             resolve();
@@ -302,7 +304,7 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '1.2';
+  readonly VERSION = '2.1.0';
   state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
@@ -372,6 +374,27 @@ export class ProxyClient {
       await proxyRequest.fetchFiles(this.selectedDevice, adbParams);
       progressCallback((100 * (idx + 1)) / files.length);
     }
+  }
+
+  areVersionsCompatible(proxyVersion: string | null): boolean {
+    if (!proxyVersion) return false;
+    const [proxyMajor, proxyMinor, proxyPatch] = proxyVersion
+      .split('.')
+      .map((s) => Number(s));
+    const [clientMajor, clientMinor, clientPatch] = this.VERSION.split('.').map(
+      (s) => Number(s),
+    );
+
+    if (proxyMajor !== clientMajor) {
+      return false;
+    }
+
+    if (proxyMinor === clientMinor) {
+      // Check patch number to ensure user has deployed latest bug fixes
+      return proxyPatch >= clientPatch;
+    }
+
+    return proxyMinor > clientMinor;
   }
 }
 

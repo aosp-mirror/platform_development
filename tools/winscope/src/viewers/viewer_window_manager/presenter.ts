@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {TimestampUtils} from 'common/timestamp_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -111,11 +109,12 @@ export class Presenter {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
-    this.trace = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+    this.trace = trace;
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
     this.copyUiDataAndNotifyView();
@@ -131,9 +130,7 @@ export class Presenter {
         );
         this.currentHierarchyTree = await entry?.getValue();
         if (entry) {
-          this.currentHierarchyTreeName = TimestampUtils.format(
-            entry.getTimestamp(),
-          );
+          this.currentHierarchyTreeName = entry.getTimestamp().format();
         }
 
         this.previousEntry =
@@ -153,7 +150,7 @@ export class Presenter {
             this.previousEntry == null;
         }
 
-        this.uiData = new UiData();
+        this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 

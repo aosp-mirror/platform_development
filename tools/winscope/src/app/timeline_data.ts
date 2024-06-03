@@ -14,40 +14,42 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {
-  INVALID_TIME_NS,
-  TimeRange,
-  Timestamp,
-  TimestampType,
-} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
+import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
 export class TimelineData {
   private traces = new Traces();
   private screenRecordingVideo?: Blob;
-  private timestampType?: TimestampType;
-  private firstEntry?: TraceEntry<{}>;
-  private lastEntry?: TraceEntry<{}>;
+  private firstEntry?: TraceEntry<object>;
+  private lastEntry?: TraceEntry<object>;
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
   private explicitlySetZoomRange?: TimeRange;
   private lastReturnedCurrentPosition?: TracePosition;
   private lastReturnedFullTimeRange?: TimeRange;
   private lastReturnedCurrentEntries = new Map<
-    TraceType,
+    Trace<object>,
     TraceEntry<any> | undefined
   >();
-  private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
+  private activeTrace: Trace<object> | undefined;
+  private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
+  private timestampConverter: ComponentTimestampConverter | undefined;
 
-  initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
+  async initialize(
+    traces: Traces,
+    screenRecordingVideo: Blob | undefined,
+    timestampConverter: ComponentTimestampConverter,
+  ) {
     this.clear();
+
+    this.timestampConverter = timestampConverter;
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
@@ -59,25 +61,41 @@ export class TimelineData {
         return;
       }
 
-      this.traces.setTrace(type, trace);
+      this.traces.addTrace(trace);
     });
+
+    const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
+    if (transitionTrace) {
+      this.transitions = await Promise.all(
+        transitionTrace.mapEntry(async (entry) => await entry.getValue()),
+      );
+    }
 
     this.screenRecordingVideo = screenRecordingVideo;
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
-    this.timestampType = this.firstEntry?.getTimestamp().getType();
 
-    const types = traces
-      .mapTrace((trace, type) => type)
+    const tracesSortedByDisplayOrder = traces
+      .mapTrace((trace) => trace)
       .filter(
-        (type) =>
-          TraceTypeUtils.isTraceTypeWithViewer(type) &&
-          type !== TraceType.SCREEN_RECORDING,
+        (trace) =>
+          TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
+          trace.type !== TraceType.SCREEN_RECORDING,
       )
-      .sort(TraceTypeUtils.compareByDisplayOrder);
-    if (types.length > 0) {
-      this.setActiveViewTraceTypes([types[0]]);
+      .sort((a, b) => {
+        return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
+      });
+    if (tracesSortedByDisplayOrder.length > 0) {
+      this.setActiveTrace(tracesSortedByDisplayOrder[0]);
     }
+  }
+
+  getTransitions(): PropertyTreeNode[] {
+    return this.transitions;
+  }
+
+  getTimestampConverter(): ComponentTimestampConverter | undefined {
+    return this.timestampConverter;
   }
 
   getCurrentPosition(): TracePosition | undefined {
@@ -90,7 +108,7 @@ export class TimelineData {
       currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
     }
 
-    const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
+    const firstActiveEntry = this.getFirstEntryOfActiveViewTrace();
     if (firstActiveEntry) {
       currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
@@ -114,33 +132,15 @@ export class TimelineData {
       return;
     }
 
-    if (position) {
-      if (this.timestampType === undefined) {
-        throw Error(
-          'Attempted to set explicit position but no timestamp type is available',
-        );
-      }
-      if (position.timestamp.getType() !== this.timestampType) {
-        throw Error(
-          'Attempted to set explicit position with incompatible timestamp type',
-        );
-      }
-    }
-
     this.explicitlySetPosition = position;
   }
 
   makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
-    let trace: Trace<{}> | undefined;
-    if (this.activeViewTraceTypes.length > 0) {
-      trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
-    }
-
-    if (!trace) {
+    if (!this.activeTrace) {
       return TracePosition.fromTimestamp(timestamp);
     }
 
-    const entry = trace.findClosestEntry(timestamp);
+    const entry = this.activeTrace.findClosestEntry(timestamp);
     if (!entry) {
       return TracePosition.fromTimestamp(timestamp);
     }
@@ -148,12 +148,12 @@ export class TimelineData {
     return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
-  setActiveViewTraceTypes(types: TraceType[]) {
-    this.activeViewTraceTypes = types;
+  setActiveTrace(trace: Trace<object>) {
+    this.activeTrace = trace;
   }
 
-  getTimestampType(): TimestampType | undefined {
-    return this.timestampType;
+  getActiveTrace() {
+    return this.activeTrace;
   }
 
   getFullTimeRange(): TimeRange {
@@ -161,10 +161,10 @@ export class TimelineData {
       throw Error('Trying to get full time range when there are no timestamps');
     }
 
-    const fullTimeRange = {
-      from: this.firstEntry.getTimestamp(),
-      to: this.lastEntry.getTimestamp(),
-    };
+    const fullTimeRange = new TimeRange(
+      this.firstEntry.getTimestamp(),
+      this.lastEntry.getTimestamp(),
+    );
 
     if (
       this.lastReturnedFullTimeRange === undefined ||
@@ -226,8 +226,8 @@ export class TimelineData {
     }
 
     return ScreenRecordingUtils.timestampToVideoTimeSeconds(
-      firstTimestamp,
-      entry.getTimestamp(),
+      firstTimestamp.getValueNs(),
+      entry.getTimestamp().getValueNs(),
     );
   }
 
@@ -243,13 +243,12 @@ export class TimelineData {
     );
   }
 
-  getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = this.traces.getTrace(type);
-    if (!trace || trace.lengthEntries === 0) {
+  getPreviousEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
+    if (trace.lengthEntries === 0) {
       return undefined;
     }
 
-    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
+    const currentIndex = this.findCurrentEntryFor(trace)?.getIndex();
     if (currentIndex === undefined || currentIndex === 0) {
       return undefined;
     }
@@ -257,13 +256,12 @@ export class TimelineData {
     return trace.getEntry(currentIndex - 1);
   }
 
-  getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = this.traces.getTrace(type);
-    if (!trace || trace.lengthEntries === 0) {
+  getNextEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
+    if (trace.lengthEntries === 0) {
       return undefined;
     }
 
-    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
+    const currentIndex = this.findCurrentEntryFor(trace)?.getIndex();
     if (currentIndex === undefined) {
       return trace.getEntry(0);
     }
@@ -275,36 +273,33 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
-  findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
+  findCurrentEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {
       return undefined;
     }
 
-    const entry = TraceEntryFinder.findCorrespondingEntry(
-      assertDefined(this.traces.getTrace(type)),
-      position,
-    );
+    const entry = TraceEntryFinder.findCorrespondingEntry(trace, position);
 
     if (
-      this.lastReturnedCurrentEntries.get(type)?.getIndex() !==
+      this.lastReturnedCurrentEntries.get(trace)?.getIndex() !==
       entry?.getIndex()
     ) {
-      this.lastReturnedCurrentEntries.set(type, entry);
+      this.lastReturnedCurrentEntries.set(trace, entry);
     }
 
-    return this.lastReturnedCurrentEntries.get(type);
+    return this.lastReturnedCurrentEntries.get(trace);
   }
 
-  moveToPreviousEntryFor(type: TraceType) {
-    const prevEntry = this.getPreviousEntryFor(type);
+  moveToPreviousEntryFor(trace: Trace<object>) {
+    const prevEntry = this.getPreviousEntryFor(trace);
     if (prevEntry !== undefined) {
       this.setPosition(TracePosition.fromTraceEntry(prevEntry));
     }
   }
 
-  moveToNextEntryFor(type: TraceType) {
-    const nextEntry = this.getNextEntryFor(type);
+  moveToNextEntryFor(trace: Trace<object>) {
+    const nextEntry = this.getNextEntryFor(trace);
     if (nextEntry !== undefined) {
       this.setPosition(TracePosition.fromTraceEntry(nextEntry));
     }
@@ -315,13 +310,12 @@ export class TimelineData {
     this.firstEntry = undefined;
     this.lastEntry = undefined;
     this.explicitlySetPosition = undefined;
-    this.timestampType = undefined;
     this.explicitlySetSelection = undefined;
     this.lastReturnedCurrentPosition = undefined;
     this.screenRecordingVideo = undefined;
     this.lastReturnedFullTimeRange = undefined;
     this.lastReturnedCurrentEntries.clear();
-    this.activeViewTraceTypes = [];
+    this.activeTrace = undefined;
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
@@ -356,18 +350,10 @@ export class TimelineData {
     return last;
   }
 
-  private getFirstEntryOfActiveViewTraces(): TraceEntry<{}> | undefined {
-    const activeEntries = this.activeViewTraceTypes
-      .filter((it) => this.traces.getTrace(it) !== undefined)
-      .map((traceType) => assertDefined(this.traces.getTrace(traceType)))
-      .filter((trace) => trace.lengthEntries > 0)
-      .map((trace) => trace.getEntry(0))
-      .sort((a, b) => {
-        return TimestampUtils.compareFn(a.getTimestamp(), b.getTimestamp());
-      });
-    if (activeEntries.length === 0) {
+  private getFirstEntryOfActiveViewTrace(): TraceEntry<{}> | undefined {
+    if (!this.activeTrace || this.activeTrace.lengthEntries === 0) {
       return undefined;
     }
-    return activeEntries[0];
+    return this.activeTrace.getEntry(0);
   }
 }

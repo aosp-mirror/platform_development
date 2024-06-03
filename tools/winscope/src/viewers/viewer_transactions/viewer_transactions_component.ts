@@ -25,6 +25,8 @@ import {
 import {MatSelectChange} from '@angular/material/select';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {CollapsibleSections} from 'viewers/common/collapsible_sections';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
@@ -37,10 +39,15 @@ import {UiData} from './ui_data';
   selector: 'viewer-transactions',
   template: `
     <div class="card-grid">
-      <div class="entries">
+      <collapsed-sections
+        [class.empty]="sections.areAllSectionsExpanded()"
+        [sections]="sections"
+        (sectionChange)="sections.onCollapseStateChange($event, false)">
+      </collapsed-sections>
+      <div class="log-view entries">
         <div class="filters">
           <div class="time"></div>
-          <div class="id">
+          <div class="id transaction-id">
             <select-with-filter
               label="TX ID"
               [options]="uiData.allTransactionIds"
@@ -80,7 +87,7 @@ import {UiData} from './ui_data';
               (selectChange)="onTypeFilterChanged($event)">
             </select-with-filter>
           </div>
-          <div class="id">
+          <div class="id layer-or-display-id">
             <select-with-filter
               label="LAYER/DISP ID"
               outerFilterWidth="125"
@@ -123,7 +130,7 @@ import {UiData} from './ui_data';
             <div class="time">
               <button
                 mat-button
-                [color]="isCurrentEntry(i) ? 'secondary' : 'primary'"
+                color="primary"
                 (click)="onTimestampClicked(entry.time)">
                 {{ entry.time.formattedValue() }}
               </button>
@@ -153,28 +160,21 @@ import {UiData} from './ui_data';
         </cdk-virtual-scroll-viewport>
       </div>
 
-      <mat-divider [vertical]="true"></mat-divider>
-
       <properties-view
         *ngIf="uiData.currentPropertiesTree"
         class="properties-view"
-        title="PROPERTIES - PROTO DUMP"
+        [title]="propertiesTitle"
         [showFilter]="false"
         [userOptions]="uiData.propertiesUserOptions"
         [propertiesTree]="uiData.currentPropertiesTree"
         [traceType]="${TraceType.TRANSACTIONS}"
-        [isProtoDump]="false"></properties-view>
+        [isProtoDump]="false"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
   `,
   styles: [
     `
-      .entries {
-        flex: 3;
-        display: flex;
-        flex-direction: column;
-        padding: 16px;
-      }
-
       .properties-view {
         flex: 1;
       }
@@ -242,12 +242,6 @@ import {UiData} from './ui_data';
         height: 65%;
         width: fit-content;
       }
-
-      ::ng-deep .mat-select-panel-wrap {
-        overflow: scroll;
-        overflow-x: hidden;
-        max-height: 75vh;
-      }
     `,
     selectedElementStyle,
     currentElementStyle,
@@ -259,6 +253,15 @@ class ViewerTransactionsComponent {
   objectKeys = Object.keys;
   uiData: UiData = UiData.EMPTY;
   private lastClicked = '';
+  propertiesTitle = 'PROPERTIES - PROTO DUMP';
+  CollapsibleSectionType = CollapsibleSectionType;
+  sections = new CollapsibleSections([
+    {
+      type: CollapsibleSectionType.PROPERTIES,
+      label: this.propertiesTitle,
+      isCollapsed: false,
+    },
+  ]);
 
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;
@@ -308,17 +311,6 @@ class ViewerTransactionsComponent {
 
   onEntryClicked(index: number) {
     this.emitEvent(Events.EntryClicked, index);
-  }
-
-  onUserOptionChange() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.PropertiesUserOptionsChange,
-      {
-        bubbles: true,
-        detail: {userOptions: this.uiData.propertiesUserOptions},
-      },
-    );
-    this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   onGoToCurrentTimeClick() {

@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -34,7 +34,7 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 describe('PresenterSurfaceFlinger', () => {
-  let trace: Trace<HierarchyTreeNode>;
+  let traceSf: Trace<HierarchyTreeNode>;
   let positionUpdate: TracePositionUpdate;
   let secondPositionUpdate: TracePositionUpdate;
   let positionUpdateMultiDisplayEntry: TracePositionUpdate;
@@ -43,7 +43,8 @@ describe('PresenterSurfaceFlinger', () => {
   let selectedTree: UiHierarchyTreeNode;
 
   beforeAll(async () => {
-    trace = new TraceBuilder<HierarchyTreeNode>()
+    traceSf = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
       .setEntries([
         await UnitTestUtils.getLayerTraceEntry(0),
         await UnitTestUtils.getMultiDisplayLayerTraceEntry(),
@@ -51,13 +52,13 @@ describe('PresenterSurfaceFlinger', () => {
       ])
       .build();
 
-    const firstEntry = trace.getEntry(0);
+    const firstEntry = traceSf.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
     positionUpdateMultiDisplayEntry = TracePositionUpdate.fromTraceEntry(
-      trace.getEntry(1),
+      traceSf.getEntry(1),
     );
     secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
-      trace.getEntry(2),
+      traceSf.getEntry(2),
     );
 
     const firstEntryDataTree = await firstEntry.getValue();
@@ -75,17 +76,18 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   beforeEach(() => {
-    presenter = createPresenter(trace);
+    presenter = createPresenter(traceSf);
   });
 
   it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
       .setEntries([])
       .build();
     const presenter = createPresenter(emptyTrace);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n),
+      TimestampConverterUtils.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
@@ -426,25 +428,27 @@ describe('PresenterSurfaceFlinger', () => {
   });
 
   it('updates view capture package names', async () => {
-    const vcTrace = new TraceBuilder<HierarchyTreeNode>()
+    const traceVc = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.VIEW_CAPTURE)
       .setEntries([await UnitTestUtils.getViewCaptureEntry()])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'com.google.android.apps.nexuslauncher',
-      )
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'com.google.android.apps.nexuslauncher',
+        windowName: 'not_used',
+      })
       .build();
     const traces = new Traces();
-    traces.setTrace(TraceType.SURFACE_FLINGER, trace);
-    traces.setTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY, vcTrace);
+    traces.addTrace(traceSf);
+    traces.addTrace(traceVc);
     const presenter = new Presenter(
+      traceSf,
       traces,
-      new MockStorage(),
+      new InMemoryStorage(),
       (newData: UiData) => {
         uiData = newData;
       },
     );
 
-    const firstEntry = trace.getEntry(0);
+    const firstEntry = traceSf.getEntry(0);
     const positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
 
     await presenter.onAppEvent(positionUpdate);
@@ -453,9 +457,14 @@ describe('PresenterSurfaceFlinger', () => {
 
   function createPresenter(trace: Trace<HierarchyTreeNode>): Presenter {
     const traces = new Traces();
-    traces.setTrace(TraceType.SURFACE_FLINGER, trace);
-    return new Presenter(traces, new MockStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    traces.addTrace(trace);
+    return new Presenter(
+      trace,
+      traces,
+      new InMemoryStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      },
+    );
   }
 });

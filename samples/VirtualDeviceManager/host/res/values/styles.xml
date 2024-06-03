@@ -1,11 +1,13 @@
 <resources>
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    </style>
     <style name="BottomBarTheme" parent="@style/Theme.MaterialComponents.Light">
         <item name="colorPrimary">@android:color/black</item>
     </style>
     <style name="SliderTheme" parent="@style/Theme.MaterialComponents.Light">
         <item name="colorPrimary">?attr/colorSecondary</item>
     </style>
-    <style name="Theme.AppCompat.Light.NoActionBar.FullScreen" parent="@style/Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.FullScreen">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowFullscreen">true</item>

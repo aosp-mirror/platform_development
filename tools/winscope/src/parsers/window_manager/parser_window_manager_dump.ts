@@ -15,9 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {Timestamp} from 'common/time';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {com} from 'protos/windowmanager/latest/static';
 import {
   CustomQueryParserResultTypeMap,
@@ -43,6 +42,14 @@ class ParserWindowManagerDump extends AbstractParser {
     return undefined;
   }
 
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
   override decodeTrace(
     buffer: Uint8Array,
   ): com.android.server.wm.IWindowManagerServiceDumpProto[] {
@@ -55,28 +62,19 @@ class ParserWindowManagerDump extends AbstractParser {
     // sure that a trace entry can actually be created from the decoded proto.
     // If the trace entry creation fails, an exception is thrown and the parser
     // will be considered unsuited for this input data.
-    this.processDecodedEntry(
-      0,
-      TimestampType.ELAPSED /*irrelevant for dump*/,
-      entryProto,
-    );
+    this.processDecodedEntry(0, entryProto);
 
     return [entryProto];
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    entryProto: any,
-  ): undefined | Timestamp {
-    if (NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, 0n)) {
-      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
-    }
-    return undefined;
+  protected override getTimestamp(
+    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
+  ): Timestamp {
+    return this.timestampConverter.makeZeroTimestamp();
   }
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
   ): HierarchyTreeNode {
     return this.makeHierarchyTree(entryProto);

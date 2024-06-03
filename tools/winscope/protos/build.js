@@ -15,7 +15,7 @@
  */
 const {exec} = require('child_process');
 
-const ANDROID_BUILD_TOP = __dirname + '/../../../../../main';
+const ANDROID_BUILD_TOP = __dirname + '/../../../../';
 const WINSCOPE_TOP = __dirname + '/..';
 const PERFETTO_TOP = ANDROID_BUILD_TOP + '/external/perfetto';
 const OUT_TOP = __dirname + '/../deps_build/protos';
@@ -29,6 +29,9 @@ async function build() {
         // IME
         buildProtos([
             '../../../../frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto'
+        ], 'ime/udc'),
+        buildProtos([
+            'ime/latest/wrapper.proto',
         ], 'ime/latest'),
 
         // ProtoLog
@@ -64,6 +67,9 @@ async function build() {
         // ViewCapture
         buildProtos([
             '../../../../frameworks/libs/systemui/viewcapturelib/src/com/android/app/viewcapture/proto/view_capture.proto'
+        ], 'viewcapture/udc'),
+        buildProtos([
+            'viewcapture/latest/wrapper.proto',
         ], 'viewcapture/latest'),
 
         // WindowManager
@@ -111,6 +117,7 @@ async function buildProtos(protoPaths, outSubdir) {
         'pbjs',
         '--force-long',
         '--target static-module',
+        `--root ${outSubdir.replace('/', '')}`,
         `--out ${outDir}/static.js`,
         `--path ${PERFETTO_TOP}`,
         `--path ${WINSCOPE_TOP}`,

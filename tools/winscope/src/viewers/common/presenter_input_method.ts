@@ -17,7 +17,6 @@
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
-import {TimestampUtils} from 'common/timestamp_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -62,7 +61,6 @@ export abstract class PresenterInputMethod {
   private currentImeEntryTimestamp: string | undefined;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
-  protected readonly dependencies: TraceType[];
   protected uiData: ImeUiData;
   protected highlightedItem = '';
   protected entry: HierarchyTreeNode | undefined;
@@ -103,20 +101,17 @@ export abstract class PresenterInputMethod {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private storage: Storage,
-    dependencies: ImeTraceType[],
     notifyViewCallback: NotifyImeViewCallbackType,
   ) {
-    this.imeTrace = traces.getTrace(
-      dependencies[0],
-    ) as Trace<HierarchyTreeNode>;
+    this.imeTrace = trace;
     this.sfTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
 
-    this.dependencies = dependencies;
     this.notifyViewCallback = notifyViewCallback;
-    this.uiData = new ImeUiData(dependencies);
+    this.uiData = new ImeUiData(this.imeTrace.type as ImeTraceType);
     this.copyUiDataAndNotifyView();
   }
 
@@ -124,7 +119,7 @@ export abstract class PresenterInputMethod {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        this.uiData = new ImeUiData(this.dependencies);
+        this.uiData = new ImeUiData(this.imeTrace.type as ImeTraceType);
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
         this.selectedHierarchyTree = undefined;
@@ -404,9 +399,7 @@ export abstract class PresenterInputMethod {
       return [undefined, undefined, undefined];
     }
 
-    this.currentImeEntryTimestamp = TimestampUtils.format(
-      imeEntry.getTimestamp(),
-    );
+    this.currentImeEntryTimestamp = imeEntry.getTimestamp().format();
 
     if (!this.imeTrace.hasFrameInfo()) {
       return [imeEntry, undefined, undefined];

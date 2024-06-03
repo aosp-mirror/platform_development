@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
@@ -280,11 +280,12 @@ export function executePresenterInputMethodTests(
     function setUpPresenter(traceTypes: TraceType[]) {
       traceTypes.forEach((traceType) => {
         const trace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(traceType)
           .setEntries([assertDefined(entries.get(traceType))])
           .setFrame(0, 0)
           .build();
 
-        traces.setTrace(traceType, trace);
+        traces.addTrace(trace);
       });
       presenter = createPresenter(traces);
 
@@ -294,10 +295,11 @@ export function executePresenterInputMethodTests(
     }
 
     function createPresenter(traces: Traces): PresenterInputMethod {
+      const trace = assertDefined(traces.getTrace(imeTraceType));
       return new PresenterInputMethod(
+        trace,
         traces,
-        new MockStorage(),
-        [imeTraceType],
+        new InMemoryStorage(),
         (newData: ImeUiData) => {
           uiData = newData;
         },

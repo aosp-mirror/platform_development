@@ -14,7 +14,7 @@ PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
 PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
-KNOWN_TAGS = {'LLNDK', 'NDK', 'PLATFORM', 'VENDOR', 'PRODUCT'}
+KNOWN_TAGS = {'APEX', 'LLNDK', 'NDK', 'PLATFORM', 'VENDOR', 'PRODUCT'}
 NON_AOSP_TAGS = {'VENDOR', 'PRODUCT'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
@@ -70,7 +70,7 @@ def tag_to_dir_name(tag):
         return ''
     if tag == 'NDK':
         return 'ndk'
-    if tag == 'PLATFORM':
+    if tag in ('APEX', 'PLATFORM'):
         return 'platform'
     if tag == 'LLNDK':
         return 'vndk'
@@ -177,14 +177,15 @@ def _parse_args():
     """Parse the command line arguments."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', help=argparse.SUPPRESS)
     parser.add_argument('--no-make-lib', action='store_true',
                         help='skip building dumps while creating references')
-    parser.add_argument('-libs', action='append',
+    parser.add_argument('--lib', '-libs', action='append',
+                        dest='libs', metavar='LIB',
                         help='libs to create references for')
-    parser.add_argument('-products', action='append',
+    parser.add_argument('--product', '-products', action='append',
+                        dest='products', metavar='PRODUCT',
                         help='products to create references for')
-    parser.add_argument('-release',
+    parser.add_argument('--release', '-release',
                         help='release configuration to create references for. '
                              'e.g., trunk_staging, next.')
     parser.add_argument('--build-variant', default='userdebug',
@@ -192,37 +193,26 @@ def _parse_args():
     parser.add_argument('--lib-variant', action='append', dest='include_tags',
                         default=[], choices=KNOWN_TAGS,
                         help='library variant to create references for.')
-    parser.add_argument('--compress', action='store_true',
-                        help=argparse.SUPPRESS)
-    parser.add_argument('-ref-dump-dir',
+    parser.add_argument('--ref-dump-dir', '-ref-dump-dir',
                         help='directory to copy reference abi dumps into')
-
     args = parser.parse_args()
-
-    if args.version is not None:
-        parser.error('--version is deprecated. Please specify the version in '
-                     'the reference dump directory path. e.g., '
-                     '-ref-dump-dir prebuilts/abi-dumps/platform/current/64')
-
-    if args.compress:
-        parser.error("Compressed reference dumps are deprecated.")
 
     if args.libs:
         if any(lib_name.endswith(SOURCE_ABI_DUMP_EXT_END) or
                lib_name.endswith(SO_EXT) for lib_name in args.libs):
-            parser.error('-libs should be followed by a base name without '
+            parser.error('--lib should be followed by a base name without '
                          'file extension.')
 
     if NON_AOSP_TAGS.intersection(args.include_tags) and not args.libs:
-        parser.error('-libs must be given if --lib-variant is any of ' +
+        parser.error('--lib must be given if --lib-variant is any of ' +
                      str(NON_AOSP_TAGS))
 
     if args.ref_dump_dir and not args.libs:
-        parser.error('-libs must be given if -ref-dump-dir is given.')
+        parser.error('--lib must be given if --ref-dump-dir is given.')
 
     if args.ref_dump_dir and len(args.include_tags) != 1:
         print('WARNING: Exactly one --lib-variant should be specified if '
-              '-ref-dump-dir is given.')
+              '--ref-dump-dir is given.')
 
     if args.products is None:
         # If `args.products` is unspecified, generate reference ABI dumps for

@@ -24,8 +24,8 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {MockStorage} from 'test/unit/mock_storage';
 import {
   TraceConfigurationMap,
   TRACES,
@@ -67,7 +67,7 @@ describe('CollectTracesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.isAdbProxy = true;
-    component.storage = new MockStorage();
+    component.storage = new InMemoryStorage();
     component.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
       TRACES['default'],
@@ -78,13 +78,11 @@ describe('CollectTracesComponent', () => {
       {
         window_dump: {
           name: 'Window Manager',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         layers_dump: {
           name: 'Surface Flinger',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },

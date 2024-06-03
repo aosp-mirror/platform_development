@@ -17,14 +17,19 @@
 package com.android.sharetest
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Bundle
 import android.service.chooser.ChooserAction
+import android.service.chooser.ChooserTarget
 import android.text.TextUtils
+import androidx.core.os.bundleOf
+import kotlin.math.roundToLong
 
+const val REFINEMENT_ACTION = "com.android.sharetest.REFINEMENT"
 private const val EXTRA_IS_INITIAL = "isInitial"
 
 fun createAlternateIntent(intent: Intent): Intent {
@@ -55,6 +60,17 @@ fun Bundle.setModifyShareAction(context: Context, count: Int) {
     val modifyShareAction = createModifyShareAction(context, false, count)
     putParcelable(Intent.EXTRA_CHOOSER_MODIFY_SHARE_ACTION, modifyShareAction)
 }
+
+// Provide some gaussian noise around the preferred average latency
+fun getLatencyMs(avg: Long): Long {
+    // Using avg/4 as the standard deviation.
+    val noise = avg / 4 * random.nextGaussian()
+    return (avg + noise).roundToLong().coerceAtLeast(0)
+}
+
+fun getRandomFailure(failureRate: Float): Boolean = random.nextFloat() < failureRate
+
+private val random by lazy { java.util.Random() }
 
 private fun createModifyShareAction(
     context: Context,
@@ -108,3 +124,25 @@ var Intent.isInitial: Boolean
         putExtra(EXTRA_IS_INITIAL, value)
     }
     get() = getBooleanExtra(EXTRA_IS_INITIAL, true)
+
+fun createCallerTarget(context: Context, text: String) =
+    ChooserTarget(
+        "Caller Target",
+        Icon.createWithResource(context, R.drawable.launcher_icon),
+        1f,
+        ComponentName(context, CallerDirectTargetActivity::class.java),
+        bundleOf(Intent.EXTRA_TEXT to text)
+    )
+
+fun createRefinementIntentSender(context: Context, isInitial: Boolean) =
+    PendingIntent.getBroadcast(
+        context,
+        1,
+        Intent(REFINEMENT_ACTION).apply {
+            setPackage(context.packageName)
+            this.isInitial = isInitial
+        },
+        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT or
+            PendingIntent.FLAG_CANCEL_CURRENT
+
+    ).intentSender

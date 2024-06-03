@@ -23,7 +23,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {WinscopeErrorListenerStub} from 'messaging/winscope_error_listener_stub';
+import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {UnitTestUtils} from 'test/unit/utils';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -201,7 +201,7 @@ describe('UploadTracesComponent', () => {
     await component.tracePipeline.loadFiles(
       files,
       FilesSource.TEST,
-      new WinscopeErrorListenerStub(),
+      new UserNotificationsListenerStub(),
       undefined,
     );
   }

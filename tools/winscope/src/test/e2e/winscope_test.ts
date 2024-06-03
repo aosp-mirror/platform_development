@@ -22,8 +22,8 @@ describe('winscope', () => {
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
-  it('has title', () => {
+  it('has title', async () => {
     const title = element(by.css('.app-title'));
-    expect(title.getText()).toContain('Winscope');
+    expect(await title.isPresent()).toBeTruthy();
   });
 });

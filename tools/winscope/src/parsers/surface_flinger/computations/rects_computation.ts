@@ -34,14 +34,17 @@ class RectSfFactory {
       const layerStack = assertDefined(
         display.getChildByName('layerStack'),
       ).getValue();
-      let displayName =
-        display.getChildByName('name')?.getValue() ?? 'Unknown Display';
+      let displayName = display.getChildByName('name')?.getValue();
+      if (!displayName) {
+        displayName = 'Unknown Display';
+      }
       const id = assertDefined(display.getChildByName('id')).getValue();
 
       const existingNameCount = nameCounts.get(displayName);
       if (existingNameCount !== undefined) {
         nameCounts.set(displayName, existingNameCount + 1);
-        displayName += ` (Mirror ${existingNameCount + 1})`;
+        const qualifier = displayName === 'Unknown Display' ? '' : 'Mirror ';
+        displayName += ` (${qualifier}${existingNameCount + 1})`;
       } else {
         nameCounts.set(displayName, 1);
       }
@@ -77,6 +80,12 @@ class RectSfFactory {
     const bounds = assertDefined(layer.getEagerPropertyByName('bounds'));
     const boundsRect = Rect.from(bounds);
 
+    let opacity = layer
+      .getEagerPropertyByName('color')
+      ?.getChildByName('a')
+      ?.getValue();
+    if (isVisible && opacity === undefined) opacity = 0;
+
     return new TraceRectBuilder()
       .setX(boundsRect.x)
       .setY(boundsRect.y)
@@ -100,6 +109,7 @@ class RectSfFactory {
       .setIsDisplay(false)
       .setIsVirtual(false)
       .setDepth(absoluteZ)
+      .setOpacity(opacity)
       .build();
   }
 }

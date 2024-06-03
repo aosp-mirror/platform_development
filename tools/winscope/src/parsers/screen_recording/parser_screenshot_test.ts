@@ -15,9 +15,10 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverter} from 'common/timestamp_converter';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
@@ -28,54 +29,46 @@ describe('ParserScreenshot', () => {
   let file: File;
 
   beforeAll(async () => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     file = await UnitTestUtils.getFixtureFile('traces/screenshot.png');
     parser = new ParserScreenshot(
       new TraceFile(file),
-      NO_TIMEZONE_OFFSET_FACTORY,
+      new TimestampConverter(TimestampConverterUtils.UTC_TIMEZONE_INFO, 0n),
     );
     await parser.parse();
+    parser.createTimestamps();
   });
 
   it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.SCREENSHOT);
   });
 
-  it('provides elapsed timestamps', () => {
-    const timestamps = assertDefined(
-      parser.getTimestamps(TimestampType.ELAPSED),
-    );
-
-    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
-    timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
+  it('has expected coarse version', () => {
+    expect(parser.getCoarseVersion()).toEqual(CoarseVersion.LATEST);
   });
 
-  it('provides real timestamps', () => {
-    const timestamps = assertDefined(parser.getTimestamps(TimestampType.REAL));
+  it('provides timestamps', () => {
+    const timestamps = assertDefined(parser.getTimestamps());
 
-    const expected = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
+    const expected = TimestampConverterUtils.makeElapsedTimestamp(0n);
     timestamps.forEach((timestamp) => expect(timestamp).toEqual(expected));
   });
 
   it('does not apply timezone info', async () => {
     const parserWithTimezoneInfo = new ParserScreenshot(
       new TraceFile(file),
-      UnitTestUtils.TIMESTAMP_FACTORY_WITH_TIMEZONE,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER_WITH_UTC_OFFSET,
     );
     await parserWithTimezoneInfo.parse();
 
-    const expectedElapsed = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(0n);
-    assertDefined(parser.getTimestamps(TimestampType.ELAPSED)).forEach(
-      (timestamp) => expect(timestamp).toEqual(expectedElapsed),
-    );
-
-    const expectedReal = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(0n);
-    assertDefined(parser.getTimestamps(TimestampType.REAL)).forEach(
-      (timestamp) => expect(timestamp).toEqual(expectedReal),
+    const expectedReal = TimestampConverterUtils.makeElapsedTimestamp(0n);
+    assertDefined(parser.getTimestamps()).forEach((timestamp) =>
+      expect(timestamp).toEqual(expectedReal),
     );
   });
 
   it('retrieves entry', async () => {
-    const entry = await parser.getEntry(0, TimestampType.REAL);
+    const entry = await parser.getEntry(0);
     expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
     expect(entry.isImage).toBeTrue();
   });

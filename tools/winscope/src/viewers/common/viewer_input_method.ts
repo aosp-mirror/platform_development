@@ -15,21 +15,28 @@
  */
 
 import {WinscopeEvent} from 'messaging/winscope_event';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {ImeTraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
 
 abstract class ViewerInputMethod implements Viewer {
+  private readonly trace: Trace<HierarchyTreeNode>;
   protected readonly htmlElement: HTMLElement;
   protected readonly presenter: PresenterInputMethod;
   protected abstract readonly view: View;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    storage: Storage,
+  ) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-input-method');
-    this.presenter = this.initialisePresenter(traces, storage);
+    this.presenter = this.initialisePresenter(trace, traces, storage);
     this.addViewerEventListeners();
   }
 
@@ -45,7 +52,9 @@ abstract class ViewerInputMethod implements Viewer {
     return [this.view];
   }
 
-  abstract getDependencies(): ImeTraceType[];
+  getTraces(): Array<Trace<HierarchyTreeNode>> {
+    return [this.trace];
+  }
 
   protected imeUiCallback = (uiData: ImeUiData) => {
     (this.htmlElement as any).inputData = uiData;
@@ -111,6 +120,7 @@ abstract class ViewerInputMethod implements Viewer {
   }
 
   protected abstract initialisePresenter(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,
   ): PresenterInputMethod;

@@ -34,7 +34,7 @@ class E2eTestUtils {
     viewerSelector: string,
   ) {
     await E2eTestUtils.uploadFixture(fixturePath);
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
     await E2eTestUtils.clickViewTracesButton();
     await E2eTestUtils.clickViewerTabButton(viewerTabTitle);
 
@@ -48,7 +48,7 @@ class E2eTestUtils {
     expect(await E2eTestUtils.areMessagesEmitted(defaulttimeMs)).toBeTruthy();
     await E2eTestUtils.checkEmitsUnsupportedFileFormatMessages();
     await E2eTestUtils.checkEmitsOldDataMessages();
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.closeSnackBar();
   }
 
   static async areMessagesEmitted(defaultTimeoutMs: number): Promise<boolean> {
@@ -85,7 +85,7 @@ class E2eTestUtils {
     await button.click();
   }
 
-  static async closeSnackBarIfNeeded() {
+  static async closeSnackBar() {
     const closeButton = element(by.css('.snack-bar-action'));
     const isPresent = await closeButton.isPresent();
     if (isPresent) {
@@ -127,7 +127,7 @@ class E2eTestUtils {
 
   static async checkInitialRealTimestamp(timestamp: string) {
     await E2eTestUtils.changeRealTimestampInWinscope(timestamp);
-    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp);
+    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp.slice(12));
     const prevEntryButton = element(by.css('#prev_entry_button'));
     const isDisabled = await prevEntryButton.getAttribute('disabled');
     expect(isDisabled).toEqual('true');
@@ -135,20 +135,20 @@ class E2eTestUtils {
 
   static async checkFinalRealTimestamp(timestamp: string) {
     await E2eTestUtils.changeRealTimestampInWinscope(timestamp);
-    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp);
+    await E2eTestUtils.checkWinscopeRealTimestamp(timestamp.slice(12));
     const nextEntryButton = element(by.css('#next_entry_button'));
     const isDisabled = await nextEntryButton.getAttribute('disabled');
     expect(isDisabled).toEqual('true');
   }
 
   static async checkWinscopeRealTimestamp(timestamp: string) {
-    const inputElement = element(by.css('input[name="humanRealTimeInput"]'));
+    const inputElement = element(by.css('input[name="humanTimeInput"]'));
     const value = await inputElement.getAttribute('value');
     expect(value).toEqual(timestamp);
   }
 
   static async changeRealTimestampInWinscope(newTimestamp: string) {
-    await E2eTestUtils.updateInputField('', 'humanRealTimeInput', newTimestamp);
+    await E2eTestUtils.updateInputField('', 'humanTimeInput', newTimestamp);
   }
 
   static async checkWinscopeNsTimestamp(newTimestamp: string) {
@@ -251,6 +251,56 @@ class E2eTestUtils {
     expect(foundLabel).toBeTruthy();
   }
 
+  static async checkTotalScrollEntries(
+    selectors: {viewer: string; scroll: string; entry: string},
+    scrollViewport: Function,
+    numberOfEntries: number,
+    scrollToBottomOffset?: number | undefined,
+  ) {
+    if (scrollToBottomOffset !== undefined) {
+      const viewport = element(
+        by.css(`${selectors.viewer} ${selectors.scroll}`),
+      );
+      await browser.executeAsyncScript(
+        scrollViewport,
+        viewport,
+        scrollToBottomOffset,
+      );
+    }
+    const entries: ElementFinder[] = await element.all(
+      by.css(`${selectors.viewer} ${selectors.scroll} ${selectors.entry}`),
+    );
+    expect(await entries[entries.length - 1].getAttribute('item-id')).toEqual(
+      `${numberOfEntries - 1}`,
+    );
+  }
+
+  static async toggleSelectFilterOptions(
+    viewerSelector: string,
+    filterSelector: string,
+    options: string[],
+  ) {
+    const selectFilter = element(
+      by.css(
+        `${viewerSelector} .filters ${filterSelector} .mat-select-trigger`,
+      ),
+    );
+    await selectFilter.click();
+
+    const optionElements: ElementFinder[] = await element.all(
+      by.css('.mat-select-panel .mat-option'),
+    );
+    for (const optionEl of optionElements) {
+      const optionText = (await optionEl.getText()).trim();
+      if (options.some((option) => optionText === option)) {
+        await optionEl.click();
+      }
+    }
+
+    const backdrop = element(by.css('.cdk-overlay-backdrop'));
+    await browser.actions().mouseMove(backdrop, {x: 0, y: 0}).click().perform();
+  }
+
   static async uploadFixture(...paths: string[]) {
     const inputFile = element(by.css('input[type="file"]'));
 
@@ -300,7 +350,7 @@ class E2eTestUtils {
     // discards some traces due to old data
     expect(text).not.toContain('ProtoLog');
     expect(text).not.toContain('IME Service');
-    expect(text).not.toContain('IME Manager Service');
+    expect(text).not.toContain('IME system_server');
     expect(text).not.toContain('IME Clients');
     expect(text).not.toContain('wm_log.winscope');
     expect(text).not.toContain('ime_trace_service.winscope');
@@ -316,7 +366,7 @@ class E2eTestUtils {
 
   private static async checkEmitsOldDataMessages() {
     const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('discarded because data is older than');
+    expect(text).toContain('discarded because data is old');
   }
 }
 

@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>Crate health</title>
+<style>
+table, th, td \{
+  border: 1px solid black;
+  border-collapse: collapse;
+  padding: 3px;
+}
+td \{
+  vertical-align: top;
+}
+.vertical \{
+  writing-mode: vertical-lr;
+}
+</style>
+</head>
+<body>
+
+<h1>Migratable crates</h1>
+<p>Crates that can be safely migrated:
+<ul>
+<li>migration-eligible as defined below</li>
+<li>Has a vendored crate with a compatible version</li>
+<li>Patches apply successfully</li>
+<li>cargo_embargo succeeds on the vendored version.</li>
+<li>No significant diffs in the resulting Android.bp</li>
+</ul>
+</p>
+{migratable | unescaped}
+
+<h1>Migration-eligible crates</h1>
+<p>Crates that are eligible for migration, but can't yet be migrated:
+<ul>
+<li>It is in crates.io</li>
+<li>It is not denylisted</li>
+<li>It has an Android.bp</li>
+<li>It has a cargo_embargo.json</li>
+</ul>
+</p>
+{eligible | unescaped}
+
+<h1>Ineligible crates</h1>
+<p>Crates that are not eligible for migration</p>
+</p>
+{ineligible | unescaped}
+
+<h1>Superfluous vendored crates</h1>
+<p>Vendored crates that we don't know anything about</p>
+{superfluous | unescaped}
+
+</body>
+</html>

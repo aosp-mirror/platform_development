@@ -41,8 +41,12 @@ export class Presenter {
   private uiData = UiData.EMPTY;
   private readonly notifyUiDataCallback: (data: UiData) => void;
 
-  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
-    this.transitionTrace = assertDefined(traces.getTrace(TraceType.TRANSITION));
+  constructor(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    notifyUiDataCallback: (data: UiData) => void,
+  ) {
+    this.transitionTrace = trace;
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
     this.notifyUiDataCallback = notifyUiDataCallback;
@@ -109,10 +113,21 @@ export class Presenter {
       return entry.getValue();
     });
     const entries = await Promise.all(entryPromises);
+    // TODO(b/339191691): Ideally we should refactor the parsers to
+    // keep a map of time -> rowId, instead of relying on table order
+    this.sortEntries(entries);
     const transitions = this.makeTransitions(entries);
     const selectedTransition = this.uiData?.selectedTransition ?? undefined;
 
     return new UiData(transitions, selectedTransition);
+  }
+
+  private sortEntries(entries: PropertyTreeNode[]) {
+    entries.sort((a: PropertyTreeNode, b: PropertyTreeNode) => {
+      const aVal = assertDefined(a.getChildByName('id')).getValue();
+      const bVal = assertDefined(b.getChildByName('id')).getValue();
+      return aVal <= bVal ? -1 : 1;
+    });
   }
 
   private makeTransitions(entries: PropertyTreeNode[]): Transition[] {

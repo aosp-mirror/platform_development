@@ -29,24 +29,20 @@ describe('Viewer Input Method Service', () => {
   it('processes trace from zip and navigates correctly', async () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
-      'Input Method Service',
+      'IME Service',
       viewerSelector,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'keyboard_alt',
       color: 'rgba(242, 153, 0, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:12.497050996',
-    );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.060151811');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:12.497');
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.061');
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:14.721076009',
+      '2022-11-21, 18:05:14.720',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:14.721076009',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.720');
 
     await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, true);
     await checkHierarchy();
@@ -64,7 +60,7 @@ describe('Viewer Input Method Service', () => {
     );
     expect(nodes.length).toEqual(4);
     expect(await nodes[0].getText()).toContain(
-      'InputMethodService - 2022-11-21T18:05:14.721076009 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
+      'InputMethodService - 2022-11-21, 18:05:14.720 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
     );
     expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
     expect(await nodes[2].getText()).toContain(

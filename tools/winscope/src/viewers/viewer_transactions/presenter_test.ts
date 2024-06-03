@@ -15,18 +15,14 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
-import {MockStorage} from 'test/unit/mock_storage';
-import {TracesBuilder} from 'test/unit/traces_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
@@ -34,7 +30,6 @@ import {UiData, UiDataEntryType} from './ui_data';
 describe('PresenterTransactions', () => {
   let parser: Parser<PropertyTreeNode>;
   let trace: Trace<PropertyTreeNode>;
-  let traces: Traces;
   let presenter: Presenter;
   let outputUiData: undefined | UiData;
   const TOTAL_OUTPUT_ENTRIES = 1647;
@@ -48,14 +43,12 @@ describe('PresenterTransactions', () => {
 
   beforeEach(async () => {
     outputUiData = undefined;
-    await setUpTestEnvironment(TimestampType.ELAPSED);
+    await setUpTestEnvironment();
   });
 
   it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder()
-      .setEntries(TraceType.TRANSACTIONS, [])
-      .build();
-    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
+    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
+    presenter = new Presenter(trace, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
@@ -75,7 +68,7 @@ describe('PresenterTransactions', () => {
     };
     await presenter.onAppEvent(
       TracePositionUpdate.fromTimestamp(
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
       ),
     );
     expect(outputUiData).toEqual(UiData.EMPTY);
@@ -342,33 +335,18 @@ describe('PresenterTransactions', () => {
     expect(assertDefined(outputUiData).currentEntryIndex).toEqual(13);
   });
 
-  it('formats real time', async () => {
-    await setUpTestEnvironment(TimestampType.REAL);
+  it('formats entry time', async () => {
+    await setUpTestEnvironment();
     expect(
       assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2022-08-03T06:19:01.051480997');
+    ).toEqual('2022-08-03, 06:19:01.051');
   });
 
-  it('formats elapsed time', async () => {
-    await setUpTestEnvironment(TimestampType.ELAPSED);
-    expect(
-      assertDefined(outputUiData).entries[0].time.formattedValue(),
-    ).toEqual('2s450ms981445ns');
-  });
-
-  async function setUpTestEnvironment(timestampType: TimestampType) {
-    trace = new TraceBuilder<PropertyTreeNode>()
-      .setParser(parser)
-      .setTimestampType(timestampType)
-      .build();
-
-    traces = new Traces();
-    traces.setTrace(TraceType.TRANSACTIONS, trace);
-
-    presenter = new Presenter(traces, new MockStorage(), (data: UiData) => {
+  async function setUpTestEnvironment() {
+    trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
+    presenter = new Presenter(trace, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
-
     await presenter.onAppEvent(createTracePositionUpdate(0)); // trigger initialization
   }
 

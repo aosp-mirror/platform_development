@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
-import {AbstractParser} from 'parsers/abstract_parser';
+import {Timestamp} from 'common/time';
+import {AbstractParser} from 'parsers/legacy/abstract_parser';
+import {CoarseVersion} from 'trace/coarse_version';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {TraceType} from 'trace/trace_type';
 
@@ -29,18 +29,24 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
     return TraceType.SCREENSHOT;
   }
 
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LATEST;
+  }
+
   override getMagicNumber(): number[] | undefined {
     return ParserScreenshot.MAGIC_NUMBER;
   }
 
-  override getTimestamp(
-    type: TimestampType,
-    decodedEntry: number,
-  ): Timestamp | undefined {
-    if (NO_TIMEZONE_OFFSET_FACTORY.canMakeTimestampFromType(type, 0n)) {
-      return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(type, 0n, 0n);
-    }
+  override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
     return undefined;
+  }
+
+  override getRealToBootTimeOffsetNs(): bigint | undefined {
+    return undefined;
+  }
+
+  protected override getTimestamp(decodedEntry: number): Timestamp {
+    return this.timestampConverter.makeZeroTimestamp();
   }
 
   override decodeTrace(screenshotData: Uint8Array): number[] {
@@ -49,7 +55,6 @@ class ParserScreenshot extends AbstractParser<ScreenRecordingTraceEntry> {
 
   override processDecodedEntry(
     index: number,
-    timestampType: TimestampType,
     entry: number,
   ): ScreenRecordingTraceEntry {
     const screenshotData = this.traceFile.file;

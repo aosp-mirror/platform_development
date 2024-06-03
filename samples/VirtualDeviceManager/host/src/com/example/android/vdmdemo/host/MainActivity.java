@@ -69,7 +69,8 @@ public class MainActivity extends Hilt_MainActivity {
                 }
             };
 
-    @Inject PreferenceController mPreferenceController;
+    @Inject
+    PreferenceController mPreferenceController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,9 +81,11 @@ public class MainActivity extends Hilt_MainActivity {
         setSupportActionBar(toolbar);
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
+        mHomeDisplayButton.setVisibility(View.GONE);
         mHomeDisplayButton.setEnabled(
                 mPreferenceController.getBoolean(R.string.internal_pref_home_displays_supported));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
+        mMirrorDisplayButton.setVisibility(View.GONE);
         mMirrorDisplayButton.setEnabled(
                 mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
@@ -135,6 +138,7 @@ public class MainActivity extends Hilt_MainActivity {
     protected void onStart() {
         super.onStart();
         Intent intent = new Intent(this, VdmService.class);
+        Log.i(TAG, "Starting Vdm Host service");
         startForegroundService(intent);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
@@ -142,7 +146,9 @@ public class MainActivity extends Hilt_MainActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        mVdmService.setVirtualDeviceListener(null);
+        if (mVdmService != null) {
+            mVdmService.setVirtualDeviceListener(null);
+        }
         unbindService(mServiceConnection);
     }
 

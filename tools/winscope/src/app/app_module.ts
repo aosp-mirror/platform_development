@@ -16,14 +16,16 @@
 
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
+import {CdkMenuModule} from '@angular/cdk/menu';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
 import {HttpClientModule} from '@angular/common/http';
-import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA, ErrorHandler, NgModule} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatGridListModule} from '@angular/material/grid-list';
@@ -41,6 +43,8 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
@@ -74,6 +78,7 @@ import {
 } from './components/bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
+import {ShortcutsComponent} from './components/shortcuts_component';
 import {SnackBarComponent} from './components/snack_bar_component';
 import {DefaultTimelineRowComponent} from './components/timeline/expanded-timeline/default_timeline_row_component';
 import {ExpandedTimelineComponent} from './components/timeline/expanded-timeline/expanded_timeline_component';
@@ -85,6 +90,7 @@ import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
 import {UploadTracesComponent} from './components/upload_traces_component';
 import {WebAdbComponent} from './components/web_adb_component';
+import {GlobalErrorHandler} from './global_error_handler';
 
 @NgModule({
   declarations: [
@@ -130,6 +136,9 @@ import {WebAdbComponent} from './components/web_adb_component';
     TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
     SelectWithFilterComponent,
+    ShortcutsComponent,
+    CollapsedSectionsComponent,
+    CollapsibleSectionTitleComponent,
   ],
   imports: [
     BrowserModule,
@@ -160,8 +169,10 @@ import {WebAdbComponent} from './components/web_adb_component';
     DragDropModule,
     ClipboardModule,
     ReactiveFormsModule,
+    CdkMenuModule,
+    MatDialogModule,
   ],
-  providers: [Title],
+  providers: [Title, {provide: ErrorHandler, useClass: GlobalErrorHandler}],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],
 })

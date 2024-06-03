@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "crate_health",
+    "crate_health_proc_macros",
+]
+resolver = "2"

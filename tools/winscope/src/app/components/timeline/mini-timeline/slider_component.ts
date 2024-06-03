@@ -30,7 +30,7 @@ import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
 import {TimeRange, Timestamp} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 
@@ -60,7 +60,7 @@ import {Transformer} from './transformer';
     `
       #timeline-slider-box {
         position: relative;
-        margin: 5px 0;
+        margin-bottom: 5px;
       }
 
       #timeline-slider-box,
@@ -79,11 +79,11 @@ import {Transformer} from './transformer';
 
       .background.line {
         width: 100%;
-        background: ${Color.GUIDE_BAR_LIGHT};
+        background: ${Color.GUIDE_BAR};
       }
 
       .selection.line {
-        background: ${Color.SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .slider {
@@ -95,13 +95,13 @@ import {Transformer} from './transformer';
 
       .handle {
         flex-grow: 1;
-        background: ${Color.SELECTION_BACKGROUND};
+        background: var(--slider-background-color);
         cursor: grab;
       }
 
       .cropper {
         width: 5px;
-        background: ${Color.SELECTOR_COLOR};
+        background: var(--slider-border-color);
       }
 
       .cropper.left,
@@ -123,6 +123,7 @@ export class SliderComponent {
   @Input() fullRange: TimeRange | undefined;
   @Input() zoomRange: TimeRange | undefined;
   @Input() currentPosition: TracePosition | undefined;
+  @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onZoomChanged = new EventEmitter<TimeRange>();
 
@@ -151,8 +152,8 @@ export class SliderComponent {
 
   syncDragPositionTo(zoomRange: TimeRange) {
     this.sliderWidth = this.computeSliderWidth();
-    const middleOfZoomRange = zoomRange.from.plus(
-      zoomRange.to.minus(zoomRange.from).div(2n),
+    const middleOfZoomRange = zoomRange.from.add(
+      zoomRange.to.minus(zoomRange.from.getValueNs()).div(2n).getValueNs(),
     );
 
     this.dragPosition = {
@@ -172,7 +173,11 @@ export class SliderComponent {
     const width = this.viewInitialized
       ? this.sliderBox.nativeElement.offsetWidth
       : 0;
-    return new Transformer(assertDefined(this.fullRange), {from: 0, to: width});
+    return new Transformer(
+      assertDefined(this.fullRange),
+      {from: 0, to: width},
+      assertDefined(this.timestampConverter),
+    );
   }
 
   ngAfterViewInit(): void {
@@ -230,17 +235,17 @@ export class SliderComponent {
     // Calculation to adjust for min width slider
     const from = this.getTransformer()
       .untransform(newX + this.sliderWidth / 2)
-      .minus(zoomRange.to.minus(zoomRange.from).div(2n));
+      .minus(
+        zoomRange.to.minus(zoomRange.from.getValueNs()).div(2n).getValueNs(),
+      );
 
-    const to = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
-      assertDefined(this.zoomRange).to.getType(),
+    const to = assertDefined(this.timestampConverter).makeTimestampFromNs(
       from.getValueNs() +
         (assertDefined(this.zoomRange).to.getValueNs() -
           assertDefined(this.zoomRange).from.getValueNs()),
-      0n,
     );
 
-    this.onZoomChanged.emit({from, to});
+    this.onZoomChanged.emit(new TimeRange(from, to));
   }
 
   startMoveLeft(e: any) {
@@ -262,7 +267,7 @@ export class SliderComponent {
       }
       const to = assertDefined(this.zoomRange).to;
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 
@@ -292,7 +297,7 @@ export class SliderComponent {
         to = assertDefined(this.zoomRange).from;
       }
 
-      this.onZoomChanged.emit({from, to});
+      this.onZoomChanged.emit(new TimeRange(from, to));
     };
     addEventListener('mousemove', listener);
 
@@ -304,4 +309,4 @@ export class SliderComponent {
   }
 }
 
-export const MIN_SLIDER_WIDTH = 50;
+export const MIN_SLIDER_WIDTH = 30;

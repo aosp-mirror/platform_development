@@ -32,7 +32,7 @@ export class UiData {
   tree: UiHierarchyTreeNode | undefined;
   propertiesTree: UiPropertyTreeNode | undefined;
 
-  constructor(dependencies?: TraceType[]) {
-    this.dependencies = dependencies ?? [];
+  constructor(dependencies: TraceType[]) {
+    this.dependencies = dependencies;
   }
 }

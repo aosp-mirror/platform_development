@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from './trace';
 
 describe('TraceEntry', () => {
   let trace: Trace<string>;
 
   beforeAll(() => {
+    jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     trace = new TraceBuilder<string>()
       .setTimestamps([
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(13n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(14n),
-        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n),
+        TimestampConverterUtils.makeRealTimestamp(10n),
+        TimestampConverterUtils.makeRealTimestamp(11n),
+        TimestampConverterUtils.makeRealTimestamp(12n),
+        TimestampConverterUtils.makeRealTimestamp(13n),
+        TimestampConverterUtils.makeRealTimestamp(14n),
+        TimestampConverterUtils.makeRealTimestamp(15n),
       ])
       .setEntries([
         'entry-0',
@@ -61,10 +63,10 @@ describe('TraceEntry', () => {
 
   it('getTimestamp()', () => {
     expect(trace.getEntry(0).getTimestamp()).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+      TimestampConverterUtils.makeRealTimestamp(10n),
     );
     expect(trace.getEntry(1).getTimestamp()).toEqual(
-      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
+      TimestampConverterUtils.makeRealTimestamp(11n),
     );
   });
 

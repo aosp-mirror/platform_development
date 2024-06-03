@@ -15,7 +15,6 @@
 import {defer, Deferred} from './deferred';
 import {assertExists, assertTrue} from './logging';
 import {perfetto} from '../../deps_build/trace_processor/ui/tsc/gen/protos';
-
 import {ProtoRingBuffer} from './proto_ring_buffer';
 import {
   ComputeMetricArgs,
@@ -31,7 +30,6 @@ import {
   QueryResult,
   WritableQueryResult,
 } from './query_result';
-
 import TraceProcessorRpc = perfetto.protos.TraceProcessorRpc;
 import TraceProcessorRpcStream = perfetto.protos.TraceProcessorRpcStream;
 import TPM = perfetto.protos.TraceProcessorRpc.TraceProcessorMethod;

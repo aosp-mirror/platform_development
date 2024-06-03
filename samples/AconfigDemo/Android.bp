@@ -86,6 +86,9 @@ cc_library {
         "aconfig_demo_flags_c_lib",
     ],
     export_include_dirs: ["src/include"],
+    defaults: [
+        "aconfig_lib_cc_static_link.defaults",
+    ],
 }
 
 rust_aconfig_library {
