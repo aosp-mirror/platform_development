@@ -15,14 +15,15 @@
 use std::{
     fs::{copy, remove_dir_all},
     path::{Path, PathBuf},
+    process::Output,
 };
 
 use anyhow::{anyhow, Context, Result};
 use glob::glob;
 
 use crate::{
-    copy_dir, most_recent_version, CompatibleVersionPair, Crate, CrateCollection, Migratable,
-    NameAndVersionMap, PseudoCrate, VersionMatch,
+    copy_dir, crate_type::diff_android_bp, most_recent_version, CompatibleVersionPair, Crate,
+    CrateCollection, Migratable, NameAndVersionMap, PseudoCrate, VersionMatch,
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
@@ -30,7 +31,7 @@ static CUSTOMIZATIONS: &'static [&'static str] =
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.path();
+        let dest_dir_absolute = self.dest.root().join(self.dest.staging_path());
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
@@ -64,6 +65,14 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
         }
         Ok(())
     }
+    pub fn diff_android_bps(&self) -> Result<Output> {
+        diff_android_bp(
+            &self.source.android_bp(),
+            &self.dest.staging_path().join("Android.bp"),
+            &self.source.root(),
+        )
+        .context("Failed to diff Android.bp".to_string())
+    }
 }
 
 pub fn migrate<P: Into<PathBuf>>(
@@ -92,10 +101,11 @@ pub fn migrate<P: Into<PathBuf>>(
 
     let mut version_match = VersionMatch::new(source, dest)?;
 
-    version_match.copy_customizations()?;
     version_match.stage_crates()?;
+    version_match.copy_customizations()?;
     version_match.apply_patches()?;
     version_match.generate_android_bps()?;
+    version_match.diff_android_bps()?;
 
     Ok(version_match)
 }
