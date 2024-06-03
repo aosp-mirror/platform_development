@@ -34,7 +34,7 @@ mod reports;
 pub use self::migration::migrate;
 mod migration;
 
-pub use self::pseudo_crate::write_pseudo_crate;
+pub use self::pseudo_crate::PseudoCrate;
 mod pseudo_crate;
 
 pub use self::version_match::{CompatibleVersionPair, VersionMatch, VersionPair};
