@@ -28,8 +28,6 @@ import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
 import {LoadedParsers} from './loaded_parsers';
 
-//TODO: filter out legacy parsers with same file? Or what if we download archive with same file?
-
 describe('LoadedParsers', () => {
   const realZeroTimestamp = TimestampConverterUtils.makeRealTimestamp(0n);
   const elapsedZeroTimestamp = TimestampConverterUtils.makeElapsedTimestamp(0n);
@@ -56,7 +54,6 @@ describe('LoadedParsers', () => {
   ];
 
   const filename = 'filename';
-  const file = new TraceFile(new File([], filename));
 
   const parserSf0 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -123,6 +120,16 @@ describe('LoadedParsers', () => {
   const parserScreenRecording = new ParserBuilder<object>()
     .setType(TraceType.SCREEN_RECORDING)
     .setTimestamps(timestamps)
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture0 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture1 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
     .setDescriptors([filename])
     .build();
 
@@ -460,16 +467,48 @@ describe('LoadedParsers', () => {
   });
 
   it('can make zip archive of traces with appropriate directories and extensions', async () => {
-    loadParsers([parserSf0, parserScreenRecording], [parserWmTransitions]);
-    expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions],
-      [],
-    );
+    const fileDuplicated = new File([], filename);
 
-    const fileWithExt = new TraceFile(new File([], filename + '.pb'));
-    loadParsers([parserWm0], [], fileWithExt);
+    const legacyFiles = [
+      // ScreenRecording
+      new File([], filename),
+
+      // ViewCapture
+      // Multiple parsers point to the same viewcapture file,
+      // but we expect to see only one in the output archive (deduplicated)
+      fileDuplicated,
+      fileDuplicated,
+
+      // WM
+      new File([], filename + '.pb'),
+
+      // WM
+      // Same filename as above.
+      // Expect this file to be automatically renamed to avoid clashes/overwrites
+      new File([], filename + '.pb'),
+    ];
+
+    loadParsers(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+      ],
+      [parserSf0, parserWmTransitions],
+      legacyFiles,
+    );
     expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions, parserWm0],
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+        parserSf0,
+        parserWmTransitions,
+      ],
       [],
     );
 
@@ -479,11 +518,14 @@ describe('LoadedParsers', () => {
       .map((file) => file.name)
       .sort();
 
+    console.log(actualArchiveContents);
+
     const expectedArchiveContents = [
-      'filename.mp4', // adds .mp4
-      'filename.perfetto-trace', // adds .perfetto-trace
-      'sf/filename.winscope', // adds .winscope
-      'wm/filename.pb', // does not add/replace .pb
+      'filename.mp4',
+      'filename.perfetto-trace',
+      'vc/filename.winscope',
+      'wm/filename (1).pb',
+      'wm/filename.pb',
     ];
     expect(actualArchiveContents).toEqual(expectedArchiveContents);
   });
@@ -491,13 +533,18 @@ describe('LoadedParsers', () => {
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
-    testFile = file,
+    legacyFiles?: File[],
   ) {
-    const legacyFileAndParsers = legacy.map(
-      (parser) => new FileAndParser(testFile, parser),
-    );
+    const legacyFileAndParsers = legacy.map((parser, i) => {
+      const legacyFile = legacyFiles ? legacyFiles[i] : new File([], filename);
+      return new FileAndParser(new TraceFile(legacyFile), parser);
+    });
+
+    const perfettoTraceFile = new TraceFile(new File([], filename));
     const perfettoFileAndParsers =
-      perfetto.length > 0 ? new FileAndParsers(testFile, perfetto) : undefined;
+      perfetto.length > 0
+        ? new FileAndParsers(perfettoTraceFile, perfetto)
+        : undefined;
 
     warnings = [];
     const listener = {
