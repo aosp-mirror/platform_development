@@ -14,9 +14,8 @@
 
 use std::{
     fs::{create_dir, write},
-    path::Path,
+    path::{Path, PathBuf},
     process::Command,
-    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
@@ -38,54 +37,85 @@ struct CargoToml {
     deps: Vec<Dep>,
 }
 
-pub fn write_pseudo_crate<'a>(
-    dest_absolute: &impl AsRef<Path>,
-    crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
-) -> Result<()> {
-    let dest_absolute = dest_absolute.as_ref();
-    ensure_exists_and_empty(&dest_absolute)?;
+pub struct PseudoCrate {
+    // Absolute path to pseudo-crate.
+    path: PathBuf,
+}
 
-    let mut deps = Vec::new();
-    for krate in crates {
-        // Special cases:
-        // * libsqlite3-sys is a sub-crate of rusqlite
-        // * remove_dir_all has a version not known by crates.io (b/313489216)
-        if krate.name() != "libsqlite3-sys" {
-            deps.push(Dep {
-                name: krate.name().to_string(),
-                version: if krate.name() == "remove_dir_all"
-                    && krate.version().to_string() == "0.7.1"
-                {
-                    "0.7.0".to_string()
-                } else {
-                    krate.version().to_string()
-                },
-            });
+impl PseudoCrate {
+    pub fn new<P: Into<PathBuf>>(path: P) -> PseudoCrate {
+        PseudoCrate { path: path.into() }
+    }
+    pub fn init<'a>(
+        &self,
+        crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
+    ) -> Result<()> {
+        if self.path.exists() {
+            return Err(anyhow!(
+                "Can't init pseudo-crate because {} already exists",
+                self.path.display()
+            ));
         }
+        ensure_exists_and_empty(&self.path)?;
+
+        let mut deps = Vec::new();
+        for krate in crates {
+            // Special cases:
+            // * libsqlite3-sys is a sub-crate of rusqlite
+            // * remove_dir_all has a version not known by crates.io (b/313489216)
+            if krate.name() != "libsqlite3-sys" {
+                deps.push(Dep {
+                    name: krate.name().to_string(),
+                    version: if krate.name() == "remove_dir_all"
+                        && krate.version().to_string() == "0.7.1"
+                    {
+                        "0.7.0".to_string()
+                    } else {
+                        krate.version().to_string()
+                    },
+                });
+            }
+        }
+
+        let mut tt = TinyTemplate::new();
+        tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
+        let cargo_toml = self.path.join("Cargo.toml");
+        write(&cargo_toml, tt.render("cargo_toml", &CargoToml { deps })?)?;
+
+        create_dir(self.path.join("src")).context("Failed to create src dir")?;
+        write(self.path.join("src/lib.rs"), "// Nothing").context("Failed to create src/lib.rs")?;
+
+        self.vendor()
+
+        // TODO: Run "cargo deny"
     }
-
-    let mut tt = TinyTemplate::new();
-    tt.add_template("cargo_toml", CARGO_TOML_TEMPLATE)?;
-    let cargo_toml = dest_absolute.join("Cargo.toml");
-    write(&cargo_toml, tt.render("cargo_toml", &CargoToml { deps })?)?;
-
-    create_dir(dest_absolute.join("src")).context("Failed to create src dir")?;
-    write(dest_absolute.join("src/lib.rs"), "// Nothing").context("Failed to create src/lib.rs")?;
-
-    let vendor_output = Command::new("cargo")
-        .args(["vendor", "android/vendor"])
-        .current_dir(dest_absolute)
-        .output()?;
-    if !vendor_output.status.success() {
-        return Err(anyhow!(
-            "cargo vendor failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
-            vendor_output.status,
-            from_utf8(&vendor_output.stdout)?,
-            from_utf8(&vendor_output.stderr)?
-        ));
+    pub fn get_path(&self) -> &Path {
+        self.path.as_path()
     }
-
-    // TODO: Run "cargo deny"
-
-    Ok(())
+    pub fn add(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        let status = Command::new("cargo")
+            .args(["add", format!("{}@={}", krate.name(), krate.version()).as_str()])
+            .current_dir(&self.path)
+            .spawn()
+            .context("Failed to spawn 'cargo add'")?
+            .wait()
+            .context("Failed to wait on 'cargo add'")?;
+        if !status.success() {
+            return Err(anyhow!("Failed to run 'cargo add {}@{}'", krate.name(), krate.version()));
+        }
+        Ok(())
+    }
+    pub fn vendor(&self) -> Result<()> {
+        let status = Command::new("cargo")
+            .args(["vendor"])
+            .current_dir(&self.path)
+            .spawn()
+            .context("Failed to spawn 'cargo vendor'")?
+            .wait()
+            .context("Failed to wait on 'cargo vendor'")?;
+        if !status.success() {
+            return Err(anyhow!("Failed to run 'cargo vendor'",));
+        }
+        Ok(())
+    }
 }
