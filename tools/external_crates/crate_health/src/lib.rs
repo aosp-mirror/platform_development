@@ -15,6 +15,8 @@
 use std::env::current_dir;
 use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::str::from_utf8;
 
 use anyhow::{anyhow, Context, Result};
 use semver::Version;
@@ -89,4 +91,20 @@ pub fn ensure_exists_and_empty(dir: &impl AsRef<Path>) -> Result<()> {
         remove_dir_all(&dir).context(format!("Failed to remove {}", dir.display()))?;
     }
     create_dir_all(&dir).context(format!("Failed to create {}", dir.display()))
+}
+
+// The copy_dir crate doesn't handle symlinks.
+pub fn copy_dir(src: &impl AsRef<Path>, dst: &impl AsRef<Path>) -> Result<()> {
+    let output =
+        Command::new("cp").arg("--archive").arg(src.as_ref()).arg(dst.as_ref()).output()?;
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Failed to copy {} to {}\nstdout:\n{}\nstderr:\n{}",
+            src.as_ref().display(),
+            dst.as_ref().display(),
+            from_utf8(&output.stdout)?,
+            from_utf8(&output.stderr)?
+        ));
+    }
+    Ok(())
 }
