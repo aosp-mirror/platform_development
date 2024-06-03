@@ -18,12 +18,11 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use copy_dir::copy_dir;
 use glob::glob;
 
 use crate::{
-    most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate, CrateCollection,
-    Migratable, NameAndVersionMap, VersionMatch,
+    copy_dir, most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate,
+    CrateCollection, Migratable, NameAndVersionMap, VersionMatch,
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
@@ -45,7 +44,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     .context(format!("Failed to get file name for {}", entry.display()))?
                     .to_os_string();
                 if entry.is_dir() {
-                    copy_dir(&entry, dest_dir_absolute.join(filename)).context(format!(
+                    copy_dir(&entry, &dest_dir_absolute.join(filename)).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
                         dest_dir_absolute.display()
