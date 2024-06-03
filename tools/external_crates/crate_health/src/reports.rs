@@ -106,7 +106,7 @@ impl<'template> ReportEngine<'template> {
                 &krate.aosp_url().map_or(format!("{}", krate.relpath().display()), |url| {
                     linkify(&krate.relpath().display(), &url)
                 }),
-                &prefer_yes(krate.android_bp().exists()),
+                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
                 &prefer_yes_or_summarize(
                     krate.generate_android_bp_success(),
                     krate
@@ -155,7 +155,7 @@ impl<'template> ReportEngine<'template> {
                 }),
                 &prefer_yes(krate.is_crates_io()),
                 &prefer_no(krate.is_migration_denied()),
-                &prefer_yes(krate.android_bp().exists()),
+                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
                 &prefer_yes(krate.cargo_embargo_json().exists()),
             ]);
         }
