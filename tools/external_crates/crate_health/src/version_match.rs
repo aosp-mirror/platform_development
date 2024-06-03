@@ -195,7 +195,22 @@ impl VersionMatch<CrateCollection> {
                 .map_field_mut()
                 .get_mut(&nv)
                 .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
-                .set_generate_android_bp_output(output.0, output.1);
+                .set_generate_android_bp_output(output);
+        }
+        Ok(())
+    }
+
+    pub fn diff_android_bps(&mut self) -> Result<()> {
+        let mut results = BTreeMap::new();
+        for pair in self.compatible_and_eligible() {
+            results.insert_or_error(NameAndVersion::from(pair.dest), pair.diff_android_bps()?)?;
+        }
+        for (nv, output) in results.into_iter() {
+            self.dest
+                .map_field_mut()
+                .get_mut(&nv)
+                .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
+                .set_diff_output(output);
         }
         Ok(())
     }
