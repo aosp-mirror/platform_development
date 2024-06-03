@@ -25,12 +25,11 @@ use cargo::{
     util::toml::read_manifest,
     Config,
 };
-use copy_dir::copy_dir;
 use semver::Version;
 
 use crate::{
-    ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError, NameAndVersionRef,
-    NamedAndVersioned,
+    copy_dir, ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError,
+    NameAndVersionRef, NamedAndVersioned,
 };
 
 #[derive(Debug)]
@@ -214,7 +213,7 @@ impl Crate {
         ensure_exists_and_empty(&staging_path_absolute)?;
         remove_dir_all(&staging_path_absolute)
             .context(format!("Failed to remove {}", staging_path_absolute.display()))?;
-        copy_dir(self.path(), &staging_path_absolute).context(format!(
+        copy_dir(&self.path(), &staging_path_absolute).context(format!(
             "Failed to copy {} to {}",
             self.path().display(),
             staging_path_absolute.display()
