@@ -15,7 +15,6 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -34,10 +33,7 @@ describe('Perfetto ParserViewCaptureWindow', () => {
       TraceType.VIEW_CAPTURE,
       'traces/perfetto/viewcapture.perfetto-trace',
     )) as Parser<HierarchyTreeNode>;
-    trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
-      .setParser(parser)
-      .build();
+    trace = Trace.fromParser(parser);
   });
 
   it('has expected trace type', () => {
@@ -81,10 +77,15 @@ describe('Perfetto ParserViewCaptureWindow', () => {
     expect(defaultProperty.formattedValue()).toEqual('0');
   });
 
-  it('supports VIEW_CAPTURE_PACKAGE_NAME custom query', async () => {
-    const packageName = await trace.customQuery(
-      CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+  it('supports VIEW_CAPTURE_METADATA custom query', async () => {
+    const metadata = await trace.customQuery(
+      CustomQueryType.VIEW_CAPTURE_METADATA,
     );
-    expect(packageName).toEqual('com.google.android.apps.nexuslauncher');
+    expect(metadata.packageName).toEqual(
+      'com.google.android.apps.nexuslauncher',
+    );
+    expect(metadata.windowName).toEqual(
+      'com.android.internal.policy.PhoneWindow@4f9be60',
+    );
   });
 });

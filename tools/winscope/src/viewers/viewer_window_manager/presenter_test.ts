@@ -42,6 +42,7 @@ describe('PresenterWindowManager', () => {
 
   beforeAll(async () => {
     trace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.WINDOW_MANAGER)
       .setEntries([
         await UnitTestUtils.getWindowManagerState(0),
         await UnitTestUtils.getWindowManagerState(1),
@@ -377,9 +378,14 @@ describe('PresenterWindowManager', () => {
 
   const createPresenter = (trace: Trace<HierarchyTreeNode>): Presenter => {
     const traces = new Traces();
-    traces.setTrace(TraceType.WINDOW_MANAGER, trace);
-    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
-      uiData = newData;
-    });
+    traces.addTrace(trace);
+    return new Presenter(
+      trace,
+      traces,
+      new InMemoryStorage(),
+      (newData: UiData) => {
+        uiData = newData;
+      },
+    );
   };
 });

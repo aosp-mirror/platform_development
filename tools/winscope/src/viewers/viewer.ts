@@ -19,7 +19,7 @@ import {
   WinscopeEventEmitter,
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {TraceType} from 'trace/trace_type';
+import {Trace} from 'trace/trace';
 
 enum ViewType {
   TAB,
@@ -29,10 +29,9 @@ enum ViewType {
 class View {
   constructor(
     public type: ViewType,
-    public dependencies: TraceType[],
+    public traces: Array<Trace<object>>,
     public htmlElement: HTMLElement,
     public title: string,
-    public traceType: TraceType,
   ) {}
 }
 
@@ -40,7 +39,7 @@ interface Viewer extends WinscopeEventListener, WinscopeEventEmitter {
   onWinscopeEvent(event: WinscopeEvent): Promise<void>;
   setEmitEvent(callback: EmitEvent): void;
   getViews(): View[];
-  getDependencies(): TraceType[];
+  getTraces(): Array<Trace<object>>;
 }
 
 export {Viewer, View, ViewType};
