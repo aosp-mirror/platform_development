@@ -13,16 +13,17 @@
 // limitations under the License.
 
 use std::{
-    fs::copy,
+    fs::{copy, remove_dir_all},
     path::{Path, PathBuf},
+    process::Output,
 };
 
 use anyhow::{anyhow, Context, Result};
 use glob::glob;
 
 use crate::{
-    copy_dir, most_recent_version, write_pseudo_crate, CompatibleVersionPair, Crate,
-    CrateCollection, Migratable, NameAndVersionMap, VersionMatch,
+    copy_dir, crate_type::diff_android_bp, most_recent_version, CompatibleVersionPair, Crate,
+    CrateCollection, Migratable, NameAndVersionMap, PseudoCrate, VersionMatch,
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
@@ -30,7 +31,7 @@ static CUSTOMIZATIONS: &'static [&'static str] =
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.path();
+        let dest_dir_absolute = self.dest.root().join(self.dest.staging_path());
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
@@ -64,6 +65,14 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
         }
         Ok(())
     }
+    pub fn diff_android_bps(&self) -> Result<Output> {
+        diff_android_bp(
+            &self.source.android_bp(),
+            &self.dest.staging_path().join("Android.bp"),
+            &self.source.root(),
+        )
+        .context("Failed to diff Android.bp".to_string())
+    }
 }
 
 pub fn migrate<P: Into<PathBuf>>(
@@ -75,9 +84,12 @@ pub fn migrate<P: Into<PathBuf>>(
     source.add_from(source_dir, None::<&&str>)?;
     source.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
 
-    let pseudo_crate_dir_absolute = source.repo_root().join(pseudo_crate_dir);
-    write_pseudo_crate(
-        &pseudo_crate_dir_absolute,
+    let pseudo_crate = PseudoCrate::new(source.repo_root().join(pseudo_crate_dir));
+    if pseudo_crate.get_path().exists() {
+        remove_dir_all(pseudo_crate.get_path())
+            .context(format!("Failed to remove {}", pseudo_crate.get_path().display()))?;
+    }
+    pseudo_crate.init(
         source
             .filter_versions(&most_recent_version)
             .filter(|(_nv, krate)| krate.is_migration_eligible())
@@ -85,14 +97,15 @@ pub fn migrate<P: Into<PathBuf>>(
     )?;
 
     let mut dest = CrateCollection::new(source.repo_root());
-    dest.add_from(&pseudo_crate_dir.as_ref().join("android/vendor"), Some(pseudo_crate_dir))?;
+    dest.add_from(&pseudo_crate_dir.as_ref().join("vendor"), Some(pseudo_crate_dir))?;
 
     let mut version_match = VersionMatch::new(source, dest)?;
 
-    version_match.copy_customizations()?;
     version_match.stage_crates()?;
+    version_match.copy_customizations()?;
     version_match.apply_patches()?;
     version_match.generate_android_bps()?;
+    version_match.diff_android_bps()?;
 
     Ok(version_match)
 }
