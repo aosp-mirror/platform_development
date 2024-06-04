@@ -13,7 +13,8 @@
 // limitations under the License.
 
 use std::{
-    fs::{copy, remove_dir_all},
+    fs::{copy, read_link, remove_dir_all},
+    os::unix::fs::symlink,
     path::{Path, PathBuf},
     process::Output,
 };
@@ -28,6 +29,8 @@ use crate::{
 
 static CUSTOMIZATIONS: &'static [&'static str] =
     &["*.bp", "cargo_embargo.json", "patches", "METADATA", "TEST_MAPPING", "MODULE_LICENSE_*"];
+
+static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
@@ -61,6 +64,20 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                         dest_dir_absolute.display()
                     ))?;
                 }
+            }
+        }
+        for link in SYMLINKS {
+            let src_path = self.source.path().join(link);
+            if src_path.is_symlink() {
+                let dest = read_link(src_path)?;
+                if dest.exists() {
+                    return Err(anyhow!(
+                        "Can't symlink {} -> {} because destination exists",
+                        link,
+                        dest.display(),
+                    ));
+                }
+                symlink(dest, dest_dir_absolute.join(link))?;
             }
         }
         Ok(())
