@@ -27,6 +27,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
@@ -102,12 +103,12 @@ describe('PresenterViewCapture', () => {
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
-    expect(uiData.trees).toBeFalsy();
+    expect(uiData.hierarchyTrees).toBeFalsy();
   });
 
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.vcRectIdToShowState?.size).toEqual(13);
+    expect(uiData.rectIdToShowState?.size).toEqual(13);
     expect(uiData.highlightedItem?.length).toEqual(0);
 
     const hierarchyUserOptions = Object.keys(uiData.hierarchyUserOptions);
@@ -116,24 +117,24 @@ describe('PresenterViewCapture', () => {
     const propertiesUserOptions = Object.keys(uiData.propertiesUserOptions);
     expect(propertiesUserOptions).toBeTruthy();
 
-    expect(assertDefined(uiData.trees).length === 1).toBeTrue();
+    expect(assertDefined(uiData.hierarchyTrees).length === 1).toBeTrue();
     expect(
-      assertDefined(uiData.trees)[0].getAllChildren().length > 0,
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length > 0,
     ).toBeTrue();
-    expect(uiData.windows).toEqual([
+    expect(uiData.displays).toEqual([
       {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
       {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
 
     await presenter.onAppEvent(secondPositionUpdate);
-    expect(uiData.vcRectsToDraw.length).toEqual(145);
-    expect(assertDefined(uiData.trees).length === 2).toBeTrue();
+    expect(uiData.rectsToDraw.length).toEqual(145);
+    expect(assertDefined(uiData.hierarchyTrees).length === 2).toBeTrue();
     expect(
-      assertDefined(uiData.trees).every(
+      assertDefined(uiData.hierarchyTrees).every(
         (tree) => tree.getAllChildren().length > 0,
       ),
     ).toBeTrue();
-    expect(uiData.windows).toEqual([
+    expect(uiData.displays).toEqual([
       {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
       {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
@@ -141,10 +142,10 @@ describe('PresenterViewCapture', () => {
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.vcRectsToDraw[0].x).toEqual(0);
-    expect(uiData.vcRectsToDraw[0].y).toEqual(0);
-    expect(uiData.vcRectsToDraw[0].w).toEqual(1080);
-    expect(uiData.vcRectsToDraw[0].h).toEqual(249);
+    expect(uiData.rectsToDraw[0].x).toEqual(0);
+    expect(uiData.rectsToDraw[0].y).toEqual(0);
+    expect(uiData.rectsToDraw[0].w).toEqual(1080);
+    expect(uiData.rectsToDraw[0].h).toEqual(249);
     checkRectUiData(13, 13, 13);
   });
 
@@ -241,7 +242,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> TaskbarView
-      uiData.trees?.at(0)?.getAllChildren()[0].name,
+      uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
 
     const userOptions: UserOptions = {
@@ -263,15 +264,15 @@ describe('PresenterViewCapture', () => {
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     expect(
       // TaskbarDragLayer -> TaskbarScrimView
-      uiData.trees?.at(0)?.getAllChildren()[0].name,
+      uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.TaskbarScrimView@114418695');
   });
 
   it('simplifies names in hierarchy tree', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.trees?.at(0)?.getAllChildren()[0].getDisplayName()).toEqual(
-      'TaskbarView@80213537',
-    );
+    expect(
+      uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].getDisplayName(),
+    ).toEqual('TaskbarView@80213537');
 
     const userOptions: UserOptions = {
       showDiff: {
@@ -290,9 +291,9 @@ describe('PresenterViewCapture', () => {
     };
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    expect(uiData.trees?.at(0)?.getAllChildren()[0].getDisplayName()).toEqual(
-      'com.android.launcher3.taskbar.TaskbarView@80213537',
-    );
+    expect(
+      uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].getDisplayName(),
+    ).toEqual('com.android.launcher3.taskbar.TaskbarView@80213537');
   });
 
   it('filters hierarchy tree by search string', async () => {
@@ -317,7 +318,7 @@ describe('PresenterViewCapture', () => {
 
     expect(
       // TaskbarDragLayer -> BubbleBarView if filter works as expected
-      uiData.trees?.at(0)?.getAllChildren()[0].name,
+      uiData.hierarchyTrees?.at(0)?.getAllChildren()[0].name,
     ).toEqual('com.android.launcher3.taskbar.bubbles.BubbleBarView@256010548');
   });
 
@@ -339,7 +340,7 @@ describe('PresenterViewCapture', () => {
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );
-    const rect = assertDefined(uiData.vcRectsToDraw.at(5));
+    const rect = assertDefined(uiData.rectsToDraw.at(5));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(propertiesTree.id).toEqual(
@@ -354,7 +355,7 @@ describe('PresenterViewCapture', () => {
   it('after highlighting a node, updates properties tree on position update', async () => {
     await presenter.onAppEvent(positionUpdate);
     const selectedTree = assertDefined(
-      assertDefined(uiData.trees?.at(0)).findDfs(
+      assertDefined(uiData.hierarchyTrees?.at(0)).findDfs(
         UiTreeUtils.makeIdMatchFilter(
           'ViewNode com.android.launcher3.taskbar.TaskbarView@80213537',
         ),
@@ -421,18 +422,14 @@ describe('PresenterViewCapture', () => {
     await presenter.onAppEvent(update);
     await presenter.onHighlightedNodeChange(selectedTree);
     expect(
-      assertDefined(
-        uiData.propertiesTree?.getChildByName('translationY'),
-      ).getDiff(),
+      uiData.propertiesTree?.getChildByName('translationY')?.getDiff(),
     ).toEqual(DiffType.NONE);
 
     await presenter.onPropertiesUserOptionsChange(userOptions);
 
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
     expect(
-      assertDefined(
-        uiData.propertiesTree?.getChildByName('translationY'),
-      ).getDiff(),
+      uiData.propertiesTree?.getChildByName('translationY')?.getDiff(),
     ).toEqual(DiffType.MODIFIED);
   });
 
@@ -466,9 +463,14 @@ describe('PresenterViewCapture', () => {
   });
 
   function createPresenter(traces: Traces): Presenter {
-    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
+    const notifyViewCallback = (newData: UiData) => {
       uiData = newData;
-    });
+    };
+    return new Presenter(
+      traces,
+      new InMemoryStorage(),
+      notifyViewCallback as NotifyHierarchyViewCallbackType,
+    );
   }
 
   function checkRectUiData(
@@ -476,9 +478,9 @@ describe('PresenterViewCapture', () => {
     allRects: number,
     shownRects: number,
   ) {
-    expect(uiData.vcRectsToDraw.length).toEqual(rectsToDraw);
+    expect(uiData.rectsToDraw.length).toEqual(rectsToDraw);
     const showStates = Array.from(
-      assertDefined(uiData.vcRectIdToShowState).values(),
+      assertDefined(uiData.rectIdToShowState).values(),
     );
     expect(showStates.length).toEqual(allRects);
     expect(showStates.filter((s) => s === RectShowState.SHOW).length).toEqual(

@@ -29,6 +29,7 @@ describe('AddDiffsHierarchyTree', () => {
   const isModified = async (
     newTree: TreeNode | undefined,
     oldTree: TreeNode | undefined,
+    denylistProperties: string[],
   ) => {
     return (
       (newTree as UiHierarchyTreeNode)
@@ -39,7 +40,7 @@ describe('AddDiffsHierarchyTree', () => {
         ?.getValue()
     );
   };
-  const addDiffs = new AddDiffsHierarchyTree(isModified);
+  const addDiffs = new AddDiffsHierarchyTree(isModified, []);
 
   describe('AddDiffs tests', () => {
     executeAddDiffsTests(

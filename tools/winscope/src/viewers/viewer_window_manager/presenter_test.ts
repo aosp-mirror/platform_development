@@ -25,6 +25,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
 import {RectShowState} from 'viewers/common/rect_show_state';
@@ -75,14 +76,14 @@ describe('PresenterWindowManager', () => {
       .build();
     const presenter = createPresenter(emptyTrace);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
-    expect(uiData.tree).toBeFalsy();
+    expect(uiData.hierarchyTrees).toBeFalsy();
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
       TimestampConverterUtils.makeRealTimestamp(0n),
     );
     await presenter.onAppEvent(positionUpdateWithoutTraceEntry);
     expect(uiData.hierarchyUserOptions).toBeTruthy();
-    expect(uiData.tree).toBeFalsy();
+    expect(uiData.hierarchyTrees).toBeFalsy();
   });
 
   it('processes trace position update', async () => {
@@ -103,7 +104,9 @@ describe('PresenterWindowManager', () => {
     expect(propertyOpts).toBeTruthy();
 
     // does not check specific tree values as tree generation method may change
-    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length > 0,
+    ).toBeTrue();
   });
 
   it('disables show diff and generates non-diff tree if no prev entry available', async () => {
@@ -115,7 +118,9 @@ describe('PresenterWindowManager', () => {
     const propertyOpts = assertDefined(uiData.propertiesUserOptions);
     expect(propertyOpts['showDiff'].isUnavailable).toBeTrue();
 
-    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length > 0,
+    ).toBeTrue();
   });
 
   it('creates input data for rects view', async () => {
@@ -240,11 +245,15 @@ describe('PresenterWindowManager', () => {
 
     await presenter.onAppEvent(positionUpdate);
     await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length,
+    ).toEqual(68);
 
     userOptions['showOnlyVisible'].enabled = true;
     await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length,
+    ).toEqual(6);
   });
 
   it('flattens hierarchy tree', async () => {
@@ -270,12 +279,12 @@ describe('PresenterWindowManager', () => {
     };
 
     await presenter.onAppEvent(positionUpdate);
-    const oldDataTree = assertDefined(uiData.tree);
+    const oldDataTree = assertDefined(uiData.hierarchyTrees)[0];
     expect(oldDataTree.getAllChildren().length).toEqual(1);
 
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    const newDataTree = assertDefined(uiData.tree);
+    const newDataTree = assertDefined(uiData.hierarchyTrees)[0];
     expect(newDataTree.getAllChildren().length).toEqual(68);
     newDataTree.getAllChildren().forEach((child) => {
       expect(child.getAllChildren().length).toEqual(0);
@@ -311,7 +320,9 @@ describe('PresenterWindowManager', () => {
     const id = `Activity f7092ed ${longName}`;
 
     const nodeWithLongName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
+      assertDefined(uiData.hierarchyTrees)[0].findDfs(
+        UiTreeUtils.makeIdMatchFilter(id),
+      ),
     );
     expect(nodeWithLongName.getDisplayName()).toEqual(
       'com.google.(...).NexusLauncherActivity',
@@ -320,7 +331,9 @@ describe('PresenterWindowManager', () => {
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     const nodeWithShortName = assertDefined(
-      assertDefined(uiData.tree).findDfs(UiTreeUtils.makeIdMatchFilter(id)),
+      assertDefined(uiData.hierarchyTrees)[0].findDfs(
+        UiTreeUtils.makeIdMatchFilter(id),
+      ),
     );
     expect(nodeWithShortName.getDisplayName()).toEqual(longName);
   });
@@ -347,11 +360,15 @@ describe('PresenterWindowManager', () => {
     };
     await presenter.onAppEvent(positionUpdate);
     await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length,
+    ).toEqual(68);
 
     await presenter.onHierarchyFilterChange('ScreenDecor');
     // All but four layers should be filtered out
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(2);
+    expect(
+      assertDefined(uiData.hierarchyTrees)[0].getAllChildren().length,
+    ).toEqual(2);
   });
 
   it('sets properties tree and associated ui data from tree node', async () => {
@@ -378,7 +395,7 @@ describe('PresenterWindowManager', () => {
   it('after highlighting a node, updates properties tree on position update', async () => {
     await presenter.onAppEvent(positionUpdate);
     const selectedTree = assertDefined(
-      assertDefined(uiData.tree).findDfs(
+      assertDefined(uiData.hierarchyTrees)[0].findDfs(
         UiTreeUtils.makeIdMatchFilter(
           'Activity f7092ed com.google.android.apps.nexuslauncher/.NexusLauncherActivity',
         ),
@@ -482,13 +499,14 @@ describe('PresenterWindowManager', () => {
   const createPresenter = (trace: Trace<HierarchyTreeNode>): Presenter => {
     const traces = new Traces();
     traces.addTrace(trace);
+    const notifyViewCallback = (newData: UiData) => {
+      uiData = newData;
+    };
     return new Presenter(
       trace,
       traces,
       new InMemoryStorage(),
-      (newData: UiData) => {
-        uiData = newData;
-      },
+      notifyViewCallback as NotifyHierarchyViewCallbackType,
     );
   };
 
