@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Chip} from './chip';
+
 export interface UserOptions {
   [key: string]: UserOption;
 }
@@ -22,4 +25,6 @@ export interface UserOption {
   enabled: boolean;
   tooltip?: string;
   isUnavailable?: boolean;
+  chip?: Chip;
+  icon?: string;
 }

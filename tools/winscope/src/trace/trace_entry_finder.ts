@@ -24,6 +24,10 @@ export class TraceEntryFinder {
     trace: Trace<T>,
     position: TracePosition,
   ): TraceEntry<T> | undefined {
+    if (trace.lengthEntries === 0) {
+      return undefined;
+    }
+
     const isDump =
       trace.lengthEntries === 1 &&
       trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
@@ -32,7 +36,7 @@ export class TraceEntryFinder {
       return trace.getEntry(0);
     }
 
-    if (position.entry?.getFullTrace().type === trace.type) {
+    if (position.entry?.getFullTrace() === trace.getEntry(0).getFullTrace()) {
       return position.entry as TraceEntry<T>;
     }
 

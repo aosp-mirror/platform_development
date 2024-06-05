@@ -44,7 +44,7 @@ describe('Viewer Input Method Service', () => {
     );
     await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.720');
 
-    await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, true);
+    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, true);
     await checkHierarchy();
 
     await E2eTestUtils.selectItemInHierarchy(

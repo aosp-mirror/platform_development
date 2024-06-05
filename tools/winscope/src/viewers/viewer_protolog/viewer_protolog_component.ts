@@ -21,6 +21,7 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -28,91 +29,91 @@ import {UiData} from './ui_data';
   selector: 'viewer-protolog',
   template: `
     <div class="card-grid container">
-      <div class="filters">
-        <div class="log-level">
-          <select-with-filter
-            label="Log level"
-            flex="3"
-            [options]="uiData.allLogLevels"
-            outerFilterWidth="225"
-            (selectChange)="onLogLevelsChange($event)">
-          </select-with-filter>
-        </div>
-        <div class="tag">
-          <select-with-filter
-            label="Tags"
-            flex="2"
-            [options]="uiData.allTags"
-            outerFilterWidth="150"
-            innerFilterWidth="150"
-            (selectChange)="onTagsChange($event)">
-          </select-with-filter>
-        </div>
-        <div class="source-file">
-          <select-with-filter
-            label="Source files"
-            flex="4"
-            [options]="uiData.allSourceFiles"
-            outerFilterWidth="300"
-            innerFilterWidth="300"
-            (selectChange)="onSourceFilesChange($event)">
-          </select-with-filter>
-        </div>
-        <div class="text">
-          <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
-            <mat-label>Search text</mat-label>
-            <input matInput name="protologTextInput" [(ngModel)]="searchString" (input)="onSearchStringChange()" />
-          </mat-form-field>
-        </div>
-
-        <button
-          color="primary"
-          mat-stroked-button
-          class="go-to-current-time"
-          (click)="onGoToCurrentTimeClick()">
-          Go to Current Time
-        </button>
-      </div>
-      <cdk-virtual-scroll-viewport
-        protologVirtualScroll
-        class="scroll-messages"
-        [scrollItems]="uiData.messages">
-        <div
-          *cdkVirtualFor="let message of uiData.messages; let i = index"
-          class="message"
-          [attr.item-id]="i"
-          [class.current]="isCurrentMessage(i)"
-          [class.selected]="isSelectedMessage(i)"
-          (click)="onMessageClicked(i)">
-          <div class="time">
-            <button
-              mat-button
-              color="primary"
-              (click)="onTimestampClicked(message.time)">
-              {{ message.time.formattedValue() }}
-            </button>
-          </div>
+      <div class="log-view">
+        <div class="filters">
           <div class="log-level">
-            <span class="mat-body-1">{{ message.level }}</span>
+            <select-with-filter
+              label="Log level"
+              flex="3"
+              [options]="uiData.allLogLevels"
+              outerFilterWidth="225"
+              (selectChange)="onLogLevelsChange($event)">
+            </select-with-filter>
           </div>
           <div class="tag">
-            <span class="mat-body-1">{{ message.tag }}</span>
+            <select-with-filter
+              label="Tags"
+              flex="2"
+              [options]="uiData.allTags"
+              outerFilterWidth="150"
+              innerFilterWidth="150"
+              (selectChange)="onTagsChange($event)">
+            </select-with-filter>
           </div>
           <div class="source-file">
-            <span class="mat-body-1">{{ message.at }}</span>
+            <select-with-filter
+              label="Source files"
+              flex="4"
+              [options]="uiData.allSourceFiles"
+              outerFilterWidth="300"
+              innerFilterWidth="300"
+              (selectChange)="onSourceFilesChange($event)">
+            </select-with-filter>
           </div>
           <div class="text">
-            <span class="mat-body-1">{{ message.text }}</span>
+            <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
+              <mat-label>Search text</mat-label>
+              <input matInput name="protologTextInput" [(ngModel)]="searchString" (input)="onSearchStringChange()" />
+            </mat-form-field>
           </div>
+
+          <button
+            color="primary"
+            mat-stroked-button
+            class="go-to-current-time"
+            (click)="onGoToCurrentTimeClick()">
+            Go to Current Time
+          </button>
         </div>
-      </cdk-virtual-scroll-viewport>
+        <cdk-virtual-scroll-viewport
+          protologVirtualScroll
+          class="scroll-messages"
+          [scrollItems]="uiData.messages">
+          <div
+            *cdkVirtualFor="let message of uiData.messages; let i = index"
+            class="message"
+            [attr.item-id]="i"
+            [class.current]="isCurrentMessage(i)"
+            [class.selected]="isSelectedMessage(i)"
+            (click)="onMessageClicked(i)">
+            <div class="time">
+              <button
+                mat-button
+                color="primary"
+                (click)="onTimestampClicked(message.time)">
+                {{ message.time.formattedValue() }}
+              </button>
+            </div>
+            <div class="log-level">
+              <span class="mat-body-1">{{ message.level }}</span>
+            </div>
+            <div class="tag">
+              <span class="mat-body-1">{{ message.tag }}</span>
+            </div>
+            <div class="source-file">
+              <span class="mat-body-1">{{ message.at }}</span>
+            </div>
+            <div class="text">
+              <span class="mat-body-1">{{ message.text }}</span>
+            </div>
+          </div>
+        </cdk-virtual-scroll-viewport>
+      </div>
     </div>
   `,
   styles: [
     `
       .container {
-        padding: 16px;
-        box-sizing: border-box;
         display: flex;
         flex-direction: column;
       }
@@ -185,6 +186,7 @@ import {UiData} from './ui_data';
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
+    viewerCardStyle,
   ],
 })
 export class ViewerProtologComponent {
