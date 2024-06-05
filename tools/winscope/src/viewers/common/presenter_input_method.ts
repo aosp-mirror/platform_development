@@ -36,6 +36,7 @@ import {
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter as PresenterSurfaceFlinger} from 'viewers/viewer_surface_flinger/presenter';
+import {VISIBLE_CHIP} from './chip';
 import {AddChips} from './operations/add_chips';
 import {Filter} from './operations/filter';
 import {FlattenChildren} from './operations/flatten_children';
@@ -61,7 +62,6 @@ export abstract class PresenterInputMethod {
   private currentImeEntryTimestamp: string | undefined;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
-  protected readonly dependencies: TraceType[];
   protected uiData: ImeUiData;
   protected highlightedItem = '';
   protected entry: HierarchyTreeNode | undefined;
@@ -73,8 +73,9 @@ export abstract class PresenterInputMethod {
           name: 'Simplify names',
           enabled: true,
         },
-        onlyVisible: {
-          name: 'Only visible',
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
         flat: {
@@ -102,20 +103,17 @@ export abstract class PresenterInputMethod {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private storage: Storage,
-    dependencies: ImeTraceType[],
     notifyViewCallback: NotifyImeViewCallbackType,
   ) {
-    this.imeTrace = traces.getTrace(
-      dependencies[0],
-    ) as Trace<HierarchyTreeNode>;
+    this.imeTrace = trace;
     this.sfTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.wmTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
 
-    this.dependencies = dependencies;
     this.notifyViewCallback = notifyViewCallback;
-    this.uiData = new ImeUiData(dependencies);
+    this.uiData = new ImeUiData(this.imeTrace.type as ImeTraceType);
     this.copyUiDataAndNotifyView();
   }
 
@@ -123,7 +121,7 @@ export abstract class PresenterInputMethod {
     await event.visit(
       WinscopeEventType.TRACE_POSITION_UPDATE,
       async (event) => {
-        this.uiData = new ImeUiData(this.dependencies);
+        this.uiData = new ImeUiData(this.imeTrace.type as ImeTraceType);
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
         this.selectedHierarchyTree = undefined;
@@ -457,7 +455,7 @@ export abstract class PresenterInputMethod {
     }
 
     const predicates = [this.hierarchyFilter];
-    if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
+    if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
     }
 
@@ -497,7 +495,7 @@ export abstract class PresenterInputMethod {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
       UiTreeUtils.isNotCalculated,
-      UiTreeUtils.makeDenyListFilter(
+      UiTreeUtils.makeDenyListFilterByName(
         PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES,
       ),
     ];

@@ -52,7 +52,7 @@ describe('Viewer Input Method Clients', () => {
     await clickInputMethodSurface();
     await checkInputMethodSurfaceProperties();
 
-    await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, true);
+    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, true);
     await checkHierarchy();
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'InputMethod#765');
     await checkInputMethodLayerProperties();
