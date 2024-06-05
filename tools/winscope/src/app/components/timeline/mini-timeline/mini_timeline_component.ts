@@ -32,9 +32,9 @@ import {PersistentStore} from 'common/persistent_store';
 import {TimeRange, Timestamp} from 'common/time';
 import {TimestampUtils} from 'common/timestamp_utils';
 import {Analytics} from 'logging/analytics';
-import {Traces} from 'trace/traces';
+import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType, TraceTypeUtils} from 'trace/trace_type';
+import {TraceTypeUtils} from 'trace/trace_type';
 import {MiniTimelineDrawer} from './drawer/mini_timeline_drawer';
 import {MiniTimelineDrawerImpl} from './drawer/mini_timeline_drawer_impl';
 import {MiniTimelineDrawerInput} from './drawer/mini_timeline_drawer_input';
@@ -123,7 +123,7 @@ import {Transformer} from './transformer';
 export class MiniTimelineComponent {
   @Input() timelineData: TimelineData | undefined;
   @Input() currentTracePosition: TracePosition | undefined;
-  @Input() selectedTraces: TraceType[] | undefined;
+  @Input() selectedTraces: Array<Trace<object>> | undefined;
   @Input() initialZoom: TimeRange | undefined;
   @Input() expandedTimelineScrollEvent: WheelEvent | undefined;
   @Input() expandedTimelineMouseXRatio: number | undefined;
@@ -139,7 +139,7 @@ export class MiniTimelineComponent {
     range: TimeRange;
     rangeContainsBookmark: boolean;
   }>();
-  @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
+  @Output() readonly onTraceClicked = new EventEmitter<Trace<object>>();
 
   @ViewChild('miniTimelineWrapper', {static: false})
   miniTimelineWrapper: ElementRef | undefined;
@@ -191,8 +191,11 @@ export class MiniTimelineComponent {
       );
     };
 
-    const onClickCallback = (timestamp: Timestamp, trace?: TraceType) => {
-      if (trace !== undefined) {
+    const onClickCallback = (
+      timestamp: Timestamp,
+      trace: Trace<object> | undefined,
+    ) => {
+      if (trace) {
         this.onTraceClicked.emit(trace);
       }
       updateTimestampCallback(timestamp);
@@ -237,19 +240,11 @@ export class MiniTimelineComponent {
     }
   }
 
-  getTracesToShow(): Traces {
-    const traces = new Traces();
-    const timelineData = assertDefined(this.timelineData);
-    assertDefined(this.selectedTraces)
-      .filter((type) => timelineData.getTraces().getTrace(type) !== undefined)
-      .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(b, a)) // reversed to ensure display is ordered top to bottom
-      .forEach((type) => {
-        traces.setTrace(
-          type,
-          assertDefined(timelineData.getTraces().getTrace(type)),
-        );
-      });
-    return traces;
+  getTracesToShow(): Array<Trace<object>> {
+    return assertDefined(this.selectedTraces)
+      .slice()
+      .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type))
+      .reverse(); // reversed to ensure display is ordered top to bottom
   }
 
   @HostListener('window:resize', ['$event'])
