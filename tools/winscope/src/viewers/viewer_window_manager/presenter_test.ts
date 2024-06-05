@@ -148,10 +148,10 @@ describe('PresenterWindowManager', () => {
 
   it('filters rects by show/hide state', async () => {
     const userOptions: UserOptions = {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: false,
+        enabled: true,
       },
     };
     presenter.onRectsUserOptionsChange(userOptions);
@@ -164,17 +164,17 @@ describe('PresenterWindowManager', () => {
     );
     checkRectUiData(12, 12, 11);
 
-    userOptions['applyNonHidden'].enabled = true;
+    userOptions['ignoreNonHidden'].enabled = false;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(11, 12, 11);
   });
 
   it('handles both visibility and show/hide state in rects', async () => {
     const userOptions: UserOptions = {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: false,
+        enabled: true,
       },
       showOnlyVisible: {
         name: 'Show only',
@@ -192,7 +192,7 @@ describe('PresenterWindowManager', () => {
     );
     checkRectUiData(12, 12, 11);
 
-    userOptions['applyNonHidden'].enabled = true;
+    userOptions['ignoreNonHidden'].enabled = false;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(11, 12, 11);
 
@@ -200,7 +200,7 @@ describe('PresenterWindowManager', () => {
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(6, 12, 6);
 
-    userOptions['applyNonHidden'].enabled = false;
+    userOptions['ignoreNonHidden'].enabled = true;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(7, 12, 6);
   });
@@ -245,68 +245,6 @@ describe('PresenterWindowManager', () => {
     userOptions['showOnlyVisible'].enabled = true;
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
-  });
-
-  it('filters hierarchy tree by show/hide state', async () => {
-    const userOptions: UserOptions = {
-      showOnlyNonHidden: {
-        name: 'Show only',
-        icon: 'visibility',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
-    };
-
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
-
-    userOptions['showOnlyNonHidden'].enabled = true;
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(12);
-
-    await presenter.onRectShowStateChange(
-      'WindowState 93d3f3c ScreenDecorOverlayBottom',
-      RectShowState.HIDE,
-    );
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(11);
-  });
-
-  it('handles both visibility and show/hide state in hierarchy tree', async () => {
-    const userOptions: UserOptions = {
-      showOnlyVisible: {
-        name: 'Show only',
-        chip: VISIBLE_CHIP,
-        enabled: false,
-      },
-      showOnlyNonHidden: {
-        name: 'Show only',
-        icon: 'visibility',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
-    };
-
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
-
-    userOptions['showOnlyNonHidden'].enabled = true;
-    userOptions['showOnlyVisible'].enabled = true;
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
-
-    await presenter.onRectShowStateChange(
-      'WindowState 93d3f3c ScreenDecorOverlayBottom',
-      RectShowState.HIDE,
-    );
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(5);
   });
 
   it('flattens hierarchy tree', async () => {

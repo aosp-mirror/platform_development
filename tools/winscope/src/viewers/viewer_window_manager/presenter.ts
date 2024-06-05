@@ -70,10 +70,10 @@ export class Presenter {
   private rectsUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
     'WmRectsOptions',
     {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: true,
+        enabled: false,
       },
       showOnlyVisible: {
         name: 'Show only',
@@ -91,11 +91,6 @@ export class Presenter {
           name: 'Show diff',
           enabled: false,
           isUnavailable: false,
-        },
-        showOnlyNonHidden: {
-          name: 'Show only',
-          icon: 'visibility',
-          enabled: false,
         },
         showOnlyVisible: {
           name: 'Show only',
@@ -295,11 +290,6 @@ export class Presenter {
   async onRectShowStateChange(id: string, newShowState: RectShowState) {
     this.rectFilter.updateRectShowState(id, newShowState);
     this.updateRectUiData();
-    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
-      this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
-        this.currentHierarchyTree,
-      );
-    }
     this.copyUiDataAndNotifyView();
   }
 
@@ -365,12 +355,12 @@ export class Presenter {
   private filterRects(rects: UiRect[]): UiRect[] {
     const isOnlyVisibleMode =
       this.rectsUserOptions['showOnlyVisible']?.enabled ?? false;
-    const isApplyNonHiddenMode =
-      this.rectsUserOptions['applyNonHidden']?.enabled ?? false;
+    const isIgnoreNonHiddenMode =
+      this.rectsUserOptions['ignoreNonHidden']?.enabled ?? false;
     return this.rectFilter.filterRects(
       rects,
       isOnlyVisibleMode,
-      isApplyNonHiddenMode,
+      isIgnoreNonHiddenMode,
     );
   }
 
@@ -411,14 +401,6 @@ export class Presenter {
     const predicates = [this.hierarchyFilter];
     if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
-    }
-
-    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
-      predicates.push(
-        UiTreeUtils.makeAllowListFilterById(
-          this.uiData.rectsToDraw.map((rect) => rect.id),
-        ),
-      );
     }
 
     formatter

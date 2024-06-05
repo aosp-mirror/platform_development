@@ -167,10 +167,10 @@ describe('PresenterSurfaceFlinger', () => {
 
   it('filters rects by show/hide state', async () => {
     const userOptions: UserOptions = {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: false,
+        enabled: true,
       },
     };
     presenter.onRectsUserOptionsChange(userOptions);
@@ -180,17 +180,17 @@ describe('PresenterSurfaceFlinger', () => {
     await presenter.onRectShowStateChange(nodeWithRect.id, RectShowState.HIDE);
     checkRectUiData(7, 7, 6);
 
-    userOptions['applyNonHidden'].enabled = true;
+    userOptions['ignoreNonHidden'].enabled = false;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(6, 7, 6);
   });
 
   it('handles both visibility and show/hide state in rects', async () => {
     const userOptions: UserOptions = {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: false,
+        enabled: true,
       },
       showOnlyVisible: {
         name: 'Show only',
@@ -208,7 +208,7 @@ describe('PresenterSurfaceFlinger', () => {
     );
     checkRectUiData(7, 7, 6);
 
-    userOptions['applyNonHidden'].enabled = true;
+    userOptions['ignoreNonHidden'].enabled = false;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(6, 7, 6);
 
@@ -216,7 +216,7 @@ describe('PresenterSurfaceFlinger', () => {
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(5, 7, 5);
 
-    userOptions['applyNonHidden'].enabled = false;
+    userOptions['ignoreNonHidden'].enabled = true;
     presenter.onRectsUserOptionsChange(userOptions);
     checkRectUiData(6, 7, 5);
   });
@@ -261,68 +261,6 @@ describe('PresenterSurfaceFlinger', () => {
     userOptions['showOnlyVisible'].enabled = true;
     await presenter.onHierarchyUserOptionsChange(userOptions);
     expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
-  });
-
-  it('filters hierarchy tree by show/hide state', async () => {
-    const userOptions: UserOptions = {
-      showOnlyNonHidden: {
-        name: 'Show only',
-        icon: 'visibility',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
-    };
-
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(94);
-
-    userOptions['showOnlyNonHidden'].enabled = true;
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
-
-    await presenter.onRectShowStateChange(
-      '79 Wallpaper BBQ wrapper#79',
-      RectShowState.HIDE,
-    );
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(5);
-  });
-
-  it('handles both visibility and show/hide state in hierarchy tree', async () => {
-    const userOptions: UserOptions = {
-      showOnlyVisible: {
-        name: 'Show only',
-        chip: VISIBLE_CHIP,
-        enabled: false,
-      },
-      showOnlyNonHidden: {
-        name: 'Show only',
-        icon: 'visibility',
-        enabled: false,
-      },
-      flat: {
-        name: 'Flat',
-        enabled: true,
-      },
-    };
-
-    await presenter.onAppEvent(positionUpdate);
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(94);
-
-    userOptions['showOnlyNonHidden'].enabled = true;
-    userOptions['showOnlyVisible'].enabled = true;
-    await presenter.onHierarchyUserOptionsChange(userOptions);
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
-
-    await presenter.onRectShowStateChange(
-      '79 Wallpaper BBQ wrapper#79',
-      RectShowState.HIDE,
-    );
-    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(5);
   });
 
   it('flattens hierarchy tree', async () => {

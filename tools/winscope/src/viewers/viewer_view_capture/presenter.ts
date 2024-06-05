@@ -92,10 +92,10 @@ export class Presenter implements WinscopeEventEmitter {
   private rectsUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
     'SfRectsOptions',
     {
-      applyNonHidden: {
-        name: 'Apply',
+      ignoreNonHidden: {
+        name: 'Ignore',
         icon: 'visibility',
-        enabled: true,
+        enabled: false,
       },
       showOnlyVisible: {
         name: 'Show only',
@@ -111,11 +111,6 @@ export class Presenter implements WinscopeEventEmitter {
       {
         showDiff: {
           name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
-          enabled: false,
-        },
-        showOnlyNonHidden: {
-          name: 'Show only',
-          icon: 'visibility',
           enabled: false,
         },
         showOnlyVisible: {
@@ -355,12 +350,12 @@ export class Presenter implements WinscopeEventEmitter {
   private filterRects(rects: UiRect[]): UiRect[] {
     const isOnlyVisibleMode =
       this.rectsUserOptions['showOnlyVisible']?.enabled ?? false;
-    const isApplyNonHiddenMode =
-      this.rectsUserOptions['applyNonHidden']?.enabled ?? false;
+    const isIgnoreNonHiddenMode =
+      this.rectsUserOptions['ignoreNonHidden']?.enabled ?? false;
     return this.rectFilter.filterRects(
       rects,
       isOnlyVisibleMode,
-      isApplyNonHiddenMode,
+      isIgnoreNonHiddenMode,
     );
   }
 
@@ -436,14 +431,6 @@ export class Presenter implements WinscopeEventEmitter {
       const predicates = [this.hierarchyFilter];
       if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
         predicates.push(UiTreeUtils.isVisible);
-      }
-
-      if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
-        predicates.push(
-          UiTreeUtils.makeAllowListFilterById(
-            rectsToDraw.map((rect) => rect.id),
-          ),
-        );
       }
 
       formatter
@@ -592,13 +579,6 @@ export class Presenter implements WinscopeEventEmitter {
   async onRectShowStateChange(id: string, newShowState: RectShowState) {
     this.rectFilter.updateRectShowState(id, newShowState);
     this.updateRectUiData();
-    const uiData = assertDefined(this.uiData);
-    if (this.hierarchyUserOptions['showOnlyNonHidden']?.enabled) {
-      uiData.trees = await this.formatHierarchyTreesAndUpdatePinnedItems(
-        this.currentHierarchyTrees,
-        uiData.vcRectsToDraw,
-      );
-    }
     this.copyUiDataAndNotifyView();
   }
 
