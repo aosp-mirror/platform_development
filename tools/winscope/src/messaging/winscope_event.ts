@@ -16,9 +16,8 @@
 
 import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
-import {TraceEntry} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export enum WinscopeEventType {
@@ -144,12 +143,11 @@ export class TabbedViewSwitched extends WinscopeEvent {
 export class TabbedViewSwitchRequest extends WinscopeEvent {
   override readonly type = WinscopeEventType.TABBED_VIEW_SWITCH_REQUEST;
 
-  //TODO(b/263779536): use proper view/viewer ID, instead of abusing trace type.
-  readonly newFocusedViewId: TraceType;
+  readonly newActiveTrace: Trace<object>;
 
-  constructor(newFocusedViewId: TraceType) {
+  constructor(newActiveTrace: Trace<object>) {
     super();
-    this.newFocusedViewId = newFocusedViewId;
+    this.newActiveTrace = newActiveTrace;
   }
 }
 
@@ -202,7 +200,7 @@ export class ExpandedTimelineToggled extends WinscopeEvent {
 
 export class ActiveTraceChanged extends WinscopeEvent {
   override readonly type = WinscopeEventType.ACTIVE_TRACE_CHANGED;
-  constructor(readonly traceType: TraceType) {
+  constructor(readonly trace: Trace<object>) {
     super();
   }
 }

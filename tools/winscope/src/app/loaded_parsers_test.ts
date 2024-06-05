@@ -54,7 +54,6 @@ describe('LoadedParsers', () => {
   ];
 
   const filename = 'filename';
-  const file = new TraceFile(new File([], filename));
 
   const parserSf0 = new ParserBuilder<object>()
     .setType(TraceType.SURFACE_FLINGER)
@@ -123,6 +122,16 @@ describe('LoadedParsers', () => {
     .setTimestamps(timestamps)
     .setDescriptors([filename])
     .build();
+  const parserViewCapture0 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
+  const parserViewCapture1 = new ParserBuilder<object>()
+    .setType(TraceType.VIEW_CAPTURE)
+    .setEntries([])
+    .setDescriptors([filename])
+    .build();
 
   let loadedParsers: LoadedParsers;
   let warnings: UserWarning[] = [];
@@ -142,7 +151,12 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0], []);
   });
 
-  it('loads legacy parser without dropping already-loaded legacy parser with different type', async () => {
+  it('loads multiple perfetto parsers with same trace type', async () => {
+    loadParsers([], [parserSf0, parserSf1]);
+    expectLoadResult([parserSf0, parserSf1], []);
+  });
+
+  it('loads legacy parser without dropping already-loaded legacy parser (different trace type)', async () => {
     loadParsers([parserSf0], []);
     expectLoadResult([parserSf0], []);
 
@@ -150,17 +164,12 @@ describe('LoadedParsers', () => {
     expectLoadResult([parserSf0, parserWm0], []);
   });
 
-  it('loads legacy parser overriding already-loaded legacy parser with same type (newly loaded file/archive always wins)', () => {
+  it('loads legacy parser without dropping already-loaded legacy parser (same trace type)', async () => {
     loadParsers([parserSf0], []);
     expectLoadResult([parserSf0], []);
 
     loadParsers([parserSf1], []);
-    expectLoadResult([parserSf1], [new TraceOverridden(filename)]);
-  });
-
-  it('gives priority to parsers with longer data', () => {
-    loadParsers([parserWm0, parserWm_dump], []);
-    expectLoadResult([parserWm0], [new TraceOverridden(filename)]);
+    expectLoadResult([parserSf0, parserSf1], []);
   });
 
   it('drops elapsed-only parsers if parsers with real timestamps present', () => {
@@ -319,7 +328,7 @@ describe('LoadedParsers', () => {
   describe('is robust to multiple parsers of same type loaded at once', () => {
     it('legacy parsers', () => {
       loadParsers([parserSf0, parserSf1], []);
-      expectLoadResult([parserSf0], [new TraceOverridden(filename)]);
+      expectLoadResult([parserSf0, parserSf1], []);
     });
 
     it('legacy + perfetto parsers', () => {
@@ -344,12 +353,22 @@ describe('LoadedParsers', () => {
   });
 
   describe('handles screen recordings and screenshots', () => {
-    const parserScreenRecording = new ParserBuilder<object>()
+    const parserScreenRecording0 = new ParserBuilder<object>()
       .setType(TraceType.SCREEN_RECORDING)
       .setTimestamps(timestamps)
       .setDescriptors(['screen_recording.mp4'])
       .build();
-    const parserScreenshot = new ParserBuilder<object>()
+    const parserScreenRecording1 = new ParserBuilder<object>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screen_recording.mp4'])
+      .build();
+    const parserScreenshot0 = new ParserBuilder<object>()
+      .setType(TraceType.SCREENSHOT)
+      .setTimestamps(timestamps)
+      .setDescriptors(['screenshot.png'])
+      .build();
+    const parserScreenshot1 = new ParserBuilder<object>()
       .setType(TraceType.SCREENSHOT)
       .setTimestamps(timestamps)
       .setDescriptors(['screenshot.png'])
@@ -360,39 +379,67 @@ describe('LoadedParsers', () => {
     );
 
     it('loads screenshot parser', () => {
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenshot], []);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
     });
 
     it('loads screen recording parser', () => {
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], []);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], []);
     });
 
     it('discards screenshot parser in favour of screen recording parser', () => {
-      loadParsers([parserScreenshot, parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenshot0, parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('does not load screenshot parser after loading screen recording parser in same call', () => {
-      loadParsers([parserScreenRecording, parserScreenshot], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenRecording0, parserScreenshot0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('does not load screenshot parser after loading screen recording parser in previous call', () => {
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], []);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], []);
 
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
     });
 
     it('overrides previously loaded screenshot parser with screen recording parser', () => {
-      loadParsers([parserScreenshot], []);
-      expectLoadResult([parserScreenshot], []);
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
 
-      loadParsers([parserScreenRecording], []);
-      expectLoadResult([parserScreenRecording], [overrideError]);
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult([parserScreenRecording0], [overrideError]);
+    });
+
+    it('enforces limit of single screenshot or screenrecord parser', () => {
+      loadParsers([parserScreenshot0], []);
+      expectLoadResult([parserScreenshot0], []);
+
+      loadParsers([parserScreenshot1], []);
+      expectLoadResult(
+        [parserScreenshot0],
+        [new TraceOverridden('screenshot.png', TraceType.SCREENSHOT)],
+      );
+
+      loadParsers([parserScreenRecording0], []);
+      expectLoadResult(
+        [parserScreenRecording0],
+        [new TraceOverridden('screenshot.png', TraceType.SCREEN_RECORDING)],
+      );
+
+      loadParsers([parserScreenRecording1], []);
+      expectLoadResult(
+        [parserScreenRecording0],
+        [
+          new TraceOverridden(
+            'screen_recording.mp4',
+            TraceType.SCREEN_RECORDING,
+          ),
+        ],
+      );
     });
   });
 
@@ -400,10 +447,10 @@ describe('LoadedParsers', () => {
     loadParsers([parserSf0], [parserWm0]);
     expectLoadResult([parserSf0, parserWm0], []);
 
-    loadedParsers.remove(TraceType.WINDOW_MANAGER);
+    loadedParsers.remove(parserWm0);
     expectLoadResult([parserSf0], []);
 
-    loadedParsers.remove(TraceType.SURFACE_FLINGER);
+    loadedParsers.remove(parserSf0);
     expectLoadResult([], []);
   });
 
@@ -420,39 +467,82 @@ describe('LoadedParsers', () => {
   });
 
   it('can make zip archive of traces with appropriate directories and extensions', async () => {
-    loadParsers([parserSf0, parserScreenRecording], [parserWmTransitions]);
-    expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions],
-      [],
-    );
+    const fileDuplicated = new File([], filename);
 
-    const fileWithExt = new TraceFile(new File([], filename + '.pb'));
-    loadParsers([parserWm0], [], fileWithExt);
+    const legacyFiles = [
+      // ScreenRecording
+      new File([], filename),
+
+      // ViewCapture
+      // Multiple parsers point to the same viewcapture file,
+      // but we expect to see only one in the output archive (deduplicated)
+      fileDuplicated,
+      fileDuplicated,
+
+      // WM
+      new File([], filename + '.pb'),
+
+      // WM
+      // Same filename as above.
+      // Expect this file to be automatically renamed to avoid clashes/overwrites
+      new File([], filename + '.pb'),
+    ];
+
+    loadParsers(
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+      ],
+      [parserSf0, parserWmTransitions],
+      legacyFiles,
+    );
     expectLoadResult(
-      [parserSf0, parserScreenRecording, parserWmTransitions, parserWm0],
+      [
+        parserScreenRecording,
+        parserViewCapture0,
+        parserViewCapture1,
+        parserWm0,
+        parserWm1,
+        parserSf0,
+        parserWmTransitions,
+      ],
       [],
     );
 
     const zipArchive = await loadedParsers.makeZipArchive();
     const zipFile = new File([zipArchive], 'winscope.zip');
-    const unzippedArchive = await FileUtils.unzipFile(zipFile);
+    const actualArchiveContents = (await FileUtils.unzipFile(zipFile))
+      .map((file) => file.name)
+      .sort();
 
-    expect(unzippedArchive[0].name).toEqual('filename.perfetto-trace'); // adds .perfetto-trace
-    expect(unzippedArchive[1].name).toEqual('sf/filename.winscope'); // adds .winscope
-    expect(unzippedArchive[2].name).toEqual('filename.mp4'); // adds .mp4
-    expect(unzippedArchive[3].name).toEqual('wm/filename.pb'); // does not add/replace .pb
+    const expectedArchiveContents = [
+      'filename.mp4',
+      'filename.perfetto-trace',
+      'vc/filename.winscope',
+      'wm/filename (1).pb',
+      'wm/filename.pb',
+    ];
+    expect(actualArchiveContents).toEqual(expectedArchiveContents);
   });
 
   function loadParsers(
     legacy: Array<Parser<object>>,
     perfetto: Array<Parser<object>>,
-    testFile = file,
+    legacyFiles?: File[],
   ) {
-    const legacyFileAndParsers = legacy.map(
-      (parser) => new FileAndParser(testFile, parser),
-    );
+    const legacyFileAndParsers = legacy.map((parser, i) => {
+      const legacyFile = legacyFiles ? legacyFiles[i] : new File([], filename);
+      return new FileAndParser(new TraceFile(legacyFile), parser);
+    });
+
+    const perfettoTraceFile = new TraceFile(new File([], filename));
     const perfettoFileAndParsers =
-      perfetto.length > 0 ? new FileAndParsers(testFile, perfetto) : undefined;
+      perfetto.length > 0
+        ? new FileAndParsers(perfettoTraceFile, perfetto)
+        : undefined;
 
     warnings = [];
     const listener = {
@@ -472,18 +562,9 @@ describe('LoadedParsers', () => {
     expectedParsers: Array<Parser<object>>,
     expectedWarnings: UserWarning[],
   ) {
-    expectedParsers.sort((a, b) => a.getTraceType() - b.getTraceType());
-    const actualParsers = loadedParsers
-      .getParsers()
-      .sort((a, b) => a.getTraceType() - b.getTraceType());
-
-    for (
-      let i = 0;
-      i < Math.max(expectedParsers.length, actualParsers.length);
-      ++i
-    ) {
-      expect(actualParsers[i]).toBe(expectedParsers[i]);
-    }
+    const actualParsers = loadedParsers.getParsers();
+    expect(actualParsers.length).toEqual(expectedParsers.length);
+    expect(new Set([...actualParsers])).toEqual(new Set([...expectedParsers]));
 
     expect(warnings).toEqual(expectedWarnings);
   }

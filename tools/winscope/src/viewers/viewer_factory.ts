@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import {assertTrue} from 'common/assert_utils';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {Viewer} from './viewer';
@@ -26,7 +28,7 @@ import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_rec
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
-import {ViewerViewCaptureLauncher} from './viewer_view_capture/viewer_view_capture';
+import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
@@ -40,22 +42,30 @@ class ViewerFactory {
     ViewerProtoLog,
     ViewerScreenRecording,
     ViewerScreenshot,
-    ViewerViewCaptureLauncher,
     ViewerTransitions,
   ];
 
   createViewers(traces: Traces, storage: Storage): Viewer[] {
-    const activeTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const viewers: Viewer[] = [];
 
-    for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.some(
-        (traceType: TraceType) => activeTraceTypes.has(traceType),
-      );
+    // regular viewers
+    traces.forEachTrace((trace) => {
+      ViewerFactory.VIEWERS.forEach((Viewer) => {
+        assertTrue(Viewer.DEPENDENCIES.length === 1);
+        const isViewerDepSatisfied = trace.type === Viewer.DEPENDENCIES[0];
+        if (isViewerDepSatisfied) {
+          viewers.push(new Viewer(trace as Trace<any>, traces, storage));
+        }
+      });
+    });
 
-      if (areViewerDepsSatisfied) {
-        viewers.push(new Viewer(traces, storage));
-      }
+    // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
+    const availableTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
+    const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
+      (traceType: TraceType) => availableTraceTypes.has(traceType),
+    );
+    if (isViewerDepSatisfied) {
+      viewers.push(new ViewerViewCapture(traces, storage));
     }
 
     // Note:
@@ -63,8 +73,8 @@ class ViewerFactory {
     // respective viewers below
     return viewers.sort((a, b) =>
       TraceTypeUtils.compareByDisplayOrder(
-        a.getDependencies()[0],
-        b.getDependencies()[0],
+        a.getTraces()[0].type,
+        b.getTraces()[0].type,
       ),
     );
   }
