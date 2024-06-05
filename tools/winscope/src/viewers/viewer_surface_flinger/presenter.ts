@@ -15,9 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  TabbedViewSwitchRequest,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {LayerFlag} from 'parsers/surface_flinger/layer_flag';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
@@ -32,6 +42,7 @@ import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from 'viewers/common/add_diffs';
 import {AddDiffsHierarchyTree} from 'viewers/common/add_diffs_hierarchy_tree';
 import {AddDiffsPropertiesTree} from 'viewers/common/add_diffs_properties_tree';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {
   SfCuratedProperties,
   SfLayerSummary,
@@ -43,20 +54,22 @@ import {AddChips} from 'viewers/common/operations/add_chips';
 import {Filter} from 'viewers/common/operations/filter';
 import {FlattenChildren} from 'viewers/common/operations/flatten_children';
 import {SimplifyNames} from 'viewers/common/operations/simplify_names';
+import {RectFilter} from 'viewers/common/rect_filter';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UI_RECT_FACTORY} from 'viewers/common/ui_rect_factory';
 import {UiTreeFormatter} from 'viewers/common/ui_tree_formatter';
 import {TreeNodeFilter, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
-import {ViewCaptureUtils} from 'viewers/common/view_capture_utils';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
-export class Presenter {
+export class Presenter implements WinscopeEventEmitter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
+  private emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private readonly traces: Traces;
   private readonly trace: Trace<HierarchyTreeNode>;
   private viewCapturePackageNames: string[] = [];
@@ -72,6 +85,24 @@ export class Presenter {
   private previousHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTree: HierarchyTreeNode | undefined;
   private currentHierarchyTreeName: string | undefined;
+  private allCurrentRects: UiRect[] = [];
+  private rectFilter = new RectFilter();
+  private rectsUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfRectsOptions',
+    {
+      ignoreNonHidden: {
+        name: 'Ignore',
+        icon: 'visibility',
+        enabled: false,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    },
+    this.storage,
+  );
   private hierarchyUserOptions: UserOptions =
     PersistentStoreProxy.new<UserOptions>(
       'SfHierarchyOptions',
@@ -81,13 +112,14 @@ export class Presenter {
           enabled: false,
           isUnavailable: false,
         },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
+          enabled: false,
+        },
         simplifyNames: {
           name: 'Simplify names',
           enabled: true,
-        },
-        onlyVisible: {
-          name: 'Only visible',
-          enabled: false,
         },
         flat: {
           name: 'Flat',
@@ -120,15 +152,20 @@ export class Presenter {
     );
 
   constructor(
+    trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
     this.traces = traces;
-    this.trace = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
+    this.trace = trace;
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
     this.copyUiDataAndNotifyView();
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitWinscopeEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -164,21 +201,25 @@ export class Presenter {
         }
 
         this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
+        this.uiData.rectsUserOptions = this.rectsUserOptions;
         this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
         this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
         if (this.currentHierarchyTree) {
           this.uiData.highlightedItem = this.highlightedItem;
           this.uiData.highlightedProperty = this.highlightedProperty;
-          this.uiData.rects = UI_RECT_FACTORY.makeUiRects(
+
+          this.allCurrentRects = UI_RECT_FACTORY.makeUiRects(
             this.currentHierarchyTree,
             this.viewCapturePackageNames,
           );
+          this.updateRectUiData();
+          this.uiData.displays = this.getDisplays(this.uiData.rectsToDraw);
+
           this.pinnedItems = [];
           this.uiData.tree = await this.formatHierarchyTreeAndUpdatePinnedItems(
             this.currentHierarchyTree,
           );
-          this.uiData.displays = this.getDisplays(this.uiData.rects);
 
           if (this.highlightedItem && this.uiData.tree) {
             const selectedItem = this.currentHierarchyTree.findDfs(
@@ -247,6 +288,13 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
+  onRectsUserOptionsChange(userOptions: UserOptions) {
+    this.rectsUserOptions = userOptions;
+    this.uiData.rectsUserOptions = this.rectsUserOptions;
+    this.updateRectUiData();
+    this.copyUiDataAndNotifyView();
+  }
+
   async onHierarchyUserOptionsChange(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
@@ -275,6 +323,34 @@ export class Presenter {
     await this.updateSelectedTreeUiData();
   }
 
+  async onRectDoubleClick(rectId: string) {
+    const rectHasViewCapture = this.viewCapturePackageNames.some(
+      (packageName) => rectId.includes(packageName),
+    );
+    if (!rectHasViewCapture) {
+      return;
+    }
+    const newActiveTrace = this.traces.getTrace(TraceType.VIEW_CAPTURE);
+    if (!newActiveTrace) {
+      return;
+    }
+    await this.emitWinscopeEvent(new TabbedViewSwitchRequest(newActiveTrace));
+  }
+
+  async onRectShowStateChange(id: string, newShowState: RectShowState) {
+    this.rectFilter.updateRectShowState(id, newShowState);
+    this.updateRectUiData();
+    this.copyUiDataAndNotifyView();
+  }
+
+  private updateRectUiData() {
+    this.uiData.rectsToDraw = this.filterRects(this.allCurrentRects);
+    this.uiData.rectIdToShowState = this.rectFilter.getRectIdToShowState(
+      this.allCurrentRects,
+      this.uiData.rectsToDraw,
+    );
+  }
+
   private updateHighlightedItem(id: string) {
     if (this.highlightedItem === id) {
       this.highlightedItem = '';
@@ -297,9 +373,14 @@ export class Presenter {
   }
 
   private async initializeIfNeeded() {
-    this.viewCapturePackageNames = await ViewCaptureUtils.getPackageNames(
-      this.traces,
-    );
+    const tracesVc = this.traces.getTraces(TraceType.VIEW_CAPTURE);
+    const promisesPackageName = tracesVc.map(async (trace) => {
+      const packageAndWindow = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_METADATA,
+      );
+      return packageAndWindow.packageName;
+    });
+    this.viewCapturePackageNames = await Promise.all(promisesPackageName);
   }
 
   private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
@@ -511,6 +592,18 @@ export class Presenter {
     return propVal !== 'null' ? propVal : 'no color found';
   }
 
+  private filterRects(rects: UiRect[]): UiRect[] {
+    const isOnlyVisibleMode =
+      this.rectsUserOptions['showOnlyVisible']?.enabled ?? false;
+    const isIgnoreNonHiddenMode =
+      this.rectsUserOptions['ignoreNonHidden']?.enabled ?? false;
+    return this.rectFilter.filterRects(
+      rects,
+      isOnlyVisibleMode,
+      isIgnoreNonHiddenMode,
+    );
+  }
+
   private async formatHierarchyTreeAndUpdatePinnedItems(
     hierarchyTree: HierarchyTreeNode | undefined,
   ): Promise<UiHierarchyTreeNode | undefined> {
@@ -546,7 +639,7 @@ export class Presenter {
     }
 
     const predicates = [this.hierarchyFilter];
-    if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
+    if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
     }
 
@@ -608,7 +701,7 @@ export class Presenter {
 
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
-      UiTreeUtils.makeDenyListFilter(Presenter.DENYLIST_PROPERTY_NAMES),
+      UiTreeUtils.makeDenyListFilterByName(Presenter.DENYLIST_PROPERTY_NAMES),
     ];
 
     if (!this.propertiesUserOptions['showDefaults']?.enabled) {

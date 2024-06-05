@@ -40,23 +40,22 @@ app-root {
     overflow: auto;
 }
 
-rects-view .mat-tab-label {
-    min-width: 60px;
-    height: 32px;
-    font-size: 12px;
-    pointer-events: none;
+rects-view .mat-slider-thumb {
+    transform: scale(0.5);
 }
 
-rects-view .mat-tab-body {
-    padding-bottom: 0px;
+rects-view .displays-select .mat-form-field-infix {
+    border-top: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 
-rects-view .mat-tab-label-active {
-  opacity: 100%;
+rects-view .displays-select .mat-form-field-flex {
+    padding-left: 4px;
 }
 
 .mat-select-panel:has(>.select-filter) {
-  max-height: 75vh;
+    max-height: 75vh;
 }
 
 body.dark-mode button.mat-raised-button.mat-primary,
@@ -90,5 +89,9 @@ body.dark-mode button.mat-flat-button.mat-primary {
 }
 
 .context-menu-item:hover {
-  background-color: var(--hover-element-color);
+    background-color: var(--hover-element-color);
+}
+
+.mat-dialog-container {
+    border-radius: 20px !important;
 }

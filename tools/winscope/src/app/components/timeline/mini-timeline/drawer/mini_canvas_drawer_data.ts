@@ -17,10 +17,10 @@
 import {Transformer} from 'app/components/timeline/mini-timeline/transformer';
 import {Segment} from 'app/components/timeline/segment';
 import {TimeRange} from 'common/time';
-import {TraceType} from 'trace/trace_type';
+import {Trace} from 'trace/trace';
 import {MiniTimelineDrawerOutput} from './mini_timeline_drawer_output';
 
-export type TimelineTraces = Map<TraceType, TimelineTrace>;
+export type TimelineTraces = Map<Trace<object>, TimelineTrace>;
 
 export interface TimelineTrace {
   points: number[];
