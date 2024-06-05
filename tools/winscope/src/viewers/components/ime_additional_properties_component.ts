@@ -32,14 +32,17 @@ import {
 } from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {selectedElementStyle} from './styles/selected_element.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'ime-additional-properties',
   template: `
-    <collapsible-section-title
-      class="view-header"
-      title="WM & SF PROPERTIES"
-      (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    <div class="title-section">
+      <collapsible-section-title
+        class="view-header"
+        title="WM & SF PROPERTIES"
+        (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    </div>
     <div class="additional-properties-content" *ngIf="additionalProperties">
       <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
@@ -288,8 +291,8 @@ import {selectedElementStyle} from './styles/selected_element.styles';
   `,
   styles: [
     `
-      .view-header {
-        border-bottom: 1px solid var(--border-color);
+      :host collapsible-section-title {
+        padding-bottom: 8px;
       }
 
       .additional-properties-content {
@@ -337,6 +340,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
       }
     `,
     selectedElementStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class ImeAdditionalPropertiesComponent {

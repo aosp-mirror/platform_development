@@ -518,8 +518,6 @@ describe('LoadedParsers', () => {
       .map((file) => file.name)
       .sort();
 
-    console.log(actualArchiveContents);
-
     const expectedArchiveContents = [
       'filename.mp4',
       'filename.perfetto-trace',

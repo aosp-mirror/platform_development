@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-import {Chip} from './chip';
+export const searchBoxStyle = `
+  .search-box {
+    font-size: 14px;
+    height: 48px;
+  }
 
-export interface UserOptions {
-  [key: string]: UserOption;
-}
-
-export interface UserOption {
-  name: string;
-  enabled: boolean;
-  tooltip?: string;
-  isUnavailable?: boolean;
-  chip?: Chip;
-  icon?: string;
-}
+  .search-box .mat-form-field-flex {
+    padding-left: 5px;
+  }
+  .search-box .mat-form-field-wrapper {
+      padding: 0 !important;
+  }
+  .search-box .mat-form-field-label-wrapper {
+      padding: 0 !important;
+  }
+  .search-box .mat-form-field-infix {
+      border-top: 0;
+      padding-top: 5px;
+      padding-bottom: 5px;
+  }
+`;

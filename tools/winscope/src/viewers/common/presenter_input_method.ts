@@ -36,6 +36,7 @@ import {
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter as PresenterSurfaceFlinger} from 'viewers/viewer_surface_flinger/presenter';
+import {VISIBLE_CHIP} from './chip';
 import {AddChips} from './operations/add_chips';
 import {Filter} from './operations/filter';
 import {FlattenChildren} from './operations/flatten_children';
@@ -72,8 +73,9 @@ export abstract class PresenterInputMethod {
           name: 'Simplify names',
           enabled: true,
         },
-        onlyVisible: {
-          name: 'Only visible',
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
         flat: {
@@ -453,7 +455,7 @@ export abstract class PresenterInputMethod {
     }
 
     const predicates = [this.hierarchyFilter];
-    if (this.hierarchyUserOptions['onlyVisible']?.enabled) {
+    if (this.hierarchyUserOptions['showOnlyVisible']?.enabled) {
       predicates.push(UiTreeUtils.isVisible);
     }
 
@@ -493,7 +495,7 @@ export abstract class PresenterInputMethod {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [
       UiTreeUtils.isNotCalculated,
-      UiTreeUtils.makeDenyListFilter(
+      UiTreeUtils.makeDenyListFilterByName(
         PresenterSurfaceFlinger.DENYLIST_PROPERTY_NAMES,
       ),
     ];
