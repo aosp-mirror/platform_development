@@ -66,6 +66,17 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
   selector: 'timeline',
   encapsulation: ViewEncapsulation.None,
   template: `
+    <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
+      <button
+        mat-icon-button
+        [class]="TOGGLE_BUTTON_CLASS"
+        color="basic"
+        aria-label="Toggle Expanded Timeline"
+        (click)="toggleExpand()">
+          <mat-icon *ngIf="!expanded" class="material-symbols-outlined">expand_circle_up</mat-icon>
+          <mat-icon *ngIf="expanded" class="material-symbols-outlined">expand_circle_down</mat-icon>
+        </button>
+    </div>
     <div id="expanded-nav" *ngIf="expanded">
       <div id="video-content" *ngIf="videoUrl !== undefined">
         <video
@@ -87,17 +98,6 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         id="expanded-timeline"></expanded-timeline>
     </div>
     <div class="navbar-toggle">
-    <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
-      <button
-        mat-icon-button
-        [class]="TOGGLE_BUTTON_CLASS"
-        color="basic"
-        aria-label="Toggle Expanded Timeline"
-        (click)="toggleExpand()">
-          <mat-icon *ngIf="!expanded" class="material-symbols-outlined">expand_circle_up</mat-icon>
-          <mat-icon *ngIf="expanded" class="material-symbols-outlined">expand_circle_down</mat-icon>
-        </button>
-    </div>
       <div class="navbar" #collapsedTimeline>
         <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
           <div id="time-selector">
@@ -270,6 +270,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         width: fit-content;
         position: absolute;
         top: -41px;
+        right: 0px;
         z-index: 1000;
         border: 1px solid #3333;
         border-bottom: 0px;
@@ -287,7 +288,9 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
       }
       #expanded-nav {
         display: flex;
+        flex-direction: row;
         border-bottom: 1px solid #3333;
+        border-top: 1px solid #3333;
       }
       #time-selector {
         display: flex;
@@ -390,10 +393,6 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         top: 0;
         height: 100%;
         width: 100%;
-      }
-      #expanded-nav {
-        display: flex;
-        flex-direction: row;
       }
       #expanded-timeline {
         flex-grow: 1;
