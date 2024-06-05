@@ -26,6 +26,7 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {UnitTestUtils} from 'test/unit/utils';
@@ -53,6 +54,7 @@ describe('ViewerViewCaptureComponent', () => {
         MatFormFieldModule,
         FormsModule,
         BrowserAnimationsModule,
+        MatSelectModule,
       ],
       declarations: [
         ViewerViewCaptureComponent,

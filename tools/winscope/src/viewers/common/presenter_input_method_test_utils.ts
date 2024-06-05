@@ -30,6 +30,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
+import {VISIBLE_CHIP} from './chip';
 import {PresenterInputMethod} from './presenter_input_method';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
@@ -132,8 +133,9 @@ export function executePresenterInputMethodTests(
           name: 'Simplify names',
           enabled: false,
         },
-        onlyVisible: {
-          name: 'Only visible',
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
         flat: {
@@ -161,8 +163,9 @@ export function executePresenterInputMethodTests(
         TraceType.WINDOW_MANAGER,
       ]);
       const userOptions: UserOptions = {
-        onlyVisible: {
-          name: 'Only visible',
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
           enabled: false,
         },
         simplifyNames: {

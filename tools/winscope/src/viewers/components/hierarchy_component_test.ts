@@ -20,7 +20,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -32,13 +32,13 @@ import {PersistentStore} from 'common/persistent_store';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {HierarchyComponent} from './hierarchy_component';
+import {UserOptionsComponent} from './user_options_component';
 
 describe('HierarchyComponent', () => {
   let fixture: ComponentFixture<HierarchyComponent>;
@@ -54,10 +54,11 @@ describe('HierarchyComponent', () => {
         TreeNodeComponent,
         HierarchyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       imports: [
         CommonModule,
-        MatCheckboxModule,
+        MatButtonModule,
         MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
@@ -105,42 +106,8 @@ describe('HierarchyComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
-    const box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy(); //renders at least one view control option
-  });
-
-  it('disables checkboxes if option unavailable', () => {
-    let box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-    expect((box as HTMLInputElement).disabled).toBeFalse();
-
-    component.userOptions['showDiff'].isUnavailable = true;
-    fixture.detectChanges();
-    box = htmlElement.querySelector('.view-controls input');
-    expect((box as HTMLInputElement).disabled).toBeTrue();
-  });
-
-  it('updates tree on user option checkbox change', () => {
-    let options: UserOptions | undefined;
-    htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      (event) => {
-        options = (event as CustomEvent).detail.userOptions;
-      },
-    );
-    const box = assertDefined(
-      htmlElement.querySelector('.view-controls input'),
-    ) as HTMLInputElement;
-    box.checked = true;
-    box.click();
-    fixture.detectChanges();
-    expect(options).toEqual({
-      showDiff: {
-        name: 'Show diff',
-        enabled: true,
-        isUnavailable: false,
-      },
-    });
+    const button = htmlElement.querySelector('.view-controls .user-option');
+    expect(button).toBeTruthy(); //renders at least one view control option
   });
 
   it('renders initial tree elements', () => {
@@ -225,7 +192,7 @@ describe('HierarchyComponent', () => {
       },
     );
     const inputEl = assertDefined(
-      htmlElement.querySelector('.title-filter input'),
+      htmlElement.querySelector('.title-section input'),
     ) as HTMLInputElement;
 
     inputEl.value = 'Root';

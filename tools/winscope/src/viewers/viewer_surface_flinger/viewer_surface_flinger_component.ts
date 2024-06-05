@@ -35,37 +35,41 @@ import {UiData} from './ui_data';
 
       <rects-view
         class="rects-view"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
         [title]="rectsTitle"
         [store]="store"
         [isStackBased]="true"
-        [rects]="inputData?.rects ?? []"
+        [rects]="inputData?.rectsToDraw ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displays]="inputData?.displays ?? []"
         [shadingModes]="shadingModes"
-        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"></rects-view>
+        [dependencies]="inputData?.dependencies ?? []"
+        [userOptions]="inputData?.rectsUserOptions ?? {}"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
 
       <hierarchy-view
         class="hierarchy-view"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
         [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"></hierarchy-view>
+        [rectIdToShowState]="inputData?.rectIdToShowState"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"></hierarchy-view>
 
       <div class="properties" *ngIf="!arePropertiesCollapsed()">
         <surface-flinger-property-groups
           class="property-groups"
-          [properties]="inputData?.curatedProperties"
-          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.CURATED_PROPERTIES, true)"
           [class.empty]="!inputData?.curatedProperties && !sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
-          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.CURATED_PROPERTIES)"></surface-flinger-property-groups>
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.CURATED_PROPERTIES)"
+          [properties]="inputData?.curatedProperties"
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.CURATED_PROPERTIES, true)"></surface-flinger-property-groups>
 
         <properties-view
           class="properties-view"
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
           [title]="propertiesTitle"
           [userOptions]="inputData?.propertiesUserOptions ?? {}"
           [propertiesTree]="inputData?.propertiesTree"
@@ -75,8 +79,7 @@ import {UiData} from './ui_data';
           [displayPropertyGroups]="inputData?.displayPropertyGroups"
           [isProtoDump]="true"
           placeholderText="No selected entry or layer."
-          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
-          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
+          (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
       </div>
     </div>
   `,
@@ -129,7 +132,7 @@ export class ViewerSurfaceFlingerComponent {
     ShadingMode.WIRE_FRAME,
   ];
 
-  arePropertiesCollapsed() {
+  arePropertiesCollapsed(): boolean {
     return (
       this.sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES) &&
       this.sections.isSectionCollapsed(

@@ -38,37 +38,40 @@ import {UiData} from './ui_data';
       </collapsed-sections>
       <rects-view
         class="rects-view"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"
         [title]="rectsTitle"
         [store]="store"
-        [rects]="inputData?.rects ?? []"
+        [rects]="inputData?.vcRectsToDraw ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [displays]="inputData?.windows ?? []"
         groupLabel="Windows"
         [shadingModes]="shadingModes"
-        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.RECTS)"></rects-view>
+        [dependencies]="inputData?.dependencies ?? []"
+        [userOptions]="inputData?.rectsUserOptions ?? {}"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.RECTS, true)"></rects-view>
       <hierarchy-view
         class="hierarchy-view"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
         [subtrees]="inputData?.trees"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
         [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"></hierarchy-view>
+        [rectIdToShowState]="inputData?.vcRectIdToShowState"
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"></hierarchy-view>
       <properties-view
         class="properties-view"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree"
         [curatedProperties]="inputData?.curatedProperties"
         [traceType]="${TraceType.VIEW_CAPTURE}"
         [store]="store"
         [isProtoDump]="false"
-        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"></properties-view>
     </div>
   `,
   styles: [viewerCardStyle],

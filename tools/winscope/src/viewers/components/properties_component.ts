@@ -21,49 +21,47 @@ import {
   Input,
   Output,
 } from '@angular/core';
-import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Analytics} from 'logging/analytics';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
 import {CuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UserOption, UserOptions} from 'viewers/common/user_options';
+import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
+import {searchBoxStyle} from './styles/search_box.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'properties-view',
   template: `
     <div class="view-header">
-      <div class="title-filter">
-        <collapsible-section-title
+      <div class="title-section">
+       <collapsible-section-title
           class="properties-title"
-          [class.padded-title]="hasUserOptions()"
+          [class.padded-title]="!hasUserOptions()"
           [title]="title"
           (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
 
-        <mat-form-field *ngIf="showFilter" (keydown.enter)="$event.target.blur()">
-          <mat-label>Filter...</mat-label>
+        <mat-form-field *ngIf="showFilter" class="search-box" (keydown.enter)="$event.target.blur()">
+          <mat-label>Search</mat-label>
+
           <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
 
-      <div class="view-controls">
-        <mat-checkbox
-          *ngFor="let option of objectKeys(userOptions)"
-          color="primary"
-          [(ngModel)]="userOptions[option].enabled"
-          [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange(userOptions[option])"
-          [matTooltip]="userOptions[option].tooltip ?? ''"
-          >{{ userOptions[option].name }}</mat-checkbox
-        >
-      </div>
+      <user-options
+        *ngIf="hasUserOptions()"
+        class="view-controls"
+        [userOptions]="userOptions"
+        [eventType]="ViewerEvents.PropertiesUserOptionsChange"
+        [traceType]="traceType"
+        [logCallback]="Analytics.Navigation.logPropertiesSettingsChanged">
+      </user-options>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="hasUserOptions()"></mat-divider>
 
     <ng-container *ngIf="showViewCaptureFormat()">
       <view-capture-property-groups
@@ -91,25 +89,10 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       .view-header {
         display: flex;
         flex-direction: column;
-        margin-bottom: 12px;
-      }
-
-      .title-filter {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
       }
 
       .padded-title {
-        padding-bottom: 16px;
-      }
-
-      .view-controls {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
+        padding-bottom: 8px;
       }
 
       .property-groups {
@@ -121,23 +104,23 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-      }
-
-      .tree-wrapper {
-        overflow: auto;
+        padding: 0px 12px;
       }
 
       .placeholder-text {
-        padding-top: 4px;
+        padding: 8px 12px;
       }
     `,
     nodeStyles,
+    searchBoxStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class PropertiesComponent {
+  Analytics = Analytics;
   CollapsibleSectionType = CollapsibleSectionType;
-  objectKeys = Object.keys;
   filterString = '';
+  ViewerEvents = ViewerEvents;
 
   @Input() title = 'PROPERTIES';
   @Input() showFilter = true;
@@ -171,21 +154,8 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onUserOptionChange(option: UserOption) {
-    Analytics.Navigation.logPropertiesSettingsChanged(
-      option.name,
-      option.enabled,
-      TRACE_INFO[assertDefined(this.traceType)].name,
-    );
-    const event = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.userOptions},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
   hasUserOptions() {
-    return this.objectKeys(this.userOptions).length > 0;
+    return Object.keys(this.userOptions).length > 0;
   }
 
   showViewCaptureFormat(): boolean {
