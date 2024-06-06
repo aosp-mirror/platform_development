@@ -16,13 +16,13 @@
 
 import {Point} from 'common/geometry_types';
 import {Padding} from 'common/padding';
-import {TraceType} from 'trace/trace_type';
+import {Trace} from 'trace/trace';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 
 export interface MiniTimelineDrawer {
   draw(): Promise<void>;
   updateHover(mousePoint: Point | undefined): Promise<void>;
-  getTraceClicked(mousePoint: Point): Promise<TraceType | undefined>;
+  getTraceClicked(mousePoint: Point): Promise<Trace<object> | undefined>;
   getXScale(): number;
   getYScale(): number;
   getHeight(): number;
