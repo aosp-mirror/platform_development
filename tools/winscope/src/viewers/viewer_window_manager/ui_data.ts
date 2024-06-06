@@ -15,6 +15,7 @@
  */
 import {TraceType} from 'trace/trace_type';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
@@ -22,11 +23,13 @@ import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   dependencies: TraceType[];
-  rects: UiRect[] = [];
+  rectsToDraw: UiRect[] = [];
+  rectIdToShowState: Map<string, RectShowState> | undefined;
   displays: DisplayIdentifier[] = [];
   highlightedItem = '';
   highlightedProperty = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
+  rectsUserOptions: UserOptions = {};
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   tree: UiHierarchyTreeNode | undefined;

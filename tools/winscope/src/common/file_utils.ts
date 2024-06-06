@@ -24,12 +24,12 @@ export class FileUtils {
   static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
   static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
 
-  static getFileExtension(file: File): string | undefined {
-    const split = file.name.split('.');
-    if (split.length > 1) {
-      return split.pop();
+  static getFileExtension(filename: string): string | undefined {
+    const lastDot = filename.lastIndexOf('.');
+    if (lastDot === -1) {
+      return undefined;
     }
-    return undefined;
+    return filename.slice(lastDot + 1);
   }
 
   static removeDirFromFileName(name: string): string {
