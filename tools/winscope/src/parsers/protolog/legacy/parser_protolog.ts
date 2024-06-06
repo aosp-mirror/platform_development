@@ -19,7 +19,7 @@ import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {LogMessage} from 'parsers/protolog/log_message';
 import {ParserProtologUtils} from 'parsers/protolog/parser_protolog_utils';
-import root from 'protos/protolog/latest/json';
+import root from 'protos/protolog/udc/json';
 import {com} from 'protos/protolog/latest/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
