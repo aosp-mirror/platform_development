@@ -86,7 +86,7 @@ export class TimelineData {
         return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
       });
     if (tracesSortedByDisplayOrder.length > 0) {
-      this.setActiveTrace(tracesSortedByDisplayOrder[0]);
+      this.trySetActiveTrace(tracesSortedByDisplayOrder[0]);
     }
   }
 
@@ -148,8 +148,13 @@ export class TimelineData {
     return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
-  setActiveTrace(trace: Trace<object>) {
-    this.activeTrace = trace;
+  trySetActiveTrace(trace: Trace<object>): boolean {
+    const isTraceWithValidTimestamps = this.traces.hasTrace(trace);
+    if (this.activeTrace !== trace && isTraceWithValidTimestamps) {
+      this.activeTrace = trace;
+      return true;
+    }
+    return false;
   }
 
   getActiveTrace() {

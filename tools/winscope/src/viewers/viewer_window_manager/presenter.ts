@@ -15,6 +15,7 @@
  */
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {INVALID_TIME_NS} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -152,7 +153,12 @@ export class Presenter {
         );
         this.currentHierarchyTree = await entry?.getValue();
         if (entry) {
-          this.currentHierarchyTreeName = entry.getTimestamp().format();
+          const entryTimestamp = entry.getTimestamp();
+          if (entryTimestamp.getValueNs() === INVALID_TIME_NS) {
+            this.currentHierarchyTreeName = 'Dump';
+          } else {
+            this.currentHierarchyTreeName = entryTimestamp.format();
+          }
         }
 
         this.previousEntry =
