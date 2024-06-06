@@ -41,8 +41,12 @@ export class Presenter {
   private uiData = UiData.EMPTY;
   private readonly notifyUiDataCallback: (data: UiData) => void;
 
-  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
-    this.transitionTrace = assertDefined(traces.getTrace(TraceType.TRANSITION));
+  constructor(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    notifyUiDataCallback: (data: UiData) => void,
+  ) {
+    this.transitionTrace = trace;
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
     this.notifyUiDataCallback = notifyUiDataCallback;

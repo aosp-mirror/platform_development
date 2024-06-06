@@ -25,10 +25,13 @@ import {
 } from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {
+  nodeInnerItemStyles,
   nodeStyles,
   treeNodeDataViewStyles,
 } from 'viewers/components/styles/node.styles';
@@ -56,7 +59,9 @@ import {
       [isExpanded]="isExpanded()"
       [isPinned]="isPinned()"
       [isSelected]="isHighlighted(node, highlightedItem)"
+      [showStateIcon]="getShowStateIcon(node)"
       (toggleTreeChange)="toggleTree()"
+      (rectShowStateChange)="toggleRectShowState()"
       (click)="onNodeClick($event)"
       (expandTreeChange)="expandTree()"
       (pinNodeChange)="propagateNewPinnedItem($event)"></tree-node>
@@ -65,10 +70,11 @@ import {
       *ngIf="!isLeaf(node)"
       class="children"
       [class.flattened]="isFlattened"
+      [class.with-gutter]="addGutter()"
       [hidden]="!isExpanded()">
       <tree-view
         *ngFor="let child of node.children.values(); trackBy: childTrackById"
-        class="childrenTree"
+        class="subtree"
         [node]="child"
         [store]="store"
         [showNode]="showNode"
@@ -78,13 +84,14 @@ import {
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
         [itemsClickable]="itemsClickable"
+        [rectIdToShowState]="rectIdToShowState"
         (highlightedChange)="propagateNewHighlightedItem($event)"
         (pinnedItemChange)="propagateNewPinnedItem($event)"
         (hoverStart)="childHover = true"
         (hoverEnd)="childHover = false"></tree-view>
     </div>
   `,
-  styles: [nodeStyles, treeNodeDataViewStyles],
+  styles: [nodeStyles, treeNodeDataViewStyles, nodeInnerItemStyles],
 })
 export class TreeComponent {
   isHighlighted = UiTreeUtils.isHighlighted;
@@ -96,6 +103,7 @@ export class TreeComponent {
   @Input() highlightedItem = '';
   @Input() pinnedItems?: UiHierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
+  @Input() rectIdToShowState?: Map<string, RectShowState>;
 
   // Conditionally use stored states. Some traces (e.g. transactions) do not provide items with the "stable id" field needed to search values in the storage.
   @Input() useStoredExpandedState = false;
@@ -195,11 +203,11 @@ export class TreeComponent {
   }
 
   nodeOffsetStyle() {
-    const offset = this.levelOffset * this.initialDepth + 'px';
-
+    const offset = this.levelOffset * this.initialDepth;
+    const gutterOffset = this.addGutter() ? this.levelOffset / 2 : 0;
     return {
-      marginLeft: '-' + offset,
-      paddingLeft: offset,
+      marginLeft: '-' + offset + 'px',
+      paddingLeft: offset + gutterOffset + 'px',
     };
   }
 
@@ -248,12 +256,40 @@ export class TreeComponent {
     if (this.isLeaf(this.node)) {
       return false;
     }
-    for (const child of this.node!.getAllChildren()) {
+    for (const child of assertDefined(this.node).getAllChildren()) {
       if (this.highlightedItem === child.id) {
         return true;
       }
     }
     return false;
+  }
+
+  getShowStateIcon(
+    node: UiPropertyTreeNode | UiHierarchyTreeNode,
+  ): string | undefined {
+    const showState = this.rectIdToShowState?.get(node.id);
+    if (showState === undefined || node instanceof UiPropertyTreeNode) {
+      return undefined;
+    }
+    return showState === RectShowState.SHOW ? 'visibility' : 'visibility_off';
+  }
+
+  toggleRectShowState() {
+    const nodeId = assertDefined(this.node).id;
+    const currentShowState = assertDefined(this.rectIdToShowState?.get(nodeId));
+    const newShowState =
+      currentShowState === RectShowState.HIDE
+        ? RectShowState.SHOW
+        : RectShowState.HIDE;
+    const event = new CustomEvent(ViewerEvents.RectShowStateChange, {
+      bubbles: true,
+      detail: {rectId: nodeId, state: newShowState},
+    });
+    this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  addGutter() {
+    return (this.rectIdToShowState?.size ?? 0) > 0;
   }
 
   private updateHighlightedItem() {

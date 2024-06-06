@@ -28,7 +28,6 @@ import {TimeRange} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
 import {CanvasDrawer} from './canvas_drawer';
 
 export abstract class AbstractTimelineRowComponent<T extends {}> {
@@ -41,7 +40,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
   @Input() timestampConverter: ComponentTimestampConverter | undefined;
 
   @Output() readonly onScrollEvent = new EventEmitter<WheelEvent>();
-  @Output() readonly onTraceClicked = new EventEmitter<TraceType>();
+  @Output() readonly onTraceClicked = new EventEmitter<Trace<object>>();
   @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
   @Output() readonly onMouseXRatioUpdate = new EventEmitter<
     number | undefined
@@ -144,7 +143,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
         TracePosition.fromTraceEntry(transitionEntry),
       );
     } else if (!transitionEntry && this.trace) {
-      this.onTraceClicked.emit(this.trace.type);
+      this.onTraceClicked.emit(this.trace);
     }
   }
 
@@ -168,7 +167,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     if ((event.target as HTMLElement).id === 'canvas') {
       return;
     }
-    this.onTraceClicked.emit(assertDefined(this.trace).type);
+    this.onTraceClicked.emit(assertDefined(this.trace));
   }
 
   trackMousePos(event: MouseEvent) {
