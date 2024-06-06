@@ -15,8 +15,8 @@
 use std::{fmt::Display, fs::write, path::Path, str::from_utf8};
 
 use crate::{
-    crates_with_multiple_versions, crates_with_single_version, Crate, CrateCollection,
-    NameAndVersionMap, NamedAndVersioned, VersionMatch, VersionPair,
+    crates_with_multiple_versions, crates_with_single_version, CompatibleVersionPair, Crate,
+    CrateCollection, NameAndVersionMap, NamedAndVersioned, VersionMatch, VersionPair,
 };
 
 use anyhow::Result;
@@ -106,7 +106,7 @@ impl<'template> ReportEngine<'template> {
                 &krate.aosp_url().map_or(format!("{}", krate.relpath().display()), |url| {
                     linkify(&krate.relpath().display(), &url)
                 }),
-                &prefer_yes(krate.android_bp().exists()),
+                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
                 &prefer_yes_or_summarize(
                     krate.generate_android_bp_success(),
                     krate
@@ -128,6 +128,30 @@ impl<'template> ReportEngine<'template> {
                 ),
                 &prefer_yes(krate.cargo_embargo_json().exists()),
                 &prefer_no(krate.is_migration_denied()),
+            ]);
+        }
+        Ok(self.tt.render("table", &table)?)
+    }
+    pub fn migratable_table<'a>(
+        &self,
+        crate_pairs: impl Iterator<Item = CompatibleVersionPair<'a, Crate>>,
+    ) -> Result<String> {
+        let mut table = Table::new(&[&"Crate", &"Old Version", &"New Version", &"Path"]);
+        for crate_pair in crate_pairs {
+            let source = crate_pair.source;
+            let dest = crate_pair.dest;
+            let dest_version = if source.version() == dest.version() {
+                "".to_string()
+            } else {
+                dest.version().to_string()
+            };
+            table.add_row(&[
+                &linkify(&source.name(), &source.crates_io_url()),
+                &source.version().to_string(),
+                &dest_version,
+                &source.aosp_url().map_or(format!("{}", source.relpath().display()), |url| {
+                    linkify(&source.relpath().display(), &url)
+                }),
             ]);
         }
         Ok(self.tt.render("table", &table)?)
@@ -155,7 +179,7 @@ impl<'template> ReportEngine<'template> {
                 }),
                 &prefer_yes(krate.is_crates_io()),
                 &prefer_no(krate.is_migration_denied()),
-                &prefer_yes(krate.android_bp().exists()),
+                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
                 &prefer_yes(krate.cargo_embargo_json().exists()),
             ]);
         }
@@ -248,7 +272,7 @@ impl<'template> ReportEngine<'template> {
         output_path: &impl AsRef<Path>,
     ) -> Result<()> {
         let mr = MigrationReport {
-            migratable: self.table(m.migratable().map(|pair| pair.source))?,
+            migratable: self.migratable_table(m.migratable())?,
             eligible: self.migration_eligible_table(m.eligible_but_not_migratable())?,
             ineligible: self.migration_ineligible_table(m.ineligible())?,
             superfluous: self.table(m.superfluous().map(|(_nv, krate)| krate))?,
