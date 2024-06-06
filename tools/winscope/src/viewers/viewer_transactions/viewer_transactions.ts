@@ -18,6 +18,7 @@ import {FunctionUtils} from 'common/function_utils';
 import {Timestamp} from 'common/time';
 import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -30,15 +31,21 @@ import {UiData} from './ui_data';
 class ViewerTransactions implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
 
+  private readonly trace: Trace<PropertyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(traces: Traces, storage: Storage) {
+  constructor(
+    trace: Trace<PropertyTreeNode>,
+    traces: Traces,
+    storage: Storage,
+  ) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-transactions');
 
-    this.presenter = new Presenter(traces, storage, (data: UiData) => {
+    this.presenter = new Presenter(trace, storage, (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     });
 
@@ -98,10 +105,9 @@ class ViewerTransactions implements Viewer {
 
     this.view = new View(
       ViewType.TAB,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       'Transactions',
-      TraceType.TRANSACTIONS,
     );
   }
 
@@ -122,8 +128,8 @@ class ViewerTransactions implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerTransactions.DEPENDENCIES;
+  getTraces(): Array<Trace<PropertyTreeNode>> {
+    return [this.trace];
   }
 }
 

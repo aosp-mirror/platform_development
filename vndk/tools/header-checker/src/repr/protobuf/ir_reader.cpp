@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <google/protobuf/text_format.h>
+#include <llvm/Support/raw_ostream.h>
 
 
 namespace header_checker {

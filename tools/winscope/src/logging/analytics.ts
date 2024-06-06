@@ -101,12 +101,14 @@ export class Analytics {
     }
 
     static logRectSettingsChanged(
-      option: 'only visible' | 'z spacing' | 'shading mode',
+      option: string,
       value: string | number | boolean,
+      traceType: string,
     ) {
       Analytics.doLogEvent(Analytics.RECT_SETTINGS, {
         option,
         value,
+        traceType,
       } as Gtag.CustomParams);
     }
 
