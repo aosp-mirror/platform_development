@@ -55,22 +55,22 @@ bool IRDiffToProtobufConverter::AddVTableLayoutDiff(
   abi_dump:: VTableLayout *new_vtable =
       vtable_layout_diff_protobuf->mutable_new_vtable();
   if (old_vtable == nullptr || new_vtable == nullptr ||
-      !SetIRToProtobufVTableLayout(old_vtable,
-                                   vtable_layout_diff_ir->GetOldVTable()) ||
-      !SetIRToProtobufVTableLayout(new_vtable,
-                                   vtable_layout_diff_ir->GetNewVTable())) {
+      !IRToProtobufConverter::ConvertVTableLayoutIR(
+          old_vtable, vtable_layout_diff_ir->GetOldVTable()) ||
+      !IRToProtobufConverter::ConvertVTableLayoutIR(
+          new_vtable, vtable_layout_diff_ir->GetNewVTable())) {
     return false;
   }
   return true;
 }
 
-template <typename T>
 static bool CopyBaseSpecifiersDiffIRToProtobuf(
-    google::protobuf::RepeatedPtrField<T> *dst,
+    google::protobuf::RepeatedPtrField<abi_dump::CXXBaseSpecifier> *dst,
     const std::vector<CXXBaseSpecifierIR> &bases_ir) {
   for (auto &&base_ir : bases_ir) {
-    T *added_base = dst->Add();
-    if (!SetIRToProtobufBaseSpecifier(added_base, base_ir)) {
+    abi_dump::CXXBaseSpecifier *added_base = dst->Add();
+    if (!IRToProtobufConverter::ConvertCXXBaseSpecifierIR(added_base,
+                                                          base_ir)) {
       return false;
     }
   }
@@ -102,10 +102,9 @@ bool IRDiffToProtobufConverter::AddRecordFields(
     } else {
       field = record_diff_protobuf->add_fields_added();
     }
-    if (field == nullptr) {
+    if (!IRToProtobufConverter::ConvertRecordFieldIR(field, record_field_ir)) {
       return false;
     }
-    SetIRToProtobufRecordField(field, record_field_ir);
   }
   return true;
 }
@@ -126,10 +125,10 @@ bool IRDiffToProtobufConverter::AddRecordFieldDiffs(
     if (old_field == nullptr || new_field == nullptr) {
       return false;
     }
-    SetIRToProtobufRecordField(old_field,
-                               record_field_diff_ir.GetOldField());
-    SetIRToProtobufRecordField(new_field,
-                               record_field_diff_ir.GetNewField());
+    IRToProtobufConverter::ConvertRecordFieldIR(
+        old_field, record_field_diff_ir.GetOldField());
+    IRToProtobufConverter::ConvertRecordFieldIR(
+        new_field, record_field_diff_ir.GetNewField());
   }
   return true;
 }
@@ -203,7 +202,8 @@ static bool AddEnumFields(
     const std::vector<const EnumFieldIR *> &enum_fields) {
   for (auto &&enum_field : enum_fields) {
     abi_dump::EnumFieldDecl *added_enum_field = dst->Add();
-    if (!SetIRToProtobufEnumField(added_enum_field, enum_field)) {
+    if (!IRToProtobufConverter::ConvertEnumFieldIR(added_enum_field,
+                                                   enum_field)) {
       return false;
     }
   }
@@ -218,10 +218,12 @@ static bool AddEnumFieldDiffs(
     if (field_diff_protobuf == nullptr) {
       return false;
     }
-    if (!SetIRToProtobufEnumField(field_diff_protobuf->mutable_old_field(),
-                                  field_diff_ir.GetOldField()) ||
-        !SetIRToProtobufEnumField(field_diff_protobuf->mutable_new_field(),
-                                  field_diff_ir.GetNewField())) {
+    if (!IRToProtobufConverter::ConvertEnumFieldIR(
+            field_diff_protobuf->mutable_old_field(),
+            field_diff_ir.GetOldField()) ||
+        !IRToProtobufConverter::ConvertEnumFieldIR(
+            field_diff_protobuf->mutable_new_field(),
+            field_diff_ir.GetNewField())) {
       return false;
     }
   }
