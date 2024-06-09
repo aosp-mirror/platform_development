@@ -45,6 +45,7 @@ fn main() -> Result<()> {
 
     cc.stage_crates()?;
     cc.generate_android_bps()?;
+    cc.diff_android_bps()?;
 
     let re = ReportEngine::new()?;
 
