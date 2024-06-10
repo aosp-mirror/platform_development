@@ -17,8 +17,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use crate_health::{
-    build_cargo_embargo, default_output_dir, default_repo_root, CrateCollection, NameAndVersionMap,
-    ReportEngine,
+    default_output_dir, default_repo_root, maybe_build_cargo_embargo, CrateCollection,
+    NameAndVersionMap, ReportEngine,
 };
 
 /// Generate a health report for crates in external/rust/crates
@@ -37,7 +37,7 @@ struct Args {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    build_cargo_embargo(&args.repo_root)?;
+    maybe_build_cargo_embargo(&args.repo_root, false)?;
 
     let mut cc = CrateCollection::new(args.repo_root);
     cc.add_from(&"external/rust/crates", None::<&&str>)?;
@@ -45,6 +45,7 @@ fn main() -> Result<()> {
 
     cc.stage_crates()?;
     cc.generate_android_bps()?;
+    cc.diff_android_bps()?;
 
     let re = ReportEngine::new()?;
 

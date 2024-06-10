@@ -53,6 +53,7 @@ describe('FrameMapper', () => {
       // WINDOW_MANAGER:          0     1
       // Time:           0  1  2  3  4  5  6
       protoLog = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.PROTO_LOG)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -65,6 +66,7 @@ describe('FrameMapper', () => {
         .build();
 
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -73,8 +75,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.PROTO_LOG, protoLog);
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
+      traces.addTrace(protoLog);
+      traces.addTrace(windowManager);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -113,6 +115,7 @@ describe('FrameMapper', () => {
       // WINDOW_MANAGER:    0        1  2
       // Time:           0  1  2  3  4  5
       ime = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.INPUT_METHOD_CLIENTS)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -123,6 +126,7 @@ describe('FrameMapper', () => {
         .build();
 
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -132,8 +136,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.INPUT_METHOD_CLIENTS, ime);
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
+      traces.addTrace(ime);
+      traces.addTrace(windowManager);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -181,6 +185,7 @@ describe('FrameMapper', () => {
       // Frames:          0  1   2    3     4  ... 5
       // Time:            0  1  2  3  4  5  6  ... 10s
       windowManager = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.WINDOW_MANAGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -191,6 +196,7 @@ describe('FrameMapper', () => {
         .build();
 
       transactions = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.TRANSACTIONS)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -219,8 +225,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.WINDOW_MANAGER, windowManager);
-      traces.setTrace(TraceType.TRANSACTIONS, transactions);
+      traces.addTrace(windowManager);
+      traces.addTrace(transactions);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -287,6 +293,7 @@ describe('FrameMapper', () => {
       //                   \     \        \
       // SURFACE_FLINGER:   0     1        2
       transactions = new TraceBuilder<PropertyTreeNode>()
+        .setType(TraceType.TRANSACTIONS)
         .setEntries([
           'entry-0' as unknown as PropertyTreeNode,
           'entry-1' as unknown as PropertyTreeNode,
@@ -305,6 +312,7 @@ describe('FrameMapper', () => {
         .build();
 
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -315,8 +323,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.TRANSACTIONS, transactions);
-      traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
+      traces.addTrace(transactions);
+      traces.addTrace(surfaceFlinger);
       await new FrameMapper(traces).computeMapping();
     });
 
@@ -378,6 +386,7 @@ describe('FrameMapper', () => {
       // SCREEN_RECORDING:     0        1  2  3        4 ... 5 <-- ignored (not connected) because too far
       // Time:                 0  1  2  3  4  5  6  7  8     10s
       surfaceFlinger = new TraceBuilder<HierarchyTreeNode>()
+        .setType(TraceType.SURFACE_FLINGER)
         .setEntries([
           'entry-0' as unknown as HierarchyTreeNode,
           'entry-1' as unknown as HierarchyTreeNode,
@@ -391,6 +400,7 @@ describe('FrameMapper', () => {
         .build();
 
       screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+        .setType(TraceType.SCREEN_RECORDING)
         .setEntries([
           'entry-0' as unknown as ScreenRecordingTraceEntry,
           'entry-1' as unknown as ScreenRecordingTraceEntry,
@@ -403,8 +413,8 @@ describe('FrameMapper', () => {
         .build();
 
       traces = new Traces();
-      traces.setTrace(TraceType.SURFACE_FLINGER, surfaceFlinger);
-      traces.setTrace(TraceType.SCREEN_RECORDING, screenRecording);
+      traces.addTrace(surfaceFlinger);
+      traces.addTrace(screenRecording);
       await new FrameMapper(traces).computeMapping();
     });
 
