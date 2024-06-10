@@ -145,7 +145,7 @@ fn main() -> Result<()> {
             }
 
             let mut cc = CrateCollection::new(&args.repo_root);
-            cc.add_from(&PathBuf::from("external/rust/crates").join(&crate_name), None::<&&str>)?;
+            cc.add_from(&PathBuf::from("external/rust/crates").join(&crate_name))?;
             cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
             if cc.map_field().len() != 1 {
                 return Err(anyhow!(

@@ -36,11 +36,8 @@ use crate::{
 pub struct Crate {
     manifest: Manifest,
 
-    // root is absolute. All other paths are relative to it.
     path: RepoPath,
-    pseudo_crate: Option<RepoPath>,
 
-    // compatible_dest_version: Option<Version>,
     patch_output: Vec<Output>,
     generate_android_bp_output: Option<Output>,
     android_bp_diff: Option<Output>,
@@ -61,28 +58,21 @@ impl NamedAndVersioned for Crate {
 impl IsUpgradableTo for Crate {}
 
 impl Crate {
-    pub fn new<P: Into<PathBuf>, Q: Into<PathBuf>, R: Into<PathBuf>>(
+    pub fn new<P: Into<PathBuf>, Q: Into<PathBuf>>(
         manifest: Manifest,
         root: P,
         relpath: Q,
-        pseudo_crate: Option<R>,
     ) -> Crate {
         let root: PathBuf = root.into();
         Crate {
             manifest,
             path: RepoPath::new(root.clone(), relpath),
-            pseudo_crate: pseudo_crate.map(|p| RepoPath::new(root, p)),
-            // compatible_dest_version: None,
             patch_output: Vec::new(),
             generate_android_bp_output: None,
             android_bp_diff: None,
         }
     }
-    pub fn from<P: Into<PathBuf>, Q: Into<PathBuf>>(
-        cargo_toml: &impl AsRef<Path>,
-        root: P,
-        pseudo_crate: Option<Q>,
-    ) -> Result<Crate> {
+    pub fn from<P: Into<PathBuf>>(cargo_toml: &impl AsRef<Path>, root: P) -> Result<Crate> {
         let root: PathBuf = root.into();
         let manifest_dir = cargo_toml.as_ref().parent().ok_or(anyhow!(
             "Failed to get parent directory of manifest at {}",
@@ -93,7 +83,7 @@ impl Crate {
         let (manifest, _nested) =
             read_manifest(cargo_toml.as_ref(), source_id, &Config::default()?)?;
         match manifest {
-            cargo::core::EitherManifest::Real(r) => Ok(Crate::new(r, root, relpath, pseudo_crate)),
+            cargo::core::EitherManifest::Real(r) => Ok(Crate::new(r, root, relpath)),
             cargo::core::EitherManifest::Virtual(_) => {
                 Err(anyhow!(CrateError::VirtualCrate(cargo_toml.as_ref().to_path_buf())))
             }
@@ -150,9 +140,6 @@ impl Crate {
         format!("https://crates.io/crates/{}", self.name())
     }
 
-    pub fn is_vendored(&self) -> bool {
-        self.pseudo_crate.is_some()
-    }
     pub fn is_crates_io(&self) -> bool {
         const NOT_CRATES_IO: &'static [&'static str] = &[
             "external/rust/beto-rust/",                 // Google crates
@@ -323,7 +310,7 @@ mod tests {
     fn test_from_and_properties() -> Result<()> {
         let temp_crate_dir = tempdir()?;
         let cargo_toml = write_test_manifest(temp_crate_dir.path(), "foo", "1.2.0")?;
-        let krate = Crate::from(&cargo_toml, &"/", None::<&&str>)?;
+        let krate = Crate::from(&cargo_toml, &"/")?;
         assert_eq!(krate.name(), "foo");
         assert_eq!(krate.version().to_string(), "1.2.0");
         assert!(krate.is_crates_io());
@@ -339,7 +326,7 @@ mod tests {
     fn test_from_error() -> Result<()> {
         let temp_crate_dir = tempdir()?;
         let cargo_toml = write_test_manifest(temp_crate_dir.path(), "foo", "1.2.0")?;
-        assert!(Crate::from(&cargo_toml, &"/blah", None::<&&str>).is_err());
+        assert!(Crate::from(&cargo_toml, &"/blah").is_err());
         Ok(())
     }
 }

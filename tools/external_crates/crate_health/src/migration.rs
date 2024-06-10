@@ -97,7 +97,7 @@ pub fn migrate(
     pseudo_crate_dir: RepoPath,
 ) -> Result<VersionMatch<CrateCollection>> {
     let mut source = CrateCollection::new(source_dir.root());
-    source.add_from(&source_dir.rel(), None::<&&str>)?;
+    source.add_from(&source_dir.rel())?;
     source.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
 
     let pseudo_crate = PseudoCrate::new(pseudo_crate_dir);
@@ -113,10 +113,7 @@ pub fn migrate(
     )?;
 
     let mut dest = CrateCollection::new(source.repo_root());
-    dest.add_from(
-        &pseudo_crate.get_path().join(&"vendor").rel(),
-        Some(&pseudo_crate.get_path().rel()),
-    )?;
+    dest.add_from(&pseudo_crate.get_path().join(&"vendor").rel())?;
 
     let mut version_match = VersionMatch::new(source, dest)?;
 
