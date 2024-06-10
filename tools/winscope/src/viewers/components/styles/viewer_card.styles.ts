@@ -27,9 +27,13 @@ export const viewerCardStyle = `
         border-radius: 4px;
         background-color: unset;
         margin: 4px;
-        padding: 0px 12px 12px 12px;
+        padding-bottom: 12px;
         background-color: var(--background-color);
         box-shadow: 0px 1px 3px var(--border-color), 0px 1px 2px var(--border-color);
+    }
+
+    .log-view:not(.collapsed) {
+        padding: 12px;
     }
 
     .rects-view:not(.collapsed),
@@ -58,5 +62,25 @@ export const viewerCardStyle = `
     .log-view.collapsed,
     .property-groups.collapsed {
         display: none;
+    }
+`;
+
+export const viewerCardInnerStyle = `
+    .title-section {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        background-color: var(--card-title-background-color);
+        padding: 0px 12px 0px 12px;
+    }
+
+    .view-controls {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        padding: 8px 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
     }
 `;

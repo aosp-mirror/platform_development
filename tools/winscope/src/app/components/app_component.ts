@@ -57,6 +57,7 @@ import {
   TraceConfigurationMap,
   TRACES,
 } from 'trace_collection/trace_collection_utils';
+import {iconDividerStyle} from 'viewers/components/styles/icon_divider.styles';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
@@ -75,6 +76,7 @@ import {UploadTracesComponent} from './upload_traces_component';
 
 @Component({
   selector: 'app-root',
+  encapsulation: ViewEncapsulation.None,
   template: `
     <mat-toolbar class="toolbar">
       <div class="horizontal-align vertical-align">
@@ -133,7 +135,7 @@ import {UploadTracesComponent} from './upload_traces_component';
           </button>
         </div>
 
-        <div *ngIf="showDataLoadedElements" class="icon-divider"></div>
+        <div *ngIf="showDataLoadedElements" class="icon-divider toolbar-icon-divider"></div>
         <button
           *ngIf="showDataLoadedElements && dumpsUploaded()"
           color="primary"
@@ -287,9 +289,7 @@ import {UploadTracesComponent} from './upload_traces_component';
         padding-bottom: 10px;
         width: 600px;
       }
-      .icon-divider {
-        width: 1px;
-        background-color: #C4C0C0;
+      .toolbar-icon-divider {
         margin-right: 6px;
         margin-left: 6px;
         height: 20px;
@@ -319,8 +319,8 @@ import {UploadTracesComponent} from './upload_traces_component';
         margin: auto;
       }
     `,
+    iconDividerStyle,
   ],
-  encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent implements WinscopeEventListener {
   title = 'winscope';

@@ -58,6 +58,7 @@ import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
 import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
@@ -139,6 +140,7 @@ import {GlobalErrorHandler} from './global_error_handler';
     ShortcutsComponent,
     CollapsedSectionsComponent,
     CollapsibleSectionTitleComponent,
+    UserOptionsComponent,
   ],
   imports: [
     BrowserModule,

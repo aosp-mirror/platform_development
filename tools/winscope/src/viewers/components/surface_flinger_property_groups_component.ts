@@ -26,13 +26,16 @@ import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {inlineButtonStyle} from './styles/clickable_property.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'surface-flinger-property-groups',
   template: `
-    <collapsible-section-title
-      title="PROPERTIES"
-      (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    <div class="title-section">
+      <collapsible-section-title
+        title="PROPERTIES"
+        (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    </div>
 
     <span class="mat-body-1 placeholder-text" *ngIf="!properties"> Layer not selected. </span>
 
@@ -287,12 +290,16 @@ import {inlineButtonStyle} from './styles/clickable_property.styles';
   `,
   styles: [
     `
+      :host collapsible-section-title {
+        padding-bottom: 8px;
+      }
       .placeholder-text {
-        padding-top: 4px;
+        padding: 8px 12px;
       }
 
       .property-groups-content {
         overflow-y: auto;
+        padding: 0px 12px;
       }
 
       .group {
@@ -327,6 +334,7 @@ import {inlineButtonStyle} from './styles/clickable_property.styles';
       }
     `,
     inlineButtonStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class SurfaceFlingerPropertyGroupsComponent {

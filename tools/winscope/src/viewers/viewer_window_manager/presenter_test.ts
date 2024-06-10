@@ -25,7 +25,9 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
@@ -85,7 +87,7 @@ describe('PresenterWindowManager', () => {
 
   it('processes trace position update', async () => {
     await presenter.onAppEvent(positionUpdate);
-    const filteredUiDataRectLabels = uiData.rects
+    const filteredUiDataRectLabels = uiData.rectsToDraw
       ?.filter((rect) => rect.isVisible !== undefined)
       .map((rect) => rect.label);
     const hierarchyOpts = uiData.hierarchyUserOptions
@@ -107,24 +109,100 @@ describe('PresenterWindowManager', () => {
   it('disables show diff and generates non-diff tree if no prev entry available', async () => {
     await presenter.onAppEvent(positionUpdate);
 
-    const hierarchyOpts = uiData.hierarchyUserOptions ?? null;
-    expect(hierarchyOpts).toBeTruthy();
-    expect(hierarchyOpts!['showDiff'].isUnavailable).toBeTrue();
+    const hierarchyOpts = assertDefined(uiData.hierarchyUserOptions);
+    expect(hierarchyOpts['showDiff'].isUnavailable).toBeTrue();
 
-    const propertyOpts = uiData.propertiesUserOptions ?? null;
-    expect(propertyOpts).toBeTruthy();
-    expect(propertyOpts!['showDiff'].isUnavailable).toBeTrue();
+    const propertyOpts = assertDefined(uiData.propertiesUserOptions);
+    expect(propertyOpts['showDiff'].isUnavailable).toBeTrue();
 
-    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    expect(assertDefined(uiData.tree).getAllChildren().length > 0).toBeTrue();
   });
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].x).toEqual(0);
-    expect(uiData.rects[0].y).toEqual(0);
-    expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(2400);
+    expect(uiData.rectsToDraw[0].x).toEqual(0);
+    expect(uiData.rectsToDraw[0].y).toEqual(0);
+    expect(uiData.rectsToDraw[0].w).toEqual(1080);
+    expect(uiData.rectsToDraw[0].h).toEqual(2400);
+    checkRectUiData(12, 12, 12);
+  });
+
+  it('filters rects by visibility', async () => {
+    const userOptions: UserOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    expect(uiData.rectsUserOptions).toEqual(userOptions);
+    checkRectUiData(12, 12, 12);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(7, 12, 7);
+  });
+
+  it('filters rects by show/hide state', async () => {
+    const userOptions: UserOptions = {
+      ignoreNonHidden: {
+        name: 'Ignore',
+        icon: 'visibility',
+        enabled: true,
+      },
+    };
+    presenter.onRectsUserOptionsChange(userOptions);
+    await presenter.onAppEvent(positionUpdate);
+    checkRectUiData(12, 12, 12);
+
+    await presenter.onRectShowStateChange(
+      'WindowState 93d3f3c ScreenDecorOverlayBottom',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(12, 12, 11);
+
+    userOptions['ignoreNonHidden'].enabled = false;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(11, 12, 11);
+  });
+
+  it('handles both visibility and show/hide state in rects', async () => {
+    const userOptions: UserOptions = {
+      ignoreNonHidden: {
+        name: 'Ignore',
+        icon: 'visibility',
+        enabled: true,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    presenter.onRectsUserOptionsChange(userOptions);
+    await presenter.onAppEvent(positionUpdate);
+    checkRectUiData(12, 12, 12);
+
+    await presenter.onRectShowStateChange(
+      'WindowState 93d3f3c ScreenDecorOverlayBottom',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(12, 12, 11);
+
+    userOptions['ignoreNonHidden'].enabled = false;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(11, 12, 11);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(6, 12, 6);
+
+    userOptions['ignoreNonHidden'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(7, 12, 6);
   });
 
   it('updates pinned items', async () => {
@@ -147,6 +225,28 @@ describe('PresenterWindowManager', () => {
     expect(uiData.highlightedProperty).toBe(id);
   });
 
+  it('filters hierarchy tree by visibility', async () => {
+    const userOptions: UserOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: true,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(68);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    await presenter.onHierarchyUserOptionsChange(userOptions);
+    expect(assertDefined(uiData.tree).getAllChildren().length).toEqual(6);
+  });
+
   it('flattens hierarchy tree', async () => {
     //change flat view to true
     const userOptions: UserOptions = {
@@ -158,8 +258,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {
@@ -192,8 +293,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {
@@ -223,7 +325,7 @@ describe('PresenterWindowManager', () => {
     expect(nodeWithShortName.getDisplayName()).toEqual(longName);
   });
 
-  it('filters hierarchy tree', async () => {
+  it('filters hierarchy tree by search string', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -233,8 +335,9 @@ describe('PresenterWindowManager', () => {
         name: 'Simplify names',
         enabled: true,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
       flat: {
@@ -265,7 +368,7 @@ describe('PresenterWindowManager', () => {
   it('sets properties tree and associated ui data from rect', async () => {
     await presenter.onAppEvent(positionUpdate);
     expect(uiData.propertiesTree).toBeUndefined();
-    const rect = assertDefined(uiData.rects.at(5));
+    const rect = assertDefined(uiData.rectsToDraw.at(5));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(propertiesTree.id).toEqual('WindowState e3666ec NotificationShade');
@@ -388,4 +491,19 @@ describe('PresenterWindowManager', () => {
       },
     );
   };
+
+  function checkRectUiData(
+    rectsToDraw: number,
+    allRects: number,
+    shownRects: number,
+  ) {
+    expect(uiData.rectsToDraw.length).toEqual(rectsToDraw);
+    const showStates = Array.from(
+      assertDefined(uiData.rectIdToShowState).values(),
+    );
+    expect(showStates.length).toEqual(allRects);
+    expect(showStates.filter((s) => s === RectShowState.SHOW).length).toEqual(
+      shownRects,
+    );
+  }
 });

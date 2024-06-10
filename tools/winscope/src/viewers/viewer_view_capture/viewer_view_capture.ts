@@ -106,6 +106,23 @@ export class ViewerViewCapture implements Viewer {
         await this.emitAppEvent(new ActiveTraceChanged(trace));
       },
     );
+    this.htmlElement.addEventListener(
+      ViewerEvents.RectShowStateChange,
+      async (event) => {
+        await this.presenter.onRectShowStateChange(
+          (event as CustomEvent).detail.rectId,
+          (event as CustomEvent).detail.state,
+        );
+      },
+    );
+    this.htmlElement.addEventListener(
+      ViewerEvents.RectsUserOptionsChange,
+      (event) => {
+        this.presenter.onRectsUserOptionsChange(
+          (event as CustomEvent).detail.userOptions,
+        );
+      },
+    );
 
     this.view = new View(
       ViewType.TAB,
