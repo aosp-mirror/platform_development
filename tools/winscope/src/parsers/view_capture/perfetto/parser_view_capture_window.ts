@@ -120,8 +120,12 @@ export class ParserViewCaptureWindow extends AbstractParser<HierarchyTreeNode> {
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, async () => {
-        return Promise.resolve(this.packageName);
+      .visit(CustomQueryType.VIEW_CAPTURE_METADATA, async () => {
+        const metadata = {
+          packageName: this.packageName,
+          windowName: this.windowName,
+        };
+        return Promise.resolve(metadata);
       })
       .getResult();
   }

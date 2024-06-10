@@ -43,8 +43,8 @@ export class TracesBuilder {
 
   build(): Traces {
     const traces = new Traces();
-    this.traceBuilders.forEach((builder, type) => {
-      traces.setTrace(type, builder.build());
+    this.traceBuilders.forEach((builder) => {
+      traces.addTrace(builder.build());
     });
     return traces;
   }

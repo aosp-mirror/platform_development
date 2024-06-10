@@ -15,7 +15,6 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
 import {CustomQueryType} from 'trace/custom_query';
@@ -33,16 +32,11 @@ describe('ParserViewCapture', () => {
     parser = (await UnitTestUtils.getParser(
       'traces/elapsed_and_real_timestamp/com.google.android.apps.nexuslauncher_0.vc',
     )) as Parser<HierarchyTreeNode>;
-    trace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
-      .setParser(parser)
-      .build();
+    trace = Trace.fromParser(parser);
   });
 
   it('has expected trace type', () => {
-    expect(parser.getTraceType()).toEqual(
-      TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER,
-    );
+    expect(parser.getTraceType()).toEqual(TraceType.VIEW_CAPTURE);
   });
 
   it('has expected coarse version', () => {
@@ -65,10 +59,13 @@ describe('ParserViewCapture', () => {
     );
   });
 
-  it('supports VIEW_CAPTURE_PACKAGE_NAME custom query', async () => {
-    const packageName = await trace.customQuery(
-      CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+  it('supports VIEW_CAPTURE_METADATA custom query', async () => {
+    const metadata = await trace.customQuery(
+      CustomQueryType.VIEW_CAPTURE_METADATA,
     );
-    expect(packageName).toEqual('com.google.android.apps.nexuslauncher');
+    expect(metadata.packageName).toEqual(
+      'com.google.android.apps.nexuslauncher',
+    );
+    expect(metadata.windowName).toEqual('.Taskbar');
   });
 });

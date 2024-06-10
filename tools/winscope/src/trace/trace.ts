@@ -154,6 +154,10 @@ export class Trace<T> {
     return this.parser.getDescriptors();
   }
 
+  getParser(): Parser<T> {
+    return this.parser;
+  }
+
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
     if (frameMap.lengthEntries !== this.fullTrace.lengthEntries) {
       throw new Error(
