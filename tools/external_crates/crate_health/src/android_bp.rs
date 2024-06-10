@@ -41,7 +41,6 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
         let repo_root = krate.root().to_path_buf();
         let test_path = krate.staging_path();
         pool.execute(move || {
-            println!("Generating Android.bp for {} {}", crate_name, crate_version);
             tx.send((crate_name, crate_version, generate_android_bp(&repo_root, &test_path)))
                 .expect("Failed to send");
         });
