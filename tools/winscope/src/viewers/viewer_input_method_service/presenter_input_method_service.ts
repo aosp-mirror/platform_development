@@ -16,8 +16,11 @@
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodService extends PresenterInputMethod {
-  protected updateHierarchyTableProperties() {
-    const inputMethodService = this.entry?.getChildByName('inputMethodService');
+  protected getHierarchyTableProperties() {
+    const inputMethodService = this.hierarchyPresenter
+      .getCurrentHierarchyTreesForTrace(this.imeTrace)
+      ?.at(0)
+      ?.getChildByName('inputMethodService');
     const windowVisible =
       inputMethodService?.getEagerPropertyByName('windowVisible')?.getValue() ??
       false;

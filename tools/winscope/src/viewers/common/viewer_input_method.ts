@@ -22,12 +22,17 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
+import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 
 abstract class ViewerInputMethod implements Viewer {
   private readonly trace: Trace<HierarchyTreeNode>;
   protected readonly htmlElement: HTMLElement;
   protected readonly presenter: PresenterInputMethod;
   protected abstract readonly view: View;
+
+  protected imeUiCallback = ((uiData: ImeUiData) => {
+    (this.htmlElement as any).inputData = uiData;
+  }) as NotifyHierarchyViewCallbackType;
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
@@ -36,7 +41,7 @@ abstract class ViewerInputMethod implements Viewer {
   ) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-input-method');
-    this.presenter = this.initialisePresenter(trace, traces, storage);
+    this.presenter = this.initializePresenter(trace, traces, storage);
     this.addViewerEventListeners();
   }
 
@@ -56,60 +61,8 @@ abstract class ViewerInputMethod implements Viewer {
     return [this.trace];
   }
 
-  protected imeUiCallback = (uiData: ImeUiData) => {
-    (this.htmlElement as any).inputData = uiData;
-  };
-
   protected addViewerEventListeners() {
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedIdChange,
-      async (event) =>
-        await this.presenter.onHighlightedIdChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      (event) =>
-        this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      (event) =>
-        this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedNodeChange,
-      async (event) =>
-        await this.presenter.onHighlightedNodeChange(
-          (event as CustomEvent).detail.node,
-        ),
-    );
+    this.presenter.addEventListeners(this.htmlElement);
     this.htmlElement.addEventListener(
       ViewerEvents.AdditionalPropertySelected,
       async (event) =>
@@ -119,7 +72,7 @@ abstract class ViewerInputMethod implements Viewer {
     );
   }
 
-  protected abstract initialisePresenter(
+  protected abstract initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,

@@ -30,6 +30,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
+import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from './chip';
 import {PresenterInputMethod} from './presenter_input_method';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
@@ -74,12 +75,12 @@ export function executePresenterInputMethodTests(
 
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeUndefined();
+      expect(uiData.hierarchyTrees).toBeUndefined();
 
       await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeUndefined();
+      expect(uiData.hierarchyTrees).toBeUndefined();
     });
 
     it('is robust to traces without SF', async () => {
@@ -87,7 +88,7 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeDefined();
+      expect(uiData.hierarchyTrees).toBeDefined();
     });
 
     it('is robust to traces without WM', async () => {
@@ -95,7 +96,7 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeDefined();
+      expect(uiData.hierarchyTrees).toBeDefined();
     });
 
     it('is robust to traces without WM and SF', async () => {
@@ -103,7 +104,7 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeDefined();
+      expect(uiData.hierarchyTrees).toBeDefined();
     });
 
     it('processes trace position updates', async () => {
@@ -111,7 +112,7 @@ export function executePresenterInputMethodTests(
       await presenter.onAppEvent(positionUpdate);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeDefined();
+      expect(uiData.hierarchyTrees).toBeDefined();
     });
 
     it('can update pinned items', () => {
@@ -145,15 +146,15 @@ export function executePresenterInputMethodTests(
       };
 
       await presenter.onAppEvent(positionUpdate);
-      uiData.sfSubtrees?.forEach((tree) =>
-        expect(tree.getAllChildren().length).toEqual(1),
-      );
+      uiData.hierarchyTrees
+        ?.slice(1)
+        .forEach((tree) => expect(tree.getAllChildren().length).toEqual(1));
 
-      presenter.onHierarchyUserOptionsChange(userOptions);
+      await presenter.onHierarchyUserOptionsChange(userOptions);
       expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-      uiData.sfSubtrees?.forEach((tree) =>
-        expect(tree.getAllChildren().length).toEqual(10),
-      );
+      uiData.hierarchyTrees
+        ?.slice(1)
+        .forEach((tree) => expect(tree.getAllChildren().length).toEqual(10));
     });
 
     it('can filter hierarchy tree', async () => {
@@ -180,24 +181,21 @@ export function executePresenterInputMethodTests(
 
       const expectedChildren = expectHierarchyTreeWithSfSubtree ? 11 : 1;
       await presenter.onAppEvent(positionUpdate);
-      presenter.onHierarchyUserOptionsChange(userOptions);
-      let subtreeChildren = 0;
-      uiData.sfSubtrees.forEach(
-        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
+      await presenter.onHierarchyUserOptionsChange(userOptions);
+
+      let children = 0;
+      assertDefined(uiData.hierarchyTrees).forEach(
+        (tree) => (children += tree.getAllChildren().length),
       );
-      expect(
-        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
-      ).toEqual(expectedChildren);
+      expect(children).toEqual(expectedChildren);
 
       // Filter out all children
-      presenter.onHierarchyFilterChange('Reject all');
-      subtreeChildren = 0;
-      uiData.sfSubtrees.forEach(
-        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
+      await presenter.onHierarchyFilterChange('Reject all');
+      children = 0;
+      assertDefined(uiData.hierarchyTrees).forEach(
+        (tree) => (children += tree.getAllChildren().length),
       );
-      expect(
-        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
-      ).toEqual(0);
+      expect(children).toEqual(0);
     });
 
     it('can set new properties tree and associated ui data from node', async () => {
@@ -242,7 +240,7 @@ export function executePresenterInputMethodTests(
     });
 
     it('can set new additional properties tree and associated ui data from hierarchy tree node', async () => {
-      setUpPresenter([imeTraceType]);
+      setUpPresenter([imeTraceType, TraceType.WINDOW_MANAGER]);
       expect(uiData.propertiesTree).toBeUndefined();
       await presenter.onAppEvent(positionUpdate);
       await presenter.onAdditionalPropertySelected({
@@ -299,13 +297,14 @@ export function executePresenterInputMethodTests(
 
     function createPresenter(traces: Traces): PresenterInputMethod {
       const trace = assertDefined(traces.getTrace(imeTraceType));
+      const notifyViewCallback = (newData: ImeUiData) => {
+        uiData = newData;
+      };
       return new PresenterInputMethod(
         trace,
         traces,
         new InMemoryStorage(),
-        (newData: ImeUiData) => {
-          uiData = newData;
-        },
+        notifyViewCallback as NotifyHierarchyViewCallbackType,
       );
     }
   });

@@ -44,7 +44,7 @@ class ViewerInputMethodService extends ViewerInputMethod {
     );
   }
 
-  override initialisePresenter(
+  override initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,
