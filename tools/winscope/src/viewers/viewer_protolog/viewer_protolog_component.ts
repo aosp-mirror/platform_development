@@ -16,14 +16,13 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Events} from './events';
-import {UiData} from './ui_data';
+import {UiData, UiDataMessage} from './ui_data';
 
 @Component({
   selector: 'viewer-protolog',
@@ -90,7 +89,7 @@ import {UiData} from './ui_data';
               <button
                 mat-button
                 color="primary"
-                (click)="onTimestampClicked(message.time)">
+                (click)="onTimestampClicked(message)">
                 {{ message.time.formattedValue() }}
               </button>
             </div>
@@ -241,9 +240,11 @@ export class ViewerProtologComponent {
     }
   }
 
-  onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.lastClicked = timestamp.formattedValue();
-    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  onTimestampClicked(message: UiDataMessage) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(message.time.getValue(), message.traceIndex),
+    );
   }
 
   onMessageClicked(index: number) {

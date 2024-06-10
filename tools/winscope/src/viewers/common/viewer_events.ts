@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {Timestamp} from 'common/time';
+
 export const ViewerEvents = {
   HierarchyPinnedChange: 'HierarchyPinnedChange',
   HighlightedNodeChange: 'HighlightedNodeChange',
@@ -33,4 +36,8 @@ export const ViewerEvents = {
 
 export class RectDblClickDetail {
   constructor(public clickedRectId: string) {}
+}
+
+export class TimestampClickDetail {
+  constructor(public timestamp?: Timestamp, public index?: number) {}
 }

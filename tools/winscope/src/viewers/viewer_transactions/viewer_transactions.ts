@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
-import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {assertDefined} from 'common/assert_utils';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
 import {Presenter} from './presenter';
@@ -35,7 +34,6 @@ class ViewerTransactions implements Viewer {
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
     trace: Trace<PropertyTreeNode>,
@@ -91,9 +89,13 @@ class ViewerTransactions implements Viewer {
         this.presenter.onEntryChangedByKeyPress((event as CustomEvent).detail);
       },
     );
-    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      this.propagateTimestamp((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.TimestampClick,
+      async (event) => {
+        const detail: TimestampClickDetail = (event as CustomEvent).detail;
+        await this.presenter.onLogTimestampClicked(assertDefined(detail.index));
+      },
+    );
 
     this.htmlElement.addEventListener(
       ViewerEvents.PropertiesUserOptionsChange,
@@ -116,12 +118,7 @@ class ViewerTransactions implements Viewer {
   }
 
   setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async propagateTimestamp(timestampNode: PropertyTreeNode) {
-    const timestamp: Timestamp = timestampNode.getValue();
-    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
+    this.presenter.setEmitEvent(callback);
   }
 
   getViews(): View[] {
