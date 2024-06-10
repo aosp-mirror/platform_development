@@ -23,7 +23,6 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -47,32 +46,50 @@ class ViewerTransactions implements Viewer {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.VSyncIdFilterChanged, (event) => {
-      this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
-      this.presenter.onPidFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.UidFilterChanged, (event) => {
-      this.presenter.onUidFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.TypeFilterChanged, (event) => {
-      this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.LayerIdFilterChanged, (event) => {
-      this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
-    });
-
-    this.htmlElement.addEventListener(Events.WhatFilterChanged, (event) => {
-      this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.VSyncIdFilterChanged,
+      (event) => {
+        this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
+      },
+    );
 
     this.htmlElement.addEventListener(
-      Events.TransactionIdFilterChanged,
+      ViewerEvents.PidFilterChanged,
+      (event) => {
+        this.presenter.onPidFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.UidFilterChanged,
+      (event) => {
+        this.presenter.onUidFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.TypeFilterChanged,
+      (event) => {
+        this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.LayerIdFilterChanged,
+      (event) => {
+        this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.WhatFilterChanged,
+      (event) => {
+        this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
+      },
+    );
+
+    this.htmlElement.addEventListener(
+      ViewerEvents.TransactionIdFilterChanged,
       (event) => {
         this.presenter.onTransactionIdFilterChanged(
           (event as CustomEvent).detail,
@@ -80,11 +97,11 @@ class ViewerTransactions implements Viewer {
       },
     );
 
-    this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
+    this.htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(
-      Events.EntryChangedByKeyPress,
+      ViewerEvents.LogChangedByKeyPress,
       (event) => {
         this.presenter.onEntryChangedByKeyPress((event as CustomEvent).detail);
       },

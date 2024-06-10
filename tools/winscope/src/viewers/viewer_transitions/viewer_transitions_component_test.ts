@@ -42,7 +42,6 @@ import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
@@ -117,7 +116,7 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
@@ -133,7 +132,7 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
