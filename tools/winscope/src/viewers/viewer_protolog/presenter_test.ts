@@ -21,7 +21,6 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
@@ -160,9 +159,7 @@ describe('ViewerProtoLogPresenter', () => {
 
     outputUiData = undefined;
 
-    const traces = new Traces();
-    traces.setTrace(TraceType.PROTO_LOG, trace);
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(trace, (data: UiData) => {
       outputUiData = data;
     });
     await presenter.onAppEvent(positionUpdate10); // trigger initialization
@@ -172,7 +169,8 @@ describe('ViewerProtoLogPresenter', () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.PROTO_LOG, [])
       .build();
-    presenter = new Presenter(traces, (data: UiData) => {
+    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
+    presenter = new Presenter(trace, (data: UiData) => {
       outputUiData = data;
     });
 

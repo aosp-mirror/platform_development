@@ -15,20 +15,27 @@
  */
 
 import {CommonModule} from '@angular/common';
+import {HttpClientModule} from '@angular/common/http';
 import {Component, CUSTOM_ELEMENTS_SCHEMA, ViewChild} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSelectModule} from '@angular/material/select';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {UserOptionsComponent} from 'viewers/components/user_options_component';
 import {Canvas} from './canvas';
 import {ColorType, ShadingMode} from './types3d';
 import {UiRectBuilder} from './ui_rect_builder';
@@ -44,14 +51,22 @@ describe('RectsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         CommonModule,
-        MatCheckboxModule,
         MatDividerModule,
         MatSliderModule,
-        MatRadioModule,
         MatButtonModule,
         MatTooltipModule,
+        MatIconModule,
+        HttpClientModule,
+        MatSelectModule,
+        BrowserAnimationsModule,
+        MatFormFieldModule,
       ],
-      declarations: [TestHostComponent, RectsComponent],
+      declarations: [
+        TestHostComponent,
+        RectsComponent,
+        CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
@@ -132,48 +147,42 @@ describe('RectsComponent', () => {
     checkSliderUnfocusesOnClick(rotationSlider, 1);
   });
 
-  it('draws display buttons', () => {
+  it('renders display selector', () => {
     component.displays = [
       {displayId: 0, groupId: 0, name: 'Display 0'},
       {displayId: 1, groupId: 1, name: 'Display 1'},
       {displayId: 2, groupId: 2, name: 'Display 2'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
   });
 
-  it('handles display button click', () => {
+  it('handles display change', () => {
     component.displays = [
       {displayId: 0, groupId: 0, name: 'Display 0'},
       {displayId: 1, groupId: 1, name: 'Display 1'},
       {displayId: 2, groupId: 2, name: 'Display 2'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['primary', 'secondary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
 
-    const container = assertDefined(
-      htmlElement.querySelector('.display-name-buttons'),
+    const trigger = assertDefined(
+      htmlElement.querySelector('.displays-section .mat-select-trigger'),
     );
+    (trigger as HTMLElement).click();
+    fixture.detectChanges();
+
     let groupId = 0;
     htmlElement.addEventListener(ViewerEvents.RectGroupIdChange, (event) => {
       groupId = (event as CustomEvent).detail.groupId;
     });
-    const button = Array.from(container.querySelectorAll('button'))[1];
-    button.click();
+
+    const option = document
+      .querySelectorAll('.mat-select-panel .mat-option')
+      .item(1);
+    (option as HTMLElement).click();
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1', 'Display 2'],
-      ['secondary', 'primary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
     expect(groupId).toEqual(1);
   });
 
@@ -183,22 +192,14 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['primary', 'secondary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
 
     component.displays = [
       {displayId: 20, groupId: 2, name: 'Display 1'},
       {displayId: 10, groupId: 1, name: 'Display 0'},
     ];
     fixture.detectChanges();
-    checkButtons(
-      ['Display 1', 'Display 0'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 0');
   });
 
   it('updates scene on separation slider change', () => {
@@ -229,23 +230,6 @@ describe('RectsComponent', () => {
 
     expect(sceneBefore.camera.rotationFactor).toEqual(1);
     expect(sceneAfter.camera.rotationFactor).toEqual(0.5);
-  });
-
-  it('updates scene on only visible mode change', () => {
-    const inputRect = makeRectWithGroupId(0);
-    const nonVisibleRect = makeRectWithGroupId(0, false);
-    component.rects = [inputRect, nonVisibleRect];
-    const spy = spyOn(Canvas.prototype, 'draw').and.callThrough();
-    fixture.detectChanges();
-
-    updateShowOnlyVisibleMode();
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    const sceneBefore = assertDefined(spy.calls.first().args.at(0));
-    const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
-
-    expect(sceneBefore.rects.length).toEqual(2);
-    expect(sceneAfter.rects.length).toEqual(1);
   });
 
   it('updates scene on shading mode change', () => {
@@ -279,7 +263,6 @@ describe('RectsComponent', () => {
 
     updateSeparationSlider();
     updateShadingMode(ShadingMode.GRADIENT, ShadingMode.WIRE_FRAME);
-    updateShowOnlyVisibleMode();
 
     const newFixture = TestBed.createComponent(TestHostComponent);
     newFixture.detectChanges();
@@ -287,7 +270,6 @@ describe('RectsComponent', () => {
       newFixture.componentInstance.rectsComponent,
     );
     expect(newRectsComponent.getZSpacingFactor()).toEqual(0.06);
-    expect(newRectsComponent.getShowOnlyVisibleMode()).toBeTrue();
     expect(newRectsComponent.getShadingMode()).toEqual(ShadingMode.WIRE_FRAME);
   });
 
@@ -299,12 +281,7 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 0, name: 'Display 1'},
     ];
     fixture.detectChanges();
-
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
   });
 
   it('defaults initial selection to first display with non-display rects and groupId non-zero', () => {
@@ -315,12 +292,7 @@ describe('RectsComponent', () => {
       {displayId: 20, groupId: 1, name: 'Display 1'},
     ];
     fixture.detectChanges();
-
-    checkButtons(
-      ['Display 0', 'Display 1'],
-      ['secondary', 'primary'],
-      '.display-name-buttons',
-    );
+    checkSelectedDisplay('Display 1');
   });
 
   it('draws mini rects with non-present group id', () => {
@@ -368,24 +340,25 @@ describe('RectsComponent', () => {
     expect(miniRectsScene.rects[1].topLeft.z).toEqual(5);
   });
 
-  function checkButtons(
-    buttonValues: string[],
-    buttonColors: string[],
-    selector: string,
-  ) {
-    const displayButtonContainer = assertDefined(
-      htmlElement.querySelector(selector),
+  it('handles collapse button click', () => {
+    fixture.detectChanges();
+    const spy = spyOn(
+      assertDefined(component.rectsComponent).collapseButtonClicked,
+      'emit',
     );
-    const buttons = Array.from(
-      displayButtonContainer.querySelectorAll('button'),
-    );
-    expect(buttons.map((it) => it.textContent?.trim())).toEqual(buttonValues);
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
+  });
 
-    for (let i = 0; i < buttonValues.length; i++) {
-      expect((buttons[i] as HTMLButtonElement).outerHTML).toContain(
-        buttonColors[i],
-      );
-    }
+  function checkSelectedDisplay(selectedDisplay: string) {
+    const displaySelect = assertDefined(
+      htmlElement.querySelector('.displays-select'),
+    );
+    expect(displaySelect.innerHTML).toContain(selectedDisplay);
   }
 
   function findAndClickElement(selector: string) {
@@ -429,13 +402,6 @@ describe('RectsComponent', () => {
     expect(rectsComponent.getShadingMode()).toEqual(after);
   }
 
-  function updateShowOnlyVisibleMode() {
-    const rectsComponent = assertDefined(component.rectsComponent);
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeFalse();
-    findAndClickElement('.top-view-controls .show-only-visible  input');
-    expect(rectsComponent.getShowOnlyVisibleMode()).toBeTrue();
-  }
-
   function makeRectWithGroupId(groupId: number, isVisible = true): UiRect {
     return new UiRectBuilder()
       .setX(0)
@@ -473,7 +439,9 @@ describe('RectsComponent', () => {
         [isStackBased]="isStackBased"
         [displays]="displays"
         [miniRects]="miniRects"
-        [shadingModes]="shadingModes"></rects-view>
+        [shadingModes]="shadingModes"
+        [userOptions]="userOptions"
+        [dependencies]="dependencies"></rects-view>
     `,
   })
   class TestHostComponent {
@@ -487,6 +455,14 @@ describe('RectsComponent', () => {
       ShadingMode.WIRE_FRAME,
       ShadingMode.OPACITY,
     ];
+    userOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    dependencies = [TraceType.SURFACE_FLINGER];
 
     @ViewChild(RectsComponent)
     rectsComponent: RectsComponent | undefined;

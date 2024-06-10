@@ -17,6 +17,7 @@
 import {TraceType} from 'trace/trace_type';
 import {VcCuratedProperties} from 'viewers/common/curated_properties';
 import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
@@ -27,11 +28,12 @@ export class UiData {
   readonly displayPropertyGroups = false;
 
   constructor(
-    readonly rects: UiRect[],
+    public vcRectsToDraw: UiRect[] = [],
+    public vcRectIdToShowState: Map<string, RectShowState> | undefined,
     public windows: DisplayIdentifier[] | undefined,
-    public selectedWindow: TraceType,
     public sfRects: UiRect[] | undefined,
     public trees: UiHierarchyTreeNode[] | undefined,
+    public rectsUserOptions: UserOptions = {},
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
     public pinnedItems: UiHierarchyTreeNode[],
