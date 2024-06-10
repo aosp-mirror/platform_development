@@ -16,6 +16,7 @@ use std::{
     fs::{create_dir, write},
     path::{Path, PathBuf},
     process::Command,
+    str::from_utf8,
 };
 
 use anyhow::{anyhow, Context, Result};
@@ -106,15 +107,18 @@ impl PseudoCrate {
         Ok(())
     }
     pub fn vendor(&self) -> Result<()> {
-        let status = Command::new("cargo")
-            .args(["vendor"])
-            .current_dir(&self.path)
-            .spawn()
-            .context("Failed to spawn 'cargo vendor'")?
-            .wait()
-            .context("Failed to wait on 'cargo vendor'")?;
-        if !status.success() {
-            return Err(anyhow!("Failed to run 'cargo vendor'",));
+        let output = Command::new("cargo").args(["vendor"]).current_dir(&self.path).output()?;
+        if !output.status.success() {
+            return Err(anyhow!(
+                "cargo vendor failed with exit code {}\nstdout:\n{}\nstderr:\n{}",
+                output
+                    .status
+                    .code()
+                    .map(|code| { format!("{}", code) })
+                    .unwrap_or("(unknown)".to_string()),
+                from_utf8(&output.stdout)?,
+                from_utf8(&output.stderr)?
+            ));
         }
         Ok(())
     }
