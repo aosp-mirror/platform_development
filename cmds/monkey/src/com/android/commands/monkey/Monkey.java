@@ -481,18 +481,14 @@ public class Monkey {
     private void commandLineReport(String reportName, String command) {
         Logger.err.println(reportName + ":");
         Runtime rt = Runtime.getRuntime();
-        Writer logOutput = null;
 
-        try {
+         try (Writer logOutput = mRequestBugreport ?
+            new BufferedWriter(new FileWriter(new File(Environment
+                    .getLegacyExternalStorageDirectory(), reportName), true)) : null) {
             // Process must be fully qualified here because android.os.Process
             // is used elsewhere
             java.lang.Process p = Runtime.getRuntime().exec(command);
 
-            if (mRequestBugreport) {
-                logOutput =
-                        new BufferedWriter(new FileWriter(new File(Environment
-                                .getLegacyExternalStorageDirectory(), reportName), true));
-            }
             // pipe everything from process stdout -> System.err
             InputStream inStream = p.getInputStream();
             InputStreamReader inReader = new InputStreamReader(inStream);
@@ -519,10 +515,6 @@ public class Monkey {
 
             int status = p.waitFor();
             Logger.err.println("// " + reportName + " status was " + status);
-
-            if (logOutput != null) {
-                logOutput.close();
-            }
         } catch (Exception e) {
             Logger.err.println("// Exception from " + reportName + ":");
             Logger.err.println(e.toString());

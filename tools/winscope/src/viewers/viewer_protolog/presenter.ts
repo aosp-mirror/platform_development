@@ -18,9 +18,7 @@ import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiData, UiDataMessage} from './ui_data';
 
@@ -42,8 +40,11 @@ export class Presenter {
   private levelsFilter: string[] = [];
   private searchString = '';
 
-  constructor(traces: Traces, notifyUiDataCallback: (data: UiData) => void) {
-    this.trace = assertDefined(traces.getTrace(TraceType.PROTO_LOG));
+  constructor(
+    trace: Trace<PropertyTreeNode>,
+    notifyUiDataCallback: (data: UiData) => void,
+  ) {
+    this.trace = trace;
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.notifyUiDataCallback(this.uiData);
   }
