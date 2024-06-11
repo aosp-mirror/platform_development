@@ -56,6 +56,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use tempfile::tempdir;
 
 // Major TODOs
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
@@ -126,8 +127,11 @@ struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
+    /// Store `cargo build` output in this directory. If not set, a temporary directory is created and used.
+    #[clap(long)]
+    cargo_out_dir: Option<PathBuf>,
     /// Skip the `cargo build` commands and reuse the "cargo.out" file from a previous run if
-    /// available.
+    /// available. Requires setting --cargo_out_dir.
     #[clap(long)]
     reuse_cargo_out: bool,
     #[command(subcommand)]
@@ -161,15 +165,21 @@ fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
 
+    if args.reuse_cargo_out && args.cargo_out_dir.is_none() {
+        return Err(anyhow!("Must specify --cargo_out_dir with --reuse_cargo_out"));
+    }
+    let tempdir = tempdir()?;
+    let intermediates_dir = args.cargo_out_dir.as_deref().unwrap_or(tempdir.path());
+
     match &args.mode {
         Mode::DumpCrates { config, crates } => {
-            dump_crates(&args, config, crates)?;
+            dump_crates(&args, config, crates, intermediates_dir)?;
         }
         Mode::Generate { config } => {
-            run_embargo(&args, config)?;
+            run_embargo(&args, config, intermediates_dir)?;
         }
         Mode::Autoconfig { config } => {
-            autoconfig(&args, config)?;
+            autoconfig(&args, config, intermediates_dir)?;
         }
     }
 
@@ -178,9 +188,14 @@ fn main() -> Result<()> {
 
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
-fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> Result<()> {
+fn dump_crates(
+    args: &Args,
+    config_filename: &Path,
+    crates_filename: &Path,
+    intermediates_dir: &Path,
+) -> Result<()> {
     let cfg = Config::from_file(config_filename)?;
-    let crates = make_all_crates(args, &cfg)?;
+    let crates = make_all_crates(args, &cfg, intermediates_dir)?;
     serde_json::to_writer(
         File::create(crates_filename)
             .with_context(|| format!("Failed to create {:?}", crates_filename))?,
@@ -191,13 +206,13 @@ fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> R
 
 /// Tries to automatically generate a suitable `cargo_embargo.json` for the package in the current
 /// directory.
-fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
+fn autoconfig(args: &Args, config_filename: &Path, intermediates_dir: &Path) -> Result<()> {
     println!("Trying default config with tests...");
     let mut config_with_build = Config {
         variants: vec![VariantConfig { tests: true, ..Default::default() }],
         package: Default::default(),
     };
-    let mut crates_with_build = make_all_crates(args, &config_with_build)?;
+    let mut crates_with_build = make_all_crates(args, &config_with_build, intermediates_dir)?;
 
     let has_tests =
         crates_with_build[0].iter().any(|c| c.types.contains(&CrateType::Test) && !c.empty_test);
@@ -205,7 +220,7 @@ fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
         println!("No tests, removing from config.");
         config_with_build =
             Config { variants: vec![Default::default()], package: Default::default() };
-        crates_with_build = make_all_crates(args, &config_with_build)?;
+        crates_with_build = make_all_crates(args, &config_with_build, intermediates_dir)?;
     }
 
     println!("Trying without cargo build...");
@@ -213,7 +228,7 @@ fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
         variants: vec![VariantConfig { run_cargo: false, tests: has_tests, ..Default::default() }],
         package: Default::default(),
     };
-    let crates_without_build = make_all_crates(args, &config_no_build)?;
+    let crates_without_build = make_all_crates(args, &config_no_build, intermediates_dir)?;
 
     let config = if crates_with_build == crates_without_build {
         println!("Output without build was the same, using that.");
@@ -266,11 +281,11 @@ fn add_to_path(extra_path: PathBuf) -> Result<()> {
 }
 
 /// Calls make_crates for each variant in the given config.
-fn make_all_crates(args: &Args, cfg: &Config) -> Result<Vec<Vec<Crate>>> {
-    cfg.variants.iter().map(|variant| make_crates(args, variant)).collect()
+fn make_all_crates(args: &Args, cfg: &Config, intermediates_dir: &Path) -> Result<Vec<Vec<Crate>>> {
+    cfg.variants.iter().map(|variant| make_crates(args, variant, intermediates_dir)).collect()
 }
 
-fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
+fn make_crates(args: &Args, cfg: &VariantConfig, intermediates_dir: &Path) -> Result<Vec<Crate>> {
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
     }
@@ -287,15 +302,16 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     };
     add_to_path(cargo_bin)?;
 
-    let cargo_out_path = "cargo.out";
-    let cargo_metadata_path = "cargo.metadata";
-    let cargo_output = if args.reuse_cargo_out && Path::new(cargo_out_path).exists() {
+    let cargo_out_path = intermediates_dir.join("cargo.out");
+    let cargo_metadata_path = intermediates_dir.join("cargo.metadata");
+    let cargo_output = if args.reuse_cargo_out && cargo_out_path.exists() {
         CargoOutput {
             cargo_out: read_to_string(cargo_out_path)?,
             cargo_metadata: read_to_string(cargo_metadata_path)?,
         }
     } else {
-        let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
+        let cargo_output =
+            generate_cargo_out(cfg, intermediates_dir).context("generate_cargo_out failed")?;
         if cfg.run_cargo {
             write(cargo_out_path, &cargo_output.cargo_out)?;
         }
@@ -311,9 +327,15 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
 }
 
 /// Runs cargo_embargo with the given JSON configuration file.
-fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
+fn run_embargo(args: &Args, config_filename: &Path, intermediates_dir: &Path) -> Result<()> {
+    let intermediates_glob = intermediates_dir
+        .to_str()
+        .ok_or(anyhow!("Failed to convert intermediate dir path to string"))?
+        .to_string()
+        + "target.tmp/**/build/*/out/*";
+
     let cfg = Config::from_file(config_filename)?;
-    let crates = make_all_crates(args, &cfg)?;
+    let crates = make_all_crates(args, &cfg, intermediates_dir)?;
 
     // TODO: Use different directories for different variants.
     // Find out files.
@@ -322,7 +344,7 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
     let mut package_out_files: BTreeMap<String, Vec<Vec<PathBuf>>> = BTreeMap::new();
     for (variant_index, variant_cfg) in cfg.variants.iter().enumerate() {
         if variant_cfg.package.iter().any(|(_, v)| v.copy_out) {
-            for entry in glob::glob("target.tmp/**/build/*/out/*")? {
+            for entry in glob::glob(&intermediates_glob)? {
                 match entry {
                     Ok(path) => {
                         let package_name = || -> Option<_> {
@@ -347,7 +369,7 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
         for variant in &mut cfg_no_cargo.variants {
             variant.run_cargo = false;
         }
-        let crates_no_cargo = make_all_crates(args, &cfg_no_cargo)?;
+        let crates_no_cargo = make_all_crates(args, &cfg_no_cargo, intermediates_dir)?;
         if crates_no_cargo == crates {
             eprintln!("Running cargo appears to be unnecessary for this crate, consider adding `\"run_cargo\": false` to your cargo_embargo.json.");
         }
@@ -442,12 +464,12 @@ pub struct CargoOutput {
 }
 
 /// Run various cargo commands and returns the output.
-fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
+fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<CargoOutput> {
     let verbose_args = ["-v"];
-    let target_dir_args = ["--target-dir", "target.tmp"];
+    let target_dir = intermediates_dir.join("target.tmp");
 
     // cargo clean
-    run_cargo(Command::new("cargo").arg("clean").args(target_dir_args))
+    run_cargo(Command::new("cargo").arg("clean").arg("--target-dir").arg(&target_dir))
         .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
@@ -506,7 +528,8 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
                 .envs(envs.clone())
                 .args(["build", "--target", default_target])
                 .args(verbose_args)
-                .args(target_dir_args)
+                .arg("--target-dir")
+                .arg(&target_dir)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
@@ -518,7 +541,8 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
                     .envs(envs.clone())
                     .args(["build", "--target", default_target, "--tests"])
                     .args(verbose_args)
-                    .args(target_dir_args)
+                    .arg("--target-dir")
+                    .arg(&target_dir)
                     .args(&workspace_args)
                     .args(&feature_args),
             )?;
@@ -527,7 +551,8 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
                 Command::new("cargo")
                     .envs(envs)
                     .args(["test", "--target", default_target])
-                    .args(target_dir_args)
+                    .arg("--target-dir")
+                    .arg(&target_dir)
                     .args(&workspace_args)
                     .args(&feature_args)
                     .args(["--", "--list"]),
