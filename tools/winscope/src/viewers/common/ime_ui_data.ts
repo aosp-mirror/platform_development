@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
@@ -22,7 +22,7 @@ import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export class ImeUiData {
-  dependencies: TraceType[];
+  traceType: ImeTraceType;
   highlightedItem = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
@@ -33,7 +33,7 @@ export class ImeUiData {
   hierarchyTableProperties: TableProperties | undefined;
   additionalProperties: ImeAdditionalProperties | undefined;
 
-  constructor(dependencies: TraceType[]) {
-    this.dependencies = dependencies;
+  constructor(traceType: ImeTraceType) {
+    this.traceType = traceType;
   }
 }
