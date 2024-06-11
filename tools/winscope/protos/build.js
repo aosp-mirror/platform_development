@@ -36,7 +36,10 @@ async function build() {
 
         // ProtoLog
         buildProtos([
-            '../../../../frameworks/base/core/proto/android/internal/protolog.proto'
+            'protolog/udc/protolog.proto'
+        ], 'protolog/udc'),
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/protolog.proto'
         ], 'protolog/latest'),
 
         // SurfaceFlinger

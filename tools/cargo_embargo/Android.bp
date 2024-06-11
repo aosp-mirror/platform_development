@@ -33,6 +33,7 @@ rust_defaults {
         "libregex",
         "libserde",
         "libserde_json",
+        "libtempfile",
     ],
 }
 
