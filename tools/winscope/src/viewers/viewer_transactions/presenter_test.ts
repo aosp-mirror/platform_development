@@ -18,14 +18,11 @@ import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataEntryType} from './ui_data';
@@ -33,7 +30,6 @@ import {UiData, UiDataEntryType} from './ui_data';
 describe('PresenterTransactions', () => {
   let parser: Parser<PropertyTreeNode>;
   let trace: Trace<PropertyTreeNode>;
-  let traces: Traces;
   let presenter: Presenter;
   let outputUiData: undefined | UiData;
   const TOTAL_OUTPUT_ENTRIES = 1647;
@@ -51,10 +47,8 @@ describe('PresenterTransactions', () => {
   });
 
   it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder()
-      .setEntries(TraceType.TRANSACTIONS, [])
-      .build();
-    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
+    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
+    presenter = new Presenter(trace, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
 
@@ -350,14 +344,9 @@ describe('PresenterTransactions', () => {
 
   async function setUpTestEnvironment() {
     trace = new TraceBuilder<PropertyTreeNode>().setParser(parser).build();
-
-    traces = new Traces();
-    traces.setTrace(TraceType.TRANSACTIONS, trace);
-
-    presenter = new Presenter(traces, new InMemoryStorage(), (data: UiData) => {
+    presenter = new Presenter(trace, new InMemoryStorage(), (data: UiData) => {
       outputUiData = data;
     });
-
     await presenter.onAppEvent(createTracePositionUpdate(0)); // trigger initialization
   }
 

@@ -88,28 +88,19 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
   constructor(
     private readonly descriptors: string[],
     private readonly frameData: com.android.app.viewcapture.data.IFrameData[],
-    private readonly traceType: TraceType,
     private readonly realToBootTimeOffsetNs: bigint,
     private readonly packageName: string,
+    private readonly windowName: string,
     private readonly classNames: string[],
     private readonly timestampConverter: ParserTimestampConverter,
-  ) {
-    /*
-      TODO: Enable this once multiple ViewCapture Tabs becomes generic. Right now it doesn't matter since
-        the title is dependent upon the view capture type.
-
-      this.title = `${ParserViewCapture.shortenAndCapitalize(packageName)} - ${ParserViewCapture.shortenAndCapitalize(
-        windowData.title
-      )}`;
-      */
-  }
+  ) {}
 
   parse() {
     throw new Error('Not implemented');
   }
 
   getTraceType(): TraceType {
-    return this.traceType;
+    return TraceType.VIEW_CAPTURE;
   }
 
   getCoarseVersion(): CoarseVersion {
@@ -146,8 +137,12 @@ export class ParserViewCaptureWindow implements Parser<HierarchyTreeNode> {
     entriesRange: EntriesRange,
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
-      .visit(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME, async () => {
-        return Promise.resolve(this.packageName);
+      .visit(CustomQueryType.VIEW_CAPTURE_METADATA, async () => {
+        const metadata = {
+          packageName: this.packageName,
+          windowName: this.windowName,
+        };
+        return Promise.resolve(metadata);
       })
       .getResult();
   }

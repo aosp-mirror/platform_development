@@ -82,7 +82,7 @@ export class TracePipeline {
 
       this.loadedParsers.getParsers().forEach((parser) => {
         const trace = Trace.fromParser(parser);
-        this.traces.setTrace(parser.getTraceType(), trace);
+        this.traces.addTrace(trace);
         Analytics.Tracing.logTraceLoaded(parser);
       });
 
@@ -93,18 +93,19 @@ export class TracePipeline {
 
       tracesParsers.forEach((tracesParser) => {
         const trace = Trace.fromParser(tracesParser);
-        this.traces.setTrace(trace.type, trace);
+        this.traces.addTrace(trace);
       });
 
-      const hasTransitionTrace = this.traces.getTrace(TraceType.TRANSITION);
+      const hasTransitionTrace =
+        this.traces.getTrace(TraceType.TRANSITION) !== undefined;
       if (hasTransitionTrace) {
-        this.traces.deleteTrace(TraceType.WM_TRANSITION);
-        this.traces.deleteTrace(TraceType.SHELL_TRANSITION);
+        this.traces.deleteTracesByType(TraceType.WM_TRANSITION);
+        this.traces.deleteTracesByType(TraceType.SHELL_TRANSITION);
       }
 
       const hasCujTrace = this.traces.getTrace(TraceType.CUJS);
       if (hasCujTrace) {
-        this.traces.deleteTrace(TraceType.EVENT_LOG);
+        this.traces.deleteTracesByType(TraceType.EVENT_LOG);
       }
     } finally {
       progressListener?.onOperationFinished();
@@ -112,8 +113,8 @@ export class TracePipeline {
   }
 
   removeTrace(trace: Trace<object>) {
-    this.loadedParsers.remove(trace.type);
-    this.traces.deleteTrace(trace.type);
+    this.loadedParsers.remove(trace.getParser());
+    this.traces.deleteTrace(trace);
   }
 
   async makeZipArchiveWithLoadedTraceFiles(): Promise<Blob> {
@@ -124,12 +125,14 @@ export class TracePipeline {
     const tracesWithoutVisualization = this.traces
       .mapTrace((trace) => {
         if (!TraceTypeUtils.canVisualizeTrace(trace.type)) {
-          return trace.type;
+          return trace;
         }
         return undefined;
       })
-      .filter((type) => type !== undefined) as TraceType[];
-    tracesWithoutVisualization.forEach((type) => this.traces.deleteTrace(type));
+      .filter((trace) => trace !== undefined) as Array<Trace<object>>;
+    tracesWithoutVisualization.forEach((trace) =>
+      this.traces.deleteTrace(trace),
+    );
   }
 
   async buildTraces() {

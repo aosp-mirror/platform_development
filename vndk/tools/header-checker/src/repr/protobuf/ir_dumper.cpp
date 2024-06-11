@@ -59,18 +59,49 @@ bool IRToProtobufConverter::AddTypeInfo(
   return true;
 }
 
+bool IRToProtobufConverter::ConvertRecordFieldIR(
+    abi_dump::RecordFieldDecl *record_field_protobuf,
+    const RecordFieldIR *record_field_ir) {
+  if (!record_field_protobuf) {
+    llvm::errs() << "Invalid record field\n";
+    return false;
+  }
+  record_field_protobuf->set_field_name(record_field_ir->GetName());
+  record_field_protobuf->set_referenced_type(
+      record_field_ir->GetReferencedType());
+  record_field_protobuf->set_access(
+      AccessIRToProtobuf(record_field_ir->GetAccess()));
+  record_field_protobuf->set_field_offset(record_field_ir->GetOffset());
+  if (record_field_ir->IsBitField()) {
+    record_field_protobuf->set_is_bit_field(true);
+    record_field_protobuf->set_bit_width(record_field_ir->GetBitWidth());
+  }
+  return true;
+}
+
 bool IRToProtobufConverter::AddRecordFields(
-    abi_dump::RecordType *record_protobuf,
-    const RecordTypeIR *record_ir) {
-  // Iterate through the fields and create corresponding ones for the protobuf
-  // record
+    abi_dump::RecordType *record_protobuf, const RecordTypeIR *record_ir) {
   for (auto &&field_ir : record_ir->GetFields()) {
     abi_dump::RecordFieldDecl *added_field = record_protobuf->add_fields();
-    if (!added_field) {
-      llvm::errs() << "Couldn't add record field\n";
+    if (!IRToProtobufConverter::ConvertRecordFieldIR(added_field, &field_ir)) {
+      return false;
     }
-    SetIRToProtobufRecordField(added_field, &field_ir);
   }
+  return true;
+}
+
+bool IRToProtobufConverter::ConvertCXXBaseSpecifierIR(
+    abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
+    const CXXBaseSpecifierIR &base_specifier_ir) {
+  if (!base_specifier_protobuf) {
+    llvm::errs() << "Protobuf base specifier not valid\n";
+    return false;
+  }
+  base_specifier_protobuf->set_referenced_type(
+      base_specifier_ir.GetReferencedType());
+  base_specifier_protobuf->set_is_virtual(base_specifier_ir.IsVirtual());
+  base_specifier_protobuf->set_access(
+      AccessIRToProtobuf(base_specifier_ir.GetAccess()));
   return true;
 }
 
@@ -79,9 +110,33 @@ bool IRToProtobufConverter::AddBaseSpecifiers(
   for (auto &&base_ir : record_ir->GetBases()) {
     abi_dump::CXXBaseSpecifier *added_base =
         record_protobuf->add_base_specifiers();
-    if (!SetIRToProtobufBaseSpecifier(added_base, base_ir)) {
+    if (!ConvertCXXBaseSpecifierIR(added_base, base_ir)) {
       return false;
     }
+  }
+  return true;
+}
+
+bool IRToProtobufConverter::ConvertVTableLayoutIR(
+    abi_dump::VTableLayout *vtable_layout_protobuf,
+    const VTableLayoutIR &vtable_layout_ir) {
+  if (vtable_layout_protobuf == nullptr) {
+    llvm::errs() << "vtable layout protobuf not valid\n";
+    return false;
+  }
+  for (auto &&vtable_component_ir : vtable_layout_ir.GetVTableComponents()) {
+    abi_dump::VTableComponent *added_vtable_component =
+        vtable_layout_protobuf->add_vtable_components();
+    if (!added_vtable_component) {
+      llvm::errs() << "Couldn't add vtable component\n";
+      return false;
+    }
+    added_vtable_component->set_kind(
+        VTableComponentKindIRToProtobuf(vtable_component_ir.GetKind()));
+    added_vtable_component->set_component_value(vtable_component_ir.GetValue());
+    added_vtable_component->set_mangled_component_name(
+        vtable_component_ir.GetName());
+    added_vtable_component->set_is_pure(vtable_component_ir.GetIsPure());
   }
   return true;
 }
@@ -96,7 +151,7 @@ bool IRToProtobufConverter::AddVTableLayout(
   const VTableLayoutIR &vtable_layout_ir = record_ir->GetVTableLayout();
   abi_dump::VTableLayout *vtable_layout_protobuf =
       record_protobuf->mutable_vtable_layout();
-  if (!SetIRToProtobufVTableLayout(vtable_layout_protobuf, vtable_layout_ir)) {
+  if (!ConvertVTableLayoutIR(vtable_layout_protobuf, vtable_layout_ir)) {
     return false;
   }
   return true;
@@ -124,11 +179,12 @@ abi_dump::RecordType IRToProtobufConverter::ConvertRecordTypeIR(
   return added_record_type;
 }
 
-
 abi_dump::ElfObject IRToProtobufConverter::ConvertElfObjectIR(
     const ElfObjectIR *elf_object_ir) {
   abi_dump::ElfObject elf_object_protobuf;
   elf_object_protobuf.set_name(elf_object_ir->GetName());
+  elf_object_protobuf.set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_object_ir->GetBinding()));
   return elf_object_protobuf;
 }
 
@@ -136,6 +192,8 @@ abi_dump::ElfFunction IRToProtobufConverter::ConvertElfFunctionIR(
     const ElfFunctionIR *elf_function_ir) {
   abi_dump::ElfFunction elf_function_protobuf;
   elf_function_protobuf.set_name(elf_function_ir->GetName());
+  elf_function_protobuf.set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_function_ir->GetBinding()));
   return elf_function_protobuf;
 }
 
@@ -194,11 +252,27 @@ abi_dump::FunctionDecl IRToProtobufConverter::ConvertFunctionIR(
   return added_function;
 }
 
+bool IRToProtobufConverter::ConvertEnumFieldIR(
+    abi_dump::EnumFieldDecl *enum_field_protobuf,
+    const EnumFieldIR *enum_field_ir) {
+  if (enum_field_protobuf == nullptr) {
+    llvm::errs() << "Invalid enum field\n";
+    return false;
+  }
+  enum_field_protobuf->set_name(enum_field_ir->GetName());
+  // The "enum_field_value" in the .proto is a signed 64-bit integer. An
+  // unsigned integer >= (1 << 63) is represented with a negative integer in the
+  // dump file. Despite the wrong representation, the diff result isn't affected
+  // because every integer has a unique representation.
+  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetSignedValue());
+  return true;
+}
+
 bool IRToProtobufConverter::AddEnumFields(abi_dump::EnumType *enum_protobuf,
                                           const EnumTypeIR *enum_ir) {
   for (auto &&field : enum_ir->GetFields()) {
     abi_dump::EnumFieldDecl *enum_fieldp = enum_protobuf->add_enum_fields();
-    if (!SetIRToProtobufEnumField(enum_fieldp, &field)) {
+    if (!ConvertEnumFieldIR(enum_fieldp, &field)) {
       return false;
     }
   }
@@ -337,9 +411,7 @@ bool ProtobufIRDumper::AddElfFunctionIR(const ElfFunctionIR *elf_function) {
   if (!added_elf_function) {
     return false;
   }
-  added_elf_function->set_name(elf_function->GetName());
-  added_elf_function->set_binding(
-      ElfSymbolBindingIRToProtobuf(elf_function->GetBinding()));
+  *added_elf_function = ConvertElfFunctionIR(elf_function);
   return true;
 }
 
@@ -348,9 +420,7 @@ bool ProtobufIRDumper::AddElfObjectIR(const ElfObjectIR *elf_object) {
   if (!added_elf_object) {
     return false;
   }
-  added_elf_object->set_name(elf_object->GetName());
-  added_elf_object->set_binding(
-      ElfSymbolBindingIRToProtobuf(elf_object->GetBinding()));
+  *added_elf_object = ConvertElfObjectIR(elf_object);
   return true;
 }
 
