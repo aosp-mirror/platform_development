@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    fs::{copy, read_dir, remove_dir_all},
+    fs::{read_dir, remove_dir_all},
     path::{Path, PathBuf},
     process::{Command, Output},
     str::from_utf8,
@@ -25,12 +25,11 @@ use cargo::{
     util::toml::read_manifest,
     Config,
 };
-use copy_dir::copy_dir;
 use semver::Version;
 
 use crate::{
-    ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError, NameAndVersionRef,
-    NamedAndVersioned,
+    copy_dir, ensure_exists_and_empty, name_and_version::IsUpgradableTo, CrateError,
+    NameAndVersionRef, NamedAndVersioned,
 };
 
 #[derive(Debug)]
@@ -112,29 +111,16 @@ impl Crate {
         self.root.join(&self.relpath)
     }
     pub fn android_bp(&self) -> PathBuf {
-        if let Some(d) = self.customization_dir() {
-            d.join("Android.bp.disabled")
-        } else {
-            self.path().join("Android.bp")
-        }
+        self.relpath().join("Android.bp")
     }
     pub fn cargo_embargo_json(&self) -> PathBuf {
-        if let Some(d) = self.customization_dir() {
-            d.join("cargo_embargo.json")
-        } else {
-            self.path().join("cargo_embargo.json")
-        }
+        self.path().join("cargo_embargo.json")
     }
     pub fn staging_path(&self) -> PathBuf {
         Path::new("out/rust-crate-temporary-build").join(self.staging_dir_name())
     }
-    pub fn customization_dir(&self) -> Option<PathBuf> {
-        self.pseudo_crate.as_ref().map(|pseudo_crate| {
-            pseudo_crate.join("android/customizations").join(self.staging_dir_name())
-        })
-    }
-    pub fn patch_dir(&self) -> Option<PathBuf> {
-        self.customization_dir().map(|p| p.join("patches"))
+    pub fn patch_dir(&self) -> PathBuf {
+        self.staging_path().join("patches")
     }
     pub fn staging_dir_name(&self) -> String {
         if let Some(dirname) = self.relpath.file_name().and_then(|x| x.to_str()) {
@@ -191,7 +177,7 @@ impl Crate {
     }
     pub fn is_android_bp_healthy(&self) -> bool {
         !self.is_migration_denied()
-            && self.android_bp().exists()
+            && self.root().join(self.android_bp()).exists()
             && self.cargo_embargo_json().exists()
             && self.generate_android_bp_success()
             && self.android_bp_unchanged()
@@ -227,7 +213,7 @@ impl Crate {
         ensure_exists_and_empty(&staging_path_absolute)?;
         remove_dir_all(&staging_path_absolute)
             .context(format!("Failed to remove {}", staging_path_absolute.display()))?;
-        copy_dir(self.path(), &staging_path_absolute).context(format!(
+        copy_dir(&self.path(), &staging_path_absolute).context(format!(
             "Failed to copy {} to {}",
             self.path().display(),
             staging_path_absolute.display()
@@ -236,82 +222,49 @@ impl Crate {
             remove_dir_all(staging_path_absolute.join(".git"))
                 .with_context(|| "Failed to remove .git".to_string())?;
         }
-        self.copy_customizations()
+        Ok(())
     }
-    pub fn copy_customizations(&self) -> Result<()> {
-        if let Some(customization_dir) = self.customization_dir() {
-            let customization_dir_absolute = self.root().join(customization_dir);
-            let staging_path_absolute = self.root().join(self.staging_path());
-            for entry in read_dir(&customization_dir_absolute)
-                .context(format!("Failed to read_dir {}", customization_dir_absolute.display()))?
-            {
-                let entry = entry?;
-                let entry_path = entry.path();
-                let mut filename = entry.file_name().to_os_string();
-                if entry_path.is_dir() {
-                    copy_dir(&entry_path, staging_path_absolute.join(&filename)).context(
-                        format!(
-                            "Failed to copy {} to {}",
-                            entry_path.display(),
-                            staging_path_absolute.display()
-                        ),
-                    )?;
-                } else {
-                    if let Some(extension) = entry_path.extension() {
-                        if extension == "disabled" {
-                            let mut new_filename = entry_path.clone();
-                            new_filename.set_extension("");
-                            filename = new_filename
-                                .file_name()
-                                .context(format!(
-                                    "Failed to get file name for {}",
-                                    new_filename.display()
-                                ))?
-                                .to_os_string();
-                        }
-                    }
-                    copy(&entry_path, staging_path_absolute.join(filename)).context(format!(
-                        "Failed to copy {} to {}",
-                        entry_path.display(),
-                        staging_path_absolute.display()
-                    ))?;
-                }
-            }
-        }
+
+    pub fn diff_android_bp(&mut self) -> Result<()> {
+        self.set_diff_output(
+            diff_android_bp(
+                &self.android_bp(),
+                &self.staging_path().join("Android.bp"),
+                &self.root(),
+            )
+            .context("Failed to diff Android.bp".to_string())?,
+        );
         Ok(())
     }
 
     pub fn apply_patches(&mut self) -> Result<()> {
-        if let Some(patch_dir) = self.patch_dir() {
-            let patch_dir_absolute = self.root().join(patch_dir);
-            if patch_dir_absolute.exists() {
-                println!("Patching {}", self.path().display());
-                for entry in read_dir(&patch_dir_absolute)
-                    .context(format!("Failed to read_dir {}", patch_dir_absolute.display()))?
+        let patch_dir_absolute = self.root().join(self.patch_dir());
+        if patch_dir_absolute.exists() {
+            for entry in read_dir(&patch_dir_absolute)
+                .context(format!("Failed to read_dir {}", patch_dir_absolute.display()))?
+            {
+                let entry = entry?;
+                if entry.file_name() == "Android.bp.patch"
+                    || entry.file_name() == "Android.bp.diff"
+                    || entry.file_name() == "rules.mk.diff"
                 {
-                    let entry = entry?;
-                    if entry.file_name() == "Android.bp.patch"
-                        || entry.file_name() == "Android.bp.diff"
-                    {
-                        continue;
-                    }
-                    let entry_path = entry.path();
-                    println!("  applying {}", entry_path.display());
-                    let output = Command::new("patch")
-                        .args(["-p1", "-l"])
-                        .arg(&entry_path)
-                        .current_dir(self.root().join(self.staging_path()))
-                        .output()?;
-                    if !output.status.success() {
-                        println!(
-                            "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                            entry_path.display(),
-                            from_utf8(&output.stdout)?,
-                            from_utf8(&output.stderr)?
-                        );
-                    }
-                    self.patch_output.push(output);
+                    continue;
                 }
+                let entry_path = entry.path();
+                let output = Command::new("patch")
+                    .args(["-p1", "-l", "--no-backup-if-mismatch", "-i"])
+                    .arg(&entry_path)
+                    .current_dir(self.root().join(self.staging_path()))
+                    .output()?;
+                if !output.status.success() {
+                    println!(
+                        "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
+                        entry_path.display(),
+                        from_utf8(&output.stdout)?,
+                        from_utf8(&output.stderr)?
+                    );
+                }
+                self.patch_output.push(output);
             }
         }
         Ok(())
@@ -323,8 +276,10 @@ impl Crate {
     pub fn generate_android_bp_output(&self) -> Option<&Output> {
         self.generate_android_bp_output.as_ref()
     }
-    pub fn set_generate_android_bp_output(&mut self, c2a_output: Output, diff_output: Output) {
+    pub fn set_generate_android_bp_output(&mut self, c2a_output: Output) {
         self.generate_android_bp_output.replace(c2a_output);
+    }
+    pub fn set_diff_output(&mut self, diff_output: Output) {
         self.android_bp_diff.replace(diff_output);
     }
     pub fn set_patch_output(&mut self, patch_output: Vec<Output>) {
@@ -341,7 +296,7 @@ impl Migratable for Crate {
     fn is_migration_eligible(&self) -> bool {
         self.is_crates_io()
             && !self.is_migration_denied()
-            && self.android_bp().exists()
+            && self.root.join(self.android_bp()).exists()
             && self.cargo_embargo_json().exists()
     }
     fn is_migratable(&self) -> bool {
@@ -377,7 +332,7 @@ mod tests {
         assert_eq!(krate.name(), "foo");
         assert_eq!(krate.version().to_string(), "1.2.0");
         assert!(krate.is_crates_io());
-        assert_eq!(krate.android_bp(), temp_crate_dir.path().join("Android.bp"));
+        assert_eq!(krate.root().join(krate.android_bp()), temp_crate_dir.path().join("Android.bp"));
         assert_eq!(krate.cargo_embargo_json(), temp_crate_dir.path().join("cargo_embargo.json"));
         Ok(())
     }
@@ -389,4 +344,27 @@ mod tests {
         assert!(Crate::from(&cargo_toml, &"/blah", None::<&&str>).is_err());
         Ok(())
     }
+}
+
+pub fn diff_android_bp(
+    a: &impl AsRef<Path>,
+    b: &impl AsRef<Path>,
+    root: &impl AsRef<Path>,
+) -> Result<Output> {
+    Ok(Command::new("diff")
+        .args([
+            "-u",
+            "-w",
+            "-B",
+            "-I",
+            "// has rustc warnings",
+            "-I",
+            "This file is generated by",
+            "-I",
+            "cargo_pkg_version:",
+        ])
+        .arg(a.as_ref())
+        .arg(b.as_ref())
+        .current_dir(root)
+        .output()?)
 }

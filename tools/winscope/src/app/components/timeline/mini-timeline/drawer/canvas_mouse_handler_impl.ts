@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Point} from 'common/geometry_types';
-import {TraceType} from 'trace/trace_type';
+import {Trace} from 'trace/trace';
 import {
   CanvasMouseHandler,
   DragListener,
@@ -43,7 +43,7 @@ export class CanvasMouseHandlerImpl implements CanvasMouseHandler {
     private onUnhandledMouseDown: (
       point: Point,
       button: number,
-      trace?: TraceType,
+      trace: Trace<object> | undefined,
     ) => void = (point, button) => {},
   ) {
     this.drawer.canvas.addEventListener('mousemove', (event) => {

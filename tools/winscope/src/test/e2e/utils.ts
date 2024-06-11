@@ -163,7 +163,7 @@ class E2eTestUtils {
 
   static async filterHierarchy(viewer: string, filterString: string) {
     await E2eTestUtils.updateInputField(
-      `${viewer} hierarchy-view .title-filter`,
+      `${viewer} hierarchy-view .title-section`,
       'filter',
       filterString,
     );
@@ -198,20 +198,21 @@ class E2eTestUtils {
     throw Error(`could not find item matching ${itemName} in hierarchy`);
   }
 
-  static async applyStateToHierarchyCheckboxes(
+  static async applyStateToHierarchyOptions(
     viewerSelector: string,
     shouldEnable: boolean,
   ) {
-    const checkboxes: ElementFinder[] = await element.all(
-      by.css(`${viewerSelector} hierarchy-view .view-controls .mat-checkbox`),
+    const options: ElementFinder[] = await element.all(
+      by.css(`${viewerSelector} hierarchy-view .view-controls .user-option`),
     );
-    for (const box of checkboxes) {
-      const input = box.element(by.css('input'));
-      const isEnabled = await input.isSelected();
+    for (const option of options) {
+      const isEnabled = !(await option.getAttribute('class')).includes(
+        'not-enabled',
+      );
       if (shouldEnable && !isEnabled) {
-        await box.click();
+        await option.click();
       } else if (!shouldEnable && isEnabled) {
-        await box.click();
+        await option.click();
       }
     }
   }
