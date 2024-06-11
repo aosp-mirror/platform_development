@@ -86,7 +86,13 @@ impl CrateCollection {
             self.crates
                 .get_mut(&nv)
                 .ok_or(anyhow!("Failed to get crate {} {}", nv.name(), nv.version()))?
-                .set_generate_android_bp_output(output.0, output.1);
+                .set_generate_android_bp_output(output);
+        }
+        Ok(())
+    }
+    pub fn diff_android_bps(&mut self) -> Result<()> {
+        for krate in self.crates.values_mut() {
+            krate.diff_android_bp()?;
         }
         Ok(())
     }
