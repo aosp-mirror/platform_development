@@ -18,14 +18,14 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
+import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
-import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
 import {UpdateDisplayNames} from './operations/update_display_names';
 
-export class PresenterInputMethodClients extends PresenterInputMethod {
+export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
   protected override hierarchyPresenter = new HierarchyPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'ImeHierarchyOptions',

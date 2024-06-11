@@ -28,7 +28,7 @@ export interface UiDataHierarchy {
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesUserOptions: UserOptions;
   propertiesTree: UiPropertyTreeNode | undefined;
-  highlightedProperty?: string;
+  highlightedProperty: string;
   rectsToDraw?: UiRect[];
   rectIdToShowState?: Map<string, RectShowState> | undefined;
   displays?: DisplayIdentifier[];

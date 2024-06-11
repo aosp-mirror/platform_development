@@ -18,16 +18,16 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
 import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 
-abstract class ViewerInputMethod implements Viewer {
+export abstract class AbstractViewerInputMethod implements Viewer {
   private readonly trace: Trace<HierarchyTreeNode>;
   protected readonly htmlElement: HTMLElement;
-  protected readonly presenter: PresenterInputMethod;
+  protected readonly presenter: AbstractPresenterInputMethod;
   protected abstract readonly view: View;
 
   protected imeUiCallback = ((uiData: ImeUiData) => {
@@ -76,7 +76,5 @@ abstract class ViewerInputMethod implements Viewer {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,
-  ): PresenterInputMethod;
+  ): AbstractPresenterInputMethod;
 }
-
-export {ViewerInputMethod};

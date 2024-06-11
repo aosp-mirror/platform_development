@@ -29,6 +29,7 @@ export class ImeUiData implements UiDataHierarchy {
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesUserOptions: UserOptions = {};
   propertiesTree: UiPropertyTreeNode | undefined;
+  highlightedProperty = '';
 
   constructor(
     readonly traceType: ImeTraceType,

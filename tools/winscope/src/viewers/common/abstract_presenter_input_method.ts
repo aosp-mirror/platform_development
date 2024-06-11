@@ -43,7 +43,7 @@ import {PropertiesPresenter} from './properties_presenter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
 
-export abstract class PresenterInputMethod extends AbstractHierarchyViewerPresenter {
+export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter {
   protected getHierarchyTreeNameStrategy = (
     entry: TraceEntry<HierarchyTreeNode>,
     tree: HierarchyTreeNode,
