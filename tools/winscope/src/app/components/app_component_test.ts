@@ -15,6 +15,7 @@
  */
 import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
+import {HttpClientModule} from '@angular/common/http';
 import {ChangeDetectionStrategy} from '@angular/core';
 import {
   ComponentFixture,
@@ -29,6 +30,7 @@ import {
 } from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -58,6 +60,7 @@ import {
   MatDrawerContent,
 } from './bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './collect_traces_component';
+import {ShortcutsComponent} from './shortcuts_component';
 import {MiniTimelineComponent} from './timeline/mini-timeline/mini_timeline_component';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
@@ -90,6 +93,8 @@ describe('AppComponent', () => {
         MatInputModule,
         BrowserAnimationsModule,
         ClipboardModule,
+        MatDialogModule,
+        HttpClientModule,
       ],
       declarations: [
         AdbProxyComponent,
@@ -105,6 +110,7 @@ describe('AppComponent', () => {
         UploadTracesComponent,
         ViewerSurfaceFlingerComponent,
         WebAdbComponent,
+        ShortcutsComponent,
       ],
     })
       .overrideComponent(AppComponent, {
@@ -273,6 +279,16 @@ describe('AppComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('opens shortcuts dialog', () => {
+    expect(document.querySelector('shortcuts-panel')).toBeFalsy();
+    const shortcutsButton = assertDefined(
+      htmlElement.querySelector('.shortcuts'),
+    ) as HTMLElement;
+    shortcutsButton.click();
+    fixture.detectChanges();
+    expect(document.querySelector('shortcuts-panel')).toBeTruthy();
+  });
+
   function goToTraceView() {
     component.dataLoaded = true;
     component.showDataLoadedElements = true;
@@ -349,6 +365,7 @@ describe('AppComponent', () => {
 
   function checkPermanentHeaderItems() {
     expect(htmlElement.querySelector('.app-title')).toBeTruthy();
+    expect(htmlElement.querySelector('.shortcuts')).toBeTruthy();
     expect(htmlElement.querySelector('.documentation')).toBeTruthy();
     expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
     expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();

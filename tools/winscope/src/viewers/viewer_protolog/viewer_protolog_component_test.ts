@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -62,7 +63,7 @@ describe('ViewerProtologComponent', () => {
           SelectWithFilterComponent,
           ProtologScrollDirective,
         ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       fixture = TestBed.createComponent(ViewerProtologComponent);
       component = fixture.componentInstance;
@@ -247,9 +248,16 @@ describe('ViewerProtologComponent', () => {
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [ScrollingModule],
+        imports: [
+          ScrollingModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatInputModule,
+          BrowserAnimationsModule,
+          MatSelectModule,
+        ],
         declarations: [ViewerProtologComponent, ProtologScrollDirective],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerProtologComponent);
       const protologComponent = fixture.componentInstance;

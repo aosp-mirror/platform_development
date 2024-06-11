@@ -27,13 +27,14 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {DiffType} from 'viewers/common/diff_type';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from 'viewers/viewer_view_capture/presenter';
 import {UiData} from 'viewers/viewer_view_capture/ui_data';
-import {ViewerViewCaptureLauncher} from './viewer_view_capture';
 
 describe('PresenterViewCapture', () => {
   let parsers: Array<Parser<HierarchyTreeNode>>;
@@ -52,22 +53,15 @@ describe('PresenterViewCapture', () => {
 
     traces = new Traces();
     for (const parser of parsers) {
-      traces.setTrace(
-        parser.getTraceType(),
-        new TraceBuilder<HierarchyTreeNode>()
-          .setType(parser.getTraceType())
-          .setParser(parser)
-          .build(),
-      );
+      traces.addTrace(Trace.fromParser(parser));
     }
-    traceTaskbar = assertDefined(
-      traces.getTrace(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER),
-    );
+
+    traceTaskbar = assertDefined(traces.getTraces(TraceType.VIEW_CAPTURE)[0]);
     const firstEntry = traceTaskbar.getEntry(0);
     positionUpdate = TracePositionUpdate.fromTraceEntry(firstEntry);
 
     const traceLauncherActivity = assertDefined(
-      traces.getTrace(TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY),
+      traces.getTraces(TraceType.VIEW_CAPTURE)[1],
     );
     const firstEntryLauncherActivity = traceLauncherActivity.getEntry(0);
     secondPositionUpdate = TracePositionUpdate.fromTraceEntry(
@@ -90,23 +84,17 @@ describe('PresenterViewCapture', () => {
     presenter = createPresenter(traces);
   });
 
-  it('initializes active trace type', () => {
-    expect(presenter.getActiveTraceType()).toEqual(
-      TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY,
-    );
-  });
-
   it('is robust to empty trace', async () => {
     const emptyTrace = new TraceBuilder<HierarchyTreeNode>()
-      .setType(TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER)
+      .setType(TraceType.VIEW_CAPTURE)
       .setEntries([])
-      .setParserCustomQueryResult(
-        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
-        'the_package_name',
-      )
+      .setParserCustomQueryResult(CustomQueryType.VIEW_CAPTURE_METADATA, {
+        packageName: 'the_package_name',
+        windowName: 'the_window_name',
+      })
       .build();
     const emptyTraces = new Traces();
-    emptyTraces.setTrace(emptyTrace.type, emptyTrace);
+    emptyTraces.addTrace(emptyTrace);
     const presenter = createPresenter(emptyTraces);
 
     const positionUpdateWithoutTraceEntry = TracePositionUpdate.fromTimestamp(
@@ -119,24 +107,26 @@ describe('PresenterViewCapture', () => {
 
   it('processes trace position updates', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toEqual(17);
+    expect(uiData.vcRectIdToShowState?.size).toEqual(13);
     expect(uiData.highlightedItem?.length).toEqual(0);
 
-    const hierarchyOpts = Object.keys(uiData.hierarchyUserOptions);
-    expect(hierarchyOpts).toBeTruthy();
-    const propertyOpts = Object.keys(uiData.propertiesUserOptions);
-    expect(propertyOpts).toBeTruthy();
+    const hierarchyUserOptions = Object.keys(uiData.hierarchyUserOptions);
+    expect(hierarchyUserOptions).toBeTruthy();
+
+    const propertiesUserOptions = Object.keys(uiData.propertiesUserOptions);
+    expect(propertiesUserOptions).toBeTruthy();
+
     expect(assertDefined(uiData.trees).length === 1).toBeTrue();
     expect(
       assertDefined(uiData.trees)[0].getAllChildren().length > 0,
     ).toBeTrue();
     expect(uiData.windows).toEqual([
-      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
-      {displayId: 22, groupId: 22, name: 'Taskbar'},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
+      {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
 
     await presenter.onAppEvent(secondPositionUpdate);
-    expect(uiData.rects.length).toEqual(168);
+    expect(uiData.vcRectsToDraw.length).toEqual(145);
     expect(assertDefined(uiData.trees).length === 2).toBeTrue();
     expect(
       assertDefined(uiData.trees).every(
@@ -144,18 +134,96 @@ describe('PresenterViewCapture', () => {
       ),
     ).toBeTrue();
     expect(uiData.windows).toEqual([
-      {displayId: 21, groupId: 21, name: 'Nexuslauncher'},
-      {displayId: 22, groupId: 22, name: 'Taskbar'},
+      {displayId: 1, groupId: 1, name: 'PhoneWindow@25063d9'},
+      {displayId: 0, groupId: 0, name: 'Taskbar'},
     ]);
   });
 
   it('creates input data for rects view', async () => {
     await presenter.onAppEvent(positionUpdate);
-    expect(uiData.rects.length).toEqual(17);
-    expect(uiData.rects[0].x).toEqual(0);
-    expect(uiData.rects[0].y).toEqual(0);
-    expect(uiData.rects[0].w).toEqual(1080);
-    expect(uiData.rects[0].h).toEqual(249);
+    expect(uiData.vcRectsToDraw[0].x).toEqual(0);
+    expect(uiData.vcRectsToDraw[0].y).toEqual(0);
+    expect(uiData.vcRectsToDraw[0].w).toEqual(1080);
+    expect(uiData.vcRectsToDraw[0].h).toEqual(249);
+    checkRectUiData(13, 13, 13);
+  });
+
+  it('filters rects by visibility', async () => {
+    const userOptions: UserOptions = {
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    expect(uiData.rectsUserOptions).toEqual(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(5, 13, 5);
+  });
+
+  it('filters rects by show/hide state', async () => {
+    const userOptions: UserOptions = {
+      ignoreNonHidden: {
+        name: 'Ignore',
+        icon: 'visibility',
+        enabled: true,
+      },
+    };
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.views.IconButtonView@78121542',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(13, 13, 12);
+
+    userOptions['ignoreNonHidden'].enabled = false;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(12, 13, 12);
+  });
+
+  it('handles both visibility and show/hide state in rects', async () => {
+    const userOptions: UserOptions = {
+      ignoreNonHidden: {
+        name: 'Apply',
+        icon: 'visibility',
+        enabled: true,
+      },
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
+        enabled: false,
+      },
+    };
+    await presenter.onAppEvent(positionUpdate);
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(13, 13, 13);
+
+    await presenter.onRectShowStateChange(
+      'ViewNode com.android.launcher3.taskbar.TaskbarScrimView@114418695',
+      RectShowState.HIDE,
+    );
+    checkRectUiData(13, 13, 12);
+
+    userOptions['ignoreNonHidden'].enabled = false;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(12, 13, 12);
+
+    userOptions['showOnlyVisible'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(4, 13, 4);
+
+    userOptions['ignoreNonHidden'].enabled = true;
+    presenter.onRectsUserOptionsChange(userOptions);
+    checkRectUiData(5, 13, 4);
   });
 
   it('updates pinned items', async () => {
@@ -185,8 +253,9 @@ describe('PresenterViewCapture', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: true,
       },
     };
@@ -213,8 +282,9 @@ describe('PresenterViewCapture', () => {
         name: 'Simplify names',
         enabled: false,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
     };
@@ -225,7 +295,7 @@ describe('PresenterViewCapture', () => {
     );
   });
 
-  it('filters hierarchy tree', async () => {
+  it('filters hierarchy tree by search string', async () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: 'Show diff',
@@ -235,8 +305,9 @@ describe('PresenterViewCapture', () => {
         name: 'Simplify names',
         enabled: true,
       },
-      onlyVisible: {
-        name: 'Only visible',
+      showOnlyVisible: {
+        name: 'Show only',
+        chip: VISIBLE_CHIP,
         enabled: false,
       },
     };
@@ -268,7 +339,7 @@ describe('PresenterViewCapture', () => {
     expect(assertDefined(uiData.propertiesTree).id).toEqual(
       'ViewNode com.android.launcher3.taskbar.TaskbarDragLayer@265160962',
     );
-    const rect = assertDefined(uiData.rects.at(5));
+    const rect = assertDefined(uiData.vcRectsToDraw.at(5));
     await presenter.onHighlightedIdChange(rect.id);
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(propertiesTree.id).toEqual(
@@ -395,13 +466,23 @@ describe('PresenterViewCapture', () => {
   });
 
   function createPresenter(traces: Traces): Presenter {
-    return new Presenter(
-      ViewerViewCaptureLauncher.DEPENDENCIES,
-      traces,
-      new InMemoryStorage(),
-      (newData: UiData) => {
-        uiData = newData;
-      },
+    return new Presenter(traces, new InMemoryStorage(), (newData: UiData) => {
+      uiData = newData;
+    });
+  }
+
+  function checkRectUiData(
+    rectsToDraw: number,
+    allRects: number,
+    shownRects: number,
+  ) {
+    expect(uiData.vcRectsToDraw.length).toEqual(rectsToDraw);
+    const showStates = Array.from(
+      assertDefined(uiData.vcRectIdToShowState).values(),
+    );
+    expect(showStates.length).toEqual(allRects);
+    expect(showStates.filter((s) => s === RectShowState.SHOW).length).toEqual(
+      shownRects,
     );
   }
 });

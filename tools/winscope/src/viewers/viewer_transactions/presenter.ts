@@ -19,9 +19,7 @@ import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace, TraceEntry} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TraceType} from 'trace/trace_type';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
@@ -82,11 +80,11 @@ export class Presenter {
   private static readonly VALUE_NA = 'N/A';
 
   constructor(
-    traces: Traces,
+    trace: Trace<PropertyTreeNode>,
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
-    this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
+    this.trace = trace;
     this.notifyUiDataCallback = notifyViewCallback;
     this.originalIndicesOfUiDataEntries = [];
     this.notifyUiDataCallback(this.uiData);
