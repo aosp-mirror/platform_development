@@ -72,6 +72,11 @@ export class FrameMapper {
       this.propagateFromSurfaceFlingerToTransactions,
     );
     await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.VIEW_CAPTURE,
+      this.propagateFromSurfaceFlingerToViewCapture,
+    );
+    await this.tryPropagateMapping(
       TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
       this.propagateFromTransactionsToWindowManager,
@@ -156,6 +161,20 @@ export class FrameMapper {
         return;
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), frames);
+    });
+  }
+
+  private async propagateFromSurfaceFlingerToViewCapture(
+    surfaceFlinger: Trace<object>,
+    viewCapture: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
+    surfaceFlinger.forEachEntry((srcEntry) => {
+      const dstEntry = viewCapture.findLastLowerEntry(srcEntry.getTimestamp());
+      if (!dstEntry) {
+        return;
+      }
+      frameMapBuilder.setFrames(dstEntry.getIndex(), srcEntry.getFramesRange());
     });
   }
 
