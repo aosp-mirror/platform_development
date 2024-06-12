@@ -23,6 +23,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -33,9 +34,14 @@ describe('PresenterTransitions', () => {
       .build();
     const trace = assertDefined(traces.getTrace(TraceType.TRANSITION));
     let outputUiData: UiData | undefined;
-    const presenter = new Presenter(trace, traces, (data: UiData) => {
+    const callback = (data: UiData) => {
       outputUiData = data;
-    });
+    };
+    const presenter = new Presenter(
+      trace,
+      traces,
+      callback as NotifyLogViewCallbackType,
+    );
 
     await presenter.onAppEvent(
       TracePositionUpdate.fromTimestamp(
@@ -60,16 +66,21 @@ describe('PresenterTransitions', () => {
     traces.addTrace(trace);
 
     let outputUiData = UiData.EMPTY;
-    const presenter = new Presenter(trace, traces, (data: UiData) => {
+    const callback = (data: UiData) => {
       outputUiData = data;
-    });
+    };
+    const presenter = new Presenter(
+      trace,
+      traces,
+      callback as NotifyLogViewCallbackType,
+    );
 
     const entry = trace.getEntry(1);
     await presenter.onAppEvent(TracePositionUpdate.fromTraceEntry(entry));
 
     expect(outputUiData.entries.length).toEqual(4);
 
-    const selectedTransition = assertDefined(outputUiData.selectedTransition);
+    const selectedTransition = assertDefined(outputUiData.propertiesTree);
     const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
     expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
