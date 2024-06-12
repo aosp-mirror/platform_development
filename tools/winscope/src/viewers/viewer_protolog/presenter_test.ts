@@ -123,7 +123,7 @@ describe('ViewerProtoLogPresenter', () => {
 
     inputMessages = [
       {
-        originalIndex: 0,
+        traceIndex: 0,
         text: 'text0',
         time: assertDefined(entries[0].getChildByName('timestamp')),
         tag: 'tag0',
@@ -131,7 +131,7 @@ describe('ViewerProtoLogPresenter', () => {
         at: 'sourcefile0',
       },
       {
-        originalIndex: 1,
+        traceIndex: 1,
         text: 'text1',
         time: assertDefined(entries[1].getChildByName('timestamp')),
         tag: 'tag1',
@@ -139,7 +139,7 @@ describe('ViewerProtoLogPresenter', () => {
         at: 'sourcefile1',
       },
       {
-        originalIndex: 2,
+        traceIndex: 2,
         text: 'text2',
         time: assertDefined(entries[2].getChildByName('timestamp')),
         tag: 'tag2',
