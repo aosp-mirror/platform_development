@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -54,10 +54,7 @@ export class TimelineData {
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
       // Filter out dumps with invalid timestamp (would mess up the timeline)
-      const isDump =
-        trace.lengthEntries === 1 &&
-        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
+      if (trace.isDumpWithoutTimestamp()) {
         return;
       }
 
