@@ -253,16 +253,16 @@ describe('ViewerTransactionsComponent', () => {
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData(0);
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('1ns');
+      expect(index).toEqual(0);
     });
 
     it('creates collapsed sections with no buttons', () => {

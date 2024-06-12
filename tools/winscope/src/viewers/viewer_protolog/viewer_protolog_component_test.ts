@@ -199,16 +199,16 @@ describe('ViewerProtologComponent', () => {
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('10ns');
+      expect(index).toEqual(0);
     });
 
     async function checkSelectFilter(filterSelector: string) {
@@ -288,7 +288,7 @@ describe('ViewerProtologComponent', () => {
     const longMessage = shortMessage.repeat(10) + 'keep';
     for (let i = 0; i < 200; i++) {
       const uiDataMessage: UiDataMessage = {
-        originalIndex: i,
+        traceIndex: i,
         text: i % 2 === 0 ? shortMessage : longMessage,
         time,
         tag: i % 2 === 0 ? allTags[0] : allTags[1],
