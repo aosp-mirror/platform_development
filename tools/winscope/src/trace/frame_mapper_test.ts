@@ -469,4 +469,51 @@ describe('FrameMapper', () => {
       expect(await TracesUtils.extractFrames(traces)).toEqual(expectedFrames);
     });
   });
+
+  it('supports multiple traces with same type', async () => {
+    // SURFACE_FLINGER_0:    0
+    //                        \
+    //                         \
+    // SURFACE_FLINGER_1:    0  \
+    //                        \ |
+    //                         \|
+    // SCREEN_RECORDING:        0
+    // Time:                 0  1
+    const surfaceFlinger0 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const surfaceFlinger1 = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries(['entry-0' as unknown as HierarchyTreeNode])
+      .setTimestamps([time0])
+      .build();
+
+    const screenRecording = new TraceBuilder<ScreenRecordingTraceEntry>()
+      .setType(TraceType.SCREEN_RECORDING)
+      .setEntries(['entry-0' as unknown as ScreenRecordingTraceEntry])
+      .setTimestamps([time1])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(surfaceFlinger0);
+    traces.addTrace(surfaceFlinger1);
+    traces.addTrace(screenRecording);
+    await new FrameMapper(traces).computeMapping();
+
+    expect(surfaceFlinger0.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(surfaceFlinger1.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+    expect(screenRecording.getEntry(0).getFramesRange()).toEqual({
+      start: 0,
+      end: 1,
+    });
+  });
 });
