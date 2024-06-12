@@ -40,7 +40,7 @@ void HideIrrelevantCommandLineOptions(
     if (IsOptionInCategory(*p.second, category)) {
       continue;
     }
-    if (p.first().startswith("help")) {
+    if (p.first().starts_with("help")) {
       continue;
     }
     p.second->setHiddenFlag(llvm::cl::Hidden);

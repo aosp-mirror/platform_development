@@ -34,7 +34,7 @@ static const std::vector<std::string> libcxx_include_dir{"libcxx", "include"};
 static bool HasHeaderExtension(llvm::StringRef file_name) {
   return std::find_if(header_extensions.begin(), header_extensions.end(),
                       [file_name](const std::string &e) {
-                        return file_name.endswith(e);
+                        return file_name.ends_with(e);
                       }) != header_extensions.end();
 }
 
@@ -112,19 +112,19 @@ std::string NormalizePath(std::string_view path, const RootDirs &root_dirs) {
   for (const RootDir &root_dir : root_dirs) {
     // llvm::sys::path::replace_path_prefix("AB", "A", "") returns "B", so do
     // not use it.
-    if (!norm_path.startswith(root_dir.path)) {
+    if (!norm_path.starts_with(root_dir.path)) {
       continue;
     }
     if (norm_path.size() == root_dir.path.size()) {
       return root_dir.replacement;
     }
     llvm::StringRef suffix = norm_path.substr(root_dir.path.size());
-    if (suffix.startswith(separator)) {
+    if (suffix.starts_with(separator)) {
       if (root_dir.replacement.empty()) {
         return suffix.substr(separator.size()).str();
       }
       // replacement == "/"
-      if (llvm::StringRef(root_dir.replacement).endswith(separator)) {
+      if (llvm::StringRef(root_dir.replacement).ends_with(separator)) {
         return root_dir.replacement + suffix.substr(separator.size()).str();
       }
       return root_dir.replacement + suffix.str();
@@ -155,7 +155,7 @@ static bool CollectExportedHeaderSet(const std::string &dir_name,
     const std::string &file_path = walker->path();
 
     llvm::StringRef file_name(llvm::sys::path::filename(file_path));
-    if (file_name.empty() || file_name.startswith(".")) {
+    if (file_name.empty() || file_name.starts_with(".")) {
       // Ignore hidden files and directories.
       walker.no_push();
       continue;
