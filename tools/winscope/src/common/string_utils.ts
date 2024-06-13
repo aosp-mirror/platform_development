@@ -30,7 +30,8 @@ class StringUtils {
     let prevChar: string | undefined;
     for (const currChar of s) {
       const prevCharCouldBeWordEnd =
-        prevChar && (StringUtils.isDigit(prevChar) || StringUtils.isLowerCase(prevChar));
+        prevChar &&
+        (StringUtils.isDigit(prevChar) || StringUtils.isLowerCase(prevChar));
       const currCharCouldBeWordStart = StringUtils.isUpperCase(currChar);
       if (prevCharCouldBeWordEnd && currCharCouldBeWordStart) {
         result.push('_');
@@ -81,6 +82,14 @@ class StringUtils {
   static isUpperCase(char: string): boolean {
     assertTrue(char.length === 1, () => 'Input must be a single character');
     return StringUtils.isAlpha(char) && char === char.toUpperCase();
+  }
+
+  static isBlank(str: string): boolean {
+    return str.replace(/\s/g, '').length === 0;
+  }
+
+  static isNumeric(str: string): boolean {
+    return Number(str).toString() === str;
   }
 
   private static capitalizeFirstCharIfAlpha(word: string): string {

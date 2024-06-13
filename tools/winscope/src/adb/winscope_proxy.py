@@ -81,7 +81,17 @@ function is_perfetto_data_source_available {
 function is_any_perfetto_data_source_available {
     if is_perfetto_data_source_available android.surfaceflinger.layers || \
        is_perfetto_data_source_available android.surfaceflinger.transactions || \
-       is_perfetto_data_source_available com.android.wm.shell.transition; then
+       is_perfetto_data_source_available com.android.wm.shell.transition || \
+       is_perfetto_data_source_available android.protolog; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function is_flag_set {
+    local flag_name=$1
+    if dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
         return 0
     else
         return 1
@@ -200,13 +210,21 @@ fi
 ),
     "screen_recording": TraceTarget(
         File(f'/data/local/tmp/screen.mp4', "screen_recording"),
-        f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
-        'pkill -l SIGINT screenrecord >/dev/null 2>&1'
+        f'''
+        settings put system show_touches 1 && \
+        settings put system pointer_location 1 && \
+        screenrecord --bugreport --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 & \
+        echo "ScreenRecorder started."
+        ''',
+        '''settings put system pointer_location 0 && \
+        settings put system show_touches 0 && \
+        pkill -l SIGINT screenrecord >/dev/null 2>&1
+        '''.strip()
     ),
     "transactions": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
         f"""
-if is_perfetto_data_source_available android.surfaceflinger.transaction; then
+if is_perfetto_data_source_available android.surfaceflinger.transactions; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
@@ -224,7 +242,7 @@ else
 fi
 """,
         """
-if ! is_perfetto_data_source_available android.surfaceflinger.transaction; then
+if ! is_perfetto_data_source_available android.surfaceflinger.transactions; then
     su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1
 fi
 """
@@ -239,8 +257,29 @@ fi
     ),
     "proto_log": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
-        'su root cmd window logging start\necho "WM logging started."',
-        'su root cmd window logging stop >/dev/null 2>&1'
+        f"""
+if is_perfetto_data_source_available android.protolog && \
+    is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.protolog"
+    }}
+}}
+EOF
+    echo 'ProtoLog (perfetto) configured to start along the other perfetto traces'
+else
+    su root cmd window logging start
+    echo "ProtoLog (legacy) started."
+fi
+        """,
+        """
+if ! is_perfetto_data_source_available android.protolog && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_protolog_tracing; then
+    su root cmd window logging stop >/dev/null 2>&1
+    echo "ProtoLog (legacy) stopped."
+fi
+        """
     ),
     "ime_trace_clients": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
@@ -271,7 +310,8 @@ fi
         [WinscopeFileMatcher(WINSCOPE_DIR, "wm_transition_trace", "wm_transition_trace"),
          WinscopeFileMatcher(WINSCOPE_DIR, "shell_transition_trace", "shell_transition_trace")],
          f"""
-if is_perfetto_data_source_available com.android.wm.shell.transition; then
+if is_perfetto_data_source_available com.android.wm.shell.transition && \
+    is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
@@ -286,7 +326,8 @@ else
 fi
         """,
         """
-if ! is_perfetto_data_source_available com.android.wm.shell.transition; then
+if ! is_perfetto_data_source_available com.android.wm.shell.transition && \
+    ! is_flag_set windowing_tools/android.tracing.perfetto_transition_tracing; then
     su root cmd window shell tracing stop && su root dumpsys activity service SystemUIService WMShell transitions tracing stop >/dev/null 2>&1
     echo 'Transition traces (legacy) stopped.'
 fi
@@ -430,12 +471,12 @@ SF_PERFETTO_FLAGS_MAP = {
     "virtualdisplays": "TRACE_FLAG_VIRTUAL_DISPLAYS",
 }
 
-#Keep up to date with options in DataAdb.vue
+#Keep up to date with options in trace_collection_utils.ts
 CONFIG_SF_SELECTION = [
     "sfbuffersize",
 ]
 
-#Keep up to date with options in DataAdb.vue
+#Keep up to date with options in trace_collection_utils.ts
 CONFIG_WM_SELECTION = [
     "wmbuffersize",
     "tracingtype",
@@ -487,6 +528,11 @@ else
     su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}
 fi
 """
+    ),
+
+    "screenshot": DumpTarget(
+        File("/data/local/tmp/screenshot.png", "screenshot.png"),
+        "screencap -p > /data/local/tmp/screenshot.png"
     ),
 
     "perfetto_dump": DumpTarget(

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Segment} from 'app/components/timeline/segment';
 import {MathUtils} from 'three/src/Three';
-import {Segment} from '../../utils';
 import {DraggableCanvasObject} from './draggable_canvas_object';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 
@@ -30,11 +30,14 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
   constructor(
     private drawer: MiniTimelineDrawer,
     private positionGetter: () => number,
-    private definePathFunc: (ctx: CanvasRenderingContext2D, position: number) => void,
+    private definePathFunc: (
+      ctx: CanvasRenderingContext2D,
+      position: number,
+    ) => void,
     private drawConfig: DrawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
-    private rangeGetter: () => Segment
+    private rangeGetter: () => Segment,
   ) {
     this.drawer.handler.registerDraggableObject(
       this,
@@ -47,7 +50,7 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
         this.draggingPosition = undefined;
         this.onDrop(this.clampPositionToRange(x));
         this.drawer.draw();
-      }
+      },
     );
   }
 
@@ -56,7 +59,9 @@ export class DraggableCanvasObjectImpl implements DraggableCanvasObject {
   }
 
   get position(): number {
-    return this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
+    return this.draggingPosition !== undefined
+      ? this.draggingPosition
+      : this.positionGetter();
   }
 
   definePath(ctx: CanvasRenderingContext2D) {

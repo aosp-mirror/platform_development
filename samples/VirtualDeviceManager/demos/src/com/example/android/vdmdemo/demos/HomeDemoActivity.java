@@ -49,6 +49,11 @@ public final class HomeDemoActivity extends AppCompatActivity {
         sendIntentToDisplay(Intent.CATEGORY_SECONDARY_HOME);
     }
 
+    /** Handle a request to move the task to back. */
+    public void onMoveTaskToBack(View view) {
+        moveTaskToBack(true);
+    }
+
     private void sendIntentToDisplay(String category) {
         Display[] displays = mDisplayManager.getDisplays();
 

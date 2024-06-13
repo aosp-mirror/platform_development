@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 import {Component} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
-import {Color} from 'flickerlib/common';
-import {LayerBuilder} from 'test/unit/layer_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
+import {SfCuratedProperties} from 'viewers/common/curated_properties';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from './transform_matrix_component';
 
-describe('PropertyGroupsComponent', () => {
+describe('SurfaceFlingerPropertyGroupsComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
@@ -49,119 +54,87 @@ describe('PropertyGroupsComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders verbose flags if available', () => {
-    const layer = new LayerBuilder().setFlags(3).build();
-    component.item = layer;
-    fixture.detectChanges();
-
+  it('renders flags', () => {
     const flags = assertDefined(htmlElement.querySelector('.flags'));
-    expect(flags.innerHTML).toMatch('Flags:.*HIDDEN|OPAQUE \\(0x3\\)');
-  });
-
-  it('renders numeric flags if verbose flags not available', () => {
-    const flags = assertDefined(htmlElement.querySelector('.flags'));
-    expect(flags.innerHTML).toMatch('Flags:.*0');
+    expect(flags.innerHTML).toMatch('Flags:.*HIDDEN \\(0x1\\)');
   });
 
   it('displays calculated geometry', () => {
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.geometry .left-column'));
-    expect(calculatedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(assertDefined(calculatedDiv.querySelector('.crop')).innerHTML).toContain('[empty]');
-    expect(assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML).toContain(
-      '[empty]'
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.geometry .left-column'),
     );
+    expect(calculatedDiv.querySelector('transform-matrix')).toBeTruthy();
+    expect(
+      assertDefined(calculatedDiv.querySelector('.crop')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
+    expect(
+      assertDefined(calculatedDiv.querySelector('.final-bounds')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
   });
 
   it('displays requested geometry', () => {
-    const layer = new LayerBuilder().setFlags(0).build();
-    layer.proto = {
-      requestedTransform: {
-        dsdx: 0,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 0,
-        type: 0,
-      },
-    };
-    component.item = layer;
-    fixture.detectChanges();
-    const requestedDiv = assertDefined(htmlElement.querySelector('.geometry .right-column'));
+    const requestedDiv = assertDefined(
+      htmlElement.querySelector('.geometry .right-column'),
+    );
     expect(requestedDiv.querySelector('transform-matrix')).toBeTruthy();
-    expect(assertDefined(requestedDiv.querySelector('.crop')).innerHTML).toContain('[empty]');
+    expect(
+      assertDefined(requestedDiv.querySelector('.crop')).innerHTML,
+    ).toContain(EMPTY_OBJ_STRING);
   });
 
   it('displays buffer info', () => {
-    const layer = new LayerBuilder().setFlags(0).build();
-    layer.proto = {
-      destinationFrame: {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-      },
-    };
-    component.item = layer;
-    fixture.detectChanges();
-
     const sizeDiv = htmlElement.querySelector('.buffer .size');
-    expect(assertDefined(sizeDiv).innerHTML).toContain('[empty]');
+    expect(assertDefined(sizeDiv).innerHTML).toContain(EMPTY_OBJ_STRING);
     const currFrameDiv = htmlElement.querySelector('.buffer .frame-number');
     expect(assertDefined(currFrameDiv).innerHTML).toContain('0');
     const transformDiv = htmlElement.querySelector('.buffer .transform');
     expect(assertDefined(transformDiv).innerHTML).toContain('IDENTITY');
     const destFrameDiv = htmlElement.querySelector('.buffer .dest-frame');
-    expect(assertDefined(destFrameDiv).innerHTML).toContain('left: 0, top: 0, right: 0, bottom: 0');
+    expect(assertDefined(destFrameDiv).innerHTML).toContain(EMPTY_OBJ_STRING);
+    const ignoreFrameDiv = htmlElement.querySelector('.buffer .ignore-frame');
+    expect(assertDefined(ignoreFrameDiv).innerHTML).toContain(
+      'Destination Frame ignored because item has eIgnoreDestinationFrame flag set.',
+    );
   });
 
   it('displays hierarchy info', () => {
     const zDiv = htmlElement.querySelector('.hierarchy-info .z-order');
     expect(assertDefined(zDiv).innerHTML).toContain('0');
-    const relParentDiv = htmlElement.querySelector('.hierarchy-info .rel-parent');
+    const relParentDiv = htmlElement.querySelector(
+      '.hierarchy-info .rel-parent',
+    );
     expect(assertDefined(relParentDiv).innerHTML).toContain('none');
   });
 
   it('displays simple calculated effects', () => {
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.effects .left-column'));
-    expect(assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML).toContain('1 px');
-    expect(assertDefined(calculatedDiv.querySelector('.blur')).innerHTML).toContain('1 px');
-    expect(assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML).toContain(
-      '1 px'
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.effects .left-column'),
     );
+    expect(
+      assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML,
+    ).toContain('1 px');
+    expect(
+      assertDefined(calculatedDiv.querySelector('.blur')).innerHTML,
+    ).toContain('1 px');
+    expect(
+      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
+    ).toContain('1 px');
   });
 
   it('displays simple requested effects', () => {
-    const layer = new LayerBuilder().setFlags(0).build();
-    layer.proto = {
-      requestedShadowRadius: 1,
-      requestedCornerRadius: 1,
-    };
-    component.item = layer;
-    fixture.detectChanges();
-
-    const calculatedDiv = assertDefined(htmlElement.querySelector('.effects .right-column'));
-    expect(assertDefined(calculatedDiv.querySelector('.shadow')).innerHTML).toContain('1 px');
-    expect(assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML).toContain(
-      '1 px'
+    const calculatedDiv = assertDefined(
+      htmlElement.querySelector('.effects .right-column'),
     );
+    expect(
+      assertDefined(calculatedDiv.querySelector('.corner-radius')).innerHTML,
+    ).toContain('1 px');
   });
 
-  it('displays empty color and alpha value in effects', () => {
-    const layer = new LayerBuilder().setFlags(0).build();
-    layer.color.a = 1;
-    component.item = layer;
-    fixture.detectChanges();
-
+  it('displays color and alpha value in effects', () => {
     const colorDiv = htmlElement.querySelector('.color');
-    expect(assertDefined(colorDiv).innerHTML).toContain('[empty], alpha: 1');
-  });
-
-  it('displays rgba color in effects', () => {
-    const layer = new LayerBuilder().setFlags(0).setColor(new Color(0, 0, 0, 1)).build();
-    component.item = layer;
-    fixture.detectChanges();
-
-    const colorDiv = htmlElement.querySelector('.color');
-    expect(assertDefined(colorDiv).innerHTML).toContain('(0, 0, 0, 1)');
+    expect(assertDefined(colorDiv).innerHTML).toContain(
+      `${EMPTY_OBJ_STRING}, alpha: 1`,
+    );
   });
 
   it('displays not set message if no inputs present', () => {
@@ -170,41 +143,78 @@ describe('PropertyGroupsComponent', () => {
   });
 
   it('displays input window info if available', () => {
-    const layer = new LayerBuilder().setFlags(0).build();
-    layer.proto = {
-      inputWindowInfo: {
-        focusable: false,
-        inputTransform: {
-          dsdx: 0,
-          dsdy: 0,
-          dtdx: 0,
-          dtdy: 0,
-          type: 0,
-        },
-        cropLayerId: 0,
-        replaceTouchableRegionWithCrop: false,
-      },
-    };
-    component.item = layer;
+    component.properties.hasInputChannel = true;
     fixture.detectChanges();
 
-    expect(htmlElement.querySelector('.inputs .left-column transform-matrix')).toBeTruthy();
+    expect(
+      htmlElement.querySelector('.inputs .left-column transform-matrix'),
+    ).toBeTruthy();
 
-    const configDiv = assertDefined(htmlElement.querySelector('.inputs .right-column'));
-    expect(assertDefined(configDiv.querySelector('.focusable')).innerHTML).toContain('false');
-    expect(assertDefined(configDiv.querySelector('.crop-touch-region')).innerHTML).toContain(
-      'none'
+    const configDiv = assertDefined(
+      htmlElement.querySelector('.inputs .right-column'),
     );
-    expect(assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML).toContain(
-      'false'
-    );
+    expect(
+      assertDefined(configDiv.querySelector('.focusable')).innerHTML,
+    ).toContain('false');
+    expect(
+      assertDefined(configDiv.querySelector('.crop-touch-region')).innerHTML,
+    ).toContain('none');
+    expect(
+      assertDefined(configDiv.querySelector('.replace-touch-region')).innerHTML,
+    ).toContain('false');
+    expect(
+      assertDefined(configDiv.querySelector('.input-config')).innerHTML,
+    ).toContain('null');
   });
 
   @Component({
     selector: 'host-component',
-    template: ` <surface-flinger-property-groups [item]="item"></surface-flinger-property-groups> `,
+    template: `
+      <surface-flinger-property-groups [properties]="properties"></surface-flinger-property-groups>
+    `,
   })
   class TestHostComponent {
-    item = new LayerBuilder().setFlags(0).build();
+    transformNode = TreeNodeUtils.makeUiPropertyNode('transform', 'transform', {
+      type: 0,
+      matrix: {
+        dsdx: 1,
+        dsdy: 0,
+        dtdx: 0,
+        dtdy: 1,
+        tx: 0,
+        ty: 0,
+      },
+    });
+
+    properties: SfCuratedProperties = {
+      summary: [],
+      flags: 'HIDDEN (0x1)',
+      calcTransform: this.transformNode,
+      calcCrop: EMPTY_OBJ_STRING,
+      finalBounds: EMPTY_OBJ_STRING,
+      reqTransform: this.transformNode,
+      reqCrop: EMPTY_OBJ_STRING,
+      bufferSize: EMPTY_OBJ_STRING,
+      frameNumber: '0',
+      bufferTransformType: 'IDENTITY',
+      destinationFrame: EMPTY_OBJ_STRING,
+      z: '0',
+      relativeParent: 'none',
+      calcColor: `${EMPTY_OBJ_STRING}, alpha: 1`,
+      calcShadowRadius: '1 px',
+      calcCornerRadius: '1 px',
+      calcCornerRadiusCrop: EMPTY_OBJ_STRING,
+      backgroundBlurRadius: '1 px',
+      reqColor: `${EMPTY_OBJ_STRING}, alpha: 1`,
+      reqCornerRadius: '1 px',
+      inputTransform: this.transformNode,
+      inputRegion: 'null',
+      focusable: 'false',
+      cropTouchRegionWithItem: 'none',
+      replaceTouchRegionWithCrop: 'false',
+      inputConfig: 'null',
+      hasInputChannel: false,
+      ignoreDestinationFrame: true,
+    };
   }
 });

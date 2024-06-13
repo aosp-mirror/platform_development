@@ -38,7 +38,9 @@ describe('WebAdbComponent', () => {
 
   it('renders the info message', () => {
     fixture.detectChanges();
-    expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe('Add new device');
+    expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
+      'Add new device',
+    );
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('info');
   });
 });

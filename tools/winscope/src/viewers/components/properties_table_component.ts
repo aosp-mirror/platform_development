@@ -19,7 +19,7 @@ import {TableProperties} from 'viewers/common/table_properties';
 @Component({
   selector: 'properties-table',
   template: `
-    <table class="table">
+    <table class="table" *ngIf="properties !== undefined">
       <tr *ngFor="let entry of objectEntries(properties)">
         <td class="table-cell-name">
           <p class="mat-body-1">{{ entry[0] }}</p>
@@ -54,5 +54,5 @@ import {TableProperties} from 'viewers/common/table_properties';
 export class PropertiesTableComponent {
   objectEntries = Object.entries;
 
-  @Input() properties!: TableProperties;
+  @Input() properties: TableProperties | undefined;
 }

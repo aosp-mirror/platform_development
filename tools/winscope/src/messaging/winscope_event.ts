@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import {assertTrue} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
-import {View, Viewer} from 'viewers/viewer';
+import {View, Viewer, ViewType} from 'viewers/viewer';
 
 export enum WinscopeEventType {
   APP_INITIALIZED,
@@ -59,7 +60,7 @@ export abstract class WinscopeEvent {
 
   async visit<T extends WinscopeEventType>(
     type: T,
-    callback: (event: TypeMap[T]) => Promise<void>
+    callback: (event: TypeMap[T]) => Promise<void>,
   ) {
     if (this.type === type) {
       const event = this as unknown as TypeMap[T];
@@ -97,7 +98,8 @@ export class AppTraceViewRequest extends WinscopeEvent {
 }
 
 export class BuganizerAttachmentsDownloadStart extends WinscopeEvent {
-  override readonly type = WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START;
+  override readonly type =
+    WinscopeEventType.BUGANIZER_ATTACHMENTS_DOWNLOAD_START;
 }
 
 export class BuganizerAttachmentsDownloaded extends WinscopeEvent {
@@ -111,7 +113,7 @@ export class BuganizerAttachmentsDownloaded extends WinscopeEvent {
 export class RemoteToolBugreportReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_BUGREPORT_RECEIVED;
 
-  constructor(readonly bugreport: File, readonly timestamp?: Timestamp) {
+  constructor(readonly bugreport: File, readonly timestampNs?: bigint) {
     super();
   }
 }
@@ -119,7 +121,7 @@ export class RemoteToolBugreportReceived extends WinscopeEvent {
 export class RemoteToolTimestampReceived extends WinscopeEvent {
   override readonly type = WinscopeEventType.REMOTE_TOOL_TIMESTAMP_RECEIVED;
 
-  constructor(readonly timestamp: Timestamp) {
+  constructor(readonly timestampNs: bigint) {
     super();
   }
 }
@@ -130,6 +132,7 @@ export class TabbedViewSwitched extends WinscopeEvent {
 
   constructor(view: View) {
     super();
+    assertTrue(view.type === ViewType.TAB);
     this.newFocusedView = view;
   }
 }
@@ -149,20 +152,28 @@ export class TabbedViewSwitchRequest extends WinscopeEvent {
 export class TracePositionUpdate extends WinscopeEvent {
   override readonly type = WinscopeEventType.TRACE_POSITION_UPDATE;
   readonly position: TracePosition;
+  readonly updateTimeline: boolean;
 
-  constructor(position: TracePosition) {
+  constructor(position: TracePosition, updateTimeline = false) {
     super();
     this.position = position;
+    this.updateTimeline = updateTimeline;
   }
 
-  static fromTimestamp(timestamp: Timestamp): TracePositionUpdate {
+  static fromTimestamp(
+    timestamp: Timestamp,
+    updateTimeline = false,
+  ): TracePositionUpdate {
     const position = TracePosition.fromTimestamp(timestamp);
-    return new TracePositionUpdate(position);
+    return new TracePositionUpdate(position, updateTimeline);
   }
 
-  static fromTraceEntry(entry: TraceEntry<object>): TracePositionUpdate {
+  static fromTraceEntry(
+    entry: TraceEntry<object>,
+    updateTimeline = false,
+  ): TracePositionUpdate {
     const position = TracePosition.fromTraceEntry(entry);
-    return new TracePositionUpdate(position);
+    return new TracePositionUpdate(position, updateTimeline);
   }
 }
 

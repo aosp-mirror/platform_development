@@ -20,4 +20,11 @@
         android:onClick="onSendSecondaryHomeIntent"
         android:text="@string/send_secondary_home" />
 
+    <Button
+        android:id="@+id/move_task_to_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onMoveTaskToBack"
+        android:text="@string/move_task_to_back" />
+
 </LinearLayout>

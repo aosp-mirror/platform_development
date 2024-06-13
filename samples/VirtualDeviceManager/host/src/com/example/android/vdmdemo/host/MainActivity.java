@@ -34,8 +34,6 @@ import android.widget.GridView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.example.android.vdmdemo.common.ConnectionManager;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 import javax.inject.Inject;
@@ -59,7 +57,9 @@ public class MainActivity extends Hilt_MainActivity {
                 public void onServiceConnected(ComponentName className, IBinder binder) {
                     Log.i(TAG, "Connected to VDM Service");
                     mVdmService = ((VdmService.LocalBinder) binder).getService();
-                    mConnectionManager.startHostSession();
+                    mVdmService.setVirtualDeviceListener(
+                            MainActivity.this::updateLauncherVisibility);
+                    updateLauncherVisibility(mVdmService.isVirtualDeviceActive());
                 }
 
                 @Override
@@ -69,21 +69,6 @@ public class MainActivity extends Hilt_MainActivity {
                 }
             };
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onConnected(String remoteDeviceName) {
-                    updateLauncherVisibility(View.VISIBLE);
-                }
-
-                @Override
-                public void onDisconnected() {
-                    updateLauncherVisibility(View.GONE);
-                    mConnectionManager.startHostSession();
-                }
-            };
-
-    @Inject ConnectionManager mConnectionManager;
     @Inject PreferenceController mPreferenceController;
 
     @Override
@@ -96,10 +81,10 @@ public class MainActivity extends Hilt_MainActivity {
 
         mHomeDisplayButton = requireViewById(R.id.create_home_display);
         mHomeDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_enable_home_displays));
+                mPreferenceController.getBoolean(R.string.internal_pref_home_displays_supported));
         mMirrorDisplayButton = requireViewById(R.id.create_mirror_display);
         mMirrorDisplayButton.setEnabled(
-                mPreferenceController.getBoolean(R.string.internal_pref_enable_mirror_displays));
+                mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
         mLauncher = requireViewById(R.id.app_grid);
         mLauncher.setVisibility(View.GONE);
@@ -152,20 +137,17 @@ public class MainActivity extends Hilt_MainActivity {
         Intent intent = new Intent(this, VdmService.class);
         startForegroundService(intent);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-        ConnectionManager.ConnectionStatus connectionStatus =
-                mConnectionManager.getConnectionStatus();
-        updateLauncherVisibility(connectionStatus.connected ? View.VISIBLE : View.GONE);
-        mConnectionManager.addConnectionCallback(mConnectionCallback);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        mVdmService.setVirtualDeviceListener(null);
         unbindService(mServiceConnection);
-        mConnectionManager.removeConnectionCallback(mConnectionCallback);
     }
 
-    private void updateLauncherVisibility(int visibility) {
+    private void updateLauncherVisibility(boolean virtualDeviceActive) {
+        final int visibility = virtualDeviceActive ? View.VISIBLE : View.GONE;
         runOnUiThread(
                 () -> {
                     if (mLauncher != null) {
@@ -202,6 +184,9 @@ public class MainActivity extends Hilt_MainActivity {
         switch (item.getItemId()) {
             case R.id.settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.input:
+                startActivity(new Intent(this, InputActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

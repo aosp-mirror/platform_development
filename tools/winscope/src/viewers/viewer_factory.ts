@@ -21,6 +21,7 @@ import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_inp
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
 import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
 import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
+import {ViewerScreenshot} from './viewer_screen_recording/viewer_screenshot';
 import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_recording';
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
@@ -45,6 +46,7 @@ class ViewerFactory {
     ViewerTransactions,
     ViewerProtoLog,
     ViewerScreenRecording,
+    ViewerScreenshot,
     ViewerTransitions,
     ViewerViewCaptureLauncherActivity,
     ViewerViewCaptureTaskbarDragLayer,
@@ -56,8 +58,8 @@ class ViewerFactory {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
-        activeTraceTypes.has(traceType)
+      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every(
+        (traceType: TraceType) => activeTraceTypes.has(traceType),
       );
 
       if (areViewerDepsSatisfied) {

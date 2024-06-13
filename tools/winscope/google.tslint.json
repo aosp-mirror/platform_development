@@ -2,14 +2,6 @@
 // Enable non-strict mode to allow comments.
 {
   "rules": {
-    // The disabled rules below are google3 custom rules that need to be built
-    // and added to the project (see google3/javascript/typescript/tslint/rules/).
-    // If needed, it should be possible to build and run them in the Winscope npm
-    // environment as well. It is probably simpler and quicker to wait till
-    // Winscope is ported to google3 though.
-
-    //"angular-use-component-harnesses": true,
-    //"angular-output-is-readonly": true,
     "array-type": [true, "array-simple"],
     "arrow-return-shorthand": true,
     "ban": [true,
@@ -39,100 +31,56 @@
       {"name": ["pdescribe", "only"]},
       {"name": ["describeWithDate", "skip"]},
       {"name": ["describeWithDate", "only"]},
+      {"name": ["describeBooleanFlag", "only"]},
+      {"name": ["describeEnabledBooleanFlag", "only"]},
       {"name": "parseInt", "message": "See http://go/tsstyle#type-coercion"},
       {"name": "parseFloat", "message": "See http://go/tsstyle#type-coercion"},
       {"name": "Array", "message": "See http://go/tsstyle#array-constructor"},
       {"name": ["*", "innerText"], "message": "Use .textContent instead. http://go/typescript/patterns#browser-oddities"},
       {"name": ["goog", "setTestOnly"], "message": "See http://go/tsstyle#tests"}
     ],
-    //"ban-as-never": true,
-    //"ban-implicit-undefined-default-parameters": true,
-    //"ban-jsdoc-enum-tag": true,
-    //"ban-malformed-import-paths": true,
-    //"ban-passing-async-function-to-describe": true,
-    //"ban-spy-returning-rejected-promise": true,
-    //"ban-strict-prop-init-comment": true,
-    // allowedSuppressions is a list of strings with no whitespace which, when
-    // found wrapped in parentheses immediately after the suppresion, will
-    // prevent this rule from triggering.
-    // For example: `// @ts-ignore(go/ts99upgrade) Some explanation.`
-    // Prefer using b/ bug links or go/ go links.
-    // To check if your suppression string is available in prod, use:
-    //   cl-status/#/summary/tricorder.go-worker/[[SUBMITTED_CL_NUM]]
-    // Or, for CLs using the suppression, a go/startblock directive of:
-    //   cl-status tricorder.go-worker contains cl/[[SUBMITTED_CL_NUM]] in prod
-    //"ban-ts-suppressions": [true, {
-    //  "allowedSuppressions": [
-    //    "b/249999919", // Node 18.x typings update
-    //    "go/tsjs-aatm",
-    //    "go/ts49upgrade",
-    //    "go/jspb-ts-enums-fix",
-    //    "KEEP_ME_LAST_TO_AVOID_NEEDING_TO_ADD_A_COMMA_TO_THE_LAST_ENTRY"
-    //  ]
-    //}],
-    //"ban-tslint-disable": true,
     "ban-types": [true,
       ["Object", "Use {} or 'object' instead. See http://go/ts-style#wrapper-types"],
       ["String", "Use 'string' instead."],
       ["Number", "Use 'number' instead."],
       ["Boolean", "Use 'boolean' instead."],
       // Add tests in google3/javascript/typescript/tslint/test/googleConfig/ban_types.ts.lint
-      ["AnyDuring(?!((ICentral|CelloJs|AngularIvy|Drive|1TF|AllAsUnknown|GoogPromiseThen|Search|DWE|JasmineApril2021|Assisted)Migration)).*",
+      ["AnyDuring(?!((CelloJs|AngularIvy|Drive|1TF|AllAsUnknown|GoogPromiseThen|Search|DWE|Assisted)Migration)).*",
        "AnyDuringMigration is a quick-fix used during TypeScript migrations, and should be removed as soon as possible. See http://go/any_during_migration."]
     ],
     // go/keep-sorted start
-    //"class-as-namespace": true,
     "class-name": true,
     "curly": [true, "ignore-same-line"],
-    //"decorator-placement": true,
-    //"discourage-angular-material-subpackage-imports": true,
-    //"enforce-comments-on-exported-symbols": true,
-    //"enforce-name-casing": true,
-    //"file-comment": true,
-    //"fix-trailing-comma-import-export": true,
     "forin": true,
     "interface-name": [true, "never-prefix"],
     "interface-over-type-literal": true,
     "jsdoc-format": true,
-    //"jsdoc-tags": true,
     "label-position": true,
     "member-access": [true, "no-public"],
     "new-parens": true,
     "no-angle-bracket-type-assertion": true,
-    //TODO (b/264508345): enable rule below after removeing 'any' types
-    //"no-any": true,
     "no-conditional-assignment": [true, "allow-within-parenthesis"],
     "no-construct": true,
     "no-debugger": true,
     "no-default-export": true,
     "no-duplicate-switch-case": true,
-    //"no-inferrable-new-expression": true,
     "no-namespace": [true, "allow-declarations"],
-    //"no-new-decorators": true,
-    //"no-quoted-property-signatures": true,
     "no-reference": true,
     "no-require-imports": true,
-    //"no-return-only-generics": true,
     "no-string-throw": true,
-    //"no-undefined-type-alias": true,
-    //"no-unnecessary-escapes": true,
     "no-unsafe-finally": true,
     "no-unused-expression": [true, "allow-fast-null-checks"],
-    "no-unused-variable": true,
-    //"no-unused-wiz-injections": true,
     "no-var-keyword": true,
     "object-literal-shorthand": true,
+    "one-variable-per-declaration": [true, "ignore-for-loop"],
     "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
     "prefer-const": [true, {"destructuring": "all"}],
-    //"prefer-function-declaration": true,
-    //"prefer-type-annotation": true,
     "radix": true,
     "semicolon": [true, "always", "strict-bound-class-methods"],
     "static-this": true,
     "switch-default": true,
     "triple-equals": [true, "allow-null-check"],
     "unnecessary-constructor": true
-    //"well-formed-closure-message": true
     // go/keep-sorted end
   }
 }
