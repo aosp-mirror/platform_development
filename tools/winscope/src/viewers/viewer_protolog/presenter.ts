@@ -16,15 +16,25 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
-import {Trace, TraceEntry} from 'trace/trace';
+import {FunctionUtils} from 'common/function_utils';
+import {
+  TracePositionUpdate,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {AbsoluteEntryIndex, Trace, TraceEntry} from 'trace/trace';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiData, UiDataMessage} from './ui_data';
 
-export class Presenter {
+export class Presenter implements WinscopeEventEmitter {
   private readonly trace: Trace<PropertyTreeNode>;
   private readonly notifyUiDataCallback: (data: UiData) => void;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private entry?: TraceEntry<PropertyTreeNode>;
   private uiData = UiData.EMPTY;
   private originalIndicesOfFilteredOutputMessages: number[] = [];
@@ -47,6 +57,10 @@ export class Presenter {
     this.trace = trace;
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.notifyUiDataCallback(this.uiData);
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -101,11 +115,16 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
+  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
+    await this.emitAppEvent(
+      TracePositionUpdate.fromTraceEntry(this.trace.getEntry(traceIndex), true),
+    );
+  }
+
   private async initializeIfNeeded() {
     if (this.isInitialized) {
       return;
     }
-
     this.allUiDataMessages = await this.makeAllUiDataMessages();
 
     this.allLogLevels = this.getUniqueMessageValues(
@@ -130,18 +149,18 @@ export class Presenter {
     const messages: PropertyTreeNode[] = [];
 
     for (
-      let originalIndex = 0;
-      originalIndex < this.trace.lengthEntries;
-      ++originalIndex
+      let traceIndex = 0;
+      traceIndex < this.trace.lengthEntries;
+      ++traceIndex
     ) {
-      const entry = assertDefined(this.trace.getEntry(originalIndex));
+      const entry = assertDefined(this.trace.getEntry(traceIndex));
       const message = await entry.getValue();
       messages.push(message);
     }
 
     return messages.map((messageNode, index) => {
       return {
-        originalIndex: index,
+        traceIndex: index,
         text: assertDefined(
           messageNode.getChildByName('text'),
         ).formattedValue(),
@@ -181,7 +200,7 @@ export class Presenter {
     );
 
     this.originalIndicesOfFilteredOutputMessages = filteredMessages.map(
-      (message) => message.originalIndex,
+      (message) => message.traceIndex,
     );
 
     this.uiData = new UiData(

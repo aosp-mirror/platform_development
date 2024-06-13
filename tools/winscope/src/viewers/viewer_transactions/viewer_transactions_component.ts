@@ -24,16 +24,15 @@ import {
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
 import {TraceType} from 'trace/trace_type';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {Events} from './events';
-import {UiData} from './ui_data';
+import {UiData, UiDataEntry} from './ui_data';
 
 @Component({
   selector: 'viewer-transactions',
@@ -131,7 +130,7 @@ import {UiData} from './ui_data';
               <button
                 mat-button
                 color="primary"
-                (click)="onTimestampClicked(entry.time)">
+                (click)="onTimestampClicked(entry)">
                 {{ entry.time.formattedValue() }}
               </button>
             </div>
@@ -319,9 +318,11 @@ class ViewerTransactionsComponent {
     }
   }
 
-  onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.lastClicked = timestamp.formattedValue();
-    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  onTimestampClicked(entry: UiDataEntry) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(entry.time.getValue(), entry.traceIndex),
+    );
   }
 
   @HostListener('document:keydown', ['$event'])
