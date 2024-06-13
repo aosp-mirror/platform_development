@@ -152,7 +152,11 @@ export class Presenter {
         );
         this.currentHierarchyTree = await entry?.getValue();
         if (entry) {
-          this.currentHierarchyTreeName = entry.getTimestamp().format();
+          if (this.trace.isDumpWithoutTimestamp()) {
+            this.currentHierarchyTreeName = 'Dump';
+          } else {
+            this.currentHierarchyTreeName = entry.getTimestamp().format();
+          }
         }
 
         this.previousEntry =
