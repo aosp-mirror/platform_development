@@ -119,7 +119,7 @@ describe('AddDiffsHierarchyTree', () => {
       exampleProperty: value,
     });
     rootNode.addOrReplaceChild(child);
-    child.setZParent(rootNode);
+    child.setParent(rootNode);
     return child;
   }
 
@@ -132,7 +132,7 @@ describe('AddDiffsHierarchyTree', () => {
       exampleProperty: 'value',
     });
     rootNode.addOrReplaceChild(parent);
-    parent.setZParent(rootNode);
+    parent.setParent(rootNode);
     return parent;
   }
 });
