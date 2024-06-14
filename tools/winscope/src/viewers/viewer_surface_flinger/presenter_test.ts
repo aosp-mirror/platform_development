@@ -71,7 +71,7 @@ describe('PresenterSurfaceFlinger', () => {
       ),
     );
     const selectedTreeParent = UiHierarchyTreeNode.from(
-      assertDefined(layer.getZParent()),
+      assertDefined(layer.getParent()),
     );
     selectedTree = assertDefined(
       selectedTreeParent.getChildByName('Dim layer#53'),
