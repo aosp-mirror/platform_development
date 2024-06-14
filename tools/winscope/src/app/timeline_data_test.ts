@@ -99,6 +99,19 @@ describe('TimelineData', () => {
     });
   });
 
+  it('sets first entry as that with valid timestamp', async () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.TRANSITION, [timestamp0, timestamp9])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp9, timestamp10])
+      .build();
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
+  });
+
   it('uses first entry of first active trace by default', () => {
     timelineData.initialize(
       traces,
