@@ -70,6 +70,9 @@ export abstract class AbstractLogViewerPresenterTest {
         if (this.shouldExecutePropertiesTests) {
           expect(uiData.propertiesTree).toBeUndefined();
           expect(uiData.propertiesUserOptions).toBeDefined();
+          if (this.executePropertiesChecksForEmptyTrace) {
+            this.executePropertiesChecksForEmptyTrace(uiData);
+          }
         }
       });
 
@@ -345,6 +348,7 @@ export abstract class AbstractLogViewerPresenterTest {
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate;
 
+  executePropertiesChecksForEmptyTrace?(uiData: UiDataLog): void;
   executePropertiesChecksAfterPositionUpdate?(uiData: UiDataLog): void;
   executeSpecializedTests?(): void;
 }
