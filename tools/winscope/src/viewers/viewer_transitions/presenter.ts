@@ -15,9 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {FunctionUtils} from 'common/function_utils';
+import {Timestamp} from 'common/time';
+import {
+  TracePositionUpdate,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {CustomQueryType} from 'trace/custom_query';
-import {Trace} from 'trace/trace';
+import {AbsoluteEntryIndex, Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TraceType} from 'trace/trace_type';
@@ -31,7 +41,7 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {UiData} from './ui_data';
 
-export class Presenter {
+export class Presenter implements WinscopeEventEmitter {
   private isInitialized = false;
   private transitionTrace: Trace<PropertyTreeNode>;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
@@ -40,6 +50,7 @@ export class Presenter {
   private windowTokenToTitle = new Map<string, string>();
   private uiData = UiData.EMPTY;
   private readonly notifyUiDataCallback: (data: UiData) => void;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(
     trace: Trace<PropertyTreeNode>,
@@ -50,6 +61,10 @@ export class Presenter {
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
     this.notifyUiDataCallback = notifyUiDataCallback;
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -80,6 +95,19 @@ export class Presenter {
   onTransitionSelected(transition: PropertyTreeNode): void {
     this.uiData.selectedTransition = this.makeUiPropertiesTree(transition);
     this.notifyUiDataCallback(this.uiData);
+  }
+
+  async onRawTimestampClicked(timestamp: Timestamp) {
+    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
+  }
+
+  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
+    await this.emitAppEvent(
+      TracePositionUpdate.fromTraceEntry(
+        this.transitionTrace.getEntry(traceIndex),
+        true,
+      ),
+    );
   }
 
   private async initializeIfNeeded() {
@@ -115,23 +143,21 @@ export class Presenter {
     const entries = await Promise.all(entryPromises);
     // TODO(b/339191691): Ideally we should refactor the parsers to
     // keep a map of time -> rowId, instead of relying on table order
-    this.sortEntries(entries);
     const transitions = this.makeTransitions(entries);
+    this.sortTransitions(transitions);
     const selectedTransition = this.uiData?.selectedTransition ?? undefined;
 
     return new UiData(transitions, selectedTransition);
   }
 
-  private sortEntries(entries: PropertyTreeNode[]) {
-    entries.sort((a: PropertyTreeNode, b: PropertyTreeNode) => {
-      const aVal = assertDefined(a.getChildByName('id')).getValue();
-      const bVal = assertDefined(b.getChildByName('id')).getValue();
-      return aVal <= bVal ? -1 : 1;
+  private sortTransitions(transitions: Transition[]) {
+    transitions.sort((a: Transition, b: Transition) => {
+      return a.id <= b.id ? -1 : 1;
     });
   }
 
   private makeTransitions(entries: PropertyTreeNode[]): Transition[] {
-    return entries.map((transitionNode) => {
+    return entries.map((transitionNode, index) => {
       const wmDataNode = assertDefined(transitionNode.getChildByName('wmData'));
       const shellDataNode = assertDefined(
         transitionNode.getChildByName('shellData'),
@@ -153,6 +179,7 @@ export class Presenter {
           transitionNode.getChildByName('played'),
         ).getValue(),
         propertiesTree: transitionNode,
+        traceIndex: index,
       };
       return transition;
     });

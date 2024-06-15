@@ -389,7 +389,7 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private isHiddenByParent(layer: HierarchyTreeNode): boolean {
-    const parentLayer = assertDefined(layer.getZParent());
+    const parentLayer = assertDefined(layer.getParent());
     return (
       !parentLayer.isRoot() &&
       (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))

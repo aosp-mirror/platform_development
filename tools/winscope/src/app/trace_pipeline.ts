@@ -15,7 +15,6 @@
  */
 
 import {FileUtils} from 'common/file_utils';
-import {INVALID_TIME_NS} from 'common/time';
 import {
   TimestampConverter,
   UTC_TIMEZONE_INFO,
@@ -137,11 +136,10 @@ export class TracePipeline {
 
   async buildTraces() {
     for (const trace of this.traces) {
-      if (trace.lengthEntries === 0) {
+      if (trace.lengthEntries === 0 || trace.isDumpWithoutTimestamp()) {
         continue;
-      }
-      const timestamp = trace.getEntry(0).getTimestamp();
-      if (timestamp.getValueNs() !== INVALID_TIME_NS) {
+      } else {
+        const timestamp = trace.getEntry(0).getTimestamp();
         this.timestampConverter.initializeUTCOffset(timestamp);
         break;
       }
