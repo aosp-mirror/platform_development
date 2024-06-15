@@ -24,7 +24,6 @@ import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
-import {Events} from './events';
 import {UiData} from './ui_data';
 
 @Component({
@@ -235,7 +234,7 @@ export class ViewerTransitionsComponent {
   }
 
   onTransitionClicked(transition: Transition): void {
-    this.emitEvent(Events.TransitionSelected, transition.propertiesTree);
+    this.emitEvent(ViewerEvents.TransitionSelected, transition.propertiesTree);
   }
 
   isSelectedTransition(transition: Transition): boolean {

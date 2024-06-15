@@ -373,6 +373,9 @@ export class Mediator {
     // The viewers initialization is triggered by sending them a "trace position update".
     await this.propagateTracePosition(initialPosition, true);
 
+    this.focusedTabView = this.viewers
+      .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)
+      ?.getViews()[0];
     this.areViewersLoaded = true;
 
     // Notify app component (i.e. render viewers), only after all viewers have been initialized

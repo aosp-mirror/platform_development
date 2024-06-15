@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from 'trace/trace_type';
-import {DisplayIdentifier} from 'viewers/common/display_identifier';
-import {RectShowState} from 'viewers/common/rect_show_state';
-import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
+
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
-import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
+import {DisplayIdentifier} from './display_identifier';
+import {RectShowState} from './rect_show_state';
+import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export class UiData implements UiDataHierarchy {
-  readonly dependencies: TraceType[] = [TraceType.WINDOW_MANAGER];
-  rectsToDraw: UiRect[] = [];
-  rectIdToShowState: Map<string, RectShowState> | undefined;
-  displays: DisplayIdentifier[] = [];
-  highlightedItem = '';
-  highlightedProperty = '';
-  pinnedItems: UiHierarchyTreeNode[] = [];
-  rectsUserOptions: UserOptions = {};
-  hierarchyUserOptions: UserOptions = {};
-  propertiesUserOptions: UserOptions = {};
+export interface UiDataHierarchy {
+  highlightedItem: string;
+  pinnedItems: UiHierarchyTreeNode[];
+  hierarchyUserOptions: UserOptions;
   hierarchyTrees: UiHierarchyTreeNode[] | undefined;
+  propertiesUserOptions: UserOptions;
   propertiesTree: UiPropertyTreeNode | undefined;
+  highlightedProperty: string;
+  rectsToDraw?: UiRect[];
+  rectIdToShowState?: Map<string, RectShowState> | undefined;
+  displays?: DisplayIdentifier[];
+  rectsUserOptions?: UserOptions;
 }

@@ -21,7 +21,6 @@ import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styl
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
-import {Events} from './events';
 import {UiData, UiDataMessage} from './ui_data';
 
 @Component({
@@ -219,19 +218,19 @@ export class ViewerProtologComponent {
   }
 
   onLogLevelsChange(event: MatSelectChange) {
-    this.emitEvent(Events.LogLevelsFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.LogLevelsFilterChanged, event.value);
   }
 
   onTagsChange(event: MatSelectChange) {
-    this.emitEvent(Events.TagsFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.TagsFilterChanged, event.value);
   }
 
   onSourceFilesChange(event: MatSelectChange) {
-    this.emitEvent(Events.SourceFilesFilterChanged, event.value);
+    this.emitEvent(ViewerEvents.SourceFilesFilterChanged, event.value);
   }
 
   onSearchStringChange() {
-    this.emitEvent(Events.SearchStringFilterChanged, this.searchString);
+    this.emitEvent(ViewerEvents.SearchStringFilterChanged, this.searchString);
   }
 
   onGoToCurrentTimeClick() {
@@ -249,7 +248,7 @@ export class ViewerProtologComponent {
 
   onMessageClicked(index: number) {
     this.lastSelectedMessage = index;
-    this.emitEvent(Events.MessageClicked, index);
+    this.emitEvent(ViewerEvents.LogClicked, index);
   }
 
   isCurrentMessage(index: number): boolean {

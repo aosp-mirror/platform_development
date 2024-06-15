@@ -23,7 +23,6 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -44,16 +43,19 @@ class ViewerProtoLog implements Viewer {
     });
 
     this.htmlElement.addEventListener(
-      Events.LogLevelsFilterChanged,
+      ViewerEvents.LogLevelsFilterChanged,
       (event) => {
         this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
       },
     );
-    this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
-      this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
-    });
     this.htmlElement.addEventListener(
-      Events.SourceFilesFilterChanged,
+      ViewerEvents.TagsFilterChanged,
+      (event) => {
+        this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
+      },
+    );
+    this.htmlElement.addEventListener(
+      ViewerEvents.SourceFilesFilterChanged,
       (event) => {
         this.presenter.onSourceFilesFilterChanged(
           (event as CustomEvent).detail,
@@ -61,14 +63,14 @@ class ViewerProtoLog implements Viewer {
       },
     );
     this.htmlElement.addEventListener(
-      Events.SearchStringFilterChanged,
+      ViewerEvents.SearchStringFilterChanged,
       (event) => {
         this.presenter.onSearchStringFilterChanged(
           (event as CustomEvent).detail,
         );
       },
     );
-    this.htmlElement.addEventListener(Events.MessageClicked, (event) => {
+    this.htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
       this.presenter.onMessageClicked((event as CustomEvent).detail);
     });
     this.htmlElement.addEventListener(
