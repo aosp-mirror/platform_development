@@ -15,6 +15,7 @@
  */
 
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {AbsoluteEntryIndex} from './index_types';
 
 export interface Transition {
   id: number;
@@ -26,4 +27,5 @@ export interface Transition {
   aborted: boolean;
   played: boolean;
   propertiesTree: PropertyTreeNode;
+  traceIndex: AbsoluteEntryIndex;
 }
