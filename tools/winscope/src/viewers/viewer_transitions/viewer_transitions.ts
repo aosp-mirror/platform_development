@@ -21,7 +21,6 @@ import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -41,9 +40,12 @@ export class ViewerTransitions implements Viewer {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.TransitionSelected, (event) => {
-      this.presenter.onTransitionSelected((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      ViewerEvents.TransitionSelected,
+      (event) => {
+        this.presenter.onTransitionSelected((event as CustomEvent).detail);
+      },
+    );
 
     this.htmlElement.addEventListener(
       ViewerEvents.TimestampClick,

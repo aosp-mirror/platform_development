@@ -29,7 +29,6 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 
 export class ParserMotionEvent extends AbstractInputEventParser {
-
   private static readonly MotionEventField =
     AbstractInputEventParser.WrapperProto.fields['motionEvent'];
 
