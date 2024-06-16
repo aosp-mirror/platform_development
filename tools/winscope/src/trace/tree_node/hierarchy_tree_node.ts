@@ -21,7 +21,8 @@ import {TreeNode} from './tree_node';
 
 export class HierarchyTreeNode extends TreeNode {
   private rects: TraceRect[] | undefined;
-  private zParent: this | undefined;
+  private zParent: HierarchyTreeNode | undefined;
+  private parent: this | undefined;
 
   constructor(
     id: string,
@@ -51,23 +52,31 @@ export class HierarchyTreeNode extends TreeNode {
     return this.rects;
   }
 
-  setZParent(parent: this): void {
+  setZParent(parent: HierarchyTreeNode): void {
     this.zParent = parent;
   }
 
-  getZParent(): this | undefined {
-    return this.zParent;
+  getZParent(): HierarchyTreeNode | undefined {
+    return this.zParent ?? this.parent;
+  }
+
+  setParent(parent: this): void {
+    this.parent = parent;
+  }
+
+  getParent(): this | undefined {
+    return this.parent;
   }
 
   override isRoot(): boolean {
-    return !this.zParent;
+    return !this.parent;
   }
 
   findAncestor(targetNodeFilter: (node: this) => boolean): this | undefined {
-    let ancestor = this.getZParent();
+    let ancestor = this.getParent();
 
     while (ancestor && !targetNodeFilter(ancestor)) {
-      ancestor = ancestor.getZParent();
+      ancestor = ancestor.getParent();
     }
 
     return ancestor;

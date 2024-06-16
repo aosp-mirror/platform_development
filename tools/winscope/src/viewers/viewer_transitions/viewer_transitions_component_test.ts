@@ -35,14 +35,13 @@ import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
@@ -117,11 +116,13 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
-      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
+        .getChildByName('id')
+        ?.getValue(),
     ).toEqual(0);
 
     const id1 = assertDefined(entry2.querySelector('.id')).textContent;
@@ -131,11 +132,13 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
-      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
+        .getChildByName('id')
+        ?.getValue(),
     ).toEqual(1);
   });
 
@@ -194,16 +197,28 @@ describe('ViewerTransitionsComponent', () => {
   });
 
   it('propagates timestamp on click', () => {
-    let timestamp = '';
+    let timestamp: string | undefined;
+    let index: number | undefined;
     htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      timestamp = (event as CustomEvent).detail.formattedValue();
+      const detail: TimestampClickDetail = (event as CustomEvent).detail;
+      timestamp = detail.timestamp?.format();
+      index = detail.index;
     });
-    const logTimestampButton = assertDefined(
-      htmlElement.querySelector('.time button'),
+    const sendTimeButton = assertDefined(
+      htmlElement.querySelector('.send-time button'),
     ) as HTMLButtonElement;
-    logTimestampButton.click();
+    sendTimeButton.click();
 
+    expect(index).toBeUndefined();
     expect(timestamp).toEqual('20ns');
+
+    const dispatchTimeButton = assertDefined(
+      htmlElement.querySelector('.dispatch-time button'),
+    ) as HTMLButtonElement;
+    dispatchTimeButton.click();
+
+    expect(index).toEqual(0);
+    expect(timestamp).toEqual('25ns');
   });
 
   it('creates collapsed sections with no buttons', () => {
@@ -254,15 +269,25 @@ function createMockTransition(
     .setFormatter(TIMESTAMP_NODE_FORMATTER)
     .build();
 
+  const dispatchTimeNode = new PropertyTreeBuilder()
+    .setRootId(transitionTree.id)
+    .setName('dispatchTimeNs')
+    .setValue(
+      TimestampConverterUtils.makeElapsedTimestamp(BigInt(sendTimeNanos) + 5n),
+    )
+    .setFormatter(TIMESTAMP_NODE_FORMATTER)
+    .build();
+
   return {
     id,
     type: 'TO_FRONT',
     sendTime: sendTimeNode,
-    dispatchTime: undefined,
+    dispatchTime: dispatchTimeNode,
     duration: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
     merged: false,
     aborted: false,
     played: false,
     propertiesTree: transitionTree,
+    traceIndex: 0,
   };
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {AbsoluteEntryIndex} from 'trace/index_types';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
@@ -54,7 +55,7 @@ class UiData {
 
 class UiDataEntry {
   constructor(
-    public originalIndexInTraceEntry: number,
+    public traceIndex: AbsoluteEntryIndex,
     public time: PropertyTreeNode,
     public vsyncId: number,
     public pid: string,
