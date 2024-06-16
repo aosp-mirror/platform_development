@@ -18,7 +18,7 @@ use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 use crate_health::{
     default_repo_root, maybe_build_cargo_embargo, migrate, CrateCollection, Migratable,
-    NameAndVersionMap, NamedAndVersioned,
+    NameAndVersionMap, NamedAndVersioned, RepoPath,
 };
 
 #[derive(Parser)]
@@ -145,7 +145,7 @@ fn main() -> Result<()> {
             }
 
             let mut cc = CrateCollection::new(&args.repo_root);
-            cc.add_from(&PathBuf::from("external/rust/crates").join(&crate_name), None::<&&str>)?;
+            cc.add_from(&PathBuf::from("external/rust/crates").join(&crate_name))?;
             cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
             if cc.map_field().len() != 1 {
                 return Err(anyhow!(
@@ -160,34 +160,23 @@ fn main() -> Result<()> {
             cc.diff_android_bps()?;
 
             let krate = cc.map_field().values().next().unwrap();
-            println!(
-                "Found {} v{} in {}",
-                krate.name(),
-                krate.version(),
-                krate.relpath().display()
-            );
+            println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
             let migratable;
             if !krate.is_android_bp_healthy() {
                 if krate.is_migration_denied() {
                     println!("This crate is on the migration denylist");
                 }
-                if !krate.root().join(krate.android_bp()).exists() {
-                    println!("There is no Android.bp file in {}", krate.relpath().display());
+                if !krate.android_bp().abs().exists() {
+                    println!("There is no Android.bp file in {}", krate.path());
                 }
-                if !krate.cargo_embargo_json().exists() {
-                    println!(
-                        "There is no cargo_embargo.json file in {}",
-                        krate.relpath().display()
-                    );
+                if !krate.cargo_embargo_json().abs().exists() {
+                    println!("There is no cargo_embargo.json file in {}", krate.path());
                 } else if !krate.generate_android_bp_success() {
-                    println!(
-                        "cargo_embargo execution did not succeed for {}",
-                        krate.relpath().display()
-                    );
+                    println!("cargo_embargo execution did not succeed for {}", krate.path());
                 } else if !krate.android_bp_unchanged() {
                     println!(
                         "Running cargo_embargo on {} produced changes to the Android.bp file:",
-                        krate.relpath().display()
+                        krate.path()
                     );
                     println!(
                         "{}",
@@ -202,9 +191,11 @@ fn main() -> Result<()> {
                 migratable = false;
             } else {
                 let migration = migrate(
-                    &args.repo_root,
-                    &PathBuf::from("external/rust/crates").join(&crate_name),
-                    &"out/rust-crate-migration-report",
+                    RepoPath::new(
+                        args.repo_root.clone(),
+                        PathBuf::from("external/rust/crates").join(&crate_name),
+                    ),
+                    RepoPath::new(args.repo_root.clone(), &"out/rust-crate-migration-report"),
                 )?;
                 let compatible_pairs = migration.compatible_pairs().collect::<Vec<_>>();
                 if compatible_pairs.len() != 1 {
@@ -243,23 +234,23 @@ fn main() -> Result<()> {
                 let diff_status = Command::new("diff")
                     .args(["-u", "-r", "-w", "--no-dereference"])
                     .args(IGNORED_FILES.iter().map(|ignored| format!("--exclude={}", ignored)))
-                    .arg(pair.source.relpath())
-                    .arg(pair.dest.staging_path())
+                    .arg(pair.source.path().rel())
+                    .arg(pair.dest.staging_path().rel())
                     .current_dir(&args.repo_root)
                     .spawn()?
                     .wait()?;
                 if !diff_status.success() {
                     println!(
                         "Found differences between {} and {}",
-                        pair.source.relpath().display(),
-                        pair.dest.staging_path().display()
+                        pair.source.path(),
+                        pair.dest.staging_path()
                     );
                 }
                 println!("All diffs:");
                 Command::new("diff")
                     .args(["-u", "-r", "-w", "-q", "--no-dereference"])
-                    .arg(pair.source.relpath())
-                    .arg(pair.dest.staging_path())
+                    .arg(pair.source.path().rel())
+                    .arg(pair.dest.staging_path().rel())
                     .current_dir(&args.repo_root)
                     .spawn()?
                     .wait()?;

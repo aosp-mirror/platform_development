@@ -300,11 +300,11 @@ export class TreeComponent {
     isExpanded: boolean,
     shouldUpdateStoredState = true,
   ) {
-    if (this.useStoredExpandedState && shouldUpdateStoredState) {
+    if (this.store && this.useStoredExpandedState && shouldUpdateStoredState) {
       if (isExpanded) {
-        assertDefined(this.store).removeItem(this.storeKeyCollapsedState);
+        this.store.removeItem(this.storeKeyCollapsedState);
       } else {
-        assertDefined(this.store).setItem(this.storeKeyCollapsedState, 'true');
+        this.store.setItem(this.storeKeyCollapsedState, 'true');
       }
     } else {
       this.localExpandedState = isExpanded;
