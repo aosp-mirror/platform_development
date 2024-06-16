@@ -20,6 +20,7 @@ import {android} from 'protos/surfaceflinger/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {VisibilityPropertiesComputation} from './visibility_properties_computation';
+import {ZOrderPathsComputation} from './z_order_paths_computation';
 
 describe('VisibilityPropertiesComputation', () => {
   let computation: VisibilityPropertiesComputation;
@@ -126,7 +127,7 @@ describe('VisibilityPropertiesComputation', () => {
     expect(getVisibilityReasons(invisibleLayer)).toEqual(['flag is hidden']);
   });
 
-  it('detects non-visible layer that is hidden by parent', () => {
+  it('detects non-visible layer that is hidden by parent, even if rel-z parent is not hidden', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -176,6 +177,7 @@ describe('VisibilityPropertiesComputation', () => {
                 backgroundBlurRadius: 0,
                 layerStack: 0,
                 z: 0,
+                zOrderRelativeOf: 3,
                 transform: {
                   type: 0,
                   dsdx: 1,
@@ -189,8 +191,37 @@ describe('VisibilityPropertiesComputation', () => {
             },
           ],
         },
+        {
+          id: 3,
+          name: 'relZParent',
+          properties: {
+            id: 3,
+            name: 'relZParent',
+            parent: -1,
+            children: [],
+            visibleRegion: {rect: [{left: 0, right: 1, top: 0, bottom: 1}]},
+            activeBuffer: {width: 1, height: 1, stride: 1, format: 1},
+            flags: 0,
+            color: {r: 0, g: 0, b: 0, a: 1},
+            cornerRadius: 0,
+            shadowRadius: 0,
+            backgroundBlurRadius: 0,
+            layerStack: 0,
+            z: 0,
+            transform: {
+              type: 0,
+              dsdx: 1,
+              dtdx: 0,
+              dsdy: 0,
+              dtdy: 1,
+            },
+            screenBounds: null,
+            isOpaque: false,
+          } as android.surfaceflinger.ILayerProto,
+        },
       ])
       .build();
+    new ZOrderPathsComputation().setRoot(hierarchyRoot).executeInPlace();
 
     computation.setRoot(hierarchyRoot).executeInPlace();
     const visibleLayer = assertDefined(hierarchyRoot.getChildByName('parent'));

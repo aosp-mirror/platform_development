@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
+import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 
-export class PresenterInputMethodService extends PresenterInputMethod {
-  protected updateHierarchyTableProperties() {
-    const inputMethodService = this.entry?.getChildByName('inputMethodService');
+export class PresenterInputMethodService extends AbstractPresenterInputMethod {
+  protected getHierarchyTableProperties() {
+    const inputMethodService = this.hierarchyPresenter
+      .getCurrentHierarchyTreesForTrace(this.imeTrace)
+      ?.at(0)
+      ?.getChildByName('inputMethodService');
     const windowVisible =
       inputMethodService?.getEagerPropertyByName('windowVisible')?.getValue() ??
       false;

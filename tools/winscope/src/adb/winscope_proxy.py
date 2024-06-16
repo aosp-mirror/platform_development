@@ -61,7 +61,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '2.1.0'
+VERSION = '2.1.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -383,13 +383,12 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 buffers: {{
-    size_kb: 50000
+    size_kb: 80000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 0
-flush_period_ms: 1000
+file_write_period_ms: 999999999
 write_into_file: true
-max_file_size_bytes: 1000000000
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
 
