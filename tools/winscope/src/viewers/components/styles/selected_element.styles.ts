@@ -16,6 +16,6 @@
 
 export const selectedElementStyle = `
     .selected {
-        background-color: var(--selected-element-color);
+        background-color: var(--selected-element-color) !important;
     }
 `;

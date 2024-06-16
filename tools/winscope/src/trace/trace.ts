@@ -15,7 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {Timestamp} from 'common/time';
+import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -444,6 +444,13 @@ export class Trace<T> {
   getFramesRange(): FramesRange | undefined {
     this.checkTraceCanBeAccessedInFrameDomain();
     return this.framesRange;
+  }
+
+  isDumpWithoutTimestamp() {
+    return (
+      this.lengthEntries === 1 &&
+      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
+    );
   }
 
   private getEntryInternal<

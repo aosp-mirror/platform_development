@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -54,10 +54,7 @@ export class TimelineData {
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
       // Filter out dumps with invalid timestamp (would mess up the timeline)
-      const isDump =
-        trace.lengthEntries === 1 &&
-        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
+      if (trace.isDumpWithoutTimestamp()) {
         return;
       }
 
@@ -86,7 +83,7 @@ export class TimelineData {
         return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
       });
     if (tracesSortedByDisplayOrder.length > 0) {
-      this.setActiveTrace(tracesSortedByDisplayOrder[0]);
+      this.trySetActiveTrace(tracesSortedByDisplayOrder[0]);
     }
   }
 
@@ -148,8 +145,13 @@ export class TimelineData {
     return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
-  setActiveTrace(trace: Trace<object>) {
-    this.activeTrace = trace;
+  trySetActiveTrace(trace: Trace<object>): boolean {
+    const isTraceWithValidTimestamps = this.traces.hasTrace(trace);
+    if (this.activeTrace !== trace && isTraceWithValidTimestamps) {
+      this.activeTrace = trace;
+      return true;
+    }
+    return false;
   }
 
   getActiveTrace() {
