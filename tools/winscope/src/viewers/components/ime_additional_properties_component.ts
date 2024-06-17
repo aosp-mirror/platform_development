@@ -32,14 +32,17 @@ import {
 } from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {selectedElementStyle} from './styles/selected_element.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'ime-additional-properties',
   template: `
-    <collapsible-section-title
-      class="view-header"
-      title="WM & SF PROPERTIES"
-      (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    <div class="title-section">
+      <collapsible-section-title
+        class="view-header"
+        title="WM & SF PROPERTIES"
+        (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+    </div>
     <div class="additional-properties-content" *ngIf="additionalProperties">
       <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
@@ -52,7 +55,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         <div class="group ime-manager-service">
           <button
             *ngIf="wmHierarchyTree()"
-            color="primary"
+            [color]="getButtonColor(wmHierarchyTree())"
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmHierarchyTree())}"
@@ -71,7 +74,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="wmInsetsSourceProvider()" class="group insets-source-provider">
           <button
-            color="primary"
+            [color]="getButtonColor(wmInsetsSourceProvider())"
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmInsetsSourceProvider())}"
@@ -111,7 +114,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="wmImeControlTarget()" class="group ime-control-target">
           <button
-            color="primary"
+          [color]="getButtonColor(wmImeControlTarget())"
             mat-button
             class="group-header ime-control-target-button"
             [class]="{selected: isHighlighted(wmImeControlTarget())}"
@@ -128,7 +131,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="wmImeInputTarget()" class="group ime-input-target">
           <button
-            color="primary"
+          [color]="getButtonColor(wmImeInputTarget())"
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmImeInputTarget())}"
@@ -145,7 +148,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="wmImeLayeringTarget()" class="group ime-layering-target">
           <button
-            color="primary"
+          [color]="getButtonColor(wmImeLayeringTarget())"
             mat-button
             class="group-header"
             [class]="{selected: isHighlighted(wmImeLayeringTarget())}"
@@ -167,7 +170,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         <div class="group">
           <button
             *ngIf="wmHierarchyTree()"
-            color="primary"
+            [color]="getButtonColor(wmHierarchyTree())"
             mat-button
             class="group-header wm-state-button"
             [class]="{selected: isHighlighted(wmHierarchyTree())}"
@@ -239,7 +242,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="additionalProperties?.sf" class="group ime-container">
           <button
-            color="primary"
+          [color]="getButtonColor(additionalProperties.sf.properties.imeContainer)"
             mat-button
             class="group-header ime-container-button"
             [class]="{selected: isHighlighted(additionalProperties.sf.properties.imeContainer)}"
@@ -263,7 +266,7 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         </div>
         <div *ngIf="additionalProperties?.sf" class="group input-method-surface">
           <button
-            color="primary"
+          [color]="getButtonColor(additionalProperties.sf.properties.inputMethodSurface)"
             mat-button
             class="group-header input-method-surface-button"
             [class]="{
@@ -288,8 +291,8 @@ import {selectedElementStyle} from './styles/selected_element.styles';
   `,
   styles: [
     `
-      .view-header {
-        border-bottom: 1px solid var(--border-color);
+      :host collapsible-section-title {
+        padding-bottom: 8px;
       }
 
       .additional-properties-content {
@@ -331,12 +334,9 @@ import {selectedElementStyle} from './styles/selected_element.styles';
         flex: 1;
         padding: 0 5px;
       }
-
-      .selected {
-        color: black;
-      }
     `,
     selectedElementStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class ImeAdditionalPropertiesComponent {
@@ -356,6 +356,10 @@ export class ImeAdditionalPropertiesComponent {
       | undefined,
   ): boolean {
     return item ? item.id === this.highlightedItem : false;
+  }
+
+  getButtonColor(node: TreeNode | undefined) {
+    return this.isHighlighted(node) ? undefined : 'primary';
   }
 
   formattedWindowColor(): string {

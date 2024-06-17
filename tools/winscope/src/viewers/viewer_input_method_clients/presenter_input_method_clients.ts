@@ -13,11 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
+import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
+import {VISIBLE_CHIP} from 'viewers/common/chip';
+import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {TableProperties} from 'viewers/common/table_properties';
+import {UserOptions} from 'viewers/common/user_options';
+import {UpdateDisplayNames} from './operations/update_display_names';
 
-export class PresenterInputMethodClients extends PresenterInputMethod {
-  protected updateHierarchyTableProperties() {
-    const client = this.entry?.getChildByName('client');
+export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
+  protected override hierarchyPresenter = new HierarchyPresenter(
+    PersistentStoreProxy.new<UserOptions>(
+      'ImeHierarchyOptions',
+      {
+        simplifyNames: {
+          name: 'Simplify names',
+          enabled: true,
+        },
+        showOnlyVisible: {
+          name: 'Show only',
+          chip: VISIBLE_CHIP,
+          enabled: false,
+        },
+        flat: {
+          name: 'Flat',
+          enabled: false,
+        },
+      },
+      this.storage,
+    ),
+    [],
+    true,
+    false,
+    this.getHierarchyTreeNameStrategy,
+    [new UpdateDisplayNames()],
+  );
+  constructor(
+    trace: Trace<HierarchyTreeNode>,
+    traces: Traces,
+    storage: Storage,
+    notifyViewCallback: NotifyHierarchyViewCallbackType,
+  ) {
+    super(trace, traces, storage, notifyViewCallback);
+  }
+
+  protected override getHierarchyTableProperties(): TableProperties {
+    const client = this.hierarchyPresenter
+      .getCurrentHierarchyTreesForTrace(this.imeTrace)
+      ?.at(0)
+      ?.getChildByName('client');
     const curId = client
       ?.getEagerPropertyByName('inputMethodManager')
       ?.getChildByName('curId')

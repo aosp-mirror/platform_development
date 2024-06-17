@@ -40,11 +40,12 @@ fn main() -> Result<()> {
     maybe_build_cargo_embargo(&args.repo_root, false)?;
 
     let mut cc = CrateCollection::new(args.repo_root);
-    cc.add_from(&"external/rust/crates", None::<&&str>)?;
+    cc.add_from(&"external/rust/crates")?;
     cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
 
     cc.stage_crates()?;
     cc.generate_android_bps()?;
+    cc.diff_android_bps()?;
 
     let re = ReportEngine::new()?;
 

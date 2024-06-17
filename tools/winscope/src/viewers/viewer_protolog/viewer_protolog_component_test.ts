@@ -36,7 +36,6 @@ import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
-import {Events} from './events';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
@@ -87,21 +86,24 @@ describe('ViewerProtologComponent', () => {
 
     it('applies log level filter correctly', async () => {
       const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.messages = allMessages;
-          return;
-        }
-        component.uiData.messages = allMessages.filter((message) =>
-          (event as CustomEvent).detail.includes(message.level),
-        );
-      });
+      htmlElement.addEventListener(
+        ViewerEvents.LogLevelsFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.messages = allMessages;
+            return;
+          }
+          component.uiData.messages = allMessages.filter((message) =>
+            (event as CustomEvent).detail.includes(message.level),
+          );
+        },
+      );
       await checkSelectFilter('.log-level');
     });
 
     it('applies tag filter correctly', async () => {
       const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
+      htmlElement.addEventListener(ViewerEvents.TagsFilterChanged, (event) => {
         if ((event as CustomEvent).detail.length === 0) {
           component.uiData.messages = allMessages;
           return;
@@ -115,22 +117,25 @@ describe('ViewerProtologComponent', () => {
 
     it('applies source file filter correctly', async () => {
       const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.messages = allMessages;
-          return;
-        }
-        component.uiData.messages = allMessages.filter((message) =>
-          (event as CustomEvent).detail.includes(message.at),
-        );
-      });
+      htmlElement.addEventListener(
+        ViewerEvents.SourceFilesFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.messages = allMessages;
+            return;
+          }
+          component.uiData.messages = allMessages.filter((message) =>
+            (event as CustomEvent).detail.includes(message.at),
+          );
+        },
+      );
       await checkSelectFilter('.source-file');
     });
 
     it('applies text filter correctly', () => {
       const allMessages = makeUiData().messages;
       htmlElement.addEventListener(
-        Events.SearchStringFilterChanged,
+        ViewerEvents.SearchStringFilterChanged,
         (event) => {
           component.uiData.messages = allMessages.filter((message) =>
             message.text.includes((event as CustomEvent).detail),
@@ -176,7 +181,7 @@ describe('ViewerProtologComponent', () => {
       component.inputData = uiData;
       fixture.detectChanges();
 
-      htmlElement.addEventListener(Events.MessageClicked, (event) => {
+      htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
         const index = (event as CustomEvent).detail;
         uiData.selectedMessageIndex = index;
         component.inputData = uiData;
@@ -199,16 +204,16 @@ describe('ViewerProtologComponent', () => {
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('10ns');
+      expect(index).toEqual(0);
     });
 
     async function checkSelectFilter(filterSelector: string) {
@@ -288,7 +293,7 @@ describe('ViewerProtologComponent', () => {
     const longMessage = shortMessage.repeat(10) + 'keep';
     for (let i = 0; i < 200; i++) {
       const uiDataMessage: UiDataMessage = {
-        originalIndex: i,
+        traceIndex: i,
         text: i % 2 === 0 ? shortMessage : longMessage,
         time,
         tag: i % 2 === 0 ? allTags[0] : allTags[1],

@@ -34,12 +34,12 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
         flex-direction: row;
       }
       :host button {
-        padding-top: 11px;
+        padding-top: 4px;
         margin-right: 4px;
         width: 24px;
       }
       .mat-title {
-        padding-top: 16px;
+        padding-top: 8px;
       }
     `,
   ],

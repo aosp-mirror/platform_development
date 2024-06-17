@@ -20,7 +20,7 @@ import {
   TestBed,
 } from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -32,15 +32,14 @@ import {PersistentStore} from 'common/persistent_store';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TraceType} from 'trace/trace_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
-import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
 import {PropertiesComponent} from './properties_component';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {SurfaceFlingerPropertyGroupsComponent} from './surface_flinger_property_groups_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
+import {UserOptionsComponent} from './user_options_component';
 
 describe('PropertiesComponent', () => {
   let fixture: ComponentFixture<PropertiesComponent>;
@@ -55,15 +54,15 @@ describe('PropertiesComponent', () => {
         SurfaceFlingerPropertyGroupsComponent,
         TreeComponent,
         TreeNodeComponent,
-        HierarchyTreeNodeDataViewComponent,
         PropertyTreeNodeDataViewComponent,
         CollapsibleSectionTitleComponent,
+        UserOptionsComponent,
       ],
       imports: [
         CommonModule,
         MatInputModule,
         MatFormFieldModule,
-        MatCheckboxModule,
+        MatButtonModule,
         MatDividerModule,
         BrowserAnimationsModule,
         FormsModule,
@@ -102,42 +101,8 @@ describe('PropertiesComponent', () => {
   it('renders view controls', () => {
     const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
-    const box = htmlElement.querySelector('.view-controls input');
+    const box = htmlElement.querySelector('.view-controls .user-option');
     expect(box).toBeTruthy(); //renders at least one view control option
-  });
-
-  it('disables checkboxes if option unavailable', () => {
-    let box = htmlElement.querySelector('.view-controls input');
-    expect(box).toBeTruthy();
-    expect((box as HTMLInputElement).disabled).toBeFalse();
-
-    component.userOptions['showDiff'].isUnavailable = true;
-    fixture.detectChanges();
-    box = htmlElement.querySelector('.view-controls input');
-    expect((box as HTMLInputElement).disabled).toBeTrue();
-  });
-
-  it('updates tree on user option checkbox change', () => {
-    let options: UserOptions | undefined;
-    htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      (event) => {
-        options = (event as CustomEvent).detail.userOptions;
-      },
-    );
-    const box = assertDefined(
-      htmlElement.querySelector('.view-controls input'),
-    ) as HTMLInputElement;
-    box.checked = true;
-    box.click();
-    fixture.detectChanges();
-    expect(options).toEqual({
-      showDiff: {
-        name: 'Show diff',
-        enabled: true,
-        isUnavailable: false,
-      },
-    });
   });
 
   it('renders tree in proto dump upon selected item', () => {
@@ -188,7 +153,7 @@ describe('PropertiesComponent', () => {
       },
     );
     const inputEl = assertDefined(
-      htmlElement.querySelector('.title-filter input'),
+      htmlElement.querySelector('.title-section input'),
     ) as HTMLInputElement;
 
     inputEl.value = 'Root';

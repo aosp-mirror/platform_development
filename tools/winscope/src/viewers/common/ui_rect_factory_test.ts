@@ -184,12 +184,26 @@ describe('UI_RECT_FACTORY', () => {
     );
   });
 
-  function buildRectAndSetToNode(node: HierarchyTreeNode, depth: number) {
+  it('discards vc trace rects with zero height or width', () => {
+    const GROUP_ID = 11;
+
+    buildRectAndSetToNode(node1, 1, 0, 1);
+    buildRectAndSetToNode(node2, 0, 1, 0);
+
+    expect(UI_RECT_FACTORY.makeVcUiRects(hierarchyRoot, GROUP_ID)).toEqual([]);
+  });
+
+  function buildRectAndSetToNode(
+    node: HierarchyTreeNode,
+    depth: number,
+    width = 1,
+    height = 1,
+  ) {
     const rect = new TraceRectBuilder()
       .setX(0)
       .setY(0)
-      .setWidth(1)
-      .setHeight(1)
+      .setWidth(width)
+      .setHeight(height)
       .setId(node.id)
       .setName(node.name)
       .setCornerRadius(0)

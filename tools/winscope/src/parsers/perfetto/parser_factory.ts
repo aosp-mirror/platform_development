@@ -20,6 +20,8 @@ import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {InvalidPerfettoTrace} from 'messaging/user_warnings';
+import {ParserKeyEvent} from 'parsers/input/perfetto/parser_key_event';
+import {ParserMotionEvent} from 'parsers/input/perfetto/parser_motion_event';
 import {ParserInputMethodClients} from 'parsers/input_method/perfetto/parser_input_method_clients';
 import {ParserInputMethodManagerService} from 'parsers/input_method/perfetto/parser_input_method_manager_service';
 import {ParserInputMethodService} from 'parsers/input_method/perfetto/parser_input_method_service';
@@ -46,6 +48,8 @@ export class ParserFactory {
     ParserTransactions,
     ParserTransitions,
     ParserViewCapture,
+    ParserMotionEvent,
+    ParserKeyEvent,
   ];
   private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
   private static traceProcessor?: WasmEngineProxy;

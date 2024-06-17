@@ -26,7 +26,10 @@ export abstract class AddDiffs<T extends DiffNode> {
   protected abstract processModifiedNodes(newNode: T, oldNode: T): void;
   protected abstract processOldNode(oldNode: T): void;
 
-  constructor(private isModified: IsModifiedCallbackType) {}
+  constructor(
+    private isModified: IsModifiedCallbackType,
+    private denylistProperties: string[],
+  ) {}
 
   async executeInPlace(newRoot: T, oldRoot?: T): Promise<void> {
     this.newIdNodeMap = this.updateIdNodeMap(newRoot);
@@ -117,7 +120,7 @@ export abstract class AddDiffs<T extends DiffNode> {
       if (
         oldNode &&
         oldNode.id === newNode.id &&
-        (await this.isModified(newNode, oldNode))
+        (await this.isModified(newNode, oldNode, this.denylistProperties))
       ) {
         this.processModifiedNodes(newNode, oldNode);
       }
@@ -168,4 +171,5 @@ export abstract class AddDiffs<T extends DiffNode> {
 export type IsModifiedCallbackType = (
   newTree: TreeNode | undefined,
   oldTree: TreeNode | undefined,
+  denylistProperties: string[],
 ) => Promise<boolean>;
