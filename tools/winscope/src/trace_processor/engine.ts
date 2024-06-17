@@ -26,12 +26,9 @@ import {
 } from './protos';
 import {
   createQueryResult,
-  LONG,
-  LONG_NULL,
   NUM,
   QueryError,
   QueryResult,
-  STR,
   WritableQueryResult,
 } from './query_result';
 

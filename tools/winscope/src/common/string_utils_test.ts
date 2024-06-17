@@ -34,7 +34,9 @@ describe('StringUtils', () => {
     expect(StringUtils.parseBigIntStrippingUnit(' 10 unit ')).toEqual(10n);
 
     expect(() => StringUtils.parseBigIntStrippingUnit('invalid')).toThrow();
-    expect(() => StringUtils.parseBigIntStrippingUnit('invalid 10 unit')).toThrow();
+    expect(() =>
+      StringUtils.parseBigIntStrippingUnit('invalid 10 unit'),
+    ).toThrow();
   });
 
   it('convertCamelToSnakeCase()', () => {
@@ -48,27 +50,55 @@ describe('StringUtils', () => {
     expect(StringUtils.convertCamelToSnakeCase('aaa_bbb')).toEqual('aaa_bbb');
     expect(StringUtils.convertCamelToSnakeCase('aaa_Bbb')).toEqual('aaa_Bbb');
 
-    expect(StringUtils.convertCamelToSnakeCase('aaaBbbCcc')).toEqual('aaa_bbb_ccc');
-    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_ccc')).toEqual('aaa_bbb_ccc');
-    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_Ccc')).toEqual('aaa_bbb_Ccc');
-
-    expect(StringUtils.convertCamelToSnakeCase('aaaBBBccc')).toEqual('aaa_bBBccc');
-    expect(StringUtils.convertCamelToSnakeCase('aaaBBBcccDDD')).toEqual('aaa_bBBccc_dDD');
-    expect(StringUtils.convertCamelToSnakeCase('aaaBBB_ccc')).toEqual('aaa_bBB_ccc');
-    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_CCC')).toEqual('aaa_bbb_CCC');
-
-    expect(StringUtils.convertCamelToSnakeCase('_field_32')).toEqual('_field_32');
-    expect(StringUtils.convertCamelToSnakeCase('field_32')).toEqual('field_32');
-    expect(StringUtils.convertCamelToSnakeCase('field_32Bits')).toEqual('field_32_bits');
-    expect(StringUtils.convertCamelToSnakeCase('field_32BitsLsb')).toEqual('field_32_bits_lsb');
-    expect(StringUtils.convertCamelToSnakeCase('field_32bits')).toEqual('field_32bits');
-    expect(StringUtils.convertCamelToSnakeCase('field_32bitsLsb')).toEqual('field_32bits_lsb');
-
-    expect(StringUtils.convertCamelToSnakeCase('_aaaAaa.bbbBbb')).toEqual('_aaa_aaa.bbb_bbb');
-    expect(StringUtils.convertCamelToSnakeCase('aaaAaa.bbbBbb')).toEqual('aaa_aaa.bbb_bbb');
-    expect(StringUtils.convertCamelToSnakeCase('aaaAaa.field_32bitsLsb.bbbBbb')).toEqual(
-      'aaa_aaa.field_32bits_lsb.bbb_bbb'
+    expect(StringUtils.convertCamelToSnakeCase('aaaBbbCcc')).toEqual(
+      'aaa_bbb_ccc',
     );
+    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_ccc')).toEqual(
+      'aaa_bbb_ccc',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_Ccc')).toEqual(
+      'aaa_bbb_Ccc',
+    );
+
+    expect(StringUtils.convertCamelToSnakeCase('aaaBBBccc')).toEqual(
+      'aaa_bBBccc',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('aaaBBBcccDDD')).toEqual(
+      'aaa_bBBccc_dDD',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('aaaBBB_ccc')).toEqual(
+      'aaa_bBB_ccc',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('aaaBbb_CCC')).toEqual(
+      'aaa_bbb_CCC',
+    );
+
+    expect(StringUtils.convertCamelToSnakeCase('_field_32')).toEqual(
+      '_field_32',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('field_32')).toEqual('field_32');
+    expect(StringUtils.convertCamelToSnakeCase('field_32Bits')).toEqual(
+      'field_32_bits',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('field_32BitsLsb')).toEqual(
+      'field_32_bits_lsb',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('field_32bits')).toEqual(
+      'field_32bits',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('field_32bitsLsb')).toEqual(
+      'field_32bits_lsb',
+    );
+
+    expect(StringUtils.convertCamelToSnakeCase('_aaaAaa.bbbBbb')).toEqual(
+      '_aaa_aaa.bbb_bbb',
+    );
+    expect(StringUtils.convertCamelToSnakeCase('aaaAaa.bbbBbb')).toEqual(
+      'aaa_aaa.bbb_bbb',
+    );
+    expect(
+      StringUtils.convertCamelToSnakeCase('aaaAaa.field_32bitsLsb.bbbBbb'),
+    ).toEqual('aaa_aaa.field_32bits_lsb.bbb_bbb');
   });
 
   it('convertSnakeToCamelCase()', () => {
@@ -78,21 +108,39 @@ describe('StringUtils', () => {
     expect(StringUtils.convertSnakeToCamelCase('aaa_bbb')).toEqual('aaaBbb');
     expect(StringUtils.convertSnakeToCamelCase('_aaa_bbb')).toEqual('_aaaBbb');
 
-    expect(StringUtils.convertSnakeToCamelCase('aaa_bbb_ccc')).toEqual('aaaBbbCcc');
-    expect(StringUtils.convertSnakeToCamelCase('_aaa_bbb_ccc')).toEqual('_aaaBbbCcc');
-
-    expect(StringUtils.convertSnakeToCamelCase('_field_32')).toEqual('_field_32');
-    expect(StringUtils.convertSnakeToCamelCase('field_32')).toEqual('field_32');
-    expect(StringUtils.convertSnakeToCamelCase('field_32_bits')).toEqual('field_32Bits');
-    expect(StringUtils.convertSnakeToCamelCase('field_32_bits_lsb')).toEqual('field_32BitsLsb');
-    expect(StringUtils.convertSnakeToCamelCase('field_32bits')).toEqual('field_32bits');
-    expect(StringUtils.convertSnakeToCamelCase('field_32bits_lsb')).toEqual('field_32bitsLsb');
-
-    expect(StringUtils.convertSnakeToCamelCase('_aaa_aaa.bbb_bbb')).toEqual('_aaaAaa.bbbBbb');
-    expect(StringUtils.convertSnakeToCamelCase('aaa_aaa.bbb_bbb')).toEqual('aaaAaa.bbbBbb');
-    expect(StringUtils.convertSnakeToCamelCase('aaa_aaa.field_32bits_lsb.bbb_bbb')).toEqual(
-      'aaaAaa.field_32bitsLsb.bbbBbb'
+    expect(StringUtils.convertSnakeToCamelCase('aaa_bbb_ccc')).toEqual(
+      'aaaBbbCcc',
     );
+    expect(StringUtils.convertSnakeToCamelCase('_aaa_bbb_ccc')).toEqual(
+      '_aaaBbbCcc',
+    );
+
+    expect(StringUtils.convertSnakeToCamelCase('_field_32')).toEqual(
+      '_field_32',
+    );
+    expect(StringUtils.convertSnakeToCamelCase('field_32')).toEqual('field_32');
+    expect(StringUtils.convertSnakeToCamelCase('field_32_bits')).toEqual(
+      'field_32Bits',
+    );
+    expect(StringUtils.convertSnakeToCamelCase('field_32_bits_lsb')).toEqual(
+      'field_32BitsLsb',
+    );
+    expect(StringUtils.convertSnakeToCamelCase('field_32bits')).toEqual(
+      'field_32bits',
+    );
+    expect(StringUtils.convertSnakeToCamelCase('field_32bits_lsb')).toEqual(
+      'field_32bitsLsb',
+    );
+
+    expect(StringUtils.convertSnakeToCamelCase('_aaa_aaa.bbb_bbb')).toEqual(
+      '_aaaAaa.bbbBbb',
+    );
+    expect(StringUtils.convertSnakeToCamelCase('aaa_aaa.bbb_bbb')).toEqual(
+      'aaaAaa.bbbBbb',
+    );
+    expect(
+      StringUtils.convertSnakeToCamelCase('aaa_aaa.field_32bits_lsb.bbb_bbb'),
+    ).toEqual('aaaAaa.field_32bitsLsb.bbbBbb');
   });
 
   it('isAlpha()', () => {
@@ -129,5 +177,24 @@ describe('StringUtils', () => {
     expect(StringUtils.isUpperCase('_')).toBeFalse();
     expect(StringUtils.isUpperCase('0')).toBeFalse();
     expect(StringUtils.isUpperCase('9')).toBeFalse();
+  });
+
+  it('isBlank()', () => {
+    expect(StringUtils.isBlank('')).toBeTrue();
+    expect(StringUtils.isBlank(' ')).toBeTrue();
+    expect(StringUtils.isBlank('  ')).toBeTrue();
+    expect(StringUtils.isBlank(' a')).toBeFalse();
+    expect(StringUtils.isBlank('a ')).toBeFalse();
+    expect(StringUtils.isBlank(' a ')).toBeFalse();
+    expect(StringUtils.isBlank('a  a')).toBeFalse();
+  });
+
+  it('isNumeric()', () => {
+    expect(StringUtils.isNumeric('0')).toBeTrue();
+    expect(StringUtils.isNumeric('1')).toBeTrue();
+    expect(StringUtils.isNumeric('0.1')).toBeTrue();
+    expect(StringUtils.isNumeric('')).toBeFalse();
+    expect(StringUtils.isNumeric('a')).toBeFalse();
+    expect(StringUtils.isNumeric('4n')).toBeFalse();
   });
 });

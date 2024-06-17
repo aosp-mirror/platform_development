@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
 
 export enum ColorType {
   VISIBLE,

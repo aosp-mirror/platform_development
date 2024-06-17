@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {
   EnableConfiguration,
   SelectionConfiguration,
   TraceConfiguration,
+  TraceConfigurationMap,
 } from 'trace_collection/trace_collection_utils';
-import {TracingConfig} from 'trace_collection/tracing_config';
 
 @Component({
   selector: 'trace-config',
@@ -28,51 +29,46 @@ import {TracingConfig} from 'trace_collection/tracing_config';
 
     <div class="checkboxes">
       <mat-checkbox
-        *ngFor="let traceKey of objectKeys(tracingConfig.getTraceConfig())"
+        *ngFor="let traceKey of objectKeys(this.traceConfig)"
         color="primary"
         class="trace-checkbox"
-        [checked]="tracingConfig.getTraceConfig()[traceKey].run"
+        [checked]="this.traceConfig[traceKey].run"
         [indeterminate]="
-          tracingConfig.getTraceConfig()[traceKey].isTraceCollection
-            ? someTraces(tracingConfig.getTraceConfig()[traceKey])
+          this.traceConfig[traceKey].isTraceCollection
+            ? someTraces(this.traceConfig[traceKey])
             : false
         "
-        (change)="changeRunTrace($event.checked, tracingConfig.getTraceConfig()[traceKey])"
-        >{{ tracingConfig.getTraceConfig()[traceKey].name }}</mat-checkbox
+        (change)="changeRunTrace($event.checked, this.traceConfig[traceKey])"
+        >{{ this.traceConfig[traceKey].name }}</mat-checkbox
       >
     </div>
 
     <ng-container *ngFor="let traceKey of advancedConfigTraces()">
       <mat-divider></mat-divider>
 
-      <h3 class="mat-subheading-2">
-        {{ tracingConfig.getTraceConfig()[traceKey].name }} configuration
-      </h3>
+      <h3 class="mat-subheading-2">{{ this.traceConfig[traceKey].name }} configuration</h3>
 
       <div
-        *ngIf="tracingConfig.getTraceConfig()[traceKey].config?.enableConfigs.length > 0"
+        *ngIf="this.traceConfig[traceKey].config?.enableConfigs.length > 0"
         class="enable-config-opt">
         <mat-checkbox
-          *ngFor="let enableConfig of traceEnableConfigs(tracingConfig.getTraceConfig()[traceKey])"
+          *ngFor="let enableConfig of traceEnableConfigs(this.traceConfig[traceKey])"
           color="primary"
           class="enable-config"
           [disabled]="
-            !tracingConfig.getTraceConfig()[traceKey].run &&
-            !tracingConfig.getTraceConfig()[traceKey].isTraceCollection
+            !this.traceConfig[traceKey].run && !this.traceConfig[traceKey].isTraceCollection
           "
           [(ngModel)]="enableConfig.enabled"
-          (change)="changeTraceCollectionConfig(tracingConfig.getTraceConfig()[traceKey])"
+          (change)="changeTraceCollectionConfig(this.traceConfig[traceKey])"
           >{{ enableConfig.name }}</mat-checkbox
         >
       </div>
 
       <div
-        *ngIf="tracingConfig.getTraceConfig()[traceKey].config?.selectionConfigs.length > 0"
+        *ngIf="this.traceConfig[traceKey].config?.selectionConfigs.length > 0"
         class="selection-config-opt">
         <mat-form-field
-          *ngFor="
-            let selectionConfig of traceSelectionConfigs(tracingConfig.getTraceConfig()[traceKey])
-          "
+          *ngFor="let selectionConfig of traceSelectionConfigs(this.traceConfig[traceKey])"
           class="config-selection"
           appearance="fill">
           <mat-label>{{ selectionConfig.name }}</mat-label>
@@ -80,7 +76,7 @@ import {TracingConfig} from 'trace_collection/tracing_config';
           <mat-select
             class="selected-value"
             [(value)]="selectionConfig.value"
-            [disabled]="!tracingConfig.getTraceConfig()[traceKey].run">
+            [disabled]="!this.traceConfig[traceKey].run">
             <mat-option *ngFor="let option of selectionConfig.options" value="{{ option }}">{{
               option
             }}</mat-option>
@@ -108,12 +104,15 @@ import {TracingConfig} from 'trace_collection/tracing_config';
 })
 export class TraceConfigComponent {
   objectKeys = Object.keys;
-  tracingConfig = TracingConfig.getInstance();
+
+  @Input() traceConfig: TraceConfigurationMap | undefined;
+  @Output() readonly traceConfigChange =
+    new EventEmitter<TraceConfigurationMap>();
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];
-    Object.keys(this.tracingConfig.getTraceConfig()).forEach((traceKey: string) => {
-      if (this.tracingConfig.getTraceConfig()[traceKey].config) {
+    Object.keys(assertDefined(this.traceConfig)).forEach((traceKey: string) => {
+      if (assertDefined(this.traceConfig)[traceKey].config) {
         advancedConfigs.push(traceKey);
       }
     });
@@ -137,19 +136,26 @@ export class TraceConfigComponent {
   }
 
   someTraces(trace: TraceConfiguration): boolean {
-    return this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0 && !trace.run;
+    return (
+      !trace.run &&
+      this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0
+    );
   }
 
   changeRunTrace(run: boolean, trace: TraceConfiguration): void {
     trace.run = run;
     if (trace.isTraceCollection) {
-      this.traceEnableConfigs(trace).forEach((c: EnableConfiguration) => (c.enabled = run));
+      this.traceEnableConfigs(trace).forEach(
+        (c: EnableConfiguration) => (c.enabled = run),
+      );
     }
   }
 
   changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
-      trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
+      trace.run = this.traceEnableConfigs(trace).every(
+        (c: EnableConfiguration) => c.enabled,
+      );
     }
   }
 }

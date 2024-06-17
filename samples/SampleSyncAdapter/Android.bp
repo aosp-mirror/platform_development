@@ -7,8 +7,9 @@ android_test {
     name: "SampleSyncAdapter",
     // Only compile source java files in this apk.
     srcs: ["src/**/*.java"],
-    sdk_version: "15",
+    sdk_version: "19",
     dex_preopt: {
         enabled: false,
     },
+    static_libs: ["androidx.test.rules"],
 }

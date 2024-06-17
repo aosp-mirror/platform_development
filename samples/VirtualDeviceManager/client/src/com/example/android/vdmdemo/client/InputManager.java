@@ -24,6 +24,7 @@ import android.view.MotionEvent;
 
 import androidx.annotation.GuardedBy;
 
+import com.example.android.vdmdemo.common.RemoteEventProto.DisplayChangeEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteHomeEvent;
@@ -262,13 +263,21 @@ final class InputManager {
         }
     }
 
-    private void setFocusedDisplayId(int displayId) {
+    void setFocusedDisplayId(int displayId) {
         List<FocusListener> listenersToNotify = Collections.emptyList();
+        boolean focusedDisplayChanged = false;
         synchronized (mLock) {
             if (displayId != mFocusedDisplayId) {
                 mFocusedDisplayId = displayId;
                 listenersToNotify = new ArrayList<>(mFocusListeners);
+                focusedDisplayChanged = true;
             }
+        }
+        if (focusedDisplayChanged) {
+            mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                    .setDisplayId(displayId)
+                    .setDisplayChangeEvent(DisplayChangeEvent.newBuilder().setFocused(true))
+                    .build());
         }
         for (FocusListener focusListener : listenersToNotify) {
             focusListener.onFocusChange(displayId);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {UiTreeNode} from 'viewers/common/ui_tree_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {HierarchyTreeNodeDataViewComponent} from './hierarchy_tree_node_data_view_component';
+import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
 import {TreeComponent} from './tree_component';
 import {TreeNodeComponent} from './tree_node_component';
 
@@ -29,8 +43,15 @@ describe('TreeComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      declarations: [TreeComponent, TestHostComponent, TreeNodeComponent],
-      schemas: [NO_ERRORS_SCHEMA],
+      declarations: [
+        TreeComponent,
+        TestHostComponent,
+        TreeNodeComponent,
+        HierarchyTreeNodeDataViewComponent,
+        PropertyTreeNodeDataViewComponent,
+      ],
+      imports: [MatTooltipModule, MatIconModule],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
@@ -48,80 +69,149 @@ describe('TreeComponent', () => {
   });
 
   it('can identify if a parent node has a selected child', () => {
-    expect(component.treeComponent.hasSelectedChild()).toBeFalse();
-    component.highlightedItem = 'child3';
+    expect(component.treeComponents.first.hasSelectedChild()).toBeFalse();
+    component.highlightedItem = '3 Child3';
     fixture.detectChanges();
-    expect(component.treeComponent.hasSelectedChild()).toBeTrue();
+    expect(component.treeComponents.first.hasSelectedChild()).toBeTrue();
   });
 
-  it('highlights item upon node click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
+  it('highlights node upon click', () => {
+    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
-    const spy = spyOn(component.treeComponent.highlightedChange, 'emit');
-    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 1}));
+    const spy = spyOn(component.treeComponents.first.highlightedChange, 'emit');
+    (treeNode as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', {detail: 1}),
+    );
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 
   it('toggles tree upon node double click', () => {
-    const treeNode = htmlElement.querySelector('tree-node');
-    expect(treeNode).toBeTruthy();
+    const treeNode = assertDefined(htmlElement.querySelector('tree-node'));
 
-    const currCollapseValue = component.treeComponent.localCollapsedState;
-    (treeNode as HTMLButtonElement).dispatchEvent(new MouseEvent('click', {detail: 2}));
+    const currLocalExpandedState =
+      component.treeComponents.first.localExpandedState;
+    (treeNode as HTMLButtonElement).dispatchEvent(
+      new MouseEvent('click', {detail: 2}),
+    );
     fixture.detectChanges();
-    expect(!currCollapseValue).toBe(component.treeComponent.localCollapsedState);
+    expect(!currLocalExpandedState).toBe(
+      component.treeComponents.first.localExpandedState,
+    );
   });
 
-  it('scrolls selected node into view if out of view', async () => {
-    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild50`));
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = 'child50';
+  it('scrolls selected node only if not in view', () => {
+    const tree = assertDefined(component.treeComponents.get(0));
+    const treeNode = assertDefined(
+      tree.elementRef.nativeElement.querySelector(`#nodeChild79`),
+    );
+
+    component.highlightedItem = 'Root node';
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+
+    const spy = spyOn(treeNode, 'scrollIntoView').and.callThrough();
+    component.highlightedItem = '79 Child79';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
+
+    component.highlightedItem = '78 Child78';
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it('does not scroll selected element if already in view', () => {
-    const treeNode = assertDefined(htmlElement.querySelector(`#nodechild2`));
-    const spy = spyOn(treeNode, 'scrollIntoView');
-    component.highlightedItem = 'child2';
+  it('sets initial expanded state to true by default', () => {
+    const tree = assertDefined(component.treeComponents.get(1));
     fixture.detectChanges();
-    expect(spy).not.toHaveBeenCalled();
+    expect(tree.isExpanded()).toBeTrue();
   });
 
-  function makeTreeNodeChildren(): UiTreeNode[] {
-    const children = [];
-    for (let i = 0; i < 60; i++) {
-      children.push({kind: `${i}`, stableId: `child${i}`, name: `Child${i}`});
-    }
-    return children;
-  }
+  it('does not initially set expanded state to true if already exists in store', () => {
+    // tree1 expanded by default
+    const tree = assertDefined(component.treeComponents.get(1));
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeTrue();
+
+    // tree1 collapsed
+    tree.toggleTree();
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeFalse();
+
+    // tree0 expanded by default
+    component.itemWithStoredExpandedState = component.tree0;
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeTrue();
+
+    // tree1 collapsed state retained
+    component.itemWithStoredExpandedState = component.tree1;
+    fixture.detectChanges();
+    expect(tree.isExpanded()).toBeFalse();
+  });
 
   @Component({
     selector: 'host-component',
     template: `
+    <div class="tree-wrapper">
       <tree-view
-        [item]="item"
+        [node]="tree0"
         [store]="store"
         [isFlattened]="false"
         [isPinned]="false"
         [highlightedItem]="highlightedItem"
         [itemsClickable]="true"></tree-view>
+    </div>
+
+    <div class="tree-wrapper">
+      <tree-view
+        [node]="itemWithStoredExpandedState"
+        [store]="store"
+        [isFlattened]="false"
+        [isPinned]="false"
+        [highlightedItem]="highlightedItem"
+        [useStoredExpandedState]="true"
+        [itemsClickable]="true"></tree-view>
+    </div>
     `,
+    styles: [
+      `
+      .tree-wrapper {
+        height: 500px;
+        overflow: auto;
+      }
+    `,
+    ],
   })
   class TestHostComponent {
-    item: UiTreeNode = {
-      simplifyNames: false,
-      kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: 'LayerTraceEntry 2',
-      children: makeTreeNodeChildren(),
-    };
+    tree0: UiHierarchyTreeNode;
+
+    tree1 = UiHierarchyTreeNode.from(
+      new HierarchyTreeBuilder()
+        .setId('RootNode2')
+        .setName('Root node')
+        .setChildren([{id: 0, name: 'Child0'}])
+        .build(),
+    );
+
+    itemWithStoredExpandedState = this.tree1;
+
     store = new PersistentStore();
     highlightedItem = '';
 
-    @ViewChild(TreeComponent)
-    treeComponent!: TreeComponent;
+    constructor() {
+      localStorage.clear();
+      const children = [];
+      for (let i = 0; i < 80; i++) {
+        children.push({id: i, name: `Child${i}`});
+      }
+      this.tree0 = UiHierarchyTreeNode.from(
+        new HierarchyTreeBuilder()
+          .setId('RootNode')
+          .setName('Root node')
+          .setChildren(children)
+          .build(),
+      );
+    }
+
+    @ViewChildren(TreeComponent)
+    treeComponents!: QueryList<TreeComponent>;
   }
 });

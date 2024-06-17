@@ -22,7 +22,7 @@ export function dispatchMouseEvent(
   screenX: number,
   screenY: number,
   clientX: number,
-  clientY: number
+  clientY: number,
 ) {
   const event = document.createEvent('MouseEvent');
 
@@ -41,7 +41,7 @@ export function dispatchMouseEvent(
     false /* shiftKey */,
     false /* metaKey */,
     0 /* button */,
-    null /* relatedTarget */
+    null /* relatedTarget */,
   );
   Object.defineProperty(event, 'buttons', {get: () => 1});
 
@@ -52,7 +52,7 @@ export function dragElement<T>(
   fixture: ComponentFixture<T>,
   target: Element,
   x: number,
-  y: number
+  y: number,
 ) {
   const {left, top} = target.getBoundingClientRect();
 
@@ -71,7 +71,11 @@ export function dragElement<T>(
   flush();
 }
 
-export async function waitToBeCalled(spy: jasmine.Spy, times: number = 1, timeout = 10000) {
+export async function waitToBeCalled(
+  spy: jasmine.Spy,
+  times: number = 1,
+  timeout = 10000,
+) {
   return new Promise<void>((resolve, reject) => {
     let called = 0;
     spy.and.callThrough().and.callFake(() => {
@@ -81,6 +85,9 @@ export async function waitToBeCalled(spy: jasmine.Spy, times: number = 1, timeou
       }
     });
 
-    setTimeout(() => reject(`not called ${times} times within ${timeout}ms`), timeout);
+    setTimeout(
+      () => reject(`not called ${times} times within ${timeout}ms`),
+      timeout,
+    );
   });
 }

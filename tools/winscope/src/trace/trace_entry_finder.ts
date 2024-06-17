@@ -21,7 +21,7 @@ import {TraceTypeUtils} from './trace_type';
 export class TraceEntryFinder {
   static findCorrespondingEntry<T>(
     trace: Trace<T>,
-    position: TracePosition
+    position: TracePosition,
   ): TraceEntry<T> | undefined {
     if (position.entry?.getFullTrace().type === trace.type) {
       return position.entry as TraceEntry<T>;
@@ -39,10 +39,14 @@ export class TraceEntryFinder {
       const timestamp = position.entry.getTimestamp();
       if (TraceTypeUtils.compareByUiPipelineOrder(entryTraceType, trace.type)) {
         return (
-          trace.findFirstGreaterEntry(timestamp) ?? trace.findFirstGreaterOrEqualEntry(timestamp)
+          trace.findFirstGreaterEntry(timestamp) ??
+          trace.findFirstGreaterOrEqualEntry(timestamp)
         );
       } else {
-        return trace.findLastLowerEntry(timestamp) ?? trace.findLastLowerOrEqualEntry(timestamp);
+        return (
+          trace.findLastLowerEntry(timestamp) ??
+          trace.findLastLowerOrEqualEntry(timestamp)
+        );
       }
     }
 
