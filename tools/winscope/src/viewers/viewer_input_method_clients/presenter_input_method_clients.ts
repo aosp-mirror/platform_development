@@ -16,11 +16,13 @@
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {UpdateSfSubtreeDisplayNames} from 'viewers/common/operations/update_sf_subtree_display_names';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
 import {UpdateDisplayNames} from './operations/update_display_names';
@@ -50,7 +52,10 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
     true,
     false,
     this.getHierarchyTreeNameStrategy,
-    [new UpdateDisplayNames()],
+    [
+      [TraceType.SURFACE_FLINGER, [new UpdateSfSubtreeDisplayNames()]],
+      [TraceType.INPUT_METHOD_CLIENTS, [new UpdateDisplayNames()]],
+    ],
   );
   constructor(
     trace: Trace<HierarchyTreeNode>,
