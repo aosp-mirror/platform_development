@@ -58,7 +58,7 @@ export class CanvasDrawer {
         rect.x + rect.w,
         0,
       );
-      const gradientRatio = Math.min(25 / rect.w, 1);
+      const gradientRatio = Math.max(0, Math.min(25 / rect.w, 1));
       gradient.addColorStop(
         0,
         withGradientStart ? transparentColor : rgbaColor,
