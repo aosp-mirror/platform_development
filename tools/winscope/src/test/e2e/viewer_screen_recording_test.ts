@@ -25,7 +25,7 @@ describe('Viewer ScreenRecording', () => {
 
   it('processes trace and renders view', async () => {
     await E2eTestUtils.uploadFixture(
-      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
     );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();

@@ -55,4 +55,11 @@
         android:onClick="onDemoSelected"
         android:text="@string/latency_demo" />
 
+    <Button
+        android:id="@+id/stylus_demo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onDemoSelected"
+        android:text="@string/stylus_demo" />
+
 </LinearLayout>

@@ -17,49 +17,18 @@
 import {ArrayUtils} from 'common/array_utils';
 
 export class ParsingUtils {
-  static throwIfMagicNumberDoesntMatch(traceBuffer: Uint8Array, magicNumber: number[] | undefined) {
+  static throwIfMagicNumberDoesNotMatch(
+    traceBuffer: Uint8Array,
+    magicNumber: number[] | undefined,
+  ) {
     if (magicNumber !== undefined) {
       const bufferContainsMagicNumber = ArrayUtils.equal(
         magicNumber,
-        traceBuffer.slice(0, magicNumber.length)
+        traceBuffer.slice(0, magicNumber.length),
       );
       if (!bufferContainsMagicNumber) {
         throw TypeError("buffer doesn't contain expected magic number");
       }
     }
-  }
-
-  // Add default values to the proto objects.
-  static addDefaultProtoFields(protoObj: any): any {
-    if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
-      return protoObj;
-    }
-
-    for (const fieldName in protoObj.$type.fields) {
-      if (Object.prototype.hasOwnProperty.call(protoObj.$type.fields, fieldName)) {
-        const fieldProperties = protoObj.$type.fields[fieldName];
-        const field = protoObj[fieldName];
-
-        if (Array.isArray(field)) {
-          field.forEach((item, _) => {
-            ParsingUtils.addDefaultProtoFields(item);
-          });
-          continue;
-        }
-
-        if (!field) {
-          protoObj[fieldName] = fieldProperties.defaultValue;
-        }
-
-        if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-          protoObj[fieldName] =
-            fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-          continue;
-        }
-        ParsingUtils.addDefaultProtoFields(protoObj[fieldName]);
-      }
-    }
-
-    return protoObj;
   }
 }

@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
+import {TimestampFactory} from 'common/timestamp_factory';
 import {ProgressListener} from 'messaging/progress_listener';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {UnsupportedFileFormat} from 'messaging/winscope_error';
 import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {ParserWindowManager} from 'parsers/window_manager/parser_window_manager';
+import {ParserWindowManagerDump} from 'parsers/window_manager/parser_window_manager_dump';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
+import {ParserEventLog} from './events/parser_eventlog';
 import {FileAndParser} from './file_and_parser';
-import {ParserEventLog} from './parser_eventlog';
-import {ParserInputMethodClients} from './parser_input_method_clients';
-import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
-import {ParserInputMethodService} from './parser_input_method_service';
-import {ParserProtoLog} from './parser_protolog';
-import {ParserScreenRecording} from './parser_screen_recording';
-import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
-import {ParserSurfaceFlinger} from './parser_surface_flinger';
-import {ParserTransactions} from './parser_transactions';
-import {ParserTransitionsShell} from './parser_transitions_shell';
-import {ParserTransitionsWm} from './parser_transitions_wm';
-import {ParserViewCapture} from './parser_view_capture';
-import {ParserWindowManager} from './parser_window_manager';
-import {ParserWindowManagerDump} from './parser_window_manager_dump';
+import {ParserInputMethodClients} from './input_method/parser_input_method_clients';
+import {ParserInputMethodManagerService} from './input_method/parser_input_method_manager_service';
+import {ParserInputMethodService} from './input_method/parser_input_method_service';
+import {ParserProtoLog} from './protolog/parser_protolog';
+import {ParserScreenshot} from './screen_recording/parser_screenshot';
+import {ParserScreenRecording} from './screen_recording/parser_screen_recording';
+import {ParserScreenRecordingLegacy} from './screen_recording/parser_screen_recording_legacy';
+import {ParserSurfaceFlinger} from './surface_flinger/parser_surface_flinger';
+import {ParserTransactions} from './transactions/parser_transactions';
+import {ParserTransitionsShell} from './transitions/parser_transitions_shell';
+import {ParserTransitionsWm} from './transitions/parser_transitions_wm';
+import {ParserViewCapture} from './view_capture/parser_view_capture';
 
 export class ParserFactory {
   static readonly PARSERS = [
@@ -51,28 +53,33 @@ export class ParserFactory {
     ParserTransitionsWm,
     ParserTransitionsShell,
     ParserViewCapture,
+    ParserScreenshot,
   ];
 
   async createParsers(
     traceFiles: TraceFile[],
+    timestampFactory: TimestampFactory,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener
+    errorListener?: WinscopeErrorListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
     for (const [index, traceFile] of traceFiles.entries()) {
-      progressListener?.onProgressUpdate('Parsing proto files', (index / traceFiles.length) * 100);
+      progressListener?.onProgressUpdate(
+        'Parsing proto files',
+        (index / traceFiles.length) * 100,
+      );
 
       let hasFoundParser = false;
 
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const p = new ParserType(traceFile);
+          const p = new ParserType(traceFile, timestampFactory);
           await p.parse();
           hasFoundParser = true;
           if (p instanceof ParserViewCapture) {
             p.getWindowParsers().forEach((subParser) =>
-              parsers.push(new FileAndParser(traceFile, subParser))
+              parsers.push(new FileAndParser(traceFile, subParser)),
             );
           } else {
             parsers.push({file: traceFile, parser: p});
@@ -85,7 +92,7 @@ export class ParserFactory {
 
       if (!hasFoundParser) {
         errorListener?.onError(
-          new WinscopeError(WinscopeErrorType.UNSUPPORTED_FILE_FORMAT, traceFile.getDescriptor())
+          new UnsupportedFileFormat(traceFile.getDescriptor()),
         );
       }
     }

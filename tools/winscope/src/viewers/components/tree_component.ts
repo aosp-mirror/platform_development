@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,56 +21,61 @@ import {
   Inject,
   Input,
   Output,
+  SimpleChanges,
 } from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
-import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node.styles';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  nodeStyles,
+  treeNodeDataViewStyles,
+} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'tree-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tree-node
-      *ngIf="item && showNode(item)"
+      *ngIf="node && showNode(node)"
+      [id]="'node' + node.name"
       class="node"
-      [id]="'node' + item.stableId"
-      [class.leaf]="isLeaf(this.item)"
-      [class.selected]="isHighlighted(item, highlightedItem)"
+      [id]="'node' + node.name"
+      [class.leaf]="isLeaf(node)"
+      [class.selected]="isHighlighted(node, highlightedItem)"
       [class.clickable]="isClickable()"
       [class.child-selected]="hasSelectedChild()"
       [class.hover]="nodeHover"
       [class.childHover]="childHover"
-      [isAlwaysCollapsed]="isAlwaysCollapsed"
-      [class]="diffClass(item)"
+      [class]="node.getDiff()"
       [style]="nodeOffsetStyle()"
-      [item]="item"
+      [node]="node"
       [flattened]="isFlattened"
-      [isLeaf]="isLeaf(this.item)"
-      [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
-      [hasChildren]="hasChildren()"
+      [isLeaf]="isLeaf(node)"
+      [isExpanded]="isExpanded()"
       [isPinned]="isPinned()"
-      [isSelected]="isHighlighted(item, highlightedItem)"
+      [isSelected]="isHighlighted(node, highlightedItem)"
       (toggleTreeChange)="toggleTree()"
       (click)="onNodeClick($event)"
       (expandTreeChange)="expandTree()"
       (pinNodeChange)="propagateNewPinnedItem($event)"></tree-node>
 
     <div
-      *ngIf="hasChildren()"
+      *ngIf="!isLeaf(node)"
       class="children"
       [class.flattened]="isFlattened"
-      [hidden]="!isCollapsed()">
+      [hidden]="!isExpanded()">
       <tree-view
-        *ngFor="let child of children(); trackBy: childTrackById"
+        *ngFor="let child of node.children.values(); trackBy: childTrackById"
         class="childrenTree"
-        [item]="child"
+        [node]="child"
         [store]="store"
         [showNode]="showNode"
-        [isLeaf]="isLeaf"
         [dependencies]="dependencies"
         [isFlattened]="isFlattened"
-        [useGlobalCollapsedState]="useGlobalCollapsedState"
+        [useStoredExpandedState]="useStoredExpandedState"
         [initialDepth]="initialDepth + 1"
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
@@ -85,7 +90,6 @@ import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node
   styles: [nodeStyles, treeNodeDataViewStyles],
 })
 export class TreeComponent {
-  diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
 
   // TODO (b/263779536): this array is passed down from viewers/presenters and is used to generate
@@ -93,70 +97,101 @@ export class TreeComponent {
   //  instead. Each viewer/presenter could pass down a random magic number, an UUID, ...
   @Input() dependencies: TraceType[] = [];
 
-  @Input() item?: UiTreeNode;
-  @Input() store!: PersistentStore;
+  @Input() node?: UiPropertyTreeNode | UiHierarchyTreeNode;
+  @Input() store?: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
-  @Input() highlightedItem: string = '';
-  @Input() pinnedItems?: HierarchyTreeNode[] = [];
+  @Input() highlightedItem = '';
+  @Input() pinnedItems?: UiHierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
-  @Input() useGlobalCollapsedState?: boolean;
-  @Input() isAlwaysCollapsed?: boolean;
-  @Input() showNode = (item: UiTreeNode) => true;
-  @Input() isLeaf = (item?: UiTreeNode) => {
-    return !item || !item.children || item.children.length === 0;
-  };
 
-  @Output() highlightedChange = new EventEmitter<string>();
-  @Output() selectedTreeChange = new EventEmitter<UiTreeNode>();
-  @Output() pinnedItemChange = new EventEmitter<UiTreeNode>();
-  @Output() hoverStart = new EventEmitter<void>();
-  @Output() hoverEnd = new EventEmitter<void>();
+  // Conditionally use stored states. Some traces (e.g. transactions) do not provide items with the "stable id" field needed to search values in the storage.
+  @Input() useStoredExpandedState = false;
 
-  isCollapsedByDefault = true;
-  localCollapsedState = this.isCollapsedByDefault;
+  @Input() showNode = (node: UiPropertyTreeNode | UiHierarchyTreeNode) => true;
+
+  @Output() readonly highlightedChange = new EventEmitter<string>();
+  @Output() readonly selectedTreeChange =
+    new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly pinnedItemChange = new EventEmitter<UiHierarchyTreeNode>();
+  @Output() readonly hoverStart = new EventEmitter<void>();
+  @Output() readonly hoverEnd = new EventEmitter<void>();
+
+  localExpandedState = true;
   nodeHover = false;
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
 
-  childTrackById(index: number, child: UiTreeNode): string {
-    if (child.stableId !== undefined) {
-      return child.stableId;
-    }
-    if (!(child instanceof HierarchyTreeNode) && typeof child.propertyKey === 'string') {
-      return child.propertyKey;
-    }
+  private storeKeyExpandedState = '';
 
-    throw Error('Missing stable id or property key on node');
+  childTrackById(
+    index: number,
+    child: UiPropertyTreeNode | UiHierarchyTreeNode,
+  ): string {
+    return child.id;
   }
 
   constructor(@Inject(ElementRef) public elementRef: ElementRef) {
     this.nodeElement = elementRef.nativeElement.querySelector('.node');
-    this.nodeElement?.addEventListener('mousedown', this.nodeMouseDownEventListener);
-    this.nodeElement?.addEventListener('mouseenter', this.nodeMouseEnterEventListener);
-    this.nodeElement?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.nodeElement?.addEventListener(
+      'mousedown',
+      this.nodeMouseDownEventListener,
+    );
+    this.nodeElement?.addEventListener(
+      'mouseenter',
+      this.nodeMouseEnterEventListener,
+    );
+    this.nodeElement?.addEventListener(
+      'mouseleave',
+      this.nodeMouseLeaveEventListener,
+    );
   }
 
-  ngOnInit() {
-    if (this.isCollapsedByDefault) {
-      this.setCollapseValue(this.isCollapsedByDefault);
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['node'] && this.node) {
+      this.storeKeyExpandedState = `treeView.expandedState.node.${this.dependencies}.${this.node.id}`;
+      if (this.store) {
+        this.setExpandedValue(
+          true,
+          assertDefined(this.store).get(this.storeKeyExpandedState) ===
+            undefined,
+        );
+      } else {
+        this.setExpandedValue(true);
+      }
     }
-  }
-
-  ngOnChanges() {
     if (
-      this.item instanceof HierarchyTreeNode &&
-      UiTreeUtils.isHighlighted(this.item, this.highlightedItem)
+      this.node instanceof UiHierarchyTreeNode &&
+      UiTreeUtils.isHighlighted(this.node, this.highlightedItem)
     ) {
-      this.selectedTreeChange.emit(this.item);
+      this.selectedTreeChange.emit(this.node);
     }
   }
 
   ngOnDestroy() {
-    this.nodeElement?.removeEventListener('mousedown', this.nodeMouseDownEventListener);
-    this.nodeElement?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
-    this.nodeElement?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.nodeElement?.removeEventListener(
+      'mousedown',
+      this.nodeMouseDownEventListener,
+    );
+    this.nodeElement?.removeEventListener(
+      'mouseenter',
+      this.nodeMouseEnterEventListener,
+    );
+    this.nodeElement?.removeEventListener(
+      'mouseleave',
+      this.nodeMouseLeaveEventListener,
+    );
+  }
+
+  isLeaf(node?: UiPropertyTreeNode | UiHierarchyTreeNode): boolean {
+    if (node === undefined) return true;
+    if (node instanceof UiHierarchyTreeNode) {
+      return node.getAllChildren().length === 0;
+    }
+    return (
+      node.formattedValue().length > 0 || node.getAllChildren().length === 0
+    );
   }
 
   onNodeClick(event: MouseEvent) {
@@ -166,7 +201,7 @@ export class TreeComponent {
     }
 
     const isDoubleClick = event.detail % 2 === 0;
-    if (!this.isLeaf(this.item) && isDoubleClick) {
+    if (!this.isLeaf(this.node) && isDoubleClick) {
       event.preventDefault();
       this.toggleTree();
     } else {
@@ -183,15 +218,9 @@ export class TreeComponent {
     };
   }
 
-  private updateHighlightedItem() {
-    if (this.item?.stableId) {
-      this.highlightedChange.emit(`${this.item.stableId}`);
-    }
-  }
-
   isPinned() {
-    if (this.item instanceof HierarchyTreeNode) {
-      return this.pinnedItems?.map((item) => `${item.stableId}`).includes(`${this.item.stableId}`);
+    if (this.node instanceof UiHierarchyTreeNode) {
+      return this.pinnedItems?.map((item) => item.id).includes(this.node!.id);
     }
     return false;
   }
@@ -200,73 +229,68 @@ export class TreeComponent {
     this.highlightedChange.emit(newId);
   }
 
-  propagateNewPinnedItem(newPinnedItem: UiTreeNode) {
+  propagateNewPinnedItem(newPinnedItem: UiHierarchyTreeNode) {
     this.pinnedItemChange.emit(newPinnedItem);
   }
 
-  propagateNewSelectedTree(newTree: UiTreeNode) {
+  propagateNewSelectedTree(newTree: UiHierarchyTreeNode) {
     this.selectedTreeChange.emit(newTree);
   }
 
   isClickable() {
-    return !this.isLeaf(this.item) || this.itemsClickable;
+    return !this.isLeaf(this.node) || this.itemsClickable;
   }
 
   toggleTree() {
-    this.setCollapseValue(!this.isCollapsed());
+    this.setExpandedValue(!this.isExpanded());
   }
 
   expandTree() {
-    this.setCollapseValue(true);
+    this.setExpandedValue(true);
   }
 
-  isCollapsed() {
-    if (this.isAlwaysCollapsed || this.isLeaf(this.item)) {
+  isExpanded() {
+    if (this.isLeaf(this.node)) {
       return true;
     }
 
-    if (this.useGlobalCollapsedState) {
+    if (this.useStoredExpandedState) {
       return (
-        this.store.get(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`) ===
-          'true' ?? this.isCollapsedByDefault
+        assertDefined(this.store).get(this.storeKeyExpandedState) === 'true' ??
+        false
       );
     }
-    return this.localCollapsedState;
-  }
 
-  children(): UiTreeNode[] {
-    return this.item?.children ?? [];
-  }
-
-  hasChildren() {
-    if (!this.item) {
-      return false;
-    }
-    const isParentEntryInFlatView =
-      UiTreeUtils.isParentNode(this.item.kind ?? '') && this.isFlattened;
-    return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
+    return this.localExpandedState;
   }
 
   hasSelectedChild() {
-    if (!this.hasChildren()) {
+    if (this.isLeaf(this.node)) {
       return false;
     }
-    for (const child of this.item!.children!) {
-      if (child.stableId && this.highlightedItem === child.stableId) {
+    for (const child of this.node!.getAllChildren()) {
+      if (this.highlightedItem === child.id) {
         return true;
       }
     }
     return false;
   }
 
-  private setCollapseValue(isCollapsed: boolean) {
-    if (this.useGlobalCollapsedState) {
-      this.store.add(
-        `collapsedState.item.${this.dependencies}.${this.item?.stableId}`,
-        `${isCollapsed}`
+  private updateHighlightedItem() {
+    if (this.node) this.highlightedChange.emit(this.node.id);
+  }
+
+  private setExpandedValue(
+    isExpanded: boolean,
+    shouldUpdateStoredState = true,
+  ) {
+    if (this.useStoredExpandedState && shouldUpdateStoredState) {
+      assertDefined(this.store).add(
+        this.storeKeyExpandedState,
+        `${isExpanded}`,
       );
     } else {
-      this.localCollapsedState = isCollapsed;
+      this.localExpandedState = isExpanded;
     }
   }
 

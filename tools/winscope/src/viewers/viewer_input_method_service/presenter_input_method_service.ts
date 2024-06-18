@@ -17,11 +17,24 @@ import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodService extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
+    const inputMethodService = this.entry?.getChildByName('inputMethodService');
+    const windowVisible =
+      inputMethodService?.getEagerPropertyByName('windowVisible')?.getValue() ??
+      false;
+    const decorViewVisible =
+      inputMethodService
+        ?.getEagerPropertyByName('decorViewVisible')
+        ?.getValue() ?? false;
+    const packageName = inputMethodService
+      ?.getEagerPropertyByName('inputEditorInfo')
+      ?.getChildByName('packageName')
+      ?.formattedValue();
+
     return {
       ...new ImServiceTableProperties(
-        this.entry?.obj?.inputMethodService?.windowVisible ?? false,
-        this.entry?.obj?.inputMethodService?.decorViewVisible ?? false,
-        this.entry?.obj?.inputMethodService?.inputEditorInfo?.packageName
+        windowVisible,
+        decorViewVisible,
+        packageName,
       ),
     };
   }
@@ -31,6 +44,6 @@ class ImServiceTableProperties {
   constructor(
     public windowVisible: boolean,
     public decorViewVisible: boolean,
-    public packageName: string | undefined
+    public packageName: string | undefined,
   ) {}
 }

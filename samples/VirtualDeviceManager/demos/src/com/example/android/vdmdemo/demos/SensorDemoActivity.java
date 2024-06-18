@@ -30,6 +30,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.os.BuildCompat;
 
 import java.util.List;
 import java.util.Objects;
@@ -75,7 +76,7 @@ public final class SensorDemoActivity extends AppCompatActivity implements Senso
         String deviceName = DEVICE_NAME_UNKNOWN;
         if (context.getDeviceId() == Context.DEVICE_ID_DEFAULT) {
             deviceName = DEVICE_NAME_DEFAULT;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        } else if (BuildCompat.isAtLeastV()) {
             VirtualDevice device = mVirtualDeviceManager.getVirtualDevice(context.getDeviceId());
             deviceName = Objects.requireNonNull(device).getName();
         } else {

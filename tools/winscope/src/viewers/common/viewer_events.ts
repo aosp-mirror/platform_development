@@ -25,6 +25,7 @@ export const ViewerEvents = {
   AdditionalPropertySelected: 'AdditionalPropertySelected',
   RectsDblClick: 'RectsDblClick',
   MiniRectsDblClick: 'MiniRectsDblClick',
+  TimestampClick: 'TimestampClick',
 };
 
 export class RectDblClickDetail {

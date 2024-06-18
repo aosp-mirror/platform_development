@@ -13,27 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, by, element} from 'protractor';
+
+import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
-describe('Viewer ProtoLog', () => {
-  beforeAll(async () => {
+describe('Viewer Protolog', () => {
+  const viewerSelector = 'viewer-protolog';
+
+  beforeEach(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
-  it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/ProtoLog.pb');
-    await E2eTestUtils.closeSnackBarIfNeeded();
-    await E2eTestUtils.clickViewTracesButton();
+  it('processes trace from zip and navigates correctly', async () => {
+    await E2eTestUtils.loadTraceAndCheckViewer(
+      'traces/deployment_full_trace_phone.zip',
+      'ProtoLog',
+      viewerSelector,
+    );
+    await E2eTestUtils.checkTimelineTraceSelector({
+      icon: 'notes',
+      color: 'rgba(64, 165, 138, 1)',
+    });
+    await E2eTestUtils.checkInitialRealTimestamp(
+      '2022-11-21T18:05:09.777144978',
+    );
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.259191031');
 
-    const isViewerRendered = await element(by.css('viewer-protolog')).isPresent();
-    expect(isViewerRendered).toBeTruthy();
-
-    const isFirstMessageRendered = await element(
-      by.css('viewer-protolog .scroll-messages .message')
-    ).isPresent();
-    expect(isFirstMessageRendered).toBeTruthy();
+    await checkNumberOfEntries(41);
+    await filterByText('FREEZE');
+    await checkNumberOfEntries(4);
   });
+
+  async function filterByText(filterString: string) {
+    await E2eTestUtils.updateInputField(
+      `${viewerSelector} .filters .text`,
+      'protologTextInput',
+      filterString,
+    );
+  }
+
+  async function checkNumberOfEntries(numberOfEntries: number) {
+    const entries: ElementFinder[] = await element.all(
+      by.css(`${viewerSelector} .scroll-messages .message`),
+    );
+    expect(entries.length).toEqual(numberOfEntries);
+  }
 });

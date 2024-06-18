@@ -110,7 +110,7 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
   },
 ];
 
-export const traceConfigurations: TraceConfigurationMap = {
+const traceConfigurations: TraceConfigurationMap = {
   layers_trace: {
     name: 'Surface Flinger',
     run: true,

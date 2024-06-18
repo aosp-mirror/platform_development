@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {GeometryUtils, Point, Rect} from 'common/geometry_utils';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
+import {Point} from 'common/geometry_types';
+import {Rect} from 'common/rect';
 import {TimeRange, Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
@@ -39,17 +49,27 @@ import {AbstractTimelineRowComponent} from './abstract_timeline_row_component';
 })
 export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}> {
   @Input() color = '#AF5CF7';
-  @Input() trace!: Trace<{}>;
-  @Input() selectedEntry: TraceEntry<{}> | undefined = undefined;
-  @Input() selectionRange!: TimeRange;
+  @Input() trace: Trace<{}> | undefined;
+  @Input() selectedEntry: TraceEntry<{}> | undefined;
+  @Input() selectionRange: TimeRange | undefined;
 
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
   @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;
 
   hoveringEntry?: Timestamp;
   hoveringSegment?: TimeRange;
+
+  getEntryWidth() {
+    return this.canvasDrawer.getScaledCanvasHeight();
+  }
+
+  getAvailableWidth() {
+    return Math.floor(
+      this.canvasDrawer.getScaledCanvasWidth() - this.getEntryWidth(),
+    );
+  }
 
   ngOnInit() {
     if (!this.trace || !this.selectionRange) {
@@ -70,8 +90,41 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     this.hoveringSegment = undefined;
   }
 
+  override async drawTimeline() {
+    assertDefined(this.trace)
+      .sliceTime(
+        assertDefined(this.selectionRange).from,
+        assertDefined(this.selectionRange).to,
+      )
+      .forEachTimestamp((entry) => {
+        this.drawEntry(entry);
+      });
+    this.drawSelectedEntry();
+  }
+
+  protected override async getEntryAt(
+    mousePoint: Point,
+  ): Promise<TraceEntry<{}> | undefined> {
+    const timestampOfClick = this.getTimestampOf(mousePoint.x);
+    const candidateEntry = assertDefined(this.trace).findLastLowerOrEqualEntry(
+      timestampOfClick,
+    );
+
+    if (candidateEntry !== undefined) {
+      const timestamp = candidateEntry.getTimestamp();
+      const rect = this.entryRect(timestamp);
+      if (rect.containsPoint(mousePoint)) {
+        return candidateEntry;
+      }
+    }
+
+    return undefined;
+  }
+
   private async drawEntryHover(mousePoint: Point) {
-    const currentHoverEntry = (await this.getEntryAt(mousePoint))?.getTimestamp();
+    const currentHoverEntry = (
+      await this.getEntryAt(mousePoint)
+    )?.getTimestamp();
 
     if (this.hoveringEntry === currentHoverEntry) {
       return;
@@ -95,61 +148,39 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
     this.canvasDrawer.drawRectBorder(rect);
   }
 
-  protected override async getEntryAt(mousePoint: Point): Promise<TraceEntry<{}> | undefined> {
-    const timestampOfClick = this.getTimestampOf(mousePoint.x);
-    const candidateEntry = this.trace.findLastLowerOrEqualEntry(timestampOfClick);
-
-    if (candidateEntry !== undefined) {
-      const timestamp = candidateEntry.getTimestamp();
-      const rect = this.entryRect(timestamp);
-      if (GeometryUtils.isPointInRect(mousePoint, rect)) {
-        return candidateEntry;
-      }
-    }
-
-    return undefined;
-  }
-
-  get entryWidth() {
-    return this.canvasDrawer.getScaledCanvasHeight();
-  }
-
-  get availableWidth() {
-    return Math.floor(this.canvasDrawer.getScaledCanvasWidth() - this.entryWidth);
-  }
-
   private entryRect(entry: Timestamp, padding = 0): Rect {
     const xPos = this.getXPosOf(entry);
 
-    return {
-      x: xPos + padding,
-      y: padding,
-      w: this.entryWidth - 2 * padding,
-      h: this.entryWidth - 2 * padding,
-    };
+    return new Rect(
+      xPos + padding,
+      padding,
+      this.getEntryWidth() - 2 * padding,
+      this.getEntryWidth() - 2 * padding,
+    );
   }
 
   private getXPosOf(entry: Timestamp): number {
-    const start = this.selectionRange.from.getValueNs();
-    const end = this.selectionRange.to.getValueNs();
+    const start = assertDefined(this.selectionRange).from.getValueNs();
+    const end = assertDefined(this.selectionRange).to.getValueNs();
 
-    return Number((BigInt(this.availableWidth) * (entry.getValueNs() - start)) / (end - start));
+    return Number(
+      (BigInt(this.getAvailableWidth()) * (entry.getValueNs() - start)) /
+        (end - start),
+    );
   }
 
   private getTimestampOf(x: number): Timestamp {
-    const start = this.selectionRange.from.getValueNs();
-    const end = this.selectionRange.to.getValueNs();
-    const ts = (BigInt(Math.floor(x)) * (end - start)) / BigInt(this.availableWidth) + start;
-    return new Timestamp(this.selectionRange.from.getType(), ts);
-  }
-
-  override async drawTimeline() {
-    this.trace
-      .sliceTime(this.selectionRange.from, this.selectionRange.to)
-      .forEachTimestamp((entry) => {
-        this.drawEntry(entry);
-      });
-    this.drawSelectedEntry();
+    const start = assertDefined(this.selectionRange).from.getValueNs();
+    const end = assertDefined(this.selectionRange).to.getValueNs();
+    const ts =
+      (BigInt(Math.floor(x)) * (end - start)) /
+        BigInt(this.getAvailableWidth()) +
+      start;
+    return NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
+      assertDefined(this.selectionRange).from.getType(),
+      ts,
+      0n,
+    );
   }
 
   private drawEntry(entry: Timestamp) {

@@ -21,8 +21,8 @@ export class TraceFile {
 
   getDescriptor(): string {
     let descriptor = FileUtils.removeDirFromFileName(this.file.name);
-    if (this.parentArchive?.name !== undefined) {
-      descriptor += ` (${this.parentArchive?.name})`;
+    if (this.parentArchive?.name) {
+      descriptor += ` (${this.parentArchive.name})`;
     }
     return descriptor;
   }

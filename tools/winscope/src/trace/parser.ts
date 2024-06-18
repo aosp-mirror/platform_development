@@ -31,7 +31,7 @@ export interface Parser<T> {
   customQuery<Q extends CustomQueryType>(
     type: Q,
     entriesRange: EntriesRange,
-    param?: CustomQueryParamTypeMap[Q]
+    param?: CustomQueryParamTypeMap[Q],
   ): Promise<CustomQueryParserResultTypeMap[Q]>;
   getDescriptors(): string[];
 }

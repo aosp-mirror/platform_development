@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.latency_demo -> startActivity(new Intent(this, LatencyDemoActivity.class));
             case R.id.vibration_demo -> startActivity(
                     new Intent(this, VibrationDemoActivity.class));
+            case R.id.stylus_demo -> startActivity(new Intent(this, StylusDemoActivity.class));
         }
     }
 }

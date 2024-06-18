@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-import {Rect} from 'common/geometry_utils';
+import {assertDefined} from 'common/assert_utils';
+import {Rect} from 'common/rect';
 
 export class CanvasDrawer {
-  private canvas!: HTMLCanvasElement;
-  private ctx!: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement | undefined;
+  private ctx: CanvasRenderingContext2D | undefined;
 
   setCanvas(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -30,13 +31,17 @@ export class CanvasDrawer {
   }
 
   drawRect(rect: Rect, color: string, alpha: number) {
+    if (!this.ctx) {
+      throw Error('Canvas not set');
+    }
+
     const rgbColor = this.hexToRgb(color);
     if (rgbColor === undefined) {
       throw new Error('Failed to parse provided hex color');
     }
     const {r, g, b} = rgbColor;
 
-    this.defineRectPath(rect);
+    this.defineRectPath(rect, this.ctx);
     this.ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     this.ctx.fill();
 
@@ -44,50 +49,58 @@ export class CanvasDrawer {
   }
 
   drawRectBorder(rect: Rect) {
-    this.defineRectPath(rect);
-    this.highlightPath();
+    if (!this.ctx) {
+      throw Error('Canvas not set');
+    }
+    this.defineRectPath(rect, this.ctx);
+    this.highlightPath(this.ctx);
     this.ctx.restore();
   }
 
   clear() {
-    this.ctx.clearRect(0, 0, this.getScaledCanvasWidth(), this.getScaledCanvasHeight());
+    assertDefined(this.ctx).clearRect(
+      0,
+      0,
+      this.getScaledCanvasWidth(),
+      this.getScaledCanvasHeight(),
+    );
   }
 
   getScaledCanvasWidth() {
-    return Math.floor(this.canvas.width / this.getXScale());
+    return Math.floor(assertDefined(this.canvas).width / this.getXScale());
   }
 
   getScaledCanvasHeight() {
-    return Math.floor(this.canvas.height / this.getYScale());
+    return Math.floor(assertDefined(this.canvas).height / this.getYScale());
   }
 
   getXScale(): number {
-    return this.ctx.getTransform().m11;
+    return assertDefined(this.ctx).getTransform().m11;
   }
 
   getYScale(): number {
-    return this.ctx.getTransform().m22;
+    return assertDefined(this.ctx).getTransform().m22;
   }
 
-  private highlightPath() {
-    this.ctx.globalAlpha = 1.0;
-    this.ctx.lineWidth = 2;
-    this.ctx.save();
-    this.ctx.clip();
-    this.ctx.lineWidth *= 2;
-    this.ctx.stroke();
-    this.ctx.restore();
-    this.ctx.stroke();
+  private highlightPath(ctx: CanvasRenderingContext2D) {
+    ctx.globalAlpha = 1.0;
+    ctx.lineWidth = 2;
+    ctx.save();
+    ctx.clip();
+    ctx.lineWidth *= 2;
+    ctx.stroke();
+    ctx.restore();
+    ctx.stroke();
   }
 
-  private defineRectPath(rect: Rect) {
-    this.ctx.beginPath();
-    this.ctx.moveTo(rect.x, rect.y);
-    this.ctx.lineTo(rect.x + rect.w, rect.y);
-    this.ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
-    this.ctx.lineTo(rect.x, rect.y + rect.h);
-    this.ctx.lineTo(rect.x, rect.y);
-    this.ctx.closePath();
+  private defineRectPath(rect: Rect, ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.moveTo(rect.x, rect.y);
+    ctx.lineTo(rect.x + rect.w, rect.y);
+    ctx.lineTo(rect.x + rect.w, rect.y + rect.h);
+    ctx.lineTo(rect.x, rect.y + rect.h);
+    ctx.lineTo(rect.x, rect.y);
+    ctx.closePath();
   }
 
   private hexToRgb(hex: string): {r: number; g: number; b: number} | undefined {

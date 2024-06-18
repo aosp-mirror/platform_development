@@ -28,8 +28,9 @@ import {
 } from '@angular/core';
 import {Color} from 'app/colors';
 import {assertDefined} from 'common/assert_utils';
-import {Point} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
 import {TimeRange, Timestamp} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePosition} from 'trace/trace_position';
 import {Transformer} from './transformer';
 
@@ -123,7 +124,7 @@ export class SliderComponent {
   @Input() zoomRange: TimeRange | undefined;
   @Input() currentPosition: TracePosition | undefined;
 
-  @Output() onZoomChanged = new EventEmitter<TimeRange>();
+  @Output() readonly onZoomChanged = new EventEmitter<TimeRange>();
 
   dragging = false;
   sliderWidth = 0;
@@ -142,18 +143,23 @@ export class SliderComponent {
     }
 
     if (changes['currentPosition']) {
-      const currentPosition = changes['currentPosition'].currentValue as TracePosition;
+      const currentPosition = changes['currentPosition']
+        .currentValue as TracePosition;
       this.syncCursosPositionTo(currentPosition.timestamp);
     }
   }
 
   syncDragPositionTo(zoomRange: TimeRange) {
     this.sliderWidth = this.computeSliderWidth();
-    const middleOfZoomRange = zoomRange.from.plus(zoomRange.to.minus(zoomRange.from).div(2n));
+    const middleOfZoomRange = zoomRange.from.plus(
+      zoomRange.to.minus(zoomRange.from).div(2n),
+    );
 
     this.dragPosition = {
       // Calculation to account for there being a min width of the slider
-      x: this.getTransformer().transform(middleOfZoomRange) - this.sliderWidth / 2,
+      x:
+        this.getTransformer().transform(middleOfZoomRange) -
+        this.sliderWidth / 2,
       y: 0,
     };
   }
@@ -163,7 +169,9 @@ export class SliderComponent {
   }
 
   getTransformer(): Transformer {
-    const width = this.viewInitialized ? this.sliderBox.nativeElement.offsetWidth : 0;
+    const width = this.viewInitialized
+      ? this.sliderBox.nativeElement.offsetWidth
+      : 0;
     return new Transformer(assertDefined(this.fullRange), {from: 0, to: width});
   }
 
@@ -224,11 +232,12 @@ export class SliderComponent {
       .untransform(newX + this.sliderWidth / 2)
       .minus(zoomRange.to.minus(zoomRange.from).div(2n));
 
-    const to = new Timestamp(
+    const to = NO_TIMEZONE_OFFSET_FACTORY.makeTimestampFromType(
       assertDefined(this.zoomRange).to.getType(),
       from.getValueNs() +
         (assertDefined(this.zoomRange).to.getValueNs() -
-          assertDefined(this.zoomRange).from.getValueNs())
+          assertDefined(this.zoomRange).from.getValueNs()),
+      0n,
     );
 
     this.onZoomChanged.emit({from, to});
@@ -238,7 +247,9 @@ export class SliderComponent {
     e.preventDefault();
 
     const startPos = e.pageX;
-    const startOffset = this.getTransformer().transform(assertDefined(this.zoomRange).from);
+    const startOffset = this.getTransformer().transform(
+      assertDefined(this.zoomRange).from,
+    );
 
     const listener = (event: any) => {
       const movedX = event.pageX - startPos;
@@ -266,7 +277,9 @@ export class SliderComponent {
     e.preventDefault();
 
     const startPos = e.pageX;
-    const startOffset = this.getTransformer().transform(assertDefined(this.zoomRange).to);
+    const startOffset = this.getTransformer().transform(
+      assertDefined(this.zoomRange).to,
+    );
 
     const listener = (event: any) => {
       const movedX = event.pageX - startPos;

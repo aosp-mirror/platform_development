@@ -15,8 +15,17 @@
  */
 import {CommonModule} from '@angular/common';
 import {ChangeDetectionStrategy} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {FormControl, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
+import {
+  FormControl,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
@@ -37,7 +46,11 @@ import {ViewersLoaded, ViewersUnloaded} from 'messaging/winscope_event';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
-import {MatDrawer, MatDrawerContainer, MatDrawerContent} from './bottomnav/bottom_drawer_component';
+import {
+  MatDrawer,
+  MatDrawerContainer,
+  MatDrawerContent,
+} from './bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {MiniTimelineComponent} from './timeline/mini-timeline/mini_timeline_component';
 import {TimelineComponent} from './timeline/timeline_component';
@@ -99,7 +112,7 @@ describe('AppComponent', () => {
       Validators.compose([
         Validators.required,
         Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
-      ])
+      ]),
     );
     fixture.detectChanges();
   });
@@ -112,9 +125,8 @@ describe('AppComponent', () => {
     expect(component.title).toEqual('winscope');
   });
 
-  it('renders the page title', () => {
-    const title = assertDefined(htmlElement.querySelector('.app-title'));
-    expect(title.innerHTML).toContain('Winscope');
+  it('shows permanent header items on homepage', () => {
+    checkPermanentHeaderItems();
   });
 
   it('displays correct elements when no data loaded', () => {
@@ -128,6 +140,8 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
     expect(htmlElement.querySelector('.viewers')).toBeFalsy();
+    expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    checkPermanentHeaderItems();
   });
 
   it('displays correct elements when data loaded', () => {
@@ -142,6 +156,8 @@ describe('AppComponent', () => {
     expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
     expect(htmlElement.querySelector('.viewers')).toBeTruthy();
+    expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    checkPermanentHeaderItems();
   });
 
   it('downloads traces on download button click', () => {
@@ -221,8 +237,12 @@ describe('AppComponent', () => {
 
     clickEditFilenameButton();
 
-    const inputField = assertDefined(htmlElement.querySelector('.file-name-input-field'));
-    const inputEl = assertDefined(htmlElement.querySelector('.file-name-input-field input'));
+    const inputField = assertDefined(
+      htmlElement.querySelector('.file-name-input-field'),
+    );
+    const inputEl = assertDefined(
+      htmlElement.querySelector('.file-name-input-field input'),
+    );
     (inputEl as HTMLInputElement).value = 'valid_file_name';
     inputField.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
 
@@ -231,8 +251,12 @@ describe('AppComponent', () => {
   });
 
   function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
-    const inputEl = assertDefined(htmlElement.querySelector('.file-name-input-field input'));
-    const checkButton = assertDefined(htmlElement.querySelector('.check-button'));
+    const inputEl = assertDefined(
+      htmlElement.querySelector('.file-name-input-field input'),
+    );
+    const checkButton = assertDefined(
+      htmlElement.querySelector('.check-button'),
+    );
     (inputEl as HTMLInputElement).value = name;
     inputEl.dispatchEvent(new Event('input'));
     fixture.detectChanges();
@@ -248,14 +272,27 @@ describe('AppComponent', () => {
   }
 
   function clickDownloadTracesButton() {
-    const downloadButton = assertDefined(htmlElement.querySelector('.save-button'));
+    const downloadButton = assertDefined(
+      htmlElement.querySelector('.save-button'),
+    );
     downloadButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
   }
 
   function clickEditFilenameButton() {
-    const pencilButton = assertDefined(htmlElement.querySelector('.edit-button'));
+    const pencilButton = assertDefined(
+      htmlElement.querySelector('.edit-button'),
+    );
     pencilButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
+  }
+
+  function checkPermanentHeaderItems() {
+    expect(
+      assertDefined(htmlElement.querySelector('.app-title')).innerHTML,
+    ).toContain('Winscope');
+    expect(htmlElement.querySelector('.documentation')).toBeTruthy();
+    expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
+    expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();
   }
 });

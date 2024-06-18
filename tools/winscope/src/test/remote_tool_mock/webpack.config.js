@@ -20,7 +20,11 @@ const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin
 module.exports = {
   resolve: {
     extensions: ['.ts', '.js', '.css'],
-    modules: [__dirname + '/../../../node_modules', __dirname + '/../../../src', __dirname],
+    modules: [
+      __dirname + '/../../../node_modules',
+      __dirname + '/../../../src',
+      __dirname,
+    ],
   },
 
   module: {

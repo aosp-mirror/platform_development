@@ -28,6 +28,8 @@ import androidx.fragment.app.Fragment;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
+import java.util.function.Consumer;
+
 import javax.inject.Inject;
 
 /** Fragment that holds the connectivity status UI. */
@@ -39,31 +41,18 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
     private TextView mStatus = null;
     private int mDefaultBackgroundColor;
 
-    private final ConnectionManager.ConnectionCallback mConnectionCallback =
-            new ConnectionManager.ConnectionCallback() {
-                @Override
-                public void onInitialized() {
-                    updateStatus(mDefaultBackgroundColor, R.string.initialized);
-                }
-
-                @Override
-                public void onConnecting(String remoteDeviceName) {
-                    updateStatus(mDefaultBackgroundColor, R.string.connecting, remoteDeviceName);
-                }
-
-                @Override
-                public void onConnected(String remoteDeviceName) {
-                    updateStatus(Color.GREEN, R.string.connected, remoteDeviceName);
-                }
-
-                @Override
-                public void onDisconnected() {
-                    updateStatus(mDefaultBackgroundColor, R.string.disconnected);
-                }
-
-                @Override
-                public void onError(String message) {
-                    updateStatus(Color.RED, R.string.error, message);
+    private final Consumer<ConnectionManager.ConnectionStatus> mConnectionCallback =
+            (status) -> {
+                switch (status.state) {
+                    case DISCONNECTED -> updateStatus(mDefaultBackgroundColor,
+                            R.string.disconnected);
+                    case INITIALIZED -> updateStatus(mDefaultBackgroundColor,
+                            R.string.initialized);
+                    case CONNECTING -> updateStatus(mDefaultBackgroundColor,
+                            R.string.connecting, status.remoteDeviceName);
+                    case CONNECTED -> updateStatus(Color.GREEN, R.string.connected,
+                            status.remoteDeviceName);
+                    case ERROR -> updateStatus(Color.RED, R.string.error, status.errorMessage);
                 }
             };
 
@@ -78,26 +67,18 @@ public final class ConnectivityFragment extends Hilt_ConnectivityFragment {
         mStatus = requireActivity().requireViewById(R.id.connection_status);
 
         TypedValue background = new TypedValue();
-        getActivity()
+        requireActivity()
                 .getTheme()
                 .resolveAttribute(android.R.attr.windowBackground, background, true);
         mDefaultBackgroundColor = background.isColorType() ? background.data : Color.WHITE;
 
-        CharSequence currentTitle = getActivity().getTitle();
+        CharSequence currentTitle = requireActivity().getTitle();
         String localEndpointId = ConnectionManager.getLocalEndpointId();
-        String title = getActivity().getString(R.string.this_device, currentTitle, localEndpointId);
-        getActivity().setTitle(title);
+        String title =
+                requireActivity().getString(R.string.this_device, currentTitle, localEndpointId);
+        requireActivity().setTitle(title);
 
-        ConnectionManager.ConnectionStatus connectionStatus =
-                mConnectionManager.getConnectionStatus();
-        if (connectionStatus.connected) {
-            mConnectionCallback.onConnected(connectionStatus.remoteDeviceName);
-        } else if (connectionStatus.remoteDeviceName != null) {
-            mConnectionCallback.onConnecting(connectionStatus.remoteDeviceName);
-        } else {
-            mConnectionCallback.onDisconnected();
-        }
-
+        mConnectionCallback.accept(mConnectionManager.getConnectionStatus());
         mConnectionManager.addConnectionCallback(mConnectionCallback);
     }
 

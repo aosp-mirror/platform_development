@@ -18,5 +18,8 @@ import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 
 export class FileAndParsers {
-  constructor(readonly file: TraceFile, readonly parsers: Array<Parser<object>>) {}
+  constructor(
+    readonly file: TraceFile,
+    readonly parsers: Array<Parser<object>>,
+  ) {}
 }

@@ -16,6 +16,8 @@
 
 package com.example.android.vdmdemo.common;
 
+import static com.google.common.util.concurrent.Uninterruptibles.putUninterruptibly;
+
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CodecException;
@@ -30,9 +32,8 @@ import android.view.Surface;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 
-import com.example.android.vdmdemo.common.RemoteEventProto.DisplayFrame;
+import com.example.android.vdmdemo.common.RemoteEventProto.EncodedFrame;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.protobuf.ByteString;
 
 import java.io.BufferedOutputStream;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,23 +61,33 @@ public class VideoManager {
     private final Object mCodecLock = new Object();
     private final HandlerThread mCallbackThread;
     private final boolean mRecordEncoderOutput;
-    private final BlockingQueue<RemoteEvent> mEventQueue = new LinkedBlockingQueue<>(100);
+    private final BlockingQueue<EncodedFrame> mEventQueue = new LinkedBlockingQueue<>(100);
     private final BlockingQueue<Integer> mFreeInputBuffers = new LinkedBlockingQueue<>(100);
     private final RemoteIo mRemoteIo;
     private final Consumer<RemoteEvent> mRemoteFrameConsumer = this::processFrameProto;
-    private final int mDisplayId;
-    private int mFrameIndex = 0;
     private StorageFile mStorageFile;
     private DecoderThread mDecoderThread;
 
+    private VideoManagerProtoHelper mProtoHelper;
+
+    private interface VideoManagerProtoHelper {
+
+        Optional<EncodedFrame> extractEncodedFrame(RemoteEvent event);
+
+        RemoteEvent createFrameProto(byte[] data, int flags, long presentationTimeUs);
+
+        String getVideoManagerId();
+    }
+
     private VideoManager(
-            int displayId, RemoteIo remoteIo, MediaCodec mediaCodec, boolean recordEncoderOutput) {
-        mDisplayId = displayId;
+            VideoManagerProtoHelper protoHelper, RemoteIo remoteIo, MediaCodec mediaCodec,
+            boolean recordEncoderOutput) {
+        mProtoHelper = protoHelper;
         mRemoteIo = remoteIo;
         mMediaCodec = mediaCodec;
         mRecordEncoderOutput = recordEncoderOutput;
 
-        mCallbackThread = new HandlerThread("VideoManager-" + displayId);
+        mCallbackThread = new HandlerThread("VideoManager-" + protoHelper.getVideoManagerId());
         mCallbackThread.start();
         mediaCodec.setCallback(new MediaCodecCallback(), new Handler(mCallbackThread.getLooper()));
 
@@ -84,26 +96,49 @@ public class VideoManager {
         }
 
         if (recordEncoderOutput) {
-            mStorageFile = new StorageFile(displayId);
+            mStorageFile = new StorageFile(protoHelper.getVideoManagerId());
         }
     }
 
-    /** Creates a VideoManager instance for encoding. */
-    public static VideoManager createEncoder(
+    /** Creates a VideoManager instance for encoding display stream. */
+    public static VideoManager createDisplayEncoder(
             int displayId, RemoteIo remoteIo, boolean recordEncoderOutput) {
         try {
             MediaCodec mediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
-            return new VideoManager(displayId, remoteIo, mediaCodec, recordEncoderOutput);
+            return new VideoManager(new DisplayProtoHelper(displayId), remoteIo, mediaCodec,
+                    recordEncoderOutput);
         } catch (IOException e) {
             throw new AssertionError("Unhandled exception", e);
         }
     }
 
-    /** Creates a VideoManager instance for decoding. */
-    public static VideoManager createDecoder(int displayId, RemoteIo remoteIo) {
+    /** Creates a VideoManager instance for decoding display stream. */
+    public static VideoManager createDisplayDecoder(int displayId, RemoteIo remoteIo) {
         try {
             MediaCodec mediaCodec = MediaCodec.createDecoderByType(MIME_TYPE);
-            return new VideoManager(displayId, remoteIo, mediaCodec, false);
+            return new VideoManager(new DisplayProtoHelper(displayId), remoteIo, mediaCodec, false);
+        } catch (IOException e) {
+            throw new AssertionError("Unhandled exception", e);
+        }
+    }
+
+    /** Creates a VideoManager instance for encoding camera stream. */
+    public static VideoManager createCameraEncoder(
+            String cameraId, RemoteIo remoteIo, boolean recordEncoderOutput) {
+        try {
+            MediaCodec mediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
+            return new VideoManager(new CameraProtoHelper(cameraId), remoteIo, mediaCodec,
+                    recordEncoderOutput);
+        } catch (IOException e) {
+            throw new AssertionError("Unhandled exception", e);
+        }
+    }
+
+    /** Creates a VideoManager instance for decoding camera stream. */
+    public static VideoManager createCameraDecoder(String cameraId, RemoteIo remoteIo) {
+        try {
+            MediaCodec mediaCodec = MediaCodec.createDecoderByType(MIME_TYPE);
+            return new VideoManager(new CameraProtoHelper(cameraId), remoteIo, mediaCodec, false);
         } catch (IOException e) {
             throw new AssertionError("Unhandled exception", e);
         }
@@ -123,8 +158,14 @@ public class VideoManager {
                 mDecoderThread.exit();
             }
             mCallbackThread.quitSafely();
-            mMediaCodec.flush();
-            mMediaCodec.stop();
+            try {
+                mMediaCodec.flush();
+                mMediaCodec.stop();
+            } catch (IllegalStateException exception) {
+                // It's possible the codec transitioned from "executing" state, because
+                // the surface was already released.
+                Log.w(TAG, "IllegalStateException while flushing codec", exception);
+            }
             mMediaCodec.release();
             mMediaCodec = null;
         }
@@ -169,22 +210,9 @@ public class VideoManager {
         mDecoderThread.start();
     }
 
-    private RemoteEvent createFrameProto(byte[] data, int flags, long presentationTimeUs) {
-        return RemoteEvent.newBuilder()
-                .setDisplayId(mDisplayId)
-                .setDisplayFrame(
-                        DisplayFrame.newBuilder()
-                                .setFrameData(ByteString.copyFrom(data))
-                                .setFrameIndex(mFrameIndex++)
-                                .setPresentationTimeUs(presentationTimeUs)
-                                .setFlags(flags))
-                .build();
-    }
-
     private void processFrameProto(RemoteEvent event) {
-        if (event.hasDisplayFrame() && event.getDisplayId() == mDisplayId) {
-            Uninterruptibles.putUninterruptibly(mEventQueue, event);
-        }
+        mProtoHelper.extractEncodedFrame(event).ifPresent(
+                encodedFrame -> putUninterruptibly(mEventQueue, encodedFrame));
     }
 
     private final class MediaCodecCallback extends MediaCodec.Callback {
@@ -210,20 +238,26 @@ public class VideoManager {
                     }
 
                     mRemoteIo.sendMessage(
-                            createFrameProto(
+                            mProtoHelper.createFrameProto(
                                     data, bufferInfo.flags, bufferInfo.presentationTimeUs));
                 } else {
-                    mMediaCodec.releaseOutputBuffer(i, true);
+                    try {
+                        mMediaCodec.releaseOutputBuffer(i, true);
+                    } catch (CodecException exception) {
+                        Log.e(TAG, "Codec exception ", exception);
+                    }
                 }
             }
         }
 
         @Override
-        public void onError(@NonNull MediaCodec mediaCodec, @NonNull CodecException e) {}
+        public void onError(@NonNull MediaCodec mediaCodec, @NonNull CodecException e) {
+        }
 
         @Override
         public void onOutputFormatChanged(
-                @NonNull MediaCodec mediaCodec, @NonNull MediaFormat mediaFormat) {}
+                @NonNull MediaCodec mediaCodec, @NonNull MediaFormat mediaFormat) {
+        }
     }
 
     private class DecoderThread extends Thread {
@@ -240,25 +274,31 @@ public class VideoManager {
         public void run() {
             while (!(Thread.interrupted() && mExit.get())) {
                 try {
-                    RemoteEvent event = mEventQueue.take();
+                    EncodedFrame encodedFrame = mEventQueue.take();
                     int inputBuffer = mFreeInputBuffers.take();
 
                     synchronized (mCodecLock) {
                         if (mMediaCodec == null) {
                             continue;
                         }
-                        ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
-                        byte[] data = event.getDisplayFrame().getFrameData().toByteArray();
-                        Objects.requireNonNull(inBuffer).put(data);
-                        if (mRecordEncoderOutput) {
-                            mStorageFile.writeOutputFile(data);
+                        try {
+                            ByteBuffer inBuffer = mMediaCodec.getInputBuffer(inputBuffer);
+                            byte[] data = encodedFrame.getFrameData().toByteArray();
+                            Objects.requireNonNull(inBuffer).put(data);
+                            if (mRecordEncoderOutput) {
+                                mStorageFile.writeOutputFile(data);
+                            }
+                            mMediaCodec.queueInputBuffer(
+                                    inputBuffer,
+                                    0,
+                                    encodedFrame.getFrameData().size(),
+                                    encodedFrame.getPresentationTimeUs(),
+                                    encodedFrame.getFlags());
+                        } catch (MediaCodec.CodecException exception) {
+                            Log.e(TAG, "MediaCodec exception while queuing input", exception);
+                            mMediaCodec.release();
+                            mMediaCodec = null;
                         }
-                        mMediaCodec.queueInputBuffer(
-                                inputBuffer,
-                                0,
-                                event.getDisplayFrame().getFrameData().size(),
-                                event.getDisplayFrame().getPresentationTimeUs(),
-                                event.getDisplayFrame().getFlags());
                     }
                 } catch (InterruptedException e) {
                     if (mExit.get()) {
@@ -275,8 +315,8 @@ public class VideoManager {
 
         private OutputStream mOutputStream;
 
-        private StorageFile(int displayId) {
-            String filePath = DIR + "/" + FILENAME + "_" + displayId + ".h264";
+        private StorageFile(String id) {
+            String filePath = DIR + "/" + FILENAME + "_" + id + ".h264";
             File f = new File(Environment.getExternalStorageDirectory(), filePath);
             try {
                 mOutputStream = new BufferedOutputStream(new FileOutputStream(f));
@@ -306,6 +346,82 @@ public class VideoManager {
             } catch (IOException e) {
                 Log.e(TAG, "Error closing output file", e);
             }
+        }
+    }
+
+    private static class DisplayProtoHelper implements VideoManagerProtoHelper {
+        private final int mDisplayId;
+        private int mFrameIndex = 0;
+
+        DisplayProtoHelper(int displayId) {
+            mDisplayId = displayId;
+        }
+
+        @Override
+        public Optional<EncodedFrame> extractEncodedFrame(RemoteEvent event) {
+            if (event.hasDisplayFrame() && event.getDisplayId() == mDisplayId) {
+                return Optional.of(event.getDisplayFrame());
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public RemoteEvent createFrameProto(byte[] data, int flags, long presentationTimeUs) {
+            return RemoteEvent.newBuilder()
+                    .setDisplayId(mDisplayId)
+                    .setDisplayFrame(
+                            EncodedFrame.newBuilder()
+                                    .setFrameData(ByteString.copyFrom(data))
+                                    .setFrameIndex(mFrameIndex++)
+                                    .setPresentationTimeUs(presentationTimeUs)
+                                    .setFlags(flags))
+                    .build();
+        }
+
+        @Override
+        public String getVideoManagerId() {
+            return "display" + mDisplayId;
+        }
+    }
+
+    private static class CameraProtoHelper implements VideoManagerProtoHelper {
+        private final String mCameraId;
+        private int mFrameIndex = 0;
+
+        CameraProtoHelper(String cameraId) {
+            mCameraId = cameraId;
+        }
+
+        @Override
+        public Optional<EncodedFrame> extractEncodedFrame(RemoteEvent event) {
+            if (event.hasCameraFrame() && event.getCameraFrame().getCameraId().equals(mCameraId)) {
+                Log.d(TAG, "Received encoded frame "
+                        + event.getCameraFrame().getCameraFrame().getFrameIndex());
+                return Optional.of(event.getCameraFrame().getCameraFrame());
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public RemoteEvent createFrameProto(byte[] data, int flags, long presentationTimeUs) {
+            Log.d(TAG, "Sending " + data.length + "B encoded camera frame");
+            return RemoteEvent.newBuilder()
+                    .setCameraFrame(
+                            RemoteEventProto.CameraFrame.newBuilder()
+                                    .setCameraId(mCameraId)
+                                    .setCameraFrame(
+                                            EncodedFrame.newBuilder()
+                                                    .setFrameData(ByteString.copyFrom(data))
+                                                    .setFrameIndex(mFrameIndex++)
+                                                    .setPresentationTimeUs(presentationTimeUs)
+                                                    .setFlags(flags))
+                    )
+                    .build();
+        }
+
+        @Override
+        public String getVideoManagerId() {
+            return "camera" + mCameraId;
         }
     }
 }
