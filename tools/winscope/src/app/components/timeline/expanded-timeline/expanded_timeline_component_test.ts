@@ -27,8 +27,8 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {TimelineData} from 'app/timeline_data';
 import {assertDefined} from 'common/assert_utils';
-import {RealTimestamp} from 'common/time';
-import {Transition} from 'flickerlib/common';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -41,6 +41,12 @@ describe('ExpandedTimelineComponent', () => {
   let component: ExpandedTimelineComponent;
   let htmlElement: HTMLElement;
   let timelineData: TimelineData;
+  const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+  const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+  const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+  const time30 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(30n);
+  const time60 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(60n);
+  const time110 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(110n);
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -72,22 +78,46 @@ describe('ExpandedTimelineComponent', () => {
     timelineData = new TimelineData();
     const traces = new TracesBuilder()
       .setEntries(TraceType.SURFACE_FLINGER, [{}])
-      .setTimestamps(TraceType.SURFACE_FLINGER, [new RealTimestamp(10n)])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [time10])
       .setEntries(TraceType.WINDOW_MANAGER, [{}])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [new RealTimestamp(11n)])
+      .setTimestamps(TraceType.WINDOW_MANAGER, [time11])
       .setEntries(TraceType.TRANSACTIONS, [{}])
-      .setTimestamps(TraceType.TRANSACTIONS, [new RealTimestamp(12n)])
+      .setTimestamps(TraceType.TRANSACTIONS, [time12])
       .setEntries(TraceType.TRANSITION, [
-        {
-          createTime: {unixNanos: 10n},
-          finishTime: {unixNanos: 30n},
-        } as Transition,
-        {
-          createTime: {unixNanos: 60n},
-          finishTime: {unixNanos: 110n},
-        } as Transition,
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: time30}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: time10}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
+        new PropertyTreeBuilder()
+          .setIsRoot(true)
+          .setRootId('TransitionsTraceEntry')
+          .setName('transition')
+          .setChildren([
+            {
+              name: 'wmData',
+              children: [{name: 'finishTimeNs', value: time110}],
+            },
+            {
+              name: 'shellData',
+              children: [{name: 'dispatchTimeNs', value: time60}],
+            },
+            {name: 'aborted', value: false},
+          ])
+          .build(),
       ])
-      .setTimestamps(TraceType.TRANSITION, [new RealTimestamp(10n), new RealTimestamp(60n)])
+      .setTimestamps(TraceType.TRANSITION, [time10, time60])
       .setTimestamps(TraceType.PROTO_LOG, [])
       .build();
     timelineData.initialize(traces, undefined);
@@ -101,10 +131,14 @@ describe('ExpandedTimelineComponent', () => {
   it('renders all timelines', () => {
     fixture.detectChanges();
 
-    const timelineElements = htmlElement.querySelectorAll('.timeline.row single-timeline');
+    const timelineElements = htmlElement.querySelectorAll(
+      '.timeline.row single-timeline',
+    );
     expect(timelineElements.length).toEqual(4);
 
-    const transitionElement = htmlElement.querySelectorAll('.timeline.row transition-timeline');
+    const transitionElement = htmlElement.querySelectorAll(
+      '.timeline.row transition-timeline',
+    );
     expect(transitionElement.length).toEqual(1);
   });
 
@@ -116,7 +150,7 @@ describe('ExpandedTimelineComponent', () => {
 
     // initially only first entry of SF is set
     singleTimelines.forEach((timeline) => {
-      if (timeline.trace.type === TraceType.SURFACE_FLINGER) {
+      if (assertDefined(timeline.trace).type === TraceType.SURFACE_FLINGER) {
         const entry = assertDefined(timeline.selectedEntry);
         expect(entry.getFullTrace().type).toBe(TraceType.SURFACE_FLINGER);
       } else {
@@ -124,13 +158,17 @@ describe('ExpandedTimelineComponent', () => {
       }
     });
 
-    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    const transitionTimeline = assertDefined(
+      component.transitionTimelines,
+    ).first;
     assertDefined(transitionTimeline.selectedEntry);
   });
 
   it('passes selectedEntry of correct type into each timeline on position change', () => {
     // 3 out of the 5 traces have timestamps before or at 11n
-    component.timelineData.setPosition(TracePosition.fromTimestamp(new RealTimestamp(11n)));
+    assertDefined(component.timelineData).setPosition(
+      TracePosition.fromTimestamp(time11),
+    );
     fixture.detectChanges();
 
     const singleTimelines = assertDefined(component.singleTimelines);
@@ -139,24 +177,34 @@ describe('ExpandedTimelineComponent', () => {
     singleTimelines.forEach((timeline) => {
       // protolog and transactions traces have no timestamps before current position
       if (
-        timeline.trace.type === TraceType.PROTO_LOG ||
-        timeline.trace.type === TraceType.TRANSACTIONS
+        assertDefined(timeline.trace).type === TraceType.PROTO_LOG ||
+        assertDefined(timeline.trace).type === TraceType.TRANSACTIONS
       ) {
         expect(timeline.selectedEntry).toBeUndefined();
       } else {
         const selectedEntry = assertDefined(timeline.selectedEntry);
-        expect(selectedEntry.getFullTrace().type).toEqual(timeline.trace.type);
+        expect(selectedEntry.getFullTrace().type).toEqual(
+          assertDefined(timeline.trace).type,
+        );
       }
     });
 
-    const transitionTimeline = assertDefined(component.transitionTimelines).first;
+    const transitionTimeline = assertDefined(
+      component.transitionTimelines,
+    ).first;
     const selectedEntry = assertDefined(transitionTimeline.selectedEntry);
-    expect(selectedEntry.getFullTrace().type).toEqual(transitionTimeline.trace.type);
+    expect(selectedEntry.getFullTrace().type).toEqual(
+      assertDefined(transitionTimeline.trace).type,
+    );
   });
 
   it('getAllLoadedTraces causes timelines to render in correct order', () => {
     // traces in timelineData are in order of being set in Traces API
-    expect(component.timelineData.getTraces().mapTrace((trace) => trace.type)).toEqual([
+    expect(
+      assertDefined(component.timelineData)
+        .getTraces()
+        .mapTrace((trace) => trace.type),
+    ).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
       TraceType.TRANSACTIONS,
@@ -165,7 +213,9 @@ describe('ExpandedTimelineComponent', () => {
     ]);
 
     // getAllLoadedTraces returns traces in enum order
-    expect(component.getTracesSortedByDisplayOrder().map((trace) => trace.type)).toEqual([
+    expect(
+      component.getTracesSortedByDisplayOrder().map((trace) => trace.type),
+    ).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.WINDOW_MANAGER,
       TraceType.TRANSACTIONS,

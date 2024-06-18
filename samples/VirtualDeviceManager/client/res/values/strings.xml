@@ -7,13 +7,5 @@
     <string name="display_resize" translatable="false">Resize</string>
     <string name="display_fullscreen" translatable="false">Fullscreen</string>
     <string name="display_close" translatable="false">Close</string>
-
     <string name="input" translatable="false">Input</string>
-
-    <string name="dpad_up" translatable="false">Up</string>
-    <string name="dpad_down" translatable="false">Down</string>
-    <string name="dpad_left" translatable="false">Left</string>
-    <string name="dpad_right" translatable="false">Right</string>
-    <string name="dpad_center" translatable="false">Center</string>
-    <string name="nav_touchpad_move" translatable="false">Navigation Touchpad</string>
 </resources>

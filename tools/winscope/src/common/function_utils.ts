@@ -31,7 +31,9 @@ export class FunctionUtils {
     Object.assign(ret, b);
 
     const assignMethods = (dst: object, src: object) => {
-      for (const methodName of Object.getOwnPropertyNames(Object.getPrototypeOf(src))) {
+      for (const methodName of Object.getOwnPropertyNames(
+        Object.getPrototypeOf(src),
+      )) {
         const method = (src as any)[methodName];
         (dst as any)[methodName] = method;
       }

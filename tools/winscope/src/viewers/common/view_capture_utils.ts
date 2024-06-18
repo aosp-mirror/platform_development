@@ -20,7 +20,8 @@ import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 
 export class ViewCaptureUtils {
-  static readonly NEXUS_LAUNCHER_PACKAGE_NAME = 'com.google.android.apps.nexuslauncher';
+  static readonly NEXUS_LAUNCHER_PACKAGE_NAME =
+    'com.google.android.apps.nexuslauncher';
 
   static async getPackageNames(traces: Traces): Promise<string[]> {
     const packageNames: string[] = [];
@@ -32,7 +33,9 @@ export class ViewCaptureUtils {
     ].filter((trace) => trace !== undefined) as Array<Trace<object>>;
 
     for (const trace of viewCaptureTraces) {
-      const packageName = await trace.customQuery(CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME);
+      const packageName = await trace.customQuery(
+        CustomQueryType.VIEW_CAPTURE_PACKAGE_NAME,
+      );
       if (packageNames.includes(packageName)) {
         continue;
       }

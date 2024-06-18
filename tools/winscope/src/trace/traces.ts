@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from '../common/time';
+import {Timestamp} from 'common/time';
 import {AbsoluteFrameIndex} from './index_types';
 import {Trace} from './trace';
 import {TraceEntryTypeMap, TraceType} from './trace_type';
@@ -22,12 +22,14 @@ import {TraceEntryTypeMap, TraceType} from './trace_type';
 export class Traces {
   private traces = new Map<TraceType, Trace<{}>>();
 
-  setTrace<T extends TraceType>(type: T, trace: Trace<TraceEntryTypeMap[T]['legacy']>) {
+  setTrace<T extends TraceType>(type: T, trace: Trace<TraceEntryTypeMap[T]>) {
     this.traces.set(type, trace);
   }
 
-  getTrace<T extends TraceType>(type: T): Trace<TraceEntryTypeMap[T]['legacy']> | undefined {
-    return this.traces.get(type) as Trace<TraceEntryTypeMap[T]['legacy']> | undefined;
+  getTrace<T extends TraceType>(
+    type: T,
+  ): Trace<TraceEntryTypeMap[T]> | undefined {
+    return this.traces.get(type) as Trace<TraceEntryTypeMap[T]> | undefined;
   }
 
   deleteTrace<T extends TraceType>(type: T) {
@@ -64,7 +66,9 @@ export class Traces {
     return result;
   }
 
-  forEachFrame(callback: (traces: Traces, index: AbsoluteFrameIndex) => void): void {
+  forEachFrame(
+    callback: (traces: Traces, index: AbsoluteFrameIndex) => void,
+  ): void {
     let startFrameIndex: AbsoluteFrameIndex = Number.MAX_VALUE;
     let endFrameIndex: AbsoluteFrameIndex = Number.MIN_VALUE;
 

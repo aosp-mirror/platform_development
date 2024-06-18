@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 import {CommonModule} from '@angular/common';
-import {NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
 import {FormsModule} from '@angular/forms';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStore} from 'common/persistent_store';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
+import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
 import {HierarchyComponent} from './hierarchy_component';
 
 describe('HierarchyComponent', () => {
@@ -42,7 +47,7 @@ describe('HierarchyComponent', () => {
         HierarchyComponent,
         TreeComponent,
         TreeNodeComponent,
-        TreeNodeDataViewComponent,
+        HierarchyTreeNodeDataViewComponent,
       ],
       imports: [
         CommonModule,
@@ -52,19 +57,23 @@ describe('HierarchyComponent', () => {
         MatFormFieldModule,
         BrowserAnimationsModule,
         FormsModule,
+        MatIconModule,
+        MatTooltipModule,
       ],
-      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HierarchyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = new HierarchyTreeBuilder()
-      .setStableId('RootNode1')
-      .setName('Root node')
-      .setChildren([new HierarchyTreeBuilder().setName('Child node').build()])
-      .build();
+    const tree = TreeNodeUtils.makeUiHierarchyNode({
+      id: 'RootNode1',
+      name: 'Root node',
+    });
+    tree.addOrReplaceChild(
+      TreeNodeUtils.makeUiHierarchyNode({id: 'Child1', name: 'Child node'}),
+    );
+    component.tree = tree;
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -109,7 +118,7 @@ describe('HierarchyComponent', () => {
     const box = htmlElement.querySelector('.view-controls input');
     expect(box).toBeTruthy();
 
-    const spy = spyOn(component, 'updateTree');
+    const spy = spyOn(component, 'onUserOptionChange');
     (box as HTMLInputElement).checked = true;
     (box as HTMLInputElement).dispatchEvent(new Event('click'));
     fixture.detectChanges();
@@ -151,7 +160,7 @@ describe('HierarchyComponent', () => {
     const inputEl = htmlElement.querySelector('.title-filter input');
     expect(inputEl).toBeTruthy();
 
-    const spy = spyOn(component, 'filterTree');
+    const spy = spyOn(component, 'onFilterChange');
     (inputEl as HTMLInputElement).value = 'Root';
     (inputEl as HTMLInputElement).dispatchEvent(new Event('input'));
     fixture.detectChanges();

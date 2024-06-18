@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,150 +13,89 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Chip} from 'viewers/common/chip';
-import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 
-class HierarchyTreeBuilder {
-  stableId = '';
-  name = '';
-  kind = '';
-  children: HierarchyTreeNode[] = [];
-  shortName?: string;
-  type?: string;
-  id?: string | number;
-  layerId?: number;
-  displayId?: number;
-  stackId?: number;
-  isVisible?: boolean;
-  isMissing?: boolean;
-  hwcCompositionType?: number;
-  zOrderRelativeOfId?: number;
-  zOrderRelativeOf?: any;
-  zOrderRelativeParentOf?: any;
-  isRootLayer?: boolean;
-  showInFilteredView = true;
-  showInOnlyVisibleView?: boolean;
-  simplifyNames = false;
-  chips: Chip[] = [];
-  diffType?: string;
-  skip?: any;
+import {assertDefined} from 'common/assert_utils';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {OperationChain} from 'trace/tree_node/operations/operation_chain';
+import {PropertiesProvider} from 'trace/tree_node/properties_provider';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {PropertyTreeNodeFactory} from 'trace/tree_node/property_tree_node_factory';
+import {ChildProperty, PropertyTreeBuilder} from './property_tree_builder';
+import {TreeBuilder} from './tree_builder';
 
-  setId(id: string | number) {
-    this.id = id;
+export class HierarchyTreeBuilder extends TreeBuilder<
+  HierarchyTreeNode,
+  ChildHierarchy
+> {
+  private properties: any;
+  private additionalProperties: ChildProperty[] = [];
+
+  setId(value: any): this {
+    this.id = value;
     return this;
   }
 
-  setKind(kind: string) {
-    this.kind = kind;
+  setProperties(value: any): this {
+    this.properties = value;
     return this;
   }
 
-  setStableId(stableId: string) {
-    this.stableId = stableId;
+  addChildProperty(value: ChildProperty): this {
+    this.additionalProperties.push(value);
     return this;
   }
 
-  setName(name: string) {
-    this.name = name;
-    return this;
+  protected override makeRootNode(): HierarchyTreeNode {
+    const rootId = this.makeHierarchyNodeId();
+
+    const propertiesTree = new PropertyTreeNodeFactory().makeProtoProperty(
+      rootId,
+      assertDefined(this.name),
+      this.properties,
+    );
+    this.additionalProperties.forEach((property) => {
+      const childNode = new PropertyTreeBuilder()
+        .setRootId(propertiesTree.id)
+        .setName(property.name)
+        .setSource(property.source ?? propertiesTree.source)
+        .setValue(property.value)
+        .setChildren(property.children ?? [])
+        .build();
+      propertiesTree.addOrReplaceChild(childNode);
+    });
+    const provider = new PropertiesProvider(
+      propertiesTree,
+      async () => propertiesTree,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+    );
+
+    return new HierarchyTreeNode(rootId, assertDefined(this.name), provider);
   }
 
-  setShortName(shortName: string) {
-    this.shortName = shortName;
-    return this;
+  protected override addOrReplaceChildNode(
+    rootNode: HierarchyTreeNode,
+    child: ChildHierarchy,
+  ): void {
+    const childNode = new HierarchyTreeBuilder()
+      .setId(child.id)
+      .setName(child.name)
+      .setProperties(child.properties)
+      .setChildren(child.children ?? [])
+      .build();
+    rootNode.addOrReplaceChild(childNode);
+    childNode.setZParent(rootNode);
   }
 
-  setChips(chips: Chip[]) {
-    this.chips = chips;
-    return this;
-  }
-
-  setDiffType(diffType: string) {
-    this.diffType = diffType;
-    return this;
-  }
-
-  setChildren(children: HierarchyTreeNode[]) {
-    this.children = children;
-    return this;
-  }
-
-  setDisplayId(displayId: number) {
-    this.displayId = displayId;
-    return this;
-  }
-
-  setLayerId(layerId: number) {
-    this.layerId = layerId;
-    return this;
-  }
-
-  setStackId(stackId: number) {
-    this.stackId = stackId;
-    return this;
-  }
-
-  setIsVisible(isVisible: boolean) {
-    this.isVisible = isVisible;
-    return this;
-  }
-
-  setVisibleView(showInOnlyVisibleView: boolean) {
-    this.showInOnlyVisibleView = showInOnlyVisibleView;
-    return this;
-  }
-
-  setFilteredView(showInFilteredView: boolean) {
-    this.showInFilteredView = showInFilteredView;
-    return this;
-  }
-
-  setSimplifyNames(simplifyNames: boolean) {
-    this.simplifyNames = simplifyNames;
-    return this;
-  }
-
-  build(): HierarchyTreeNode {
-    const node = new HierarchyTreeNode(this.name, this.kind, this.stableId, this.children);
-
-    node.chips = this.chips;
-    node.showInFilteredView = this.showInFilteredView;
-    node.simplifyNames = this.simplifyNames;
-
-    if (this.id) {
-      node.id = this.id;
-    }
-
-    if (this.diffType) {
-      node.diffType = this.diffType;
-    }
-
-    if (this.displayId) {
-      node.displayId = this.displayId;
-    }
-
-    if (this.layerId) {
-      node.layerId = this.layerId;
-    }
-
-    if (this.stackId) {
-      node.stackId = this.stackId;
-    }
-
-    if (this.isVisible) {
-      node.isVisible = this.isVisible;
-    }
-
-    if (this.showInOnlyVisibleView) {
-      node.showInOnlyVisibleView = this.showInOnlyVisibleView;
-    }
-
-    if (this.shortName) {
-      node.shortName = this.shortName;
-    }
-
-    return node;
+  private makeHierarchyNodeId() {
+    return `${this.id} ${this.name}`;
   }
 }
 
-export {HierarchyTreeBuilder};
+export interface ChildHierarchy {
+  id: string | number;
+  name: string;
+  properties?: any;
+  children?: ChildHierarchy[];
+}

@@ -57,7 +57,7 @@ class FileUtils {
 
   static async unzipFile(
     file: Blob,
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING,
   ): Promise<File[]> {
     const unzippedFiles: File[] = [];
     const zip = new JSZip();

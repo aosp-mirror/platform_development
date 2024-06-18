@@ -16,7 +16,7 @@
 
 import {Color} from 'app/colors';
 import {TRACE_INFO} from 'app/trace_info';
-import {Point} from 'common/geometry_utils';
+import {Point} from 'common/geometry_types';
 import {Padding} from 'common/padding';
 import {Timestamp} from 'common/time';
 import {CanvasMouseHandler} from './canvas_mouse_handler';
@@ -27,6 +27,10 @@ import {MiniCanvasDrawerData, TimelineEntries} from './mini_canvas_drawer_data';
 import {MiniTimelineDrawer} from './mini_timeline_drawer';
 import {MiniTimelineDrawerInput} from './mini_timeline_drawer_input';
 
+/**
+ * Mini timeline drawer implementation
+ * @docs-private
+ */
 export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   ctx: CanvasRenderingContext2D;
   handler: CanvasMouseHandler;
@@ -69,7 +73,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     private inputGetter: () => MiniTimelineDrawerInput,
     private onPointerPositionDragging: (pos: Timestamp) => void,
     private onPointerPositionChanged: (pos: Timestamp) => void,
-    private onUnhandledClick: (pos: Timestamp) => void
+    private onUnhandledClick: (pos: Timestamp) => void,
   ) {
     const ctx = canvas.getContext('2d');
 
@@ -82,7 +86,11 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const onUnhandledClickInternal = async (mousePoint: Point) => {
       this.onUnhandledClick(this.input.transformer.untransform(mousePoint.x));
     };
-    this.handler = new CanvasMouseHandlerImpl(this, 'pointer', onUnhandledClickInternal);
+    this.handler = new CanvasMouseHandlerImpl(
+      this,
+      'pointer',
+      onUnhandledClickInternal,
+    );
 
     this.activePointer = new DraggableCanvasObjectImpl(
       this,
@@ -112,7 +120,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
         this.input.selectedPosition = x;
         this.onPointerPositionChanged(this.input.transformer.untransform(x));
       },
-      () => this.usableRange
+      () => this.usableRange,
     );
   }
 
@@ -191,7 +199,6 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
   }
 
   private drawTimelineGuides() {
-    const edgeBarHeight = (this.innerHeight * 1) / 2;
     const edgeBarWidth = 4;
 
     const boldBarHeight = (this.innerHeight * 1) / 5;
@@ -203,10 +210,12 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const minSpacing = lightBarWidth * 7;
     const barsInSetWidth = 9 * lightBarWidth + boldBarWidth;
     const barSets = Math.floor(
-      (this.getWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing)
+      (this.getWidth() - edgeBarWidth * 2 - minSpacing) /
+        (barsInSetWidth + 10 * minSpacing),
     );
     const bars = barSets * 10;
-    const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
+    const spacing =
+      (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
     let start = edgeBarWidth + spacing;
     for (let i = 1; i < bars; i++) {
       if (i % 10 === 0) {
@@ -216,7 +225,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
           start,
           this.padding.top + this.innerHeight - boldBarHeight,
           boldBarWidth,
-          boldBarHeight
+          boldBarHeight,
         );
         start += boldBarWidth; // TODO: Shift a bit
       } else {
@@ -226,7 +235,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
           start,
           this.padding.top + this.innerHeight - lightBarHeight,
           lightBarWidth,
-          lightBarHeight
+          lightBarHeight,
         );
         start += lightBarWidth;
       }
