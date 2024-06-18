@@ -47,7 +47,6 @@ class Mapper3D {
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
   private panScreenDistance = new Distance2D(0, 0);
-  private showOnlyVisibleMode = false; // by default show all
   private currentGroupId = 0; // default stack id is usually 0
   private shadingModeIndex = 0;
   private allowedShadingModes: ShadingMode[] = [ShadingMode.GRADIENT];
@@ -103,14 +102,6 @@ class Mapper3D {
     this.panScreenDistance.dy = 0;
   }
 
-  getShowOnlyVisibleMode(): boolean {
-    return this.showOnlyVisibleMode;
-  }
-
-  setShowOnlyVisibleMode(enabled: boolean) {
-    this.showOnlyVisibleMode = enabled;
-  }
-
   getCurrentGroupId(): number {
     return this.currentGroupId;
   }
@@ -163,10 +154,6 @@ class Mapper3D {
     );
   }
 
-  private compareDepth(a: UiRect, b: UiRect): number {
-    return a.depth > b.depth ? -1 : 1;
-  }
-
   computeScene(): Scene3D {
     const rects2d = this.selectRectsToDraw(this.rects);
     rects2d.sort(this.compareDepth);
@@ -188,13 +175,12 @@ class Mapper3D {
     return scene;
   }
 
-  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
-    rects = rects.filter((rect) => rect.groupId === this.currentGroupId);
-    if (this.showOnlyVisibleMode) {
-      rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
-    }
+  private compareDepth(a: UiRect, b: UiRect): number {
+    return b.depth - a.depth;
+  }
 
-    return rects;
+  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
+    return rects.filter((rect) => rect.groupId === this.currentGroupId);
   }
 
   private computeRects(rects2d: UiRect[]): Rect3D[] {

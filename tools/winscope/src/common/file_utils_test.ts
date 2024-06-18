@@ -18,15 +18,9 @@ import {FileUtils} from './file_utils';
 
 describe('FileUtils', () => {
   it('extracts file extensions', () => {
-    expect(FileUtils.getFileExtension(new File([], 'winscope.zip'))).toEqual(
-      'zip',
-    );
-    expect(FileUtils.getFileExtension(new File([], 'win.scope.zip'))).toEqual(
-      'zip',
-    );
-    expect(FileUtils.getFileExtension(new File([], 'winscopezip'))).toEqual(
-      undefined,
-    );
+    expect(FileUtils.getFileExtension('winscope.zip')).toEqual('zip');
+    expect(FileUtils.getFileExtension('win.scope.zip')).toEqual('zip');
+    expect(FileUtils.getFileExtension('winscopezip')).toEqual(undefined);
   });
 
   it('removes directory from filename', () => {

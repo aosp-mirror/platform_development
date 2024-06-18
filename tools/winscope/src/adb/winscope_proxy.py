@@ -61,7 +61,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '2.0.0'
+VERSION = '2.1.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -192,8 +192,28 @@ class TraceTarget:
 TRACE_TARGETS = {
     "view_capture_trace": TraceTarget(
         File('/data/misc/wmtrace/view_capture_trace.zip', "view_capture_trace.zip"),
-        'su root settings put global view_capture_enabled 1\necho "View capture trace started."',
-        "su root sh -c 'cmd launcherapps dump-view-hierarchies >/data/misc/wmtrace/view_capture_trace.zip'; su root settings put global view_capture_enabled 0"
+    f"""
+if is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.viewcapture"
+    }}
+}}
+EOF
+    echo 'ViewCapture tracing (perfetto) configured to start along the other perfetto traces'
+else
+    su root settings put global view_capture_enabled 1
+    echo 'ViewCapture tracing (legacy) started.'
+fi
+""",
+    """
+if ! is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
+    su root sh -c 'cmd launcherapps dump-view-hierarchies >/data/misc/wmtrace/view_capture_trace.zip'
+    su root settings put global view_capture_enabled 0
+    echo 'ViewCapture tracing (legacy) stopped.'
+fi
+"""
     ),
     "window_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
@@ -363,13 +383,12 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 buffers: {{
-    size_kb: 50000
+    size_kb: 80000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 0
-flush_period_ms: 1000
+file_write_period_ms: 999999999
 write_into_file: true
-max_file_size_bytes: 1000000000
 unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
 

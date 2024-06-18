@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ComponentFixture} from '@angular/core/testing';
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
@@ -193,7 +194,7 @@ class UnitTestUtils {
     const traces = new Traces();
     parsersArray.forEach((parser) => {
       const trace = Trace.fromParser(parser);
-      traces.setTrace(parser.getTraceType(), trace);
+      traces.addTrace(trace);
     });
 
     const tracesParsers = await new TracesParserFactory().createParsers(
@@ -241,7 +242,7 @@ class UnitTestUtils {
   }
 
   static async getImeTraceEntries(): Promise<
-    Map<TraceType, HierarchyTreeNode>
+    [Map<TraceType, HierarchyTreeNode>, Map<TraceType, HierarchyTreeNode>]
   > {
     let surfaceFlingerEntry: HierarchyTreeNode | undefined;
     {
@@ -277,7 +278,15 @@ class UnitTestUtils {
     entries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
     entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
 
-    return entries;
+    const secondEntries = new Map<TraceType, HierarchyTreeNode>();
+    secondEntries.set(
+      TraceType.INPUT_METHOD_CLIENTS,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb', 1),
+    );
+    secondEntries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
+    secondEntries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
+
+    return [entries, secondEntries];
   }
 
   static timestampEqualityTester(first: any, second: any): boolean | undefined {
@@ -285,6 +294,40 @@ class UnitTestUtils {
       return UnitTestUtils.testTimestamps(first, second);
     }
     return undefined;
+  }
+
+  static checkSectionCollapseAndExpand<T>(
+    htmlElement: HTMLElement,
+    fixture: ComponentFixture<T>,
+    selector: string,
+    sectionTitle: string,
+  ) {
+    const section = assertDefined(htmlElement.querySelector(selector));
+    const collapseButton = assertDefined(
+      section.querySelector('collapsible-section-title button'),
+    ) as HTMLElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(section.classList).toContain('collapsed');
+    const collapsedSections = assertDefined(
+      htmlElement.querySelector('collapsed-sections'),
+    );
+    const collapsedSection = assertDefined(
+      collapsedSections.querySelector('.collapsed-section'),
+    ) as HTMLElement;
+    expect(collapsedSection.textContent).toContain(sectionTitle);
+    collapsedSection.click();
+    fixture.detectChanges();
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  }
+
+  static checkNoCollapsedSectionButtons(htmlElement: HTMLElement) {
+    const collapsedSections = assertDefined(
+      htmlElement.querySelector('collapsed-sections'),
+    );
+    expect(
+      collapsedSections.querySelectorAll('.collapsed-section').length,
+    ).toEqual(0);
   }
 
   private static testTimestamps(

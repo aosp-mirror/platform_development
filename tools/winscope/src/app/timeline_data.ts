@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {INVALID_TIME_NS, TimeRange, Timestamp} from 'common/time';
+import {TimeRange, Timestamp} from 'common/time';
 import {ComponentTimestampConverter} from 'common/timestamp_converter';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
 import {Trace, TraceEntry} from 'trace/trace';
@@ -28,18 +27,18 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 export class TimelineData {
   private traces = new Traces();
   private screenRecordingVideo?: Blob;
-  private firstEntry?: TraceEntry<{}>;
-  private lastEntry?: TraceEntry<{}>;
+  private firstEntry?: TraceEntry<object>;
+  private lastEntry?: TraceEntry<object>;
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
   private explicitlySetZoomRange?: TimeRange;
   private lastReturnedCurrentPosition?: TracePosition;
   private lastReturnedFullTimeRange?: TimeRange;
   private lastReturnedCurrentEntries = new Map<
-    TraceType,
+    Trace<object>,
     TraceEntry<any> | undefined
   >();
-  private activeViewTraceType: TraceType | undefined;
+  private activeTrace: Trace<object> | undefined;
   private transitions: PropertyTreeNode[] = []; // cached trace entries to avoid TP and object creation latencies each time transition timeline is redrawn
   private timestampConverter: ComponentTimestampConverter | undefined;
 
@@ -55,14 +54,11 @@ export class TimelineData {
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
       // Filter out dumps with invalid timestamp (would mess up the timeline)
-      const isDump =
-        trace.lengthEntries === 1 &&
-        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
-      if (isDump) {
+      if (trace.isDumpWithoutTimestamp()) {
         return;
       }
 
-      this.traces.setTrace(type, trace);
+      this.traces.addTrace(trace);
     });
 
     const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
@@ -76,16 +72,18 @@ export class TimelineData {
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
 
-    const types = traces
-      .mapTrace((trace, type) => type)
+    const tracesSortedByDisplayOrder = traces
+      .mapTrace((trace) => trace)
       .filter(
-        (type) =>
-          TraceTypeUtils.isTraceTypeWithViewer(type) &&
-          type !== TraceType.SCREEN_RECORDING,
+        (trace) =>
+          TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
+          trace.type !== TraceType.SCREEN_RECORDING,
       )
-      .sort(TraceTypeUtils.compareByDisplayOrder);
-    if (types.length > 0) {
-      this.setActiveViewTraceType(types[0]);
+      .sort((a, b) => {
+        return TraceTypeUtils.compareByDisplayOrder(a.type, b.type);
+      });
+    if (tracesSortedByDisplayOrder.length > 0) {
+      this.trySetActiveTrace(tracesSortedByDisplayOrder[0]);
     }
   }
 
@@ -135,16 +133,11 @@ export class TimelineData {
   }
 
   makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
-    let trace: Trace<{}> | undefined;
-    if (this.activeViewTraceType !== undefined) {
-      trace = this.traces.getTrace(this.activeViewTraceType);
-    }
-
-    if (!trace) {
+    if (!this.activeTrace) {
       return TracePosition.fromTimestamp(timestamp);
     }
 
-    const entry = trace.findClosestEntry(timestamp);
+    const entry = this.activeTrace.findClosestEntry(timestamp);
     if (!entry) {
       return TracePosition.fromTimestamp(timestamp);
     }
@@ -152,12 +145,17 @@ export class TimelineData {
     return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
-  setActiveViewTraceType(type: TraceType) {
-    this.activeViewTraceType = type;
+  trySetActiveTrace(trace: Trace<object>): boolean {
+    const isTraceWithValidTimestamps = this.traces.hasTrace(trace);
+    if (this.activeTrace !== trace && isTraceWithValidTimestamps) {
+      this.activeTrace = trace;
+      return true;
+    }
+    return false;
   }
 
-  getActiveViewTraceType() {
-    return this.activeViewTraceType;
+  getActiveTrace() {
+    return this.activeTrace;
   }
 
   getFullTimeRange(): TimeRange {
@@ -247,13 +245,12 @@ export class TimelineData {
     );
   }
 
-  getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = this.traces.getTrace(type);
-    if (!trace || trace.lengthEntries === 0) {
+  getPreviousEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
+    if (trace.lengthEntries === 0) {
       return undefined;
     }
 
-    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
+    const currentIndex = this.findCurrentEntryFor(trace)?.getIndex();
     if (currentIndex === undefined || currentIndex === 0) {
       return undefined;
     }
@@ -261,13 +258,12 @@ export class TimelineData {
     return trace.getEntry(currentIndex - 1);
   }
 
-  getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = this.traces.getTrace(type);
-    if (!trace || trace.lengthEntries === 0) {
+  getNextEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
+    if (trace.lengthEntries === 0) {
       return undefined;
     }
 
-    const currentIndex = this.findCurrentEntryFor(type)?.getIndex();
+    const currentIndex = this.findCurrentEntryFor(trace)?.getIndex();
     if (currentIndex === undefined) {
       return trace.getEntry(0);
     }
@@ -279,36 +275,33 @@ export class TimelineData {
     return trace.getEntry(currentIndex + 1);
   }
 
-  findCurrentEntryFor(type: TraceType): TraceEntry<{}> | undefined {
+  findCurrentEntryFor(trace: Trace<object>): TraceEntry<object> | undefined {
     const position = this.getCurrentPosition();
     if (!position) {
       return undefined;
     }
 
-    const entry = TraceEntryFinder.findCorrespondingEntry(
-      assertDefined(this.traces.getTrace(type)),
-      position,
-    );
+    const entry = TraceEntryFinder.findCorrespondingEntry(trace, position);
 
     if (
-      this.lastReturnedCurrentEntries.get(type)?.getIndex() !==
+      this.lastReturnedCurrentEntries.get(trace)?.getIndex() !==
       entry?.getIndex()
     ) {
-      this.lastReturnedCurrentEntries.set(type, entry);
+      this.lastReturnedCurrentEntries.set(trace, entry);
     }
 
-    return this.lastReturnedCurrentEntries.get(type);
+    return this.lastReturnedCurrentEntries.get(trace);
   }
 
-  moveToPreviousEntryFor(type: TraceType) {
-    const prevEntry = this.getPreviousEntryFor(type);
+  moveToPreviousEntryFor(trace: Trace<object>) {
+    const prevEntry = this.getPreviousEntryFor(trace);
     if (prevEntry !== undefined) {
       this.setPosition(TracePosition.fromTraceEntry(prevEntry));
     }
   }
 
-  moveToNextEntryFor(type: TraceType) {
-    const nextEntry = this.getNextEntryFor(type);
+  moveToNextEntryFor(trace: Trace<object>) {
+    const nextEntry = this.getNextEntryFor(trace);
     if (nextEntry !== undefined) {
       this.setPosition(TracePosition.fromTraceEntry(nextEntry));
     }
@@ -324,18 +317,28 @@ export class TimelineData {
     this.screenRecordingVideo = undefined;
     this.lastReturnedFullTimeRange = undefined;
     this.lastReturnedCurrentEntries.clear();
-    this.activeViewTraceType = undefined;
+    this.activeTrace = undefined;
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
-    let first: TraceEntry<{}> | undefined = undefined;
+    let first: TraceEntry<{}> | undefined;
 
     this.traces.forEachTrace((trace) => {
       if (trace.lengthEntries === 0) {
         return;
       }
-      const candidate = trace.getEntry(0);
-      if (!first || candidate.getTimestamp() < first.getTimestamp()) {
+      let candidate: TraceEntry<{}> | undefined;
+      for (let i = 0; i < trace.lengthEntries; i++) {
+        const entry = trace.getEntry(i);
+        if (entry.hasValidTimestamp()) {
+          candidate = entry;
+          break;
+        }
+      }
+      if (
+        candidate &&
+        (!first || candidate.getTimestamp() < first.getTimestamp())
+      ) {
         first = candidate;
       }
     });
@@ -360,13 +363,9 @@ export class TimelineData {
   }
 
   private getFirstEntryOfActiveViewTrace(): TraceEntry<{}> | undefined {
-    if (this.activeViewTraceType === undefined) {
+    if (!this.activeTrace || this.activeTrace.lengthEntries === 0) {
       return undefined;
     }
-    const trace = this.traces.getTrace(this.activeViewTraceType);
-    if (!trace || trace.lengthEntries === 0) {
-      return undefined;
-    }
-    return trace.getEntry(0);
+    return this.activeTrace.getEntry(0);
   }
 }

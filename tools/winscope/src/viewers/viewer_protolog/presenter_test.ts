@@ -21,7 +21,6 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
@@ -124,7 +123,7 @@ describe('ViewerProtoLogPresenter', () => {
 
     inputMessages = [
       {
-        originalIndex: 0,
+        traceIndex: 0,
         text: 'text0',
         time: assertDefined(entries[0].getChildByName('timestamp')),
         tag: 'tag0',
@@ -132,7 +131,7 @@ describe('ViewerProtoLogPresenter', () => {
         at: 'sourcefile0',
       },
       {
-        originalIndex: 1,
+        traceIndex: 1,
         text: 'text1',
         time: assertDefined(entries[1].getChildByName('timestamp')),
         tag: 'tag1',
@@ -140,7 +139,7 @@ describe('ViewerProtoLogPresenter', () => {
         at: 'sourcefile1',
       },
       {
-        originalIndex: 2,
+        traceIndex: 2,
         text: 'text2',
         time: assertDefined(entries[2].getChildByName('timestamp')),
         tag: 'tag2',
@@ -160,9 +159,7 @@ describe('ViewerProtoLogPresenter', () => {
 
     outputUiData = undefined;
 
-    const traces = new Traces();
-    traces.setTrace(TraceType.PROTO_LOG, trace);
-    presenter = new Presenter(traces, (data: UiData) => {
+    presenter = new Presenter(trace, (data: UiData) => {
       outputUiData = data;
     });
     await presenter.onAppEvent(positionUpdate10); // trigger initialization
@@ -172,7 +169,8 @@ describe('ViewerProtoLogPresenter', () => {
     const traces = new TracesBuilder()
       .setEntries(TraceType.PROTO_LOG, [])
       .build();
-    presenter = new Presenter(traces, (data: UiData) => {
+    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
+    presenter = new Presenter(trace, (data: UiData) => {
       outputUiData = data;
     });
 
