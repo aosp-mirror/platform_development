@@ -24,7 +24,6 @@ import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_tr
 type ScrollComponent = ViewerProtologComponent | ViewerTransactionsComponent;
 
 export function executeScrollComponentTests(
-  itemClassName: string,
   setUpTestEnvironment: () => Promise<
     [ComponentFixture<ScrollComponent>, HTMLElement, CdkVirtualScrollViewport]
   >,
@@ -39,7 +38,7 @@ export function executeScrollComponentTests(
     });
 
     it('renders initial state', () => {
-      const items = htmlElement.querySelectorAll(`.${itemClassName}`)!;
+      const items = htmlElement.querySelectorAll('.entry');
       expect(items.length).toBe(20);
     });
 
@@ -52,13 +51,9 @@ export function executeScrollComponentTests(
     });
 
     it('should scroll to index in large jumps', () => {
-      expect(
-        htmlElement.querySelector(`.${itemClassName}[item-id="30"]`),
-      ).toBeFalsy();
+      expect(htmlElement.querySelector(`.entry[item-id="30"]`)).toBeFalsy();
       checkScrollToIndex(30);
-      expect(
-        htmlElement.querySelector(`.${itemClassName}[item-id="70"]`),
-      ).toBeFalsy();
+      expect(htmlElement.querySelector(`.entry[item-id="70"]`)).toBeFalsy();
       checkScrollToIndex(70);
     });
 
@@ -76,9 +71,7 @@ export function executeScrollComponentTests(
       viewport.elementRef.nativeElement.dispatchEvent(new Event('scroll'));
       animationFrameScheduler.flush();
       fixture.detectChanges();
-      assertDefined(
-        htmlElement.querySelector(`.${itemClassName}[item-id="${i}"]`),
-      );
+      assertDefined(htmlElement.querySelector(`.entry[item-id="${i}"]`));
     }
   });
 }
