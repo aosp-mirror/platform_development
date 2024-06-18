@@ -54,9 +54,9 @@ export class ParserViewCapture {
           new ParserViewCaptureWindow(
             [this.traceFile.getDescriptor()],
             windowData.frameData ?? [],
-            ParserViewCapture.toTraceType(windowData),
             realToBootTimeOffsetNs,
             assertDefined(exportedData.package),
+            assertDefined(windowData.title),
             assertDefined(exportedData.classname),
             this.timestampConverter,
           ),
@@ -70,19 +70,6 @@ export class ParserViewCapture {
 
   getWindowParsers(): Array<Parser<HierarchyTreeNode>> {
     return this.windowParsers;
-  }
-
-  private static toTraceType(
-    windowData: com.android.app.viewcapture.data.IWindowData,
-  ): TraceType {
-    switch (windowData.title) {
-      case '.Taskbar':
-        return TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER;
-      case '.TaskbarOverlay':
-        return TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER;
-      default:
-        return TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY;
-    }
   }
 
   private static readonly MAGIC_NUMBER = [

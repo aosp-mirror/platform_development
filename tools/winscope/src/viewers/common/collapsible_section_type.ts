@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-class Events {
-  static LogLevelsFilterChanged = 'ViewerProtoLogEvent_LogLevelsFilterChanged';
-  static TagsFilterChanged = 'ViewerProtoLogEvent_TagsFilterChanged';
-  static SourceFilesFilterChanged =
-    'ViewerProtoLogEvent_SourceFilesFilterChanged';
-  static SearchStringFilterChanged =
-    'ViewerProtoLogEvent_SearchStringFilterChanged';
-  static MessageClicked = 'ViewerProtoLogEvent_MessageClicked';
-}
 
-export {Events};
+export enum CollapsibleSectionType {
+  RECTS = 'RECTS',
+  HIERARCHY = 'HIERARCHY',
+  PROPERTIES = 'PROPERTIES',
+  CURATED_PROPERTIES = 'CURATED PROPERTIES',
+  IME_ADDITIONAL_PROPERTIES = 'WM & SF PROPERTIES',
+}

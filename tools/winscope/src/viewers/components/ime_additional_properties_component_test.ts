@@ -15,11 +15,15 @@
  */
 import {Component} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatButtonModule} from '@angular/material/button';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSectionTitleComponent} from './collapsible_section_title_component';
 import {CoordinatesTableComponent} from './coordinates_table_component';
 import {ImeAdditionalPropertiesComponent} from './ime_additional_properties_component';
 
@@ -30,10 +34,16 @@ describe('ImeAdditionalPropertiesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatDividerModule],
+      imports: [
+        MatDividerModule,
+        MatIconModule,
+        MatButtonModule,
+        MatTooltipModule,
+      ],
       declarations: [
         ImeAdditionalPropertiesComponent,
         TestHostComponent,
+        CollapsibleSectionTitleComponent,
         CoordinatesTableComponent,
       ],
     }).compileComponents();
@@ -126,13 +136,24 @@ describe('ImeAdditionalPropertiesComponent', () => {
     expect(button.className).toContain('selected');
   });
 
+  it('handles collapse button click', () => {
+    expect(component.collapseButtonClicked).toBeFalse();
+    const collapseButton = assertDefined(
+      htmlElement.querySelector('collapsible-section-title button'),
+    ) as HTMLButtonElement;
+    collapseButton.click();
+    fixture.detectChanges();
+    expect(component.collapseButtonClicked).toBeTrue();
+  });
+
   @Component({
     selector: 'host-component',
     template: `
       <ime-additional-properties
         [highlightedItem]="highlightedItem"
         [isImeManagerService]="isImeManagerService"
-        [additionalProperties]="additionalProperties"></ime-additional-properties>
+        [additionalProperties]="additionalProperties"
+        (collapseButtonClicked)="onCollapseButtonClick()"></ime-additional-properties>
     `,
   })
   class TestHostComponent {
@@ -181,6 +202,7 @@ describe('ImeAdditionalPropertiesComponent', () => {
     );
     highlightedItem = '';
     additionalPropertieTreeName: string | undefined;
+    collapseButtonClicked = false;
 
     onHighlightedNodeChange = (event: Event) => {
       this.highlightedItem = (event as CustomEvent).detail.node.id;
@@ -196,5 +218,9 @@ describe('ImeAdditionalPropertiesComponent', () => {
         event as CustomEvent
       ).detail.selectedItem.name;
     };
+
+    onCollapseButtonClick() {
+      this.collapseButtonClicked = true;
+    }
   }
 });

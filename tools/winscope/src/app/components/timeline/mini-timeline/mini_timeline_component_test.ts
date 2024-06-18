@@ -32,6 +32,7 @@ import {TimeRange, Timestamp} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {dragElement} from 'test/utils';
+import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {MiniTimelineComponent} from './mini_timeline_component';
@@ -57,6 +58,17 @@ describe('MiniTimelineComponent', () => {
 
   const position800 = TracePosition.fromTimestamp(
     TimestampConverterUtils.makeRealTimestamp(800n),
+  );
+
+  const traces = new TracesBuilder()
+    .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
+    .setTimestamps(TraceType.TRANSACTIONS, [timestamp10, timestamp20])
+    .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp20])
+    .build();
+  const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
+  const traceWm = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+  const traceTransactions = assertDefined(
+    traces.getTrace(TraceType.TRANSACTIONS),
   );
 
   beforeEach(async () => {
@@ -85,11 +97,6 @@ describe('MiniTimelineComponent', () => {
     htmlElement = fixture.nativeElement;
 
     timelineData = new TimelineData();
-    const traces = new TracesBuilder()
-      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
-      .setTimestamps(TraceType.TRANSACTIONS, [timestamp10, timestamp20])
-      .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp20])
-      .build();
     await timelineData.initialize(
       traces,
       undefined,
@@ -98,7 +105,7 @@ describe('MiniTimelineComponent', () => {
     component.timelineData = timelineData;
     expect(timelineData.getCurrentPosition()).toBeDefined();
     component.currentTracePosition = timelineData.getCurrentPosition()!;
-    component.selectedTraces = [TraceType.SURFACE_FLINGER];
+    component.selectedTraces = [traceSf];
   });
 
   it('can be created', () => {
@@ -197,30 +204,23 @@ describe('MiniTimelineComponent', () => {
   it('getTracesToShow returns traces targeted by selectedTraces', () => {
     fixture.detectChanges();
     const selectedTraces = assertDefined(component.selectedTraces);
-    const traces = assertDefined(
+    const selectedTracesTypes = selectedTraces.map((trace) => trace.type);
+
+    const tracesToShow = assertDefined(
       component.miniTimelineComponent,
     ).getTracesToShow();
-    const types: TraceType[] = [];
-    traces.forEachTrace((trace) => {
-      types.push(trace.type);
-    });
-    expect(types).toHaveSize(selectedTraces.length);
-    for (const type of selectedTraces) {
-      expect(types).toContain(type);
-    }
+    const tracesToShowTypes = tracesToShow.map((trace) => trace.type);
+
+    expect(new Set(tracesToShowTypes)).toEqual(new Set(selectedTracesTypes));
   });
 
   it('getTracesToShow adds traces in correct order', () => {
-    component.selectedTraces = [
-      TraceType.WINDOW_MANAGER,
-      TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
-    ];
+    component.selectedTraces = [traceWm, traceSf, traceTransactions];
     fixture.detectChanges();
-    const traces = assertDefined(component.miniTimelineComponent)
+    const tracesToShowTypes = assertDefined(component.miniTimelineComponent)
       .getTracesToShow()
-      .mapTrace((trace, type) => trace.type);
-    expect(traces).toEqual([
+      .map((trace) => trace.type);
+    expect(tracesToShowTypes).toEqual([
       TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
       TraceType.SURFACE_FLINGER,
@@ -841,7 +841,7 @@ describe('MiniTimelineComponent', () => {
   class TestHostComponent {
     timelineData = new TimelineData();
     currentTracePosition: TracePosition | undefined;
-    selectedTraces: TraceType[] = [];
+    selectedTraces: Array<Trace<object>> = [];
     initialZoom: TimeRange | undefined;
     expandedTimelineScrollEvent: WheelEvent | undefined;
     expandedTimelineMouseXRatio: number | undefined;

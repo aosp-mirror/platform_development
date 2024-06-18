@@ -38,7 +38,10 @@ export class UiHierarchyTreeNode extends HierarchyTreeNode implements DiffNode {
     const rects = node.getRects();
     if (rects) displayNode.setRects(rects);
 
-    if (parent) displayNode.setZParent(parent);
+    if (parent) displayNode.setParent(parent);
+
+    const zParent = node.getZParent();
+    if (zParent) displayNode.setZParent(zParent);
 
     node.getAllChildren().forEach((child) => {
       displayNode.addOrReplaceChild(
