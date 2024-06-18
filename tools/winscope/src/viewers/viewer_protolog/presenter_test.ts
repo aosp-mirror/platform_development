@@ -26,24 +26,83 @@ import {
 } from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
-import {
-  LogEntry,
-  LogFieldName,
-  LogFieldValue,
-} from 'viewers/common/ui_data_log';
+import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {LogFieldName, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
-import {UiData} from './ui_data';
 
-describe('ViewerProtoLogPresenter', () => {
-  let presenter: Presenter;
-  let trace: Trace<PropertyTreeNode>;
-  let positionUpdate10: TracePositionUpdate;
-  let positionUpdate11: TracePositionUpdate;
-  let positionUpdate12: TracePositionUpdate;
-  let outputUiData: undefined | UiData;
-  const TOTAL_OUTPUT_ENTRIES = 3;
+class PresenterProtologTest extends AbstractLogViewerPresenterTest {
+  private trace: Trace<PropertyTreeNode> | undefined;
+  private positionUpdate: TracePositionUpdate | undefined;
+  private secondPositionUpdate: TracePositionUpdate | undefined;
 
-  beforeEach(async () => {
+  override readonly shouldExecuteHeaderTests = false;
+  override readonly shouldExecuteFilterTests = true;
+  override readonly shouldExecuteCurrentIndexTests = true;
+  override readonly shouldExecutePropertiesTests = false;
+
+  override readonly totalOutputEntries = 3;
+  override readonly expectedIndexOfSecondPositionUpdate = 1;
+  override readonly expectedInitialFilterOptions = new Map<
+    LogFieldName,
+    string[] | number
+  >([
+    [LogFieldName.LOG_LEVEL, ['level0', 'level1', 'level2']],
+    [LogFieldName.TAG, ['tag0', 'tag1', 'tag2']],
+    [LogFieldName.SOURCE_FILE, ['sourcefile0', 'sourcefile1', 'sourcefile2']],
+  ]);
+  override readonly filterValuesToSet = new Map<
+    LogFieldName,
+    Array<string | string[]>
+  >([
+    [LogFieldName.LOG_LEVEL, [[], ['level1'], ['level0', 'level1', 'level2']]],
+    [LogFieldName.TAG, [[], ['tag1'], ['tag0', 'tag1', 'tag2']]],
+    [
+      LogFieldName.SOURCE_FILE,
+      [[], ['sourcefile1'], ['sourcefile0', 'sourcefile1', 'sourcefile2']],
+    ],
+    [LogFieldName.TEXT, [[], 'text', 'text0', 'text1']],
+  ]);
+  override readonly expectedFieldValuesAfterFilter = new Map<
+    LogFieldName,
+    Array<LogFieldValue[] | number>
+  >([
+    [
+      LogFieldName.LOG_LEVEL,
+      [this.totalOutputEntries, ['level1'], ['level0', 'level1', 'level2']],
+    ],
+    [
+      LogFieldName.TAG,
+      [this.totalOutputEntries, ['tag1'], ['tag0', 'tag1', 'tag2']],
+    ],
+    [
+      LogFieldName.SOURCE_FILE,
+      [
+        this.totalOutputEntries,
+        ['sourcefile1'],
+        ['sourcefile0', 'sourcefile1', 'sourcefile2'],
+      ],
+    ],
+    [
+      LogFieldName.TEXT,
+      [
+        this.totalOutputEntries,
+        ['text0', 'text1', 'text2'],
+        ['text0'],
+        ['text1'],
+      ],
+    ],
+  ]);
+  override readonly logEntryClickIndex = 10;
+  override readonly filterNameForCurrentIndexTest = LogFieldName.LOG_LEVEL;
+  override readonly filterChangeForCurrentIndexTest = ['level1'];
+  override readonly expectedCurrentIndexAfterFilterChange = 0;
+  override readonly secondFilterChangeForCurrentIndexTest = [
+    'level0',
+    'level1',
+  ];
+  override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
+
+  override async setUpTestEnvironment(): Promise<void> {
     const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
     const time11 = TimestampConverterUtils.makeRealTimestamp(11n);
     const time12 = TimestampConverterUtils.makeRealTimestamp(12n);
@@ -125,241 +184,41 @@ describe('ViewerProtoLogPresenter', () => {
         .build(),
     ];
 
-    trace = new TraceBuilder<PropertyTreeNode>()
+    this.trace = new TraceBuilder<PropertyTreeNode>()
       .setEntries(entries)
       .setTimestamps([time10, time11, time12])
       .build();
 
-    positionUpdate10 = TracePositionUpdate.fromTimestamp(time10);
-    positionUpdate11 = TracePositionUpdate.fromTimestamp(time11);
-    positionUpdate12 = TracePositionUpdate.fromTimestamp(time12);
-
-    outputUiData = undefined;
-    const callback = (data: UiData) => {
-      outputUiData = data;
-    };
-    presenter = new Presenter(trace, callback as NotifyLogViewCallbackType);
-    await presenter.onAppEvent(positionUpdate10); // trigger initialization
-  });
-
-  it('is robust to empty trace', async () => {
-    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
-
-    let outputData: UiData | undefined;
-    const callback = (data: UiData) => {
-      outputData = data;
-    };
-    const presenterEmptyTrace = new Presenter(
-      trace,
-      callback as NotifyLogViewCallbackType,
-    );
-    expect(outputData).toEqual(UiData.EMPTY);
-
-    await presenterEmptyTrace.onAppEvent(
-      TracePositionUpdate.fromTimestamp(
-        TimestampConverterUtils.makeRealTimestamp(10n),
-      ),
-    );
-    expect(outputData).toEqual(UiData.EMPTY);
-  });
-
-  it('processes trace position updates', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-
-    const uiData = assertDefined(outputUiData);
-    expect(getFilterOptions(LogFieldName.LOG_LEVEL)).toEqual([
-      'level0',
-      'level1',
-      'level2',
-    ]);
-    expect(getFilterOptions(LogFieldName.TAG)).toEqual([
-      'tag0',
-      'tag1',
-      'tag2',
-    ]);
-    expect(getFilterOptions(LogFieldName.SOURCE_FILE)).toEqual([
-      'sourcefile0',
-      'sourcefile1',
-      'sourcefile2',
-    ]);
-    expect(uiData.entries.length).toEqual(3);
-    expect(uiData.currentIndex).toEqual(0);
-  });
-
-  it('filters entries according to log level filter', async () => {
-    await checkFilter(
-      LogFieldName.LOG_LEVEL,
-      [],
-      undefined,
-      TOTAL_OUTPUT_ENTRIES,
-    );
-
-    await checkFilter(LogFieldName.LOG_LEVEL, ['level1'], ['level1']);
-
-    await checkFilter(
-      LogFieldName.LOG_LEVEL,
-      ['level0', 'level1', 'level2'],
-      ['level0', 'level1', 'level2'],
-    );
-  });
-
-  it('filters entries according to tag filter', async () => {
-    await checkFilter(LogFieldName.TAG, [], undefined, TOTAL_OUTPUT_ENTRIES);
-
-    await checkFilter(LogFieldName.TAG, ['tag1'], ['tag1']);
-
-    await checkFilter(
-      LogFieldName.TAG,
-      ['tag0', 'tag1', 'tag2'],
-      ['tag0', 'tag1', 'tag2'],
-    );
-  });
-
-  it('filters entries according to source file filter', async () => {
-    await checkFilter(
-      LogFieldName.SOURCE_FILE,
-      [],
-      undefined,
-      TOTAL_OUTPUT_ENTRIES,
-    );
-
-    await checkFilter(
-      LogFieldName.SOURCE_FILE,
-      ['sourcefile1'],
-      ['sourcefile1'],
-    );
-
-    await checkFilter(
-      LogFieldName.SOURCE_FILE,
-      ['sourcefile0', 'sourcefile1', 'sourcefile2'],
-      ['sourcefile0', 'sourcefile1', 'sourcefile2'],
-    );
-  });
-
-  it('filters entries according to text filter', async () => {
-    await checkFilter(LogFieldName.TEXT, '', undefined, TOTAL_OUTPUT_ENTRIES);
-
-    await checkFilter(LogFieldName.TEXT, 'text', ['text0', 'text1', 'text2']);
-
-    await checkFilter(LogFieldName.TEXT, 'text0', ['text0']);
-
-    await checkFilter(LogFieldName.TEXT, 'text1', ['text1']);
-  });
-
-  it('updates selected entry ui data when entry clicked', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-    checkInitialTracePositionUpdate();
-
-    const newIndex = 10;
-    await presenter.onLogEntryClick(newIndex);
-    checkSelectedEntryUiData(newIndex);
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(undefined); // no scrolling
-
-    // does not remove selection when entry clicked again
-    await presenter.onLogEntryClick(newIndex);
-    checkSelectedEntryUiData(newIndex);
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(undefined);
-  });
-
-  it('updates selected entry ui data when entry changed by key press', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-    checkInitialTracePositionUpdate();
-    expect(assertDefined(outputUiData).selectedIndex).toEqual(undefined);
-
-    await presenter.onArrowDownPress();
-    checkSelectedAndScrollIndices(1);
-
-    await presenter.onArrowUpPress();
-    checkSelectedAndScrollIndices(0);
-
-    // robust to attempt to go before first entry
-    await presenter.onArrowUpPress();
-    checkSelectedAndScrollIndices(0);
-
-    // robust to attempt to go beyond last entry
-    const finalIndex = assertDefined(outputUiData).entries.length - 1;
-    await presenter.onLogEntryClick(finalIndex);
-    await presenter.onArrowDownPress();
-    expect(assertDefined(outputUiData).selectedIndex).toEqual(finalIndex);
-  });
-
-  it('computes current index', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(0);
-
-    await presenter.onAppEvent(positionUpdate11);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(1);
-  });
-
-  it('updates current index when filters change', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, []);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(0);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, ['level0']);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(0);
-
-    await presenter.onAppEvent(positionUpdate11);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, []);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(1);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, ['level0']);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(0);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, ['level1']);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(0);
-
-    await presenter.onFilterChange(LogFieldName.LOG_LEVEL, [
-      'level0',
-      'level1',
-    ]);
-    expect(assertDefined(outputUiData).currentIndex).toEqual(1);
-  });
-
-  function checkInitialTracePositionUpdate() {
-    const uiData = assertDefined(outputUiData);
-    expect(uiData.currentIndex).toEqual(0);
-    expect(uiData.selectedIndex).toBeUndefined();
-    expect(uiData.scrollToIndex).toEqual(0);
+    this.positionUpdate = TracePositionUpdate.fromTimestamp(time10);
+    this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
   }
 
-  function checkSelectedEntryUiData(index: number | undefined) {
-    const uiData = assertDefined(outputUiData);
-    expect(uiData.currentIndex).toEqual(0);
-    expect(uiData.selectedIndex).toEqual(index);
+  override createPresenterWithEmptyTrace(
+    callback: NotifyLogViewCallbackType,
+  ): Presenter {
+    const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries([])
+      .build();
+    return new Presenter(emptyTrace, callback);
   }
 
-  function checkSelectedAndScrollIndices(index: number | undefined) {
-    checkSelectedEntryUiData(index);
-    expect(assertDefined(outputUiData).scrollToIndex).toEqual(index);
+  override async createPresenter(
+    callback: NotifyLogViewCallbackType,
+  ): Promise<Presenter> {
+    const presenter = new Presenter(assertDefined(this.trace), callback);
+    await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
+    return presenter;
   }
 
-  function getFilterOptions(logFieldName: LogFieldName): string[] {
-    return assertDefined(
-      outputUiData?.filters.find((f) => f.name === logFieldName)?.options,
-    );
+  override getPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.positionUpdate);
   }
 
-  async function checkFilter(
-    name: LogFieldName,
-    filterValue: string[] | string,
-    expectedFieldValues?: LogFieldValue[],
-    numberOfFieldValues?: number,
-  ) {
-    await presenter.onFilterChange(name, filterValue);
-    const fieldValues = assertDefined(outputUiData).entries.map((entry) =>
-      getFieldValue(entry, name),
-    );
-    if (expectedFieldValues !== undefined) {
-      expect(new Set(fieldValues)).toEqual(new Set(expectedFieldValues));
-    } else if (numberOfFieldValues !== undefined) {
-      expect(fieldValues.length).toEqual(numberOfFieldValues);
-    }
+  override getSecondPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.secondPositionUpdate);
   }
+}
 
-  function getFieldValue(entry: LogEntry, logFieldName: LogFieldName) {
-    return entry.fields.find((f) => f.name === logFieldName)?.value;
-  }
+describe('PresenterProtolog', () => {
+  new PresenterProtologTest().execute();
 });
