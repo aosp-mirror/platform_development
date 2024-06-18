@@ -43,21 +43,24 @@ import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
+import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additional_properties_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
+import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
-import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
+import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
+import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
@@ -105,8 +108,8 @@ import {WebAdbComponent} from './components/web_adb_component';
     TraceViewComponent,
     TreeComponent,
     TreeNodeComponent,
-    TreeNodeDataViewComponent,
-    TreeNodePropertiesDataViewComponent,
+    HierarchyTreeNodeDataViewComponent,
+    PropertyTreeNodeDataViewComponent,
     SurfaceFlingerPropertyGroupsComponent,
     TransformMatrixComponent,
     PropertiesTableComponent,
@@ -123,7 +126,10 @@ import {WebAdbComponent} from './components/web_adb_component';
     MatDrawerContainer,
     LoadProgressComponent,
     SliderComponent,
+    ProtologScrollDirective,
+    TransactionsScrollDirective,
     ViewCapturePropertyGroupsComponent,
+    SelectWithFilterComponent,
   ],
   imports: [
     BrowserModule,

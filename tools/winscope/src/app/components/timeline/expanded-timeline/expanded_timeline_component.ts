@@ -16,17 +16,16 @@
 
 import {
   Component,
-  ElementRef,
   EventEmitter,
   HostListener,
   Input,
   Output,
   QueryList,
-  ViewChild,
   ViewChildren,
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {assertDefined} from 'common/assert_utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -153,11 +152,8 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
   ],
 })
 export class ExpandedTimelineComponent {
-  @Input() timelineData!: TimelineData;
-  @Output() onTracePositionUpdate = new EventEmitter<TracePosition>();
-
-  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('expandedTimelineWrapper', {static: false}) warpperRef!: ElementRef;
+  @Input() timelineData: TimelineData | undefined;
+  @Output() readonly onTracePositionUpdate = new EventEmitter<TracePosition>();
 
   @ViewChildren(DefaultTimelineRowComponent)
   singleTimelines: QueryList<DefaultTimelineRowComponent> | undefined;
@@ -178,8 +174,12 @@ export class ExpandedTimelineComponent {
   };
 
   getTracesSortedByDisplayOrder(): Array<Trace<{}>> {
-    const traces = this.timelineData.getTraces().mapTrace((trace) => trace);
-    return traces.sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type));
+    const traces = assertDefined(this.timelineData)
+      .getTraces()
+      .mapTrace((trace) => trace);
+    return traces.sort((a, b) =>
+      TraceTypeUtils.compareByDisplayOrder(a.type, b.type),
+    );
   }
 
   private resizeCanvases() {
@@ -187,7 +187,9 @@ export class ExpandedTimelineComponent {
     // Needs to be done together because otherwise the sizes of each timeline will interfere with
     // each other, since if one timeline is still too big the container will stretch to that size.
     const timelines = [
-      ...(this.transitionTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
+      ...(this.transitionTimelines as QueryList<
+        AbstractTimelineRowComponent<{}>
+      >),
       ...(this.singleTimelines as QueryList<AbstractTimelineRowComponent<{}>>),
     ];
     for (const timeline of timelines) {

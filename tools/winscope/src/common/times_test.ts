@@ -14,77 +14,63 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from './time';
+import {TimestampType} from './time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from './timestamp_factory';
 
 describe('Timestamp', () => {
-  describe('from', () => {
-    it('throws when missing elapsed timestamp', () => {
-      expect(() => {
-        Timestamp.from(TimestampType.REAL, 100n);
-      }).toThrow();
-    });
-
-    it('can create real timestamp', () => {
-      const timestamp = Timestamp.from(TimestampType.REAL, 100n, 500n);
-      expect(timestamp.getType()).toBe(TimestampType.REAL);
-      expect(timestamp.getValueNs()).toBe(600n);
-    });
-
-    it('can create elapsed timestamp', () => {
-      let timestamp = Timestamp.from(TimestampType.ELAPSED, 100n, 500n);
-      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
-      expect(timestamp.getValueNs()).toBe(100n);
-
-      timestamp = Timestamp.from(TimestampType.ELAPSED, 100n);
-      expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
-      expect(timestamp.getValueNs()).toBe(100n);
-    });
-  });
-
   describe('arithmetic', () => {
+    const REAL_TIMESTAMP_10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+    const REAL_TIMESTAMP_20 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(20n);
+    const ELAPSED_TIMESTAMP_10 =
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+    const ELAPSED_TIMESTAMP_20 =
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
+
     it('can add', () => {
-      let timestamp = new RealTimestamp(10n).plus(new RealTimestamp(20n));
+      let timestamp = REAL_TIMESTAMP_10.plus(REAL_TIMESTAMP_20);
       expect(timestamp.getType()).toBe(TimestampType.REAL);
       expect(timestamp.getValueNs()).toBe(30n);
 
-      timestamp = new ElapsedTimestamp(10n).plus(new ElapsedTimestamp(20n));
+      timestamp = ELAPSED_TIMESTAMP_10.plus(ELAPSED_TIMESTAMP_20);
       expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
       expect(timestamp.getValueNs()).toBe(30n);
     });
 
     it('can subtract', () => {
-      let timestamp = new RealTimestamp(20n).minus(new RealTimestamp(10n));
+      let timestamp = REAL_TIMESTAMP_20.minus(REAL_TIMESTAMP_10);
       expect(timestamp.getType()).toBe(TimestampType.REAL);
       expect(timestamp.getValueNs()).toBe(10n);
 
-      timestamp = new ElapsedTimestamp(20n).minus(new ElapsedTimestamp(10n));
+      timestamp = ELAPSED_TIMESTAMP_20.minus(ELAPSED_TIMESTAMP_10);
       expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
       expect(timestamp.getValueNs()).toBe(10n);
     });
 
     it('can divide', () => {
-      let timestamp = new RealTimestamp(10n).div(2n);
+      let timestamp = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n).div(2n);
       expect(timestamp.getType()).toBe(TimestampType.REAL);
       expect(timestamp.getValueNs()).toBe(5n);
 
-      timestamp = new ElapsedTimestamp(10n).div(2n);
+      timestamp = ELAPSED_TIMESTAMP_10.div(2n);
       expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
       expect(timestamp.getValueNs()).toBe(5n);
     });
 
     it('fails between different timestamp types', () => {
-      const error = new Error('Attemping to do timestamp arithmetic on different timestamp types');
+      const error = new Error(
+        'Attemping to do timestamp arithmetic on different timestamp types',
+      );
       expect(() => {
-        new RealTimestamp(20n).minus(new ElapsedTimestamp(10n));
+        REAL_TIMESTAMP_20.minus(ELAPSED_TIMESTAMP_10);
       }).toThrow(error);
       expect(() => {
-        new RealTimestamp(20n).plus(new ElapsedTimestamp(10n));
+        REAL_TIMESTAMP_20.plus(ELAPSED_TIMESTAMP_10);
       }).toThrow(error);
       expect(() => {
-        new ElapsedTimestamp(20n).minus(new RealTimestamp(10n));
+        ELAPSED_TIMESTAMP_20.minus(REAL_TIMESTAMP_10);
       }).toThrow(error);
       expect(() => {
-        new ElapsedTimestamp(20n).plus(new RealTimestamp(10n));
+        ELAPSED_TIMESTAMP_20.plus(REAL_TIMESTAMP_10);
       }).toThrow(error);
     });
   });

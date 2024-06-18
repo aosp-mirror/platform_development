@@ -108,7 +108,7 @@ final class DisplayRepository {
         }
     }
 
-    private Optional<RemoteDisplay> getDisplayByRemoteId(int remoteDisplayId) {
+    Optional<RemoteDisplay> getDisplayByRemoteId(int remoteDisplayId) {
         synchronized (mDisplayRepository) {
             return mDisplayRepository.stream()
                     .filter(display -> display.getRemoteDisplayId() == remoteDisplayId)

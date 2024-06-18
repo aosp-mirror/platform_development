@@ -7,6 +7,7 @@
     <string name="secure_window_demo" translatable="false">VDM Secure Window Demo</string>
     <string name="permissions_demo" translatable="false">VDM Permissions Demo</string>
     <string name="latency_demo" translatable="false">VDM Latency Demo</string>
+    <string name="stylus_demo" translatable="false">VDM Stylus Demo</string>
 
     <string name="current_device" translatable="false">Device: %s</string>
     <string name="change_device" translatable="false">Change</string>
@@ -17,6 +18,7 @@
 
     <string name="send_home" translatable="false">Send HOME intent</string>
     <string name="send_secondary_home" translatable="false">Send SECONDARY_HOME intent</string>
+    <string name="move_task_to_back" translatable="false">Move task to back</string>
 
     <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
 

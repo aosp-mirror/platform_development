@@ -16,16 +16,16 @@
 
 import {Inject, Injectable, NgZone} from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {TRACE_INFO} from 'app/trace_info';
+import {assertDefined} from 'common/assert_utils';
 import {UserNotificationListener} from 'messaging/user_notification_listener';
-import {WinscopeError, WinscopeErrorType} from 'messaging/winscope_error';
+import {WinscopeError} from 'messaging/winscope_error';
 import {SnackBarComponent} from './snack_bar_component';
 
 @Injectable({providedIn: 'root'})
 export class SnackBarOpener implements UserNotificationListener {
   constructor(
     @Inject(NgZone) private ngZone: NgZone,
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
   ) {}
 
   onErrors(errors: WinscopeError[]) {
@@ -49,64 +49,35 @@ export class SnackBarOpener implements UserNotificationListener {
     const messages: string[] = [];
     const groups = this.groupErrorsByType(errors);
 
-    for (const [type, groupedErrors] of groups) {
+    for (const groupedErrors of groups) {
       const CROP_THRESHOLD = 5;
       const countUsed = Math.min(groupedErrors.length, CROP_THRESHOLD);
       const countCropped = groupedErrors.length - countUsed;
 
       groupedErrors.slice(0, countUsed).forEach((error) => {
-        messages.push(this.convertErrorToMessage(error));
+        messages.push(error.getMessage());
       });
 
       if (countCropped > 0) {
-        messages.push(this.makeCroppedMessage(type, countCropped));
+        messages.push(
+          `... (cropped ${countCropped} '${groupedErrors[0].getType()}' messages)`,
+        );
       }
     }
 
     return messages;
   }
 
-  private convertErrorToMessage(error: WinscopeError): string {
-    const fileName = error.trace !== undefined ? error.trace : '<no file name>';
-    const traceTypeInfo =
-      error.traceType !== undefined ? ` of type ${TRACE_INFO[error.traceType].name}` : '';
-
-    switch (error.type) {
-      case WinscopeErrorType.CORRUPTED_ARCHIVE:
-        return `${fileName}: corrupted archive`;
-      case WinscopeErrorType.NO_INPUT_FILES:
-        return `Input doesn't contain trace files`;
-      case WinscopeErrorType.UNSUPPORTED_FILE_FORMAT:
-        return `${fileName}: unsupported file format`;
-      case WinscopeErrorType.FILE_OVERRIDDEN: {
-        return `${fileName}: overridden by another trace${traceTypeInfo}`;
-      }
-      default:
-        return `${fileName}: unknown error occurred`;
-    }
-  }
-
-  private makeCroppedMessage(type: WinscopeErrorType, count: number): string {
-    switch (type) {
-      case WinscopeErrorType.FILE_OVERRIDDEN:
-        return `... (cropped ${count} overridden trace messages)`;
-      case WinscopeErrorType.UNSUPPORTED_FILE_FORMAT:
-        return `... (cropped ${count} unsupported file format messages)`;
-      default:
-        return `... (cropped ${count} unknown error messages)`;
-    }
-  }
-
-  private groupErrorsByType(errors: WinscopeError[]): Map<WinscopeErrorType, WinscopeError[]> {
-    const groups = new Map<WinscopeErrorType, WinscopeError[]>();
+  private groupErrorsByType(errors: WinscopeError[]): Set<WinscopeError[]> {
+    const groups = new Map<Function, WinscopeError[]>();
 
     errors.forEach((error) => {
-      if (groups.get(error.type) === undefined) {
-        groups.set(error.type, []);
+      if (groups.get(error.constructor) === undefined) {
+        groups.set(error.constructor, []);
       }
-      groups.get(error.type)!.push(error);
+      assertDefined(groups.get(error.constructor)).push(error);
     });
 
-    return groups;
+    return new Set(groups.values());
   }
 }

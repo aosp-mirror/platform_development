@@ -53,10 +53,10 @@ describe('UploadTracesComponent', () => {
     htmlElement = fixture.nativeElement;
     component.tracePipeline = new TracePipeline();
     validSfFile = await UnitTestUtils.getFixtureFile(
-      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb'
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
     );
     validWmFile = await UnitTestUtils.getFixtureFile(
-      'traces/elapsed_and_real_timestamp/WindowManager.pb'
+      'traces/elapsed_and_real_timestamp/WindowManager.pb',
     );
     fixture.detectChanges();
   });
@@ -66,7 +66,9 @@ describe('UploadTracesComponent', () => {
   });
 
   it('renders the expected card title', () => {
-    expect(htmlElement.querySelector('.title')?.innerHTML).toContain('Upload Traces');
+    expect(htmlElement.querySelector('.title')?.innerHTML).toContain(
+      'Upload Traces',
+    );
   });
 
   it('handles file upload via drag and drop', () => {
@@ -99,7 +101,9 @@ describe('UploadTracesComponent', () => {
     expect(component.tracePipeline.getTraces().getSize()).toBe(2);
 
     const spy = spyOn(component, 'onOperationFinished');
-    const removeButton = assertDefined(htmlElement.querySelector('.uploaded-files button'));
+    const removeButton = assertDefined(
+      htmlElement.querySelector('.uploaded-files button'),
+    );
     (removeButton as HTMLButtonElement).click();
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.uploaded-files'));
@@ -112,7 +116,9 @@ describe('UploadTracesComponent', () => {
     fixture.detectChanges();
 
     const spy = spyOn(component, 'onOperationFinished');
-    const removeButton = assertDefined(htmlElement.querySelector('.uploaded-files button'));
+    const removeButton = assertDefined(
+      htmlElement.querySelector('.uploaded-files button'),
+    );
     (removeButton as HTMLButtonElement).click();
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.drop-info'));
@@ -126,7 +132,9 @@ describe('UploadTracesComponent', () => {
     expect(component.tracePipeline.getTraces().getSize()).toBe(2);
 
     const spy = spyOn(component, 'onOperationFinished');
-    const clearAllButton = assertDefined(htmlElement.querySelector('.clear-all-btn'));
+    const clearAllButton = assertDefined(
+      htmlElement.querySelector('.clear-all-btn'),
+    );
     (clearAllButton as HTMLButtonElement).click();
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.drop-info'));
@@ -139,18 +147,24 @@ describe('UploadTracesComponent', () => {
     fixture.detectChanges();
 
     const spy = spyOn(component.viewTracesButtonClick, 'emit');
-    const viewTracesButton = assertDefined(htmlElement.querySelector('.load-btn'));
+    const viewTracesButton = assertDefined(
+      htmlElement.querySelector('.load-btn'),
+    );
     (viewTracesButton as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 
   it('disables view traces button unless files with viewers uploaded', async () => {
-    const validEventlogFile = await UnitTestUtils.getFixtureFile('traces/eventlog.winscope');
+    const validEventlogFile = await UnitTestUtils.getFixtureFile(
+      'traces/eventlog.winscope',
+    );
     await loadFiles([validEventlogFile]);
     fixture.detectChanges();
 
-    const viewTracesButton = assertDefined(htmlElement.querySelector('.load-btn'));
+    const viewTracesButton = assertDefined(
+      htmlElement.querySelector('.load-btn'),
+    );
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
 
     await loadFiles([validSfFile]);
@@ -159,11 +173,12 @@ describe('UploadTracesComponent', () => {
   });
 
   async function loadFiles(files: File[]) {
+    component.tracePipeline.clear();
     await component.tracePipeline.loadFiles(
       files,
       FilesSource.TEST,
       new WinscopeErrorListenerStub(),
-      undefined
+      undefined,
     );
   }
 });

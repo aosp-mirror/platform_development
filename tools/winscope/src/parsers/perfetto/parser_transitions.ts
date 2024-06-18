@@ -15,87 +15,91 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampType} from 'common/time';
-import {
-  CrossPlatform,
-  ShellTransitionData,
-  Timestamp,
-  Transition,
-  TransitionChange,
-  TransitionType,
-  WmTransitionData,
-} from 'flickerlib/common';
-import {LayerTraceEntry} from 'flickerlib/layers/LayerTraceEntry';
-import {TraceFile} from 'trace/trace_file';
+import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
+import {perfetto} from 'protos/transitions/latest/static';
 import {TraceType} from 'trace/trace_type';
-import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AbstractParser} from './abstract_parser';
-import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
+import {FakeProtoBuilder} from './fake_proto_builder';
 
-export class ParserTransitions extends AbstractParser<Transition> {
-  constructor(traceFile: TraceFile, traceProcessor: WasmEngineProxy) {
-    super(traceFile, traceProcessor);
-  }
+export class ParserTransitions extends AbstractParser<PropertyTreeNode> {
+  private handlerIdToName: {[id: number]: string} | undefined = undefined;
 
   override getTraceType(): TraceType {
     return TraceType.TRANSITION;
   }
 
-  override async getEntry(index: number, timestampType: TimestampType): Promise<LayerTraceEntry> {
+  override async getEntry(
+    index: number,
+    timestampType: TimestampType,
+  ): Promise<PropertyTreeNode> {
     const transitionProto = await this.queryTransition(index);
 
     if (this.handlerIdToName === undefined) {
       const handlers = await this.queryHandlers();
       this.handlerIdToName = {};
-      handlers.forEach((it) => (assertDefined(this.handlerIdToName)[it.id] = it.name));
+      handlers.forEach(
+        (it) => (assertDefined(this.handlerIdToName)[it.id] = it.name),
+      );
     }
 
-    return new Transition(
-      Number(transitionProto.id),
-      new WmTransitionData(
-        this.toTimestamp(transitionProto.createTimeNs),
-        this.toTimestamp(transitionProto.sendTimeNs),
-        this.toTimestamp(transitionProto.wmAbortTimeNs),
-        this.toTimestamp(transitionProto.finishTimeNs),
-        this.toTimestamp(transitionProto.startingWindowRemoveTimeNs),
-        transitionProto.startTransactionId.toString(),
-        transitionProto.finishTransactionId.toString(),
-        TransitionType.Companion.fromInt(Number(transitionProto.type)),
-        transitionProto.targets.map(
-          (it: any) =>
-            new TransitionChange(
-              TransitionType.Companion.fromInt(Number(it.mode)),
-              Number(it.layerId),
-              Number(it.windowId)
-            )
-        )
-      ),
-      new ShellTransitionData(
-        this.toTimestamp(transitionProto.dispatchTimeNs),
-        this.toTimestamp(transitionProto.mergeRequestTimeNs),
-        this.toTimestamp(transitionProto.mergeTimeNs),
-        this.toTimestamp(transitionProto.shellAbortTimeNs),
-        this.handlerIdToName[Number(transitionProto.handler)],
-        transitionProto.mergeTarget ? Number(transitionProto.mergeTarget) : null
-      )
-    );
-  }
-
-  private toTimestamp(n: BigInt | undefined | null): Timestamp | null {
-    if (n === undefined || n === null) {
-      return null;
-    }
-
-    const realToElapsedTimeOffsetNs = assertDefined(this.realToElapsedTimeOffsetNs);
-    const unixNs = BigInt(n.toString()) + realToElapsedTimeOffsetNs;
-
-    return CrossPlatform.timestamp.fromString(n.toString(), null, unixNs.toString());
+    return this.makePropertiesTree(timestampType, transitionProto);
   }
 
   protected override getTableName(): string {
     return 'window_manager_shell_transitions';
   }
 
-  private async queryTransition(index: number): Promise<FakeProto> {
+  private makePropertiesTree(
+    timestampType: TimestampType,
+    transitionProto: perfetto.protos.ShellTransition,
+  ): PropertyTreeNode {
+    this.validatePerfettoTransition(transitionProto);
+
+    const perfettoTransitionInfo = {
+      entry: transitionProto,
+      realToElapsedTimeOffsetNs: assertDefined(this.realToElapsedTimeOffsetNs),
+      timestampType,
+      handlerMapping: this.handlerIdToName,
+      timestampFactory: this.timestampFactory,
+    };
+
+    const shellEntryTree = ParserTransitionsUtils.makeShellPropertiesTree(
+      perfettoTransitionInfo,
+      [
+        'createTimeNs',
+        'sendTimeNs',
+        'wmAbortTimeNs',
+        'finishTimeNs',
+        'startTransactionId',
+        'finishTransactionId',
+        'type',
+        'targets',
+        'flags',
+        'startingWindowRemoveTimeNs',
+      ],
+    );
+    const wmEntryTree = ParserTransitionsUtils.makeWmPropertiesTree(
+      perfettoTransitionInfo,
+      [
+        'dispatchTimeNs',
+        'mergeTimeNs',
+        'mergeRequestTimeNs',
+        'shellAbortTimeNs',
+        'handler',
+        'mergeTarget',
+      ],
+    );
+
+    return ParserTransitionsUtils.makeTransitionPropertiesTree(
+      shellEntryTree,
+      wmEntryTree,
+    );
+  }
+
+  private async queryTransition(
+    index: number,
+  ): Promise<perfetto.protos.ShellTransition> {
     const protoBuilder = new FakeProtoBuilder();
 
     const sql = `
@@ -119,7 +123,7 @@ export class ParserTransitions extends AbstractParser<Transition> {
         it.get('value_type') as string,
         it.get('int_value') as bigint | undefined,
         it.get('real_value') as number | undefined,
-        it.get('string_value') as string | undefined
+        it.get('string_value') as string | undefined,
       );
     }
 
@@ -127,7 +131,8 @@ export class ParserTransitions extends AbstractParser<Transition> {
   }
 
   private async queryHandlers(): Promise<TransitionHandler[]> {
-    const sql = 'SELECT handler_id, handler_name FROM window_manager_shell_transition_handlers;';
+    const sql =
+      'SELECT handler_id, handler_name FROM window_manager_shell_transition_handlers;';
     const result = await this.traceProcessor.query(sql).waitAllRows();
 
     const handlers: TransitionHandler[] = [];
@@ -141,7 +146,25 @@ export class ParserTransitions extends AbstractParser<Transition> {
     return handlers;
   }
 
-  private handlerIdToName: {[id: number]: string} | undefined = undefined;
+  private validatePerfettoTransition(
+    transition: perfetto.protos.IShellTransition,
+  ) {
+    if (transition.id === 0) {
+      throw new Error('Entry need a non null id');
+    }
+    if (
+      !transition.createTimeNs &&
+      !transition.sendTimeNs &&
+      !transition.wmAbortTimeNs &&
+      !transition.finishTimeNs &&
+      !transition.dispatchTimeNs &&
+      !transition.mergeRequestTimeNs &&
+      !transition.mergeTimeNs &&
+      !transition.shellAbortTimeNs
+    ) {
+      throw new Error('Requires at least one non-null timestamp');
+    }
+  }
 }
 
 interface TransitionHandler {
