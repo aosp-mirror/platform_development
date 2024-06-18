@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {ElementRef, EventEmitter, SimpleChanges} from '@angular/core';
-import {Point} from 'common/geometry_utils';
+import {ElementRef, EventEmitter} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
+import {Point} from 'common/geometry_types';
 import {TraceEntry} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {CanvasDrawer} from './canvas_drawer';
@@ -23,32 +24,31 @@ import {CanvasDrawer} from './canvas_drawer';
 export abstract class AbstractTimelineRowComponent<T extends {}> {
   abstract selectedEntry: TraceEntry<T> | undefined;
   abstract onTracePositionUpdate: EventEmitter<TracePosition>;
-  abstract wrapperRef: ElementRef;
-  abstract canvasRef: ElementRef;
+  abstract wrapperRef: ElementRef | undefined;
+  abstract canvasRef: ElementRef | undefined;
 
-  canvasDrawer: CanvasDrawer = new CanvasDrawer();
+  canvasDrawer = new CanvasDrawer();
+  protected viewInitialized = false;
+  private _observer = new ResizeObserver(() => this.initializeCanvas());
 
   getCanvas(): HTMLCanvasElement {
-    return this.canvasRef.nativeElement;
+    return this.canvasRef?.nativeElement;
   }
 
-  private _observer = new ResizeObserver(() => this.initializeCanvas());
   async ngAfterViewInit() {
-    this._observer.observe(this.wrapperRef.nativeElement);
+    this._observer.observe(assertDefined(this.wrapperRef).nativeElement);
     await this.initializeCanvas();
   }
 
-  ngOnDestroy() {
-    this._observer.disconnect();
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges() {
     if (this.viewInitialized) {
       this.redraw();
     }
   }
 
-  protected viewInitialized = false;
+  ngOnDestroy() {
+    this._observer.disconnect();
+  }
 
   async initializeCanvas() {
     const canvas = this.getCanvas();
@@ -59,10 +59,12 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     canvas.style.width = 'auto';
     canvas.style.height = 'auto';
 
-    const computedStyle = getComputedStyle(this.wrapperRef.nativeElement);
-    const width = this.wrapperRef.nativeElement.offsetWidth;
+    const htmlElement = assertDefined(this.wrapperRef).nativeElement;
+
+    const computedStyle = getComputedStyle(htmlElement);
+    const width = htmlElement.offsetWidth;
     const height =
-      this.wrapperRef.nativeElement.offsetHeight -
+      htmlElement.offsetHeight -
       // tslint:disable-next-line:ban
       parseFloat(computedStyle.paddingTop) -
       // tslint:disable-next-line:ban
@@ -111,7 +113,9 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     if (transitionEntry && transitionEntry !== this.selectedEntry) {
       this.redraw();
       this.selectedEntry = transitionEntry;
-      this.onTracePositionUpdate.emit(TracePosition.fromTraceEntry(transitionEntry));
+      this.onTracePositionUpdate.emit(
+        TracePosition.fromTraceEntry(transitionEntry),
+      );
     }
   }
 
@@ -135,14 +139,15 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     }
   }
 
-  protected abstract getEntryAt(mousePoint: Point): Promise<TraceEntry<T> | undefined>;
-  protected abstract onHover(mousePoint: Point): void;
-  protected abstract handleMouseOut(e: MouseEvent): void;
-
   protected async redraw() {
     this.canvasDrawer.clear();
     await this.drawTimeline();
   }
 
   abstract drawTimeline(): Promise<void>;
+  protected abstract getEntryAt(
+    mousePoint: Point,
+  ): Promise<TraceEntry<T> | undefined>;
+  protected abstract onHover(mousePoint: Point): void;
+  protected abstract handleMouseOut(e: MouseEvent): void;
 }

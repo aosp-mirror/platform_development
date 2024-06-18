@@ -40,6 +40,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
 
     private final PackageManager mPackageManager;
     private final AudioStreamer mAudioStreamer;
+    private final AudioInjector mAudioInjector;
 
     private final Object mLock = new Object();
 
@@ -49,9 +50,11 @@ final class RunningVdmUidsTracker implements ActivityListener {
     @GuardedBy("mLock")
     private Set<Integer> mRunningVdmUids = Collections.emptySet();
 
-    RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer) {
+    RunningVdmUidsTracker(@NonNull Context context, @NonNull AudioStreamer audioStreamer,
+            @NonNull AudioInjector audioInjector) {
         mPackageManager = Objects.requireNonNull(context).getPackageManager();
         mAudioStreamer = Objects.requireNonNull(audioStreamer);
+        mAudioInjector = Objects.requireNonNull(audioInjector);
     }
 
     @Override
@@ -76,6 +79,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
         }
 
         mAudioStreamer.updateVdmUids(updatedUids);
+        mAudioInjector.updateVdmUids(updatedUids);
     }
 
     @Override
@@ -94,6 +98,7 @@ final class RunningVdmUidsTracker implements ActivityListener {
 
         if (!uidsAfter.equals(uidsBefore)) {
             mAudioStreamer.updateVdmUids(uidsAfter);
+            mAudioInjector.updateVdmUids(uidsAfter);
         }
     }
 

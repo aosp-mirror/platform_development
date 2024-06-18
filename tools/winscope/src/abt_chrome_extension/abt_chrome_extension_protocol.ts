@@ -21,11 +21,21 @@ import {
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
-import {EmitEvent, WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {MessageType, OpenBuganizerResponse, OpenRequest, WebCommandMessage} from './messages';
+import {
+  MessageType,
+  OpenBuganizerResponse,
+  OpenRequest,
+  WebCommandMessage,
+} from './messages';
 
-export class AbtChromeExtensionProtocol implements WinscopeEventEmitter, WinscopeEventListener {
+export class AbtChromeExtensionProtocol
+  implements WinscopeEventEmitter, WinscopeEventListener
+{
   static readonly ABT_EXTENSION_ID = 'mbbaofdfoekifkfpgehgffcpagbbjkmj';
 
   private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -50,7 +60,7 @@ export class AbtChromeExtensionProtocol implements WinscopeEventEmitter, Winscop
       chrome.runtime.sendMessage(
         AbtChromeExtensionProtocol.ABT_EXTENSION_ID,
         openRequestMessage,
-        async (message) => await this.onMessageReceived(message)
+        async (message) => await this.onMessageReceived(message),
       );
     });
   }
@@ -59,12 +69,20 @@ export class AbtChromeExtensionProtocol implements WinscopeEventEmitter, Winscop
     if (this.isOpenBuganizerResponseMessage(message)) {
       await this.onOpenBuganizerResponseMessageReceived(message);
     } else {
-      console.warn('ABT chrome extension protocol received unexpected message:', message);
+      console.warn(
+        'ABT chrome extension protocol received unexpected message:',
+        message,
+      );
     }
   }
 
-  private async onOpenBuganizerResponseMessageReceived(message: OpenBuganizerResponse) {
-    console.log('ABT chrome extension protocol received OpenBuganizerResponse message:', message);
+  private async onOpenBuganizerResponseMessageReceived(
+    message: OpenBuganizerResponse,
+  ) {
+    console.log(
+      'ABT chrome extension protocol received OpenBuganizerResponse message:',
+      message,
+    );
 
     if (message.attachments.length === 0) {
       console.warn('ABT chrome extension protocol received no attachments');
@@ -87,7 +105,7 @@ export class AbtChromeExtensionProtocol implements WinscopeEventEmitter, Winscop
   }
 
   private isOpenBuganizerResponseMessage(
-    message: WebCommandMessage
+    message: WebCommandMessage,
   ): message is OpenBuganizerResponse {
     return message.action === MessageType.OPEN_BUGANIZER_RESPONSE;
   }

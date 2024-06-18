@@ -17,6 +17,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
+import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
 import {UiData} from './ui_data';
 
 /**
@@ -30,16 +31,16 @@ import {UiData} from './ui_data';
       <rects-view
         class="rects-view"
         title="View Hierarchy Sketch"
-        [enableShowVirtualButton]="false"
+        [store]="store"
         [rects]="inputData?.rects ?? []"
         [zoomFactor]="4"
         [miniRects]="inputData?.sfRects ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
-        [displayIds]="[0]"></rects-view>
+        [displays]="[{displayId: 0, stackId: 0}]"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
-        [tree]="inputData?.tree ?? null"
+        [tree]="inputData?.tree"
         [dependencies]="inputData?.dependencies ?? []"
         [highlightedItem]="inputData?.highlightedItem ?? ''"
         [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -49,28 +50,17 @@ import {UiData} from './ui_data';
       <properties-view
         class="properties-view"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"
-        [selectedItem]="inputData?.selectedViewNode ?? null"
+        [propertiesTree]="inputData?.propertiesTree"
+        [curatedProperties]="inputData?.curatedProperties"
         [traceType]="${TraceType.VIEW_CAPTURE}"
+        [store]="store"
         [isProtoDump]="false">
       </properties-view>
     </div>
   `,
-  styles: [
-    `
-      .rects-view,
-      .hierarchy-view,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
-    `,
-  ],
+  styles: [viewerCardStyle],
 })
 export class ViewerViewCaptureComponent {
-  @Input() inputData?: UiData;
-  @Input() store: PersistentStore = new PersistentStore();
+  @Input() inputData: UiData | undefined;
+  @Input() store: PersistentStore | undefined;
 }
