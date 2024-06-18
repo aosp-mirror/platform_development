@@ -321,14 +321,24 @@ export class TimelineData {
   }
 
   private findFirstEntry(): TraceEntry<{}> | undefined {
-    let first: TraceEntry<{}> | undefined = undefined;
+    let first: TraceEntry<{}> | undefined;
 
     this.traces.forEachTrace((trace) => {
       if (trace.lengthEntries === 0) {
         return;
       }
-      const candidate = trace.getEntry(0);
-      if (!first || candidate.getTimestamp() < first.getTimestamp()) {
+      let candidate: TraceEntry<{}> | undefined;
+      for (let i = 0; i < trace.lengthEntries; i++) {
+        const entry = trace.getEntry(i);
+        if (entry.hasValidTimestamp()) {
+          candidate = entry;
+          break;
+        }
+      }
+      if (
+        candidate &&
+        (!first || candidate.getTimestamp() < first.getTimestamp())
+      ) {
         first = candidate;
       }
     });
