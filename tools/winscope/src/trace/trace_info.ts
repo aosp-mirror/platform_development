@@ -29,6 +29,7 @@ const IME_ICON = 'keyboard_alt';
 const EVENT_LOG_ICON = 'description';
 const TRANSITION_ICON = 'animation';
 const CUJ_ICON = 'label';
+const INPUT_ICON = 'touch_app';
 
 interface TraceInfoMap {
   [key: number]: {
@@ -116,28 +117,7 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: VIEW_CAPTURE_ICON,
     color: '#137333',
     downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
-  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: {
-    name: 'View Capture - Nexuslauncher',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
-  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: {
-    name: 'View Capture - Taskbar',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
-  },
-  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: {
-    name: 'View Capture - Taskbar Overlay',
-    icon: VIEW_CAPTURE_ICON,
-    color: '#137333',
-    downloadArchiveDir: 'vc',
-    legacyExt: '.vc',
+    legacyExt: '.winscope',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
@@ -193,6 +173,20 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: CUJ_ICON,
     color: '#EC407A',
     downloadArchiveDir: 'eventlog',
+    legacyExt: '.winscope',
+  },
+  [TraceType.INPUT_MOTION_EVENT]: {
+    name: 'Motion Events',
+    icon: INPUT_ICON,
+    color: '#4079ec',
+    downloadArchiveDir: 'input',
+    legacyExt: '.winscope',
+  },
+  [TraceType.INPUT_KEY_EVENT]: {
+    name: 'Key Events',
+    icon: INPUT_ICON,
+    color: '#4079ec',
+    downloadArchiveDir: 'input',
     legacyExt: '.winscope',
   },
 };

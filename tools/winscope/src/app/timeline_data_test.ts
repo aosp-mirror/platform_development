@@ -18,6 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {TimeRange} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {TimelineData} from './timeline_data';
@@ -38,9 +39,9 @@ describe('TimelineData', () => {
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
     .build();
 
-  const position9 = TracePosition.fromTraceEntry(
-    assertDefined(traces.getTrace(TraceType.PROTO_LOG)).getEntry(0),
-  );
+  const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
+  const traceWm = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+
   const position10 = TracePosition.fromTraceEntry(
     assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER)).getEntry(0),
   );
@@ -72,6 +73,8 @@ describe('TimelineData', () => {
       .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp0])
       .build();
 
+    const dumpWm = assertDefined(traces.getTrace(TraceType.WINDOW_MANAGER));
+
     it('drops trace if it is a dump (will not display in timeline UI)', () => {
       timelineData.initialize(
         traces,
@@ -91,13 +94,22 @@ describe('TimelineData', () => {
         undefined,
         TimestampConverterUtils.TIMESTAMP_CONVERTER,
       );
-      expect(
-        timelineData.getPreviousEntryFor(TraceType.WINDOW_MANAGER),
-      ).toBeUndefined();
-      expect(
-        timelineData.getNextEntryFor(TraceType.WINDOW_MANAGER),
-      ).toBeUndefined();
+      expect(timelineData.getPreviousEntryFor(dumpWm)).toBeUndefined();
+      expect(timelineData.getNextEntryFor(dumpWm)).toBeUndefined();
     });
+  });
+
+  it('sets first entry as that with valid timestamp', async () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.TRANSITION, [timestamp0, timestamp9])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp9, timestamp10])
+      .build();
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
   });
 
   it('uses first entry of first active trace by default', () => {
@@ -120,14 +132,14 @@ describe('TimelineData', () => {
     timelineData.setPosition(position1000);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
-    timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
+    timelineData.trySetActiveTrace(traceSf);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
 
-    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
+    timelineData.trySetActiveTrace(traceWm);
     expect(timelineData.getCurrentPosition()).toEqual(position1000);
   });
 
-  it('sets active trace types and update current position accordingly', () => {
+  it('sets active trace and update current position accordingly', () => {
     timelineData.initialize(
       traces,
       undefined,
@@ -136,11 +148,38 @@ describe('TimelineData', () => {
 
     expect(timelineData.getCurrentPosition()).toEqual(position10);
 
-    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
+    timelineData.trySetActiveTrace(traceWm);
     expect(timelineData.getCurrentPosition()).toEqual(position11);
 
-    timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
+    timelineData.trySetActiveTrace(traceSf);
     expect(timelineData.getCurrentPosition()).toEqual(position10);
+  });
+
+  it('does not set active trace if not present in timeline, or already set', () => {
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+
+    expect(timelineData.getCurrentPosition()).toEqual(position10);
+
+    let success = timelineData.trySetActiveTrace(traceWm);
+    expect(timelineData.getActiveTrace()).toEqual(traceWm);
+    expect(success).toBeTrue();
+
+    success = timelineData.trySetActiveTrace(traceWm);
+    expect(timelineData.getActiveTrace()).toEqual(traceWm);
+    expect(success).toBeFalse();
+
+    success = timelineData.trySetActiveTrace(
+      new TraceBuilder<{}>()
+        .setType(TraceType.SURFACE_FLINGER)
+        .setEntries([])
+        .build(),
+    );
+    expect(timelineData.getActiveTrace()).toEqual(traceWm);
+    expect(success).toBeFalse();
   });
 
   it('hasTimestamps()', () => {
@@ -250,21 +289,17 @@ describe('TimelineData', () => {
     const time100 = TimestampConverterUtils.makeRealTimestamp(100n);
 
     {
-      timelineData.setActiveViewTraceType(TraceType.SURFACE_FLINGER);
+      timelineData.trySetActiveTrace(traceSf);
       const position = timelineData.makePositionFromActiveTrace(time100);
       expect(position.timestamp).toEqual(time100);
-      expect(position.entry).toEqual(
-        traces.getTrace(TraceType.SURFACE_FLINGER)?.getEntry(0),
-      );
+      expect(position.entry).toEqual(traceSf.getEntry(0));
     }
 
     {
-      timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
+      timelineData.trySetActiveTrace(traceWm);
       const position = timelineData.makePositionFromActiveTrace(time100);
       expect(position.timestamp).toEqual(time100);
-      expect(position.entry).toEqual(
-        traces.getTrace(TraceType.WINDOW_MANAGER)?.getEntry(0),
-      );
+      expect(position.entry).toEqual(traceWm.getEntry(0));
     }
   });
 
@@ -318,7 +353,7 @@ describe('TimelineData', () => {
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
-    timelineData.setActiveViewTraceType(TraceType.WINDOW_MANAGER);
+    timelineData.trySetActiveTrace(traceWm);
 
     expect(timelineData.getCurrentPosition()?.timestamp).toBe(timestamp11);
   });

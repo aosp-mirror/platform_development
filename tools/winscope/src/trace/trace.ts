@@ -15,7 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {Timestamp} from 'common/time';
+import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -61,6 +61,10 @@ export abstract class TraceEntry<T> {
 
   getTimestamp(): Timestamp {
     return this.timestamp;
+  }
+
+  hasValidTimestamp() {
+    return this.timestamp.getValueNs() !== INVALID_TIME_NS;
   }
 
   getFramesRange(): FramesRange | undefined {
@@ -152,6 +156,10 @@ export class Trace<T> {
 
   getDescriptors(): string[] {
     return this.parser.getDescriptors();
+  }
+
+  getParser(): Parser<T> {
+    return this.parser;
   }
 
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
@@ -440,6 +448,13 @@ export class Trace<T> {
   getFramesRange(): FramesRange | undefined {
     this.checkTraceCanBeAccessedInFrameDomain();
     return this.framesRange;
+  }
+
+  isDumpWithoutTimestamp() {
+    return (
+      this.lengthEntries === 1 &&
+      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
+    );
   }
 
   private getEntryInternal<

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS} from 'common/time';
 import {Trace, TraceEntry} from './trace';
 import {TracePosition} from './trace_position';
 import {TraceTypeUtils} from './trace_type';
@@ -24,15 +23,16 @@ export class TraceEntryFinder {
     trace: Trace<T>,
     position: TracePosition,
   ): TraceEntry<T> | undefined {
-    const isDump =
-      trace.lengthEntries === 1 &&
-      trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
-    if (isDump) {
+    if (trace.lengthEntries === 0) {
+      return undefined;
+    }
+
+    if (trace.isDumpWithoutTimestamp()) {
       // always display dumps regardless of the current trace position
       return trace.getEntry(0);
     }
 
-    if (position.entry?.getFullTrace().type === trace.type) {
+    if (position.entry?.getFullTrace() === trace.getEntry(0).getFullTrace()) {
       return position.entry as TraceEntry<T>;
     }
 
