@@ -16,13 +16,21 @@
 
 import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
+import {
+  TracePositionUpdate,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {AbsoluteEntryIndex} from 'trace/index_types';
 import {Trace, TraceEntry} from 'trace/trace';
-import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
-import {TraceType} from 'trace/trace_type';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {Filter} from 'viewers/common/operations/filter';
@@ -35,7 +43,8 @@ import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
-export class Presenter {
+export class Presenter implements WinscopeEventEmitter {
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   private readonly trace: Trace<PropertyTreeNode>;
   private entry?: TraceEntry<PropertyTreeNode>;
   private originalIndicesOfUiDataEntries: number[];
@@ -82,14 +91,18 @@ export class Presenter {
   private static readonly VALUE_NA = 'N/A';
 
   constructor(
-    traces: Traces,
+    trace: Trace<PropertyTreeNode>,
     private readonly storage: Storage,
     notifyViewCallback: NotifyViewCallbackType,
   ) {
-    this.trace = assertDefined(traces.getTrace(TraceType.TRANSACTIONS));
+    this.trace = trace;
     this.notifyUiDataCallback = notifyViewCallback;
     this.originalIndicesOfUiDataEntries = [];
     this.notifyUiDataCallback(this.uiData);
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
   }
 
   async onAppEvent(event: WinscopeEvent) {
@@ -104,7 +117,7 @@ export class Presenter {
         this.uiData.currentEntryIndex = this.computeCurrentEntryIndex();
         this.uiData.selectedEntryIndex = undefined;
         this.uiData.scrollToIndex = this.uiData.currentEntryIndex;
-        this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+        this.currentPropertiesTree = this.computePropertiesTree(
           this.uiData.entries,
           this.uiData.currentEntryIndex,
           this.uiData.selectedEntryIndex,
@@ -163,23 +176,19 @@ export class Presenter {
   onEntryClicked(index: number) {
     if (this.uiData.selectedEntryIndex === index) {
       return;
-    } else {
-      this.uiData.selectedEntryIndex = index;
     }
-
+    this.uiData.selectedEntryIndex = index;
     this.uiData.scrollToIndex = undefined; // no scrolling
+    this.updatePropertiesTree();
+  }
 
-    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
-      this.uiData.entries,
-      this.uiData.currentEntryIndex,
-      this.uiData.selectedEntryIndex,
-    );
-
-    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
-      this.currentPropertiesTree,
-    );
-
-    this.notifyUiDataCallback(this.uiData);
+  onEntryChangedByKeyPress(index: number) {
+    if (this.uiData.selectedEntryIndex === index) {
+      return;
+    }
+    this.uiData.selectedEntryIndex = index;
+    this.uiData.scrollToIndex = index;
+    this.updatePropertiesTree();
   }
 
   onPropertiesUserOptionsChange(userOptions: UserOptions) {
@@ -189,6 +198,12 @@ export class Presenter {
       this.currentPropertiesTree,
     );
     this.notifyUiDataCallback(this.uiData);
+  }
+
+  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
+    await this.emitAppEvent(
+      TracePositionUpdate.fromTraceEntry(this.trace.getEntry(traceIndex), true),
+    );
   }
 
   private async initializeIfNeeded() {
@@ -282,12 +297,12 @@ export class Presenter {
     }
 
     this.originalIndicesOfUiDataEntries = filteredEntries.map(
-      (entry) => entry.originalIndexInTraceEntry,
+      (entry) => entry.traceIndex,
     );
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
     const selectedEntryIndex = undefined;
-    this.currentPropertiesTree = this.computeCurrentPropertiesTree(
+    this.currentPropertiesTree = this.computePropertiesTree(
       filteredEntries,
       currentEntryIndex,
       selectedEntryIndex,
@@ -331,7 +346,21 @@ export class Presenter {
     );
   }
 
-  private computeCurrentPropertiesTree(
+  private updatePropertiesTree() {
+    this.currentPropertiesTree = this.computePropertiesTree(
+      this.uiData.entries,
+      this.uiData.currentEntryIndex,
+      this.uiData.selectedEntryIndex,
+    );
+
+    this.uiData.currentPropertiesTree = this.formatPropertiesTree(
+      this.currentPropertiesTree,
+    );
+
+    this.notifyUiDataCallback(this.uiData);
+  }
+
+  private computePropertiesTree(
     entries: UiDataEntry[],
     currentEntryIndex: undefined | number,
     selectedEntryIndex: undefined | number,
@@ -380,12 +409,12 @@ export class Presenter {
     );
 
     for (
-      let originalIndex = 0;
-      originalIndex < this.trace.lengthEntries;
-      ++originalIndex
+      let traceIndex = 0;
+      traceIndex < this.trace.lengthEntries;
+      ++traceIndex
     ) {
-      const entry = this.trace.getEntry(originalIndex);
-      const entryNode = entryProtos[originalIndex];
+      const entry = this.trace.getEntry(traceIndex);
+      const entryNode = entryProtos[traceIndex];
       const vsyncId = Number(
         assertDefined(entryNode.getChildByName('vsyncId')).getValue(),
       );
@@ -396,7 +425,7 @@ export class Presenter {
           'timestamp',
           entry.getTimestamp(),
         );
-      entryTimestamp.setFormatter(TIMESTAMP_FORMATTER);
+      entryTimestamp.setFormatter(TIMESTAMP_NODE_FORMATTER);
 
       for (const transactionState of assertDefined(
         entryNode.getChildByName('transactions'),
@@ -417,7 +446,7 @@ export class Presenter {
         for (const layerState of layerChanges) {
           entries.push(
             new UiDataEntry(
-              originalIndex,
+              traceIndex,
               entryTimestamp,
               vsyncId,
               pid,
@@ -439,7 +468,7 @@ export class Presenter {
         for (const displayState of displayChanges) {
           entries.push(
             new UiDataEntry(
-              originalIndex,
+              traceIndex,
               entryTimestamp,
               vsyncId,
               pid,
@@ -458,7 +487,7 @@ export class Presenter {
         if (layerChanges.length === 0 && displayChanges.length === 0) {
           entries.push(
             new UiDataEntry(
-              originalIndex,
+              traceIndex,
               entryTimestamp,
               vsyncId,
               pid,
@@ -478,7 +507,7 @@ export class Presenter {
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
-            originalIndex,
+            traceIndex,
             entryTimestamp,
             vsyncId,
             Presenter.VALUE_NA,
@@ -499,7 +528,7 @@ export class Presenter {
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
-            originalIndex,
+            traceIndex,
             entryTimestamp,
             vsyncId,
             Presenter.VALUE_NA,
@@ -518,7 +547,7 @@ export class Presenter {
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
-            originalIndex,
+            traceIndex,
             entryTimestamp,
             vsyncId,
             Presenter.VALUE_NA,
@@ -537,7 +566,7 @@ export class Presenter {
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
-            originalIndex,
+            traceIndex,
             entryTimestamp,
             vsyncId,
             Presenter.VALUE_NA,
@@ -556,7 +585,7 @@ export class Presenter {
       ).getAllChildren()) {
         entries.push(
           new UiDataEntry(
-            originalIndex,
+            traceIndex,
             entryTimestamp,
             vsyncId,
             Presenter.VALUE_NA,

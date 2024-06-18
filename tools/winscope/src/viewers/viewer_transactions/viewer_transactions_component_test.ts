@@ -13,24 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
   TestBed,
 } from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {UnitTestUtils} from 'test/unit/utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
+import {PropertiesComponent} from 'viewers/components/properties_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -44,19 +55,31 @@ describe('ViewerTransactionsComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [MatDividerModule, ScrollingModule],
+        imports: [
+          ScrollingModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatInputModule,
+          BrowserAnimationsModule,
+          MatSelectModule,
+          MatDividerModule,
+        ],
         declarations: [
           ViewerTransactionsComponent,
           TransactionsScrollDirective,
+          SelectWithFilterComponent,
+          CollapsedSectionsComponent,
+          CollapsibleSectionTitleComponent,
+          PropertiesComponent,
         ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
 
       fixture = TestBed.createComponent(ViewerTransactionsComponent);
       component = fixture.componentInstance;
       htmlElement = fixture.nativeElement;
 
-      component.inputData = makeUiData();
+      component.inputData = makeUiData(0);
       fixture.detectChanges();
     });
 
@@ -88,6 +111,117 @@ describe('ViewerTransactionsComponent', () => {
       expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
     });
 
+    it('applies transaction id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(
+        ViewerEvents.TransactionIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) =>
+            (event as CustomEvent).detail.includes(entry.transactionId),
+          );
+        },
+      );
+      await checkSelectFilter('.transaction-id');
+    });
+
+    it('applies vsync id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(
+        ViewerEvents.VSyncIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) => {
+            return (event as CustomEvent).detail.includes(`${entry.vsyncId}`);
+          });
+        },
+      );
+      await checkSelectFilter('.vsyncid');
+    });
+
+    it('applies pid filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(ViewerEvents.PidFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.pid);
+        });
+      });
+      await checkSelectFilter('.pid');
+    });
+
+    it('applies uid filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(ViewerEvents.UidFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.uid);
+        });
+      });
+      await checkSelectFilter('.uid');
+    });
+
+    it('applies type filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(ViewerEvents.TypeFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.includes(entry.type);
+        });
+      });
+      await checkSelectFilter('.type');
+    });
+
+    it('applies layer/display id filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(
+        ViewerEvents.LayerIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) => {
+            return (event as CustomEvent).detail.includes(
+              entry.layerOrDisplayId,
+            );
+          });
+        },
+      );
+      await checkSelectFilter('.layer-or-display-id');
+    });
+
+    it('applies what filter correctly', async () => {
+      const allEntries = makeUiData(0).entries;
+      htmlElement.addEventListener(ViewerEvents.WhatFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.entries = allEntries;
+          return;
+        }
+        component.uiData.entries = allEntries.filter((entry) => {
+          return (event as CustomEvent).detail.some((allowed: string) => {
+            return entry.what.includes(allowed);
+          });
+        });
+      });
+      await checkSelectFilter('.what');
+    });
+
     it('scrolls to current entry on button click', () => {
       const goToCurrentTimeButton = assertDefined(
         htmlElement.querySelector('.go-to-current-time'),
@@ -100,22 +234,61 @@ describe('ViewerTransactionsComponent', () => {
       expect(spy).toHaveBeenCalledWith(1);
     });
 
+    it('changes selected entry on arrow key press', () => {
+      htmlElement.addEventListener(
+        ViewerEvents.LogChangedByKeyPress,
+        (event) => {
+          component.inputData = makeUiData((event as CustomEvent).detail);
+          fixture.detectChanges();
+        },
+      );
+
+      // does not do anything if no prev entry available
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(0);
+
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowDown'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(1);
+
+      component.handleKeyboardEvent(
+        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
+      );
+      expect(component.uiData.selectedEntryIndex).toEqual(0);
+    });
+
     it('propagates timestamp on click', () => {
-      component.inputData = makeUiData();
+      component.inputData = makeUiData(0);
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('1ns');
+      expect(index).toEqual(0);
     });
 
-    function makeUiData(): UiData {
+    it('creates collapsed sections with no buttons', () => {
+      UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+    });
+
+    it('handles properties section collapse/expand', () => {
+      UnitTestUtils.checkSectionCollapseAndExpand(
+        htmlElement,
+        fixture,
+        '.properties-view',
+        'PROPERTIES - PROTO DUMP',
+      );
+    });
+
+    function makeUiData(selectedEntryIndex: number): UiData {
       const propertiesTree = new PropertyTreeBuilder()
         .setRootId('Transactions')
         .setName('tree')
@@ -125,8 +298,8 @@ describe('ViewerTransactionsComponent', () => {
       const time = new PropertyTreeBuilder()
         .setRootId(propertiesTree.id)
         .setName('timestamp')
-        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_FORMATTER)
+        .setValue(TimestampConverterUtils.makeElapsedTimestamp(1n))
+        .setFormatter(TIMESTAMP_NODE_FORMATTER)
         .build();
 
       const entry = new UiDataEntry(
@@ -165,11 +338,35 @@ describe('ViewerTransactionsComponent', () => {
         ['flag1', 'flag2', 'flag3', 'flag4'],
         [entry, entry2],
         1,
-        0,
+        selectedEntryIndex,
         0,
         UiPropertyTreeNode.from(propertiesTree),
         {},
       );
+    }
+
+    async function checkSelectFilter(filterSelector: string) {
+      component.inputData = makeUiData(0);
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(2);
+      const filterTrigger = assertDefined(
+        htmlElement.querySelector(
+          `.filters ${filterSelector} .mat-select-trigger`,
+        ),
+      ) as HTMLInputElement;
+      filterTrigger.click();
+      await fixture.whenStable();
+
+      const firstOption = assertDefined(
+        document.querySelector('.mat-select-panel .mat-option'),
+      ) as HTMLElement;
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(1);
+
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.entries.length).toEqual(2);
     }
   });
 
@@ -186,8 +383,8 @@ describe('ViewerTransactionsComponent', () => {
       const time = new PropertyTreeBuilder()
         .setRootId(propertiesTree.id)
         .setName('timestamp')
-        .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_FORMATTER)
+        .setValue(TimestampConverterUtils.makeElapsedTimestamp(1n))
+        .setFormatter(TIMESTAMP_NODE_FORMATTER)
         .build();
 
       const uiData = new UiData(
@@ -239,7 +436,7 @@ describe('ViewerTransactionsComponent', () => {
           ViewerTransactionsComponent,
           TransactionsScrollDirective,
         ],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerTransactionsComponent);
       const transactionsComponent = fixture.componentInstance;

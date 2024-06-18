@@ -15,7 +15,6 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
 import {Item} from 'trace/item';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -86,9 +85,7 @@ class ImeAdditionalPropertiesUtils {
     const displayContent = entry.getAllChildren()[0];
 
     const props: WmStateProperties = {
-      timestamp: wmEntryTimestamp
-        ? TimeUtils.format(wmEntryTimestamp)
-        : undefined,
+      timestamp: wmEntryTimestamp ? wmEntryTimestamp.format() : undefined,
       focusedApp: entry.getEagerPropertyByName('focusedApp')?.getValue(),
       focusedWindow: this.getFocusedWindowString(entry),
       focusedActivity: this.getFocusedActivityString(entry),
@@ -171,7 +168,7 @@ class ImeAdditionalPropertiesUtils {
     );
 
     const rootProperties = sfEntryTimestamp
-      ? {timestamp: TimeUtils.format(sfEntryTimestamp)}
+      ? {timestamp: sfEntryTimestamp.format()}
       : undefined;
 
     return new ImeLayers(

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {TransformMatrix} from 'common/geometry_types';
 import * as THREE from 'three';
 import {
@@ -31,28 +32,34 @@ import {
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
-  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xd2e3fc);
+  private static readonly RECT_COLOR_HIGHLIGHTED_LIGHT_MODE = new THREE.Color(
+    0xd2e3fc, // Keep in sync with :not(.dark-mode) --selected-element-color in material-theme.scss
+  );
+  private static readonly RECT_COLOR_HIGHLIGHTED_DARK_MODE = new THREE.Color(
+    0x5f718a, // Keep in sync with .dark-mode --selected-element-color in material-theme.scss
+  );
   private static readonly RECT_COLOR_HAS_CONTENT = new THREE.Color(0xad42f5);
-  private static readonly RECT_EDGE_COLOR = 0x000000;
+
+  private static readonly RECT_EDGE_COLOR_LIGHT_MODE = 0x000000;
+  private static readonly RECT_EDGE_COLOR_DARK_MODE = 0xffffff;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
-  private static readonly LABEL_CIRCLE_COLOR = 0x000000;
-  private static readonly LABEL_LINE_COLOR = 0x000000;
-  private static readonly LABEL_LINE_COLOR_HIGHLIGHTED = 0x808080;
+
+  private static readonly LABEL_LINE_COLOR = 0x808080;
+
   private static readonly OPACITY_REGULAR = 0.75;
   private static readonly OPACITY_OVERSIZED = 0.25;
 
-  private canvasRects: HTMLCanvasElement;
-  private canvasLabels?: HTMLElement;
   private camera?: THREE.OrthographicCamera;
   private scene?: THREE.Scene;
   private renderer?: THREE.WebGLRenderer;
   private labelRenderer?: CSS2DRenderer;
   private clickableObjects: THREE.Object3D[] = [];
 
-  constructor(canvasRects: HTMLCanvasElement, canvasLabels?: HTMLElement) {
-    this.canvasRects = canvasRects;
-    this.canvasLabels = canvasLabels;
-  }
+  constructor(
+    private canvasRects: HTMLCanvasElement,
+    private canvasLabels?: HTMLElement,
+    private isDarkMode = () => false,
+  ) {}
 
   draw(scene: Scene3D) {
     // Must set 100% width and height so the HTML element expands to the parent's
@@ -129,21 +136,19 @@ export class Canvas {
 
     // set various factors for shading and shifting
     this.drawRects(scene.rects);
+    const canvasRects = assertDefined(this.canvasRects);
     if (this.canvasLabels) {
-      this.drawLabels(scene.labels);
+      this.drawLabels(scene.labels, this.isDarkMode());
 
       this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
       this.labelRenderer.setSize(
-        this.canvasRects!.clientWidth,
-        this.canvasRects!.clientHeight,
+        canvasRects.clientWidth,
+        canvasRects.clientHeight,
       );
       this.labelRenderer.render(this.scene, this.camera);
     }
 
-    this.renderer.setSize(
-      this.canvasRects!.clientWidth,
-      this.canvasRects!.clientHeight,
-    );
+    this.renderer.setSize(canvasRects.clientWidth, canvasRects.clientHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
@@ -152,7 +157,7 @@ export class Canvas {
   getClickedRectId(x: number, y: number, z: number): undefined | string {
     const clickPosition = new THREE.Vector3(x, y, z);
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(clickPosition, this.camera!);
+    raycaster.setFromCamera(clickPosition, assertDefined(this.camera));
     const intersected = raycaster.intersectObjects(this.clickableObjects);
     if (intersected.length > 0) {
       return intersected[0].object.name;
@@ -163,7 +168,7 @@ export class Canvas {
   private drawRects(rects: Rect3D[]) {
     this.clickableObjects = [];
     rects.forEach((rect) => {
-      const rectMesh = Canvas.makeRectMesh(rect);
+      const rectMesh = Canvas.makeRectMesh(rect, this.isDarkMode());
       const transform = Canvas.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
 
@@ -175,10 +180,10 @@ export class Canvas {
     });
   }
 
-  private drawLabels(labels: Label3D[]) {
+  private drawLabels(labels: Label3D[], isDarkMode: boolean) {
     this.clearLabels();
     labels.forEach((label) => {
-      const circleMesh = this.makeLabelCircleMesh(label.circle);
+      const circleMesh = this.makeLabelCircleMesh(label.circle, isDarkMode);
       this.scene?.add(circleMesh);
 
       const linePoints = label.linePoints.map((point: Point3D) => {
@@ -187,7 +192,9 @@ export class Canvas {
       const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
       const lineMaterial = new THREE.LineBasicMaterial({
         color: label.isHighlighted
-          ? Canvas.LABEL_LINE_COLOR_HIGHLIGHTED
+          ? isDarkMode
+            ? Canvas.RECT_EDGE_COLOR_DARK_MODE
+            : Canvas.RECT_EDGE_COLOR_LIGHT_MODE
           : Canvas.LABEL_LINE_COLOR,
       });
       const line = new THREE.Line(lineGeometry, lineMaterial);
@@ -217,7 +224,7 @@ export class Canvas {
     div.appendChild(spanPlaceholder);
 
     div.style.marginTop = '5px';
-    if (label.isHighlighted) {
+    if (!label.isHighlighted) {
       div.style.color = 'gray';
     }
     div.style.pointerEvents = 'auto';
@@ -257,25 +264,46 @@ export class Canvas {
     );
   }
 
-  private static makeRectMesh(rect: Rect3D): THREE.Mesh {
+  private static makeRectMesh(rect: Rect3D, isDarkMode: boolean): THREE.Mesh {
     const rectShape = Canvas.createRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
-    const rectBorders = Canvas.createRectBorders(rect, rectGeometry);
-
-    let opacity = Canvas.OPACITY_REGULAR;
-    if (rect.isOversized) {
-      opacity = Canvas.OPACITY_OVERSIZED;
-    }
-
-    // Crate mesh to draw
-    const mesh = new THREE.Mesh(
+    const rectBorders = Canvas.createRectBorders(
+      rect,
       rectGeometry,
-      new THREE.MeshBasicMaterial({
-        color: Canvas.getColor(rect),
-        opacity,
-        transparent: true,
-      }),
+      isDarkMode,
     );
+
+    const color = Canvas.getColor(rect, isDarkMode);
+    let mesh: THREE.Mesh | undefined;
+    if (color === undefined) {
+      mesh = new THREE.Mesh(
+        rectGeometry,
+        new THREE.MeshBasicMaterial({
+          opacity: 0,
+          transparent: true,
+        }),
+      );
+    } else {
+      let opacity: number | undefined;
+      if (
+        rect.colorType === ColorType.VISIBLE_WITH_OPACITY ||
+        rect.colorType === ColorType.HAS_CONTENT_AND_OPACITY
+      ) {
+        opacity = rect.darkFactor;
+      } else {
+        opacity = rect.isOversized
+          ? Canvas.OPACITY_OVERSIZED
+          : Canvas.OPACITY_REGULAR;
+      }
+      mesh = new THREE.Mesh(
+        rectGeometry,
+        new THREE.MeshBasicMaterial({
+          color,
+          opacity,
+          transparent: true,
+        }),
+      );
+    }
 
     mesh.add(rectBorders);
     mesh.position.x = 0;
@@ -342,14 +370,25 @@ export class Canvas {
       );
   }
 
-  private static getColor(rect: Rect3D): THREE.Color {
+  private static getVisibleRectColor(darkFactor: number) {
+    const red = ((200 - 45) * darkFactor + 45) / 255;
+    const green = ((232 - 182) * darkFactor + 182) / 255;
+    const blue = ((183 - 44) * darkFactor + 44) / 255;
+    return new THREE.Color(red, green, blue);
+  }
+
+  private static getColor(
+    rect: Rect3D,
+    isDarkMode: boolean,
+  ): THREE.Color | undefined {
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
-        const red = ((200 - 45) * rect.darkFactor + 45) / 255;
-        const green = ((232 - 182) * rect.darkFactor + 182) / 255;
-        const blue = ((183 - 44) * rect.darkFactor + 44) / 255;
-        return new THREE.Color(red, green, blue);
+        return Canvas.getVisibleRectColor(rect.darkFactor);
+      }
+      case ColorType.VISIBLE_WITH_OPACITY: {
+        // same green for all rects - rect.darkFactor determines opacity
+        return Canvas.getVisibleRectColor(0.7);
       }
       case ColorType.NOT_VISIBLE: {
         // gray (darkness depends on z order)
@@ -359,10 +398,18 @@ export class Canvas {
         return new THREE.Color(darkness, darkness, darkness);
       }
       case ColorType.HIGHLIGHTED: {
-        return Canvas.RECT_COLOR_HIGHLIGHTED;
+        return isDarkMode
+          ? Canvas.RECT_COLOR_HIGHLIGHTED_DARK_MODE
+          : Canvas.RECT_COLOR_HIGHLIGHTED_LIGHT_MODE;
+      }
+      case ColorType.HAS_CONTENT_AND_OPACITY: {
+        return Canvas.RECT_COLOR_HAS_CONTENT;
       }
       case ColorType.HAS_CONTENT: {
         return Canvas.RECT_COLOR_HAS_CONTENT;
+      }
+      case ColorType.EMPTY: {
+        return undefined;
       }
       default: {
         throw new Error(`Unexpected color type: ${rect.colorType}`);
@@ -373,6 +420,7 @@ export class Canvas {
   private static createRectBorders(
     rect: Rect3D,
     rectGeometry: THREE.ShapeGeometry,
+    isDarkMode: boolean,
   ): THREE.LineSegments {
     // create line edges for rect
     const edgeGeo = new THREE.EdgesGeometry(rectGeometry);
@@ -384,7 +432,9 @@ export class Canvas {
       });
     } else {
       edgeMaterial = new THREE.LineBasicMaterial({
-        color: Canvas.RECT_EDGE_COLOR,
+        color: isDarkMode
+          ? Canvas.RECT_EDGE_COLOR_DARK_MODE
+          : Canvas.RECT_EDGE_COLOR_LIGHT_MODE,
         linewidth: 1,
       });
     }
@@ -393,10 +443,15 @@ export class Canvas {
     return lineSegments;
   }
 
-  private makeLabelCircleMesh(circle: Circle3D): THREE.Mesh {
+  private makeLabelCircleMesh(
+    circle: Circle3D,
+    isDarkMode: boolean,
+  ): THREE.Mesh {
     const geometry = new THREE.CircleGeometry(circle.radius, 20);
     const material = new THREE.MeshBasicMaterial({
-      color: Canvas.LABEL_CIRCLE_COLOR,
+      color: isDarkMode
+        ? Canvas.RECT_EDGE_COLOR_DARK_MODE
+        : Canvas.RECT_EDGE_COLOR_LIGHT_MODE,
     });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(circle.center.x, circle.center.y, circle.center.z);
@@ -406,7 +461,7 @@ export class Canvas {
   private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent = new CustomEvent(
-      ViewerEvents.HighlightedChange,
+      ViewerEvents.HighlightedIdChange,
       {
         bubbles: true,
         detail: {id: newId},

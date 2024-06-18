@@ -15,8 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {Timestamp} from 'common/time';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {
@@ -30,12 +30,12 @@ import {com} from 'protos/transitions/udc/static';
 import {
   EnumFormatter,
   PropertyFormatter,
-  TIMESTAMP_FORMATTER,
+  TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builder_from_proto';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {AddDuration} from './operations/add_duration';
-import {AddRealToElapsedTimeOffsetTimestamp} from './operations/add_real_to_elapsed_time_offset_timestamp';
+import {AddRealToBootTimeOffsetTimestamp} from './operations/add_real_to_elapsed_time_offset_timestamp';
 import {AddRootProperties} from './operations/add_root_properties';
 import {AddStatus} from './operations/add_status';
 import {UpdateAbortTimeNodes} from './operations/update_abort_time_nodes';
@@ -46,9 +46,8 @@ interface TransitionInfo {
     | com.android.server.wm.shell.ITransition
     | com.android.wm.shell.ITransition
     | perfetto.protos.IShellTransition;
-  realToElapsedTimeOffsetNs: bigint | undefined;
-  timestampType: TimestampType;
-  timestampFactory: TimestampFactory;
+  realToBootTimeOffsetNs: bigint | undefined;
+  timestampConverter: ParserTimestampConverter;
   handlerMapping?: {[key: number]: string};
 }
 
@@ -66,7 +65,7 @@ export class ParserTransitionsUtils {
     ParserTransitionsUtils.TransitionTraceProto.fields['transitions'];
   private static readonly WM_ADD_DEFAULTS_OPERATION = new AddDefaults(
     ParserTransitionsUtils.TransitionField,
-    ['type'],
+    ['type', 'targets'],
   );
   private static readonly SET_FORMATTERS_OPERATION = new SetFormatters();
   private static readonly PERFETTO_TRANSITION_OPERATIONS = [
@@ -122,19 +121,19 @@ export class ParserTransitionsUtils {
       );
     }
 
-    const realToElapsedTimeOffsetTimestamp =
-      info.realToElapsedTimeOffsetNs !== undefined
-        ? info.timestampFactory.makeTimestampFromType(
-            info.timestampType,
-            info.realToElapsedTimeOffsetNs,
-            0n,
-          )
-        : undefined;
+    let realToBootTimeOffsetTimestamp: Timestamp | undefined;
+
+    if (info.realToBootTimeOffsetNs !== undefined) {
+      realToBootTimeOffsetTimestamp =
+        info.timestampConverter.makeTimestampFromRealNs(
+          info.realToBootTimeOffsetNs,
+        );
+    }
 
     const wmDataNode = assertDefined(tree.getChildByName('wmData'));
-    new AddRealToElapsedTimeOffsetTimestamp(
-      realToElapsedTimeOffsetTimestamp,
-    ).apply(wmDataNode);
+    new AddRealToBootTimeOffsetTimestamp(realToBootTimeOffsetTimestamp).apply(
+      wmDataNode,
+    );
     ParserTransitionsUtils.WM_ADD_DEFAULTS_OPERATION.apply(wmDataNode);
     new TransformToTimestamp(
       [
@@ -144,36 +143,21 @@ export class ParserTransitionsUtils {
         'finishTimeNs',
         'startingWindowRemoveTimeNs',
       ],
-      ParserTransitionsUtils.makeTimestampStrategy(info),
+      ParserTransitionsUtils.makeTimestampStrategy(info.timestampConverter),
     ).apply(wmDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([
       ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
       ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['abortTimeNs', TIMESTAMP_FORMATTER],
-      ['createTimeNs', TIMESTAMP_FORMATTER],
-      ['sendTimeNs', TIMESTAMP_FORMATTER],
-      ['finishTimeNs', TIMESTAMP_FORMATTER],
-      ['startingWindowRemoveTimeNs', TIMESTAMP_FORMATTER],
+      ['abortTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['createTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['sendTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['finishTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['startingWindowRemoveTimeNs', TIMESTAMP_NODE_FORMATTER],
     ]);
 
     new SetFormatters(undefined, customFormatters).apply(tree);
     return tree;
-  }
-
-  private static makeTimestampStrategy(
-    info: TransitionInfo,
-  ): MakeTimestampStrategyType {
-    if (info.timestampType === TimestampType.REAL) {
-      return (valueNs: bigint) => {
-        return info.timestampFactory.makeRealTimestamp(
-          valueNs,
-          info.realToElapsedTimeOffsetNs,
-        );
-      };
-    } else {
-      return info.timestampFactory.makeElapsedTimestamp;
-    }
   }
 
   static makeShellPropertiesTree(
@@ -199,31 +183,30 @@ export class ParserTransitionsUtils {
       );
     }
 
-    const realToElapsedTimeOffsetTimestamp =
-      info.realToElapsedTimeOffsetNs !== undefined
-        ? info.timestampFactory.makeTimestampFromType(
-            info.timestampType,
-            info.realToElapsedTimeOffsetNs,
-            0n,
-          )
-        : undefined;
+    let realToBootTimeOffsetTimestamp: Timestamp | undefined;
+    if (info.realToBootTimeOffsetNs !== undefined) {
+      realToBootTimeOffsetTimestamp =
+        info.timestampConverter.makeTimestampFromRealNs(
+          info.realToBootTimeOffsetNs,
+        );
+    }
 
     const shellDataNode = assertDefined(tree.getChildByName('shellData'));
-    new AddRealToElapsedTimeOffsetTimestamp(
-      realToElapsedTimeOffsetTimestamp,
-    ).apply(shellDataNode);
+    new AddRealToBootTimeOffsetTimestamp(realToBootTimeOffsetTimestamp).apply(
+      shellDataNode,
+    );
     new TransformToTimestamp(
       ['dispatchTimeNs', 'mergeRequestTimeNs', 'mergeTimeNs', 'abortTimeNs'],
-      ParserTransitionsUtils.makeTimestampStrategy(info),
+      ParserTransitionsUtils.makeTimestampStrategy(info.timestampConverter),
     ).apply(shellDataNode);
 
     const customFormatters = new Map<string, PropertyFormatter>([
       ['type', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
       ['mode', ParserTransitionsUtils.TRANSITION_TYPE_FORMATTER],
-      ['dispatchTimeNs', TIMESTAMP_FORMATTER],
-      ['mergeRequestTimeNs', TIMESTAMP_FORMATTER],
-      ['mergeTimeNs', TIMESTAMP_FORMATTER],
-      ['abortTimeNs', TIMESTAMP_FORMATTER],
+      ['dispatchTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['mergeRequestTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['mergeTimeNs', TIMESTAMP_NODE_FORMATTER],
+      ['abortTimeNs', TIMESTAMP_NODE_FORMATTER],
     ]);
 
     if (info.handlerMapping) {
@@ -233,5 +216,13 @@ export class ParserTransitionsUtils {
     new SetFormatters(undefined, customFormatters).apply(tree);
 
     return tree;
+  }
+
+  private static makeTimestampStrategy(
+    timestampConverter: ParserTimestampConverter,
+  ): MakeTimestampStrategyType {
+    return (valueNs: bigint) => {
+      return timestampConverter.makeTimestampFromBootTimeNs(valueNs);
+    };
   }
 }

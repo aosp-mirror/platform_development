@@ -23,10 +23,9 @@ import {
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {assertDefined} from 'common/assert_utils';
-import {TimestampType} from 'common/time';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
@@ -34,14 +33,15 @@ import {Traces} from 'trace/traces';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
+import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
@@ -61,6 +61,8 @@ describe('ViewerTransitionsComponent', () => {
         TreeNodeComponent,
         PropertyTreeNodeDataViewComponent,
         PropertiesComponent,
+        CollapsedSectionsComponent,
+        CollapsibleSectionTitleComponent,
       ],
       schemas: [],
     }).compileComponents();
@@ -114,11 +116,13 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
-      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
+        .getChildByName('id')
+        ?.getValue(),
     ).toEqual(0);
 
     const id1 = assertDefined(entry2.querySelector('.id')).textContent;
@@ -128,11 +132,13 @@ describe('ViewerTransitionsComponent', () => {
 
     expect(emitEventSpy).toHaveBeenCalled();
     expect(emitEventSpy).toHaveBeenCalledWith(
-      Events.TransitionSelected,
+      ViewerEvents.TransitionSelected,
       jasmine.any(Object),
     );
     expect(
-      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+      (emitEventSpy.calls.mostRecent().args[1] as PropertyTreeNode)
+        .getChildByName('id')
+        ?.getValue(),
     ).toEqual(1);
   });
 
@@ -141,9 +147,9 @@ describe('ViewerTransitionsComponent', () => {
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     ])) as Parser<PropertyTreeNode>;
-    const trace = Trace.fromParser(parser, TimestampType.REAL);
+    const trace = Trace.fromParser(parser);
     const traces = new Traces();
-    traces.setTrace(TraceType.TRANSITION, trace);
+    traces.addTrace(trace);
 
     let treeView = assertDefined(
       htmlElement.querySelector('.properties-view'),
@@ -152,7 +158,7 @@ describe('ViewerTransitionsComponent', () => {
       assertDefined(treeView.querySelector('.placeholder-text')).textContent,
     ).toContain('No selected transition');
 
-    const presenter = new Presenter(traces, (data) => {
+    const presenter = new Presenter(trace, traces, (data) => {
       component.inputData = data;
     });
     const selectedTransitionEntry = assertDefined(
@@ -191,16 +197,41 @@ describe('ViewerTransitionsComponent', () => {
   });
 
   it('propagates timestamp on click', () => {
-    let timestamp = '';
+    let timestamp: string | undefined;
+    let index: number | undefined;
     htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      timestamp = (event as CustomEvent).detail.formattedValue();
+      const detail: TimestampClickDetail = (event as CustomEvent).detail;
+      timestamp = detail.timestamp?.format();
+      index = detail.index;
     });
-    const logTimestampButton = assertDefined(
-      htmlElement.querySelector('.time button'),
+    const sendTimeButton = assertDefined(
+      htmlElement.querySelector('.send-time button'),
     ) as HTMLButtonElement;
-    logTimestampButton.click();
+    sendTimeButton.click();
 
+    expect(index).toBeUndefined();
     expect(timestamp).toEqual('20ns');
+
+    const dispatchTimeButton = assertDefined(
+      htmlElement.querySelector('.dispatch-time button'),
+    ) as HTMLButtonElement;
+    dispatchTimeButton.click();
+
+    expect(index).toEqual(0);
+    expect(timestamp).toEqual('25ns');
+  });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles properties section collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.properties-view',
+      'SELECTED TRANSITION',
+    );
   });
 });
 
@@ -233,20 +264,30 @@ function createMockTransition(
     .setRootId(transitionTree.id)
     .setName('sendTimeNs')
     .setValue(
-      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(BigInt(sendTimeNanos)),
+      TimestampConverterUtils.makeElapsedTimestamp(BigInt(sendTimeNanos)),
     )
-    .setFormatter(TIMESTAMP_FORMATTER)
+    .setFormatter(TIMESTAMP_NODE_FORMATTER)
+    .build();
+
+  const dispatchTimeNode = new PropertyTreeBuilder()
+    .setRootId(transitionTree.id)
+    .setName('dispatchTimeNs')
+    .setValue(
+      TimestampConverterUtils.makeElapsedTimestamp(BigInt(sendTimeNanos) + 5n),
+    )
+    .setFormatter(TIMESTAMP_NODE_FORMATTER)
     .build();
 
   return {
     id,
     type: 'TO_FRONT',
     sendTime: sendTimeNode,
-    dispatchTime: undefined,
+    dispatchTime: dispatchTimeNode,
     duration: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
     merged: false,
     aborted: false,
     played: false,
     propertiesTree: transitionTree,
+    traceIndex: 0,
   };
 }

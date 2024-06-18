@@ -18,18 +18,24 @@ import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {TraceType} from 'trace/trace_type';
 import {Transition} from 'trace/transition';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {CollapsibleSections} from 'viewers/common/collapsible_sections';
+import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
-import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
-import {Events} from './events';
 import {UiData} from './ui_data';
 
 @Component({
   selector: 'viewer-transitions',
   template: `
     <div class="card-grid container">
-      <div class="entries">
+      <collapsed-sections
+        [class.empty]="sections.areAllSectionsExpanded()"
+        [sections]="sections"
+        (sectionChange)="sections.onCollapseStateChange($event, false)">
+      </collapsed-sections>
+      <div class="log-view entries">
         <div class="table-header table-row">
           <div class="id mat-body-2">Id</div>
           <div class="type mat-body-2">Type</div>
@@ -55,7 +61,7 @@ import {UiData} from './ui_data';
                 mat-button
                 color="primary"
                 *ngIf="transition.sendTime"
-                (click)="onTimestampClicked(transition.sendTime)">
+                (click)="onSendTimeClicked(transition)">
                 {{ transition.sendTime.formattedValue() }}
               </button>
               <span *ngIf="!transition.sendTime" class="mat-body-1"> n/a </span>
@@ -65,7 +71,7 @@ import {UiData} from './ui_data';
                 mat-button
                 color="primary"
                 *ngIf="transition.dispatchTime"
-                (click)="onTimestampClicked(transition.dispatchTime)">
+                (click)="onDispatchTimeClicked(transition)">
                 {{ transition.dispatchTime.formattedValue() }}
               </button>
               <span *ngIf="!transition.dispatchTime" class="mat-body-1"> n/a </span>
@@ -105,16 +111,16 @@ import {UiData} from './ui_data';
         </cdk-virtual-scroll-viewport>
       </div>
 
-      <mat-divider [vertical]="true"></mat-divider>
-
       <properties-view
         class="properties-view"
-        title="SELECTED TRANSITION"
+        [title]="propertiesTitle"
         [showFilter]="false"
         [propertiesTree]="uiData.selectedTransition"
         [traceType]="${TraceType.TRANSITION}"
         [isProtoDump]="false"
-        placeholderText="No selected transition."></properties-view>
+        placeholderText="No selected transition."
+        (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
     </div>
   `,
   styles: [
@@ -187,10 +193,6 @@ import {UiData} from './ui_data';
         gap: 5px;
       }
 
-      .selected .status mat-icon {
-        color: white !important;
-      }
-
       .transition-timeline .row svg rect {
         cursor: pointer;
       }
@@ -214,6 +216,16 @@ import {UiData} from './ui_data';
   ],
 })
 export class ViewerTransitionsComponent {
+  propertiesTitle = 'SELECTED TRANSITION';
+  CollapsibleSectionType = CollapsibleSectionType;
+  sections = new CollapsibleSections([
+    {
+      type: CollapsibleSectionType.PROPERTIES,
+      label: this.propertiesTitle,
+      isCollapsed: false,
+    },
+  ]);
+
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   @Input()
@@ -222,7 +234,7 @@ export class ViewerTransitionsComponent {
   }
 
   onTransitionClicked(transition: Transition): void {
-    this.emitEvent(Events.TransitionSelected, transition.propertiesTree);
+    this.emitEvent(ViewerEvents.TransitionSelected, transition.propertiesTree);
   }
 
   isSelectedTransition(transition: Transition): boolean {
@@ -240,14 +252,27 @@ export class ViewerTransitionsComponent {
     );
   }
 
-  onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  onDispatchTimeClicked(transition: Transition) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(
+        transition.dispatchTime?.getValue(),
+        transition.traceIndex,
+      ),
+    );
   }
 
-  emitEvent(event: string, propertiesTree: PropertyTreeNode) {
+  onSendTimeClicked(transition: Transition) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(transition.sendTime?.getValue(), undefined),
+    );
+  }
+
+  emitEvent(event: string, data: PropertyTreeNode | TimestampClickDetail) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
-      detail: propertiesTree,
+      detail: data,
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }

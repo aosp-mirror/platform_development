@@ -24,14 +24,15 @@ import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {MockStorage} from 'test/unit/mock_storage';
 import {
   TraceConfigurationMap,
   TRACES,
 } from 'trace_collection/trace_collection_utils';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {CollectTracesComponent} from './collect_traces_component';
+import {LoadProgressComponent} from './load_progress_component';
 import {TraceConfigComponent} from './trace_config_component';
 import {WebAdbComponent} from './web_adb_component';
 
@@ -58,6 +59,7 @@ describe('CollectTracesComponent', () => {
         AdbProxyComponent,
         WebAdbComponent,
         TraceConfigComponent,
+        LoadProgressComponent,
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -65,7 +67,7 @@ describe('CollectTracesComponent', () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.isAdbProxy = true;
-    component.storage = new MockStorage();
+    component.storage = new InMemoryStorage();
     component.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
       TRACES['default'],
@@ -76,13 +78,11 @@ describe('CollectTracesComponent', () => {
       {
         window_dump: {
           name: 'Window Manager',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
         layers_dump: {
           name: 'Surface Flinger',
-          isTraceCollection: undefined,
           run: true,
           config: undefined,
         },
@@ -97,9 +97,8 @@ describe('CollectTracesComponent', () => {
   });
 
   it('renders the expected card title', () => {
-    expect(htmlElement.querySelector('.title')?.innerHTML).toContain(
-      'Collect Traces',
-    );
+    const title = assertDefined(htmlElement.querySelector('.title'));
+    expect(title.innerHTML).toContain('Collect Traces');
   });
 
   it('displays connecting message', () => {
@@ -107,260 +106,212 @@ describe('CollectTracesComponent', () => {
       .createSpy()
       .and.returnValue(true);
     fixture.detectChanges();
-    expect(
-      htmlElement.querySelector('.connecting-message')?.innerHTML,
-    ).toContain('Connecting...');
+
+    const connectingMessage = assertDefined(
+      htmlElement.querySelector('.connecting-message'),
+    );
+    expect(connectingMessage.innerHTML).toContain('Connecting...');
   });
 
-  it('displays adb set up', async () => {
+  it('displays adb set up', () => {
     assertDefined(component.connect).adbSuccess = jasmine
       .createSpy()
       .and.returnValue(false);
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector('.set-up-adb')).toBeTruthy();
-      const proxyTab: HTMLButtonElement | null =
-        htmlElement.querySelector('.proxy-tab');
-      expect(proxyTab).toBeInstanceOf(HTMLButtonElement);
-      const webTab: HTMLButtonElement | null =
-        htmlElement.querySelector('.web-tab');
-      expect(webTab).toBeInstanceOf(HTMLButtonElement);
-    });
+
+    const setUpAdbEl = assertDefined(htmlElement.querySelector('.set-up-adb'));
+    expect(setUpAdbEl.querySelector('.proxy-tab')).toBeTruthy();
   });
 
-  it('displays adb proxy element', async () => {
+  it('displays adb proxy element', () => {
     assertDefined(component.connect).adbSuccess = jasmine
       .createSpy()
       .and.returnValue(false);
     component.isAdbProxy = true;
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector('adb-proxy')).toBeTruthy();
-      expect(htmlElement.querySelector('web-adb')).toBeFalsy();
-    });
+
+    expect(htmlElement.querySelector('adb-proxy')).toBeTruthy();
   });
 
-  it('displays web adb element', async () => {
-    assertDefined(component.connect).adbSuccess = jasmine
-      .createSpy()
-      .and.returnValue(false);
-    component.isAdbProxy = false;
+  it('displays no connected devices', () => {
+    const connect = assertDefined(component.connect);
+    connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connect.devices = jasmine.createSpy().and.returnValue({});
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector('adb-proxy')).toBeFalsy();
-      expect(htmlElement.querySelector('web-adb')).toBeTruthy();
-    });
+
+    const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
+    expect(el.innerHTML).toContain('No devices detected');
   });
 
-  it('changes to adb workflow tab', async () => {
-    assertDefined(component.connect).adbSuccess = jasmine
-      .createSpy()
-      .and.returnValue(false);
-    component.isAdbProxy = true;
-    fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const webTab: HTMLButtonElement | null =
-        htmlElement.querySelector('.web-tab');
-      expect(webTab).toBeInstanceOf(HTMLButtonElement);
-      webTab?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(component.displayWebAdbTab).toHaveBeenCalled();
-      });
-    });
-  });
-
-  it('displays no connected devices', async () => {
-    assertDefined(component.connect).isDevicesState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    assertDefined(component.connect).devices = jasmine
-      .createSpy()
-      .and.returnValue({});
-    fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.devices-connecting');
-      expect(el).toBeTruthy();
-      expect(el?.innerHTML).toContain('No devices detected');
-    });
-  });
-
-  it('displays connected authorised devices', async () => {
-    assertDefined(component.connect).isDevicesState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    assertDefined(component.connect).devices = jasmine
+  it('displays connected authorised devices', () => {
+    const connect = assertDefined(component.connect);
+    connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connect.devices = jasmine
       .createSpy()
       .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.devices-connecting');
-      expect(el).toBeTruthy();
-      expect(el?.innerHTML).toContain('Connected devices:');
-      expect(el?.innerHTML).toContain('Pixel 6');
-      expect(el?.innerHTML).toContain('smartphone');
-    });
+
+    const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
+    expect(el.innerHTML).toContain('Pixel 6');
+    expect(el.innerHTML).toContain('smartphone');
   });
 
-  it('displays connected unauthorised devices', async () => {
-    assertDefined(component.connect).isDevicesState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    assertDefined(component.connect).devices = jasmine
+  it('displays connected unauthorised devices', () => {
+    const connect = assertDefined(component.connect);
+    connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connect.devices = jasmine
       .createSpy()
       .and.returnValue({'35562': {model: 'Pixel 6', authorised: false}});
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.devices-connecting');
-      expect(el).toBeTruthy();
-      expect(el?.innerHTML).toContain('Connected devices:');
-      expect(el?.innerHTML).toContain('unauthorised');
-      expect(el?.innerHTML).toContain('screen_lock_portrait');
-    });
+
+    const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
+    expect(el.innerHTML).toContain('unauthorised');
+    expect(el.innerHTML).toContain('screen_lock_portrait');
   });
 
-  it('displays trace collection config elements', async () => {
-    assertDefined(component.connect).isStartTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    const mock = {model: 'Pixel 6', authorised: true};
-    assertDefined(component.connect).devices = jasmine
-      .createSpy()
-      .and.returnValue({'35562': mock});
-    assertDefined(component.connect).selectedDevice = jasmine
-      .createSpy()
-      .and.returnValue(mock);
+  it('auto detects changes in devices', async () => {
+    const connect = assertDefined(component.connect);
+    connect.isDevicesState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
 
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.trace-collection-config');
-      expect(el).toBeTruthy();
-      expect(el?.innerHTML).toContain('smartphone');
-      expect(el?.innerHTML).toContain('Pixel 6');
-      expect(el?.innerHTML).toContain('35562');
+    const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
+    expect(el.textContent).toContain('No devices detected');
 
-      const traceSection = htmlElement.querySelector('.trace-section');
-      expect(traceSection).toBeTruthy();
+    connect.devices = jasmine
+      .createSpy()
+      .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
 
-      const dumpSection = htmlElement.querySelector('.dump-section');
-      expect(dumpSection).toBeTruthy();
-    });
+    await fixture.whenStable();
+    expect(el.textContent).toContain(
+      'Select a device: smartphone  Pixel 6 (35562)',
+    );
   });
 
-  it('start trace button works as expected', async () => {
-    assertDefined(component.connect).isStartTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
+  it('displays trace collection config elements', () => {
+    const connect = assertDefined(component.connect);
+    connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    assertDefined(component.connect).devices = jasmine
-      .createSpy()
-      .and.returnValue({'35562': mock});
-    assertDefined(component.connect).selectedDevice = jasmine
-      .createSpy()
-      .and.returnValue(mock);
+    connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    connect.selectedDeviceId = jasmine.createSpy().and.returnValue('35562');
     fixture.detectChanges();
 
-    fixture.whenStable().then(() => {
-      const start: HTMLButtonElement | null =
-        htmlElement.querySelector('.start-btn');
-      expect(start).toBeInstanceOf(HTMLButtonElement);
-      start?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(component.startTracing).toHaveBeenCalled();
-        expect(assertDefined(component.connect).startTrace).toHaveBeenCalled();
-      });
-    });
+    const el = assertDefined(
+      htmlElement.querySelector('.trace-collection-config'),
+    );
+    expect(el.innerHTML).toContain('smartphone');
+    expect(el.innerHTML).toContain('Pixel 6');
+    expect(el.innerHTML).toContain('35562');
+
+    const traceSection = htmlElement.querySelector('.trace-section');
+    expect(traceSection).toBeTruthy();
+
+    const dumpSection = htmlElement.querySelector('.dump-section');
+    expect(dumpSection).toBeTruthy();
   });
 
-  it('dump state button works as expected', async () => {
-    assertDefined(component.connect).isStartTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
+  it('start trace button works as expected', () => {
+    const connect = assertDefined(component.connect);
+    connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    assertDefined(component.connect).devices = jasmine
-      .createSpy()
-      .and.returnValue({'35562': mock});
-    assertDefined(component.connect).selectedDevice = jasmine
-      .createSpy()
-      .and.returnValue(mock);
+    connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
-    fixture.whenStable().then(() => {
-      const dump: HTMLButtonElement | null =
-        htmlElement.querySelector('.dump-btn');
-      expect(dump).toBeInstanceOf(HTMLButtonElement);
-      dump?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(component.dumpState).toHaveBeenCalled();
-        expect(assertDefined(component.connect).dumpState).toHaveBeenCalled();
-      });
-    });
+    const spy = spyOn(connect, 'startTrace');
+    const start = assertDefined(
+      htmlElement.querySelector('.start-btn button'),
+    ) as HTMLButtonElement;
+    start.click();
+    expect(spy).toHaveBeenCalled();
   });
 
-  it('change device button works as expected', async () => {
-    assertDefined(component.connect).isStartTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
+  it('dump state button works as expected', () => {
+    const connect = assertDefined(component.connect);
+    connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
     const mock = {model: 'Pixel 6', authorised: true};
-    assertDefined(component.connect).devices = jasmine
-      .createSpy()
-      .and.returnValue({'35562': mock});
-    assertDefined(component.connect).selectedDevice = jasmine
-      .createSpy()
-      .and.returnValue(mock);
+    connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
     fixture.detectChanges();
 
-    fixture.whenStable().then(() => {
-      const change: HTMLButtonElement | null =
-        htmlElement.querySelector('.change-btn');
-      expect(change).toBeInstanceOf(HTMLButtonElement);
-      change?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(
-          assertDefined(component.connect).resetLastDevice,
-        ).toHaveBeenCalled();
-      });
-    });
+    const spy = spyOn(connect, 'dumpState');
+    const dump = assertDefined(
+      htmlElement.querySelector('.dump-btn button'),
+    ) as HTMLButtonElement;
+    dump.click();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('change device button works as expected', () => {
+    const connect = assertDefined(component.connect);
+    connect.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    const mock = {model: 'Pixel 6', authorised: true};
+    connect.devices = jasmine.createSpy().and.returnValue({'35562': mock});
+    connect.selectedDevice = jasmine.createSpy().and.returnValue(mock);
+    fixture.detectChanges();
+
+    const spy = spyOn(connect, 'resetLastDevice');
+    const change = assertDefined(
+      htmlElement.querySelector('.change-btn'),
+    ) as HTMLButtonElement;
+    change.click();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('displays unknown error message', () => {
-    assertDefined(component.connect).isErrorState = jasmine
+    const connect = assertDefined(component.connect);
+    connect.isErrorState = jasmine.createSpy().and.returnValue(true);
+    fixture.detectChanges();
+
+    const testErrorMessage = 'bad things are happening';
+    assertDefined(connect.proxy).errorText = testErrorMessage;
+    fixture.detectChanges();
+
+    const el = assertDefined(htmlElement.querySelector('.unknown-error'));
+    expect(el.innerHTML).toContain('Error:');
+    expect(el.innerHTML).toContain(testErrorMessage);
+
+    const spy = spyOn(connect, 'restart').and.callThrough();
+    const retryButton = assertDefined(
+      htmlElement.querySelector('.retry-btn'),
+    ) as HTMLButtonElement;
+    retryButton.click();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('displays starting trace elements', () => {
+    assertDefined(component.connect).isStartingTraceState = jasmine
       .createSpy()
       .and.returnValue(true);
-    assertDefined(component.connect).proxy!.errorText =
-      'bad things are happening';
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.unknown-error');
-      expect(el?.innerHTML).toContain('Error:');
-      expect(el?.innerHTML).toContain('bad things are happening');
-      const retry: HTMLButtonElement | null =
-        htmlElement.querySelector('.retry-btn');
-      expect(retry).toBeInstanceOf(HTMLButtonElement);
-      retry?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(assertDefined(component.connect).restart).toHaveBeenCalled();
-      });
-    });
+
+    const el = assertDefined(htmlElement.querySelector('.starting-trace'));
+    const progress = assertDefined(el.querySelector('load-progress'));
+    expect(progress.innerHTML).toContain('Starting trace...');
+
+    const endButton = assertDefined(
+      el.querySelector('.end-btn button'),
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBeTrue();
   });
 
   it('displays end tracing elements', () => {
-    assertDefined(component.connect).isEndTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
+    const connect = assertDefined(component.connect);
+    connect.isEndTraceState = jasmine.createSpy().and.returnValue(true);
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      const el = htmlElement.querySelector('.end-tracing');
-      expect(el?.innerHTML).toContain('Tracing...');
-      expect(htmlElement.querySelector('mat-progress-bar')).toBeTruthy();
 
-      const end: HTMLButtonElement | null = htmlElement.querySelector('.end');
-      expect(end).toBeInstanceOf(HTMLButtonElement);
-      end?.dispatchEvent(new Event('click'));
-      fixture.whenStable().then(() => {
-        expect(component.endTrace).toHaveBeenCalled();
-        expect(assertDefined(component.connect).endTrace).toHaveBeenCalled();
-      });
-    });
+    const el = assertDefined(htmlElement.querySelector('.end-tracing'));
+    const progress = assertDefined(el.querySelector('load-progress'));
+    expect(progress.innerHTML).toContain('Tracing...');
+    expect(progress.innerHTML).toContain('cable');
+
+    const spy = spyOn(connect, 'endTrace');
+    const endButton = assertDefined(
+      el.querySelector('.end-btn button'),
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBeFalse();
+    endButton.click();
+    expect(spy).toHaveBeenCalled();
   });
 
   it('displays loading data elements', () => {
@@ -368,11 +319,14 @@ describe('CollectTracesComponent', () => {
       .createSpy()
       .and.returnValue(true);
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector('.load-data')?.innerHTML).toContain(
-        'Loading data...',
-      );
-      expect(htmlElement.querySelector('mat-progress-bar')).toBeTruthy();
-    });
+
+    const el = assertDefined(htmlElement.querySelector('.load-data'));
+    const progress = assertDefined(el.querySelector('load-progress'));
+    expect(progress.innerHTML).toContain('Fetching...');
+
+    const endButton = assertDefined(
+      el.querySelector('.end-btn button'),
+    ) as HTMLButtonElement;
+    expect(endButton.disabled).toBeTrue();
   });
 });

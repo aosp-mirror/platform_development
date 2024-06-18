@@ -72,10 +72,11 @@ final class AudioStreamer {
                     AudioPlaybackConfiguration.PLAYER_STATE_IDLE,
                     AudioPlaybackConfiguration.PLAYER_STATE_STARTED);
 
-    private final Context mContext;
+    private final Context mApplicationContext;
+    private Context mDeviceContext;
     private final RemoteIo mRemoteIo;
-    private final AudioManager mAudioManager;
-    private final int mPlaybackSessionId;
+    private AudioManager mAudioManager;
+    private int mPlaybackSessionId;
 
     private final Object mLock = new Object();
 
@@ -147,19 +148,21 @@ final class AudioStreamer {
 
     @Inject
     AudioStreamer(@ApplicationContext Context context, RemoteIo remoteIo) {
-        mContext = context;
+        mApplicationContext = context;
         mRemoteIo = remoteIo;
-        mAudioManager = context.getSystemService(AudioManager.class);
-        mPlaybackSessionId = mAudioManager.generateAudioSessionId();
     }
 
-    public void start() {
+    public void start(int deviceId, int audioSessionId) {
+        mDeviceContext = mApplicationContext.createDeviceContext(deviceId)
+                .createDeviceContext(deviceId);
+        mPlaybackSessionId = audioSessionId;
+
+        mAudioManager = mDeviceContext.getSystemService(AudioManager.class);
+
         mAudioManager.registerAudioPlaybackCallback(mAudioPlaybackCallback, null);
-        registerAudioPolicy();
-    }
-
-    public int getPlaybackSessionId() {
-        return mPlaybackSessionId;
+        synchronized (mLock) {
+            updateAudioPolicies(mReroutedUids);
+        }
     }
 
     private void registerAudioPolicy() {
@@ -178,7 +181,7 @@ final class AudioStreamer {
                 Log.w(TAG, "AudioPolicy is already registered");
                 return;
             }
-            mAudioPolicy = new AudioPolicy.Builder(mContext).addMix(audioMix).build();
+            mAudioPolicy = new AudioPolicy.Builder(mApplicationContext).addMix(audioMix).build();
             int ret = mAudioManager.registerAudioPolicy(mAudioPolicy);
             if (ret != AudioManager.SUCCESS) {
                 Log.e(TAG, "Failed to register audio policy, error code " + ret);
@@ -280,7 +283,9 @@ final class AudioStreamer {
                         .setDevice(mRemoteSubmixDevice)
                         .setFormat(AUDIO_FORMAT)
                         .build();
-        AudioPolicy uidPolicy = new AudioPolicy.Builder(mContext).addMix(mUidAudioMix).build();
+        AudioPolicy uidPolicy = new AudioPolicy.Builder(mApplicationContext)
+                .addMix(mUidAudioMix)
+                .build();
         int ret = mAudioManager.registerAudioPolicy(uidPolicy);
         if (ret != AudioManager.SUCCESS) {
             Log.e(TAG, "Error " + ret + " while trying to register UID policy");
@@ -298,21 +303,24 @@ final class AudioStreamer {
                 joinUninterruptibly(mStreamingThread);
                 mStreamingThread = null;
             }
-            if (mUidAudioPolicy != null) {
-                mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
-                mUidAudioPolicy = null;
+            if (mAudioManager != null) {
+                if (mUidAudioPolicy != null) {
+                    mAudioManager.unregisterAudioPolicy(mUidAudioPolicy);
+                    mUidAudioPolicy = null;
+                }
+                if (mAudioPolicy != null) {
+                    mAudioManager.unregisterAudioPolicy(mAudioPolicy);
+                    mAudioPolicy = null;
+                }
+                mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
             }
-            if (mAudioPolicy != null) {
-                mAudioManager.unregisterAudioPolicy(mAudioPolicy);
-                mAudioPolicy = null;
-            }
+
             if (mGhostRecord != null) {
                 mGhostRecord.stop();
                 mGhostRecord.release();
                 mGhostRecord = null;
             }
 
-            mAudioManager.unregisterAudioPlaybackCallback(mAudioPlaybackCallback);
         }
     }
 

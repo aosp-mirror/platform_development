@@ -18,7 +18,13 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Transactions', () => {
-  const viewerSelector = 'viewer-transactions';
+  const scrollSelectors = {
+    viewer: 'viewer-transactions',
+    scroll: '.scroll',
+    entry: '.entry',
+  };
+  const totalEntries = 9534;
+  const scrollToTotalBottomOffset = 980000;
 
   beforeEach(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
@@ -30,30 +36,36 @@ describe('Viewer Transactions', () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
       'Transactions',
-      viewerSelector,
+      scrollSelectors.viewer,
     );
-    await checkNumberOfEntries(44);
+    await E2eTestUtils.checkTotalScrollEntries(
+      scrollSelectors,
+      scrollViewport,
+      totalEntries,
+      scrollToTotalBottomOffset,
+    );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'show_chart',
       color: 'rgba(91, 185, 116, 1)',
     });
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:19.592049232');
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T11:36:19.513353722',
-    );
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:19.592');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 11:36:19.513');
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:17.505508034',
+      '2022-11-21, 18:05:17.505',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:17.505508034',
-    );
-    await checkNumberOfEntries(49);
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:17.505');
     await checkSelectedEntry();
+
+    await checkSelectFilter('.pid', ['6914'], 2);
+    await checkSelectFilter('.uid', ['10161'], 16);
+    await checkSelectFilter('.what', ['eBackgroundBlurRadiusChanged'], 10);
   });
 
   async function checkSelectedEntry() {
-    const selectedEntry = element(by.css(`${viewerSelector} .scroll .current`));
+    const selectedEntry = element(
+      by.css(`${scrollSelectors.viewer} ${scrollSelectors.scroll} .current`),
+    );
     expect(await selectedEntry.isPresent()).toBeTruthy();
 
     const transactionId = selectedEntry.element(by.css('.transaction-id'));
@@ -82,21 +94,52 @@ describe('Viewer Transactions', () => {
     expect(await what.getText()).toEqual(whatString);
 
     await E2eTestUtils.checkItemInPropertiesTree(
-      viewerSelector,
+      scrollSelectors.viewer,
       'what',
       'what:\n' + whatString,
     );
     await E2eTestUtils.checkItemInPropertiesTree(
-      viewerSelector,
+      scrollSelectors.viewer,
       'color',
       'color:\n(0.106, 0.106, 0.106)',
     );
   }
 
-  async function checkNumberOfEntries(numberOfEntries: number) {
-    const entries: ElementFinder[] = await element.all(
-      by.css(`${viewerSelector} .scroll .entry`),
+  async function checkSelectFilter(
+    filterSelector: string,
+    options: string[],
+    expectedFilteredEntries: number,
+  ) {
+    await E2eTestUtils.toggleSelectFilterOptions(
+      scrollSelectors.viewer,
+      filterSelector,
+      options,
     );
-    expect(entries.length).toEqual(numberOfEntries);
+    await E2eTestUtils.checkTotalScrollEntries(
+      scrollSelectors,
+      scrollViewport,
+      expectedFilteredEntries,
+    );
+
+    await E2eTestUtils.toggleSelectFilterOptions(
+      scrollSelectors.viewer,
+      filterSelector,
+      options,
+    );
+    await E2eTestUtils.checkTotalScrollEntries(
+      scrollSelectors,
+      scrollViewport,
+      totalEntries,
+      scrollToTotalBottomOffset,
+    );
+  }
+
+  function scrollViewport(
+    viewportEl: ElementFinder,
+    offset: number,
+    done: () => void,
+  ) {
+    viewportEl['scrollTop'] = offset;
+    window.requestAnimationFrame(() => done());
   }
 });

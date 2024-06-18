@@ -59,23 +59,139 @@ describe('SelectWithFilterComponent', () => {
   });
 
   it('applies filter correctly', () => {
-    const selectComponent = assertDefined(component.selectWithFilterComponent);
-    expect(selectComponent.filteredOptions).toEqual(['1', '2', '3']);
-    selectComponent.filterString = '2';
-    selectComponent.onOptionsFilterChange();
+    openSelectPanel();
+
+    const options = getOptions();
+    checkHiddenOptions(options, []);
+
+    const inputEl = getFilterInput();
+    dispatchInput(inputEl, '2');
+    checkHiddenOptions(options, [0, 1]);
+
+    dispatchInput(inputEl, '');
+    checkHiddenOptions(options, []);
+  });
+
+  it('maintains selection even if filtered out', () => {
+    const spy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
+    );
+    openSelectPanel();
+
+    const options = getOptions();
+    checkHiddenOptions(options, []);
+
+    (options.item(0) as HTMLElement).click();
     fixture.detectChanges();
-    expect(selectComponent.filteredOptions).toEqual(['2']);
+    checkSelectValue(spy, ['0']);
+
+    const inputEl = getFilterInput();
+
+    dispatchInput(inputEl, '2');
+    checkHiddenOptions(options, [0, 1]);
+
+    (options.item(2) as HTMLElement).click();
+    checkSelectValue(spy, ['0', '2']);
+
+    dispatchInput(inputEl, '');
+    checkHiddenOptions(options, []);
+
+    (options.item(1) as HTMLElement).click();
+    checkSelectValue(spy, ['0', '1', '2']);
+  });
+
+  it('applies selection correctly', () => {
+    const spy = spyOn(
+      assertDefined(component.selectWithFilterComponent).selectChange,
+      'emit',
+    );
+    openSelectPanel();
+
+    const options = getOptions();
+
+    (options.item(0) as HTMLElement).click();
+    checkSelectValue(spy, ['0']);
+
+    (options.item(0) as HTMLElement).click();
+    checkSelectValue(spy, []);
+  });
+
+  it('resets filter on close', async () => {
+    openSelectPanel();
+
+    const options = getOptions();
+    checkHiddenOptions(options, []);
+
+    const inputEl = getFilterInput();
+    dispatchInput(inputEl, 'A');
+    checkHiddenOptions(options, [0, 1, 2]);
+
+    (document.querySelector('.cdk-overlay-backdrop') as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    openSelectPanel();
+    checkHiddenOptions(getOptions(), []);
   });
 
   @Component({
     selector: 'host-component',
-    template: ` <select-with-filter [label]="label" [options]="allOptions"> </select-with-filter> `,
+    template: `
+      <select-with-filter
+        [label]="label"
+        [options]="allOptions"></select-with-filter>
+    `,
   })
   class TestHostComponent {
     label = 'TEST FILTER';
-    allOptions = ['1', '2', '3'];
+    allOptions = ['0', '1', '2'];
 
     @ViewChild(SelectWithFilterComponent)
     selectWithFilterComponent: SelectWithFilterComponent | undefined;
+  }
+
+  function openSelectPanel() {
+    const trigger = assertDefined(
+      htmlElement.querySelector('.mat-select-trigger'),
+    ) as HTMLElement;
+    trigger.click();
+  }
+
+  function getOptions(): NodeList {
+    return document.querySelectorAll('.mat-select-panel .mat-option');
+  }
+
+  function checkHiddenOptions(options: NodeList, hidden: number[]) {
+    expect(options.length).toEqual(3);
+    options.forEach((option, index) => {
+      expect(option.textContent).toContain(`${index}`);
+      if (hidden.includes(index)) {
+        expect((option as HTMLElement).className).toContain('hidden-option');
+      } else {
+        expect((option as HTMLElement).className).not.toContain(
+          'hidden-option',
+        );
+      }
+    });
+  }
+
+  function getFilterInput(): HTMLInputElement {
+    return assertDefined(
+      document.querySelector('.mat-select-panel .select-filter input'),
+    ) as HTMLInputElement;
+  }
+
+  function dispatchInput(inputEl: HTMLInputElement, input: string) {
+    inputEl.value = input;
+    inputEl.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function checkSelectValue(spy: jasmine.Spy, expected: string[]) {
+    expect(spy).toHaveBeenCalled();
+    expect(assertDefined(spy.calls.mostRecent().args[0]).value).toEqual(
+      expected,
+    );
   }
 });

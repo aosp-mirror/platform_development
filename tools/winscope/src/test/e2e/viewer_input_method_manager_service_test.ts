@@ -29,30 +29,26 @@ describe('Viewer Input Method Manager Service', () => {
   it('processes trace from zip and navigates correctly', async () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
-      'Input Method Manager Service',
+      'IME system_server',
       viewerSelector,
     );
     await E2eTestUtils.checkTimelineTraceSelector({
       icon: 'keyboard_alt',
       color: 'rgba(217, 48, 37, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:11.145417632',
-    );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.081981604');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:11.145');
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.081');
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:14.713780435',
+      '2022-11-21, 18:05:14.713',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:14.713780435',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.713');
 
     await checkAdditionalProperties();
     await clickWmState();
     await checkWmStateProperties();
 
-    await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, false);
+    await E2eTestUtils.applyStateToHierarchyOptions(viewerSelector, false);
     await E2eTestUtils.selectItemInHierarchy(
       viewerSelector,
       'inputMethodManagerService',
@@ -68,7 +64,7 @@ describe('Viewer Input Method Manager Service', () => {
       by.css('.ime-manager-service .wm-state'),
     );
     const wmStateTimestamp = await wmState.getText();
-    expect(wmStateTimestamp).toEqual('2022-11-21T18:05:14.713503732');
+    expect(wmStateTimestamp).toEqual('2022-11-21, 18:05:14.714');
 
     const insetsSourceProvider = additionalProperties.element(
       by.css('.insets-source-provider'),

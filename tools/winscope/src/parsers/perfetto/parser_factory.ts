@@ -15,11 +15,21 @@
  */
 
 import {globalConfig} from 'common/global_config';
-import {TimestampFactory} from 'common/timestamp_factory';
+import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {UrlUtils} from 'common/url_utils';
 import {ProgressListener} from 'messaging/progress_listener';
-import {InvalidPerfettoTrace} from 'messaging/winscope_error';
-import {WinscopeErrorListener} from 'messaging/winscope_error_listener';
+import {UserNotificationsListener} from 'messaging/user_notifications_listener';
+import {InvalidPerfettoTrace} from 'messaging/user_warnings';
+import {ParserKeyEvent} from 'parsers/input/perfetto/parser_key_event';
+import {ParserMotionEvent} from 'parsers/input/perfetto/parser_motion_event';
+import {ParserInputMethodClients} from 'parsers/input_method/perfetto/parser_input_method_clients';
+import {ParserInputMethodManagerService} from 'parsers/input_method/perfetto/parser_input_method_manager_service';
+import {ParserInputMethodService} from 'parsers/input_method/perfetto/parser_input_method_service';
+import {ParserProtolog} from 'parsers/protolog/perfetto/parser_protolog';
+import {ParserSurfaceFlinger} from 'parsers/surface_flinger/perfetto/parser_surface_flinger';
+import {ParserTransactions} from 'parsers/transactions/perfetto/parser_transactions';
+import {ParserTransitions} from 'parsers/transitions/perfetto/parser_transitions';
+import {ParserViewCapture} from 'parsers/view_capture/perfetto/parser_view_capture';
 import {Parser} from 'trace/parser';
 import {TraceFile} from 'trace/trace_file';
 import {
@@ -27,26 +37,28 @@ import {
   resetEngineWorker,
   WasmEngineProxy,
 } from 'trace_processor/wasm_engine_proxy';
-import {ParserProtolog} from './parser_protolog';
-import {ParserSurfaceFlinger} from './parser_surface_flinger';
-import {ParserTransactions} from './parser_transactions';
-import {ParserTransitions} from './parser_transitions';
 
 export class ParserFactory {
   private static readonly PARSERS = [
+    ParserInputMethodClients,
+    ParserInputMethodManagerService,
+    ParserInputMethodService,
+    ParserProtolog,
     ParserSurfaceFlinger,
     ParserTransactions,
     ParserTransitions,
-    ParserProtolog,
+    ParserViewCapture,
+    ParserMotionEvent,
+    ParserKeyEvent,
   ];
   private static readonly CHUNK_SIZE_BYTES = 50 * 1024 * 1024;
   private static traceProcessor?: WasmEngineProxy;
 
   async createParsers(
     traceFile: TraceFile,
-    timestampFactory: TimestampFactory,
+    timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    errorListener?: WinscopeErrorListener,
+    notificationListener?: UserNotificationsListener,
   ): Promise<Array<Parser<object>>> {
     const traceProcessor = await this.initializeTraceProcessor();
     for (
@@ -85,10 +97,14 @@ export class ParserFactory {
         const parser = new ParserType(
           traceFile,
           traceProcessor,
-          timestampFactory,
+          timestampConverter,
         );
         await parser.parse();
-        parsers.push(parser);
+        if (parser instanceof ParserViewCapture) {
+          parsers.push(...parser.getWindowParsers());
+        } else {
+          parsers.push(parser);
+        }
         hasFoundParser = true;
       } catch (error) {
         // skip current parser
@@ -97,9 +113,9 @@ export class ParserFactory {
     }
 
     if (!hasFoundParser) {
-      errorListener?.onError(
+      notificationListener?.onNotifications([
         new InvalidPerfettoTrace(traceFile.getDescriptor(), errors),
-      );
+      ]);
     }
 
     return parsers;

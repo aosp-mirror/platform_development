@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {CommonModule} from '@angular/common';
+import {HttpClientModule} from '@angular/common/http';
 import {ChangeDetectionStrategy} from '@angular/core';
 import {
   ComponentFixture,
@@ -28,6 +30,7 @@ import {
 } from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
@@ -37,12 +40,17 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-
-import {Title} from '@angular/platform-browser';
 import {FileUtils} from 'common/file_utils';
-import {ViewersLoaded, ViewersUnloaded} from 'messaging/winscope_event';
+import {
+  AppRefreshDumpsRequest,
+  ViewersLoaded,
+  ViewersUnloaded,
+} from 'messaging/winscope_event';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TracesBuilder} from 'test/unit/traces_builder';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
 import {AdbProxyComponent} from './adb_proxy_component';
 import {AppComponent} from './app_component';
@@ -52,6 +60,7 @@ import {
   MatDrawerContent,
 } from './bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './collect_traces_component';
+import {ShortcutsComponent} from './shortcuts_component';
 import {MiniTimelineComponent} from './timeline/mini-timeline/mini_timeline_component';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
@@ -83,6 +92,9 @@ describe('AppComponent', () => {
         ReactiveFormsModule,
         MatInputModule,
         BrowserAnimationsModule,
+        ClipboardModule,
+        MatDialogModule,
+        HttpClientModule,
       ],
       declarations: [
         AdbProxyComponent,
@@ -98,6 +110,7 @@ describe('AppComponent', () => {
         UploadTracesComponent,
         ViewerSurfaceFlingerComponent,
         WebAdbComponent,
+        ShortcutsComponent,
       ],
     })
       .overrideComponent(AppComponent, {
@@ -133,31 +146,42 @@ describe('AppComponent', () => {
     component.dataLoaded = false;
     component.showDataLoadedElements = false;
     fixture.detectChanges();
-
-    expect(htmlElement.querySelector('.welcome-info')).toBeTruthy();
-    expect(htmlElement.querySelector('.trace-file-info')).toBeFalsy();
-    expect(htmlElement.querySelector('.active')).toBeFalsy();
-    expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
-    expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
-    expect(htmlElement.querySelector('.viewers')).toBeFalsy();
-    expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
-    checkPermanentHeaderItems();
+    checkHomepage();
   });
 
   it('displays correct elements when data loaded', () => {
-    component.dataLoaded = true;
-    component.showDataLoadedElements = true;
-    fixture.detectChanges();
+    goToTraceView();
+    checkTraceViewPage();
 
-    expect(htmlElement.querySelector('.welcome-info')).toBeFalsy();
-    expect(htmlElement.querySelector('.trace-file-info')).toBeTruthy();
-    expect(htmlElement.querySelector('.active')).toBeTruthy();
-    expect(htmlElement.querySelector('.save-button')).toBeTruthy();
-    expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
-    expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
-    expect(htmlElement.querySelector('.viewers')).toBeTruthy();
-    expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
-    checkPermanentHeaderItems();
+    spyOn(component, 'dumpsUploaded').and.returnValue(true);
+    fixture.detectChanges();
+    expect(htmlElement.querySelector('.refresh-dumps')).toBeTruthy();
+  });
+
+  it('returns to homepage on upload new button click', async () => {
+    goToTraceView();
+    checkTraceViewPage();
+
+    (htmlElement.querySelector('.upload-new') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    checkHomepage();
+  });
+
+  it('sends event on refresh dumps button click', async () => {
+    spyOn(component, 'dumpsUploaded').and.returnValue(true);
+    goToTraceView();
+    checkTraceViewPage();
+
+    const winscopeEventSpy = spyOn(
+      component.mediator,
+      'onWinscopeEvent',
+    ).and.callThrough();
+    (htmlElement.querySelector('.refresh-dumps') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    checkHomepage();
+    expect(winscopeEventSpy).toHaveBeenCalledWith(new AppRefreshDumpsRequest());
   });
 
   it('downloads traces on download button click', () => {
@@ -189,6 +213,11 @@ describe('AppComponent', () => {
 
   it('changes page title based on archive name', async () => {
     const pageTitle = TestBed.inject(Title);
+    component.timelineData.initialize(
+      new TracesBuilder().build(),
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
 
     await component.onWinscopeEvent(new ViewersUnloaded());
     expect(pageTitle.getTitle()).toBe('Winscope');
@@ -250,6 +279,27 @@ describe('AppComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('opens shortcuts dialog', () => {
+    expect(document.querySelector('shortcuts-panel')).toBeFalsy();
+    const shortcutsButton = assertDefined(
+      htmlElement.querySelector('.shortcuts'),
+    ) as HTMLElement;
+    shortcutsButton.click();
+    fixture.detectChanges();
+    expect(document.querySelector('shortcuts-panel')).toBeTruthy();
+  });
+
+  function goToTraceView() {
+    component.dataLoaded = true;
+    component.showDataLoadedElements = true;
+    component.timelineData.initialize(
+      new TracesBuilder().build(),
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    fixture.detectChanges();
+  }
+
   function updateFilenameInputAndDownloadTraces(name: string, valid: boolean) {
     const inputEl = assertDefined(
       htmlElement.querySelector('.file-name-input-field input'),
@@ -263,11 +313,18 @@ describe('AppComponent', () => {
     checkButton.dispatchEvent(new Event('click'));
     fixture.detectChanges();
     if (valid) {
-      expect(htmlElement.querySelector('.download-file-info')).toBeTruthy();
+      assertDefined(htmlElement.querySelector('.download-file-info'));
+      expect(
+        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
+          .disabled,
+      ).toBeFalse();
       clickDownloadTracesButton();
     } else {
-      expect(htmlElement.querySelector('.save-button')).toBeFalsy();
       expect(htmlElement.querySelector('.download-file-info')).toBeFalsy();
+      expect(
+        (htmlElement.querySelector('.save-button') as HTMLButtonElement)
+          .disabled,
+      ).toBeTrue();
     }
   }
 
@@ -287,10 +344,28 @@ describe('AppComponent', () => {
     fixture.detectChanges();
   }
 
+  function checkHomepage() {
+    expect(htmlElement.querySelector('.welcome-info')).toBeTruthy();
+    expect(htmlElement.querySelector('.collect-traces-card')).toBeTruthy();
+    expect(htmlElement.querySelector('.upload-traces-card')).toBeTruthy();
+    expect(htmlElement.querySelector('.viewers')).toBeFalsy();
+    expect(htmlElement.querySelector('.upload-new')).toBeFalsy();
+    checkPermanentHeaderItems();
+  }
+
+  function checkTraceViewPage() {
+    expect(htmlElement.querySelector('.welcome-info')).toBeFalsy();
+    expect(htmlElement.querySelector('.save-button')).toBeTruthy();
+    expect(htmlElement.querySelector('.collect-traces-card')).toBeFalsy();
+    expect(htmlElement.querySelector('.upload-traces-card')).toBeFalsy();
+    expect(htmlElement.querySelector('.viewers')).toBeTruthy();
+    expect(htmlElement.querySelector('.upload-new')).toBeTruthy();
+    checkPermanentHeaderItems();
+  }
+
   function checkPermanentHeaderItems() {
-    expect(
-      assertDefined(htmlElement.querySelector('.app-title')).innerHTML,
-    ).toContain('Winscope');
+    expect(htmlElement.querySelector('.app-title')).toBeTruthy();
+    expect(htmlElement.querySelector('.shortcuts')).toBeTruthy();
     expect(htmlElement.querySelector('.documentation')).toBeTruthy();
     expect(htmlElement.querySelector('.report-bug')).toBeTruthy();
     expect(htmlElement.querySelector('.dark-mode')).toBeTruthy();

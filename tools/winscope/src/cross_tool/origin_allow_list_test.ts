@@ -69,5 +69,26 @@ describe('OriginAllowList', () => {
         ),
       ).toBeFalse();
     });
+
+    it('allows perfetto.dev', () => {
+      expect(
+        OriginAllowList.isAllowed('https://perfetto.dev', mode),
+      ).toBeTrue();
+      expect(
+        OriginAllowList.isAllowed('https://subdomain.perfetto.dev', mode),
+      ).toBeTrue();
+    });
+
+    it('denies pseudo perfetto.dev', () => {
+      expect(
+        OriginAllowList.isAllowed('https://evilperfetto.dev', mode),
+      ).toBeFalse();
+      expect(
+        OriginAllowList.isAllowed(
+          'https://evil.com/subdomain.perfetto.dev',
+          mode,
+        ),
+      ).toBeFalse();
+    });
   });
 });

@@ -9,6 +9,7 @@ android_app {
     sdk_version: "system_current",
     min_sdk_version: "34",
     privileged: true,
+    privapp_allowlist: "host/com.example.android.vdmdemo.host.xml",
     srcs: [
         "host/src/**/*.java",
     ],
@@ -94,6 +95,7 @@ android_app {
     name: "VirtualCameraDemo",
     manifest: "virtualcamera/AndroidManifest.xml",
     privileged: true,
+    privapp_allowlist: "virtualcamera/com.example.android.vdmdemo.virtualcamera.xml",
     platform_apis: true,
     srcs: [
         "virtualcamera/src/**/*.java",

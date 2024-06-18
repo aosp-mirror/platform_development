@@ -36,26 +36,20 @@ describe('Viewer Window Manager', () => {
       icon: 'web',
       color: 'rgba(175, 92, 247, 1)',
     });
-    await E2eTestUtils.checkInitialRealTimestamp(
-      '2022-11-21T18:05:09.753946780',
-    );
-    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.269296899');
+    await E2eTestUtils.checkInitialRealTimestamp('2022-11-21, 18:05:09.753');
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21, 18:05:18.269');
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:09.753946780',
+      '2022-11-21, 18:05:09.753',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:09.753946780',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:09.753');
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'root');
     await checkRootProperties();
 
     await E2eTestUtils.changeRealTimestampInWinscope(
-      '2022-11-21T18:05:14.544918403',
+      '2022-11-21, 18:05:14.544',
     );
-    await E2eTestUtils.checkWinscopeRealTimestamp(
-      '2022-11-21T18:05:14.544918403',
-    );
+    await E2eTestUtils.checkWinscopeRealTimestamp('18:05:14.544');
     await E2eTestUtils.filterHierarchy(viewerSelector, 'InputMethod');
     await E2eTestUtils.selectItemInHierarchy(viewerSelector, 'InputMethod');
     await checkInputMethodWindowProperties();

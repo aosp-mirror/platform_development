@@ -485,10 +485,10 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .addPointer(0, x, y, 1, 5);
                 mQ.addLast(e1);
                 mQ.addLast(e2);
-                mQ.addLast(e2);
+                mQ.addLast(e3);
 
             } catch (NumberFormatException e) {
-                Logger.err.println("// " + e.toString());
+                Logger.err.println("// " + e);
             }
             return;
         }

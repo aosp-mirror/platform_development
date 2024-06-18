@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   CdkVirtualScrollViewport,
   ScrollingModule,
 } from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -29,12 +30,12 @@ import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
-import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {Events} from './events';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {UiData, UiDataMessage} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
@@ -56,8 +57,12 @@ describe('ViewerProtologComponent', () => {
           BrowserAnimationsModule,
           MatSelectModule,
         ],
-        declarations: [ViewerProtologComponent, ProtologScrollDirective],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        declarations: [
+          ViewerProtologComponent,
+          SelectWithFilterComponent,
+          ProtologScrollDirective,
+        ],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       fixture = TestBed.createComponent(ViewerProtologComponent);
       component = fixture.componentInstance;
@@ -79,12 +84,61 @@ describe('ViewerProtologComponent', () => {
       expect(htmlElement.querySelector('.scroll-messages')).toBeTruthy();
     });
 
-    it('applies text filters correctly', () => {
+    it('applies log level filter correctly', async () => {
+      const allMessages = makeUiData().messages;
       htmlElement.addEventListener(
-        Events.SearchStringFilterChanged,
+        ViewerEvents.LogLevelsFilterChanged,
         (event) => {
-          component.uiData.messages = component.uiData.messages.filter(
-            (message) => message.text.includes((event as CustomEvent).detail),
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.messages = allMessages;
+            return;
+          }
+          component.uiData.messages = allMessages.filter((message) =>
+            (event as CustomEvent).detail.includes(message.level),
+          );
+        },
+      );
+      await checkSelectFilter('.log-level');
+    });
+
+    it('applies tag filter correctly', async () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(ViewerEvents.TagsFilterChanged, (event) => {
+        if ((event as CustomEvent).detail.length === 0) {
+          component.uiData.messages = allMessages;
+          return;
+        }
+        component.uiData.messages = allMessages.filter((message) =>
+          (event as CustomEvent).detail.includes(message.tag),
+        );
+      });
+      await checkSelectFilter('.tag');
+    });
+
+    it('applies source file filter correctly', async () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(
+        ViewerEvents.SourceFilesFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.messages = allMessages;
+            return;
+          }
+          component.uiData.messages = allMessages.filter((message) =>
+            (event as CustomEvent).detail.includes(message.at),
+          );
+        },
+      );
+      await checkSelectFilter('.source-file');
+    });
+
+    it('applies text filter correctly', () => {
+      const allMessages = makeUiData().messages;
+      htmlElement.addEventListener(
+        ViewerEvents.SearchStringFilterChanged,
+        (event) => {
+          component.uiData.messages = allMessages.filter((message) =>
+            message.text.includes((event as CustomEvent).detail),
           );
         },
       );
@@ -102,6 +156,10 @@ describe('ViewerProtologComponent', () => {
       inputEl.dispatchEvent(new Event('input'));
       fixture.detectChanges();
       expect(component.uiData.messages.length).toEqual(100);
+      inputEl.value = '';
+      inputEl.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
     });
 
     it('scrolls to current entry on button click', () => {
@@ -123,7 +181,7 @@ describe('ViewerProtologComponent', () => {
       component.inputData = uiData;
       fixture.detectChanges();
 
-      htmlElement.addEventListener(Events.MessageClicked, (event) => {
+      htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
         const index = (event as CustomEvent).detail;
         uiData.selectedMessageIndex = index;
         component.inputData = uiData;
@@ -146,17 +204,42 @@ describe('ViewerProtologComponent', () => {
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData();
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('10ns');
+      expect(index).toEqual(0);
     });
+
+    async function checkSelectFilter(filterSelector: string) {
+      component.inputData = makeUiData();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
+
+      const filterTrigger = assertDefined(
+        htmlElement.querySelector(
+          `.filters ${filterSelector} .mat-select-trigger`,
+        ),
+      ) as HTMLInputElement;
+      filterTrigger.click();
+      await fixture.whenStable();
+
+      const firstOption = assertDefined(
+        document.querySelector('.mat-select-panel .mat-option'),
+      ) as HTMLElement;
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(100);
+
+      firstOption.click();
+      fixture.detectChanges();
+      expect(component.uiData.messages.length).toEqual(200);
+    }
   });
 
   describe('Scroll component', () => {
@@ -170,9 +253,16 @@ describe('ViewerProtologComponent', () => {
     > {
       await TestBed.configureTestingModule({
         providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-        imports: [ScrollingModule],
+        imports: [
+          ScrollingModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatInputModule,
+          BrowserAnimationsModule,
+          MatSelectModule,
+        ],
         declarations: [ViewerProtologComponent, ProtologScrollDirective],
-        schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerProtologComponent);
       const protologComponent = fixture.componentInstance;
@@ -194,8 +284,8 @@ describe('ViewerProtologComponent', () => {
     const time = new PropertyTreeBuilder()
       .setRootId('ProtologMessage')
       .setName('timestamp')
-      .setValue(NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n))
-      .setFormatter(TIMESTAMP_FORMATTER)
+      .setValue(TimestampConverterUtils.makeElapsedTimestamp(10n))
+      .setFormatter(TIMESTAMP_NODE_FORMATTER)
       .build();
 
     const messages = [];
@@ -203,7 +293,7 @@ describe('ViewerProtologComponent', () => {
     const longMessage = shortMessage.repeat(10) + 'keep';
     for (let i = 0; i < 200; i++) {
       const uiDataMessage: UiDataMessage = {
-        originalIndex: i,
+        traceIndex: i,
         text: i % 2 === 0 ? shortMessage : longMessage,
         time,
         tag: i % 2 === 0 ? allTags[0] : allTags[1],

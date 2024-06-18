@@ -13,27 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject, Input, SimpleChanges} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  Inject,
+  Input,
+  SimpleChanges,
+} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 
 @Component({
   selector: 'viewer-screen-recording',
   template: `
-    <mat-card class="container">
+  <div class="overlay">
+    <mat-card class="container" cdkDrag cdkDragBoundary=".overlay">
       <mat-card-title class="header">
         <button mat-button class="button-drag" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
           <span class="mat-body-2">{{ title }}</span>
         </button>
 
-        <button mat-button class="button-minimize" (click)="onMinimizeButtonClick()">
+        <button mat-button class="button-minimize" [disabled]="forceMinimize" (click)="onMinimizeButtonClick()">
           <mat-icon>
-            {{ isMinimized ? 'maximize' : 'minimize' }}
+            {{ isMinimized() ? 'maximize' : 'minimize' }}
           </mat-icon>
         </button>
       </mat-card-title>
-      <div class="video-container" [style.height]="isMinimized ? '0px' : ''">
+      <div class="video-container" cdkDragHandle [style.height]="isMinimized() ? '0px' : ''">
         <ng-container *ngIf="hasFrameToShow(); then video; else noVideo"> </ng-container>
       </div>
     </mat-card>
@@ -41,9 +49,10 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
     <ng-template #video>
       <video
         *ngIf="hasFrameToShow()"
+        [class.ready]="videoElement.readyState"
         [currentTime]="currentTraceEntry.videoTimeSeconds"
         [src]="safeUrl"
-        cdkDragHandle></video>
+        #videoElement></video>
     </ng-template>
 
     <ng-template #noVideo>
@@ -54,15 +63,31 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
         <p class="mat-body-1">Current timestamp is still before first frame.</p>
       </div>
     </ng-template>
+    </div>
   `,
   styles: [
     `
+      .overlay {
+        z-index: 30;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
       .container {
-        width: fit-content;
-        height: fit-content;
+        pointer-events: all;
+        width: max(250px, 15vw);
+        min-width: 165px;
+        resize: horizontal;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         padding: 0;
+        left: 80vw;
+        top: 20vh;
       }
 
       .header {
@@ -76,6 +101,7 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
       .button-drag {
         flex-grow: 1;
         cursor: grab;
+        padding: 2px;
       }
 
       .drag-icon {
@@ -85,13 +111,14 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 
       .button-minimize {
         flex-grow: 0;
+        padding: 2px;
+        min-width: 24px;
       }
 
-      .video-container,
-      video,
-      img {
+      .video-container, video, img {
         border: 1px solid var(--default-border);
-        max-width: max(250px, 15vw);
+        width: 100%;
+        height: auto;
         cursor: grab;
         overflow: hidden;
       }
@@ -105,12 +132,21 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 })
 class ViewerScreenRecordingComponent {
   safeUrl: undefined | SafeUrl = undefined;
-  isMinimized = false;
+  shouldMinimize = false;
 
-  constructor(@Inject(DomSanitizer) private sanitizer: DomSanitizer) {}
+  constructor(
+    @Inject(DomSanitizer) private sanitizer: DomSanitizer,
+    @Inject(ElementRef) private elementRef: ElementRef,
+  ) {}
 
   @Input() currentTraceEntry: ScreenRecordingTraceEntry | undefined;
   @Input() title = 'Screen recording';
+  @Input() forceMinimize = false;
+
+  private frameHeight = 1280; // default for Flicker/Winscope
+  private frameWidth = 720; // default for Flicker/Winscope
+
+  private videoObserver: MutationObserver | undefined;
 
   ngOnChanges(changes: SimpleChanges) {
     if (this.currentTraceEntry === undefined) {
@@ -128,8 +164,73 @@ class ViewerScreenRecordingComponent {
     }
   }
 
+  async ngAfterViewInit() {
+    const video: HTMLVideoElement | null =
+      this.elementRef.nativeElement.querySelector('video');
+
+    if (video) {
+      const config = {
+        attributes: true,
+        CharacterData: true,
+      };
+
+      const videoCallback = (
+        mutations: MutationRecord[],
+        observer: MutationObserver,
+      ) => {
+        for (const mutation of mutations) {
+          if (
+            mutation.type === 'attributes' &&
+            mutation.attributeName === 'class'
+          ) {
+            if (video?.className.includes('ready')) {
+              this.frameHeight = video?.videoHeight;
+              this.frameWidth = video?.videoWidth;
+              observer.disconnect();
+            }
+          }
+        }
+      };
+
+      this.videoObserver = new MutationObserver(videoCallback);
+      this.videoObserver.observe(video, config);
+    } else {
+      const image: HTMLImageElement | null =
+        this.elementRef.nativeElement.querySelector('img');
+      if (image) {
+        this.frameHeight = image.naturalHeight;
+        this.frameWidth = image.naturalWidth;
+      }
+    }
+
+    this.updateMaxContainerSize();
+  }
+
+  ngOnDestroy() {
+    this.videoObserver?.disconnect();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.updateMaxContainerSize();
+  }
+
+  updateMaxContainerSize() {
+    const container = this.elementRef.nativeElement.querySelector('.container');
+    const maxHeight = window.innerHeight - 140;
+    const headerHeight =
+      this.elementRef.nativeElement.querySelector('.header').clientHeight;
+    const maxWidth =
+      ((maxHeight - headerHeight) * this.frameWidth) / this.frameHeight;
+    container.style.maxWidth = `${maxWidth}px`;
+  }
+
   onMinimizeButtonClick() {
-    this.isMinimized = !this.isMinimized;
+    this.shouldMinimize = !this.shouldMinimize;
+  }
+
+  isMinimized() {
+    return this.forceMinimize || this.shouldMinimize;
   }
 
   hasFrameToShow() {

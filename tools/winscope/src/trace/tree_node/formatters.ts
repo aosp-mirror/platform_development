@@ -15,7 +15,7 @@
  */
 
 import {Timestamp} from 'common/time';
-import {TimeUtils} from 'common/time_utils';
+import {TimeDuration} from 'common/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
 import {PropertyTreeNode} from './property_tree_node';
@@ -210,16 +210,16 @@ class FixedStringFormatter implements PropertyFormatter {
   }
 }
 
-class TimestampFormatter implements PropertyFormatter {
+class TimestampNodeFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const timestamp = node.getValue();
-    if (timestamp instanceof Timestamp) {
-      return TimeUtils.format(timestamp);
+    if (timestamp instanceof Timestamp || timestamp instanceof TimeDuration) {
+      return timestamp.format();
     }
     return 'null';
   }
 }
-const TIMESTAMP_FORMATTER = new TimestampFormatter();
+const TIMESTAMP_NODE_FORMATTER = new TimestampNodeFormatter();
 
 export {
   EMPTY_OBJ_STRING,
@@ -236,6 +236,6 @@ export {
   REGION_FORMATTER,
   EnumFormatter,
   FixedStringFormatter,
-  TIMESTAMP_FORMATTER,
+  TIMESTAMP_NODE_FORMATTER,
   MATRIX_FORMATTER,
 };

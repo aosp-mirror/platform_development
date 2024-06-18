@@ -47,7 +47,7 @@
     <application
         android:name=".VdmHostApplication"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -72,12 +72,7 @@
             android:name=".CustomLauncherActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" />
-        <activity
-            android:name=".EmptyTrampolineActivity"
-            android:exported="false"
-            android:configChanges="density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
-            android:excludeFromRecents="true" />
+            android:theme="@style/AppTheme.FullScreen" />
 
         <service
             android:name=".VdmService"

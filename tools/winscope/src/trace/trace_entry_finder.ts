@@ -23,7 +23,16 @@ export class TraceEntryFinder {
     trace: Trace<T>,
     position: TracePosition,
   ): TraceEntry<T> | undefined {
-    if (position.entry?.getFullTrace().type === trace.type) {
+    if (trace.lengthEntries === 0) {
+      return undefined;
+    }
+
+    if (trace.isDumpWithoutTimestamp()) {
+      // always display dumps regardless of the current trace position
+      return trace.getEntry(0);
+    }
+
+    if (position.entry?.getFullTrace() === trace.getEntry(0).getFullTrace()) {
       return position.entry as TraceEntry<T>;
     }
 

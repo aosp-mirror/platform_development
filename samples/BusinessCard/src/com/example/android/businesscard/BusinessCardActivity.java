@@ -18,11 +18,14 @@ package com.example.android.businesscard;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Insets;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -54,6 +57,17 @@ public class BusinessCardActivity extends Activity  {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.business_card);
+        getWindow().setDecorFitsSystemWindows(false);
+        findViewById(android.R.id.content).setOnApplyWindowInsetsListener((v, w) -> {
+            final Insets i = w.getInsets(
+                    WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+            final View topBarBackground = findViewById(R.id.top_bar_background);
+            final ViewGroup.LayoutParams attrs = topBarBackground.getLayoutParams();
+            attrs.height = i.top;
+            topBarBackground.setLayoutParams(attrs);
+            v.setPadding(i.left, 0, i.right, i.bottom);
+            return WindowInsets.CONSUMED;
+        });
 
         // Install a click handler on the Pick Contact button
         Button pickContact = (Button)findViewById(R.id.pick_contact_button);

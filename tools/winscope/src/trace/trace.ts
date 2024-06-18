@@ -15,7 +15,7 @@
  */
 
 import {ArrayUtils} from 'common/array_utils';
-import {Timestamp, TimestampType} from 'common/time';
+import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {
   CustomQueryParamTypeMap,
   CustomQueryParserResultTypeMap,
@@ -87,7 +87,7 @@ export class TraceEntryLazy<T> extends TraceEntry<T> {
   }
 
   override async getValue(): Promise<T> {
-    return await this.parser.getEntry(this.index, this.timestamp.getType());
+    return await this.parser.getEntry(this.index);
   }
 }
 
@@ -118,21 +118,16 @@ export class Trace<T> {
   private readonly parser: Parser<T>;
   private readonly descriptors: string[];
   private readonly fullTrace: Trace<T>;
-  private timestampType: TimestampType;
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
 
-  static fromParser<T>(
-    parser: Parser<T>,
-    timestampType: TimestampType,
-  ): Trace<T> {
+  static fromParser<T>(parser: Parser<T>): Trace<T> {
     return new Trace(
       parser.getTraceType(),
       parser,
       parser.getDescriptors(),
       undefined,
-      timestampType,
       undefined,
     );
   }
@@ -142,7 +137,6 @@ export class Trace<T> {
     parser: Parser<T>,
     descriptors: string[],
     fullTrace: Trace<T> | undefined,
-    timestampType: TimestampType,
     entriesRange: EntriesRange | undefined,
   ) {
     this.type = type;
@@ -154,18 +148,14 @@ export class Trace<T> {
       end: parser.getLengthEntries(),
     };
     this.lengthEntries = this.entriesRange.end - this.entriesRange.start;
-    this.timestampType = timestampType;
   }
 
   getDescriptors(): string[] {
     return this.parser.getDescriptors();
   }
 
-  getTimestampType(): TimestampType {
-    if (this.timestampType === undefined) {
-      throw new Error('Trace no fully initialized yet!');
-    }
-    return this.timestampType;
+  getParser(): Parser<T> {
+    return this.parser;
   }
 
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
@@ -238,7 +228,6 @@ export class Trace<T> {
   }
 
   findClosestEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
-    this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
     }
@@ -272,7 +261,6 @@ export class Trace<T> {
   }
 
   findFirstGreaterOrEqualEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
-    this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
     }
@@ -288,7 +276,7 @@ export class Trace<T> {
     }
 
     const entry = this.getEntry(pos - this.entriesRange.start);
-    if (entry.getTimestamp() < time) {
+    if (entry.getTimestamp().getValueNs() < time.getValueNs()) {
       return undefined;
     }
 
@@ -296,7 +284,6 @@ export class Trace<T> {
   }
 
   findFirstGreaterEntry(time: Timestamp): TraceEntryLazy<T> | undefined {
-    this.checkTimestampIsCompatible(time);
     if (this.lengthEntries === 0) {
       return undefined;
     }
@@ -309,7 +296,7 @@ export class Trace<T> {
     }
 
     const entry = this.getEntry(pos - this.entriesRange.start);
-    if (entry.getTimestamp() <= time) {
+    if (entry.getTimestamp().getValueNs() <= time.getValueNs()) {
       return undefined;
     }
 
@@ -364,8 +351,6 @@ export class Trace<T> {
   }
 
   sliceTime(start?: Timestamp, end?: Timestamp): Trace<T> {
-    this.checkTimestampIsCompatible(start);
-    this.checkTimestampIsCompatible(end);
     const startEntry =
       start === undefined
         ? this.entriesRange.start
@@ -461,6 +446,13 @@ export class Trace<T> {
     return this.framesRange;
   }
 
+  isDumpWithoutTimestamp() {
+    return (
+      this.lengthEntries === 1 &&
+      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
+    );
+  }
+
   private getEntryInternal<
     EntryType extends TraceEntryLazy<T> | TraceEntryEager<T, any>,
   >(
@@ -493,15 +485,9 @@ export class Trace<T> {
   }
 
   private getFullTraceTimestamps(): Timestamp[] {
-    if (this.timestampType === undefined) {
-      throw new Error('Forgot to initialize trace?');
-    }
-
-    const timestamps = this.parser.getTimestamps(this.timestampType);
+    const timestamps = this.parser.getTimestamps();
     if (!timestamps) {
-      throw new Error(
-        `Timestamp type ${this.timestampType} is expected to be available`,
-      );
+      throw new Error('Timestamps expected to be available');
     }
     return timestamps;
   }
@@ -537,7 +523,6 @@ export class Trace<T> {
       this.parser,
       this.descriptors,
       this.fullTrace,
-      this.timestampType,
       entries,
     );
 
@@ -607,20 +592,6 @@ export class Trace<T> {
     if (!this.frameMap) {
       throw new Error(
         `Trace ${this.type} can't be accessed in frame domain (no frame mapping available)`,
-      );
-    }
-  }
-
-  private checkTimestampIsCompatible(timestamp?: Timestamp) {
-    if (!timestamp) {
-      return;
-    }
-    const timestamps = this.parser.getTimestamps(timestamp.getType());
-    if (timestamps === undefined) {
-      throw new Error(
-        `Trace ${
-          this.type
-        } can't be accessed using timestamp of type ${timestamp.getType()}`,
       );
     }
   }

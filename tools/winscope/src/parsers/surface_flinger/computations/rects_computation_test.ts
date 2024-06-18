@@ -75,6 +75,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 5, bottom: 5},
             zOrderPath: [0, 2],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -94,6 +95,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(0)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -126,6 +128,7 @@ describe('RectsComputation', () => {
         .setDepth(2)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -161,6 +164,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -175,6 +179,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -194,6 +199,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -210,6 +216,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(1)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -238,7 +245,7 @@ describe('RectsComputation', () => {
           {
             id: 1,
             layerStack: 0,
-            size: {w: 5, h: 5},
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
             transform: Transform.EMPTY,
             name: 'Test Display',
           },
@@ -268,6 +275,66 @@ describe('RectsComputation', () => {
     expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
   });
 
+  it('makes display rects with unknown or empty name', () => {
+    const hierarchyRoot = new HierarchyTreeBuilder()
+      .setId('LayerTraceEntry')
+      .setName('root')
+      .setProperties({
+        displays: [
+          {
+            id: 1,
+            layerStack: 0,
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
+            transform: Transform.EMPTY,
+          },
+          {
+            id: 1,
+            layerStack: 0,
+            layerStackSpaceRect: {left: 0, top: 0, right: 5, bottom: 5},
+            transform: Transform.EMPTY,
+            name: '',
+          },
+        ],
+      })
+      .build();
+
+    const expectedDisplayRects = [
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(5)
+        .setId('Display - 1')
+        .setName('Unknown Display')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsVirtual(false)
+        .build(),
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(5)
+        .setId('Display - 1')
+        .setName('Unknown Display (2)')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsVirtual(false)
+        .build(),
+    ];
+
+    computation.setRoot(hierarchyRoot).executeInPlace();
+    expect(hierarchyRoot.getRects()).toEqual(expectedDisplayRects);
+  });
+
   it('handles z-order paths with different lengths', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
@@ -284,6 +351,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0, 1],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -298,6 +366,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 2, bottom: 2},
             zOrderPath: [0, 0, 0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -317,6 +386,7 @@ describe('RectsComputation', () => {
         .setDepth(1)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -333,6 +403,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -368,6 +439,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 1, bottom: 1},
             zOrderPath: [0, 1],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -382,6 +454,7 @@ describe('RectsComputation', () => {
             bounds: {left: 0, top: 0, right: 2, bottom: 2},
             zOrderPath: [0, 1, 0],
             isComputedVisible: true,
+            color: {r: 0, g: 0, b: 0, a: 1},
             transform: Transform.EMPTY,
           } as android.surfaceflinger.ILayerProto,
         },
@@ -401,6 +474,7 @@ describe('RectsComputation', () => {
         .setDepth(0)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),
@@ -417,6 +491,7 @@ describe('RectsComputation', () => {
         .setDepth(1)
         .setGroupId(0)
         .setIsVisible(true)
+        .setOpacity(1)
         .setIsDisplay(false)
         .setIsVirtual(false)
         .build(),

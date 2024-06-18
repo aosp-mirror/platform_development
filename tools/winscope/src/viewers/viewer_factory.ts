@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import {assertTrue} from 'common/assert_utils';
+import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {Viewer} from './viewer';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
@@ -26,17 +28,10 @@ import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_rec
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
-import {
-  ViewerViewCaptureLauncherActivity,
-  ViewerViewCaptureTaskbarDragLayer,
-  ViewerViewCaptureTaskbarOverlayDragLayer,
-} from './viewer_view_capture/viewer_view_capture';
+import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
-  // Note:
-  // the final order of tabs/views in the UI corresponds the order of the
-  // respective viewers below
   static readonly VIEWERS = [
     ViewerSurfaceFlinger,
     ViewerWindowManager,
@@ -48,26 +43,40 @@ class ViewerFactory {
     ViewerScreenRecording,
     ViewerScreenshot,
     ViewerTransitions,
-    ViewerViewCaptureLauncherActivity,
-    ViewerViewCaptureTaskbarDragLayer,
-    ViewerViewCaptureTaskbarOverlayDragLayer,
   ];
 
   createViewers(traces: Traces, storage: Storage): Viewer[] {
-    const activeTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const viewers: Viewer[] = [];
 
-    for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every(
-        (traceType: TraceType) => activeTraceTypes.has(traceType),
-      );
+    // regular viewers
+    traces.forEachTrace((trace) => {
+      ViewerFactory.VIEWERS.forEach((Viewer) => {
+        assertTrue(Viewer.DEPENDENCIES.length === 1);
+        const isViewerDepSatisfied = trace.type === Viewer.DEPENDENCIES[0];
+        if (isViewerDepSatisfied) {
+          viewers.push(new Viewer(trace as Trace<any>, traces, storage));
+        }
+      });
+    });
 
-      if (areViewerDepsSatisfied) {
-        viewers.push(new Viewer(traces, storage));
-      }
+    // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
+    const availableTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
+    const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
+      (traceType: TraceType) => availableTraceTypes.has(traceType),
+    );
+    if (isViewerDepSatisfied) {
+      viewers.push(new ViewerViewCapture(traces, storage));
     }
 
-    return viewers;
+    // Note:
+    // the final order of tabs/views in the UI corresponds the order of the
+    // respective viewers below
+    return viewers.sort((a, b) =>
+      TraceTypeUtils.compareByDisplayOrder(
+        a.getTraces()[0].type,
+        b.getTraces()[0].type,
+      ),
+    );
   }
 }
 

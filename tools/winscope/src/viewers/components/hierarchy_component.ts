@@ -13,24 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
 import {PersistentStore} from 'common/persistent_store';
+import {Analytics} from 'logging/analytics';
 import {TraceType} from 'trace/trace_type';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {nodeStyles} from 'viewers/components/styles/node.styles';
+import {searchBoxStyle} from './styles/search_box.styles';
+import {viewerCardInnerStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'hierarchy-view',
   template: `
     <div class="view-header">
-      <div class="title-filter">
-        <h2 class="hierarchy-title mat-title">HIERARCHY</h2>
-        <mat-form-field (keydown.enter)="$event.target.blur()">
-          <mat-label>Filter...</mat-label>
+      <div class="title-section">
+        <collapsible-section-title
+          class="hierarchy-title"
+          title="HIERARCHY"
+          (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+        <mat-form-field class="search-box" (keydown.enter)="$event.target.blur()">
+          <mat-label>Search</mat-label>
           <input
             matInput
             [(ngModel)]="filterString"
@@ -38,16 +52,13 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
             name="filter" />
         </mat-form-field>
       </div>
-      <div class="view-controls">
-        <mat-checkbox
-          *ngFor="let option of objectKeys(userOptions)"
-          color="primary"
-          [(ngModel)]="userOptions[option].enabled"
-          [disabled]="userOptions[option].isUnavailable ?? false"
-          (ngModelChange)="onUserOptionChange()"
-          >{{ userOptions[option].name }}</mat-checkbox
-        >
-      </div>
+      <user-options
+        class="view-controls"
+        [userOptions]="userOptions"
+        [eventType]="ViewerEvents.HierarchyUserOptionsChange"
+        [traceType]="dependencies[0]"
+        [logCallback]="Analytics.Navigation.logHierarchySettingsChanged">
+      </user-options>
       <properties-table
         *ngIf="tableProperties"
         class="properties-table"
@@ -73,29 +84,26 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
         *ngIf="tree"
         [isFlattened]="isFlattened()"
         [node]="tree"
-        [dependencies]="dependencies"
-        [store]="store"
         [useStoredExpandedState]="true"
         [itemsClickable]="true"
         [highlightedItem]="highlightedItem"
         [pinnedItems]="pinnedItems"
+        [rectIdToShowState]="rectIdToShowState"
         (highlightedChange)="onHighlightedItemChange($event)"
         (pinnedItemChange)="onPinnedItemChange($event)"
         (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
 
-      <div class="children">
+      <div class="subtrees">
         <tree-view
           *ngFor="let subtree of subtrees; trackBy: trackById"
-          class="childrenTree"
+          class="subtree"
           [node]="subtree"
-          [store]="store"
-          [dependencies]="dependencies"
           [isFlattened]="isFlattened()"
           [useStoredExpandedState]="true"
-          [initialDepth]="1"
           [highlightedItem]="highlightedItem"
           [pinnedItems]="pinnedItems"
           [itemsClickable]="true"
+          [rectIdToShowState]="rectIdToShowState"
           (highlightedChange)="onHighlightedItemChange($event)"
           (pinnedItemChange)="onPinnedItemChange($event)"
           (selectedTreeChange)="onSelectedTreeChange($event)"></tree-view>
@@ -104,28 +112,9 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
   `,
   styles: [
     `
-      .mat-title {
-        padding-top: 16px;
-      }
-
       .view-header {
         display: flex;
         flex-direction: column;
-        margin-bottom: 12px;
-      }
-
-      .title-filter {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-      }
-
-      .view-controls {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        column-gap: 10px;
       }
 
       .properties-table {
@@ -135,6 +124,7 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       .hierarchy-content {
         height: 100%;
         overflow: auto;
+        padding: 0px 12px;
       }
 
       .pinned-items {
@@ -148,12 +138,15 @@ import {nodeStyles} from 'viewers/components/styles/node.styles';
       }
     `,
     nodeStyles,
+    searchBoxStyle,
+    viewerCardInnerStyle,
   ],
 })
 export class HierarchyComponent {
-  objectKeys = Object.keys;
   filterString = '';
   isHighlighted = UiTreeUtils.isHighlighted;
+  ViewerEvents = ViewerEvents;
+  Analytics = Analytics;
 
   @Input() tree: UiHierarchyTreeNode | undefined;
   @Input() subtrees: UiHierarchyTreeNode[] = [];
@@ -163,6 +156,9 @@ export class HierarchyComponent {
   @Input() pinnedItems: UiHierarchyTreeNode[] = [];
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
+  @Input() rectIdToShowState?: Map<string, RectShowState>;
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
@@ -179,16 +175,7 @@ export class HierarchyComponent {
     if (window.getSelection()?.type === 'range') {
       return;
     }
-    this.onHighlightedItemChange(pinnedItem.id);
-    this.onSelectedTreeChange(pinnedItem);
-  }
-
-  onUserOptionChange() {
-    const event = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
-      bubbles: true,
-      detail: {userOptions: this.userOptions},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
+    this.onHighlightedItemChange(pinnedItem);
   }
 
   onFilterChange() {
@@ -199,18 +186,10 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  onHighlightedItemChange(newId: string) {
-    const event = new CustomEvent(ViewerEvents.HighlightedChange, {
+  onHighlightedItemChange(node: UiHierarchyTreeNode) {
+    const event = new CustomEvent(ViewerEvents.HighlightedNodeChange, {
       bubbles: true,
-      detail: {id: newId},
-    });
-    this.elementRef.nativeElement.dispatchEvent(event);
-  }
-
-  onSelectedTreeChange(item: UiHierarchyTreeNode) {
-    const event = new CustomEvent(ViewerEvents.SelectedTreeChange, {
-      bubbles: true,
-      detail: {selectedItem: item},
+      detail: {node},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

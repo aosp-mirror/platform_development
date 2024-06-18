@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Trace} from 'trace/trace';
@@ -24,22 +23,21 @@ import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
 
-class ViewerScreenRecording implements Viewer {
+export class ViewerScreenRecording implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
 
   private readonly trace: Trace<ScreenRecordingTraceEntry>;
   private readonly htmlElement: HTMLElement;
   private readonly view: View;
 
-  constructor(traces: Traces) {
-    this.trace = assertDefined(traces.getTrace(TraceType.SCREEN_RECORDING));
+  constructor(trace: Trace<ScreenRecordingTraceEntry>, traces: Traces) {
+    this.trace = trace;
     this.htmlElement = document.createElement('viewer-screen-recording');
     this.view = new View(
       ViewType.OVERLAY,
-      this.getDependencies(),
+      this.getTraces(),
       this.htmlElement,
       'ScreenRecording',
-      TraceType.SCREEN_RECORDING,
     );
   }
 
@@ -56,6 +54,14 @@ class ViewerScreenRecording implements Viewer {
         ).currentTraceEntry = await entry?.getValue();
       },
     );
+    await event.visit(
+      WinscopeEventType.EXPANDED_TIMELINE_TOGGLED,
+      async (event) => {
+        (
+          this.htmlElement as unknown as ViewerScreenRecordingComponent
+        ).forceMinimize = event.isTimelineExpanded;
+      },
+    );
   }
 
   setEmitEvent() {
@@ -66,9 +72,7 @@ class ViewerScreenRecording implements Viewer {
     return [this.view];
   }
 
-  getDependencies(): TraceType[] {
-    return ViewerScreenRecording.DEPENDENCIES;
+  getTraces(): Array<Trace<ScreenRecordingTraceEntry>> {
+    return [this.trace];
   }
 }
-
-export {ViewerScreenRecording};

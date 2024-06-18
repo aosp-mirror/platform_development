@@ -61,42 +61,52 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 # Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '1.2'
+VERSION = '2.1.1'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
 PERFETTO_SF_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy.surfaceflinger.conf'
 PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
 PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
-PERFETTO_UTILS = """
-function is_perfetto_data_source_available {
+PERFETTO_UNIQUE_SESSION_NAME = 'winscope proxy perfetto tracing'
+PERFETTO_UTILS = f"""
+function is_perfetto_data_source_available {{
     local data_source_name=$1
     if perfetto --query | grep $data_source_name 2>&1 >/dev/null; then
         return 0
     else
         return 1
     fi
-}
+}}
 
-function is_any_perfetto_data_source_available {
-    if is_perfetto_data_source_available android.surfaceflinger.layers || \
-       is_perfetto_data_source_available android.surfaceflinger.transactions || \
-       is_perfetto_data_source_available com.android.wm.shell.transition || \
-       is_perfetto_data_source_available android.protolog; then
+function is_perfetto_tracing_session_running {{
+    if perfetto --query | grep "{PERFETTO_UNIQUE_SESSION_NAME}" 2>&1 >/dev/null; then
         return 0
     else
         return 1
     fi
-}
+}}
 
-function is_flag_set {
+function is_any_perfetto_data_source_available {{
+    if is_perfetto_data_source_available android.inputmethod || \
+       is_perfetto_data_source_available android.protolog || \
+       is_perfetto_data_source_available android.surfaceflinger.layers || \
+       is_perfetto_data_source_available android.surfaceflinger.transactions || \
+       is_perfetto_data_source_available com.android.wm.shell.transition; then
+        return 0
+    else
+        return 1
+    fi
+}}
+
+function is_flag_set {{
     local flag_name=$1
     if dumpsys device_config | grep $flag_name=true 2>&1 >/dev/null; then
         return 0
     else
         return 1
     fi
-}
+}}
 """
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
@@ -182,8 +192,28 @@ class TraceTarget:
 TRACE_TARGETS = {
     "view_capture_trace": TraceTarget(
         File('/data/misc/wmtrace/view_capture_trace.zip', "view_capture_trace.zip"),
-        'su root settings put global view_capture_enabled 1\necho "View capture trace started."',
-        "su root sh -c 'cmd launcherapps dump-view-hierarchies >/data/misc/wmtrace/view_capture_trace.zip'; su root settings put global view_capture_enabled 0"
+    f"""
+if is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.viewcapture"
+    }}
+}}
+EOF
+    echo 'ViewCapture tracing (perfetto) configured to start along the other perfetto traces'
+else
+    su root settings put global view_capture_enabled 1
+    echo 'ViewCapture tracing (legacy) started.'
+fi
+""",
+    """
+if ! is_flag_set windowing_tools/android.tracing.perfetto_view_capture_tracing; then
+    su root sh -c 'cmd launcherapps dump-view-hierarchies >/data/misc/wmtrace/view_capture_trace.zip'
+    su root settings put global view_capture_enabled 0
+    echo 'ViewCapture tracing (legacy) stopped.'
+fi
+"""
     ),
     "window_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
@@ -264,6 +294,9 @@ if is_perfetto_data_source_available android.protolog && \
 data_sources: {{
     config {{
         name: "android.protolog"
+        protolog_config: {{
+            tracing_mode: ENABLE_ALL
+        }}
     }}
 }}
 EOF
@@ -281,20 +314,31 @@ if ! is_perfetto_data_source_available android.protolog && \
 fi
         """
     ),
-    "ime_trace_clients": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
-        'su root ime tracing start\necho "Clients IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
-    ),
-   "ime_trace_service": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
-        'su root ime tracing start\necho "Service IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
-    ),
-    "ime_trace_managerservice": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
-        'su root ime tracing start\necho "ManagerService IME trace started."',
-        'su root ime tracing stop >/dev/null 2>&1'
+    "ime": TraceTarget(
+        [WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
+         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
+         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice")],
+         f"""
+if is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.inputmethod"
+    }}
+}}
+EOF
+    echo 'IME tracing (perfetto) configured to start along the other perfetto traces'
+else
+    su root ime tracing start
+    echo "IME tracing (legacy) started."
+fi
+""",
+    """
+if ! is_flag_set windowing_tools/android.tracing.perfetto_ime; then
+    su root ime tracing stop >/dev/null 2>&1
+    echo "IME tracing (legacy) stopped."
+fi
+"""
     ),
     "wayland_trace": TraceTarget(
         WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),
@@ -339,14 +383,22 @@ fi
 if is_any_perfetto_data_source_available; then
     cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
 buffers: {{
-    size_kb: 50000
+    size_kb: 80000
     fill_policy: RING_BUFFER
 }}
 duration_ms: 0
-flush_period_ms: 1000
+file_write_period_ms: 999999999
 write_into_file: true
-max_file_size_bytes: 1000000000
+unique_session_name: "{PERFETTO_UNIQUE_SESSION_NAME}"
 EOF
+
+    if is_perfetto_tracing_session_running; then
+        perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
+        echo 'Stopped already-running winscope perfetto session'
+    fi
+
+    echo 'Concurrent Perfetto Sessions'
+    perfetto --query | sed -n '/^TRACING SESSIONS:$/,$p'
 
     rm -f {PERFETTO_TRACE_FILE}
     perfetto --out {PERFETTO_TRACE_FILE} --txt --config {PERFETTO_TRACE_CONFIG_FILE} --detach=WINSCOPE-PROXY-TRACING-SESSION
