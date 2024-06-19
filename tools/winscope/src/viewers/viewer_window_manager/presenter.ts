@@ -19,7 +19,6 @@ import {INVALID_TIME_NS} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {
   AbstractHierarchyViewerPresenter,
@@ -82,7 +81,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       }
       return entry.getTimestamp().format();
     },
-    [[TraceType.WINDOW_MANAGER, [new UpdateDisplayNames()]]],
+    [new UpdateDisplayNames()],
   );
   protected override rectsPresenter = new RectsPresenter(
     PersistentStoreProxy.new<UserOptions>(

@@ -63,10 +63,6 @@ export abstract class TraceEntry<T> {
     return this.timestamp;
   }
 
-  hasValidTimestamp() {
-    return this.timestamp.getValueNs() !== INVALID_TIME_NS;
-  }
-
   getFramesRange(): FramesRange | undefined {
     if (!this.fullTrace.hasFrameInfo()) {
       throw new Error(

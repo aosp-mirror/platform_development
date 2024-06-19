@@ -141,8 +141,6 @@ describe('TransitionTimelineComponent', () => {
       new Rect(0, padding, Math.floor(width / 5), oneRowHeight),
       component.color,
       1,
-      false,
-      false,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(
@@ -153,8 +151,6 @@ describe('TransitionTimelineComponent', () => {
       ),
       component.color,
       1,
-      false,
-      false,
     );
   });
 
@@ -216,15 +212,11 @@ describe('TransitionTimelineComponent', () => {
       new Rect(0, padding, Math.floor(width / 10), oneRowHeight),
       component.color,
       1,
-      false,
-      false,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(Math.floor(width / 2), padding, Math.floor(width), oneRowHeight),
       component.color,
       1,
-      false,
-      false,
     );
   });
 
@@ -254,13 +246,7 @@ describe('TransitionTimelineComponent', () => {
       oneRowHeight,
     );
     expect(drawRectSpy).toHaveBeenCalledTimes(2); // once drawn as a normal entry another time with rect border
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      expectedRect,
-      component.color,
-      1,
-      false,
-      false,
-    );
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1);
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
     expect(drawRectBorderSpy).toHaveBeenCalledWith(expectedRect);
   });
@@ -284,13 +270,7 @@ describe('TransitionTimelineComponent', () => {
     );
 
     expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      expectedRect,
-      component.color,
-      1,
-      false,
-      false,
-    );
+    expect(drawRectSpy).toHaveBeenCalledWith(expectedRect, component.color, 1);
 
     const drawRectBorderSpy = spyOn(
       component.canvasDrawer,
@@ -369,8 +349,6 @@ describe('TransitionTimelineComponent', () => {
       new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
       component.color,
       1,
-      false,
-      false,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(
@@ -381,8 +359,6 @@ describe('TransitionTimelineComponent', () => {
       ),
       component.color,
       1,
-      false,
-      false,
     );
   });
 
@@ -446,8 +422,6 @@ describe('TransitionTimelineComponent', () => {
       new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
       component.color,
       1,
-      false,
-      false,
     );
     expect(drawRectSpy).toHaveBeenCalledWith(
       new Rect(
@@ -458,8 +432,6 @@ describe('TransitionTimelineComponent', () => {
       ),
       component.color,
       1,
-      false,
-      false,
     );
   });
 
@@ -513,107 +485,6 @@ describe('TransitionTimelineComponent', () => {
       ),
       component.color,
       0.25,
-      false,
-      false,
-    );
-  });
-
-  it('can draw transition with unknown start time', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            children: [{name: 'finishTimeNs', value: time85}],
-          },
-          {
-            name: 'shellData',
-            value: null,
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time85])
-      .build();
-    component.traceEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
-
-    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
-    const padding = 5;
-    const oneRowTotalHeight = 30;
-    const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
-
-    expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(0, padding, Math.floor((width * 3) / 4), oneRowHeight),
-      component.color,
-      1,
-      true,
-      false,
-    );
-  });
-
-  it('can draw transition with unknown end time', async () => {
-    const transitions = [
-      new PropertyTreeBuilder()
-        .setIsRoot(true)
-        .setRootId('TransitionsTraceEntry')
-        .setName('transition')
-        .setChildren([
-          {
-            name: 'wmData',
-            value: null,
-          },
-          {
-            name: 'shellData',
-            children: [{name: 'dispatchTimeNs', value: time35}],
-          },
-          {name: 'aborted', value: false},
-        ])
-        .build(),
-    ];
-    component.trace = new TraceBuilder<PropertyTreeNode>()
-      .setType(TraceType.TRANSITION)
-      .setEntries(transitions)
-      .setTimestamps([time35])
-      .build();
-    component.traceEntries = transitions;
-    component.selectionRange = new TimeRange(time10, time110);
-
-    const drawRectSpy = spyOn(component.canvasDrawer, 'drawRect');
-
-    fixture.detectChanges();
-    await fixture.whenRenderingDone();
-
-    const padding = 5;
-    const oneRowTotalHeight = 30;
-    const oneRowHeight = oneRowTotalHeight - padding;
-    const width = component.canvasDrawer.getScaledCanvasWidth();
-
-    expect(drawRectSpy).toHaveBeenCalledTimes(1);
-    expect(drawRectSpy).toHaveBeenCalledWith(
-      new Rect(
-        Math.floor((width * 1) / 4),
-        padding,
-        Math.floor((width * 3) / 4),
-        oneRowHeight,
-      ),
-      component.color,
-      1,
-      false,
-      true,
     );
   });
 

@@ -17,6 +17,4 @@
 export interface Segment {
   from: number;
   to: number;
-  unknownStart?: boolean;
-  unknownEnd?: boolean;
 }

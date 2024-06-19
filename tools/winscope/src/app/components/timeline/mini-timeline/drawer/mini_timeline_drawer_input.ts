@@ -136,8 +136,6 @@ export class MiniTimelineDrawerInput {
     return {
       from: transformer.transform(timeRange.from),
       to: transformer.transform(timeRange.to),
-      unknownStart: TimelineUtils.isTransitionWithUnknownStart(transition),
-      unknownEnd: TimelineUtils.isTransitionWithUnknownEnd(transition),
     };
   }
 
