@@ -278,6 +278,9 @@ export class MiniTimelineComponent {
 
   @HostListener('document:keydown', ['$event'])
   async handleKeyboardEvent(event: KeyboardEvent) {
+    if ((event.target as HTMLElement).tagName === 'INPUT') {
+      return;
+    }
     if (event.code === 'KeyA') {
       this.updateSliderPosition(-MiniTimelineComponent.SLIDER_HORIZONTAL_STEP);
     }
