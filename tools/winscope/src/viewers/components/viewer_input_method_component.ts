@@ -43,7 +43,8 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
           [store]="store"
           [userOptions]="inputData?.hierarchyUserOptions ?? {}"
           (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.HIERARCHY, true)"
-          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"></hierarchy-view>
+          [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.HIERARCHY)"
+          placeholderText="No IME entry found."></hierarchy-view>
         <ime-additional-properties
           class="ime-additional-properties"
           [isImeManagerService]="isImeManagerService()"
@@ -60,7 +61,8 @@ import {viewerCardStyle} from './styles/viewer_card.styles';
         [propertiesTree]="inputData?.propertiesTree"
         [traceType]="inputData?.traceType"
         (collapseButtonClicked)="sections.onCollapseStateChange(CollapsibleSectionType.PROPERTIES, true)"
-        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"></properties-view>
+        [class.collapsed]="sections.isSectionCollapsed(CollapsibleSectionType.PROPERTIES)"
+        placeholderText="No selected item."></properties-view>
     </div>
   `,
   styles: [
