@@ -340,9 +340,12 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const end = entry.unknownEnd ? endGradientx1 : entry.to;
 
     const gradient = this.ctx.createLinearGradient(start, 0, end, 0);
-    const gradientRatio = Math.min(
-      (gradientWidthOutsideEntry + gradientWidthInsideEntry) / (end - start),
-      1,
+    const gradientRatio = Math.max(
+      0,
+      Math.min(
+        (gradientWidthOutsideEntry + gradientWidthInsideEntry) / (end - start),
+        1,
+      ),
     );
     gradient.addColorStop(0, entry.unknownStart ? transparentColor : rgbaColor);
     gradient.addColorStop(1, entry.unknownEnd ? transparentColor : rgbaColor);

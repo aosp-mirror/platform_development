@@ -53,8 +53,8 @@ export class TimelineData {
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
-      // Filter out dumps with invalid timestamp (would mess up the timeline)
-      if (trace.isDumpWithoutTimestamp()) {
+      // Filter out empty traces or dumps with invalid timestamp (would mess up the timeline)
+      if (trace.lengthEntries === 0 || trace.isDumpWithoutTimestamp()) {
         return;
       }
 
@@ -217,7 +217,7 @@ export class TimelineData {
     position: TracePosition,
   ): number | undefined {
     const trace = this.traces.getTrace(TraceType.SCREEN_RECORDING);
-    if (!trace || trace.lengthEntries === 0) {
+    if (!trace) {
       return undefined;
     }
 
@@ -324,9 +324,6 @@ export class TimelineData {
     let first: TraceEntry<{}> | undefined;
 
     this.traces.forEachTrace((trace) => {
-      if (trace.lengthEntries === 0) {
-        return;
-      }
       let candidate: TraceEntry<{}> | undefined;
       for (let i = 0; i < trace.lengthEntries; i++) {
         const entry = trace.getEntry(i);
@@ -350,9 +347,6 @@ export class TimelineData {
     let last: TraceEntry<{}> | undefined = undefined;
 
     this.traces.forEachTrace((trace) => {
-      if (trace.lengthEntries === 0) {
-        return;
-      }
       const candidate = trace.getEntry(trace.lengthEntries - 1);
       if (!last || candidate.getTimestamp() > last.getTimestamp()) {
         last = candidate;
@@ -363,7 +357,7 @@ export class TimelineData {
   }
 
   private getFirstEntryOfActiveViewTrace(): TraceEntry<{}> | undefined {
-    if (!this.activeTrace || this.activeTrace.lengthEntries === 0) {
+    if (!this.activeTrace) {
       return undefined;
     }
     return this.activeTrace.getEntry(0);

@@ -17,7 +17,7 @@
 import {VIRTUAL_SCROLL_STRATEGY} from '@angular/cdk/scrolling';
 import {Directive, forwardRef} from '@angular/core';
 import {VariableHeightScrollDirective} from 'viewers/common/variable_height_scroll_directive';
-import {UiDataMessage} from 'viewers/viewer_protolog/ui_data';
+import {ProtologEntry} from 'viewers/viewer_protolog/ui_data';
 import {ProtologScrollStrategy} from './protolog_scroll_strategy';
 
 @Directive({
@@ -30,6 +30,6 @@ import {ProtologScrollStrategy} from './protolog_scroll_strategy';
     },
   ],
 })
-export class ProtologScrollDirective extends VariableHeightScrollDirective<UiDataMessage> {
+export class ProtologScrollDirective extends VariableHeightScrollDirective<ProtologEntry> {
   scrollStrategy = new ProtologScrollStrategy();
 }
