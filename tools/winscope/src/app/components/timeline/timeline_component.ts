@@ -872,6 +872,7 @@ export class TimelineComponent
         ).makeTimestampFromNs(clickedNs),
       ]);
     }
+    Analytics.Navigation.logTimeBookmark();
   }
 
   removeAllBookmarks() {

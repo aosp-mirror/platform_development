@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-export interface Segment {
-  from: number;
-  to: number;
-  unknownStart?: boolean;
-  unknownEnd?: boolean;
+import {Operation} from 'trace/tree_node/operations/operation';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+
+export class UpdateSfSubtreeDisplayNames
+  implements Operation<UiHierarchyTreeNode>
+{
+  apply(node: UiHierarchyTreeNode): void {
+    this.updateRootName(node);
+  }
+
+  private updateRootName(node: UiHierarchyTreeNode) {
+    node.setDisplayName('SfSubtree - ' + node.name);
+  }
 }
