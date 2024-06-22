@@ -34,7 +34,7 @@ import {MatSelectChange} from '@angular/material/select';
         <mat-option
           *ngFor="let option of options"
           [value]="option"
-          [class.hidden-option]="!option.includes(filterString)">
+          [class.hidden-option]="hideOption(option)">
           {{ option }}
         </mat-option>
       </mat-select>
@@ -89,5 +89,9 @@ export class SelectWithFilterComponent {
 
   onSelectClosed() {
     this.filterString = '';
+  }
+
+  hideOption(option: string) {
+    return !option.toLowerCase().includes(this.filterString.toLowerCase());
   }
 }
