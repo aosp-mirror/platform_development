@@ -37,6 +37,7 @@ describe('TimelineData', () => {
     .setTimestamps(TraceType.EVENT_LOG, [timestamp9])
     .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp10])
     .setTimestamps(TraceType.WINDOW_MANAGER, [timestamp11])
+    .setTimestamps(TraceType.TRANSACTIONS, [])
     .build();
 
   const traceSf = assertDefined(traces.getTrace(TraceType.SURFACE_FLINGER));
@@ -97,6 +98,30 @@ describe('TimelineData', () => {
       expect(timelineData.getPreviousEntryFor(dumpWm)).toBeUndefined();
       expect(timelineData.getNextEntryFor(dumpWm)).toBeUndefined();
     });
+  });
+
+  it('drops empty trace', () => {
+    timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(
+      timelineData.getTraces().getTrace(TraceType.TRANSACTIONS),
+    ).toBeUndefined();
+  });
+
+  it('sets first entry as that with valid timestamp', async () => {
+    const traces = new TracesBuilder()
+      .setTimestamps(TraceType.TRANSITION, [timestamp0, timestamp9])
+      .setTimestamps(TraceType.SURFACE_FLINGER, [timestamp9, timestamp10])
+      .build();
+    await timelineData.initialize(
+      traces,
+      undefined,
+      TimestampConverterUtils.TIMESTAMP_CONVERTER,
+    );
+    expect(timelineData.getFullTimeRange().from).toEqual(timestamp9);
   });
 
   it('uses first entry of first active trace by default', () => {
