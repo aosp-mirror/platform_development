@@ -38,7 +38,9 @@ The VDM Demo contains 3 apps:
 *   An Android device running Android 13 or newer to act as a client device.
 
 *   A *rooted* Android device running Android 14 or newer (e.g. a `userdebug` or
-    `eng` build) to act as a host device.
+    `eng` build) to act as a host device. Even though VDM is available starting
+    Android 13, the support there is minimal and the Host app is not compatible
+    with Android 13.
 
 *   Both devices need to support
     [Wi-Fi Aware](https://developer.android.com/develop/connectivity/wifi/wifi-aware)
@@ -168,16 +170,46 @@ show a launcher-like list of installed apps on the host device.
 
 ### Settings
 
+#### Input
+
+The input menu button enables several different mechanisms for injecting input
+from the host device into the focused display on the client device. The focused
+display is indicated by the frame around its header whenever there are more than
+one displays. The display focus is based on user interaction.
+
+Each input screen has a "Back", "Home" and "Forward" buttons.
+
+-   **Touchpad** shows an on-screen touchpad for injecting mouse events into the
+    focused display.
+
+-   **Remote** allows the host device to act as a pointer that controls the
+    mouse movement on the focused display.
+
+-   **Navigation** shows an on-screen D-Pad and touchpad for navigating the
+    activity on the focused display.
+
+-   **Keyboard** shows the host device's on-screen keyboard and sends any key
+    events to the activity on the focused display.
+
+-   **Stylus** allows for injecting simulated stylus events into the focused
+    display. Use together with the stylus demo. Run the commands below to enable
+    this functionality.
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_stylus true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
 #### General
 
 -   **Device profile**: Enables device streaming CDM role as opposed to app
     streaming role, with all differences in policies that this entails. \
     *Changing this will recreate the virtual device.*
 
--   **Include streamed apps in recents**: Whether streamed apps should show up
-    in the host device's recent apps. Run the commands below to enable this
-    functionality. \
-    *This can be changed dynamically.*
+-   **Hide streamed app from recents**: Whether streamed apps should show up in
+    the host device's recent apps. Run the commands below to make this
+    functionality dynamic. \
+    *This can be changed dynamically starting with Android V.*
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
@@ -191,6 +223,7 @@ show a launcher-like list of installed apps on the host device.
     *This can be changed dynamically.*
 
     ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.dynamic_policy true
     adb shell device_config put virtual_devices android.companion.virtual.flags.cross_device_clipboard true
     adb shell am force-stop com.example.android.vdmdemo.host
     ```
@@ -201,6 +234,18 @@ show a launcher-like list of installed apps on the host device.
     into the host device. Any context that is associated with the virtual device
     will access the virtual sensors by default. \
     *Changing this will recreate the virtual device.*
+
+-   **Enable client Camera**: Enables front & back camera injection from the client device
+    into the host device. (WIP: Any context that is associated with the virtual device
+    will the virtual cameras by default). Run the commands below on host device \
+    to enable this functionality.
+    *Changing this will recreate the virtual device.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.virtual_camera true
+    adb shell device_config put virtual_devices android.companion.virtualdevice.flags.virtual_camera_service_discovery true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
 
 -   **Enable client Audio**: Enables audio output on the client device. Any
     context that is associated with the virtual device will play audio on the
@@ -248,6 +293,17 @@ show a launcher-like list of installed apps on the host device.
 -   **Display IME policy**: Choose the IME behavior on remote displays. Run the
     commands below to enable this functionality. \
     *This can be changed dynamically.*
+
+    ```shell
+    adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
+    adb shell am force-stop com.example.android.vdmdemo.host
+    ```
+
+-   **Use the native client IME**: Enables the native client IME instead of
+    streaming the host's IME on the virtual displays. Requires the *Display IME
+    Policy* to be set to *Show IME on the remote display*. Run the commands
+    below to enable this functionality. \
+    *Changing this will recreate the virtual device.*
 
     ```shell
     adb shell device_config put virtual_devices android.companion.virtual.flags.vdm_custom_ime true
@@ -332,4 +388,70 @@ display, if the mouse pointer is currently positioned on a streamed display.
     is no vibration support on virtual devices, so vibration requests from
     streamed activities are ignored.
 
+-   **Stylus**: A simple drawing activity that reacts on stylus input events.
+    Use together with the simulated stylus input feature of the host app.
+
 <!-- LINT.ThenChange(README.md) -->
+
+## SDK Version
+
+### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for cross-device clipboard.
+
+-   Added support for custom home activities.
+
+-   Added support for custom IME component.
+
+-   Added support for per-display IME policy.
+
+-   Added support for fixed orientation displays (disable display rotation).
+
+-   Added support for mirroring the default display on the virtual device.
+
+-   Added support for dynamic policy changes, so the device does not need to be
+    recreated.
+
+-   Improved support for displays that support home activities. Removed
+    navigation bar and added support for normal home intents.
+
+-   Improved handling of vibrating requests originating from virtual devices.
+
+-   Improved multi-display mouse support.
+
+-   Fixed bugs with hiding streamed apps from the host's recent apps.
+
+### Android 14 / Upside Down Cake / SDK level 34
+
+-   Added support for virtual sensors.
+
+-   Added device awareness to contexts.
+
+-   Added support for clipboard on the virtual device.
+
+-   Added support for hiding streamed apps from the host's recent apps.
+
+-   Added `COMPANION_DEVICE_NEARBY_DEVICE_STREAMING` device profile.
+
+-   Added support for virtual navigation input: D-Pad and navigation touchpad.
+
+-   Improved support for audio, allowing routing to be based on the origin
+    context.
+
+-   Improved support for creation of virtual displays and input devices.
+
+-   Improved handling of virtual touch events.
+
+### Android 13 / Tiramisu / SDK level 33
+
+-   Added support for virtual audio device.
+
+-   Added support for hiding the mouse pointer icon.
+
+-   Added support for virtual mouse, keyboard, touchscreen.
+
+-   Added support for always unlocked displays.
+
+-   Added `COMPANION_DEVICE_APP_STREAMING` device profile.
+
+-   Added support for virtual device creation.

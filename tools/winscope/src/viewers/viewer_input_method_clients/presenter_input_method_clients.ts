@@ -17,15 +17,24 @@ import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodClients extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
+    const client = this.entry?.getChildByName('client');
+    const curId = client
+      ?.getEagerPropertyByName('inputMethodManager')
+      ?.getChildByName('curId')
+      ?.formattedValue();
+    const packageName = client
+      ?.getEagerPropertyByName('editorInfo')
+      ?.getChildByName('packageName')
+      ?.formattedValue();
     return {
-      ...new ImClientsTableProperties(
-        this.entry?.obj?.client?.inputMethodManager?.curId,
-        this.entry?.obj?.client?.editorInfo?.packageName
-      ),
+      ...new ImClientsTableProperties(curId, packageName),
     };
   }
 }
 
 class ImClientsTableProperties {
-  constructor(public inputMethodId: string | undefined, public packageName: string | undefined) {}
+  constructor(
+    public inputMethodId: string | undefined,
+    public packageName: string | undefined,
+  ) {}
 }

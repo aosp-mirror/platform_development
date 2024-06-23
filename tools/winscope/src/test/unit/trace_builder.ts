@@ -15,14 +15,21 @@
  */
 
 import {Timestamp, TimestampType} from 'common/time';
-import {CustomQueryParserResultTypeMap, CustomQueryType} from 'trace/custom_query';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
 import {FrameMap} from 'trace/frame_map';
 import {FrameMapBuilder} from 'trace/frame_map_builder';
-import {AbsoluteEntryIndex, AbsoluteFrameIndex, EntriesRange} from 'trace/index_types';
+import {
+  AbsoluteEntryIndex,
+  AbsoluteFrameIndex,
+  EntriesRange,
+} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {ParserMock} from 'trace/parser_mock';
 import {Trace} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {ParserBuilder} from './parser_builder';
 
 export class TraceBuilder<T> {
   private type = TraceType.SURFACE_FLINGER;
@@ -78,7 +85,7 @@ export class TraceBuilder<T> {
 
   setParserCustomQueryResult<Q extends CustomQueryType>(
     type: Q,
-    result: CustomQueryParserResultTypeMap[Q]
+    result: CustomQueryParserResultTypeMap[Q],
   ): TraceBuilder<T> {
     this.parserCustomQueryResult.set(type, result);
     return this;
@@ -99,7 +106,7 @@ export class TraceBuilder<T> {
       this.descriptors,
       undefined,
       this.timestampType,
-      entriesRange
+      entriesRange,
     );
 
     const frameMap = this.getFrameMap();
@@ -111,45 +118,27 @@ export class TraceBuilder<T> {
   }
 
   private createParser(): Parser<T> {
-    if (!this.timestamps && !this.entries) {
-      throw new Error(`Either the timestamps or the entries should be specified`);
+    const builder = new ParserBuilder<T>().setType(this.type);
+
+    if (this.timestamps) {
+      builder.setTimestamps(this.timestamps);
     }
 
-    if (!this.timestamps) {
-      this.timestamps = this.createTimestamps(this.entries as T[]);
+    if (this.entries) {
+      builder.setEntries(this.entries);
     }
 
-    if (!this.entries) {
-      this.entries = this.createEntries(this.timestamps);
-    }
+    this.parserCustomQueryResult?.forEach((result, queryType) => {
+      builder.setCustomQueryResult(queryType, result as any);
+    });
 
-    if (this.entries.length !== this.timestamps.length) {
-      throw new Error('Entries and timestamps arrays must have the same length');
-    }
-
-    return new ParserMock(this.timestamps, this.entries, this.parserCustomQueryResult);
-  }
-
-  private createTimestamps(entries: T[]): Timestamp[] {
-    const timestamps = new Array<Timestamp>();
-    for (let i = 0; i < entries.length; ++i) {
-      timestamps[i] = new Timestamp(TimestampType.REAL, BigInt(i));
-    }
-    return timestamps;
-  }
-
-  private createEntries(timestamps: Timestamp[]): T[] {
-    const entries = new Array<T>();
-    for (let i = 0; i < timestamps.length; ++i) {
-      entries.push(`entry-${i}` as unknown as T);
-    }
-    return entries;
+    return builder.build();
   }
 
   private getFrameMap(): FrameMap | undefined {
     if (this.frameMap && this.frameMapBuilder) {
       throw new Error(
-        `Cannot set a full frame map as well as individual entry's frames. Pick one of the two options.`
+        `Cannot set a full frame map as well as individual entry's frames. Pick one of the two options.`,
       );
     }
     if (this.frameMap) {

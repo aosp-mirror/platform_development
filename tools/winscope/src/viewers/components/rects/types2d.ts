@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-import {Rect, TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
+import {Rect} from 'common/rect';
 
-export interface UiRect extends Rect {
-  label: string;
-  transform?: TransformMatrix;
-  isVisible: boolean;
-  isDisplay: boolean;
-  id: string;
-  displayId: number;
-  isVirtual: boolean;
-  isClickable: boolean;
-  cornerRadius: number;
-  depth?: number;
-  hasContent?: boolean;
+export class UiRect extends Rect {
+  constructor(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    readonly label: string,
+    readonly isVisible: boolean,
+    readonly isDisplay: boolean,
+    readonly id: string,
+    readonly groupId: number,
+    readonly isVirtual: boolean,
+    readonly isClickable: boolean,
+    readonly cornerRadius: number,
+    readonly transform: TransformMatrix | undefined,
+    readonly depth: number,
+    readonly hasContent: boolean | undefined,
+  ) {
+    super(x, y, w, h);
+  }
 }
 
 export interface Size {

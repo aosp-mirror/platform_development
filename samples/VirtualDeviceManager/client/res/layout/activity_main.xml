@@ -44,7 +44,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/dpad_fragment_container"
-        android:name="com.example.android.vdmdemo.client.DpadFragment"
+        android:name="com.example.android.vdmdemo.common.DpadFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
@@ -56,7 +56,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_touchpad_fragment_container"
-        android:name="com.example.android.vdmdemo.client.NavTouchpadFragment"
+        android:name="com.example.android.vdmdemo.common.NavTouchpadFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"

@@ -24,7 +24,7 @@ export class BigintMath {
       result <<= 1n;
     }
     return result;
-  };
+  }
 
   // Returns the largest integral power of 2 which is not greater than n.
   // If n is less than or equal to 0, returns 1.
@@ -34,7 +34,7 @@ export class BigintMath {
       result <<= 1n;
     }
     return result;
-  };
+  }
 
   // Returns the largest integral value x where 2^x is not greater than n.
   static log2(n: bigint): number {
