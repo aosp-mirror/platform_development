@@ -43,6 +43,9 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         title="WM & SF PROPERTIES"
         (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
     </div>
+
+    <span class="mat-body-1 placeholder-text" *ngIf="!additionalProperties"> No IME entry found. </span>
+
     <div class="additional-properties-content" *ngIf="additionalProperties">
       <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">

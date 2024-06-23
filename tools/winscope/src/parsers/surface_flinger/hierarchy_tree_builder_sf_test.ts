@@ -19,29 +19,28 @@ import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
 import {HierarchyTreeBuilderSf} from './hierarchy_tree_builder_sf';
 import {LayerFlag} from './layer_flag';
 
 describe('HierarchyTreeBuilderSf', () => {
   let builder: HierarchyTreeBuilderSf;
   let entry: PropertiesProvider;
+  let expectedRoot: HierarchyTreeNode;
 
   beforeEach(() => {
     jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
     builder = new HierarchyTreeBuilderSf();
-    const testPropertyNode = new PropertyTreeBuilder()
+    const propertiesTree = new PropertyTreeBuilder()
       .setIsRoot(true)
       .setRootId('LayerTraceEntry')
       .setName('root')
       .build();
-    entry = new PropertiesProvider(
-      testPropertyNode,
-      async () => testPropertyNode,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    entry = makePropertiesProvider(propertiesTree);
+    expectedRoot = new HierarchyTreeNode('LayerTraceEntry root', 'root', entry);
   });
 
   it('throws error if entry not set', () => {
@@ -56,25 +55,6 @@ describe('HierarchyTreeBuilderSf', () => {
 
   it('builds root with no children correctly', () => {
     const root = builder.setRoot(entry).setChildren([]).build();
-
-    const propertiesTree = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('LayerTraceEntry')
-      .setName('root')
-      .build();
-
-    const expectedRoot = new HierarchyTreeNode(
-      'LayerTraceEntry root',
-      'root',
-      new PropertiesProvider(
-        propertiesTree,
-        async () => propertiesTree,
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-      ),
-    );
-
     expect(root).toEqual(expectedRoot);
   });
 
@@ -91,34 +71,10 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-
-    const layer1Provider = new PropertiesProvider(
-      layer1Props,
-      async () => layer1Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer1Provider = makePropertiesProvider(layer1Props);
 
     const root = builder.setRoot(entry).setChildren([layer1Provider]).build();
 
-    const propertiesTree = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('LayerTraceEntry')
-      .setName('root')
-      .build();
-
-    const expectedRoot = new HierarchyTreeNode(
-      'LayerTraceEntry root',
-      'root',
-      new PropertiesProvider(
-        propertiesTree,
-        async () => propertiesTree,
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-      ),
-    );
     expectedRoot.addOrReplaceChild(
       new HierarchyTreeNode('1 layer1', 'layer1', layer1Provider),
     );
@@ -148,13 +104,7 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-    const layer1Provider = new PropertiesProvider(
-      layer1Props,
-      async () => layer1Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer1Provider = makePropertiesProvider(layer1Props);
 
     const layer2Props = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -168,36 +118,13 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-    const layer2Provider = new PropertiesProvider(
-      layer2Props,
-      async () => layer2Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer2Provider = makePropertiesProvider(layer2Props);
 
     const root = builder
       .setRoot(entry)
       .setChildren([layer1Provider, layer2Provider])
       .build();
 
-    const propertiesTree = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('LayerTraceEntry')
-      .setName('root')
-      .build();
-
-    const expectedRoot = new HierarchyTreeNode(
-      'LayerTraceEntry root',
-      'root',
-      new PropertiesProvider(
-        propertiesTree,
-        async () => propertiesTree,
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-      ),
-    );
     const expectedRootLayer = new HierarchyTreeNode(
       '1 layer1',
       'layer1',
@@ -236,13 +163,7 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-    const layer1Provider = new PropertiesProvider(
-      layer1Props,
-      async () => layer1Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer1Provider = makePropertiesProvider(layer1Props);
 
     const layer2Props = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -256,13 +177,7 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-    const layer2Provider = new PropertiesProvider(
-      layer2Props,
-      async () => layer2Props,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer2Provider = makePropertiesProvider(layer2Props);
 
     const layer2DupProps = new PropertyTreeBuilder()
       .setIsRoot(true)
@@ -276,36 +191,13 @@ describe('HierarchyTreeBuilderSf', () => {
         {name: 'flags', value: LayerFlag.HIDDEN},
       ])
       .build();
-    const layer2DupProvider = new PropertiesProvider(
-      layer2DupProps,
-      async () => layer2DupProps,
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-      OperationChain.emptyChain<PropertyTreeNode>(),
-    );
+    const layer2DupProvider = makePropertiesProvider(layer2DupProps);
 
     const root = builder
       .setRoot(entry)
       .setChildren([layer1Provider, layer2Provider, layer2DupProvider])
       .build();
 
-    const propertiesTree = new PropertyTreeBuilder()
-      .setIsRoot(true)
-      .setRootId('LayerTraceEntry')
-      .setName('root')
-      .build();
-
-    const expectedRoot = new HierarchyTreeNode(
-      'LayerTraceEntry root',
-      'root',
-      new PropertiesProvider(
-        propertiesTree,
-        async () => propertiesTree,
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-        OperationChain.emptyChain<PropertyTreeNode>(),
-      ),
-    );
     const expectedRootLayer = new HierarchyTreeNode(
       '1 layer1',
       'layer1',
@@ -327,4 +219,73 @@ describe('HierarchyTreeBuilderSf', () => {
 
     expect(root).toEqual(expectedRoot);
   });
+
+  it('builds root with default parent values correctly', () => {
+    const layer1Props = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('1')
+      .setName('layer1')
+      .setChildren([
+        {name: 'id', value: 1},
+        {name: 'name', value: 'layer1'},
+        {name: 'parent', value: -1},
+        {
+          name: 'children',
+          value: undefined,
+          children: [
+            {
+              name: '0',
+              value: 2,
+            },
+          ],
+        },
+        {name: 'flags', value: LayerFlag.HIDDEN},
+      ])
+      .build();
+    const layer1Provider = makePropertiesProvider(layer1Props);
+
+    const layer2Props = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('2')
+      .setName('layer2')
+      .setChildren([
+        {name: 'id', value: 2},
+        {name: 'name', value: 'layer2'},
+        {name: 'parent', value: 1, source: PropertySource.DEFAULT},
+        {name: 'children', value: []},
+        {name: 'flags', value: LayerFlag.HIDDEN},
+      ])
+      .build();
+    const layer2Provider = makePropertiesProvider(layer2Props);
+
+    const root = builder
+      .setRoot(entry)
+      .setChildren([layer1Provider, layer2Provider])
+      .build();
+
+    const expectedLayer1 = new HierarchyTreeNode(
+      '1 layer1',
+      'layer1',
+      layer1Provider,
+    );
+    const expectedLayer2 = new HierarchyTreeNode(
+      '2 layer2',
+      'layer2',
+      layer2Provider,
+    );
+    expectedRoot.addOrReplaceChild(expectedLayer1);
+    expectedRoot.addOrReplaceChild(expectedLayer2);
+
+    expect(root).toEqual(expectedRoot);
+  });
+
+  function makePropertiesProvider(node: PropertyTreeNode): PropertiesProvider {
+    return new PropertiesProvider(
+      node,
+      async () => node,
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+      OperationChain.emptyChain<PropertyTreeNode>(),
+    );
+  }
 });
