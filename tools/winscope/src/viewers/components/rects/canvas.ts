@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TransformMatrix} from 'common/geometry_utils';
+import {TransformMatrix} from 'common/geometry_types';
 import * as THREE from 'three';
-import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
+import {
+  CSS2DObject,
+  CSS2DRenderer,
+} from 'three/examples/jsm/renderers/CSS2DRenderer';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D} from './types3d';
+import {
+  Circle3D,
+  ColorType,
+  Label3D,
+  Point3D,
+  Rect3D,
+  Scene3D,
+} from './types3d';
 
 export class Canvas {
   static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -54,24 +64,35 @@ export class Canvas {
 
     if (this.canvasRects.clientWidth > this.canvasRects.clientHeight) {
       heightAspectRatioAdjustFactor = 1;
-      widthAspectRatioAdjustFactor = this.canvasRects.clientWidth / this.canvasRects.clientHeight;
+      widthAspectRatioAdjustFactor =
+        this.canvasRects.clientWidth / this.canvasRects.clientHeight;
     } else {
-      heightAspectRatioAdjustFactor = this.canvasRects.clientHeight / this.canvasRects.clientWidth;
+      heightAspectRatioAdjustFactor =
+        this.canvasRects.clientHeight / this.canvasRects.clientWidth;
       widthAspectRatioAdjustFactor = 1;
     }
 
-    const cameraWidth = Canvas.TARGET_SCENE_DIAGONAL * widthAspectRatioAdjustFactor;
-    const cameraHeight = Canvas.TARGET_SCENE_DIAGONAL * heightAspectRatioAdjustFactor;
+    const cameraWidth =
+      Canvas.TARGET_SCENE_DIAGONAL * widthAspectRatioAdjustFactor;
+    const cameraHeight =
+      Canvas.TARGET_SCENE_DIAGONAL * heightAspectRatioAdjustFactor;
 
-    const panFactorX = scene.camera.panScreenDistance.dx / this.canvasRects.clientWidth;
-    const panFactorY = scene.camera.panScreenDistance.dy / this.canvasRects.clientHeight;
+    const panFactorX =
+      scene.camera.panScreenDistance.dx / this.canvasRects.clientWidth;
+    const panFactorY =
+      scene.camera.panScreenDistance.dy / this.canvasRects.clientHeight;
 
     this.scene = new THREE.Scene();
     const scaleFactor =
-      (Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal) * scene.camera.zoomFactor;
+      (Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal) *
+      scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
-    this.scene.translateX(scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX);
-    this.scene.translateY(scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY);
+    this.scene.translateX(
+      scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX,
+    );
+    this.scene.translateY(
+      scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY,
+    );
     this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
 
     this.camera = new THREE.OrthographicCamera(
@@ -80,16 +101,24 @@ export class Canvas {
       cameraHeight / 2,
       -cameraHeight / 2,
       0,
-      100
+      100,
     );
 
     const rotationAngleX = (scene.camera.rotationFactor * Math.PI * 45) / 360;
     const rotationAngleY = rotationAngleX * 1.5;
-    const cameraPosition = new THREE.Vector3(0, 0, Canvas.TARGET_SCENE_DIAGONAL);
+    const cameraPosition = new THREE.Vector3(
+      0,
+      0,
+      Canvas.TARGET_SCENE_DIAGONAL,
+    );
     cameraPosition.applyAxisAngle(new THREE.Vector3(1, 0, 0), -rotationAngleX);
     cameraPosition.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngleY);
 
-    this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    this.camera.position.set(
+      cameraPosition.x,
+      cameraPosition.y,
+      cameraPosition.z,
+    );
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({
@@ -104,11 +133,17 @@ export class Canvas {
       this.drawLabels(scene.labels);
 
       this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
-      this.labelRenderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
+      this.labelRenderer.setSize(
+        this.canvasRects!.clientWidth,
+        this.canvasRects!.clientHeight,
+      );
       this.labelRenderer.render(this.scene, this.camera);
     }
 
-    this.renderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
+    this.renderer.setSize(
+      this.canvasRects!.clientWidth,
+      this.canvasRects!.clientHeight,
+    );
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
@@ -151,7 +186,9 @@ export class Canvas {
       });
       const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
       const lineMaterial = new THREE.LineBasicMaterial({
-        color: label.isHighlighted ? Canvas.LABEL_LINE_COLOR_HIGHLIGHTED : Canvas.LABEL_LINE_COLOR,
+        color: label.isHighlighted
+          ? Canvas.LABEL_LINE_COLOR_HIGHLIGHTED
+          : Canvas.LABEL_LINE_COLOR,
       });
       const line = new THREE.Line(lineGeometry, lineMaterial);
       this.scene?.add(line);
@@ -186,11 +223,15 @@ export class Canvas {
     div.style.pointerEvents = 'auto';
     div.style.cursor = 'pointer';
     div.addEventListener('click', (event) =>
-      this.propagateUpdateHighlightedItem(event, label.rectId)
+      this.propagateUpdateHighlightedItem(event, label.rectId),
     );
 
     const labelCss = new CSS2DObject(div);
-    labelCss.position.set(label.textCenter.x, label.textCenter.y, label.textCenter.z);
+    labelCss.position.set(
+      label.textCenter.x,
+      label.textCenter.y,
+      label.textCenter.z,
+    );
 
     this.scene?.add(labelCss);
   }
@@ -212,7 +253,7 @@ export class Canvas {
       0,
       0,
       0,
-      1
+      1,
     );
   }
 
@@ -233,7 +274,7 @@ export class Canvas {
         color: Canvas.getColor(rect),
         opacity,
         transparent: true,
-      })
+      }),
     );
 
     mesh.add(rectBorders);
@@ -246,8 +287,16 @@ export class Canvas {
   }
 
   private static createRectShape(rect: Rect3D): THREE.Shape {
-    const bottomLeft: Point3D = {x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z};
-    const topRight: Point3D = {x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z};
+    const bottomLeft: Point3D = {
+      x: rect.topLeft.x,
+      y: rect.bottomRight.y,
+      z: rect.topLeft.z,
+    };
+    const topRight: Point3D = {
+      x: rect.bottomRight.x,
+      y: rect.topLeft.y,
+      z: rect.bottomRight.z,
+    };
 
     // Limit corner radius if larger than height/2 (or width/2)
     const height = rect.bottomRight.y - rect.topLeft.y;
@@ -264,22 +313,32 @@ export class Canvas {
     return new THREE.Shape()
       .moveTo(rect.topLeft.x, rect.topLeft.y + cornerRadius)
       .lineTo(bottomLeft.x, bottomLeft.y - cornerRadius)
-      .quadraticCurveTo(bottomLeft.x, bottomLeft.y, bottomLeft.x + cornerRadius, bottomLeft.y)
+      .quadraticCurveTo(
+        bottomLeft.x,
+        bottomLeft.y,
+        bottomLeft.x + cornerRadius,
+        bottomLeft.y,
+      )
       .lineTo(rect.bottomRight.x - cornerRadius, rect.bottomRight.y)
       .quadraticCurveTo(
         rect.bottomRight.x,
         rect.bottomRight.y,
         rect.bottomRight.x,
-        rect.bottomRight.y - cornerRadius
+        rect.bottomRight.y - cornerRadius,
       )
       .lineTo(topRight.x, topRight.y + cornerRadius)
-      .quadraticCurveTo(topRight.x, topRight.y, topRight.x - cornerRadius, topRight.y)
+      .quadraticCurveTo(
+        topRight.x,
+        topRight.y,
+        topRight.x - cornerRadius,
+        topRight.y,
+      )
       .lineTo(rect.topLeft.x + cornerRadius, rect.topLeft.y)
       .quadraticCurveTo(
         rect.topLeft.x,
         rect.topLeft.y,
         rect.topLeft.x,
-        rect.topLeft.y + cornerRadius
+        rect.topLeft.y + cornerRadius,
       );
   }
 
@@ -313,7 +372,7 @@ export class Canvas {
 
   private static createRectBorders(
     rect: Rect3D,
-    rectGeometry: THREE.ShapeGeometry
+    rectGeometry: THREE.ShapeGeometry,
   ): THREE.LineSegments {
     // create line edges for rect
     const edgeGeo = new THREE.EdgesGeometry(rectGeometry);
@@ -336,7 +395,9 @@ export class Canvas {
 
   private makeLabelCircleMesh(circle: Circle3D): THREE.Mesh {
     const geometry = new THREE.CircleGeometry(circle.radius, 20);
-    const material = new THREE.MeshBasicMaterial({color: Canvas.LABEL_CIRCLE_COLOR});
+    const material = new THREE.MeshBasicMaterial({
+      color: Canvas.LABEL_CIRCLE_COLOR,
+    });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(circle.center.x, circle.center.y, circle.center.z);
     return mesh;
@@ -344,10 +405,13 @@ export class Canvas {
 
   private propagateUpdateHighlightedItem(event: MouseEvent, newId: string) {
     event.preventDefault();
-    const highlightedChangeEvent: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
-      bubbles: true,
-      detail: {id: newId},
-    });
+    const highlightedChangeEvent = new CustomEvent(
+      ViewerEvents.HighlightedChange,
+      {
+        bubbles: true,
+        detail: {id: newId},
+      },
+    );
     event.target?.dispatchEvent(highlightedChangeEvent);
   }
 

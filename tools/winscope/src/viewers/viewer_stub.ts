@@ -27,7 +27,12 @@ class ViewerStub implements Viewer {
   private dependencies: TraceType[];
   private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
-  constructor(title: string, viewContent?: string, dependencies?: TraceType[]) {
+  constructor(
+    title: string,
+    viewContent?: string,
+    dependencies?: TraceType[],
+    viewType?: ViewType,
+  ) {
     this.title = title;
 
     if (viewContent !== undefined) {
@@ -40,11 +45,11 @@ class ViewerStub implements Viewer {
     this.dependencies = dependencies ?? [TraceType.WINDOW_MANAGER];
 
     this.view = new View(
-      ViewType.TAB,
+      viewType ?? ViewType.TAB,
       this.getDependencies(),
       this.htmlElement,
       this.title,
-      this.getDependencies()[0]
+      this.getDependencies()[0],
     );
   }
 

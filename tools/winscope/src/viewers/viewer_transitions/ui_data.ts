@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-import {TimestampType} from 'common/time';
-import {Transition} from 'flickerlib/common';
-import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {Transition} from 'trace/transition';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 export class UiData {
   constructor(
     public entries: Transition[],
-    public selectedTransition: Transition,
-    public timestampType: TimestampType,
-    public selectedTransitionPropertiesTree?: PropertiesTreeNode
+    public selectedTransition?: UiPropertyTreeNode,
   ) {}
 
-  static EMPTY = new UiData([], undefined, TimestampType.REAL, undefined);
+  static EMPTY = new UiData([], undefined);
 }

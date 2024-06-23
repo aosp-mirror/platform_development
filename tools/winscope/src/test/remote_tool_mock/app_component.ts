@@ -67,7 +67,9 @@ export class AppComponent {
   private isWinscopeUp = false;
   private onMessagePongReceived = FunctionUtils.DO_NOTHING;
 
-  constructor(@Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
+  constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+  ) {
     window.addEventListener('message', (event) => {
       this.onMessageReceived(event);
     });
@@ -84,7 +86,9 @@ export class AppComponent {
   }
 
   onButtonSendTimestampClick() {
-    const inputTimestampElement = document.querySelector('.input-timestamp')! as HTMLInputElement;
+    const inputTimestampElement = document.querySelector(
+      '.input-timestamp',
+    )! as HTMLInputElement;
     this.sendTimestamp(BigInt(inputTimestampElement.value));
   }
 
@@ -126,7 +130,7 @@ export class AppComponent {
 
     this.winscope!.postMessage(
       new MessageBugReport(file, AppComponent.TIMESTAMP_IN_BUGREPORT_MESSAGE),
-      AppComponent.TARGET
+      AppComponent.TARGET,
     );
 
     this.printStatus('SENT BUGREPORT');
@@ -135,7 +139,10 @@ export class AppComponent {
   private sendTimestamp(value: bigint) {
     this.printStatus('SENDING TIMESTAMP');
 
-    this.winscope!.postMessage(new MessageTimestamp(value), AppComponent.TARGET);
+    this.winscope!.postMessage(
+      new MessageTimestamp(value),
+      AppComponent.TARGET,
+    );
 
     this.printStatus('SENT TIMESTAMP');
   }
@@ -143,36 +150,51 @@ export class AppComponent {
   private onMessageReceived(event: MessageEvent) {
     const message = event.data as Message;
     if (!message.type) {
-      console.log('Cross-tool protocol received unrecognized message:', message);
+      console.log(
+        'Cross-tool protocol received unrecognized message:',
+        message,
+      );
       return;
     }
 
     switch (message.type) {
       case MessageType.PING:
-        console.log('Cross-tool protocol received unexpected ping message:', message);
+        console.log(
+          'Cross-tool protocol received unexpected ping message:',
+          message,
+        );
         break;
       case MessageType.PONG:
         this.onMessagePongReceived();
         break;
       case MessageType.BUGREPORT:
-        console.log('Cross-tool protocol received unexpected bugreport message:', message);
+        console.log(
+          'Cross-tool protocol received unexpected bugreport message:',
+          message,
+        );
         break;
       case MessageType.TIMESTAMP:
         console.log('Cross-tool protocol received timestamp message:', message);
         this.onMessageTimestampReceived(message as MessageTimestamp);
         break;
       case MessageType.FILES:
-        console.log('Cross-tool protocol received unexpected files message:', message);
+        console.log(
+          'Cross-tool protocol received unexpected files message:',
+          message,
+        );
         break;
       default:
-        console.log('Cross-tool protocol received unrecognized message:', message);
+        console.log(
+          'Cross-tool protocol received unrecognized message:',
+          message,
+        );
         break;
     }
   }
 
   private onMessageTimestampReceived(message: MessageTimestamp) {
     const paragraph = document.querySelector(
-      '.paragraph-received-timestamp'
+      '.paragraph-received-timestamp',
     ) as HTMLParagraphElement;
     paragraph.textContent = message.timestampNs.toString();
     this.changeDetectorRef.detectChanges();

@@ -57,7 +57,7 @@ export const matDrawerAnimations: {
       style({
         transform: 'none',
         visibility: 'visible',
-      })
+      }),
     ),
     state(
       'void',
@@ -65,12 +65,12 @@ export const matDrawerAnimations: {
         // Avoids the shadow showing up when closed in SSR.
         'box-shadow': 'none',
         visibility: 'hidden',
-      })
+      }),
     ),
     transition('void => open-instant', animate('0ms')),
     transition(
       'void <=> open, open-instant => void',
-      animate('400ms cubic-bezier(0.25, 0.8, 0.25, 1)')
+      animate('400ms cubic-bezier(0.25, 0.8, 0.25, 1)'),
     ),
   ]),
 };
@@ -145,11 +145,15 @@ export class MatDrawer {
   encapsulation: ViewEncapsulation.None,
 })
 export class MatDrawerContent /*extends MatDrawerContentBase*/ {
-  private contentMargins: {top: number | null; bottom: number | null} = {top: null, bottom: null};
+  private contentMargins: {top: number | null; bottom: number | null} = {
+    top: null,
+    bottom: null,
+  };
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(forwardRef(() => MatDrawerContainer)) public container: MatDrawerContainer
+    @Inject(forwardRef(() => MatDrawerContainer))
+    public container: MatDrawerContainer,
   ) {}
 
   ngAfterContentInit() {
@@ -163,6 +167,10 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
   }
 }
 
+/**
+ * Container for Material drawers
+ * @docs-private
+ */
 @Component({
   selector: 'mat-drawer-container',
   exportAs: 'matDrawerContainer',
@@ -203,9 +211,15 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
    * drawer is open. We use margin rather than transform even for push mode because transform breaks
    * fixed position elements inside of the transformed element.
    */
-  contentMargins: {top: number | null; bottom: number | null} = {top: null, bottom: null};
+  contentMargins: {top: number | null; bottom: number | null} = {
+    top: null,
+    bottom: null,
+  };
 
-  readonly contentMarginChanges = new Subject<{top: number | null; bottom: number | null}>();
+  readonly contentMarginChanges = new Subject<{
+    top: number | null;
+    bottom: number | null;
+  }>();
 
   /** Emits on every ngDoCheck. Used for debouncing reflows. */
   private readonly doCheckSubject = new Subject<void>();
@@ -223,7 +237,7 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
       this.doCheckSubject
         .pipe(
           debounceTime(10), // Arbitrary debounce time, less than a frame at 60fps
-          takeUntil(this.destroyed)
+          takeUntil(this.destroyed),
         )
         .subscribe(() => this.updateContentMargins());
     });
@@ -252,7 +266,8 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
 
     const baseHeight = this.drawer.getBaseHeight();
     const height = this.getDrawerHeight();
-    const shiftAmount = this.drawer.mode === 'push' ? Math.max(0, height - baseHeight) : 0;
+    const shiftAmount =
+      this.drawer.mode === 'push' ? Math.max(0, height - baseHeight) : 0;
 
     top -= shiftAmount;
     bottom += baseHeight + shiftAmount;
@@ -264,18 +279,25 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
     top = top || null!;
     bottom = bottom || null!;
 
-    if (top !== this.contentMargins.top || bottom !== this.contentMargins.bottom) {
+    if (
+      top !== this.contentMargins.top ||
+      bottom !== this.contentMargins.bottom
+    ) {
       this.contentMargins = {top, bottom};
 
       this.content.setMargins(this.contentMargins);
 
       // Pull back into the NgZone since in some cases we could be outside. We need to be careful
       // to do it only when something changed, otherwise we can end up hitting the zone too often.
-      this.ngZone.run(() => this.contentMarginChanges.next(this.contentMargins));
+      this.ngZone.run(() =>
+        this.contentMarginChanges.next(this.contentMargins),
+      );
     }
   }
 
   getDrawerHeight(): number {
-    return this.drawerView.nativeElement ? this.drawerView.nativeElement.offsetHeight || 0 : 0;
+    return this.drawerView.nativeElement
+      ? this.drawerView.nativeElement.offsetHeight || 0
+      : 0;
   }
 }
