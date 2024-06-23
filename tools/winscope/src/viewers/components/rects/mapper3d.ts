@@ -30,16 +30,18 @@ import {
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
-  private static readonly Z_FIGHTING_EPSILON = 5;
-  private static readonly Z_SPACING_FACTOR_INIT = 1;
-  private static readonly Z_SPACING_MAX = 200;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
-  private static readonly LABEL_TEXT_Y_SPACING = 200;
   private static readonly LABEL_CIRCLE_RADIUS = 15;
+  private static readonly LABEL_SPACING_FACTOR = 12.5;
+  private static readonly LABEL_SPACING_MIN = 200;
+  private static readonly Y_AXIS_ROTATION_FACTOR = 1.5;
+  private static readonly Z_FIGHTING_EPSILON = 5;
   private static readonly ZOOM_FACTOR_INIT = 1;
   private static readonly ZOOM_FACTOR_MIN = 0.1;
   private static readonly ZOOM_FACTOR_MAX = 30;
   private static readonly ZOOM_FACTOR_STEP = 0.2;
+  private static readonly Z_SPACING_FACTOR_INIT = 1;
+  private static readonly Z_SPACING_MAX = 200;
 
   private rects: UiRect[] = [];
   private highlightedRectId = '';
@@ -161,10 +163,12 @@ class Mapper3D {
     const labels3d = this.computeLabels(rects2d, rects3d);
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
 
+    const angleX = this.getCameraXAxisAngle();
     const scene: Scene3D = {
       boundingBox,
       camera: {
-        rotationFactor: this.cameraRotationFactor,
+        rotationAngleX: angleX,
+        rotationAngleY: angleX * Mapper3D.Y_AXIS_ROTATION_FACTOR,
         zoomFactor: this.zoomFactor,
         panScreenDistance: this.panScreenDistance,
       },
@@ -173,6 +177,10 @@ class Mapper3D {
     };
 
     return scene;
+  }
+
+  private getCameraXAxisAngle(): number {
+    return (this.cameraRotationFactor * Math.PI * 45) / 360;
   }
 
   private compareDepth(a: UiRect, b: UiRect): number {
@@ -323,12 +331,22 @@ class Mapper3D {
   private computeLabels(rects2d: UiRect[], rects3d: Rect3D[]): Label3D[] {
     const labels3d: Label3D[] = [];
 
-    let labelY =
-      Math.max(
-        ...rects3d.map((rect) => {
-          return this.matMultiply(rect.transform, rect.bottomRight).y;
-        }),
-      ) + Mapper3D.LABEL_FIRST_Y_OFFSET;
+    const bottomRightCorners = rects3d.map((rect) =>
+      this.matMultiply(rect.transform, rect.bottomRight),
+    );
+    const lowestYPoint = Math.max(...bottomRightCorners.map((p) => p.y));
+    const rightmostXPoint = Math.max(...bottomRightCorners.map((p) => p.x));
+
+    const cameraTiltFactor =
+      Math.sin(this.getCameraXAxisAngle()) / Mapper3D.Y_AXIS_ROTATION_FACTOR;
+    const labelTextYSpacing = Math.max(
+      Mapper3D.LABEL_SPACING_MIN,
+      lowestYPoint / Mapper3D.LABEL_SPACING_FACTOR,
+    );
+    const scaleFactor = Math.min(this.zoomFactor, 1) ** 2;
+
+    let labelY = lowestYPoint + Mapper3D.LABEL_FIRST_Y_OFFSET / scaleFactor;
+    let lastDepth: number | undefined;
 
     rects2d.forEach((rect2d, index) => {
       if (!rect2d.label) {
@@ -360,11 +378,20 @@ class Mapper3D {
         }
       }
       const lineStart = lineStarts[maxIndex];
+
+      if (lastDepth !== undefined) {
+        labelY +=
+          ((lastDepth - rect2d.depth) * labelTextYSpacing) / scaleFactor;
+      }
+      lastDepth = rect2d.depth;
+
+      const xDiff = rightmostXPoint - lineStart.x;
+
       lineStart.x += Mapper3D.LABEL_CIRCLE_RADIUS / 2;
 
       const lineEnd: Point3D = {
         x: lineStart.x,
-        y: labelY,
+        y: labelY + xDiff * cameraTiltFactor,
         z: lineStart.z,
       };
 
@@ -387,8 +414,6 @@ class Mapper3D {
         rectId: rect2d.id,
       };
       labels3d.push(label3d);
-
-      labelY += Mapper3D.LABEL_TEXT_Y_SPACING;
     });
 
     return labels3d;

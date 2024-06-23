@@ -14,35 +14,29 @@
  * limitations under the License.
  */
 
-import {AbsoluteEntryIndex} from 'trace/index_types';
+import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  LogEntry,
+  LogField,
+  LogFilter,
+  UiDataLog,
+} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
 
-class UiData {
+export class UiData implements UiDataLog {
   constructor(
-    public allVSyncIds: string[],
-    public allPids: string[],
-    public allUids: string[],
-    public allTypes: string[],
-    public allLayerAndDisplayIds: string[],
-    public allTransactionIds: string[],
-    public allFlags: string[],
-    public entries: UiDataEntry[],
-    public currentEntryIndex: undefined | number,
-    public selectedEntryIndex: undefined | number,
+    public filters: LogFilter[],
+    public entries: LogEntry[],
+    public currentIndex: undefined | number,
+    public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
-    public currentPropertiesTree: undefined | UiPropertyTreeNode,
+    public propertiesTree: undefined | UiPropertyTreeNode,
     public propertiesUserOptions: UserOptions,
   ) {}
 
   static EMPTY = new UiData(
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
     [],
     [],
     undefined,
@@ -53,30 +47,21 @@ class UiData {
   );
 }
 
-class UiDataEntry {
+export class TransactionsEntry implements LogEntry {
   constructor(
-    public traceIndex: AbsoluteEntryIndex,
-    public time: PropertyTreeNode,
-    public vsyncId: number,
-    public pid: string,
-    public uid: string,
-    public type: string,
-    public layerOrDisplayId: string,
-    public transactionId: string,
-    public what: string,
+    public traceEntry: TraceEntry<PropertyTreeNode>,
+    public fields: LogField[],
     public propertiesTree: PropertyTreeNode | undefined,
   ) {}
 }
 
-class UiDataEntryType {
-  static DISPLAY_ADDED = 'DISPLAY_ADDED';
-  static DISPLAY_REMOVED = 'DISPLAY_REMOVED';
-  static DISPLAY_CHANGED = 'DISPLAY_CHANGED';
-  static LAYER_ADDED = 'LAYER_ADDED';
-  static LAYER_DESTROYED = 'LAYER_DESTROYED';
-  static LAYER_CHANGED = 'LAYER_CHANGED';
-  static LAYER_HANDLE_DESTROYED = 'LAYER_HANDLE_DESTROYED';
-  static NO_OP = 'NO_OP';
+export enum TransactionsEntryType {
+  DISPLAY_ADDED = 'DISPLAY_ADDED',
+  DISPLAY_REMOVED = 'DISPLAY_REMOVED',
+  DISPLAY_CHANGED = 'DISPLAY_CHANGED',
+  LAYER_ADDED = 'LAYER_ADDED',
+  LAYER_DESTROYED = 'LAYER_DESTROYED',
+  LAYER_CHANGED = 'LAYER_CHANGED',
+  LAYER_HANDLE_DESTROYED = 'LAYER_HANDLE_DESTROYED',
+  NO_OP = 'NO_OP',
 }
-
-export {UiData, UiDataEntry, UiDataEntryType};

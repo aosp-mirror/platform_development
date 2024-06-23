@@ -39,6 +39,7 @@ import {
 } from './abstract_hierarchy_viewer_presenter';
 import {VISIBLE_CHIP} from './chip';
 import {HierarchyPresenter} from './hierarchy_presenter';
+import {UpdateSfSubtreeDisplayNames} from './operations/update_sf_subtree_display_names';
 import {PropertiesPresenter} from './properties_presenter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
@@ -75,6 +76,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     true,
     false,
     this.getHierarchyTreeNameStrategy,
+    [[TraceType.SURFACE_FLINGER, [new UpdateSfSubtreeDisplayNames()]]],
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(

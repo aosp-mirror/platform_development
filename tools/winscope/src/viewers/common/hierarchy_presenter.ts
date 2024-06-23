@@ -78,7 +78,9 @@ export class HierarchyPresenter {
     private showHeadings: boolean,
     private forceSelectFirstNode: boolean,
     private getHierarchyTreeNameStrategy?: GetHierarchyTreeNameType,
-    private customOperations?: Array<Operation<UiHierarchyTreeNode>>,
+    private customOperations?: Array<
+      [TraceType, Array<Operation<UiHierarchyTreeNode>>]
+    >,
   ) {}
 
   getUserOptions(): UserOptions {
@@ -434,7 +436,12 @@ export class HierarchyPresenter {
           : new SimplifyNames(),
       );
     }
-    this.customOperations?.forEach((op) => formatter.addOperation(op));
+    this.customOperations?.forEach((traceAndOperations) => {
+      const [traceType, operations] = traceAndOperations;
+      if (trace.type === traceType) {
+        operations.forEach((op) => formatter.addOperation(op));
+      }
+    });
     const formattedTree = formatter.format();
     this.pinnedItems.push(...this.extractPinnedItems(formattedTree));
     return formattedTree;
