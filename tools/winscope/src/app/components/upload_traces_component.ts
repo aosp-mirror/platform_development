@@ -49,6 +49,10 @@ import {LoadProgressComponent} from './load_progress_component';
             View traces
           </button>
 
+          <button class="download-btn" color="primary" mat-stroked-button (click)="downloadTracesClick.emit()">
+            Download all
+          </button>
+
           <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
             Upload another file
           </button>
@@ -142,6 +146,7 @@ import {LoadProgressComponent} from './load_progress_component';
         flex-direction: row;
         flex-wrap: wrap;
         gap: 10px;
+        padding: 4px 0px;
       }
       .drop-box {
         display: flex;
@@ -208,9 +213,10 @@ export class UploadTracesComponent implements ProgressListener {
   progressPercentage?: number;
   lastUiProgressUpdateTimeMs?: number;
 
-  @Input() tracePipeline!: TracePipeline;
+  @Input() tracePipeline: TracePipeline | undefined;
   @Output() filesUploaded = new EventEmitter<File[]>();
   @Output() viewTracesButtonClick = new EventEmitter<void>();
+  @Output() downloadTracesClick = new EventEmitter<void>();
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
@@ -218,7 +224,7 @@ export class UploadTracesComponent implements ProgressListener {
   ) {}
 
   ngOnInit() {
-    this.tracePipeline.clear();
+    this.tracePipeline?.clear();
   }
 
   onProgressUpdate(
@@ -253,7 +259,7 @@ export class UploadTracesComponent implements ProgressListener {
   }
 
   onClearButtonClick() {
-    this.tracePipeline.clear();
+    this.tracePipeline?.clear();
     this.onOperationFinished();
   }
 
@@ -278,14 +284,14 @@ export class UploadTracesComponent implements ProgressListener {
   onRemoveTrace(event: MouseEvent, trace: Trace<object>) {
     event.preventDefault();
     event.stopPropagation();
-    this.tracePipeline.removeTrace(trace);
+    this.tracePipeline?.removeTrace(trace);
     this.onOperationFinished();
   }
 
   hasLoadedFilesWithViewers(): boolean {
     return this.ngZone.run(() => {
       let hasFilesWithViewers = false;
-      this.tracePipeline.getTraces().forEachTrace((trace) => {
+      this.tracePipeline?.getTraces().forEachTrace((trace) => {
         if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
           hasFilesWithViewers = true;
         }
