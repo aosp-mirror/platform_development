@@ -188,7 +188,7 @@ class ProxyRequest {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
-      throw Error('Trace not started before stopping');
+      throw new Error('Trace not started before stopping');
     }
     await proxyRequest.call(
       'POST',

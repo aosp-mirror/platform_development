@@ -233,7 +233,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     }
 
     if (!closingEvent) {
-      throw Error('Should have found one matching closing event');
+      throw new Error('Should have found one matching closing event for CUJ');
     }
 
     return closingEvent;

@@ -160,7 +160,9 @@ export class TimelineData {
 
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
-      throw Error('Trying to get full time range when there are no timestamps');
+      throw new Error(
+        'Trying to get full time range when there are no timestamps',
+      );
     }
 
     const fullTimeRange = new TimeRange(

@@ -32,6 +32,7 @@ import {
   RelativeEntryIndex,
 } from './index_types';
 import {Parser} from './parser';
+import {TRACE_INFO} from './trace_info';
 import {TraceType} from './trace_type';
 
 export {
@@ -70,7 +71,9 @@ export abstract class TraceEntry<T> {
   getFramesRange(): FramesRange | undefined {
     if (!this.fullTrace.hasFrameInfo()) {
       throw new Error(
-        `Trace ${this.fullTrace.type} can't be accessed in frame domain (no frame info available)`,
+        `Trace ${
+          TRACE_INFO[this.fullTrace.type].name
+        } can't be accessed in frame domain (no frame info available)`,
       );
     }
     return this.framesRange;
@@ -165,7 +168,9 @@ export class Trace<T> {
   setFrameInfo(frameMap: FrameMap, framesRange: FramesRange | undefined) {
     if (frameMap.lengthEntries !== this.fullTrace.lengthEntries) {
       throw new Error(
-        'Attemped to set a frame map with incompatible number of entries',
+        `Attempted to set a frame map for ${
+          TRACE_INFO[this.type].name
+        } trace with incompatible number of entries`,
       );
     }
     this.frameMap = frameMap;
@@ -475,7 +480,11 @@ export class Trace<T> {
       absoluteIndex >= this.entriesRange.end
     ) {
       throw new Error(
-        `Trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${this.lengthEntries}.`,
+        `${
+          TRACE_INFO[this.type].name
+        } trace entry's index out of bounds. Input relative index: ${index}. Slice length: ${
+          this.lengthEntries
+        }.`,
       );
     }
     const timestamp = this.getFullTraceTimestamps()[absoluteIndex];
@@ -491,7 +500,11 @@ export class Trace<T> {
   private getFullTraceTimestamps(): Timestamp[] {
     const timestamps = this.parser.getTimestamps();
     if (!timestamps) {
-      throw new Error('Timestamps expected to be available');
+      throw new Error(
+        `Timestamps expected to be available for this ${
+          TRACE_INFO[this.type].name
+        } trace.`,
+      );
     }
     return timestamps;
   }
@@ -595,7 +608,9 @@ export class Trace<T> {
   private checkTraceCanBeAccessedInFrameDomain() {
     if (!this.frameMap) {
       throw new Error(
-        `Trace ${this.type} can't be accessed in frame domain (no frame mapping available)`,
+        `Trace ${
+          TRACE_INFO[this.type].name
+        } can't be accessed in frame domain (no frame mapping available)`,
       );
     }
   }
