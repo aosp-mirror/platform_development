@@ -19,7 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {OnRequestSuccessCallback} from './on_request_success_callback';
 import {ConfigMap} from './trace_collection_utils';
 
-export interface Device {
+export interface Devices {
   [key: string]: DeviceProperties;
 }
 
@@ -310,7 +310,7 @@ export class ProxyClient {
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
   refresh_worker: NodeJS.Timeout | undefined;
-  devices: Device = {};
+  devices: Devices = {};
   selectedDevice = '';
   errorText = '';
   adbData: File[] = [];
@@ -337,6 +337,10 @@ export class ProxyClient {
     this.stateChangeListeners = this.stateChangeListeners.filter(
       (fn) => fn !== removeFn,
     );
+  }
+
+  clearStateChangeListeners() {
+    this.stateChangeListeners = [];
   }
 
   async getDevices() {
