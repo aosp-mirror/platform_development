@@ -128,6 +128,7 @@ export class Trace<T> {
   private readonly entriesRange: EntriesRange;
   private frameMap?: FrameMap;
   private framesRange?: FramesRange;
+  private corruptedState = false;
 
   static fromParser<T>(parser: Parser<T>): Trace<T> {
     return new Trace(
@@ -460,6 +461,14 @@ export class Trace<T> {
       this.lengthEntries === 1 &&
       this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
     );
+  }
+
+  isCorrupted() {
+    return this.corruptedState;
+  }
+
+  setCorruptedState(value: boolean) {
+    this.corruptedState = value;
   }
 
   private getEntryInternal<

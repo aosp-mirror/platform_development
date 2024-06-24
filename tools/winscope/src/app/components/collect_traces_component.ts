@@ -427,9 +427,12 @@ export class CollectTracesComponent
     this.changeDetectorRef.detectChanges();
   }
 
-  onOperationFinished() {
+  onOperationFinished(success: boolean) {
     this.isExternalOperationInProgress = false;
     this.lastUiProgressUpdateTimeMs = undefined;
+    if (!success) {
+      this.adbConnection?.restart();
+    }
     this.changeDetectorRef.detectChanges();
   }
 

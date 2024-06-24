@@ -90,9 +90,9 @@ import {LoadProgressComponent} from './load_progress_component';
         </load-progress>
 
         <mat-list
-          *ngIf="!isLoadingFiles && this.tracePipeline.getTraces().getSize() > 0"
+          *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
           class="uploaded-files">
-          <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" *ngFor="let trace of this.tracePipeline.getTraces()">
+          <mat-list-item [class.no-visualization]="!canVisualizeTrace(trace)" [class.trace-error]="trace.isCorrupted()" *ngFor="let trace of tracePipeline.getTraces()">
             <mat-icon matListIcon>
               {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
@@ -105,6 +105,9 @@ import {LoadProgressComponent} from './load_progress_component';
             </mat-icon>
             <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
               warning
+            </mat-icon>
+            <mat-icon class="error-icon" *ngIf="trace.isCorrupted()" [matTooltip]="traceErrorTooltip(trace)">
+              error
             </mat-icon>
             <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
@@ -199,6 +202,9 @@ import {LoadProgressComponent} from './load_progress_component';
       }
       .no-visualization {
         background-color: var(--warning-background-color);
+      }
+      .trace-error {
+        background-color: var(--error-background-color);
       }
       .info-icon, .warning-icon {
         flex-shrink: 0;
@@ -309,7 +315,17 @@ export class UploadTracesComponent implements ProgressListener {
     return TraceTypeUtils.canVisualizeTrace(trace.type);
   }
 
+  traceErrorTooltip(trace: Trace<object>): string {
+    if (trace.isCorrupted()) {
+      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
+    }
+    return `Cannot visualize ${TRACE_INFO[trace.type].name} trace.`;
+  }
+
   cannotVisualizeTraceTooltip(trace: Trace<object>): string {
+    if (trace.isCorrupted()) {
+      return `${TRACE_INFO[trace.type].name} trace is corrupted.`;
+    }
     return TraceTypeUtils.getReasonForNoTraceVisualization(trace.type);
   }
 
