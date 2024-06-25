@@ -21,6 +21,7 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
+import {CannotVisualizeAllTraces} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -337,7 +338,7 @@ export class Mediator {
 
     this.tracePipeline.filterTracesWithoutVisualization();
     await this.tracePipeline.buildTraces();
-    this.currentProgressListener?.onOperationFinished();
+    this.currentProgressListener?.onOperationFinished(true);
 
     this.currentProgressListener?.onProgressUpdate(
       'Initializing UI...',
@@ -348,11 +349,19 @@ export class Mediator {
     // allow the UI to update before making the main thread very busy
     await TimeUtils.sleepMs(10);
 
-    await this.timelineData.initialize(
-      this.tracePipeline.getTraces(),
-      await this.tracePipeline.getScreenRecordingVideo(),
-      this.tracePipeline.getTimestampConverter(),
-    );
+    try {
+      await this.timelineData.initialize(
+        this.tracePipeline.getTraces(),
+        await this.tracePipeline.getScreenRecordingVideo(),
+        this.tracePipeline.getTimestampConverter(),
+      );
+    } catch {
+      this.currentProgressListener?.onOperationFinished(false);
+      this.userNotificationsListener.onNotifications([
+        new CannotVisualizeAllTraces('Failed to initialize timeline data'),
+      ]);
+      return;
+    }
 
     this.viewers = new ViewerFactory().createViewers(
       this.tracePipeline.getTraces(),

@@ -229,7 +229,8 @@ import {UploadTracesComponent} from './upload_traces_component';
               class="upload-traces-card homepage-card"
               [tracePipeline]="tracePipeline"
               (filesUploaded)="onFilesUploaded($event)"
-              (viewTracesButtonClick)="onViewTracesButtonClick()"></upload-traces>
+              (viewTracesButtonClick)="onViewTracesButtonClick()"
+              (downloadTracesClick)="onDownloadTracesButtonClick()"></upload-traces>
           </div>
         </div>
       </div>

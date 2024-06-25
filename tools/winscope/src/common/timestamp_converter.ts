@@ -167,7 +167,7 @@ export class TimestampConverter
       return this.makeTimestampFromHumanReal(timestampHuman);
     }
 
-    throw Error('Invalid timestamp format');
+    throw new Error('Invalid timestamp format');
   }
 
   makeTimestampFromNs(valueNs: bigint): Timestamp {

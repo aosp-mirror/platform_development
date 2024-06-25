@@ -587,7 +587,7 @@ export class TimelineComponent
 
     const position = assertDefined(this.timelineData).getCurrentPosition();
     if (position === undefined) {
-      throw Error(
+      throw new Error(
         'A trace position should be available by the time the timeline is loaded',
       );
     }
