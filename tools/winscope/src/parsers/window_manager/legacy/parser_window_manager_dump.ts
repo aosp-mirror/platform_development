@@ -17,7 +17,12 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {com} from 'protos/windowmanager/latest/static';
+import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';
+import {WmCustomQueryUtils} from 'parsers/window_manager/custom_query_utils';
+import {HierarchyTreeBuilderWm} from 'parsers/window_manager/hierarchy_tree_builder_wm';
+import {ParserWmUtils} from 'parsers/window_manager/parser_window_manager_utils';
+import {WindowManagerServiceField} from 'parsers/window_manager/wm_tampered_protos';
+import {com} from 'protos/windowmanager/udc/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -27,11 +32,6 @@ import {EntriesRange} from 'trace/index_types';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {RectsComputation} from './computations/rects_computation';
-import {WmCustomQueryUtils} from './custom_query_utils';
-import {HierarchyTreeBuilderWm} from './hierarchy_tree_builder_wm';
-import {ParserWmUtils} from './parser_window_manager_utils';
-import {WindowManagerServiceField} from './wm_tampered_protos';
 
 class ParserWindowManagerDump extends AbstractParser {
   override getTraceType(): TraceType {

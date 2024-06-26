@@ -78,6 +78,9 @@ async function build() {
         // WindowManager
         buildProtos([
             '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
+        ], 'windowmanager/udc'),
+        buildProtos([
+            'windowmanager/latest/wrapper.proto',
         ], 'windowmanager/latest'),
 
         // Input

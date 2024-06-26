@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/windowmanager/latest/json';
+import root from 'protos/windowmanager/udc/json';
 
 export const WindowManagerTraceFileProto = TamperedMessageType.tamper(
   root.lookupType('com.android.server.wm.WindowManagerTraceFileProto'),

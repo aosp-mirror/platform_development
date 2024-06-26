@@ -15,7 +15,8 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {com} from 'protos/windowmanager/latest/static';
+import {perfetto} from 'protos/windowmanager/latest/static';
+import {com} from 'protos/windowmanager/udc/static';
 import {
   LazyPropertiesStrategyType,
   PropertiesProvider,
@@ -30,7 +31,7 @@ import {WM_DENYLIST_PROPERTIES} from './wm_denylist_properties';
 import {WM_EAGER_PROPERTIES} from './wm_eager_properties';
 import {WmProtoType} from './wm_proto_type';
 
-type WindowContainerChildType =
+type WindowContainerChildTypeUdc =
   | com.android.server.wm.IWindowContainerProto
   | com.android.server.wm.IDisplayContentProto
   | com.android.server.wm.IDisplayAreaProto
@@ -39,10 +40,32 @@ type WindowContainerChildType =
   | com.android.server.wm.IWindowTokenProto
   | com.android.server.wm.IWindowStateProto
   | com.android.server.wm.ITaskFragmentProto;
+type WindowContainerChildTypeLatest =
+  | perfetto.protos.IWindowContainerProto
+  | perfetto.protos.IDisplayContentProto
+  | perfetto.protos.IDisplayAreaProto
+  | perfetto.protos.ITaskProto
+  | perfetto.protos.IActivityRecordProto
+  | perfetto.protos.IWindowTokenProto
+  | perfetto.protos.IWindowStateProto
+  | perfetto.protos.ITaskFragmentProto;
+type WindowContainerChildType =
+  | WindowContainerChildTypeUdc
+  | WindowContainerChildTypeLatest;
+
+type IdentifierProto =
+  | com.android.server.wm.IIdentifierProto
+  | perfetto.protos.IIdentifierProto;
+type WindowManagerServiceDumpProto =
+  | com.android.server.wm.IWindowManagerServiceDumpProto
+  | perfetto.protos.WindowManagerServiceDumpProto;
+type WindowContainerChildProto =
+  | com.android.server.wm.IWindowContainerChildProto
+  | perfetto.protos.IWindowContainerChildProto;
 
 class ParserWindowManagerUtils {
   makeEntryProperties(
-    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
+    entryProto: WindowManagerServiceDumpProto,
   ): PropertiesProvider {
     const operations = assertDefined(
       WM_OPERATION_LISTS.get(WmProtoType.WindowManagerService),
@@ -61,10 +84,11 @@ class ParserWindowManagerUtils {
   }
 
   extractContainers(
-    entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
+    entryProto: WindowManagerServiceDumpProto,
   ): PropertiesProvider[] {
-    let currChildren: com.android.server.wm.IWindowContainerChildProto[] =
-      assertDefined(entryProto.rootWindowContainer?.windowContainer?.children);
+    let currChildren: WindowContainerChildProto[] = assertDefined(
+      entryProto.rootWindowContainer?.windowContainer?.children,
+    );
 
     const rootContainer = assertDefined(entryProto.rootWindowContainer);
     const rootContainerProperties = this.getContainerChildProperties(
@@ -76,22 +100,17 @@ class ParserWindowManagerUtils {
     const containers = [rootContainerProperties];
 
     while (currChildren && currChildren.length > 0) {
-      const nextChildren: com.android.server.wm.IWindowContainerChildProto[] =
-        [];
+      const nextChildren: WindowContainerChildProto[] = [];
       containers.push(
-        ...currChildren.map(
-          (
-            containerChild: com.android.server.wm.IWindowContainerChildProto,
-          ) => {
-            const children = this.getChildren(containerChild);
-            nextChildren.push(...children);
-            const containerProperties = this.getContainerChildProperties(
-              containerChild,
-              children,
-            );
-            return containerProperties;
-          },
-        ),
+        ...currChildren.map((containerChild: WindowContainerChildProto) => {
+          const children = this.getChildren(containerChild);
+          nextChildren.push(...children);
+          const containerProperties = this.getContainerChildProperties(
+            containerChild,
+            children,
+          );
+          return containerProperties;
+        }),
       );
       currChildren = nextChildren;
     }
@@ -100,7 +119,7 @@ class ParserWindowManagerUtils {
   }
 
   private makeEntryEagerPropertiesTree(
-    entry: com.android.server.wm.IWindowManagerServiceDumpProto,
+    entry: WindowManagerServiceDumpProto,
   ): PropertyTreeNode {
     const denyList: string[] = [];
     const eagerProperties = assertDefined(
@@ -125,7 +144,7 @@ class ParserWindowManagerUtils {
   }
 
   private makeEntryLazyPropertiesStrategy(
-    entry: com.android.server.wm.IWindowManagerServiceDumpProto,
+    entry: WindowManagerServiceDumpProto,
   ): LazyPropertiesStrategyType {
     return async () => {
       return new PropertyTreeBuilderFromProto()
@@ -142,9 +161,9 @@ class ParserWindowManagerUtils {
   }
 
   private getChildren(
-    child: com.android.server.wm.IWindowContainerChildProto,
-  ): com.android.server.wm.IWindowContainerChildProto[] {
-    let children: com.android.server.wm.IWindowContainerChildProto[] = [];
+    child: WindowContainerChildProto,
+  ): WindowContainerChildProto[] {
+    let children: WindowContainerChildProto[] = [];
     if (child.displayContent) {
       children =
         child.displayContent.rootDisplayArea?.windowContainer?.children ?? [];
@@ -170,8 +189,8 @@ class ParserWindowManagerUtils {
   }
 
   private getContainerChildProperties(
-    containerChild: com.android.server.wm.IWindowContainerChildProto,
-    children: com.android.server.wm.IWindowContainerChildProto[],
+    containerChild: WindowContainerChildProto,
+    children: WindowContainerChildProto[],
     operations?: OperationLists,
   ): PropertiesProvider {
     const containerChildType = this.getContainerChildType(containerChild);
@@ -201,9 +220,7 @@ class ParserWindowManagerUtils {
     return containerProperties;
   }
 
-  private getContainerChildType(
-    child: com.android.server.wm.IWindowContainerChildProto,
-  ): WmProtoType {
+  private getContainerChildType(child: WindowContainerChildProto): WmProtoType {
     if (child.displayContent) {
       return WmProtoType.DisplayContent;
     } else if (child.displayArea) {
@@ -224,8 +241,8 @@ class ParserWindowManagerUtils {
   }
 
   private makeContainerChildEagerPropertiesTree(
-    containerChild: com.android.server.wm.IWindowContainerChildProto,
-    children: com.android.server.wm.IWindowContainerChildProto[],
+    containerChild: WindowContainerChildProto,
+    children: WindowContainerChildProto[],
     containerChildType: WmProtoType,
   ): PropertyTreeNode {
     const identifier = this.getIdentifier(containerChild);
@@ -276,7 +293,7 @@ class ParserWindowManagerUtils {
   }
 
   private makeContainerChildLazyPropertiesStrategy(
-    containerChild: com.android.server.wm.IWindowContainerChildProto,
+    containerChild: WindowContainerChildProto,
     containerChildType: WmProtoType,
   ): LazyPropertiesStrategyType {
     return async () => {
@@ -299,8 +316,8 @@ class ParserWindowManagerUtils {
   }
 
   private getIdentifier(
-    child: com.android.server.wm.IWindowContainerChildProto,
-  ): com.android.server.wm.IIdentifierProto | undefined {
+    child: WindowContainerChildProto,
+  ): IdentifierProto | undefined {
     if (child.displayContent) {
       return (
         child.displayContent.rootDisplayArea?.windowContainer?.identifier ??
@@ -344,8 +361,8 @@ class ParserWindowManagerUtils {
   }
 
   private getName(
-    child: com.android.server.wm.IWindowContainerChildProto,
-    identifier: com.android.server.wm.IIdentifierProto | undefined,
+    child: WindowContainerChildProto,
+    identifier: IdentifierProto | undefined,
   ): string {
     let nameOverride: string | undefined;
     if (child.displayContent) {
@@ -372,14 +389,12 @@ class ParserWindowManagerUtils {
     return nameOverride ?? identifier?.title ?? '';
   }
 
-  private makeToken(
-    identifier: com.android.server.wm.IIdentifierProto | undefined,
-  ): string {
+  private makeToken(identifier: IdentifierProto | undefined): string {
     return identifier?.hashCode?.toString(16) ?? '';
   }
 
   private getContainer(
-    containerChild: com.android.server.wm.IWindowContainerChildProto,
+    containerChild: WindowContainerChildProto,
   ): WindowContainerChildType {
     if (containerChild.displayContent) {
       return containerChild.displayContent;
@@ -405,9 +420,7 @@ class ParserWindowManagerUtils {
     return assertDefined(containerChild.windowContainer);
   }
 
-  private mapChildrenToTokens(
-    children: com.android.server.wm.IWindowContainerChildProto[],
-  ): string[] {
+  private mapChildrenToTokens(children: WindowContainerChildProto[]): string[] {
     return children
       .map((child) => {
         const identifier = this.getIdentifier(child);
