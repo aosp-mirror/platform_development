@@ -102,7 +102,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find tab corresponding to ${title}`);
+    throw new Error(`could not find tab corresponding to ${title}`);
   }
 
   static async checkTimelineTraceSelector(trace: {
@@ -195,7 +195,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item matching ${itemName} in hierarchy`);
+    throw new Error(`could not find item matching ${itemName} in hierarchy`);
   }
 
   static async applyStateToHierarchyOptions(
@@ -231,7 +231,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item ${itemName} in properties tree`);
+    throw new Error(`could not find item ${itemName} in properties tree`);
   }
 
   static async checkRectLabel(viewer: string, expectedLabel: string) {
