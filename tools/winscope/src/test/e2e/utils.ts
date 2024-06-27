@@ -102,7 +102,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find tab corresponding to ${title}`);
+    throw new Error(`could not find tab corresponding to ${title}`);
   }
 
   static async checkTimelineTraceSelector(trace: {
@@ -195,7 +195,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item matching ${itemName} in hierarchy`);
+    throw new Error(`could not find item matching ${itemName} in hierarchy`);
   }
 
   static async applyStateToHierarchyOptions(
@@ -231,7 +231,7 @@ class E2eTestUtils {
         return;
       }
     }
-    throw Error(`could not find item ${itemName} in properties tree`);
+    throw new Error(`could not find item ${itemName} in properties tree`);
   }
 
   static async checkRectLabel(viewer: string, expectedLabel: string) {
@@ -253,15 +253,13 @@ class E2eTestUtils {
   }
 
   static async checkTotalScrollEntries(
-    selectors: {viewer: string; scroll: string; entry: string},
+    viewerSelector: string,
     scrollViewport: Function,
     numberOfEntries: number,
     scrollToBottomOffset?: number | undefined,
   ) {
     if (scrollToBottomOffset !== undefined) {
-      const viewport = element(
-        by.css(`${selectors.viewer} ${selectors.scroll}`),
-      );
+      const viewport = element(by.css(`${viewerSelector} .scroll`));
       await browser.executeAsyncScript(
         scrollViewport,
         viewport,
@@ -269,7 +267,7 @@ class E2eTestUtils {
       );
     }
     const entries: ElementFinder[] = await element.all(
-      by.css(`${selectors.viewer} ${selectors.scroll} ${selectors.entry}`),
+      by.css(`${viewerSelector} .scroll .entry`),
     );
     expect(await entries[entries.length - 1].getAttribute('item-id')).toEqual(
       `${numberOfEntries - 1}`,
