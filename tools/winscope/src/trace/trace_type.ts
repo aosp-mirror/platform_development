@@ -133,15 +133,6 @@ export class TraceTypeUtils {
     return t !== TraceType.WM_TRANSITION && t !== TraceType.SHELL_TRANSITION;
   }
 
-  static traceUploadInfo(t: TraceType): string | undefined {
-    switch (t) {
-      case TraceType.CUJS:
-        return 'Used to show CUJ boundaries in timeline';
-      default:
-        return undefined;
-    }
-  }
-
   static getReasonForNoTraceVisualization(t: TraceType): string {
     switch (t) {
       case TraceType.WM_TRANSITION:
