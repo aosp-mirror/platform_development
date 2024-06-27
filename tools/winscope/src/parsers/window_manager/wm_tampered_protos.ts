@@ -14,54 +14,19 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
-import {TamperedMessageType} from 'parsers/tampered_message_type';
-import root from 'protos/windowmanager/udc/json';
+import {TamperedProtoField} from 'parsers/tampered_message_type';
 
-export const WindowManagerTraceFileProto = TamperedMessageType.tamper(
-  root.lookupType('com.android.server.wm.WindowManagerTraceFileProto'),
-);
-
-export const WindowManagerServiceField = assertDefined(
-  WindowManagerTraceFileProto.fields['entry'].tamperedMessageType,
-).fields['windowManagerService'];
-
-export const RootWindowContainerField = assertDefined(
-  WindowManagerServiceField.tamperedMessageType,
-).fields['rootWindowContainer'];
-
-export const WindowContainerField = assertDefined(
-  RootWindowContainerField.tamperedMessageType,
-).fields['windowContainer'];
-
-export const WindowContainerChildField = assertDefined(
-  WindowContainerField.tamperedMessageType,
-).fields['children'];
-
-export const DisplayContentField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['displayContent'];
-
-export const DisplayAreaField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['displayArea'];
-
-export const TaskField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['task'];
-
-export const ActivityField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['activity'];
-
-export const WindowTokenField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['windowToken'];
-
-export const WindowStateField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['window'];
-
-export const TaskFragmentField = assertDefined(
-  WindowContainerChildField.tamperedMessageType,
-).fields['taskFragment'];
+export interface WmTamperedProtos {
+  entryField: TamperedProtoField;
+  windowManagerServiceField: TamperedProtoField;
+  rootWindowContainerField: TamperedProtoField;
+  windowContainerField: TamperedProtoField;
+  windowContainerChildField: TamperedProtoField;
+  displayContentField: TamperedProtoField;
+  displayAreaField: TamperedProtoField;
+  taskField: TamperedProtoField;
+  activityField: TamperedProtoField;
+  windowTokenField: TamperedProtoField;
+  windowStateField: TamperedProtoField;
+  taskFragmentField: TamperedProtoField;
+}

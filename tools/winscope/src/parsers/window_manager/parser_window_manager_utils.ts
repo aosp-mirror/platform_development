@@ -26,10 +26,11 @@ import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builde
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {WindowTypePrefix} from 'trace/window_type';
-import {OperationLists, WM_OPERATION_LISTS} from './operations/operation_lists';
+import {OperationLists, WmOperationLists} from './operations/operation_lists';
 import {WM_DENYLIST_PROPERTIES} from './wm_denylist_properties';
 import {WM_EAGER_PROPERTIES} from './wm_eager_properties';
 import {WmProtoType} from './wm_proto_type';
+import {WmTamperedProtos} from './wm_tampered_protos';
 
 type WindowContainerChildTypeUdc =
   | com.android.server.wm.IWindowContainerProto
@@ -63,12 +64,18 @@ type WindowContainerChildProto =
   | com.android.server.wm.IWindowContainerChildProto
   | perfetto.protos.IWindowContainerChildProto;
 
-class ParserWindowManagerUtils {
+export class ParserWindowManagerUtils {
+  private readonly operationLists: WmOperationLists;
+
+  constructor(tamperedProtos: WmTamperedProtos) {
+    this.operationLists = new WmOperationLists(tamperedProtos);
+  }
+
   makeEntryProperties(
     entryProto: WindowManagerServiceDumpProto,
   ): PropertiesProvider {
     const operations = assertDefined(
-      WM_OPERATION_LISTS.get(WmProtoType.WindowManagerService),
+      this.operationLists.get(WmProtoType.WindowManagerService),
     );
     return new PropertiesProviderBuilder()
       .setEagerProperties(
@@ -94,7 +101,7 @@ class ParserWindowManagerUtils {
     const rootContainerProperties = this.getContainerChildProperties(
       rootContainer,
       currChildren,
-      WM_OPERATION_LISTS.get(WmProtoType.RootWindowContainer),
+      this.operationLists.get(WmProtoType.RootWindowContainer),
     );
 
     const containers = [rootContainerProperties];
@@ -207,7 +214,7 @@ class ParserWindowManagerUtils {
       );
 
     if (!operations) {
-      operations = assertDefined(WM_OPERATION_LISTS.get(containerChildType));
+      operations = assertDefined(this.operationLists.get(containerChildType));
     }
 
     const containerProperties = new PropertiesProviderBuilder()
@@ -429,5 +436,3 @@ class ParserWindowManagerUtils {
       .filter((token) => token.length > 0);
   }
 }
-
-export const ParserWmUtils = new ParserWindowManagerUtils();
