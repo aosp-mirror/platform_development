@@ -242,7 +242,7 @@ class UnitTestUtils {
   }
 
   static async getImeTraceEntries(): Promise<
-    Map<TraceType, HierarchyTreeNode>
+    [Map<TraceType, HierarchyTreeNode>, Map<TraceType, HierarchyTreeNode>]
   > {
     let surfaceFlingerEntry: HierarchyTreeNode | undefined;
     {
@@ -278,7 +278,15 @@ class UnitTestUtils {
     entries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
     entries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
 
-    return entries;
+    const secondEntries = new Map<TraceType, HierarchyTreeNode>();
+    secondEntries.set(
+      TraceType.INPUT_METHOD_CLIENTS,
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb', 1),
+    );
+    secondEntries.set(TraceType.SURFACE_FLINGER, surfaceFlingerEntry);
+    secondEntries.set(TraceType.WINDOW_MANAGER, windowManagerEntry);
+
+    return [entries, secondEntries];
   }
 
   static timestampEqualityTester(first: any, second: any): boolean | undefined {

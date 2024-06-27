@@ -29,7 +29,7 @@ export class ZOrderPathsComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in SF z-order paths computation');
     }
 
     this.updateZOrderParents(this.root);
