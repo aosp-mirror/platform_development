@@ -48,13 +48,13 @@ func populatePropertyMap(propMap map[string]interface{}, prefix string, m *parse
 		if prefix != "" {
 			name = prefix + "." + name
 		}
-		value := prop.Value.Eval()
+		value := prop.Value
 		if s, isScalar := expandScalarTypeExpression(value); isScalar {
 			propMap[name] = s
 		} else if list, ok := value.(*parser.List); ok {
 			var l []interface{}
 			for _, v := range list.Values {
-				if s, isScalar := expandScalarTypeExpression(v.Eval()); isScalar {
+				if s, isScalar := expandScalarTypeExpression(v); isScalar {
 					l = append(l, s)
 				}
 			}
@@ -70,7 +70,7 @@ var anonymousModuleCount int
 func flattenModule(module *parser.Module) (flattened FlatModule) {
 	flattened.Type = module.Type
 	if prop, found := module.GetProperty("name"); found {
-		if value, ok := prop.Value.Eval().(*parser.String); ok {
+		if value, ok := prop.Value.(*parser.String); ok {
 			flattened.Name = value.Value
 		}
 	} else {
