@@ -26,6 +26,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {CujType} from './cuj_type';
 import {EventTag} from './event_tag';
 import {AddCujProperties} from './operations/add_cuj_properties';
+import { Timestamp } from 'common/time';
 
 export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
   private static readonly AddCujProperties = new AddCujProperties();
@@ -74,13 +75,9 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     this.timestamps = [];
     for (let index = 0; index < this.getLengthEntries(); index++) {
       const entry = await this.getEntry(index);
-      const timestampNs = entry
+      const timestamp = entry
         ?.getChildByName('startTimestamp')
-        ?.getChildByName('unixNanos')
         ?.getValue();
-      const timestamp = this.timestampConverter.makeTimestampFromRealNs(
-        assertDefined(timestampNs),
-      );
       this.timestamps.push(timestamp);
     }
   }
@@ -110,18 +107,10 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     return undefined;
   }
 
-  private makeCujTimestampObject(timestamp: PropertyTreeNode): CujTimestamp {
-    return {
-      unixNanos: assertDefined(
-        timestamp.getChildByName('unixNanos'),
-      ).getValue(),
-      elapsedNanos: assertDefined(
-        timestamp.getChildByName('elapsedNanos'),
-      ).getValue(),
-      systemUptimeNanos: assertDefined(
-        timestamp.getChildByName('systemUptimeNanos'),
-      ).getValue(),
-    };
+  private makeCujTimestampObject(timestamp: PropertyTreeNode): Timestamp {
+    return this.timestampConverter.makeTimestampFromRealNs(
+      assertDefined(timestamp.getChildByName('unixNanos')).getValue(),
+    );
   }
 
   private makeCujsFromEvents(events: PropertyTreeNode[]): PropertyTreeNode[] {
@@ -262,13 +251,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
 interface Cuj {
   startCujType: CujType;
-  startTimestamp: CujTimestamp;
-  endTimestamp: CujTimestamp;
+  startTimestamp: Timestamp;
+  endTimestamp: Timestamp;
   canceled: boolean;
-}
-
-interface CujTimestamp {
-  unixNanos: bigint;
-  elapsedNanos: bigint;
-  systemUptimeNanos: bigint;
 }
