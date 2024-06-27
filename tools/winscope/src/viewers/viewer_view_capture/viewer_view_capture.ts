@@ -15,13 +15,14 @@
  */
 
 import {FunctionUtils} from 'common/function_utils';
-import {ActiveTraceChanged, WinscopeEvent} from 'messaging/winscope_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
@@ -39,88 +40,20 @@ export class ViewerViewCapture implements Viewer {
   constructor(traces: Traces, storage: Storage) {
     this.traces = traces;
     this.htmlElement = document.createElement('viewer-view-capture');
-    this.presenter = new Presenter(traces, storage, (data: UiData) => {
-      (this.htmlElement as any).inputData = data;
-    });
+    const notifyViewCallback = (uiData: UiData) => {
+      (this.htmlElement as any).inputData = uiData;
+    };
+    this.presenter = new Presenter(
+      traces,
+      storage,
+      notifyViewCallback as NotifyHierarchyViewCallbackType,
+    );
+    this.presenter.addEventListeners(this.htmlElement);
 
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedIdChange,
-      async (event) =>
-        await this.presenter.onHighlightedIdChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedNodeChange,
-      async (event) =>
-        await this.presenter.onHighlightedNodeChange(
-          (event as CustomEvent).detail.node,
-        ),
-    );
     this.htmlElement.addEventListener(
       ViewerEvents.MiniRectsDblClick,
       async (event) => {
         await this.presenter.onMiniRectsDoubleClick();
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectGroupIdChange,
-      async (event) => {
-        const traceId = (event as CustomEvent).detail.groupId;
-        const trace = this.presenter.getViewCaptureTraceFromId(traceId);
-        await this.emitAppEvent(new ActiveTraceChanged(trace));
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectShowStateChange,
-      async (event) => {
-        await this.presenter.onRectShowStateChange(
-          (event as CustomEvent).detail.rectId,
-          (event as CustomEvent).detail.state,
-        );
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectsUserOptionsChange,
-      (event) => {
-        this.presenter.onRectsUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        );
       },
     );
 

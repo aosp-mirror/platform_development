@@ -19,7 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {OnRequestSuccessCallback} from './on_request_success_callback';
 import {ConfigMap} from './trace_collection_utils';
 
-export interface Device {
+export interface Devices {
   [key: string]: DeviceProperties;
 }
 
@@ -188,7 +188,7 @@ class ProxyRequest {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
-      throw Error('Trace not started before stopping');
+      throw new Error('Trace not started before stopping');
     }
     await proxyRequest.call(
       'POST',
@@ -304,13 +304,13 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '2.1.0';
+  readonly VERSION = '2.1.1';
   state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
   refresh_worker: NodeJS.Timeout | undefined;
-  devices: Device = {};
+  devices: Devices = {};
   selectedDevice = '';
   errorText = '';
   adbData: File[] = [];
@@ -337,6 +337,10 @@ export class ProxyClient {
     this.stateChangeListeners = this.stateChangeListeners.filter(
       (fn) => fn !== removeFn,
     );
+  }
+
+  clearStateChangeListeners() {
+    this.stateChangeListeners = [];
   }
 
   async getDevices() {

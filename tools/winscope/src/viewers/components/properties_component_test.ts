@@ -118,6 +118,15 @@ describe('PropertiesComponent', () => {
     expect(treeEl).toBeTruthy();
   });
 
+  it('renders placeholder text', () => {
+    component.propertiesTree = undefined;
+    component.placeholderText = 'Placeholder text';
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.placeholder-text')?.textContent,
+    ).toContain('Placeholder text');
+  });
+
   it('handles node click', () => {
     const tree = new PropertyTreeBuilder()
       .setRootId('selectedItem')
