@@ -129,7 +129,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     const cujs: PropertyTreeNode[] = [];
 
     for (const startEvent of startEvents) {
-      const startCujType: CujType = assertDefined(
+      const cujType: CujType = assertDefined(
         startEvent.getChildByName('cujType'),
       ).getValue();
       const startTimestamp = assertDefined(
@@ -138,12 +138,12 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
       const matchingEndEvent = this.findMatchingEvent(
         endEvents,
-        startCujType,
+        cujType,
         startTimestamp,
       );
       const matchingCancelEvent = this.findMatchingEvent(
         canceledEvents,
-        startCujType,
+        cujType,
         startTimestamp,
       );
 
@@ -164,7 +164,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
         EventTag.JANK_CUJ_CANCEL_TAG;
 
       const cuj: Cuj = {
-        startCujType,
+        cujType,
         startTimestamp: this.makeCujTimestampObject(startTimestamp),
         endTimestamp: this.makeCujTimestampObject(closingEventTimestamp),
         canceled,
@@ -187,14 +187,14 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
   private findMatchingEvent(
     events: PropertyTreeNode[],
-    startCujType: CujType,
+    targetCujType: CujType,
     startTimestamp: PropertyTreeNode,
   ): PropertyTreeNode | undefined {
     return events.find((event) => {
       const cujType = assertDefined(event.getChildByName('cujType')).getValue();
       const timestamp = assertDefined(event.getChildByName('cujTimestamp'));
       return (
-        startCujType === cujType &&
+        targetCujType === cujType &&
         this.cujTimestampIsGreaterThan(timestamp, startTimestamp)
       );
     });
@@ -250,7 +250,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 }
 
 interface Cuj {
-  startCujType: CujType;
+  cujType: CujType;
   startTimestamp: Timestamp;
   endTimestamp: Timestamp;
   canceled: boolean;

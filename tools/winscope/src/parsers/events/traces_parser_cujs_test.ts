@@ -58,7 +58,7 @@ describe('ParserCujs', () => {
       .setIsRoot(true)
       .setChildren([
         {
-          name: 'startCujType',
+          name: 'cujType',
           value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS,
         },
         {
