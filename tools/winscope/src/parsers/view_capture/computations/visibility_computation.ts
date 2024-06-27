@@ -31,7 +31,7 @@ export class VisibilityComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in VC visibility computation');
     }
 
     this.root.forEachNodeDfs((node) => {

@@ -18,22 +18,24 @@ import {ImeTraceType} from 'trace/trace_type';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export class ImeUiData {
-  traceType: ImeTraceType;
+export class ImeUiData implements UiDataHierarchy {
   highlightedItem = '';
   pinnedItems: UiHierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
+  hierarchyTrees: UiHierarchyTreeNode[] | undefined;
   propertiesUserOptions: UserOptions = {};
-  tree: UiHierarchyTreeNode | undefined;
-  sfSubtrees: UiHierarchyTreeNode[] = [];
   propertiesTree: UiPropertyTreeNode | undefined;
-  hierarchyTableProperties: TableProperties | undefined;
-  additionalProperties: ImeAdditionalProperties | undefined;
+  highlightedProperty = '';
 
-  constructor(traceType: ImeTraceType) {
-    this.traceType = traceType;
-  }
+  constructor(
+    readonly traceType: ImeTraceType,
+    public hierarchyTableProperties: TableProperties | undefined = undefined,
+    public additionalProperties:
+      | ImeAdditionalProperties
+      | undefined = undefined,
+  ) {}
 }
