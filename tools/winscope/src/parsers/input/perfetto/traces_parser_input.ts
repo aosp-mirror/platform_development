@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
 import {CoarseVersion} from 'trace/coarse_version';
-import {Trace} from 'trace/trace';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange, Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -138,5 +143,76 @@ export class TracesParserInput extends AbstractTracesParser<PropertyTreeNode> {
     }
 
     return mergedIndices;
+  }
+
+  override async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, async () => {
+        assertTrue(entriesRange.start < entriesRange.end);
+
+        const {keyRange, motionRange} = this.getSubTraceRanges(entriesRange);
+
+        let keyResult: Array<bigint> = [];
+        if (keyRange !== undefined) {
+          keyResult =
+            (await this.keyEventTrace
+              ?.getParser()
+              .customQuery(CustomQueryType.VSYNCID, keyRange)) ?? [];
+        }
+
+        let motionResult: Array<bigint> = [];
+        if (motionRange !== undefined) {
+          motionResult =
+            (await this.motionEventTrace
+              ?.getParser()
+              .customQuery(CustomQueryType.VSYNCID, motionRange)) ?? [];
+        }
+
+        const mergedResult: Array<bigint> = [];
+        let curKeyIndex = 0;
+        let curMotionIndex = 0;
+        for (let i = entriesRange.start; i < entriesRange.end; i++) {
+          if (
+            assertDefined(this.mergedEntryIndexMap)[i][1] ===
+            TraceType.INPUT_KEY_EVENT
+          ) {
+            mergedResult.push(keyResult[curKeyIndex++]);
+          } else {
+            mergedResult.push(motionResult[curMotionIndex++]);
+          }
+        }
+        return mergedResult;
+      })
+      .getResult();
+  }
+
+  // Given the entries range for the merged trace, get the entries ranges for
+  // the individual sub-traces that make up this merged trace.
+  private getSubTraceRanges(entriesRange: EntriesRange): {
+    keyRange?: EntriesRange;
+    motionRange?: EntriesRange;
+  } {
+    const ranges: {keyRange?: EntriesRange; motionRange?: EntriesRange} = {};
+
+    for (let i = entriesRange.start; i < entriesRange.end; i++) {
+      const [subEventIndex, type] = assertDefined(this.mergedEntryIndexMap)[i];
+      if (type === TraceType.INPUT_KEY_EVENT) {
+        if (ranges.keyRange === undefined) {
+          ranges.keyRange = {start: subEventIndex, end: subEventIndex + 1};
+        } else {
+          ranges.keyRange.end = subEventIndex + 1;
+        }
+      } else {
+        if (ranges.motionRange === undefined) {
+          ranges.motionRange = {start: subEventIndex, end: subEventIndex + 1};
+        } else {
+          ranges.motionRange.end = subEventIndex + 1;
+        }
+      }
+    }
+    return ranges;
   }
 }
