@@ -146,7 +146,6 @@ cc_library_host_static {
         "src/repr/json/converter.cpp",
         "src/repr/json/ir_dumper.cpp",
         "src/repr/json/ir_reader.cpp",
-        "src/repr/protobuf/converter.cpp",
         "src/repr/protobuf/ir_diff_dumper.cpp",
         "src/repr/protobuf/ir_dumper.cpp",
         "src/repr/protobuf/ir_reader.cpp",
