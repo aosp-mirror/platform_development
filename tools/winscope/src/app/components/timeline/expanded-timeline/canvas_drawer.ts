@@ -39,7 +39,7 @@ export class CanvasDrawer {
     withGradientEnd = false,
   ) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
 
     const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
@@ -58,7 +58,7 @@ export class CanvasDrawer {
         rect.x + rect.w,
         0,
       );
-      const gradientRatio = Math.min(25 / rect.w, 1);
+      const gradientRatio = Math.max(0, Math.min(25 / rect.w, 1));
       gradient.addColorStop(
         0,
         withGradientStart ? transparentColor : rgbaColor,
@@ -115,7 +115,7 @@ export class CanvasDrawer {
 
   drawRectBorder(rect: Rect) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
     this.defineRectPath(rect, this.ctx);
     this.highlightPath(this.ctx);

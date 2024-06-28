@@ -27,7 +27,7 @@ export class ParsingUtils {
         traceBuffer.slice(0, magicNumber.length),
       );
       if (!bufferContainsMagicNumber) {
-        throw TypeError("buffer doesn't contain expected magic number");
+        throw new TypeError("buffer doesn't contain expected magic number");
       }
     }
   }

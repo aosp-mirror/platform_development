@@ -46,8 +46,8 @@ describe('Perfetto ParserKeyEvent', () => {
     expect(timestamps.length).toEqual(2);
 
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1718163697925999410n),
-      TimestampConverterUtils.makeRealTimestamp(1718163698025920410n),
+      TimestampConverterUtils.makeRealTimestamp(1718386905115026232n),
+      TimestampConverterUtils.makeRealTimestamp(1718386905123057319n),
     ];
     expect(timestamps).toEqual(expected);
   });
@@ -61,7 +61,7 @@ describe('Perfetto ParserKeyEvent', () => {
     const entry = await parser.getEntry(0);
     const keyEvent = assertDefined(entry.getChildByName('keyEvent'));
 
-    expect(keyEvent?.getChildByName('eventId')?.getValue()).toEqual(263024268);
+    expect(keyEvent?.getChildByName('eventId')?.getValue()).toEqual(759309047);
     expect(keyEvent?.getChildByName('action')?.formattedValue()).toEqual(
       'ACTION_DOWN',
     );
@@ -92,12 +92,12 @@ describe('Perfetto ParserKeyEvent', () => {
         ?.getChildByName('0')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(461));
+    ).toEqual(212n);
     expect(
       windowDispatchEvents
         ?.getChildByName('1')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(0));
+    ).toEqual(0n);
   });
 });

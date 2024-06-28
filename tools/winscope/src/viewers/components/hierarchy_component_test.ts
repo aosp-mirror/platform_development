@@ -140,6 +140,15 @@ describe('HierarchyComponent', () => {
     expect(pinnedNodeEl).toBeTruthy();
   });
 
+  it('renders placeholder text', () => {
+    component.tree = undefined;
+    component.placeholderText = 'Placeholder text';
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.placeholder-text')?.textContent,
+    ).toContain('Placeholder text');
+  });
+
   it('handles pinned node click', () => {
     const node = assertDefined(component.tree);
     component.pinnedItems = [node];

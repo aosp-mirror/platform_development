@@ -171,7 +171,7 @@ export class TracesParserTransitions extends AbstractTracesParser<PropertyTreeNo
       assertDefined(transition1.getChildByName('id')).getValue() !==
       assertDefined(transition2.getChildByName('id')).getValue()
     ) {
-      throw Error("Can't merge transitions with mismatching ids");
+      throw new Error("Can't merge transitions with mismatching ids");
     }
 
     const mergedTransition = this.mergeProperties(

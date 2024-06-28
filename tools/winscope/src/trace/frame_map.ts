@@ -127,7 +127,7 @@ export class FrameMap {
     entry: AbsoluteEntryIndex,
   ): AbsoluteFrameIndex | undefined {
     if (entry < 0 || entry >= this.lengthEntries) {
-      throw Error(`Entry index out of bounds: ${entry}`);
+      throw new Error(`Entry index out of bounds: ${entry}`);
     }
     return this.entryToStartFrame[entry];
   }
@@ -136,7 +136,7 @@ export class FrameMap {
     entry: AbsoluteEntryIndex,
   ): AbsoluteFrameIndex | undefined {
     if (entry < 0 || entry >= this.lengthEntries) {
-      throw Error(`Entry index out of bounds: ${entry}`);
+      throw new Error(`Entry index out of bounds: ${entry}`);
     }
     return this.entryToEndFrame[entry];
   }
@@ -145,7 +145,7 @@ export class FrameMap {
     frame: AbsoluteFrameIndex,
   ): AbsoluteEntryIndex | undefined {
     if (frame < 0 || frame >= this.lengthFrames) {
-      throw Error(`Frame index out of bounds: ${frame}`);
+      throw new Error(`Frame index out of bounds: ${frame}`);
     }
     return this.frameToStartEntry[frame];
   }
@@ -154,7 +154,7 @@ export class FrameMap {
     frame: AbsoluteFrameIndex,
   ): AbsoluteEntryIndex | undefined {
     if (frame < 0 || frame >= this.lengthFrames) {
-      throw Error(`Frame index out of bounds: ${frame}`);
+      throw new Error(`Frame index out of bounds: ${frame}`);
     }
     return this.frameToEndEntry[frame];
   }

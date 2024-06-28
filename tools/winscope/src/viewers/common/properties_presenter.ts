@@ -15,6 +15,7 @@
  */
 
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from './add_diffs';
@@ -34,13 +35,14 @@ export class PropertiesPresenter {
   constructor(
     private userOptions: UserOptions,
     private denylistProperties: string[],
+    private customOperations?: Array<Operation<UiPropertyTreeNode>>,
   ) {}
 
   getUserOptions() {
     return this.userOptions;
   }
 
-  setPropertiesTree(tree: PropertyTreeNode) {
+  setPropertiesTree(tree: PropertyTreeNode | undefined) {
     this.propertiesTree = tree;
   }
 
@@ -122,11 +124,17 @@ export class PropertiesPresenter {
     if (!keepCalculated) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotCalculated);
     }
-    this.formattedTree = new UiTreeFormatter<UiPropertyTreeNode>()
-      .setUiTree(uiTree)
-      .addOperation(new Filter(predicatesDiscardingChildren, false))
-      .addOperation(new Filter(predicatesKeepingChildren, true))
-      .format();
+    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(
+      uiTree,
+    );
+    if (predicatesDiscardingChildren.length > 0) {
+      formatter.addOperation(new Filter(predicatesDiscardingChildren, false));
+    }
+    formatter.addOperation(new Filter(predicatesKeepingChildren, true));
+
+    this.customOperations?.forEach((op) => formatter.addOperation(op));
+
+    this.formattedTree = formatter.format();
   }
 
   clear() {
