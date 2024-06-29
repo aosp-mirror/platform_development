@@ -93,7 +93,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         [timelineData]="timelineData"
         (onTracePositionUpdate)="updatePosition($event)"
         (onScrollEvent)="updateScrollEvent($event)"
-        (onTraceClicked)="onTimelineTraceClicked($event)"
+        (onTraceClicked)="onExpandedTimelineTraceClicked($event)"
         (onMouseXRatioUpdate)="updateExpandedTimelineMouseXRatio($event)"
         id="expanded-timeline"></expanded-timeline>
     </div>
@@ -241,7 +241,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
             (onSeekTimestampUpdate)="updateSeekTimestamp($event)"
             (onRemoveAllBookmarks)="removeAllBookmarks()"
             (onToggleBookmark)="toggleBookmarkRange($event.range, $event.rangeContainsBookmark)"
-            (onTraceClicked)="onTimelineTraceClicked($event)"
+            (onTraceClicked)="onMiniTimelineTraceClicked($event)"
             id="mini-timeline"
             #miniTimeline></mini-timeline>
         </ng-template>
@@ -587,7 +587,7 @@ export class TimelineComponent
 
     const position = assertDefined(this.timelineData).getCurrentPosition();
     if (position === undefined) {
-      throw Error(
+      throw new Error(
         'A trace position should be available by the time the timeline is loaded',
       );
     }
@@ -879,7 +879,16 @@ export class TimelineComponent
     this.bookmarks = [];
   }
 
-  async onTimelineTraceClicked(trace: Trace<object>) {
+  async onMiniTimelineTraceClicked(eventData: [Trace<object>, Timestamp]) {
+    const [trace, timestamp] = eventData;
+    await this.emitEvent(new ActiveTraceChanged(trace));
+    await this.updatePosition(
+      assertDefined(this.timelineData).makePositionFromActiveTrace(timestamp),
+    );
+    this.changeDetectorRef.detectChanges();
+  }
+
+  async onExpandedTimelineTraceClicked(trace: Trace<object>) {
     await this.emitEvent(new ActiveTraceChanged(trace));
     this.changeDetectorRef.detectChanges();
   }

@@ -63,9 +63,14 @@ export class TimelineData {
 
     const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
     if (transitionTrace) {
-      this.transitions = await Promise.all(
-        transitionTrace.mapEntry(async (entry) => await entry.getValue()),
-      );
+      try {
+        this.transitions = await Promise.all(
+          transitionTrace.mapEntry(async (entry) => await entry.getValue()),
+        );
+      } catch (error) {
+        transitionTrace.setCorruptedState(true);
+        throw error;
+      }
     }
 
     this.screenRecordingVideo = screenRecordingVideo;
@@ -160,7 +165,9 @@ export class TimelineData {
 
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
-      throw Error('Trying to get full time range when there are no timestamps');
+      throw new Error(
+        'Trying to get full time range when there are no timestamps',
+      );
     }
 
     const fullTimeRange = new TimeRange(

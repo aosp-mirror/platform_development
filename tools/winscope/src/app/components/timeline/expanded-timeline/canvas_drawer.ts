@@ -39,7 +39,7 @@ export class CanvasDrawer {
     withGradientEnd = false,
   ) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
 
     const rgbColor = TimelineUtils.convertHexToRgb(hexColor);
@@ -115,7 +115,7 @@ export class CanvasDrawer {
 
   drawRectBorder(rect: Rect) {
     if (!this.ctx) {
-      throw Error('Canvas not set');
+      throw new Error('Canvas not set');
     }
     this.defineRectPath(rect, this.ctx);
     this.highlightPath(this.ctx);
