@@ -120,3 +120,17 @@ export class InvalidPerfettoTrace extends UserWarning {
     return `${this.descriptor}: ${this.parserErrorMessages.join(', ')}`;
   }
 }
+
+export class CannotVisualizeAllTraces extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'cannot visualize all traces';
+  }
+
+  getMessage(): string {
+    return `Cannot visualize all traces: ${this.errorMessage}.\nTry removing some traces.`;
+  }
+}

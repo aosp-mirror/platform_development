@@ -148,7 +148,7 @@ class ParserProtoLog extends AbstractParser {
       if (error instanceof FormatStringMismatchError) {
         return this.makeLogMessageWithoutFormat(entry);
       }
-      throw error;
+      throw this.createParsingError((error as Error).message);
     }
   }
 
@@ -175,7 +175,7 @@ class ParserProtoLog extends AbstractParser {
       if (messageFormat[i] === '%') {
         if (i + 1 >= messageFormat.length) {
           // Should never happen - protologtool checks for that
-          throw new Error('Invalid format string');
+          throw this.createParsingError('invalid format string');
         }
         switch (messageFormat[i + 1]) {
           case '%':
@@ -210,8 +210,8 @@ class ParserProtoLog extends AbstractParser {
             break;
           default:
             // Should never happen - protologtool checks for that
-            throw new Error(
-              'Invalid format string conversion: ' + messageFormat[i + 1],
+            throw this.createParsingError(
+              'invalid format string conversion: ' + messageFormat[i + 1],
             );
         }
         i += 2;
@@ -232,7 +232,7 @@ class ParserProtoLog extends AbstractParser {
 
   private getParam<T>(arr: T[], idx: number): T {
     if (arr.length <= idx) {
-      throw new Error('No param for format string conversion');
+      throw this.createParsingError('no param for format string conversion');
     }
     return arr[idx];
   }
@@ -259,6 +259,10 @@ class ParserProtoLog extends AbstractParser {
       at: '',
       timestamp: BigInt(assertDefined(entry.elapsedRealtimeNanos).toString()),
     };
+  }
+
+  private createParsingError(msg: string) {
+    return new Error(`Protolog parsing error: ${msg}`);
   }
 }
 

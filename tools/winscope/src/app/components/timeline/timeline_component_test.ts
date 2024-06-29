@@ -40,6 +40,7 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  TracePositionUpdate,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
@@ -920,6 +921,42 @@ describe('TimelineComponent', () => {
     openContextMenu();
     clickRemoveAllBookmarksOption();
     expect(timelineComponent.bookmarks).toEqual([]);
+  });
+
+  it('updates active trace then trace position on mini timeline click', async () => {
+    loadAllTraces();
+    const timelineComponent = assertDefined(component.timeline);
+
+    let firstEvent: WinscopeEvent | undefined;
+    let activeTrace: Trace<object> | undefined;
+    let position: TracePosition | undefined;
+    timelineComponent.setEmitEvent(async (event: WinscopeEvent) => {
+      if (!firstEvent) {
+        expect(event).toBeInstanceOf(ActiveTraceChanged);
+        firstEvent = event;
+        activeTrace = (event as ActiveTraceChanged).trace;
+      } else {
+        expect(event).toBeInstanceOf(TracePositionUpdate);
+        position = (event as TracePositionUpdate).position;
+      }
+    });
+    const miniTimelineComponent = assertDefined(timelineComponent.miniTimeline);
+    const trace = assertDefined(
+      component.timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER),
+    );
+    spyOn(
+      assertDefined(miniTimelineComponent.drawer),
+      'getTraceClicked',
+    ).and.returnValue(Promise.resolve(trace));
+    const canvas = miniTimelineComponent.getCanvas();
+    canvas.dispatchEvent(new MouseEvent('mousedown'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(activeTrace).toEqual(trace);
+    expect(position).toBeDefined();
   });
 
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {
