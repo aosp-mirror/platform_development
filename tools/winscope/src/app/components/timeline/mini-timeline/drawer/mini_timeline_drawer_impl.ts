@@ -60,7 +60,7 @@ export class MiniTimelineDrawerImpl implements MiniTimelineDrawer {
     const ctx = canvas.getContext('2d');
 
     if (ctx === null) {
-      throw Error('MiniTimeline canvas context was null!');
+      throw new Error('MiniTimeline canvas context was null!');
     }
 
     this.ctx = ctx;

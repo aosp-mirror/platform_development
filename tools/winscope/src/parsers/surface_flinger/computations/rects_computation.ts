@@ -125,7 +125,7 @@ export class RectsComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in SF rects computation');
     }
     const groupIdToAbsoluteZ = new Map<number, number>();
 
@@ -170,7 +170,9 @@ export class RectsComputation implements Computation {
       .getEagerPropertyByName('isComputedVisible')
       ?.getValue();
     if (isVisible === undefined) {
-      throw Error('Visibility has not been computed');
+      throw new Error(
+        'SF rects computation attempted before visibility computation',
+      );
     }
 
     const occludedBy = node.getEagerPropertyByName('occludedBy');

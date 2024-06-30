@@ -40,11 +40,11 @@ export abstract class HierarchyTreeBuilder {
 
   build(): HierarchyTreeNode {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set');
     }
 
     if (!this.children) {
-      throw Error('children not set');
+      throw new Error('children not set');
     }
 
     const identifierToChildren = this.buildIdentifierToChildrenMap(
