@@ -30,6 +30,7 @@ import androidx.preference.PreferenceManager;
 import com.example.android.vdmdemo.common.DpadFragment;
 import com.example.android.vdmdemo.common.NavTouchpadFragment;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
+import com.example.android.vdmdemo.common.RotaryFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -158,6 +159,7 @@ public class InputActivity extends Hilt_InputActivity {
     public static final class NavigationFragment extends Hilt_InputActivity_NavigationFragment {
 
         @Inject InputController mInputController;
+        @Inject PreferenceController mPreferenceController;
 
         public NavigationFragment() {
             super(R.layout.fragment_input_navigation);
@@ -177,6 +179,16 @@ public class InputActivity extends Hilt_InputActivity {
             navTouchpadFragment.setInputEventListener((event) ->
                     mInputController.sendEventToFocusedDisplay(
                             InputDeviceType.DEVICE_TYPE_NAVIGATION_TOUCHPAD, event));
+            RotaryFragment rotaryFragment =
+                    (RotaryFragment) getChildFragmentManager().findFragmentById(
+                            R.id.rotary_fragment_container);
+            if (mPreferenceController.getBoolean(R.string.internal_pref_virtual_rotary_supported)) {
+                rotaryFragment.setInputEventListener((event) ->
+                        mInputController.sendEventToFocusedDisplay(
+                                InputDeviceType.DEVICE_TYPE_ROTARY_ENCODER, event));
+            } else {
+                getChildFragmentManager().beginTransaction().remove(rotaryFragment).commit();
+            }
         }
     }
 }

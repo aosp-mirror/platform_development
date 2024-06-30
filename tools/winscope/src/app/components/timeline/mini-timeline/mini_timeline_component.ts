@@ -139,7 +139,9 @@ export class MiniTimelineComponent {
     range: TimeRange;
     rangeContainsBookmark: boolean;
   }>();
-  @Output() readonly onTraceClicked = new EventEmitter<Trace<object>>();
+  @Output() readonly onTraceClicked = new EventEmitter<
+    [Trace<object>, Timestamp]
+  >();
 
   @ViewChild('miniTimelineWrapper', {static: false})
   miniTimelineWrapper: ElementRef | undefined;
@@ -196,9 +198,11 @@ export class MiniTimelineComponent {
       trace: Trace<object> | undefined,
     ) => {
       if (trace) {
-        this.onTraceClicked.emit(trace);
+        this.onTraceClicked.emit([trace, timestamp]);
+        this.onSeekTimestampUpdate.emit(undefined);
+      } else {
+        updateTimestampCallback(timestamp);
       }
-      updateTimestampCallback(timestamp);
     };
 
     this.drawer = new MiniTimelineDrawerImpl(
