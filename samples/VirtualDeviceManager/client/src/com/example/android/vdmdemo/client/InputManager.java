@@ -111,6 +111,9 @@ final class InputManager {
                 case DEVICE_TYPE_MOUSE:
                     sendMouseEvent(event, displayId);
                     break;
+                case DEVICE_TYPE_ROTARY_ENCODER:
+                    sendRotaryEvent(event, displayId);
+                    break;
                 default:
                     Log.e(TAG, "sendInputEvent got invalid device type " + deviceType.getNumber());
             }
@@ -243,6 +246,18 @@ final class InputManager {
                 sendInputEvent(scrollEvent, displayId);
                 break;
         }
+    }
+
+    private void sendRotaryEvent(MotionEvent event, int displayId) {
+        sendInputEvent(
+                RemoteInputEvent.newBuilder()
+                        .setDeviceType(InputDeviceType.DEVICE_TYPE_ROTARY_ENCODER)
+                        .setTimestampMs(event.getEventTime())
+                        .setMouseScrollEvent(RemoteMotionEvent.newBuilder()
+                                .setX(event.getAxisValue(MotionEvent.AXIS_SCROLL))
+                                .build())
+                        .build(),
+                displayId);
     }
 
     private void sendInputEvent(RemoteInputEvent inputEvent, int displayId) {
