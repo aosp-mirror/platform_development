@@ -13,24 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Device,
-  DeviceProperties,
-  ProxyClient,
-} from 'trace_collection/proxy_client';
+import {DeviceProperties, Devices} from 'trace_collection/proxy_client';
 import {ConfigMap} from './trace_collection_utils';
 
-export interface Connection {
+export interface AdbConnection {
   adbSuccess: () => boolean;
-  setProxyKey?(key: string): any;
-  devices(): Device;
-  selectedDevice(): DeviceProperties;
-  selectedDeviceId(): string;
-  restart(): any;
-  selectDevice(id: string): any;
-  state(): any;
-  onConnectChange(newState: any): any;
-  resetLastDevice(): any;
+  setSecurityKey(key: string): void;
+  getDevices(): Devices;
+  getSelectedDevice(): [string, DeviceProperties];
+  restart(): Promise<void>;
+  selectDevice(id: string): Promise<void>;
+  clearLastDevice(): Promise<void>;
   isDevicesState(): boolean;
   isStartTraceState(): boolean;
   isErrorState(): boolean;
@@ -38,15 +31,17 @@ export interface Connection {
   isEndTraceState(): boolean;
   isLoadDataState(): boolean;
   isConnectingState(): boolean;
-  throwNoTargetsError(): any;
+  setErrorState(message: string): Promise<void>;
+  setLoadDataState(): void;
   startTrace(
     requestedTraces: string[],
     reqEnableConfig?: string[],
     reqSelectedSfConfig?: ConfigMap,
     reqSelectedWmConfig?: ConfigMap,
-  ): any;
-  endTrace(): any;
-  adbData(): File[];
-  dumpState(requestedDumps: string[]): any;
-  proxy?: ProxyClient;
+  ): Promise<void>;
+  endTrace(): Promise<void>;
+  getAdbData(): File[];
+  dumpState(requestedDumps: string[]): Promise<boolean>;
+  getErrorText(): string;
+  onDestroy(): void;
 }

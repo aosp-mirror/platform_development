@@ -78,7 +78,7 @@ export class AddCujProperties extends AddOperation<PropertyTreeNode> {
       !StringUtils.isNumeric(elapsedNs) ||
       !StringUtils.isNumeric(uptimeNs)
     ) {
-      throw Error(`Data ${data} didn't match expected format`);
+      throw new Error(`CUJ Data ${data} didn't match expected format`);
     }
 
     return data.slice(1, data.length - 2).split(',');

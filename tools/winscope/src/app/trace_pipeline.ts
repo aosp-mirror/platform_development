@@ -107,7 +107,7 @@ export class TracePipeline {
         this.traces.deleteTracesByType(TraceType.EVENT_LOG);
       }
     } finally {
-      progressListener?.onOperationFinished();
+      progressListener?.onOperationFinished(true);
     }
   }
 

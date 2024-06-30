@@ -41,7 +41,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root || !this.rootLayers) {
-      throw Error('root not set');
+      throw new Error('root not set in SF visibility computation');
     }
 
     this.displays =
