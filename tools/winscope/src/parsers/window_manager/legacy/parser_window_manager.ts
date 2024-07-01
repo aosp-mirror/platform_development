@@ -21,7 +21,7 @@ import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';
 import {WmCustomQueryUtils} from 'parsers/window_manager/custom_query_utils';
 import {HierarchyTreeBuilderWm} from 'parsers/window_manager/hierarchy_tree_builder_wm';
-import {ParserWindowManagerUtils} from 'parsers/window_manager/parser_window_manager_utils';
+import {ParserUtils} from 'parsers/window_manager/parser_utils';
 import root from 'protos/windowmanager/udc/json';
 import {com} from 'protos/windowmanager/udc/static';
 import {
@@ -44,7 +44,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
       root.lookupType('com.android.server.wm.WindowManagerTraceFileProto'),
     );
 
-  private readonly utils = new ParserWindowManagerUtils(TAMPERED_PROTOS_UDC);
+  private readonly utils = new ParserUtils(TAMPERED_PROTOS_UDC);
   private realToBootTimeOffsetNs: bigint | undefined;
 
   override getTraceType(): TraceType {

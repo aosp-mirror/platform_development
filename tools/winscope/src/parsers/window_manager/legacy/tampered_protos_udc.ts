@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
-import {WmTamperedProtos} from 'parsers/window_manager/wm_tampered_protos';
+import {TamperedProtos} from 'parsers/window_manager/tampered_protos';
 import root from 'protos/windowmanager/udc/json';
 
 const windowManagerTraceFileProto = TamperedMessageType.tamper(
@@ -40,7 +40,7 @@ const windowContainerChildField = assertDefined(
   windowContainerField.tamperedMessageType,
 ).fields['children'];
 
-export const TAMPERED_PROTOS_UDC: WmTamperedProtos = {
+export const TAMPERED_PROTOS_UDC: TamperedProtos = {
   entryField,
 
   windowManagerServiceField: assertDefined(

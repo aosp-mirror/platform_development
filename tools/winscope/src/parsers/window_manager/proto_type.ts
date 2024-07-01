@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-import {TamperedProtoField} from 'parsers/tampered_message_type';
-
-export interface WmTamperedProtos {
-  entryField: TamperedProtoField;
-  windowManagerServiceField: TamperedProtoField;
-  rootWindowContainerField: TamperedProtoField;
-  windowContainerField: TamperedProtoField;
-  windowContainerChildField: TamperedProtoField;
-  displayContentField: TamperedProtoField;
-  displayAreaField: TamperedProtoField;
-  taskField: TamperedProtoField;
-  activityField: TamperedProtoField;
-  windowTokenField: TamperedProtoField;
-  windowStateField: TamperedProtoField;
-  taskFragmentField: TamperedProtoField;
+export enum ProtoType {
+  WindowManagerService = 'WindowManagerService',
+  RootWindowContainer = 'RootWindowContainer',
+  DisplayContent = 'DisplayContent',
+  DisplayArea = 'DisplayArea',
+  Task = 'Task',
+  TaskFragment = 'TaskFragment',
+  Activity = 'Activity',
+  WindowToken = 'WindowToken',
+  WindowState = 'WindowState',
+  WindowContainer = 'WindowContainer',
 }

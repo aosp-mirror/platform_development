@@ -18,10 +18,10 @@ import {assertDefined} from 'common/assert_utils';
 import {AddDefaults} from 'parsers/operations/add_defaults';
 import {SetFormatters} from 'parsers/operations/set_formatters';
 import {TranslateIntDef} from 'parsers/operations/translate_intdef';
-import {WM_DENYLIST_PROPERTIES} from 'parsers/window_manager/wm_denylist_properties';
-import {WM_EAGER_PROPERTIES} from 'parsers/window_manager/wm_eager_properties';
-import {WmProtoType} from 'parsers/window_manager/wm_proto_type';
-import {WmTamperedProtos} from 'parsers/window_manager/wm_tampered_protos';
+import {DENYLIST_PROPERTIES} from 'parsers/window_manager/denylist_properties';
+import {EAGER_PROPERTIES} from 'parsers/window_manager/eager_properties';
+import {ProtoType} from 'parsers/window_manager/proto_type';
+import {TamperedProtos} from 'parsers/window_manager/tampered_protos';
 import {RECT_FORMATTER} from 'trace/tree_node/formatters';
 import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -35,9 +35,9 @@ export interface OperationLists {
 }
 
 export class WmOperationLists {
-  private readonly LISTS = new Map<WmProtoType, OperationLists>([
+  private readonly LISTS = new Map<ProtoType, OperationLists>([
     [
-      WmProtoType.WindowManagerService,
+      ProtoType.WindowManagerService,
       {
         common: [
           new SetFormatters(this.tamperedProtos.windowManagerServiceField),
@@ -46,21 +46,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.windowManagerServiceField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.WindowManagerService),
+            EAGER_PROPERTIES.get(ProtoType.WindowManagerService),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.windowManagerServiceField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowManagerService),
+            DENYLIST_PROPERTIES.get(ProtoType.WindowManagerService),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.RootWindowContainer,
+      ProtoType.RootWindowContainer,
       {
         common: [
           new SetFormatters(this.tamperedProtos.rootWindowContainerField),
@@ -69,21 +69,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.rootWindowContainerField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.RootWindowContainer),
+            EAGER_PROPERTIES.get(ProtoType.RootWindowContainer),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.rootWindowContainerField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.RootWindowContainer),
+            DENYLIST_PROPERTIES.get(ProtoType.RootWindowContainer),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.WindowContainer,
+      ProtoType.WindowContainer,
       {
         common: [
           new SetFormatters(this.tamperedProtos.windowContainerField),
@@ -92,7 +92,7 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.windowContainerField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.WindowContainer),
+            EAGER_PROPERTIES.get(ProtoType.WindowContainer),
           ),
           new AddIsVisible(),
         ],
@@ -100,14 +100,14 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowContainerField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowContainer),
+            DENYLIST_PROPERTIES.get(ProtoType.WindowContainer),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.DisplayContent,
+      ProtoType.DisplayContent,
       {
         common: [
           new SetFormatters(this.tamperedProtos.displayContentField),
@@ -116,21 +116,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.displayContentField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.DisplayContent),
+            EAGER_PROPERTIES.get(ProtoType.DisplayContent),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.displayContentField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayContent),
+            DENYLIST_PROPERTIES.get(ProtoType.DisplayContent),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.DisplayArea,
+      ProtoType.DisplayArea,
       {
         common: [
           new SetFormatters(this.tamperedProtos.displayAreaField),
@@ -139,21 +139,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.displayAreaField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.DisplayArea),
+            EAGER_PROPERTIES.get(ProtoType.DisplayArea),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.displayAreaField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.DisplayArea),
+            DENYLIST_PROPERTIES.get(ProtoType.DisplayArea),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.Task,
+      ProtoType.Task,
       {
         common: [
           new SetFormatters(this.tamperedProtos.taskField),
@@ -162,21 +162,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.taskField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.Task),
+            EAGER_PROPERTIES.get(ProtoType.Task),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.taskField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.Task),
+            DENYLIST_PROPERTIES.get(ProtoType.Task),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.Activity,
+      ProtoType.Activity,
       {
         common: [
           new SetFormatters(this.tamperedProtos.activityField),
@@ -185,7 +185,7 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.activityField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.Activity),
+            EAGER_PROPERTIES.get(ProtoType.Activity),
           ),
           new AddIsVisible(),
         ],
@@ -193,14 +193,14 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.activityField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.Activity),
+            DENYLIST_PROPERTIES.get(ProtoType.Activity),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.WindowToken,
+      ProtoType.WindowToken,
       {
         common: [
           new SetFormatters(this.tamperedProtos.windowTokenField),
@@ -209,21 +209,21 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.windowTokenField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.WindowToken),
+            EAGER_PROPERTIES.get(ProtoType.WindowToken),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.windowTokenField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowToken),
+            DENYLIST_PROPERTIES.get(ProtoType.WindowToken),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.WindowState,
+      ProtoType.WindowState,
       {
         common: [
           new SetFormatters(
@@ -238,7 +238,7 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.windowStateField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.WindowState),
+            EAGER_PROPERTIES.get(ProtoType.WindowState),
           ),
           new AddWindowType(),
           new AddIsVisible(),
@@ -247,14 +247,14 @@ export class WmOperationLists {
           new AddDefaults(
             this.tamperedProtos.windowStateField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowState),
+            DENYLIST_PROPERTIES.get(ProtoType.WindowState),
           ),
         ],
       },
     ],
 
     [
-      WmProtoType.TaskFragment,
+      ProtoType.TaskFragment,
       {
         common: [
           new SetFormatters(this.tamperedProtos.taskFragmentField),
@@ -263,23 +263,23 @@ export class WmOperationLists {
         eager: [
           new AddDefaults(
             this.tamperedProtos.taskFragmentField,
-            WM_EAGER_PROPERTIES.get(WmProtoType.TaskFragment),
+            EAGER_PROPERTIES.get(ProtoType.TaskFragment),
           ),
         ],
         lazy: [
           new AddDefaults(
             this.tamperedProtos.taskFragmentField,
             undefined,
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.TaskFragment),
+            DENYLIST_PROPERTIES.get(ProtoType.TaskFragment),
           ),
         ],
       },
     ],
   ]);
 
-  constructor(private readonly tamperedProtos: WmTamperedProtos) {}
+  constructor(private readonly tamperedProtos: TamperedProtos) {}
 
-  get(type: WmProtoType): OperationLists {
+  get(type: ProtoType): OperationLists {
     return assertDefined(this.LISTS.get(type));
   }
 }

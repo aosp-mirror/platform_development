@@ -26,11 +26,11 @@ import {PropertyTreeBuilderFromProto} from 'trace/tree_node/property_tree_builde
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {WindowTypePrefix} from 'trace/window_type';
+import {DENYLIST_PROPERTIES} from './denylist_properties';
+import {EAGER_PROPERTIES} from './eager_properties';
 import {OperationLists, WmOperationLists} from './operations/operation_lists';
-import {WM_DENYLIST_PROPERTIES} from './wm_denylist_properties';
-import {WM_EAGER_PROPERTIES} from './wm_eager_properties';
-import {WmProtoType} from './wm_proto_type';
-import {WmTamperedProtos} from './wm_tampered_protos';
+import {ProtoType} from './proto_type';
+import {TamperedProtos} from './tampered_protos';
 
 type WindowContainerChildTypeUdc =
   | com.android.server.wm.IWindowContainerProto
@@ -64,10 +64,10 @@ type WindowContainerChildProto =
   | com.android.server.wm.IWindowContainerChildProto
   | perfetto.protos.IWindowContainerChildProto;
 
-export class ParserWindowManagerUtils {
+export class ParserUtils {
   private readonly operationLists: WmOperationLists;
 
-  constructor(tamperedProtos: WmTamperedProtos) {
+  constructor(tamperedProtos: TamperedProtos) {
     this.operationLists = new WmOperationLists(tamperedProtos);
   }
 
@@ -75,7 +75,7 @@ export class ParserWindowManagerUtils {
     entryProto: WindowManagerServiceDumpProto,
   ): PropertiesProvider {
     const operations = assertDefined(
-      this.operationLists.get(WmProtoType.WindowManagerService),
+      this.operationLists.get(ProtoType.WindowManagerService),
     );
     return new PropertiesProviderBuilder()
       .setEagerProperties(
@@ -101,7 +101,7 @@ export class ParserWindowManagerUtils {
     const rootContainerProperties = this.getContainerChildProperties(
       rootContainer,
       currChildren,
-      this.operationLists.get(WmProtoType.RootWindowContainer),
+      this.operationLists.get(ProtoType.RootWindowContainer),
     );
 
     const containers = [rootContainerProperties];
@@ -130,7 +130,7 @@ export class ParserWindowManagerUtils {
   ): PropertyTreeNode {
     const denyList: string[] = [];
     const eagerProperties = assertDefined(
-      WM_EAGER_PROPERTIES.get(WmProtoType.WindowManagerService),
+      EAGER_PROPERTIES.get(ProtoType.WindowManagerService),
     );
     let obj = entry;
     do {
@@ -160,7 +160,7 @@ export class ParserWindowManagerUtils {
         .setRootName('root')
         .setDenyList(
           assertDefined(
-            WM_DENYLIST_PROPERTIES.get(WmProtoType.WindowManagerService),
+            DENYLIST_PROPERTIES.get(ProtoType.WindowManagerService),
           ),
         )
         .build();
@@ -227,37 +227,37 @@ export class ParserWindowManagerUtils {
     return containerProperties;
   }
 
-  private getContainerChildType(child: WindowContainerChildProto): WmProtoType {
+  private getContainerChildType(child: WindowContainerChildProto): ProtoType {
     if (child.displayContent) {
-      return WmProtoType.DisplayContent;
+      return ProtoType.DisplayContent;
     } else if (child.displayArea) {
-      return WmProtoType.DisplayArea;
+      return ProtoType.DisplayArea;
     } else if (child.task) {
-      return WmProtoType.Task;
+      return ProtoType.Task;
     } else if (child.taskFragment) {
-      return WmProtoType.TaskFragment;
+      return ProtoType.TaskFragment;
     } else if (child.activity) {
-      return WmProtoType.Activity;
+      return ProtoType.Activity;
     } else if (child.windowToken) {
-      return WmProtoType.WindowToken;
+      return ProtoType.WindowToken;
     } else if (child.window) {
-      return WmProtoType.WindowState;
+      return ProtoType.WindowState;
     }
 
-    return WmProtoType.WindowContainer;
+    return ProtoType.WindowContainer;
   }
 
   private makeContainerChildEagerPropertiesTree(
     containerChild: WindowContainerChildProto,
     children: WindowContainerChildProto[],
-    containerChildType: WmProtoType,
+    containerChildType: ProtoType,
   ): PropertyTreeNode {
     const identifier = this.getIdentifier(containerChild);
     const name = this.getName(containerChild, identifier);
     const token = this.makeToken(identifier);
 
     const eagerProperties = assertDefined(
-      WM_EAGER_PROPERTIES.get(containerChildType),
+      EAGER_PROPERTIES.get(containerChildType),
     );
 
     const denyList: string[] = [];
@@ -301,14 +301,14 @@ export class ParserWindowManagerUtils {
 
   private makeContainerChildLazyPropertiesStrategy(
     containerChild: WindowContainerChildProto,
-    containerChildType: WmProtoType,
+    containerChildType: ProtoType,
   ): LazyPropertiesStrategyType {
     return async () => {
       const identifier = this.getIdentifier(containerChild);
       const name = this.getName(containerChild, identifier);
       const token = this.makeToken(identifier);
       const containerDenylistProperties = assertDefined(
-        WM_DENYLIST_PROPERTIES.get(containerChildType),
+        DENYLIST_PROPERTIES.get(containerChildType),
       );
 
       const container = this.getContainer(containerChild);
