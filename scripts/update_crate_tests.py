@@ -149,12 +149,6 @@ class Bazel(object):
 
         # soong_ui requires to be at the root of the repository.
         os.chdir(env.ANDROID_BUILD_TOP)
-        print("Generating Bazel files...")
-        cmd = [soong_ui, "--make-mode", "bp2build"]
-        try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
-        except subprocess.CalledProcessError as e:
-            raise UpdaterException('Unable to generate bazel workspace: ' + e.output)
 
         print("Building Bazel Queryview. This can take a couple of minutes...")
         cmd = [soong_ui, "--build-mode", "--all-modules", "--dir=.", "queryview"]
