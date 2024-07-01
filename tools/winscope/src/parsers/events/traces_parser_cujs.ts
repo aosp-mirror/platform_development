@@ -16,7 +16,7 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
-import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
+import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
 import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
