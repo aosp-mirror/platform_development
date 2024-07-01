@@ -867,7 +867,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                     self.update_file_buffers(file_path, tmp, device_id, file_type, file_buffers)
                     log.debug(f"Moving file {file_path} to {WINSCOPE_BACKUP_DIR} on device")
                     call_adb(
-                        f'shell su root [ ! -f {file_path} ] || mv {file_path} {WINSCOPE_BACKUP_DIR}',
+                        f"shell su root [ ! -f {file_path} ] || su root mv {file_path} {WINSCOPE_BACKUP_DIR}",
                         device_id)
 
         if (len(file_buffers) == 0):
