@@ -12,16 +12,19 @@
         {
           "name": "num_traits",
           "lib_name": "num_traits",
+          "raw_name": "num-traits",
           "extern_type": "Rust"
         },
         {
           "name": "plotters_backend",
           "lib_name": "plotters_backend",
+          "raw_name": "plotters-backend",
           "extern_type": "Rust"
         },
         {
           "name": "plotters_svg",
           "lib_name": "plotters_svg",
+          "raw_name": "plotters-svg",
           "extern_type": "Rust"
         }
       ],
