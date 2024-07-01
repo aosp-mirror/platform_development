@@ -24,16 +24,16 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {LogField, LogFieldName} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CujEntry, CujStatus, CujType, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter {
   static readonly FIELD_NAMES = [
-    LogFieldName.CUJ_TYPE,
-    LogFieldName.START_TIME,
-    LogFieldName.END_TIME,
-    LogFieldName.DURATION,
-    LogFieldName.STATUS,
+    LogFieldType.CUJ_TYPE,
+    LogFieldType.START_TIME,
+    LogFieldType.END_TIME,
+    LogFieldType.DURATION,
+    LogFieldType.STATUS,
   ];
   private static readonly VALUE_NA = 'N/A';
 
@@ -102,23 +102,23 @@ export class Presenter extends AbstractLogViewerPresenter {
 
       const fields: LogField[] = [
         {
-          name: LogFieldName.CUJ_TYPE,
+          type: LogFieldType.CUJ_TYPE,
           value: `${CujType[cujTypeId]} (${cujTypeId})`,
         },
         {
-          name: LogFieldName.START_TIME,
+          type: LogFieldType.START_TIME,
           value: startTs ?? Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.END_TIME,
+          type: LogFieldType.END_TIME,
           value: endTs ?? Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.DURATION,
+          type: LogFieldType.DURATION,
           value: timeDiff?.format() ?? Presenter.VALUE_NA,
         },
         {
-          name: LogFieldName.STATUS,
+          type: LogFieldType.STATUS,
           value: status ?? Presenter.VALUE_NA,
           icon: statusIcon,
           iconColor: statusIconColor,
