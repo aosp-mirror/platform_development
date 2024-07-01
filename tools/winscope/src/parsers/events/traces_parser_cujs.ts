@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AbstractTracesParser} from 'parsers/traces/abstract_traces_parser';
 import {CoarseVersion} from 'trace/coarse_version';
@@ -26,7 +27,6 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {CujType} from './cuj_type';
 import {EventTag} from './event_tag';
 import {AddCujProperties} from './operations/add_cuj_properties';
-import { Timestamp } from 'common/time';
 
 export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
   private static readonly AddCujProperties = new AddCujProperties();
@@ -75,9 +75,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     this.timestamps = [];
     for (let index = 0; index < this.getLengthEntries(); index++) {
       const entry = await this.getEntry(index);
-      const timestamp = entry
-        ?.getChildByName('startTimestamp')
-        ?.getValue();
+      const timestamp = entry?.getChildByName('startTimestamp')?.getValue();
       this.timestamps.push(timestamp);
     }
   }
