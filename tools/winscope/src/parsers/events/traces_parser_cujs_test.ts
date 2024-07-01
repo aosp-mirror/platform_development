@@ -63,19 +63,17 @@ describe('ParserCujs', () => {
         },
         {
           name: 'startTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048025580000n},
-            {name: 'elapsedNanos', value: 2661012903966n},
-            {name: 'systemUptimeNanos', value: 2661012904007n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048025580000n,
+            ),
         },
         {
           name: 'endTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048656617000n},
-            {name: 'elapsedNanos', value: 2661643941035n},
-            {name: 'systemUptimeNanos', value: 266164394123n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048643085000n,
+            ),
         },
         {name: 'canceled', value: true},
       ])
