@@ -100,9 +100,6 @@ import {LoadProgressComponent} from './load_progress_component';
             <p matLine>{{ TRACE_INFO[trace.type].name }}</p>
             <p matLine *ngFor="let descriptor of trace.getDescriptors()">{{ descriptor }}</p>
 
-            <mat-icon class="info-icon" *ngIf="traceUploadInfo(trace)" [matTooltip]="traceUploadInfo(trace)">
-              info
-            </mat-icon>
             <mat-icon class="warning-icon" *ngIf="!canVisualizeTrace(trace)" [matTooltip]="cannotVisualizeTraceTooltip(trace)">
               warning
             </mat-icon>
@@ -305,10 +302,6 @@ export class UploadTracesComponent implements ProgressListener {
 
       return hasFilesWithViewers;
     });
-  }
-
-  traceUploadInfo(trace: Trace<object>): string | undefined {
-    return TraceTypeUtils.traceUploadInfo(trace.type);
   }
 
   canVisualizeTrace(trace: Trace<object>): boolean {

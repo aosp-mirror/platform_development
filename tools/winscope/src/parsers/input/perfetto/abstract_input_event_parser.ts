@@ -21,9 +21,16 @@ import {TranslateIntDef} from 'parsers/operations/translate_intdef';
 import {AbstractParser} from 'parsers/perfetto/abstract_parser';
 import {FakeProtoBuilder} from 'parsers/perfetto/fake_proto_builder';
 import {FakeProtoTransformer} from 'parsers/perfetto/fake_proto_transformer';
+import {Utils} from 'parsers/perfetto/utils';
 import {TamperedMessageType} from 'parsers/tampered_message_type';
 import root from 'protos/input/latest/json';
 import {perfetto} from 'protos/input/latest/static';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+  VisitableParserCustomQuery,
+} from 'trace/custom_query';
+import {EntriesRange} from 'trace/index_types';
 import {TraceFile} from 'trace/trace_file';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
@@ -104,5 +111,47 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
     AbstractInputEventParser.DISPATCH_EVENT_OPS.forEach((operation) => {
       operation.apply(tree);
     });
+  }
+
+  override async customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    return new VisitableParserCustomQuery(type)
+      .visit(CustomQueryType.VSYNCID, async () => {
+        return Utils.queryVsyncId(
+          this.traceProcessor,
+          this.getTableName(),
+          this.entryIndexToRowIdMap,
+          entriesRange,
+          AbstractInputEventParser.createVsyncIdQuery,
+        );
+      })
+      .getResult();
+  }
+
+  // Use a custom sql query to get the vsync_id of the first dispatch
+  // entry associated with an input event, if any.
+  private static createVsyncIdQuery(
+    tableName: string,
+    minRowId: number,
+    maxRowId: number,
+  ): string {
+    return `
+      SELECT
+        tbl.id AS id,
+        args.key,
+        args.value_type,
+        args.int_value
+      FROM ${tableName} AS tbl
+      INNER JOIN ${AbstractInputEventParser.DispatchTableName} AS d
+          ON tbl.event_id = d.event_id
+      INNER JOIN args ON d.arg_set_id = args.arg_set_id
+      WHERE
+        tbl.id BETWEEN ${minRowId} AND ${maxRowId}
+        AND args.key = 'vsync_id'
+      GROUP BY tbl.id
+      ORDER BY tbl.id;
+    `;
   }
 }

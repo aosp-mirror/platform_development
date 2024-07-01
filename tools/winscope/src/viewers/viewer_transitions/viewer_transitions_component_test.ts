@@ -101,6 +101,8 @@ describe('ViewerTransitionsComponent', () => {
   });
 
   it('shows message when no transition is selected', () => {
+    assertDefined(component.inputData).propertiesTree = undefined;
+    fixture.detectChanges();
     expect(
       htmlElement.querySelector('.properties-view .placeholder-text')
         ?.innerHTML,
