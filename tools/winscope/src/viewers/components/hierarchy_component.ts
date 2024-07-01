@@ -79,6 +79,7 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
       </div>
     </div>
     <mat-divider></mat-divider>
+    <span class="mat-body-1 placeholder-text" *ngIf="showPlaceholderText()"> {{ placeholderText }} </span>
     <div class="hierarchy-content tree-wrapper">
       <tree-view
         *ngIf="tree"
@@ -157,6 +158,7 @@ export class HierarchyComponent {
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
   @Input() rectIdToShowState?: Map<string, RectShowState>;
+  @Input() placeholderText = '';
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -166,8 +168,14 @@ export class HierarchyComponent {
     return child.id;
   }
 
-  isFlattened() {
+  isFlattened(): boolean {
     return this.userOptions['flat']?.enabled;
+  }
+
+  showPlaceholderText(): boolean {
+    return (
+      !this.tree && (this.subtrees?.length ?? 0) === 0 && !!this.placeholderText
+    );
   }
 
   onPinnedNodeClick(event: MouseEvent, pinnedItem: UiHierarchyTreeNode) {

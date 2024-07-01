@@ -48,6 +48,9 @@ pub use self::name_and_version::{
 };
 mod name_and_version;
 
+pub use self::repo_path::RepoPath;
+mod repo_path;
+
 #[cfg(test)]
 pub use self::name_and_version_map::try_name_version_map_from_iter;
 pub use self::name_and_version_map::{
