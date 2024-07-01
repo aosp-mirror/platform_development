@@ -15,6 +15,13 @@
  */
 
 export const logComponentStyles = `
+  .entries {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+  }
+
   .entries .filters {
     display: flex;
     flex-direction: row;
@@ -22,7 +29,6 @@ export const logComponentStyles = `
 
   .entries .scroll {
     flex: 1;
-    height: 100%;
   }
 
   .scroll .entry {
