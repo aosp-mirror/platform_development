@@ -226,7 +226,7 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     } else if (!cancelTimestamp) {
       closingEvent = endEvent;
     } else {
-      const canceledBeforeEnd = !this.cujTimestampIsGreaterThan(
+      const canceledBeforeEnd = this.cujTimestampIsGreaterThan(
         endTimestamp,
         cancelTimestamp,
       );

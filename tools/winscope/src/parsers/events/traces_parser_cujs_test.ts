@@ -77,7 +77,7 @@ describe('ParserCujs', () => {
             {name: 'systemUptimeNanos', value: 266164394123n},
           ],
         },
-        {name: 'canceled', value: false},
+        {name: 'canceled', value: true},
       ])
       .build();
 
