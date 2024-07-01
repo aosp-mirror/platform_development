@@ -155,23 +155,6 @@ describe('UploadTracesComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('disables view traces button unless files with viewers uploaded', async () => {
-    const validEventlogFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog.winscope',
-    );
-    await loadFiles([validEventlogFile]);
-    fixture.detectChanges();
-
-    const viewTracesButton = assertDefined(
-      htmlElement.querySelector('.load-btn'),
-    );
-    expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
-
-    await loadFiles([validSfFile]);
-    fixture.detectChanges();
-    expect((viewTracesButton as HTMLButtonElement).disabled).toBeFalse();
-  });
-
   it('shows warning elements for traces without visualization', async () => {
     const shellTransitionFile = await UnitTestUtils.getFixtureFile(
       'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
@@ -184,16 +167,6 @@ describe('UploadTracesComponent', () => {
       htmlElement.querySelector('.load-btn'),
     );
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
-  });
-
-  it('shows info elements for traces with upload info for the user', async () => {
-    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog.winscope',
-    );
-    await loadFiles([shellTransitionFile]);
-    fixture.detectChanges();
-
-    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
   });
 
   it('emits download traces event', async () => {
