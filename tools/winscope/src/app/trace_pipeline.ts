@@ -22,7 +22,7 @@ import {
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {CorruptedArchive, NoInputFiles} from 'messaging/user_warnings';
+import {CorruptedArchive, NoValidFiles} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
 import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
@@ -65,7 +65,7 @@ export class TracePipeline {
       );
 
       if (unzippedArchives.length === 0) {
-        notificationListener.onNotifications([new NoInputFiles()]);
+        notificationListener.onNotifications([new NoValidFiles()]);
         return;
       }
 
@@ -193,7 +193,7 @@ export class TracePipeline {
     }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
-      notificationListener.onNotifications([new NoInputFiles()]);
+      notificationListener.onNotifications([new NoValidFiles()]);
       return;
     }
 

@@ -21,7 +21,7 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
-import {CannotVisualizeAllTraces} from 'messaging/user_warnings';
+import {CannotVisualizeAllTraces, NoValidFiles} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -127,8 +127,12 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
       this.currentProgressListener = this.collectTracesComponent;
-      await this.loadFiles(event.files, FilesSource.COLLECTED);
-      await this.loadViewers();
+      if (event.files.length > 0) {
+        await this.loadFiles(event.files, FilesSource.COLLECTED);
+        await this.loadViewers();
+      } else {
+        this.userNotificationsListener.onNotifications([new NoValidFiles()]);
+      }
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
