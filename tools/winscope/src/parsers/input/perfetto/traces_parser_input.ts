@@ -72,7 +72,7 @@ export class TracesParserInput extends AbstractTracesParser<PropertyTreeNode> {
   override getEntry(index: number): Promise<PropertyTreeNode> {
     const [subIndex, type] = assertDefined(this.mergedEntryIndexMap)[index];
     const trace = assertDefined(
-      type == TraceType.INPUT_KEY_EVENT
+      type === TraceType.INPUT_KEY_EVENT
         ? this.keyEventTrace
         : this.motionEventTrace,
     );
