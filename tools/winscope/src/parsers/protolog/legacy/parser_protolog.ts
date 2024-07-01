@@ -23,8 +23,8 @@ import root from 'protos/protolog/udc/json';
 import {com} from 'protos/protolog/udc/static';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import configJson32 from '../../../../configs/services.core.protolog32.json';
-import configJson64 from '../../../../configs/services.core.protolog64.json';
+import configJson32 from '../../../../configs/services.core.protolog32.json'; // eslint-disable-line no-restricted-imports
+import configJson64 from '../../../../configs/services.core.protolog64.json'; // eslint-disable-line no-restricted-imports
 
 class ParserProtoLog extends AbstractParser {
   private static readonly ProtoLogFileProto = root.lookupType(
