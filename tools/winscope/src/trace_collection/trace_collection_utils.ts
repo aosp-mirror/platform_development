@@ -141,7 +141,7 @@ const traceConfigurations: TraceConfigurationMap = {
   },
   transactions: {
     name: TRACE_INFO[TraceType.TRANSACTIONS].name,
-    run: false,
+    run: true,
     config: undefined,
   },
   proto_log: {
