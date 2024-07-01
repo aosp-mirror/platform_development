@@ -15,9 +15,9 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {AbstractTracesParser} from 'parsers/legacy/abstract_traces_parser';
+import {CoarseVersion} from 'trace/coarse_version';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
@@ -45,6 +45,10 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     }
   }
 
+  override getCoarseVersion(): CoarseVersion {
+    return CoarseVersion.LEGACY;
+  }
+
   override async parse() {
     if (this.eventLogTrace === undefined) {
       throw new Error('EventLog trace not defined');
@@ -66,6 +70,21 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
     await this.createTimestamps();
   }
 
+  override async createTimestamps() {
+    this.timestamps = [];
+    for (let index = 0; index < this.getLengthEntries(); index++) {
+      const entry = await this.getEntry(index);
+      const timestampNs = entry
+        ?.getChildByName('startTimestamp')
+        ?.getChildByName('unixNanos')
+        ?.getValue();
+      const timestamp = this.timestampConverter.makeTimestampFromRealNs(
+        assertDefined(timestampNs),
+      );
+      this.timestamps.push(timestamp);
+    }
+  }
+
   getLengthEntries(): number {
     return assertDefined(this.decodedEntries).length;
   }
@@ -81,13 +100,6 @@ export class TracesParserCujs extends AbstractTracesParser<PropertyTreeNode> {
 
   getTraceType(): TraceType {
     return TraceType.CUJS;
-  }
-
-  protected override getTimestamp(cuj: PropertyTreeNode): Timestamp {
-    const cujTimestamp = assertDefined(cuj.getChildByName('startTimestamp'));
-    return this.timestampConverter.makeTimestampFromRealNs(
-      assertDefined(cujTimestamp.getChildByName('unixNanos')).getValue(),
-    );
   }
 
   override getRealToMonotonicTimeOffsetNs(): bigint | undefined {
