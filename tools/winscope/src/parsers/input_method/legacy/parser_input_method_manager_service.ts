@@ -95,7 +95,9 @@ class ParserInputMethodManagerService extends AbstractParser<HierarchyTreeNode> 
       entry.elapsedRealtimeNanos === undefined ||
       entry.elapsedRealtimeNanos === null
     ) {
-      throw Error('Missing elapsedRealtimeNanos on entry');
+      throw new Error(
+        'Missing elapsedRealtimeNanos on IME Manager Service entry',
+      );
     }
     return ParserInputMethodManagerService.HIERARCHY_TREE_FACTORY.makeHierarchyTree(
       entry,
