@@ -40,6 +40,7 @@ export interface AdbConnection {
     reqSelectedWmConfig?: ConfigMap,
   ): Promise<void>;
   endTrace(): Promise<void>;
+  fetchExistingTraces(): Promise<void>;
   getAdbData(): File[];
   dumpState(requestedDumps: string[]): Promise<boolean>;
   getErrorText(): string;

@@ -204,6 +204,11 @@ export class ProxyConnection implements AdbConnection {
     return true;
   }
 
+  async fetchExistingTraces() {
+    await this.proxy.setState(ProxyState.LOAD_DATA);
+    await proxyRequest.fetchExistingFiles(this.proxy.selectedDevice);
+  }
+
   isWaylandAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       proxyRequest.call(
