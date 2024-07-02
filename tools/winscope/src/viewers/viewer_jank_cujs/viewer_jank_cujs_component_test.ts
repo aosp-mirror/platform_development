@@ -32,7 +32,7 @@ import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {LogEntry, LogField, LogFieldName} from 'viewers/common/ui_data_log';
+import {LogEntry, LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
@@ -127,25 +127,25 @@ describe('ViewerJankCujsComponent', () => {
   ): LogEntry {
     const fields: LogField[] = [
       {
-        name: LogFieldName.CUJ_TYPE,
+        type: LogFieldType.CUJ_TYPE,
         value: `${CujType[cujTypeId]} (${cujTypeId})`,
       },
       {
-        name: LogFieldName.START_TIME,
+        type: LogFieldType.START_TIME,
         value: TimestampConverterUtils.makeElapsedTimestamp(
           BigInt(startTsNanos),
         ),
       },
       {
-        name: LogFieldName.END_TIME,
+        type: LogFieldType.END_TIME,
         value: TimestampConverterUtils.makeElapsedTimestamp(BigInt(endTsNanos)),
       },
       {
-        name: LogFieldName.DURATION,
+        type: LogFieldType.DURATION,
         value: new TimeDuration(BigInt(endTsNanos - startTsNanos)).format(),
       },
       {
-        name: LogFieldName.STATUS,
+        type: LogFieldType.STATUS,
         value: status,
         icon: 'check',
         iconColor: 'green',
