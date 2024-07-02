@@ -48,7 +48,7 @@ import {
 @Component({
   selector: 'log-view',
   template: `
-     <div class="log-view entries">
+     <div class="entries">
         <div class="headers" *ngIf="headers.length > 0">
           <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{header}}</div>
         </div>
