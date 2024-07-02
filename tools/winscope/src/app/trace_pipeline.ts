@@ -102,9 +102,16 @@ export class TracePipeline {
         this.traces.deleteTracesByType(TraceType.SHELL_TRANSITION);
       }
 
-      const hasCujTrace = this.traces.getTrace(TraceType.CUJS);
+      const hasCujTrace = this.traces.getTrace(TraceType.CUJS) !== undefined;
       if (hasCujTrace) {
         this.traces.deleteTracesByType(TraceType.EVENT_LOG);
+      }
+
+      const hasMergedInputTrace =
+        this.traces.getTrace(TraceType.INPUT_EVENT_MERGED) !== undefined;
+      if (hasMergedInputTrace) {
+        this.traces.deleteTracesByType(TraceType.INPUT_KEY_EVENT);
+        this.traces.deleteTracesByType(TraceType.INPUT_MOTION_EVENT);
       }
     } finally {
       progressListener?.onOperationFinished(true);

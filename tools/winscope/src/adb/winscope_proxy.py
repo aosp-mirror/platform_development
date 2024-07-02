@@ -155,9 +155,9 @@ class FileMatcher:
             matchingFiles = call_adb(
                 f"shell su root find {self.path}", device_id)
 
-        file = matchingFiles.split('\n')[:-1]
-        log.debug("Found file %s", file)
-        return file
+        files = matchingFiles.split('\n')[:-1]
+        log.debug("Found files %s", files)
+        return files
 
     def get_filetype(self):
         return self.type
@@ -829,9 +829,9 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         file_buffers = dict()
         if len(path) != 1:
-            file_buffers = self.fetch_existing_files(device_id, file_buffers)
+            self.fetch_existing_files(device_id, file_buffers)
         else:
-            file_buffers = self.fetch_requested_files(path, device_id, file_buffers)
+            self.fetch_requested_files(path, device_id, file_buffers)
 
         # server.send_header('X-Content-Type-Options', 'nosniff')
         # add_standard_headers(server)
@@ -867,7 +867,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                     self.update_file_buffers(file_path, tmp, device_id, file_type, file_buffers)
                     log.debug(f"Moving file {file_path} to {WINSCOPE_BACKUP_DIR} on device")
                     call_adb(
-                        f'shell su root [ ! -f {file_path} ] || mv {file_path} {WINSCOPE_BACKUP_DIR}',
+                        f"shell su root [ ! -f {file_path} ] || su root mv {file_path} {WINSCOPE_BACKUP_DIR}",
                         device_id)
 
         if (len(file_buffers) == 0):
@@ -969,10 +969,10 @@ class TraceThread(threading.Thread):
         return self._success
 
 
-def clear_last_tracing_session():
+def clear_last_tracing_session(device_id):
     log.debug("Clearing previous tracing session files from device")
-    call_adb(f"shell su root rm -rf {WINSCOPE_BACKUP_DIR}")
-    call_adb(f"shell su root mkdir {WINSCOPE_BACKUP_DIR}")
+    call_adb(f"shell su root rm -rf {WINSCOPE_BACKUP_DIR}", device_id)
+    call_adb(f"shell su root mkdir {WINSCOPE_BACKUP_DIR}", device_id)
 
 
 class StartTraceEndpoint(DeviceRequestEndpoint):
@@ -1029,7 +1029,7 @@ while true; do sleep 0.1; done
                 "Unable to acquire root privileges on the device - check the output of 'adb -s {} shell su root id'".format(
                     device_id))
 
-        clear_last_tracing_session()
+        clear_last_tracing_session(device_id)
 
         command = StartTraceEndpoint.TRACE_COMMAND.format(
             perfetto_utils=PERFETTO_UTILS,
@@ -1180,7 +1180,7 @@ class DumpEndpoint(DeviceRequestEndpoint):
                 "Unable to acquire root privileges on the device - check the output of 'adb -s {} shell su root id'"
                 .format(device_id))
 
-        clear_last_tracing_session()
+        clear_last_tracing_session(device_id)
 
         dump_commands = '\n'.join(t.dump_command for t in requested_traces)
         command = f"""
