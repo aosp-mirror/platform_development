@@ -12,6 +12,7 @@
         {
           "name": "rustc_demangle",
           "lib_name": "rustc_demangle",
+          "raw_name": "rustc-demangle",
           "extern_type": "Rust"
         }
       ],
@@ -36,6 +37,7 @@
         {
           "name": "rustc_demangle",
           "lib_name": "rustc_demangle",
+          "raw_name": "rustc-demangle",
           "extern_type": "Rust"
         }
       ],

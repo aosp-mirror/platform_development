@@ -45,6 +45,12 @@ module.exports = {
     'prefer-const': ['error', {destructuring: 'all'}],
     'prefer-rest-params': 'error',
     'prefer-spread': 'error',
+    'no-restricted-imports': [
+      'error',
+      {
+        'patterns': ['..*'],
+      },
+    ],
   },
   globals: {
     // Specify NodeJS global as temporary workaround for eslint bug:

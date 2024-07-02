@@ -255,6 +255,40 @@ describe('CollectTracesComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('fetch existing traces button emits files and restarts connection if no files found', async () => {
+    const connection = assertDefined(component.adbConnection);
+    connection.isStartTraceState = jasmine.createSpy().and.returnValue(true);
+    setDeviceSpies(connection);
+    const fetchSpy = spyOn(connection, 'fetchExistingTraces');
+    const emitSpy = spyOn(component.filesCollected, 'emit');
+    const restartSpy = spyOn(connection, 'restart');
+    fixture.detectChanges();
+
+    const fetchButton = assertDefined(
+      htmlElement.querySelector('.fetch-btn'),
+    ) as HTMLButtonElement;
+
+    fetchButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(restartSpy).toHaveBeenCalledTimes(1);
+
+    spyOn(connection, 'getAdbData').and.returnValue([
+      new File([], 'test_file'),
+    ]);
+
+    fetchButton.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(emitSpy).toHaveBeenCalledTimes(2);
+    expect(restartSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('displays unknown error message', () => {
     const connection = assertDefined(component.adbConnection);
     connection.isErrorState = jasmine.createSpy().and.returnValue(true);

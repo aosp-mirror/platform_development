@@ -39,6 +39,7 @@ import {TransitionTimelineComponent} from './transition_timeline_component';
 describe('TransitionTimelineComponent', () => {
   let fixture: ComponentFixture<TransitionTimelineComponent>;
   let component: TransitionTimelineComponent;
+  let htmlElement: HTMLElement;
 
   const time0 = TimestampConverterUtils.makeRealTimestamp(0n);
   const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -72,6 +73,7 @@ describe('TransitionTimelineComponent', () => {
       .compileComponents();
     fixture = TestBed.createComponent(TransitionTimelineComponent);
     component = fixture.componentInstance;
+    htmlElement = fixture.nativeElement;
     component.timestampConverter = TimestampConverterUtils.TIMESTAMP_CONVERTER;
   });
 
@@ -297,12 +299,12 @@ describe('TransitionTimelineComponent', () => {
       'drawRectBorder',
     ).and.callThrough();
 
-    component.handleMouseMove({
-      offsetX: Math.floor(width / 2),
-      offsetY: oneRowTotalHeight / 2,
-      preventDefault: () => {},
-      stopPropagation: () => {},
-    } as MouseEvent);
+    const event = new MouseEvent('mousemove');
+    spyOnProperty(event, 'offsetX').and.returnValue(Math.floor(width / 2));
+    spyOnProperty(event, 'offsetY').and.returnValue(oneRowTotalHeight / 2);
+    component.getCanvas().dispatchEvent(event);
+
+    fixture.detectChanges();
     await fixture.whenRenderingDone();
 
     expect(drawRectBorderSpy).toHaveBeenCalledTimes(1);
@@ -650,7 +652,6 @@ describe('TransitionTimelineComponent', () => {
     expect(drawRectSpy).not.toHaveBeenCalled();
   });
 
-  //TODO(b/304982982): test via dom interactions, not calling listener directly
   it('emits scroll event', async () => {
     setDefaultTraceAndSelectionRange();
 
@@ -658,7 +659,8 @@ describe('TransitionTimelineComponent', () => {
     await fixture.whenRenderingDone();
 
     const spy = spyOn(component.onScrollEvent, 'emit');
-    component.updateScroll(new WheelEvent('scroll'));
+    htmlElement.dispatchEvent(new WheelEvent('wheel'));
+    fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
   });
 

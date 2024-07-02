@@ -9,7 +9,7 @@
       "features": ["default", "std"],
       "cfgs": [],
       "externs": [
-        { "name": "memchr", "lib_name": "memchr", "extern_type": "Rust" }
+        { "name": "memchr", "lib_name": "memchr", "raw_name": "memchr", "extern_type": "Rust" }
       ],
       "codegens": [],
       "cap_lints": "",
@@ -29,7 +29,7 @@
       "features": ["default", "std"],
       "cfgs": [],
       "externs": [
-        { "name": "memchr", "lib_name": "memchr", "extern_type": "Rust" }
+        { "name": "memchr", "lib_name": "memchr", "raw_name": "memchr", "extern_type": "Rust" }
       ],
       "codegens": [],
       "cap_lints": "",
