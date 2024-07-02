@@ -35,10 +35,10 @@ export enum ProxyState {
   INVALID_VERSION,
   UNAUTH,
   DEVICES,
-  START_TRACE,
-  END_TRACE,
-  LOAD_DATA,
+  CONFIGURE_TRACE,
   STARTING_TRACE,
+  TRACING,
+  LOADING_DATA,
 }
 
 export enum ProxyEndpoint {
@@ -360,7 +360,7 @@ export class ProxyClient {
     if (
       proxyClient.state !== ProxyState.DEVICES &&
       proxyClient.state !== ProxyState.CONNECTING &&
-      proxyClient.state !== ProxyState.START_TRACE
+      proxyClient.state !== ProxyState.CONFIGURE_TRACE
     ) {
       if (proxyClient.refresh_worker !== undefined) {
         clearInterval(proxyClient.refresh_worker);
@@ -374,7 +374,7 @@ export class ProxyClient {
   async selectDevice(device_id: string) {
     this.selectedDevice = device_id;
     this.store.add('adb.lastDevice', device_id);
-    this.setState(ProxyState.START_TRACE);
+    this.setState(ProxyState.CONFIGURE_TRACE);
   }
 
   async updateAdbData(

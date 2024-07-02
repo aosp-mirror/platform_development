@@ -72,8 +72,8 @@ export class ProxyConnection implements AdbConnection {
     return this.proxy.getState() === ProxyState.DEVICES;
   }
 
-  isStartTraceState() {
-    return this.proxy.getState() === ProxyState.START_TRACE;
+  isConfigureTraceState() {
+    return this.proxy.getState() === ProxyState.CONFIGURE_TRACE;
   }
 
   isErrorState() {
@@ -84,12 +84,12 @@ export class ProxyConnection implements AdbConnection {
     return this.proxy.getState() === ProxyState.STARTING_TRACE;
   }
 
-  isEndTraceState() {
-    return this.proxy.getState() === ProxyState.END_TRACE;
+  isTracingState() {
+    return this.proxy.getState() === ProxyState.TRACING;
   }
 
-  isLoadDataState() {
-    return this.proxy.getState() === ProxyState.LOAD_DATA;
+  isLoadingDataState() {
+    return this.proxy.getState() === ProxyState.LOADING_DATA;
   }
 
   isConnectingState() {
@@ -100,8 +100,8 @@ export class ProxyConnection implements AdbConnection {
     this.proxy.setState(ProxyState.ERROR, message);
   }
 
-  async setLoadDataState() {
-    this.proxy.setState(ProxyState.LOAD_DATA);
+  async setLoadingDataState() {
+    this.proxy.setState(ProxyState.LOADING_DATA);
   }
 
   setSecurityKey(key: string) {
@@ -134,7 +134,7 @@ export class ProxyConnection implements AdbConnection {
   }
 
   keepAliveTrace(view: ProxyConnection) {
-    if (!view.isStartingTraceState() && !view.isEndTraceState()) {
+    if (!view.isStartingTraceState() && !view.isTracingState()) {
       clearInterval(view.keep_alive_worker);
       view.keep_alive_worker = undefined;
       return;
@@ -180,13 +180,13 @@ export class ProxyConnection implements AdbConnection {
     // TODO(b/330118129): identify source of additional start latency that affects some traces
     await TimeUtils.sleepMs(1000); // 1s timeout ensures SR fully started
     if (proxyClient.getState() === ProxyState.STARTING_TRACE) {
-      proxyClient.setState(ProxyState.END_TRACE);
+      proxyClient.setState(ProxyState.TRACING);
     }
   }
 
   async endTrace() {
     this.progressCallback(0);
-    await this.proxy.setState(ProxyState.LOAD_DATA);
+    await this.proxy.setState(ProxyState.LOADING_DATA);
     await proxyRequest.endTrace(this.proxy, this.progressCallback);
   }
 
@@ -197,7 +197,7 @@ export class ProxyConnection implements AdbConnection {
       await this.proxy.setState(ProxyState.ERROR, 'No targets selected');
       return false;
     }
-    await this.proxy.setState(ProxyState.LOAD_DATA);
+    await this.proxy.setState(ProxyState.LOADING_DATA);
     await proxyRequest.dumpState(
       this.proxy,
       requestedDumps,
@@ -207,7 +207,7 @@ export class ProxyConnection implements AdbConnection {
   }
 
   async fetchExistingTraces() {
-    await this.proxy.setState(ProxyState.LOAD_DATA);
+    await this.proxy.setState(ProxyState.LOADING_DATA);
     await proxyRequest.fetchExistingFiles(this.proxy.selectedDevice);
   }
 
@@ -235,7 +235,7 @@ export class ProxyConnection implements AdbConnection {
     if (newState === ProxyState.CONNECTING) {
       proxyClient.getDevices();
     }
-    if (newState === ProxyState.START_TRACE) {
+    if (newState === ProxyState.CONFIGURE_TRACE) {
       const isWaylandAvailable = await this.isWaylandAvailable();
       if (isWaylandAvailable) {
         const availableTracesConfig = TRACES['default'];
