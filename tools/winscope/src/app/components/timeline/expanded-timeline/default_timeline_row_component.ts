@@ -167,7 +167,6 @@ export class DefaultTimelineRowComponent extends AbstractTimelineRowComponent<{}
 
   private drawEntry(entry: Timestamp) {
     const rect = this.entryRect(entry);
-
     this.canvasDrawer.drawRect(rect, this.color, 0.2);
   }
 
