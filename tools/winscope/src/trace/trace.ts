@@ -456,9 +456,13 @@ export class Trace<T> {
     return this.framesRange;
   }
 
+  isDump() {
+    return this.lengthEntries === 1;
+  }
+
   isDumpWithoutTimestamp() {
     return (
-      this.lengthEntries === 1 &&
+      this.isDump() &&
       this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
     );
   }

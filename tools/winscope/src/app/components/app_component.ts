@@ -204,6 +204,7 @@ import {UploadTracesComponent} from './upload_traces_component';
       <mat-drawer #drawer mode="overlay" opened="true" [baseHeight]="collapsedTimelineHeight">
         <timeline
           *ngIf="dataLoaded"
+          [allTraces]="tracePipeline.getTraces()"
           [timelineData]="timelineData"
           [store]="store"
           (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>

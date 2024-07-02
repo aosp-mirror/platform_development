@@ -45,6 +45,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = false;
   override readonly shouldExecuteShowDiffTests = false;
+  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
   override readonly hierarchyFilterString = 'Reject all';

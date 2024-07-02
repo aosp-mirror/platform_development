@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {INVALID_TIME_NS} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
@@ -1353,5 +1354,24 @@ describe('Trace', () => {
         new Map<AbsoluteFrameIndex, string[]>(),
       );
     }
+  });
+
+  it('isDump()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([time10])
+      .build();
+    expect(trace.isDump()).toBeTrue();
+    expect(trace.isDumpWithoutTimestamp()).toBeFalse();
+  });
+
+  it('isDumpWithoutTimestamp()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([
+        TimestampConverterUtils.makeElapsedTimestamp(INVALID_TIME_NS),
+      ])
+      .build();
+    expect(trace.isDumpWithoutTimestamp()).toBeTrue();
   });
 });

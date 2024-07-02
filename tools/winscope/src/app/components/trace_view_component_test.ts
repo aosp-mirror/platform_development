@@ -20,12 +20,15 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatCardModule} from '@angular/material/card';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatTabsModule} from '@angular/material/tabs';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
+import {INVALID_TIME_NS} from 'common/time';
 import {
   TabbedViewSwitchRequest,
   WinscopeEvent,
   WinscopeEventType,
 } from 'messaging/winscope_event';
+import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceType} from 'trace/trace_type';
 import {Viewer, ViewType} from 'viewers/viewer';
@@ -39,7 +42,10 @@ describe('TraceViewComponent', () => {
     .build();
   const traceWm = new TraceBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
-    .setEntries([])
+    .setEntries([{}])
+    .setTimestamps([
+      TimestampConverterUtils.makeElapsedTimestamp(INVALID_TIME_NS),
+    ])
     .build();
   const traceSr = new TraceBuilder<object>()
     .setType(TraceType.SCREEN_RECORDING)
@@ -53,7 +59,13 @@ describe('TraceViewComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [TestHostComponent, TraceViewComponent],
-      imports: [CommonModule, MatCardModule, MatDividerModule, MatTabsModule],
+      imports: [
+        CommonModule,
+        MatCardModule,
+        MatDividerModule,
+        MatTabsModule,
+        MatTooltipModule,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
@@ -75,7 +87,7 @@ describe('TraceViewComponent', () => {
     const tabs = htmlElement.querySelectorAll('.tab');
     expect(tabs.length).toEqual(2);
     expect(tabs.item(0).textContent).toContain('Title0');
-    expect(tabs.item(1).textContent).toContain('Title1');
+    expect(tabs.item(1).textContent).toContain('Title1 Dump');
   });
 
   it('creates viewer overlay', () => {
