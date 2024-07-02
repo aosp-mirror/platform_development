@@ -148,10 +148,10 @@ export const logComponentStyles = `
 
   .entry .status {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 5px;
   }
+
   .status .mat-icon {
     font-size: 18px;
     width: 18px;
