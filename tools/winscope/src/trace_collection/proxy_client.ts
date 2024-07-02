@@ -234,13 +234,22 @@ class ProxyRequest {
     );
   }
 
-  async fetchFiles(dev: string, adbParams: AdbParams): Promise<void> {
+  async fetchExistingFiles(deviceId: string) {
+    await proxyRequest.call(
+      'GET',
+      `${ProxyEndpoint.FETCH}${deviceId}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+  }
+
+  async fetchFiles(deviceId: string, adbParams: AdbParams): Promise<void> {
     const files = adbParams.files;
     const idx = adbParams.idx;
 
     await proxyRequest.call(
       'GET',
-      `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`,
+      `${ProxyEndpoint.FETCH}${deviceId}/${files[idx]}/`,
       this.onSuccessFetchFiles,
       'arraybuffer',
     );
@@ -304,7 +313,7 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '2.1.1';
+  readonly VERSION = '2.2.0';
   state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
