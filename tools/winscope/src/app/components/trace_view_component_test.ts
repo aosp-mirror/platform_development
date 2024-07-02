@@ -22,7 +22,6 @@ import {MatDividerModule} from '@angular/material/divider';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {assertDefined} from 'common/assert_utils';
-import {INVALID_TIME_NS} from 'common/time';
 import {
   TabbedViewSwitchRequest,
   WinscopeEvent,
@@ -43,9 +42,7 @@ describe('TraceViewComponent', () => {
   const traceWm = new TraceBuilder<object>()
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([{}])
-    .setTimestamps([
-      TimestampConverterUtils.makeElapsedTimestamp(INVALID_TIME_NS),
-    ])
+    .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
     .build();
   const traceSr = new TraceBuilder<object>()
     .setType(TraceType.SCREEN_RECORDING)

@@ -461,10 +461,7 @@ export class Trace<T> {
   }
 
   isDumpWithoutTimestamp() {
-    return (
-      this.isDump() &&
-      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
-    );
+    return this.isDump() && !this.getEntry(0).hasValidTimestamp();
   }
 
   isCorrupted() {

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS} from 'common/time';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {TraceUtils} from 'test/unit/trace_utils';
@@ -1368,9 +1367,7 @@ describe('Trace', () => {
   it('isDumpWithoutTimestamp()', () => {
     const trace = new TraceBuilder<string>()
       .setEntries(['entry-0'])
-      .setTimestamps([
-        TimestampConverterUtils.makeElapsedTimestamp(INVALID_TIME_NS),
-      ])
+      .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
       .build();
     expect(trace.isDumpWithoutTimestamp()).toBeTrue();
   });
