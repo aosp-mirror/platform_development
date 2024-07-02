@@ -69,31 +69,31 @@ export class ProxyConnection implements AdbConnection {
   }
 
   isDevicesState() {
-    return this.proxy.state === ProxyState.DEVICES;
+    return this.proxy.getState() === ProxyState.DEVICES;
   }
 
   isStartTraceState() {
-    return this.proxy.state === ProxyState.START_TRACE;
+    return this.proxy.getState() === ProxyState.START_TRACE;
   }
 
   isErrorState() {
-    return this.proxy.state === ProxyState.ERROR;
+    return this.proxy.getState() === ProxyState.ERROR;
   }
 
   isStartingTraceState() {
-    return this.proxy.state === ProxyState.STARTING_TRACE;
+    return this.proxy.getState() === ProxyState.STARTING_TRACE;
   }
 
   isEndTraceState() {
-    return this.proxy.state === ProxyState.END_TRACE;
+    return this.proxy.getState() === ProxyState.END_TRACE;
   }
 
   isLoadDataState() {
-    return this.proxy.state === ProxyState.LOAD_DATA;
+    return this.proxy.getState() === ProxyState.LOAD_DATA;
   }
 
   isConnectingState() {
-    return this.proxy.state === ProxyState.CONNECTING;
+    return this.proxy.getState() === ProxyState.CONNECTING;
   }
 
   async setErrorState(message: string) {
@@ -110,7 +110,7 @@ export class ProxyConnection implements AdbConnection {
   }
 
   adbSuccess() {
-    return !this.notConnected.includes(this.proxy.state);
+    return !this.notConnected.includes(this.proxy.getState());
   }
 
   getSelectedDevice(): [string, DeviceProperties] {
@@ -179,7 +179,9 @@ export class ProxyConnection implements AdbConnection {
     );
     // TODO(b/330118129): identify source of additional start latency that affects some traces
     await TimeUtils.sleepMs(1000); // 1s timeout ensures SR fully started
-    proxyClient.setState(ProxyState.END_TRACE);
+    if (proxyClient.getState() === ProxyState.STARTING_TRACE) {
+      proxyClient.setState(ProxyState.END_TRACE);
+    }
   }
 
   async endTrace() {

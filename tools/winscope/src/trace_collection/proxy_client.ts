@@ -314,7 +314,6 @@ interface AdbParams {
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
   readonly VERSION = '2.2.0';
-  state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
@@ -326,6 +325,7 @@ export class ProxyClient {
   proxyKey = '';
   lastDevice = '';
   store = new PersistentStore();
+  private state: ProxyState = ProxyState.CONNECTING;
 
   async setState(state: ProxyState, errorText = '') {
     this.state = state;
@@ -333,6 +333,10 @@ export class ProxyClient {
     for (const listener of this.stateChangeListeners) {
       await listener(state, errorText);
     }
+  }
+
+  getState() {
+    return this.state;
   }
 
   onProxyChange(fn: (state: ProxyState, errorText: string) => Promise<void>) {
