@@ -20,8 +20,8 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 @Component({
   selector: 'adb-proxy',
   template: `
-    <ng-container [ngSwitch]="client.state">
-      <ng-container *ngSwitchCase="states.NO_PROXY">
+    <ng-container [ngSwitch]="client.getState()">
+      <ng-container *ngSwitchCase="state.NO_PROXY">
         <div class="further-adb-info-text">
           <p class="mat-body-1">
             Launch the Winscope ADB Connect proxy to capture traces directly from your browser.
@@ -54,7 +54,7 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="states.INVALID_VERSION">
+      <ng-container *ngSwitchCase="state.INVALID_VERSION">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">update</mat-icon>
@@ -90,7 +90,7 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="states.UNAUTH">
+      <ng-container *ngSwitchCase="state.UNAUTH">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">lock</mat-icon>
@@ -156,7 +156,7 @@ export class AdbProxyComponent {
   readonly addKey = new EventEmitter<string>();
 
   client = proxyClient;
-  states = ProxyState;
+  state = ProxyState;
   proxyKeyItem = '';
   readonly clientVersion = this.client.VERSION;
   readonly downloadProxyUrl: string =
@@ -168,7 +168,7 @@ export class AdbProxyComponent {
     if (this.proxyKeyItem.length > 0) {
       this.addKey.emit(this.proxyKeyItem);
     }
-    await this.client.setState(this.states.CONNECTING);
+    await this.client.setState(this.state.CONNECTING);
   }
 
   async onKeydownEnterProxyKeyInput(event: MouseEvent) {

@@ -99,7 +99,7 @@ describe('AdbProxyComponent', () => {
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
-    expect(component.client.state).toBe(ProxyState.CONNECTING);
+    expect(component.client.getState()).toBe(ProxyState.CONNECTING);
   });
 
   it('check input proxy token saved as expected', async () => {
@@ -137,6 +137,6 @@ describe('AdbProxyComponent', () => {
     );
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(component.client.state).toBe(ProxyState.CONNECTING);
+    expect(component.client.getState()).toBe(ProxyState.CONNECTING);
   });
 });
