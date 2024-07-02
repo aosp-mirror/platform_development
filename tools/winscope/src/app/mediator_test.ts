@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils} from 'common/function_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
-import {INVALID_TIME_NS, TimezoneInfo} from 'common/time';
+import {TimezoneInfo} from 'common/time';
 import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
@@ -72,7 +72,7 @@ describe('Mediator', () => {
     .build();
   const traceDump = new TraceBuilder<HierarchyTreeNode>()
     .setType(TraceType.SURFACE_FLINGER)
-    .setTimestamps([TimestampConverterUtils.makeRealTimestamp(INVALID_TIME_NS)])
+    .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
     .build();
 
   let inputFiles: File[];

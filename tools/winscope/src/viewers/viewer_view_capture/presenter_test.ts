@@ -45,6 +45,7 @@ class PresenterViewCaptureTest extends AbstractHierarchyViewerPresenterTest {
   override readonly shouldExecuteFlatTreeTest = false;
   override readonly shouldExecuteRectTests = true;
   override readonly shouldExecuteShowDiffTests = true;
+  override readonly shouldExecuteDumpTests = false;
   override readonly shouldExecuteSimplifyNamesTest = true;
 
   override readonly numberOfDefaultProperties = 3;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,71 +18,54 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
-import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-export class ViewerSurfaceFlinger implements Viewer {
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
+export class ViewerJankCujs implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.CUJS];
 
-  private readonly trace: Trace<HierarchyTreeNode>;
+  private readonly trace: Trace<PropertyTreeNode>;
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
 
-  constructor(
-    trace: Trace<HierarchyTreeNode>,
-    traces: Traces,
-    storage: Storage,
-  ) {
+  constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
     this.trace = trace;
-    this.htmlElement = document.createElement('viewer-surface-flinger');
-
-    const notifyViewCallback = (uiData: UiData) => {
-      (this.htmlElement as any).inputData = uiData;
+    this.htmlElement = document.createElement('viewer-jank-cujs');
+    const notifyViewCallback = (data: UiData) => {
+      (this.htmlElement as any).inputData = data;
     };
     this.presenter = new Presenter(
       trace,
-      traces,
-      storage,
-      notifyViewCallback as NotifyHierarchyViewCallbackType,
+      notifyViewCallback as NotifyLogViewCallbackType,
     );
     this.presenter.addEventListeners(this.htmlElement);
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectsDblClick,
-      async (event) => {
-        const rectId = (event as CustomEvent).detail.clickedRectId;
-        await this.presenter.onRectDoubleClick(rectId);
-      },
-    );
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      TRACE_INFO[TraceType.SURFACE_FLINGER].name,
+      'Jank CUJs',
     );
-  }
-
-  setEmitEvent(callback: EmitEvent) {
-    this.presenter.setEmitEvent(callback);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
     await this.presenter.onAppEvent(event);
   }
 
+  setEmitEvent(callback: EmitEvent) {
+    this.presenter.setEmitEvent(callback);
+  }
+
   getViews(): View[] {
     return [this.view];
   }
 
-  getTraces(): Array<Trace<HierarchyTreeNode>> {
+  getTraces(): Array<Trace<PropertyTreeNode>> {
     return [this.trace];
   }
 }
