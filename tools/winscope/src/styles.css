@@ -32,6 +32,10 @@ app-root {
     margin: 0;
 }
 
+.mat-button, .mat-icon-button, .mat-stroked-button, .mat-flat-button {
+    user-select: auto !important;
+}
+
 .card-grid {
     width: 100%;
     height: 100%;
