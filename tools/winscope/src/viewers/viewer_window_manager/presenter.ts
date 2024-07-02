@@ -15,7 +15,6 @@
  */
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {INVALID_TIME_NS} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -73,15 +72,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
-    (entry) => {
-      if (
-        entry.getFullTrace().lengthEntries === 1 &&
-        entry.getTimestamp().getValueNs() === INVALID_TIME_NS
-      ) {
-        return 'Dump';
-      }
-      return entry.getTimestamp().format();
-    },
+    this.getEntryFormattedTimestamp,
     [[TraceType.WINDOW_MANAGER, [new UpdateDisplayNames()]]],
   );
   protected override rectsPresenter = new RectsPresenter(

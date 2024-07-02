@@ -130,11 +130,11 @@ export const logComponentStyles = `
     flex: 2;
   }
 
-  .dispatch-time {
-    flex: 4;
+  .jank_cuj-type {
+    flex: 5;
   }
 
-  .send-time {
+  .start-time, .end-time, .dispatch-time, .send-time {
     flex: 4;
   }
 
@@ -148,10 +148,10 @@ export const logComponentStyles = `
 
   .entry .status {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 5px;
   }
+
   .status .mat-icon {
     font-size: 18px;
     width: 18px;

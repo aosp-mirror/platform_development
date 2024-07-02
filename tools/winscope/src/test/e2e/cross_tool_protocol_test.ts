@@ -180,7 +180,7 @@ describe('Cross-Tool Protocol', () => {
       'Surface Flinger',
       'Transactions',
       'Transitions',
-      'Window Manager',
+      'Window Manager Dump',
     ];
 
     expect(actualTabParagraphs.sort()).toEqual(expectedTabParagraphs.sort());

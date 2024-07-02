@@ -419,7 +419,26 @@ if is_any_perfetto_data_source_available; then
     echo 'Stopped perfetto trace'
 fi
 """,
-    )
+    ),
+    "input": TraceTarget(
+        [WinscopeFileMatcher(WINSCOPE_DIR, "input_trace", "input_trace")],
+        f"""
+if is_perfetto_data_source_available android.input.inputevent; then
+    cat << EOF >> {PERFETTO_TRACE_CONFIG_FILE}
+data_sources: {{
+    config {{
+        name: "android.input.inputevent"
+        android_input_event_config {{
+            mode: TRACE_MODE_TRACE_ALL
+        }}
+    }}
+}}
+EOF
+    echo 'Input trace (perfetto) configured to start along the other perfetto traces'
+fi
+        """,
+        ""
+    ),
 }
 
 
