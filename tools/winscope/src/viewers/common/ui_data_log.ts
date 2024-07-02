@@ -70,6 +70,9 @@ export enum LogFieldName {
   DISPATCH_TIME = 'Dispatch Time',
   DURATION = 'Duration',
   STATUS = 'Status',
+  CUJ_TYPE = 'Type',
+  START_TIME = 'Start Time',
+  END_TIME = 'End Time',
 }
 
 export const LogFieldClassNames: ReadonlyMap<LogFieldName, string> = new Map([
@@ -86,8 +89,11 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldName, string> = new Map([
   [LogFieldName.TEXT, 'text'],
   [LogFieldName.TRANSITION_ID, 'transition-id'],
   [LogFieldName.TRANSITION_TYPE, 'transition-type'],
+  [LogFieldName.CUJ_TYPE, 'jank_cuj-type'],
   [LogFieldName.SEND_TIME, 'send-time time'],
   [LogFieldName.DISPATCH_TIME, 'dispatch-time time'],
+  [LogFieldName.START_TIME, 'start-time time'],
+  [LogFieldName.END_TIME, 'end-time time'],
   [LogFieldName.DURATION, 'duration'],
   [LogFieldName.STATUS, 'status'],
 ]);
