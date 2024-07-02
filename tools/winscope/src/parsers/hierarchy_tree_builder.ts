@@ -83,7 +83,7 @@ export abstract class HierarchyTreeBuilder {
     child: HierarchyTreeNode,
   ) {
     parent.addOrReplaceChild(child);
-    child.setZParent(parent);
+    child.setParent(parent);
   }
 
   protected abstract buildIdentifierToChildrenMap(

@@ -217,8 +217,8 @@ describe('DefaultTimelineRowComponent', () => {
     );
     const entryPos = Math.floor((canvasWidth * 2) / 5);
 
-    // 5 rect draws - 2 entry rects present + 2 for redraw + 1 for selected entry
-    await drawCorrectEntryOnClick(entryPos, 12n, 5);
+    // 7 rect draws - 3 entry rects present + 3 for redraw + 1 for selected entry
+    await drawCorrectEntryOnClick(entryPos, 12n, 7);
   });
 
   it('can draw correct entry on click when timeline zoomed in near end', async () => {

@@ -18,7 +18,7 @@ import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {DiffType} from 'viewers/common/diff_type';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {propertyTreeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 import {timeButtonStyle} from './styles/clickable_property.styles';
 
@@ -69,7 +69,7 @@ export class PropertyTreeNodeDataViewComponent {
   onTimestampClicked(timestamp: UiPropertyTreeNode) {
     const customEvent = new CustomEvent(ViewerEvents.TimestampClick, {
       bubbles: true,
-      detail: timestamp,
+      detail: new TimestampClickDetail(timestamp.getValue(), undefined),
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }

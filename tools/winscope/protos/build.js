@@ -80,6 +80,12 @@ async function build() {
             '../../../../frameworks/base/core/proto/android/server/windowmanagertrace.proto',
         ], 'windowmanager/latest'),
 
+        // Input
+        buildProtos([
+            '../../../../external/perfetto/protos/perfetto/trace/android/android_input_event.proto',
+            'input/latest/input_event_wrapper.proto',
+        ], 'input/latest'),
+
         // Test proto fields
         buildProtos([
             'test/fake_proto_test.proto',

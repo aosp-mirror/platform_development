@@ -42,7 +42,6 @@ import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
-import {Events} from './events';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
 import {UiData, UiDataEntry} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
@@ -115,7 +114,7 @@ describe('ViewerTransactionsComponent', () => {
     it('applies transaction id filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
       htmlElement.addEventListener(
-        Events.TransactionIdFilterChanged,
+        ViewerEvents.TransactionIdFilterChanged,
         (event) => {
           if ((event as CustomEvent).detail.length === 0) {
             component.uiData.entries = allEntries;
@@ -131,21 +130,24 @@ describe('ViewerTransactionsComponent', () => {
 
     it('applies vsync id filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.VSyncIdFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.includes(`${entry.vsyncId}`);
-        });
-      });
+      htmlElement.addEventListener(
+        ViewerEvents.VSyncIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) => {
+            return (event as CustomEvent).detail.includes(`${entry.vsyncId}`);
+          });
+        },
+      );
       await checkSelectFilter('.vsyncid');
     });
 
     it('applies pid filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
+      htmlElement.addEventListener(ViewerEvents.PidFilterChanged, (event) => {
         if ((event as CustomEvent).detail.length === 0) {
           component.uiData.entries = allEntries;
           return;
@@ -159,7 +161,7 @@ describe('ViewerTransactionsComponent', () => {
 
     it('applies uid filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.UidFilterChanged, (event) => {
+      htmlElement.addEventListener(ViewerEvents.UidFilterChanged, (event) => {
         if ((event as CustomEvent).detail.length === 0) {
           component.uiData.entries = allEntries;
           return;
@@ -173,7 +175,7 @@ describe('ViewerTransactionsComponent', () => {
 
     it('applies type filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.TypeFilterChanged, (event) => {
+      htmlElement.addEventListener(ViewerEvents.TypeFilterChanged, (event) => {
         if ((event as CustomEvent).detail.length === 0) {
           component.uiData.entries = allEntries;
           return;
@@ -187,21 +189,26 @@ describe('ViewerTransactionsComponent', () => {
 
     it('applies layer/display id filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.LayerIdFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.includes(entry.layerOrDisplayId);
-        });
-      });
+      htmlElement.addEventListener(
+        ViewerEvents.LayerIdFilterChanged,
+        (event) => {
+          if ((event as CustomEvent).detail.length === 0) {
+            component.uiData.entries = allEntries;
+            return;
+          }
+          component.uiData.entries = allEntries.filter((entry) => {
+            return (event as CustomEvent).detail.includes(
+              entry.layerOrDisplayId,
+            );
+          });
+        },
+      );
       await checkSelectFilter('.layer-or-display-id');
     });
 
     it('applies what filter correctly', async () => {
       const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(Events.WhatFilterChanged, (event) => {
+      htmlElement.addEventListener(ViewerEvents.WhatFilterChanged, (event) => {
         if ((event as CustomEvent).detail.length === 0) {
           component.uiData.entries = allEntries;
           return;
@@ -228,10 +235,13 @@ describe('ViewerTransactionsComponent', () => {
     });
 
     it('changes selected entry on arrow key press', () => {
-      htmlElement.addEventListener(Events.EntryChangedByKeyPress, (event) => {
-        component.inputData = makeUiData((event as CustomEvent).detail);
-        fixture.detectChanges();
-      });
+      htmlElement.addEventListener(
+        ViewerEvents.LogChangedByKeyPress,
+        (event) => {
+          component.inputData = makeUiData((event as CustomEvent).detail);
+          fixture.detectChanges();
+        },
+      );
 
       // does not do anything if no prev entry available
       component.handleKeyboardEvent(
@@ -253,16 +263,16 @@ describe('ViewerTransactionsComponent', () => {
     it('propagates timestamp on click', () => {
       component.inputData = makeUiData(0);
       fixture.detectChanges();
-      let timestamp = '';
+      let index: number | undefined;
       htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        timestamp = (event as CustomEvent).detail.formattedValue();
+        index = (event as CustomEvent).detail.index;
       });
       const logTimestampButton = assertDefined(
         htmlElement.querySelector('.time button'),
       ) as HTMLButtonElement;
       logTimestampButton.click();
 
-      expect(timestamp).toEqual('1ns');
+      expect(index).toEqual(0);
     });
 
     it('creates collapsed sections with no buttons', () => {

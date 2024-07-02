@@ -1001,7 +1001,7 @@ describe('TimelineComponent', () => {
   async function updateActiveTrace(type: TraceType) {
     const trace = getLoadedTrace(type);
     const timelineData = assertDefined(component.timelineData);
-    timelineData.setActiveTrace(trace);
+    timelineData.trySetActiveTrace(trace);
 
     const timelineComponent = assertDefined(component.timeline);
     await timelineComponent.onWinscopeEvent(new ActiveTraceChanged(trace));

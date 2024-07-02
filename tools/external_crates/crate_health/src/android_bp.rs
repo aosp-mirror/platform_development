@@ -24,7 +24,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use threadpool::ThreadPool;
 
-use crate::{Crate, NameAndVersion, NameAndVersionMap, NamedAndVersioned};
+use crate::{Crate, NameAndVersion, NameAndVersionMap, NamedAndVersioned, RepoPath};
 
 pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     crates: T,
@@ -38,10 +38,9 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
         let tx = tx.clone();
         let crate_name = krate.name().to_string();
         let crate_version = krate.version().clone();
-        let repo_root = krate.root().to_path_buf();
-        let test_path = krate.staging_path();
+        let staging_path = krate.staging_path();
         pool.execute(move || {
-            tx.send((crate_name, crate_version, generate_android_bp(&repo_root, &test_path)))
+            tx.send((crate_name, crate_version, generate_android_bp(&staging_path)))
                 .expect("Failed to send");
         });
     }
@@ -52,15 +51,12 @@ pub fn generate_android_bps<'a, T: Iterator<Item = &'a Crate>>(
     Ok(results)
 }
 
-pub(crate) fn generate_android_bp(
-    repo_root: &impl AsRef<Path>,
-    staging_path: &impl AsRef<Path>,
-) -> Result<Output> {
-    let generate_android_bp_output = run_cargo_embargo(repo_root, staging_path)?;
+pub(crate) fn generate_android_bp(staging_path: &RepoPath) -> Result<Output> {
+    let generate_android_bp_output = run_cargo_embargo(staging_path)?;
     if !generate_android_bp_output.status.success() {
         println!(
             "cargo_embargo failed for {}\nstdout:\n{}\nstderr:\n{}",
-            staging_path.as_ref().display(),
+            staging_path,
             from_utf8(&generate_android_bp_output.stdout)?,
             from_utf8(&generate_android_bp_output.stderr)?
         );
@@ -68,12 +64,9 @@ pub(crate) fn generate_android_bp(
     Ok(generate_android_bp_output)
 }
 
-fn run_cargo_embargo(
-    repo_root: &impl AsRef<Path>,
-    staging_path: &impl AsRef<Path>,
-) -> Result<Output> {
+fn run_cargo_embargo(staging_path: &RepoPath) -> Result<Output> {
     // Make sure we can find bpfmt.
-    let host_bin = repo_root.as_ref().join("out/host/linux-x86/bin");
+    let host_bin = staging_path.with_same_root(&"out/host/linux-x86/bin").abs();
     let new_path = match env::var_os("PATH") {
         Some(p) => {
             let mut paths = vec![host_bin];
@@ -83,12 +76,12 @@ fn run_cargo_embargo(
         None => host_bin.as_os_str().into(),
     };
 
-    let staging_path_absolute = repo_root.as_ref().join(staging_path);
-    let mut cmd = Command::new(repo_root.as_ref().join("out/host/linux-x86/bin/cargo_embargo"));
+    let mut cmd =
+        Command::new(staging_path.with_same_root(&"out/host/linux-x86/bin/cargo_embargo").abs());
     cmd.args(["generate", "cargo_embargo.json"])
         .env("PATH", new_path)
-        .env("ANDROID_BUILD_TOP", repo_root.as_ref())
-        .current_dir(&staging_path_absolute)
+        .env("ANDROID_BUILD_TOP", staging_path.root())
+        .current_dir(staging_path.abs())
         .output()
         .context(format!("Failed to execute {:?}", cmd.get_program()))
 }

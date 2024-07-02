@@ -19,11 +19,11 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
+import {AbstractViewerInputMethod} from 'viewers/common/abstract_viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 
-class ViewerInputMethodService extends ViewerInputMethod {
+class ViewerInputMethodService extends AbstractViewerInputMethod {
   static readonly DEPENDENCIES: ImeTraceType[] = [
     TraceType.INPUT_METHOD_SERVICE,
   ];
@@ -44,7 +44,7 @@ class ViewerInputMethodService extends ViewerInputMethod {
     );
   }
 
-  override initialisePresenter(
+  override initializePresenter(
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,

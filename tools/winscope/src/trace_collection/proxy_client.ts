@@ -304,7 +304,7 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '2.1.0';
+  readonly VERSION = '2.1.1';
   state: ProxyState = ProxyState.CONNECTING;
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;

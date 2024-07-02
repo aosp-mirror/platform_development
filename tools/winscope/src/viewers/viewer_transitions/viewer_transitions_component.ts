@@ -20,11 +20,10 @@ import {Transition} from 'trace/transition';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {CollapsibleSections} from 'viewers/common/collapsible_sections';
 import {CollapsibleSectionType} from 'viewers/common/collapsible_section_type';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
 import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
 import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
-import {Events} from './events';
 import {UiData} from './ui_data';
 
 @Component({
@@ -62,7 +61,7 @@ import {UiData} from './ui_data';
                 mat-button
                 color="primary"
                 *ngIf="transition.sendTime"
-                (click)="onTimestampClicked(transition.sendTime)">
+                (click)="onSendTimeClicked(transition)">
                 {{ transition.sendTime.formattedValue() }}
               </button>
               <span *ngIf="!transition.sendTime" class="mat-body-1"> n/a </span>
@@ -72,7 +71,7 @@ import {UiData} from './ui_data';
                 mat-button
                 color="primary"
                 *ngIf="transition.dispatchTime"
-                (click)="onTimestampClicked(transition.dispatchTime)">
+                (click)="onDispatchTimeClicked(transition)">
                 {{ transition.dispatchTime.formattedValue() }}
               </button>
               <span *ngIf="!transition.dispatchTime" class="mat-body-1"> n/a </span>
@@ -235,7 +234,7 @@ export class ViewerTransitionsComponent {
   }
 
   onTransitionClicked(transition: Transition): void {
-    this.emitEvent(Events.TransitionSelected, transition.propertiesTree);
+    this.emitEvent(ViewerEvents.TransitionSelected, transition.propertiesTree);
   }
 
   isSelectedTransition(transition: Transition): boolean {
@@ -253,14 +252,27 @@ export class ViewerTransitionsComponent {
     );
   }
 
-  onTimestampClicked(timestamp: PropertyTreeNode) {
-    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  onDispatchTimeClicked(transition: Transition) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(
+        transition.dispatchTime?.getValue(),
+        transition.traceIndex,
+      ),
+    );
   }
 
-  emitEvent(event: string, propertiesTree: PropertyTreeNode) {
+  onSendTimeClicked(transition: Transition) {
+    this.emitEvent(
+      ViewerEvents.TimestampClick,
+      new TimestampClickDetail(transition.sendTime?.getValue(), undefined),
+    );
+  }
+
+  emitEvent(event: string, data: PropertyTreeNode | TimestampClickDetail) {
     const customEvent = new CustomEvent(event, {
       bubbles: true,
-      detail: propertiesTree,
+      detail: data,
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
