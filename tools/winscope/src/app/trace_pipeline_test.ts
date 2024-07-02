@@ -21,7 +21,7 @@ import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   InvalidPerfettoTrace,
-  NoInputFiles,
+  NoValidFiles,
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
@@ -217,7 +217,7 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new CorruptedArchive(corruptedArchive),
-      new NoInputFiles(),
+      new NoValidFiles(),
     ]);
   });
 

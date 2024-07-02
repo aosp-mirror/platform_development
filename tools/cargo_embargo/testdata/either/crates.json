@@ -30,6 +30,7 @@
         {
           "name": "serde_json",
           "lib_name": "serde_json",
+          "raw_name": "serde_json",
           "extern_type": "Rust"
         }
       ],

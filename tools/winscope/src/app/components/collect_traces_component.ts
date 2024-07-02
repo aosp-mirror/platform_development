@@ -110,10 +110,18 @@ import {LoadProgressComponent} from './load_progress_component';
                 <button
                   color="primary"
                   class="change-btn"
-                  mat-button
+                  mat-stroked-button
                   (click)="onChangeDeviceButton()"
                   [disabled]="adbConnection.isEndTraceState() || isLoadOperationInProgress()">
                   Change device
+                </button>
+                <button
+                  color="primary"
+                  class="fetch-btn"
+                  mat-stroked-button
+                  (click)="fetchExistingTraces()"
+                  [disabled]="adbConnection.isEndTraceState() || isLoadOperationInProgress()">
+                  Fetch traces from last session
                 </button>
               </p>
             </mat-list-item>
@@ -127,7 +135,7 @@ import {LoadProgressComponent} from './load_progress_component';
                 <div class="trace-section" *ngIf="adbConnection.isStartTraceState()">
                   <trace-config [(traceConfig)]="traceConfig"></trace-config>
                   <div class="start-btn">
-                    <button color="primary" mat-stroked-button (click)="startTracing()">
+                    <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
                     </button>
                   </div>
@@ -183,7 +191,7 @@ import {LoadProgressComponent} from './load_progress_component';
                     >
                   </div>
                   <div class="dump-btn" *ngIf="!refreshDumps">
-                    <button color="primary" mat-stroked-button (click)="dumpState()">
+                    <button color="primary" mat-raised-button (click)="dumpState()">
                       Dump state
                     </button>
                   </div>
@@ -215,7 +223,8 @@ import {LoadProgressComponent} from './load_progress_component';
   styles: [
     `
       .change-btn,
-      .retry-btn {
+      .retry-btn,
+      .fetch-btn {
         margin-left: 5px;
       }
       .mat-card.collect-card {
@@ -539,6 +548,16 @@ export class CollectTracesComponent
   getSelectedDevice(): string {
     const [id, props] = assertDefined(this.adbConnection).getSelectedDevice();
     return props.model + `(${id})`;
+  }
+
+  async fetchExistingTraces() {
+    console.log('fetch existing traces from device');
+    await assertDefined(this.adbConnection).fetchExistingTraces();
+    const files = assertDefined(this.adbConnection).getAdbData();
+    this.filesCollected.emit(files);
+    if (files.length === 0) {
+      await assertDefined(this.adbConnection).restart();
+    }
   }
 
   private onProxyStateChange() {

@@ -15,8 +15,10 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -172,5 +174,17 @@ describe('Perfetto ParserMotionEvent', () => {
         ?.getChildByName('windowId')
         ?.getValue(),
     ).toEqual(0n);
+  });
+
+  it('supports VSYNCID custom query', async () => {
+    const trace = new TraceBuilder()
+      .setType(TraceType.INPUT_MOTION_EVENT)
+      .setParser(parser)
+      .build();
+    const entries = await trace
+      .sliceEntries(1, 4)
+      .customQuery(CustomQueryType.VSYNCID);
+    const values = entries.map((entry) => entry.getValue());
+    expect(values).toEqual([89110n, 89111n, 89112n]);
   });
 });

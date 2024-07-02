@@ -59,11 +59,6 @@ import {UiData} from './ui_data';
       .properties-view {
         flex: 1;
       }
-
-      .log-view {
-        flex: 1;
-        height: 100%;
-      }
     `,
     viewerCardStyle,
   ],

@@ -135,7 +135,7 @@ describe('SliderComponent', () => {
     expect(component.sliderBox.nativeElement.offsetWidth).toBe(100);
 
     htmlElement.style.width = '587px';
-    component.onResize({} as Event);
+    window.dispatchEvent(new Event('resize'));
     fixture.detectChanges();
 
     expect(initialSliderXPos).not.toBe(slider.getBoundingClientRect().left);
