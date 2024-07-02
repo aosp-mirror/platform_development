@@ -1117,8 +1117,10 @@ fn crate_to_rulesmk(
         contents += "\n";
     }
 
-    // crate dependencies without lib- prefix
-    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.lib_name.clone()).collect();
+    // crate dependencies without lib- prefix. Since paths to trusty modules may
+    // contain hyphens, we generate the module path using the raw name output by
+    // cargo metadata or cargo build.
+    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.raw_name.clone()).collect();
     if package_cfg.no_std {
         contents += "MODULE_ADD_IMPLICIT_DEPS := false\n";
         library_deps.push("compiler_builtins".to_string());

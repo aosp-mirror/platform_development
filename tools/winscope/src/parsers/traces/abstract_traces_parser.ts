@@ -26,17 +26,11 @@ import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 
 export abstract class AbstractTracesParser<T> implements Parser<T> {
-  private timestamps: Timestamp[] | undefined;
+  protected timestamps: Timestamp[] | undefined;
   protected timestampConverter: ParserTimestampConverter;
-
-  protected abstract getTimestamp(decodedEntry: any): Timestamp;
 
   constructor(timestampConverter: ParserTimestampConverter) {
     this.timestampConverter = timestampConverter;
-  }
-
-  getCoarseVersion(): CoarseVersion {
-    return CoarseVersion.LEGACY;
   }
 
   customQuery<Q extends CustomQueryType>(
@@ -50,21 +44,9 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
     return this.timestamps;
   }
 
-  async createTimestamps() {
-    this.timestamps = await this.decodeTimestamps();
-  }
-
-  private async decodeTimestamps() {
-    const timestampsNs = [];
-    for (let index = 0; index < this.getLengthEntries(); index++) {
-      const entry = await this.getEntry(index);
-      const timestamp = this.getTimestamp(entry);
-      timestampsNs.push(timestamp);
-    }
-    return timestampsNs;
-  }
-
+  abstract getCoarseVersion(): CoarseVersion;
   abstract parse(): Promise<void>;
+  abstract createTimestamps(): Promise<void>;
   abstract getDescriptors(): string[];
   abstract getTraceType(): TraceType;
   abstract getEntry(index: AbsoluteEntryIndex): Promise<T>;
