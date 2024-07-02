@@ -65,6 +65,10 @@ class TimestampConverterTestUtils {
       valueNs,
     );
   }
+
+  makeZeroTimestamp(): Timestamp {
+    return this.TIMESTAMP_CONVERTER.makeZeroTimestamp();
+  }
 }
 
 export const TimestampConverterUtils = new TimestampConverterTestUtils();

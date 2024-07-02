@@ -42,6 +42,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
   override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = true;
   override readonly shouldExecuteShowDiffTests = true;
+  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = true;
 
   override readonly numberOfDefaultProperties = 29;
