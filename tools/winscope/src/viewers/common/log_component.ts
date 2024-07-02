@@ -48,112 +48,112 @@ import {
 @Component({
   selector: 'log-view',
   template: `
-     <div class="entries">
-        <div class="headers" *ngIf="headers.length > 0">
-          <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{header}}</div>
-        </div>
+    <div class="entries">
+      <div class="headers" *ngIf="headers.length > 0">
+        <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{header}}</div>
+      </div>
 
-        <div class="filters" *ngIf="filters.length > 0">
-          <div *ngIf="showTraceEntryTimes" class="time"></div>
+      <div class="filters" *ngIf="filters.length > 0">
+        <div *ngIf="showTraceEntryTimes" class="time"></div>
 
-          <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.name)">
-            <select-with-filter
+        <div class="filter" *ngFor="let filter of filters" [class]="getLogFieldClass(filter.name)">
+          <select-with-filter
               *ngIf="filter.options?.length > 0"
               [label]="filter.name"
               [options]="filter.options"
               [outerFilterWidth]="getOuterFilterWidth(filter.name)"
               [innerFilterWidth]="getInnerFilterWidth(filter.name)"
               (selectChange)="onFilterChange($event, filter.name)">
-            </select-with-filter>
+          </select-with-filter>
 
-            <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
-              <mat-label>{{filter.name}}</mat-label>
-              <input
+          <mat-form-field *ngIf="filter.options === undefined" appearance="fill" (keydown.enter)="$event.target.blur()">
+            <mat-label>{{filter.name}}</mat-label>
+            <input
                 matInput
                 [name]="filter.name"
                 [ngModel]="emptyFilterValue"
                 (ngModelChange)="onFilterChange($event, filter.name)" />
-            </mat-form-field>
-          </div>
+          </mat-form-field>
+        </div>
 
-          <button
+        <button
             color="primary"
             mat-stroked-button
             class="go-to-current-time"
             *ngIf="showCurrentTimeButton"
             (click)="onGoToCurrentTimeClick()">
-            Go to Current Time
-          </button>
-        </div>
+          Go to Current Time
+        </button>
+      </div>
 
-        <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
+      <div class="placeholder-text mat-body-1" *ngIf="entries.length === 0"> No entries found. </div>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isTransactions()"
           transactionsVirtualScroll
           class="scroll"
           [scrollItems]="entries">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isProtolog()"
           protologVirtualScroll
           class="scroll"
           [scrollItems]="entries">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <cdk-virtual-scroll-viewport
+      <cdk-virtual-scroll-viewport
           *ngIf="isFixedSizeScrollViewport()"
           itemSize="36"
           class="scroll">
-          <ng-container
+        <ng-container
             *cdkVirtualFor="let entry of entries; let i = index"
             [ngTemplateOutlet]="content"
             [ngTemplateOutletContext]="{entry: entry, i: i}"> </ng-container>
-        </cdk-virtual-scroll-viewport>
+      </cdk-virtual-scroll-viewport>
 
-        <ng-template #content let-entry="entry" let-i="i">
-          <div
+      <ng-template #content let-entry="entry" let-i="i">
+        <div
             class="entry"
             [attr.item-id]="i"
             [class.current]="isCurrentEntry(i)"
             [class.selected]="isSelectedEntry(i)"
             (click)="onEntryClicked(i)">
-            <div *ngIf="showTraceEntryTimes" class="time">
-              <button
+          <div *ngIf="showTraceEntryTimes" class="time">
+            <button
                 mat-button
                 color="primary"
                 (click)="onTraceEntryTimestampClick($event, entry)"
                 [disabled]="!entry.traceEntry.hasValidTimestamp()">
-                {{ entry.traceEntry.getTimestamp().format() }}
-              </button>
-            </div>
-
-            <div [class]="getLogFieldClass(field.name)" *ngFor="let field of entry.fields; index as i">
-                <span class="mat-body-1" *ngIf="!showTimestampButton(field.value)">{{ field.value }}</span>
-                <button
-                  *ngIf="showTimestampButton(field.value)"
-                  mat-button
-                  color="primary"
-                  (click)="onTimestampClick($event, entry, field)">
-                  {{ field.value.format() }}
-                </button>
-                <mat-icon
-                  *ngIf="field.icon"
-                  aria-hidden="false"
-                  [style]="{color: field.iconColor}"> {{field.icon}} </mat-icon>
-            </div>
+              {{ entry.traceEntry.getTimestamp().format() }}
+            </button>
           </div>
-        </ng-template>
-      </div>
+
+          <div [class]="getLogFieldClass(field.name)" *ngFor="let field of entry.fields; index as i">
+            <span class="mat-body-1" *ngIf="!showTimestampButton(field.value)">{{ field.value }}</span>
+            <button
+                *ngIf="showTimestampButton(field.value)"
+                mat-button
+                color="primary"
+                (click)="onTimestampClick($event, entry, field)">
+              {{ field.value.format() }}
+            </button>
+            <mat-icon
+                *ngIf="field.icon"
+                aria-hidden="false"
+                [style]="{color: field.iconColor}"> {{field.icon}} </mat-icon>
+          </div>
+        </div>
+      </ng-template>
+    </div>
   `,
   styles: [
     selectedElementStyle,
