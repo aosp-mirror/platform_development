@@ -64,7 +64,6 @@ describe('TimelineComponent', () => {
   const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
   const time112 = TimestampConverterUtils.makeRealTimestamp(112n);
 
-  const time1000 = TimestampConverterUtils.makeRealTimestamp(1000n);
   const time2000 = TimestampConverterUtils.makeRealTimestamp(2000n);
   const time3000 = TimestampConverterUtils.makeRealTimestamp(3000n);
   const time4000 = TimestampConverterUtils.makeRealTimestamp(4000n);
@@ -1143,18 +1142,22 @@ describe('TimelineComponent', () => {
     const miniTimelineCanvas = assertDefined(
       htmlElement.querySelector('#mini-timeline-canvas'),
     ) as HTMLElement;
-    const clickPosX =
+    const yOffset = clickBelowMarker
+      ? assertDefined(component.timeline?.miniTimeline?.drawer?.getHeight()) /
+          6 +
+        1
+      : 0;
+
+    const event = new MouseEvent('contextmenu');
+    spyOnProperty(event, 'offsetX').and.returnValue(
       miniTimelineCanvas.offsetLeft +
-      miniTimelineCanvas.offsetWidth / 2 +
-      xOffset;
-    const clickPosY =
-      miniTimelineCanvas.offsetTop + (clickBelowMarker ? 1000 : 0);
-    miniTimelineCanvas.dispatchEvent(
-      new MouseEvent('contextmenu', {
-        clientX: clickPosX,
-        clientY: clickPosY,
-      }),
+        miniTimelineCanvas.offsetWidth / 2 +
+        xOffset,
     );
+    spyOnProperty(event, 'offsetY').and.returnValue(
+      miniTimelineCanvas.offsetTop + yOffset,
+    );
+    miniTimelineCanvas.dispatchEvent(event);
     fixture.detectChanges();
   }
 
