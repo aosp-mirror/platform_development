@@ -17,6 +17,7 @@
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
@@ -55,7 +56,7 @@ export class ViewerWindowManager implements Viewer {
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Window Manager',
+      TRACE_INFO[TraceType.WINDOW_MANAGER].name,
     );
   }
 

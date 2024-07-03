@@ -27,7 +27,7 @@ import {
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
-import {LogFieldName, LogFieldValue} from 'viewers/common/ui_data_log';
+import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 
 class PresenterProtologTest extends AbstractLogViewerPresenterTest {
@@ -43,39 +43,39 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest {
   override readonly totalOutputEntries = 3;
   override readonly expectedIndexOfSecondPositionUpdate = 1;
   override readonly expectedInitialFilterOptions = new Map<
-    LogFieldName,
+    LogFieldType,
     string[] | number
   >([
-    [LogFieldName.LOG_LEVEL, ['level0', 'level1', 'level2']],
-    [LogFieldName.TAG, ['tag0', 'tag1', 'tag2']],
-    [LogFieldName.SOURCE_FILE, ['sourcefile0', 'sourcefile1', 'sourcefile2']],
+    [LogFieldType.LOG_LEVEL, ['level0', 'level1', 'level2']],
+    [LogFieldType.TAG, ['tag0', 'tag1', 'tag2']],
+    [LogFieldType.SOURCE_FILE, ['sourcefile0', 'sourcefile1', 'sourcefile2']],
   ]);
   override readonly filterValuesToSet = new Map<
-    LogFieldName,
+    LogFieldType,
     Array<string | string[]>
   >([
-    [LogFieldName.LOG_LEVEL, [[], ['level1'], ['level0', 'level1', 'level2']]],
-    [LogFieldName.TAG, [[], ['tag1'], ['tag0', 'tag1', 'tag2']]],
+    [LogFieldType.LOG_LEVEL, [[], ['level1'], ['level0', 'level1', 'level2']]],
+    [LogFieldType.TAG, [[], ['tag1'], ['tag0', 'tag1', 'tag2']]],
     [
-      LogFieldName.SOURCE_FILE,
+      LogFieldType.SOURCE_FILE,
       [[], ['sourcefile1'], ['sourcefile0', 'sourcefile1', 'sourcefile2']],
     ],
-    [LogFieldName.TEXT, [[], 'text', 'text0', 'text1']],
+    [LogFieldType.TEXT, [[], 'text', 'text0', 'text1']],
   ]);
   override readonly expectedFieldValuesAfterFilter = new Map<
-    LogFieldName,
+    LogFieldType,
     Array<LogFieldValue[] | number>
   >([
     [
-      LogFieldName.LOG_LEVEL,
+      LogFieldType.LOG_LEVEL,
       [this.totalOutputEntries, ['level1'], ['level0', 'level1', 'level2']],
     ],
     [
-      LogFieldName.TAG,
+      LogFieldType.TAG,
       [this.totalOutputEntries, ['tag1'], ['tag0', 'tag1', 'tag2']],
     ],
     [
-      LogFieldName.SOURCE_FILE,
+      LogFieldType.SOURCE_FILE,
       [
         this.totalOutputEntries,
         ['sourcefile1'],
@@ -83,7 +83,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest {
       ],
     ],
     [
-      LogFieldName.TEXT,
+      LogFieldType.TEXT,
       [
         this.totalOutputEntries,
         ['text0', 'text1', 'text2'],
@@ -93,7 +93,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest {
     ],
   ]);
   override readonly logEntryClickIndex = 10;
-  override readonly filterNameForCurrentIndexTest = LogFieldName.LOG_LEVEL;
+  override readonly filterNameForCurrentIndexTest = LogFieldType.LOG_LEVEL;
   override readonly filterChangeForCurrentIndexTest = ['level1'];
   override readonly expectedCurrentIndexAfterFilterChange = 0;
   override readonly secondFilterChangeForCurrentIndexTest = [

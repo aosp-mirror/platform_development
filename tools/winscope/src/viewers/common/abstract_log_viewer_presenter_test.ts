@@ -21,7 +21,7 @@ import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
 } from './abstract_log_viewer_presenter';
-import {LogEntry, LogFieldName, LogFieldValue, UiDataLog} from './ui_data_log';
+import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
 
 export abstract class AbstractLogViewerPresenterTest {
   execute() {
@@ -98,11 +98,11 @@ export abstract class AbstractLogViewerPresenterTest {
         }
 
         if (this.shouldExecuteFilterTests) {
-          for (const [logFieldName, expectedOptions] of assertDefined(
+          for (const [logFieldType, expectedOptions] of assertDefined(
             this.expectedInitialFilterOptions,
           )) {
             const options = assertDefined(
-              uiData.filters?.find((f) => f.name === logFieldName)?.options,
+              uiData.filters?.find((f) => f.type === logFieldType)?.options,
             );
             if (Array.isArray(expectedOptions)) {
               expect(options).toEqual(expectedOptions);
@@ -141,19 +141,19 @@ export abstract class AbstractLogViewerPresenterTest {
 
       if (this.shouldExecuteFilterTests) {
         it('filters entries', async () => {
-          for (const [name, valuesToSet] of assertDefined(
+          for (const [type, valuesToSet] of assertDefined(
             this.filterValuesToSet,
           )) {
             const expected = assertDefined(
-              this.expectedFieldValuesAfterFilter?.get(name),
+              this.expectedFieldValuesAfterFilter?.get(type),
             );
             for (let i = 0; i < valuesToSet.length; i++) {
               const filterValues = valuesToSet[i];
               const expectedFieldValues = expected[i];
 
-              await presenter.onFilterChange(name, filterValues);
+              await presenter.onFilterChange(type, filterValues);
               const fieldValues = uiData.entries.map((entry) =>
-                assertDefined(this.getFieldValue(entry, name)),
+                assertDefined(this.getFieldValue(entry, type)),
               );
               if (Array.isArray(expectedFieldValues)) {
                 expect(new Set(fieldValues)).toEqual(
@@ -162,7 +162,7 @@ export abstract class AbstractLogViewerPresenterTest {
               } else {
                 expect(fieldValues.length).toEqual(expectedFieldValues);
               }
-              await presenter.onFilterChange(name, []);
+              await presenter.onFilterChange(type, []);
             }
           }
         });
@@ -289,8 +289,8 @@ export abstract class AbstractLogViewerPresenterTest {
     }
   }
 
-  getFieldValue(entry: LogEntry, logFieldName: LogFieldName) {
-    return entry.fields.find((f) => f.name === logFieldName)?.value;
+  getFieldValue(entry: LogEntry, logFieldType: LogFieldType) {
+    return entry.fields.find((f) => f.type === logFieldType)?.value;
   }
 
   checkSelectedEntryUiData(uiData: UiDataLog, newIndex: number | undefined) {
@@ -323,13 +323,13 @@ export abstract class AbstractLogViewerPresenterTest {
   abstract readonly expectedIndexOfSecondPositionUpdate: number;
   abstract readonly logEntryClickIndex: number;
 
-  readonly expectedInitialFilterOptions?: Map<LogFieldName, string[] | number>;
-  readonly filterValuesToSet?: Map<LogFieldName, Array<string[] | string>>;
+  readonly expectedInitialFilterOptions?: Map<LogFieldType, string[] | number>;
+  readonly filterValuesToSet?: Map<LogFieldType, Array<string[] | string>>;
   readonly expectedFieldValuesAfterFilter?: Map<
-    LogFieldName,
+    LogFieldType,
     Array<LogFieldValue[] | number>
   >;
-  readonly filterNameForCurrentIndexTest?: LogFieldName;
+  readonly filterNameForCurrentIndexTest?: LogFieldType;
   readonly filterChangeForCurrentIndexTest?: string[];
   readonly expectedCurrentIndexAfterFilterChange?: number;
   readonly secondFilterChangeForCurrentIndexTest?: string[];

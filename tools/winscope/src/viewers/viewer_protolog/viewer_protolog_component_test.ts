@@ -36,7 +36,7 @@ import {TraceBuilder} from 'test/unit/trace_builder';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
-import {LogFieldName} from 'viewers/common/ui_data_log';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
 import {ProtologEntry, UiData} from './ui_data';
@@ -158,16 +158,16 @@ describe('ViewerProtologComponent', () => {
     for (let i = 0; i < 200; i++) {
       const message = new ProtologEntry(trace.getEntry(0), [
         {
-          name: LogFieldName.LOG_LEVEL,
+          type: LogFieldType.LOG_LEVEL,
           value: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
         },
-        {name: LogFieldName.TAG, value: i % 2 === 0 ? allTags[0] : allTags[1]},
+        {type: LogFieldType.TAG, value: i % 2 === 0 ? allTags[0] : allTags[1]},
         {
-          name: LogFieldName.SOURCE_FILE,
+          type: LogFieldType.SOURCE_FILE,
           value: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
         },
         {
-          name: LogFieldName.TEXT,
+          type: LogFieldType.TEXT,
           value: i % 2 === 0 ? shortMessage : longMessage,
         },
       ]);
@@ -175,10 +175,10 @@ describe('ViewerProtologComponent', () => {
     }
     return new UiData(
       [
-        {name: LogFieldName.LOG_LEVEL, options: allLogLevels},
-        {name: LogFieldName.TAG, options: allTags},
-        {name: LogFieldName.SOURCE_FILE, options: allSourceFiles},
-        {name: LogFieldName.TEXT},
+        {type: LogFieldType.LOG_LEVEL, options: allLogLevels},
+        {type: LogFieldType.TAG, options: allTags},
+        {type: LogFieldType.SOURCE_FILE, options: allSourceFiles},
+        {type: LogFieldType.TEXT},
       ],
       messages,
       150,
