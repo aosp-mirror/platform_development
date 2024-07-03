@@ -56,6 +56,7 @@ import {
 } from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
@@ -180,7 +181,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                 <div class="select-traces-panel">
                   <div class="tip">Filter traces in the timeline</div>
                   <mat-option
-                    *ngFor="let trace of sortedAvailableTraces"
+                    *ngFor="let trace of sortedTraces"
                     [value]="trace"
                     [style]="{
                       color: 'var(--blue-text-color)',
@@ -193,7 +194,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
                         color: TRACE_INFO[trace.type].color
                       }"
                     >{{ TRACE_INFO[trace.type].icon }}</mat-icon>
-                    {{ TRACE_INFO[trace.type].name }}
+                    {{ getTitle(trace) }}
                   </mat-option>
                   <div class="actions">
                     <button mat-flat-button color="primary" (click)="traceSelector.close()">
@@ -469,6 +470,7 @@ export class TimelineComponent
   readonly MAX_SELECTED_TRACES = 3;
 
   @Input() timelineData: TimelineData | undefined;
+  @Input() allTraces: Traces | undefined;
   @Input() store: PersistentStore | undefined;
 
   @Output() readonly collapsedTimelineSizeChanged = new EventEmitter<number>();
@@ -483,7 +485,7 @@ export class TimelineComponent
 
   initialZoom: TimeRange | undefined = undefined;
   selectedTraces: Array<Trace<object>> = [];
-  sortedAvailableTraces: Array<Trace<object>> = [];
+  sortedTraces: Array<Trace<object>> = [];
   selectedTracesFormControl = new FormControl<Array<Trace<object>>>([]);
   selectedTimeFormControl = new FormControl('undefined');
   selectedNsFormControl = new FormControl(
@@ -532,22 +534,24 @@ export class TimelineComponent
     }
 
     // sorted to be displayed in order corresponding to viewer tabs
-    this.sortedAvailableTraces =
-      this.timelineData
-        ?.getTraces()
-        .mapTrace((trace) => trace)
+    this.sortedTraces =
+      this.allTraces
+        ?.mapTrace((trace) => trace)
         .sort((a, b) => TraceTypeUtils.compareByDisplayOrder(a.type, b.type)) ??
       [];
 
     const storedDeselectedTraces = this.getStoredDeselectedTraceTypes();
-    this.selectedTraces = this.sortedAvailableTraces.filter((trace) => {
-      return !storedDeselectedTraces.includes(trace.type);
+    this.selectedTraces = this.sortedTraces.filter((trace) => {
+      return (
+        timelineData.hasTrace(trace) &&
+        !storedDeselectedTraces.includes(trace.type)
+      );
     });
     this.selectedTracesFormControl = new FormControl<Array<Trace<object>>>(
       this.selectedTraces,
     );
 
-    const initialTraceToCropZoom = this.sortedAvailableTraces.find((trace) => {
+    const initialTraceToCropZoom = this.selectedTraces.find((trace) => {
       return (
         trace.type !== TraceType.SCREEN_RECORDING &&
         TraceTypeUtils.isTraceTypeWithViewer(trace.type) &&
@@ -645,13 +649,23 @@ export class TimelineComponent
   }
 
   isOptionDisabled(trace: Trace<object>) {
-    return this.timelineData?.getActiveTrace() === trace;
+    const timelineData = assertDefined(this.timelineData);
+    return (
+      !timelineData.hasTrace(trace) || timelineData.getActiveTrace() === trace
+    );
   }
 
   applyNewTraceSelection(clickedTrace: Trace<object>) {
     this.selectedTraces =
-      this.selectedTracesFormControl.value ?? this.sortedAvailableTraces;
+      this.selectedTracesFormControl.value ??
+      this.sortedTraces.filter((trace) => {
+        return assertDefined(this.timelineData).hasTrace(trace);
+      });
     this.updateStoredDeselectedTraceTypes(clickedTrace);
+  }
+
+  getTitle(trace: Trace<object>): string {
+    return TRACE_INFO[trace.type].name + (trace.isDump() ? ' Dump' : '');
   }
 
   @HostListener('document:focusin', ['$event'])

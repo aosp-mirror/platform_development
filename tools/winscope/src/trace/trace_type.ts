@@ -103,6 +103,7 @@ export class TraceTypeUtils {
     TraceType.PROTO_LOG,
     TraceType.VIEW_CAPTURE,
     TraceType.TRANSITION,
+    TraceType.CUJS,
   ];
 
   static isTraceTypeWithViewer(t: TraceType): boolean {

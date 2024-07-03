@@ -565,6 +565,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       detail: {groupId: display.groupId},
     });
     this.elementRef.nativeElement.dispatchEvent(viewerEvent);
+    event.source.close();
   }
 
   onRectClick(event: MouseEvent) {

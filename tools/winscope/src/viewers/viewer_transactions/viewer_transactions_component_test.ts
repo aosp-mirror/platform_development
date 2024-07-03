@@ -38,7 +38,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
-import {LogFieldName} from 'viewers/common/ui_data_log';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
@@ -152,16 +152,16 @@ describe('ViewerTransactionsComponent', () => {
       const entry1 = new TransactionsEntry(
         trace.getEntry(0),
         [
-          {name: LogFieldName.VSYNC_ID, value: -111},
-          {name: LogFieldName.PID, value: 'PID_VALUE'},
-          {name: LogFieldName.UID, value: 'UID_VALUE'},
-          {name: LogFieldName.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+          {type: LogFieldType.VSYNC_ID, value: -111},
+          {type: LogFieldType.PID, value: 'PID_VALUE'},
+          {type: LogFieldType.UID, value: 'UID_VALUE'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: 'LAYER_OR_DISPLAY_ID_VALUE',
           },
-          {name: LogFieldName.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE'},
-          {name: LogFieldName.FLAGS, value: 'flag1 | flag2'},
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE'},
+          {type: LogFieldType.FLAGS, value: 'flag1 | flag2'},
         ],
         propertiesTree,
       );
@@ -169,42 +169,42 @@ describe('ViewerTransactionsComponent', () => {
       const entry2 = new TransactionsEntry(
         trace.getEntry(1),
         [
-          {name: LogFieldName.VSYNC_ID, value: -222},
-          {name: LogFieldName.PID, value: 'PID_VALUE_2'},
-          {name: LogFieldName.UID, value: 'UID_VALUE_2'},
-          {name: LogFieldName.TRANSACTION_TYPE, value: 'TYPE_VALUE_2'},
+          {type: LogFieldType.VSYNC_ID, value: -222},
+          {type: LogFieldType.PID, value: 'PID_VALUE_2'},
+          {type: LogFieldType.UID, value: 'UID_VALUE_2'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE_2'},
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: 'LAYER_OR_DISPLAY_ID_VALUE_2',
           },
-          {name: LogFieldName.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE_2'},
-          {name: LogFieldName.FLAGS, value: 'flag3 | flag4'},
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE_2'},
+          {type: LogFieldType.FLAGS, value: 'flag3 | flag4'},
         ],
         propertiesTree,
       );
 
       return new UiData(
         [
-          {name: LogFieldName.VSYNC_ID, options: ['-111', '-222']},
-          {name: LogFieldName.PID, options: ['PID_VALUE', 'PID_VALUE_2']},
-          {name: LogFieldName.UID, options: ['UID_VALUE', 'UID_VALUE_2']},
+          {type: LogFieldType.VSYNC_ID, options: ['-111', '-222']},
+          {type: LogFieldType.PID, options: ['PID_VALUE', 'PID_VALUE_2']},
+          {type: LogFieldType.UID, options: ['UID_VALUE', 'UID_VALUE_2']},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             options: ['TYPE_VALUE', 'TYPE_VALUE_2'],
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             options: [
               'LAYER_OR_DISPLAY_ID_VALUE',
               'LAYER_OR_DISPLAY_ID_VALUE_2',
             ],
           },
           {
-            name: LogFieldName.TRANSACTION_ID,
+            type: LogFieldType.TRANSACTION_ID,
             options: ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
           },
           {
-            name: LogFieldName.FLAGS,
+            type: LogFieldType.FLAGS,
             options: ['flag1', 'flag2', 'flag3', 'flag4'],
           },
         ],
@@ -250,20 +250,20 @@ describe('ViewerTransactionsComponent', () => {
         const entry = new TransactionsEntry(
           trace.getEntry(0),
           [
-            {name: LogFieldName.VSYNC_ID, value: -111},
-            {name: LogFieldName.PID, value: 'PID_VALUE'},
-            {name: LogFieldName.UID, value: 'UID_VALUE'},
-            {name: LogFieldName.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+            {type: LogFieldType.VSYNC_ID, value: -111},
+            {type: LogFieldType.PID, value: 'PID_VALUE'},
+            {type: LogFieldType.UID, value: 'UID_VALUE'},
+            {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
             {
-              name: LogFieldName.LAYER_OR_DISPLAY_ID,
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
               value: 'LAYER_OR_DISPLAY_ID_VALUE',
             },
             {
-              name: LogFieldName.TRANSACTION_ID,
+              type: LogFieldType.TRANSACTION_ID,
               value: 'TRANSACTION_ID_VALUE',
             },
             {
-              name: LogFieldName.FLAGS,
+              type: LogFieldType.FLAGS,
               value: i % 2 === 0 ? shortMessage : longMessage,
             },
           ],
