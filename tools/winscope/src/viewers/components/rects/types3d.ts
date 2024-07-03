@@ -84,7 +84,8 @@ export interface Scene3D {
 }
 
 export interface Camera {
-  rotationFactor: number;
+  rotationAngleX: number;
+  rotationAngleY: number;
   zoomFactor: number;
   panScreenDistance: Distance2D;
 }

@@ -33,13 +33,13 @@ export class CorruptedArchive extends UserWarning {
   }
 }
 
-export class NoInputFiles extends UserWarning {
+export class NoValidFiles extends UserWarning {
   getDescriptor(): string {
-    return 'no input';
+    return 'no valid files';
   }
 
   getMessage(): string {
-    return `Input has no valid trace files`;
+    return `No valid trace files found`;
   }
 }
 
@@ -118,5 +118,19 @@ export class InvalidPerfettoTrace extends UserWarning {
 
   getMessage(): string {
     return `${this.descriptor}: ${this.parserErrorMessages.join(', ')}`;
+  }
+}
+
+export class CannotVisualizeAllTraces extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'cannot visualize all traces';
+  }
+
+  getMessage(): string {
+    return `Cannot visualize all traces: ${this.errorMessage}.\nTry removing some traces.`;
   }
 }

@@ -31,8 +31,7 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {Connection} from 'trace_collection/connection';
-import {ProxyState} from 'trace_collection/proxy_client';
+import {AdbConnection} from 'trace_collection/adb_connection';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   ConfigMap,
@@ -48,12 +47,12 @@ import {LoadProgressComponent} from './load_progress_component';
     <mat-card class="collect-card">
       <mat-card-title class="title">Collect Traces</mat-card-title>
 
-      <mat-card-content class="collect-card-content">
-        <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">
+      <mat-card-content *ngIf="adbConnection" class="collect-card-content">
+        <p *ngIf="adbConnection.isConnectingState()" class="connecting-message mat-body-1">
           Connecting...
         </p>
 
-        <div *ngIf="!connect.adbSuccess()" class="set-up-adb">
+        <div *ngIf="!adbConnection.adbSuccess()" class="set-up-adb">
           <button
             class="proxy-tab"
             color="primary"
@@ -65,32 +64,31 @@ import {LoadProgressComponent} from './load_progress_component';
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
           <adb-proxy
             *ngIf="isAdbProxy"
-            [(proxy)]="connect.proxy"
             (addKey)="onAddKey($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
         </div>
 
-        <div *ngIf="connect.isDevicesState()" class="devices-connecting">
-          <div *ngIf="objectKeys(connect.devices()).length === 0" class="no-device-detected">
+        <div *ngIf="adbConnection.isDevicesState()" class="devices-connecting">
+          <div *ngIf="objectKeys(adbConnection.getDevices()).length === 0" class="no-device-detected">
             <p class="mat-body-3 icon"><mat-icon inline fontIcon="phonelink_erase"></mat-icon></p>
             <p class="mat-body-1">No devices detected</p>
           </div>
-          <div *ngIf="objectKeys(connect.devices()).length > 0" class="device-selection">
+          <div *ngIf="objectKeys(adbConnection.getDevices()).length > 0" class="device-selection">
             <p class="mat-body-1 instruction">Select a device:</p>
-            <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
+            <mat-list *ngIf="objectKeys(adbConnection.getDevices()).length > 0">
               <mat-list-item
-                *ngFor="let deviceId of objectKeys(connect.devices())"
+                *ngFor="let deviceId of objectKeys(adbConnection.getDevices())"
                 (click)="onDeviceClick(deviceId)"
                 class="available-device">
                 <mat-icon matListIcon>
                   {{
-                    connect.devices()[deviceId].authorised ? 'smartphone' : 'screen_lock_portrait'
+                    adbConnection.getDevices()[deviceId].authorised ? 'smartphone' : 'screen_lock_portrait'
                   }}
                 </mat-icon>
                 <p matLine>
                   {{
-                    connect.devices()[deviceId].authorised
-                      ? connect.devices()[deviceId]?.model
+                    adbConnection.getDevices()[deviceId].authorised
+                      ? adbConnection.getDevices()[deviceId]?.model
                       : 'unauthorised'
                   }}
                   ({{ deviceId }})
@@ -107,15 +105,23 @@ import {LoadProgressComponent} from './load_progress_component';
             <mat-list-item>
               <mat-icon matListIcon>smartphone</mat-icon>
               <p matLine>
-                {{ connect.selectedDevice()?.model }} ({{ connect.selectedDeviceId() }})
+                {{ getSelectedDevice()}}
 
                 <button
                   color="primary"
                   class="change-btn"
-                  mat-button
+                  mat-stroked-button
                   (click)="onChangeDeviceButton()"
-                  [disabled]="connect.isEndTraceState() || isOperationInProgress()">
+                  [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
                   Change device
+                </button>
+                <button
+                  color="primary"
+                  class="fetch-btn"
+                  mat-stroked-button
+                  (click)="fetchExistingTraces()"
+                  [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
+                  Fetch traces from last session
                 </button>
               </p>
             </mat-list-item>
@@ -124,18 +130,18 @@ import {LoadProgressComponent} from './load_progress_component';
           <mat-tab-group [selectedIndex]="selectedTabIndex" class="tracing-tabs">
             <mat-tab
               label="Trace"
-              [disabled]="connect.isEndTraceState() || isOperationInProgress() || refreshDumps">
+              [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress() || refreshDumps">
               <div class="tabbed-section">
-                <div class="trace-section" *ngIf="connect.isStartTraceState()">
+                <div class="trace-section" *ngIf="adbConnection.isConfigureTraceState()">
                   <trace-config [(traceConfig)]="traceConfig"></trace-config>
                   <div class="start-btn">
-                    <button color="primary" mat-stroked-button (click)="startTracing()">
+                    <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
                     </button>
                   </div>
                 </div>
 
-                <div *ngIf="connect.isStartingTraceState()" class="starting-trace">
+                <div *ngIf="adbConnection.isStartingTraceState()" class="starting-trace">
                   <load-progress
                     message="Starting trace...">
                   </load-progress>
@@ -146,7 +152,7 @@ import {LoadProgressComponent} from './load_progress_component';
                   </div>
                 </div>
 
-                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+                <div *ngIf="adbConnection.isTracingState()" class="end-tracing">
                   <load-progress
                     icon="cable"
                     message="Tracing...">
@@ -158,7 +164,7 @@ import {LoadProgressComponent} from './load_progress_component';
                   </div>
                 </div>
 
-                <div *ngIf="isOperationInProgress()" class="load-data">
+                <div *ngIf="isLoadOperationInProgress()" class="load-data">
                   <load-progress
                     [progressPercentage]="progressPercentage"
                     [message]="progressMessage">
@@ -171,9 +177,9 @@ import {LoadProgressComponent} from './load_progress_component';
                 </div>
               </div>
             </mat-tab>
-            <mat-tab label="Dump" [disabled]="connect.isEndTraceState() || isOperationInProgress()">
+            <mat-tab label="Dump" [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
               <div class="tabbed-section">
-                <div class="dump-section" *ngIf="connect.isStartTraceState() && !refreshDumps">
+                <div class="dump-section" *ngIf="adbConnection.isConfigureTraceState() && !refreshDumps">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -185,14 +191,14 @@ import {LoadProgressComponent} from './load_progress_component';
                     >
                   </div>
                   <div class="dump-btn" *ngIf="!refreshDumps">
-                    <button color="primary" mat-stroked-button (click)="dumpState()">
+                    <button color="primary" mat-raised-button (click)="dumpState()">
                       Dump state
                     </button>
                   </div>
                 </div>
 
                 <load-progress
-                  *ngIf="refreshDumps || isOperationInProgress()"
+                  *ngIf="refreshDumps || isLoadOperationInProgress()"
                   [progressPercentage]="progressPercentage"
                   [message]="progressMessage">
                 </load-progress>
@@ -201,12 +207,12 @@ import {LoadProgressComponent} from './load_progress_component';
           </mat-tab-group>
         </div>
 
-        <div *ngIf="connect.isErrorState()" class="unknown-error">
+        <div *ngIf="adbConnection.isErrorState()" class="unknown-error">
           <p class="error-wrapper mat-body-1">
             <mat-icon class="error-icon">error</mat-icon>
             Error:
           </p>
-          <pre> {{ connect.proxy?.errorText }} </pre>
+          <pre> {{ adbConnection.getErrorText() }} </pre>
           <button color="primary" class="retry-btn" mat-raised-button (click)="onRetryButton()">
             Retry
           </button>
@@ -217,7 +223,8 @@ import {LoadProgressComponent} from './load_progress_component';
   styles: [
     `
       .change-btn,
-      .retry-btn {
+      .retry-btn,
+      .fetch-btn {
         margin-left: 5px;
       }
       .mat-card.collect-card {
@@ -360,7 +367,7 @@ export class CollectTracesComponent
 {
   objectKeys = Object.keys;
   isAdbProxy = true;
-  connect: Connection | undefined;
+  adbConnection: AdbConnection | undefined;
   isExternalOperationInProgress = false;
   progressMessage = 'Fetching...';
   progressPercentage: number | undefined;
@@ -380,14 +387,14 @@ export class CollectTracesComponent
 
   ngOnInit() {
     if (this.isAdbProxy) {
-      this.connect = new ProxyConnection(
+      this.adbConnection = new ProxyConnection(
         (newState) => this.onProxyStateChange(),
         (progress) => this.onLoadProgressUpdate(progress),
         this.setTraceConfigForAvailableTraces,
       );
     } else {
       // TODO: change to WebAdbConnection
-      this.connect = new ProxyConnection(
+      this.adbConnection = new ProxyConnection(
         (newState) => this.onProxyStateChange(),
         (progress) => this.onLoadProgressUpdate(progress),
         this.setTraceConfigForAvailableTraces,
@@ -396,11 +403,11 @@ export class CollectTracesComponent
   }
 
   ngOnDestroy(): void {
-    assertDefined(this.connect).proxy?.removeOnProxyChange(this.onProxyChange);
+    assertDefined(this.adbConnection).onDestroy();
   }
 
   async onDeviceClick(deviceId: string) {
-    await assertDefined(this.connect).selectDevice(deviceId);
+    await assertDefined(this.adbConnection).selectDevice(deviceId);
   }
 
   async onWinscopeEvent(event: WinscopeEvent) {
@@ -422,35 +429,37 @@ export class CollectTracesComponent
       return;
     }
     this.isExternalOperationInProgress = true;
+    this.adbConnection?.setLoadingDataState();
     this.progressMessage = message;
     this.progressPercentage = progressPercentage;
     this.lastUiProgressUpdateTimeMs = Date.now();
     this.changeDetectorRef.detectChanges();
   }
 
-  onOperationFinished() {
+  onOperationFinished(success: boolean) {
     this.isExternalOperationInProgress = false;
     this.lastUiProgressUpdateTimeMs = undefined;
+    if (!success) {
+      this.adbConnection?.restart();
+    }
     this.changeDetectorRef.detectChanges();
   }
 
-  isOperationInProgress(): boolean {
+  isLoadOperationInProgress(): boolean {
     return (
-      assertDefined(this.connect).isLoadDataState() ||
+      assertDefined(this.adbConnection).isLoadingDataState() ||
       this.isExternalOperationInProgress
     );
   }
 
   async onAddKey(key: string) {
-    if (this.connect?.setProxyKey) {
-      this.connect.setProxyKey(key);
-    }
-    await assertDefined(this.connect).restart();
+    this.adbConnection?.setSecurityKey(key);
+    await assertDefined(this.adbConnection).restart();
   }
 
   displayAdbProxyTab() {
     this.isAdbProxy = true;
-    this.connect = new ProxyConnection(
+    this.adbConnection = new ProxyConnection(
       (newState) => this.onProxyStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
@@ -460,7 +469,7 @@ export class CollectTracesComponent
   displayWebAdbTab() {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
-    this.connect = new ProxyConnection(
+    this.adbConnection = new ProxyConnection(
       (newState) => this.onProxyStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
@@ -468,21 +477,21 @@ export class CollectTracesComponent
   }
 
   showTraceCollectionConfig() {
-    const connect = assertDefined(this.connect);
+    const connect = assertDefined(this.adbConnection);
     return (
-      connect.isStartTraceState() ||
+      connect.isConfigureTraceState() ||
       connect.isStartingTraceState() ||
-      connect.isEndTraceState() ||
-      this.isOperationInProgress()
+      connect.isTracingState() ||
+      this.isLoadOperationInProgress()
     );
   }
 
   async onChangeDeviceButton() {
-    await assertDefined(this.connect).resetLastDevice();
+    await assertDefined(this.adbConnection).clearLastDevice();
   }
 
   async onRetryButton() {
-    await assertDefined(this.connect).restart();
+    await assertDefined(this.adbConnection).restart();
   }
 
   async startTracing() {
@@ -493,11 +502,13 @@ export class CollectTracesComponent
     const reqSelectedSfConfig = this.requestedSelection('layers_trace');
     const reqSelectedWmConfig = this.requestedSelection('window_trace');
     if (requestedTraces.length < 1) {
-      await assertDefined(this.connect).throwNoTargetsError();
+      await assertDefined(this.adbConnection).setErrorState(
+        'No targets selected',
+      );
       return;
     }
 
-    await assertDefined(this.connect).startTrace(
+    await assertDefined(this.adbConnection).startTrace(
       requestedTraces,
       reqEnableConfig,
       reqSelectedSfConfig,
@@ -509,19 +520,19 @@ export class CollectTracesComponent
     console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
     Analytics.Tracing.logCollectDumps(requestedDumps);
-    const dumpSuccessful = await assertDefined(this.connect).dumpState(
+    const dumpSuccessful = await assertDefined(this.adbConnection).dumpState(
       requestedDumps,
     );
     this.refreshDumps = false;
     if (dumpSuccessful) {
-      this.filesCollected.emit(assertDefined(this.connect).adbData());
+      this.filesCollected.emit(assertDefined(this.adbConnection).getAdbData());
     }
   }
 
   async endTrace() {
     console.log('end tracing');
-    await assertDefined(this.connect).endTrace();
-    this.filesCollected.emit(assertDefined(this.connect).adbData());
+    await assertDefined(this.adbConnection).endTrace();
+    this.filesCollected.emit(assertDefined(this.adbConnection).getAdbData());
   }
 
   tabClass(adbTab: boolean) {
@@ -534,22 +545,31 @@ export class CollectTracesComponent
     return ['tab', isActive];
   }
 
-  private async onProxyChange(newState: ProxyState) {
-    await assertDefined(this.connect).onConnectChange.bind(this.connect)(
-      newState,
-    );
+  getSelectedDevice(): string {
+    const [id, props] = assertDefined(this.adbConnection).getSelectedDevice();
+    return props.model + `(${id})`;
+  }
+
+  async fetchExistingTraces() {
+    console.log('fetch existing traces from device');
+    await assertDefined(this.adbConnection).fetchExistingTraces();
+    const files = assertDefined(this.adbConnection).getAdbData();
+    this.filesCollected.emit(files);
+    if (files.length === 0) {
+      await assertDefined(this.adbConnection).restart();
+    }
   }
 
   private onProxyStateChange() {
     this.changeDetectorRef.detectChanges();
     if (
       !this.refreshDumps ||
-      this.connect?.isLoadDataState() ||
-      this.connect?.isConnectingState()
+      this.adbConnection?.isLoadingDataState() ||
+      this.adbConnection?.isConnectingState()
     ) {
       return;
     }
-    if (this.connect?.isStartTraceState()) {
+    if (this.adbConnection?.isConfigureTraceState()) {
       this.dumpState();
     } else {
       // device is not connected or proxy is not started/invalid/in error state

@@ -120,7 +120,8 @@ describe('MiniTimelineComponent', () => {
     const spy = spyOn(assertDefined(miniTimelineComponent.drawer), 'draw');
     expect(spy).not.toHaveBeenCalled();
 
-    miniTimelineComponent.onResize({} as Event);
+    window.dispatchEvent(new Event('resize'));
+    fixture.detectChanges();
 
     expect(spy).toHaveBeenCalled();
   });

@@ -102,7 +102,11 @@ final class PreferenceController {
                     Flags::consistentDisplayFlags, Flags::interactiveScreenMirror),
 
             new InternalBoolRule(R.string.internal_pref_virtual_stylus_supported,
-                    VANILLA_ICE_CREAM, Flags::virtualStylus)
+                    VANILLA_ICE_CREAM, Flags::virtualStylus),
+
+            new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported,
+                    VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::virtualRotary)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
 

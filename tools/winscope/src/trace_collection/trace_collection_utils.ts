@@ -141,7 +141,7 @@ const traceConfigurations: TraceConfigurationMap = {
   },
   transactions: {
     name: TRACE_INFO[TraceType.TRANSACTIONS].name,
-    run: false,
+    run: true,
     config: undefined,
   },
   proto_log: {
@@ -169,6 +169,11 @@ const traceConfigurations: TraceConfigurationMap = {
     run: false,
     config: undefined,
   },
+  input: {
+    name: 'Input',
+    run: false,
+    config: undefined,
+  },
 };
 
 export const TRACES: {[key: string]: TraceConfigurationMap} = {
@@ -182,6 +187,7 @@ export const TRACES: {[key: string]: TraceConfigurationMap} = {
     eventlog: traceConfigurations['eventlog'],
     transition_traces: traceConfigurations['transition_traces'],
     view_capture_trace: traceConfigurations['view_capture_traces'],
+    input: traceConfigurations['input'],
   },
   arc: {
     wayland_trace: traceConfigurations['wayland_trace'],

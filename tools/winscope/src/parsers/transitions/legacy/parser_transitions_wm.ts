@@ -78,7 +78,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
     entry: com.android.server.wm.shell.ITransition,
   ) {
     if (entry.id === 0) {
-      throw new Error('Entry need a non null id');
+      throw new Error('WM Transition entry needs non-null id');
     }
     if (
       !entry.createTimeNs &&
@@ -86,10 +86,12 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
       !entry.abortTimeNs &&
       !entry.finishTimeNs
     ) {
-      throw new Error('Requires at least one non-null timestamp');
+      throw new Error(
+        'WM Transition entry requires at least one non-null timestamp',
+      );
     }
     if (this.realToBootTimeOffsetNs === undefined) {
-      throw new Error('missing realToBootTimeOffsetNs');
+      throw new Error('WM Transition trace missing realToBootTimeOffsetNs');
     }
   }
 

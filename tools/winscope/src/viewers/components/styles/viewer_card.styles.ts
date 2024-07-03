@@ -83,4 +83,8 @@ export const viewerCardInnerStyle = `
         overflow-x: auto;
         overflow-y: hidden;
     }
+
+    .placeholder-text {
+      padding: 8px 12px;
+    }
 `;

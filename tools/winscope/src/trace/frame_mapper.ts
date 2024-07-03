@@ -17,7 +17,7 @@
 import {assertDefined} from 'common/assert_utils';
 import {CustomQueryType} from './custom_query';
 import {FrameMapBuilder} from './frame_map_builder';
-import {FramesRange, TraceEntry} from './trace';
+import {FramesRange, Trace, TraceEntry} from './trace';
 import {Traces} from './traces';
 import {TraceType} from './trace_type';
 
@@ -61,29 +61,63 @@ export class FrameMapper {
   }
 
   private async propagateFrameInfoToOtherTraces() {
-    this.tryPropagateFromScreenRecordingToSurfaceFlinger();
-    await this.tryPropagateFromSurfaceFlingerToTransactions();
-    this.tryPropagateFromTransactionsToWindowManager();
-    this.tryPropagateFromWindowManagerToProtoLog();
-    this.tryPropagateFromWindowManagerToIme();
-  }
-
-  private tryPropagateFromScreenRecordingToSurfaceFlinger() {
-    const frameMapBuilder = this.tryStartFrameMapping(
+    await this.tryPropagateMapping(
       TraceType.SCREEN_RECORDING,
       TraceType.SURFACE_FLINGER,
+      this.propagateFromScreenRecordingToSurfaceFlinger,
     );
-    if (!frameMapBuilder) {
-      return;
-    }
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.TRANSACTIONS,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
+    );
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.VIEW_CAPTURE,
+      this.propagateFromSurfaceFlingerToViewCapture,
+    );
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.INPUT_KEY_EVENT,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
+    );
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.INPUT_MOTION_EVENT,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
+    );
+    await this.tryPropagateMapping(
+      TraceType.TRANSACTIONS,
+      TraceType.WINDOW_MANAGER,
+      this.propagateFromTransactionsToWindowManager,
+    );
+    await this.tryPropagateMapping(
+      TraceType.WINDOW_MANAGER,
+      TraceType.PROTO_LOG,
+      this.propagateFromWindowManagerToProtoLog,
+    );
+    await this.tryPropagateMapping(
+      TraceType.WINDOW_MANAGER,
+      TraceType.INPUT_METHOD_CLIENTS,
+      this.propagateFromWindowManagerToIme,
+    );
+    await this.tryPropagateMapping(
+      TraceType.WINDOW_MANAGER,
+      TraceType.INPUT_METHOD_MANAGER_SERVICE,
+      this.propagateFromWindowManagerToIme,
+    );
+    await this.tryPropagateMapping(
+      TraceType.WINDOW_MANAGER,
+      TraceType.INPUT_METHOD_SERVICE,
+      this.propagateFromWindowManagerToIme,
+    );
+  }
 
-    const screenRecording = assertDefined(
-      this.traces.getTrace(TraceType.SCREEN_RECORDING),
-    );
-    const surfaceFlinger = assertDefined(
-      this.traces.getTrace(TraceType.SURFACE_FLINGER),
-    );
-
+  private async propagateFromScreenRecordingToSurfaceFlinger(
+    screenRecording: Trace<object>,
+    surfaceFlinger: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
     screenRecording.forEachEntry((srcEntry) => {
       const startSearchTime = srcEntry
         .getTimestamp()
@@ -98,30 +132,17 @@ export class FrameMapper {
         );
       }
     });
-
-    const frameMap = frameMapBuilder.build();
-    surfaceFlinger.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private async tryPropagateFromSurfaceFlingerToTransactions() {
-    const frameMapBuilder = this.tryStartFrameMapping(
-      TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS,
-    );
-    if (!frameMapBuilder) {
-      return;
-    }
-
-    const transactions = assertDefined(
-      this.traces.getTrace(TraceType.TRANSACTIONS),
-    );
-    const transactionEntries = await transactions.customQuery(
+  private async propagateFromSurfaceFlingerToTraceWithVsyncIds(
+    surfaceFlinger: Trace<object>,
+    traceWithVsyncIds: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
+    const entries = await traceWithVsyncIds.customQuery(
       CustomQueryType.VSYNCID,
     );
 
-    const surfaceFlinger = assertDefined(
-      this.traces.getTrace(TraceType.SURFACE_FLINGER),
-    );
     const surfaceFlingerEntries = await surfaceFlinger.customQuery(
       CustomQueryType.VSYNCID,
     );
@@ -143,7 +164,7 @@ export class FrameMapper {
       vsyncIdToFrames.set(vsyncId, frames);
     });
 
-    transactionEntries.forEach((dstEntry) => {
+    entries.forEach((dstEntry) => {
       const vsyncId = dstEntry.getValue();
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {
@@ -151,27 +172,27 @@ export class FrameMapper {
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), frames);
     });
-
-    const frameMap = frameMapBuilder.build();
-    transactions.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private tryPropagateFromTransactionsToWindowManager() {
-    const frameMapBuilder = this.tryStartFrameMapping(
-      TraceType.TRANSACTIONS,
-      TraceType.WINDOW_MANAGER,
-    );
-    if (!frameMapBuilder) {
-      return;
-    }
+  private async propagateFromSurfaceFlingerToViewCapture(
+    surfaceFlinger: Trace<object>,
+    viewCapture: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
+    surfaceFlinger.forEachEntry((srcEntry) => {
+      const dstEntry = viewCapture.findLastLowerEntry(srcEntry.getTimestamp());
+      if (!dstEntry) {
+        return;
+      }
+      frameMapBuilder.setFrames(dstEntry.getIndex(), srcEntry.getFramesRange());
+    });
+  }
 
-    const windowManager = assertDefined(
-      this.traces.getTrace(TraceType.WINDOW_MANAGER),
-    );
-    const transactions = assertDefined(
-      this.traces.getTrace(TraceType.TRANSACTIONS),
-    );
-
+  private async propagateFromTransactionsToWindowManager(
+    transactions: Trace<object>,
+    windowManager: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
     let prevWindowManagerEntry: TraceEntry<object> | undefined;
     windowManager.forEachEntry((windowManagerEntry) => {
       if (prevWindowManagerEntry) {
@@ -199,25 +220,13 @@ export class FrameMapper {
         matches.getFramesRange(),
       );
     }
-
-    const frameMap = frameMapBuilder.build();
-    windowManager.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private tryPropagateFromWindowManagerToProtoLog() {
-    const frameMapBuilder = this.tryStartFrameMapping(
-      TraceType.WINDOW_MANAGER,
-      TraceType.PROTO_LOG,
-    );
-    if (!frameMapBuilder) {
-      return;
-    }
-
-    const protoLog = assertDefined(this.traces.getTrace(TraceType.PROTO_LOG));
-    const windowManager = assertDefined(
-      this.traces.getTrace(TraceType.WINDOW_MANAGER),
-    );
-
+  private async propagateFromWindowManagerToProtoLog(
+    windowManager: Trace<object>,
+    protoLog: Trace<object>,
+    frameMapBuilder: FrameMapBuilder,
+  ) {
     windowManager.forEachEntry((prevSrcEntry) => {
       const srcEntryIndex = prevSrcEntry.getIndex() + 1;
       const srcEntry =
@@ -252,39 +261,16 @@ export class FrameMapper {
         );
       });
     }
-
-    const frameMap = frameMapBuilder.build();
-    protoLog.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private tryPropagateFromWindowManagerToIme() {
-    const imeTypes = [
-      TraceType.INPUT_METHOD_CLIENTS,
-      TraceType.INPUT_METHOD_MANAGER_SERVICE,
-      TraceType.INPUT_METHOD_SERVICE,
-    ];
-    for (const imeType of imeTypes) {
-      const frameMapBuilder = this.tryStartFrameMapping(
-        TraceType.WINDOW_MANAGER,
-        imeType,
-      );
-      if (frameMapBuilder) {
-        this.propagateFromWindowManagerToIme(imeType, frameMapBuilder);
-      }
-    }
-  }
-
-  private propagateFromWindowManagerToIme(
-    imeTraceType: TraceType,
+  private async propagateFromWindowManagerToIme(
+    windowManager: Trace<object>,
+    ime: Trace<object>,
     frameMapBuilder: FrameMapBuilder,
   ) {
     // Value used to narrow time-based searches of corresponding WindowManager entries
     const MAX_TIME_DIFFERENCE_NS = 200000000n; // 200 ms
 
-    const ime = assertDefined(this.traces.getTrace(imeTraceType));
-    const windowManager = assertDefined(
-      this.traces.getTrace(TraceType.WINDOW_MANAGER),
-    );
     const abs = (n: bigint): bigint => (n < 0n ? -n : n);
 
     ime.forEachEntry((dstEntry) => {
@@ -301,23 +287,38 @@ export class FrameMapper {
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), srcEntry.getFramesRange());
     });
-
-    const frameMap = frameMapBuilder.build();
-    ime.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
   }
 
-  private tryStartFrameMapping(
+  private async tryPropagateMapping(
     srcTraceType: TraceType,
     dstTraceType: TraceType,
-  ): FrameMapBuilder | undefined {
+    mappingLogic: (
+      srcTrace: Trace<{}>,
+      dstTrace: Trace<{}>,
+      frameMapBuilder: FrameMapBuilder,
+    ) => Promise<void>,
+  ) {
     const srcTrace = this.traces.getTrace(srcTraceType);
-    const dstTrace = this.traces.getTrace(dstTraceType);
-    if (!srcTrace || !dstTrace || !srcTrace.hasFrameInfo()) {
-      return undefined;
+    if (!srcTrace || !srcTrace.hasFrameInfo()) {
+      return;
     }
 
-    const framesRange = srcTrace.getFramesRange();
-    const lengthFrames = framesRange ? framesRange.end : 0;
-    return new FrameMapBuilder(dstTrace.lengthEntries, lengthFrames);
+    const promises = this.traces
+      .getTraces(dstTraceType)
+      .map(async (dstTrace) => {
+        const framesRange = srcTrace.getFramesRange();
+        const lengthFrames = framesRange ? framesRange.end : 0;
+        const frameMapBuilder = new FrameMapBuilder(
+          dstTrace.lengthEntries,
+          lengthFrames,
+        );
+
+        await mappingLogic(srcTrace, dstTrace, frameMapBuilder);
+
+        const frameMap = frameMapBuilder.build();
+        dstTrace.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
+      });
+
+    await Promise.all(promises);
   }
 }

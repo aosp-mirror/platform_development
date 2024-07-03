@@ -17,14 +17,15 @@
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class ViewerWindowManager implements Viewer {
+export class ViewerWindowManager implements Viewer {
   static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
 
   private readonly trace: Trace<HierarchyTreeNode>;
@@ -39,87 +40,23 @@ class ViewerWindowManager implements Viewer {
   ) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-window-manager');
-    this.presenter = new Presenter(trace, traces, storage, (uiData: UiData) => {
+
+    const notifyViewCallback = (uiData: UiData) => {
       (this.htmlElement as any).inputData = uiData;
-    });
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyPinnedChange,
-      (event) =>
-        this.presenter.onPinnedItemChange(
-          (event as CustomEvent).detail.pinnedItem,
-        ),
+    };
+    this.presenter = new Presenter(
+      trace,
+      traces,
+      storage,
+      notifyViewCallback as NotifyHierarchyViewCallbackType,
     );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedIdChange,
-      async (event) =>
-        await this.presenter.onHighlightedIdChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedPropertyChange,
-      (event) =>
-        this.presenter.onHighlightedPropertyChange(
-          (event as CustomEvent).detail.id,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyUserOptionsChange,
-      async (event) =>
-        await this.presenter.onHierarchyUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HierarchyFilterChange,
-      async (event) =>
-        await this.presenter.onHierarchyFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      async (event) =>
-        await this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesFilterChange,
-      async (event) =>
-        await this.presenter.onPropertiesFilterChange(
-          (event as CustomEvent).detail.filterString,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.HighlightedNodeChange,
-      async (event) =>
-        await this.presenter.onHighlightedNodeChange(
-          (event as CustomEvent).detail.node,
-        ),
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectShowStateChange,
-      async (event) => {
-        await this.presenter.onRectShowStateChange(
-          (event as CustomEvent).detail.rectId,
-          (event as CustomEvent).detail.state,
-        );
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.RectsUserOptionsChange,
-      (event) => {
-        this.presenter.onRectsUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        );
-      },
-    );
+    this.presenter.addEventListeners(this.htmlElement);
+
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Window Manager',
+      TRACE_INFO[TraceType.WINDOW_MANAGER].name,
     );
   }
 
@@ -139,5 +76,3 @@ class ViewerWindowManager implements Viewer {
     return [this.trace];
   }
 }
-
-export {ViewerWindowManager};

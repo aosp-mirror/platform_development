@@ -18,28 +18,91 @@ import {assertDefined} from 'common/assert_utils';
 import {TracePositionUpdate} from 'messaging/winscope_event';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {Trace} from 'trace/trace';
-import {TraceType} from 'trace/trace_type';
 import {
   DEFAULT_PROPERTY_FORMATTER,
   TIMESTAMP_NODE_FORMATTER,
 } from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
+import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
+import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
-import {UiData, UiDataMessage} from './ui_data';
 
-describe('ViewerProtoLogPresenter', () => {
-  let presenter: Presenter;
-  let inputMessages: UiDataMessage[];
-  let trace: Trace<PropertyTreeNode>;
-  let positionUpdate10: TracePositionUpdate;
-  let positionUpdate11: TracePositionUpdate;
-  let positionUpdate12: TracePositionUpdate;
-  let outputUiData: undefined | UiData;
+class PresenterProtologTest extends AbstractLogViewerPresenterTest {
+  private trace: Trace<PropertyTreeNode> | undefined;
+  private positionUpdate: TracePositionUpdate | undefined;
+  private secondPositionUpdate: TracePositionUpdate | undefined;
 
-  beforeEach(async () => {
+  override readonly shouldExecuteHeaderTests = false;
+  override readonly shouldExecuteFilterTests = true;
+  override readonly shouldExecuteCurrentIndexTests = true;
+  override readonly shouldExecutePropertiesTests = false;
+
+  override readonly totalOutputEntries = 3;
+  override readonly expectedIndexOfSecondPositionUpdate = 1;
+  override readonly expectedInitialFilterOptions = new Map<
+    LogFieldType,
+    string[] | number
+  >([
+    [LogFieldType.LOG_LEVEL, ['level0', 'level1', 'level2']],
+    [LogFieldType.TAG, ['tag0', 'tag1', 'tag2']],
+    [LogFieldType.SOURCE_FILE, ['sourcefile0', 'sourcefile1', 'sourcefile2']],
+  ]);
+  override readonly filterValuesToSet = new Map<
+    LogFieldType,
+    Array<string | string[]>
+  >([
+    [LogFieldType.LOG_LEVEL, [[], ['level1'], ['level0', 'level1', 'level2']]],
+    [LogFieldType.TAG, [[], ['tag1'], ['tag0', 'tag1', 'tag2']]],
+    [
+      LogFieldType.SOURCE_FILE,
+      [[], ['sourcefile1'], ['sourcefile0', 'sourcefile1', 'sourcefile2']],
+    ],
+    [LogFieldType.TEXT, [[], 'text', 'text0', 'text1']],
+  ]);
+  override readonly expectedFieldValuesAfterFilter = new Map<
+    LogFieldType,
+    Array<LogFieldValue[] | number>
+  >([
+    [
+      LogFieldType.LOG_LEVEL,
+      [this.totalOutputEntries, ['level1'], ['level0', 'level1', 'level2']],
+    ],
+    [
+      LogFieldType.TAG,
+      [this.totalOutputEntries, ['tag1'], ['tag0', 'tag1', 'tag2']],
+    ],
+    [
+      LogFieldType.SOURCE_FILE,
+      [
+        this.totalOutputEntries,
+        ['sourcefile1'],
+        ['sourcefile0', 'sourcefile1', 'sourcefile2'],
+      ],
+    ],
+    [
+      LogFieldType.TEXT,
+      [
+        this.totalOutputEntries,
+        ['text0', 'text1', 'text2'],
+        ['text0'],
+        ['text1'],
+      ],
+    ],
+  ]);
+  override readonly logEntryClickIndex = 10;
+  override readonly filterNameForCurrentIndexTest = LogFieldType.LOG_LEVEL;
+  override readonly filterChangeForCurrentIndexTest = ['level1'];
+  override readonly expectedCurrentIndexAfterFilterChange = 0;
+  override readonly secondFilterChangeForCurrentIndexTest = [
+    'level0',
+    'level1',
+  ];
+  override readonly expectedCurrentIndexAfterSecondFilterChange = 1;
+
+  override async setUpTestEnvironment(): Promise<void> {
     const time10 = TimestampConverterUtils.makeRealTimestamp(10n);
     const time11 = TimestampConverterUtils.makeRealTimestamp(11n);
     const time12 = TimestampConverterUtils.makeRealTimestamp(12n);
@@ -121,179 +184,41 @@ describe('ViewerProtoLogPresenter', () => {
         .build(),
     ];
 
-    inputMessages = [
-      {
-        originalIndex: 0,
-        text: 'text0',
-        time: assertDefined(entries[0].getChildByName('timestamp')),
-        tag: 'tag0',
-        level: 'level0',
-        at: 'sourcefile0',
-      },
-      {
-        originalIndex: 1,
-        text: 'text1',
-        time: assertDefined(entries[1].getChildByName('timestamp')),
-        tag: 'tag1',
-        level: 'level1',
-        at: 'sourcefile1',
-      },
-      {
-        originalIndex: 2,
-        text: 'text2',
-        time: assertDefined(entries[2].getChildByName('timestamp')),
-        tag: 'tag2',
-        level: 'level2',
-        at: 'sourcefile2',
-      },
-    ];
-
-    trace = new TraceBuilder<PropertyTreeNode>()
+    this.trace = new TraceBuilder<PropertyTreeNode>()
       .setEntries(entries)
       .setTimestamps([time10, time11, time12])
       .build();
 
-    positionUpdate10 = TracePositionUpdate.fromTimestamp(time10);
-    positionUpdate11 = TracePositionUpdate.fromTimestamp(time11);
-    positionUpdate12 = TracePositionUpdate.fromTimestamp(time12);
+    this.positionUpdate = TracePositionUpdate.fromTimestamp(time10);
+    this.secondPositionUpdate = TracePositionUpdate.fromTimestamp(time11);
+  }
 
-    outputUiData = undefined;
-
-    presenter = new Presenter(trace, (data: UiData) => {
-      outputUiData = data;
-    });
-    await presenter.onAppEvent(positionUpdate10); // trigger initialization
-  });
-
-  it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder()
-      .setEntries(TraceType.PROTO_LOG, [])
+  override createPresenterWithEmptyTrace(
+    callback: NotifyLogViewCallbackType,
+  ): Presenter {
+    const emptyTrace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries([])
       .build();
-    const trace = new TraceBuilder<PropertyTreeNode>().setEntries([]).build();
-    presenter = new Presenter(trace, (data: UiData) => {
-      outputUiData = data;
-    });
+    return new Presenter(emptyTrace, callback);
+  }
 
-    const uiData = assertDefined(outputUiData);
-    expect(uiData.messages).toEqual([]);
-    expect(uiData.currentMessageIndex).toBeUndefined();
+  override async createPresenter(
+    callback: NotifyLogViewCallbackType,
+  ): Promise<Presenter> {
+    const presenter = new Presenter(assertDefined(this.trace), callback);
+    await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
+    return presenter;
+  }
 
-    await presenter.onAppEvent(positionUpdate10);
+  override getPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.positionUpdate);
+  }
 
-    const newUiData = assertDefined(outputUiData);
-    expect(newUiData.messages).toEqual([]);
-    expect(newUiData.currentMessageIndex).toBeUndefined();
-  });
+  override getSecondPositionUpdate(): TracePositionUpdate {
+    return assertDefined(this.secondPositionUpdate);
+  }
+}
 
-  it('processes trace position updates', async () => {
-    await presenter.onAppEvent(positionUpdate10);
-
-    const uiData = assertDefined(outputUiData);
-    expect(uiData.allLogLevels).toEqual(['level0', 'level1', 'level2']);
-    expect(uiData.allTags).toEqual(['tag0', 'tag1', 'tag2']);
-    expect(uiData.allSourceFiles).toEqual([
-      'sourcefile0',
-      'sourcefile1',
-      'sourcefile2',
-    ]);
-    expect(uiData.messages).toEqual(inputMessages);
-    expect(uiData.currentMessageIndex).toEqual(0);
-  });
-
-  it('updates displayed messages according to log levels filter', () => {
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onLogLevelsFilterChanged([]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onLogLevelsFilterChanged(['level1']);
-    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
-
-    presenter.onLogLevelsFilterChanged(['level0', 'level1', 'level2']);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-  });
-
-  it('updates displayed messages according to tags filter', () => {
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onTagsFilterChanged([]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onTagsFilterChanged(['tag1']);
-    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
-
-    presenter.onTagsFilterChanged(['tag0', 'tag1', 'tag2']);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-  });
-
-  it('updates displayed messages according to source files filter', () => {
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onSourceFilesFilterChanged([]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onSourceFilesFilterChanged(['sourcefile1']);
-    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
-
-    presenter.onSourceFilesFilterChanged([
-      'sourcefile0',
-      'sourcefile1',
-      'sourcefile2',
-    ]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-  });
-
-  it('updates displayed messages according to search string filter', () => {
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onSearchStringFilterChanged('');
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onSearchStringFilterChanged('text');
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-
-    presenter.onSearchStringFilterChanged('text0');
-    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[0]]);
-
-    presenter.onSearchStringFilterChanged('text1');
-    expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
-  });
-
-  it('computes current message index', async () => {
-    // Position -> entry #0
-    await presenter.onAppEvent(positionUpdate10);
-    presenter.onLogLevelsFilterChanged([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
-
-    presenter.onLogLevelsFilterChanged(['level0']);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
-
-    presenter.onLogLevelsFilterChanged([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
-
-    // Position -> entry #1
-    await presenter.onAppEvent(positionUpdate11);
-    presenter.onLogLevelsFilterChanged([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
-
-    presenter.onLogLevelsFilterChanged(['level0']);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
-
-    presenter.onLogLevelsFilterChanged(['level1']);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
-
-    presenter.onLogLevelsFilterChanged(['level0', 'level1']);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
-
-    // Position -> entry #2
-    await presenter.onAppEvent(positionUpdate12);
-    presenter.onLogLevelsFilterChanged([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(2);
-  });
-
-  it('updates selected message index', () => {
-    expect(assertDefined(outputUiData).selectedMessageIndex).toBeUndefined();
-    presenter.onMessageClicked(3);
-    expect(assertDefined(outputUiData).selectedMessageIndex).toEqual(3);
-  });
+describe('PresenterProtolog', () => {
+  new PresenterProtologTest().execute();
 });

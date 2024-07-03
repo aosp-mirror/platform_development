@@ -22,7 +22,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
+import {ProxyState} from 'trace_collection/proxy_client';
 import {AdbProxyComponent} from './adb_proxy_component';
 
 describe('AdbProxyComponent', () => {
@@ -45,7 +45,6 @@ describe('AdbProxyComponent', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AdbProxyComponent);
     component = fixture.componentInstance;
-    component.proxy = proxyClient;
     htmlElement = fixture.nativeElement;
   });
 
@@ -54,7 +53,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('check correct icon and message displays if no proxy', async () => {
-    await component.proxy.setState(ProxyState.NO_PROXY);
+    await component.client.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
     expect(
       htmlElement.querySelector('.further-adb-info-text')?.innerHTML,
@@ -62,7 +61,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('check correct icon and message displays if invalid proxy', async () => {
-    await component.proxy.setState(ProxyState.INVALID_VERSION);
+    await component.client.setState(ProxyState.INVALID_VERSION);
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
       'Your local proxy version is incompatible with Winscope.',
@@ -71,7 +70,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('check correct icon and message displays if unauthorised proxy', async () => {
-    await component.proxy.setState(ProxyState.UNAUTH);
+    await component.client.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
       'Proxy authorisation required.',
@@ -80,7 +79,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('check download proxy button downloads proxy', async () => {
-    await component.proxy.setState(ProxyState.NO_PROXY);
+    await component.client.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
     const spy = spyOn(window, 'open');
     const button: HTMLButtonElement | null = htmlElement.querySelector(
@@ -93,27 +92,27 @@ describe('AdbProxyComponent', () => {
   });
 
   it('check retry button if no proxy trys to reconnect proxy', async () => {
-    await component.proxy.setState(ProxyState.NO_PROXY);
+    await component.client.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
     const button: HTMLButtonElement | null =
       htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
-    expect(component.proxy.state).toBe(ProxyState.CONNECTING);
+    expect(component.client.getState()).toBe(ProxyState.CONNECTING);
   });
 
   it('check input proxy token saved as expected', async () => {
     const spy = spyOn(component.addKey, 'emit');
 
-    await component.proxy.setState(ProxyState.UNAUTH);
+    await component.client.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
     let button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
     button?.click();
     fixture.detectChanges();
     expect(spy).not.toHaveBeenCalled();
 
-    await component.proxy.setState(ProxyState.UNAUTH);
+    await component.client.setState(ProxyState.UNAUTH);
     component.proxyKeyItem = '12345';
     fixture.detectChanges();
     button = htmlElement.querySelector('.retry');
@@ -123,8 +122,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('retries proxy connection on enter key', async () => {
-    const spy = spyOn(component.proxyChange, 'emit');
-    await component.proxy.setState(ProxyState.UNAUTH);
+    await component.client.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
     const proxyKeyInputField = assertDefined(
       htmlElement.querySelector('.proxy-key-input-field'),
@@ -139,6 +137,6 @@ describe('AdbProxyComponent', () => {
     );
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(spy).toHaveBeenCalled();
+    expect(component.client.getState()).toBe(ProxyState.CONNECTING);
   });
 });

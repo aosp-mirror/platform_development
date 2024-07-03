@@ -14,14 +14,38 @@
  * limitations under the License.
  */
 
-import {Transition} from 'trace/transition';
+import {TraceEntry} from 'trace/trace';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  LogEntry,
+  LogField,
+  LogFieldType,
+  UiDataLog,
+} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
-export class UiData {
+export class UiData implements UiDataLog {
   constructor(
-    public entries: Transition[],
-    public selectedTransition?: UiPropertyTreeNode,
+    public headers: LogFieldType[],
+    public entries: LogEntry[],
+    public selectedIndex: undefined | number,
+    public scrollToIndex: undefined | number,
+    public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  static EMPTY = new UiData([], undefined);
+  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+}
+
+export class TransitionsEntry implements LogEntry {
+  constructor(
+    public traceEntry: TraceEntry<PropertyTreeNode>,
+    public fields: LogField[],
+    public propertiesTree: PropertyTreeNode | undefined,
+  ) {}
+}
+
+export enum TransitionStatus {
+  ABORTED = 'ABORTED',
+  MERGED = 'MERGED',
+  PLAYED = 'PLAYED',
 }
