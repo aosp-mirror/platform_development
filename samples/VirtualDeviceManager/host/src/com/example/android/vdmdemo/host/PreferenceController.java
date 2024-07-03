@@ -106,7 +106,11 @@ final class PreferenceController {
 
             new InternalBoolRule(R.string.internal_pref_virtual_rotary_supported,
                     VANILLA_ICE_CREAM,
-                    android.companion.virtualdevice.flags.Flags::virtualRotary)
+                    android.companion.virtualdevice.flags.Flags::virtualRotary),
+
+            new InternalBoolRule(R.string.internal_pref_display_rotation_supported,
+                    VANILLA_ICE_CREAM,
+                    android.companion.virtualdevice.flags.Flags::virtualDisplayRotationApi)
     );
     // LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options)
 
