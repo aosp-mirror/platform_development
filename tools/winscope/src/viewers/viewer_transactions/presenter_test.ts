@@ -43,6 +43,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;
+  override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 13;
   override readonly expectedInitialFilterOptions = new Map<
     LogFieldName,
