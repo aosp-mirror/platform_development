@@ -397,7 +397,9 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 ## SDK Version
 
-### SDK level 36
+### Beyond Android 15
+
+-   Added support for virtual display rotation.
 
 -   Added support for virtual rotary input.
 
