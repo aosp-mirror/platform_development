@@ -17,6 +17,8 @@ import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {MatListModule} from '@angular/material/list';
@@ -36,6 +38,7 @@ import {AdbProxyComponent} from './adb_proxy_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {LoadProgressComponent} from './load_progress_component';
 import {TraceConfigComponent} from './trace_config_component';
+import {WarningDialogComponent} from './warning_dialog_component';
 import {WebAdbComponent} from './web_adb_component';
 
 describe('CollectTracesComponent', () => {
@@ -58,6 +61,8 @@ describe('CollectTracesComponent', () => {
         MatProgressBarModule,
         BrowserAnimationsModule,
         MatSnackBarModule,
+        MatDialogModule,
+        MatCheckboxModule,
       ],
       providers: [MatSnackBar],
       declarations: [
@@ -66,6 +71,7 @@ describe('CollectTracesComponent', () => {
         WebAdbComponent,
         TraceConfigComponent,
         LoadProgressComponent,
+        WarningDialogComponent,
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -194,12 +200,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays trace collection config elements', () => {
-    const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
-    fixture.detectChanges();
+    goToConfigSection();
 
     const el = assertDefined(
       htmlElement.querySelector('.trace-collection-config'),
@@ -216,30 +217,17 @@ describe('CollectTracesComponent', () => {
   });
 
   it('start trace button works as expected', () => {
-    const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
-    fixture.detectChanges();
+    goToConfigSection();
 
-    const spy = spyOn(connection, 'startTrace');
-    const start = assertDefined(
-      htmlElement.querySelector('.start-btn button'),
-    ) as HTMLButtonElement;
-    start.click();
+    const spy = spyOn(assertDefined(component.adbConnection), 'startTrace');
+    clickStartTraceButton();
     expect(spy).toHaveBeenCalled();
   });
 
   it('dump state button works as expected', () => {
-    const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
-    fixture.detectChanges();
+    goToConfigSection();
 
-    const spy = spyOn(connection, 'dumpState');
+    const spy = spyOn(assertDefined(component.adbConnection), 'dumpState');
     const dump = assertDefined(
       htmlElement.querySelector('.dump-btn button'),
     ) as HTMLButtonElement;
@@ -248,14 +236,12 @@ describe('CollectTracesComponent', () => {
   });
 
   it('change device button works as expected', () => {
-    const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
-    fixture.detectChanges();
+    goToConfigSection();
 
-    const spy = spyOn(connection, 'clearLastDevice');
+    const spy = spyOn(
+      assertDefined(component.adbConnection),
+      'clearLastDevice',
+    );
     const change = assertDefined(
       htmlElement.querySelector('.change-btn'),
     ) as HTMLButtonElement;
@@ -374,6 +360,69 @@ describe('CollectTracesComponent', () => {
     expect(endButton.disabled).toBeTrue();
   });
 
+  it('opens IME warning dialog', async () => {
+    goToConfigSection();
+    const dialog = await openAndReturnDialog();
+    expect(dialog.textContent).toContain(
+      'Cannot build frame mapping for IME with selected traces',
+    );
+  });
+
+  it('starts traces after IME warning dialog', async () => {
+    const spy = spyOn(assertDefined(component.adbConnection), 'startTrace');
+    goToConfigSection();
+    const dialog = await openAndReturnDialog();
+
+    const buttons = dialog.querySelectorAll('.warning-action-buttons button');
+    (buttons.item(buttons.length - 1) as HTMLElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('goes back to edit config display after IME warning dialog', async () => {
+    const spy = spyOn(assertDefined(component.adbConnection), 'startTrace');
+    goToConfigSection();
+    const dialog = await openAndReturnDialog();
+
+    const button = assertDefined(
+      dialog.querySelector('.warning-action-buttons button'),
+    ) as HTMLElement;
+    button.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(spy).not.toHaveBeenCalled();
+    expect(htmlElement.querySelector('trace-config')).toBeTruthy();
+  });
+
+  it('does not show IME warning dialog again in same session if user selects "Do not show again"', async () => {
+    const spy = spyOn(assertDefined(component.adbConnection), 'startTrace');
+    goToConfigSection();
+    const dialog = await openAndReturnDialog();
+
+    const option = assertDefined(
+      dialog.querySelector('.warning-action-boxes mat-checkbox input'),
+    ) as HTMLInputElement;
+    option.checked = true;
+    option.click();
+    fixture.detectChanges();
+
+    const button = assertDefined(
+      dialog.querySelector('.warning-action-buttons button'),
+    ) as HTMLElement;
+    button.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(htmlElement.querySelector('trace-config')).toBeTruthy();
+
+    await clickStartTraceButton();
+
+    expect(spy).toHaveBeenCalled();
+    expect(document.querySelector('warning-dialog')).toBeNull();
+  });
+
   function setDeviceSpies(connection: AdbConnection) {
     connection.getDevices = jasmine
       .createSpy()
@@ -381,5 +430,37 @@ describe('CollectTracesComponent', () => {
     connection.getSelectedDevice = jasmine
       .createSpy()
       .and.returnValue(mockDevice);
+  }
+
+  function goToConfigSection() {
+    const connection = assertDefined(component.adbConnection);
+    connection.isConfigureTraceState = jasmine
+      .createSpy()
+      .and.returnValue(true);
+    setDeviceSpies(connection);
+    fixture.detectChanges();
+  }
+
+  function updateTraceConfigToInvalidIMEFrameMapping() {
+    const config = assertDefined(component.traceConfig);
+    config['ime'].run = true;
+    config['layers_trace'].run = false;
+  }
+
+  async function clickStartTraceButton() {
+    const start = assertDefined(
+      htmlElement.querySelector('.start-btn button'),
+    ) as HTMLButtonElement;
+    start.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
+  async function openAndReturnDialog(): Promise<HTMLElement> {
+    updateTraceConfigToInvalidIMEFrameMapping();
+    await clickStartTraceButton();
+    return assertDefined(
+      document.querySelector('warning-dialog'),
+    ) as HTMLElement;
   }
 });
