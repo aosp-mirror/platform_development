@@ -67,7 +67,7 @@ class TimestampConverterTestUtils {
   }
 
   makeZeroTimestamp(): Timestamp {
-    return this.TIMESTAMP_CONVERTER.makeZeroTimestamp();
+    return this.TIMESTAMP_CONVERTER_NO_RTE_OFFSET.makeZeroTimestamp();
   }
 }
 
