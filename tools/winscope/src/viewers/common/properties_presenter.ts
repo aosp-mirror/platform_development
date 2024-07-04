@@ -34,8 +34,9 @@ export class PropertiesPresenter {
 
   constructor(
     private userOptions: UserOptions,
-    private denylistProperties: string[],
+    private propertiesDenylist: string[],
     private customOperations?: Array<Operation<UiPropertyTreeNode>>,
+    private defaultAllowlist: string[] = [],
   ) {}
 
   getUserOptions() {
@@ -97,7 +98,7 @@ export class PropertiesPresenter {
         : undefined;
       await new AddDiffsPropertiesTree(
         PropertiesPresenter.isPropertyNodeModified,
-        this.denylistProperties,
+        this.propertiesDenylist,
       ).executeInPlace(uiTree, prevEntryUiTree);
     }
 
@@ -108,16 +109,15 @@ export class PropertiesPresenter {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [];
 
-    if (this.denylistProperties) {
+    if (this.propertiesDenylist) {
       predicatesDiscardingChildren.push(
-        UiTreeUtils.makeDenyListFilterByName(this.denylistProperties),
+        UiTreeUtils.makeDenyListFilterByName(this.propertiesDenylist),
       );
     }
 
     if (!this.userOptions['showDefaults']?.enabled) {
-      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
       predicatesDiscardingChildren.push(
-        UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+        UiTreeUtils.makeIsNotDefaultFilter(this.defaultAllowlist),
       );
     }
 

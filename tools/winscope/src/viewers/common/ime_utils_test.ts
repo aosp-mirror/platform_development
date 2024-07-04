@@ -128,7 +128,7 @@ describe('ImeUtils', () => {
 
     expect(
       assertDefined(layers.properties.focusedWindowColor).formattedValue(),
-    ).toEqual('(0, 0, 0, 1)');
+    ).toEqual('(0, 0, 0), alpha: 1');
 
     const taskLayerOfImeContainer = assertDefined(
       layers.taskLayerOfImeContainer,

@@ -130,6 +130,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
+    undefined,
+    ['a', 'type'],
   );
   protected override multiTraceType = undefined;
 
