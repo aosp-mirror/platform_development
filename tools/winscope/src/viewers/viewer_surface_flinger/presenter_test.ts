@@ -54,7 +54,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   override readonly numberOfNonDefaultProperties = 24;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
   override readonly propertiesFilterString = 'bound';
-  override readonly expectedTotalRects = 7;
+  override readonly expectedTotalRects = 13;
   override readonly expectedVisibleRects = 6;
   override readonly treeNodeLongName =
     'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
@@ -219,32 +219,11 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
     const curatedProperties = assertDefined(
       (uiData as UiData).curatedProperties,
     );
-    expect(curatedProperties.flags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+    expect(curatedProperties.flags).toEqual('0');
     expect(curatedProperties.summary).toEqual([
       {
-        key: 'Covered by',
-        layerValues: [
-          {
-            layerId: '65',
-            nodeId: '65 ScreenDecorOverlayBottom#65',
-            name: 'ScreenDecorOverlayBottom#65',
-          },
-          {
-            layerId: '62',
-            nodeId: '62 ScreenDecorOverlay#62',
-            name: 'ScreenDecorOverlay#62',
-          },
-          {
-            layerId: '85',
-            nodeId: '85 NavigationBar0#85',
-            name: 'NavigationBar0#85',
-          },
-          {
-            layerId: '89',
-            nodeId: '89 StatusBar#89',
-            name: 'StatusBar#89',
-          },
-        ],
+        key: 'Invisible due to',
+        simpleValue: 'buffer is empty, null visible region',
       },
     ]);
   }
@@ -316,7 +295,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
         await presenter.onAppEvent(positionUpdate);
         expect(
           uiData.rectsToDraw.filter((rect) => rect.hasContent).length,
-        ).toEqual(1);
+        ).toEqual(2);
       });
 
       it('keeps alpha and transform type regardless of show/hide defaults', async () => {
@@ -345,6 +324,44 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           treeForAlphaCheck,
           treeForTransformCheck,
         );
+      });
+
+      it('updates curated properties correctly', async () => {
+        await presenter.onAppEvent(this.getPositionUpdate());
+
+        const rect = assertDefined(uiData.rectsToDraw?.at(4));
+        await presenter.onHighlightedIdChange(rect.id);
+        const curatedProperties = assertDefined(
+          (uiData as UiData).curatedProperties,
+        );
+        expect(curatedProperties.flags).toEqual('ENABLE_BACKPRESSURE (0x100)');
+        expect(curatedProperties.summary).toEqual([
+          {
+            key: 'Covered by',
+            layerValues: [
+              {
+                layerId: '65',
+                nodeId: '65 ScreenDecorOverlayBottom#65',
+                name: 'ScreenDecorOverlayBottom#65',
+              },
+              {
+                layerId: '62',
+                nodeId: '62 ScreenDecorOverlay#62',
+                name: 'ScreenDecorOverlay#62',
+              },
+              {
+                layerId: '85',
+                nodeId: '85 NavigationBar0#85',
+                name: 'NavigationBar0#85',
+              },
+              {
+                layerId: '89',
+                nodeId: '89 StatusBar#89',
+                name: 'StatusBar#89',
+              },
+            ],
+          },
+        ]);
       });
 
       async function checkColorAndTransformProperties(

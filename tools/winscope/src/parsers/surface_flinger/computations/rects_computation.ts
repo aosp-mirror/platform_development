@@ -123,22 +123,39 @@ export class RectsComputation implements Computation {
     return this;
   }
 
+  getInvalidBoundsForDisplay(display: PropertyTreeNode): Rect {
+    const displaySize = assertDefined(display.getChildByName('size'));
+    const [invalidX, invalidY] = [
+      assertDefined(displaySize.getChildByName('w')?.getValue()) * 10,
+      assertDefined(displaySize.getChildByName('h')?.getValue()) * 10,
+    ];
+    return new Rect(-invalidX, -invalidY, invalidX * 2, invalidY * 2);
+  }
+
   executeInPlace(): void {
     if (!this.root) {
       throw new Error('root not set in SF rects computation');
     }
     const groupIdToAbsoluteZ = new Map<number, number>();
+    const invalidBoundsForDisplay = new Map<number, Rect>();
 
     const displays =
       this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
     const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
 
-    displayRects.forEach((displayRect) =>
-      groupIdToAbsoluteZ.set(displayRect.groupId, 1),
-    );
+    displayRects.forEach((displayRect, i) => {
+      groupIdToAbsoluteZ.set(displayRect.groupId, 1);
+      invalidBoundsForDisplay.set(
+        displayRect.groupId,
+        this.getInvalidBoundsForDisplay(displays[i]),
+      );
+    });
 
-    const layersWithRects = this.extractLayersWithRects(this.root);
+    const layersWithRects = this.extractLayersWithRects(
+      this.root,
+      invalidBoundsForDisplay,
+    );
     layersWithRects.sort(this.compareLayerZ);
 
     for (let i = layersWithRects.length - 1; i > -1; i--) {
@@ -159,11 +176,17 @@ export class RectsComputation implements Computation {
 
   private extractLayersWithRects(
     hierarchyRoot: HierarchyTreeNode,
+    invalidBoundsForDisplay: Map<number, Rect>,
   ): HierarchyTreeNode[] {
-    return hierarchyRoot.filterDfs(this.hasLayerRect);
+    return hierarchyRoot.filterDfs((node) =>
+      this.hasLayerRect(node, invalidBoundsForDisplay),
+    );
   }
 
-  private hasLayerRect(node: HierarchyTreeNode): boolean {
+  private hasLayerRect(
+    node: HierarchyTreeNode,
+    invalidBoundsForDisplay: Map<number, Rect>,
+  ): boolean {
     if (node.isRoot()) return false;
 
     const isVisible = node
@@ -175,16 +198,19 @@ export class RectsComputation implements Computation {
       );
     }
 
-    const occludedBy = node.getEagerPropertyByName('occludedBy');
-    if (
-      !isVisible &&
-      (occludedBy === undefined || occludedBy.getAllChildren().length === 0)
-    ) {
-      return false;
-    }
+    const screenBounds = node.getEagerPropertyByName('screenBounds');
+    if (!screenBounds) return false;
 
-    const bounds = node.getEagerPropertyByName('bounds');
-    if (!bounds) return false;
+    if (screenBounds && !isVisible) {
+      const layerStack = assertDefined(
+        node.getEagerPropertyByName('layerStack'),
+      ).getValue();
+      const invalidBounds = invalidBoundsForDisplay.get(layerStack);
+      if (invalidBounds === undefined) return true;
+
+      const screenBoundsRect = Rect.from(screenBounds);
+      return !screenBoundsRect.isAlmostEqual(invalidBounds);
+    }
 
     return true;
   }
