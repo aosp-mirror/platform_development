@@ -126,26 +126,43 @@ describe('MiniTimelineComponent', () => {
     expect(spy).toHaveBeenCalled();
   });
 
-  it('resets zoom on reset zoom button click', () => {
+  it('resets zoom to full time range on reset button click if initial zoom unavailable', () => {
     const expectedZoomRange = new TimeRange(timestamp15, timestamp16);
     timelineData.setZoom(expectedZoomRange);
-
-    let zoomRange = timelineData.getZoomRange();
-    let fullRange = timelineData.getFullTimeRange();
-    expect(zoomRange).toBe(expectedZoomRange);
-    expect(fullRange.from).toBe(timestamp10);
-    expect(fullRange.to).toBe(timestamp20);
-
+    const fullRange = timelineData.getFullTimeRange();
+    const zoomRange = timelineData.getZoomRange();
+    expect(zoomRange).toEqual(expectedZoomRange);
+    expect(zoomRange).not.toEqual(fullRange);
     fixture.detectChanges();
 
     const zoomButton = assertDefined(
       htmlElement.querySelector('button#reset-zoom-btn'),
     ) as HTMLButtonElement;
     zoomButton.click();
+    fixture.detectChanges();
 
-    zoomRange = timelineData.getZoomRange();
-    fullRange = timelineData.getFullTimeRange();
-    expect(zoomRange).toBe(fullRange);
+    expect(timelineData.getZoomRange()).toEqual(fullRange);
+  });
+
+  it('resets zoom to initial zoom on reset button click if available', () => {
+    const initialZoom = new TimeRange(timestamp15, timestamp16);
+    component.initialZoom = initialZoom;
+    fixture.detectChanges();
+    expect(timelineData.getZoomRange()).toEqual(initialZoom);
+
+    const newZoom = new TimeRange(timestamp10, timestamp16);
+    timelineData.setZoom(newZoom);
+    expect(timelineData.getZoomRange()).toEqual(newZoom);
+    fixture.detectChanges();
+
+    const zoomButton = assertDefined(
+      htmlElement.querySelector('button#reset-zoom-btn'),
+    ) as HTMLButtonElement;
+    zoomButton.click();
+    fixture.detectChanges();
+
+    expect(timelineData.getZoomRange()).toEqual(initialZoom);
+    expect(timelineData.getFullTimeRange()).not.toEqual(initialZoom);
   });
 
   it('show zoom controls when zoomed out', () => {
