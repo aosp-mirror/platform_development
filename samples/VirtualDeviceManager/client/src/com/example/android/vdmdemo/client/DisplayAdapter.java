@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 
 import com.example.android.vdmdemo.client.DisplayAdapter.DisplayHolder;
+import com.example.android.vdmdemo.common.RemoteEventProto.DisplayRotation;
 import com.example.android.vdmdemo.common.RemoteEventProto.InputDeviceType;
 import com.example.android.vdmdemo.common.RemoteEventProto.RemoteEvent;
 import com.example.android.vdmdemo.common.RemoteIo;
@@ -90,10 +91,11 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         }
     }
 
-    void addDisplay(boolean homeSupported) {
+    void addDisplay(boolean homeSupported, boolean rotationSupported) {
         Log.i(TAG, "Adding display " + sNextDisplayIndex);
         mDisplayRepository.add(
-                new RemoteDisplay(sNextDisplayIndex.getAndIncrement(), homeSupported));
+                new RemoteDisplay(sNextDisplayIndex.getAndIncrement(), homeSupported,
+                        rotationSupported));
         notifyItemInserted(mDisplayRepository.size() - 1);
     }
 
@@ -199,6 +201,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         private TextView mDisplayTitle = null;
         private View mRotateButton = null;
         private int mDisplayId = 0;
+        private RemoteDisplay mRemoteDisplay = null;
 
         DisplayHolder(View view) {
             super(view);
@@ -209,7 +212,8 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
                 return;
             }
             Log.i(TAG, "Rotating display " + mDisplayId + " to " + rotationDegrees);
-            mRotateButton.setEnabled(rotationDegrees == 0 || resize);
+            mRotateButton.setEnabled(rotationDegrees == 0 || resize
+                    || mRemoteDisplay.isRotationSupported());
 
             // Make sure the rotation is visible.
             View strut = itemView.requireViewById(R.id.strut);
@@ -275,8 +279,8 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
         @SuppressLint("ClickableViewAccessibility")
         void onBind(int position) {
-            RemoteDisplay remoteDisplay = mDisplayRepository.get(position);
-            mDisplayId = remoteDisplay.getDisplayId();
+            mRemoteDisplay = mDisplayRepository.get(position);
+            mDisplayId = mRemoteDisplay.getDisplayId();
             Log.v(TAG, "Binding DisplayHolder for display " + mDisplayId + " to position "
                     + position);
 
@@ -308,7 +312,7 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             backButton.setOnClickListener(v -> mInputManager.sendBack(mDisplayId));
 
             View homeButton = itemView.requireViewById(R.id.display_home);
-            if (remoteDisplay.isHomeSupported()) {
+            if (mRemoteDisplay.isHomeSupported()) {
                 homeButton.setVisibility(View.VISIBLE);
                 homeButton.setOnClickListener(v -> mInputManager.sendHome(mDisplayId));
             } else {
@@ -318,12 +322,20 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
             mRotateButton = itemView.requireViewById(R.id.display_rotate);
             mRotateButton.setOnClickListener(v -> {
                 mInputManager.setFocusedDisplayId(mDisplayId);
-                // This rotation is simply resizing the display with width with height swapped.
-                mDisplayController.setSurface(
-                        mSurface,
-                        /* width= */ mTextureView.getHeight(),
-                        /* height= */ mTextureView.getWidth());
-                rotateDisplay(mTextureView.getWidth() > mTextureView.getHeight() ? 90 : -90, true);
+                if (mRemoteDisplay.isRotationSupported()) {
+                    mRemoteIo.sendMessage(RemoteEvent.newBuilder()
+                            .setDisplayId(mDisplayId)
+                            .setDisplayRotation(DisplayRotation.newBuilder())
+                            .build());
+                } else {
+                    // This rotation is simply resizing the display with width with height swapped.
+                    mDisplayController.setSurface(
+                            mSurface,
+                            /* width= */ mTextureView.getHeight(),
+                            /* height= */ mTextureView.getWidth());
+                    rotateDisplay(mTextureView.getWidth() > mTextureView.getHeight() ? 90 : -90,
+                            true);
+                }
             });
 
             View resizeButton = itemView.requireViewById(R.id.display_resize);
@@ -404,10 +416,12 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
         // Local ID, not corresponding to the displayId of the relevant Display on the host device.
         private final int mDisplayId;
         private final boolean mHomeSupported;
+        private final boolean mRotationSupported;
 
-        RemoteDisplay(int displayId, boolean homeSupported) {
+        RemoteDisplay(int displayId, boolean homeSupported, boolean rotationSupported) {
             mDisplayId = displayId;
             mHomeSupported = homeSupported;
+            mRotationSupported = rotationSupported;
         }
 
         int getDisplayId() {
@@ -416,6 +430,10 @@ final class DisplayAdapter extends RecyclerView.Adapter<DisplayHolder> {
 
         boolean isHomeSupported() {
             return mHomeSupported;
+        }
+
+        boolean isRotationSupported() {
+            return mRotationSupported;
         }
     }
 }
