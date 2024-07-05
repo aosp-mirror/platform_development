@@ -209,7 +209,7 @@ export class RectsComputation implements Computation {
       if (invalidBounds === undefined) return true;
 
       const screenBoundsRect = Rect.from(screenBounds);
-      return !screenBoundsRect.isAlmostEqual(invalidBounds);
+      return !screenBoundsRect.isAlmostEqual(invalidBounds, 0.005);
     }
 
     return true;

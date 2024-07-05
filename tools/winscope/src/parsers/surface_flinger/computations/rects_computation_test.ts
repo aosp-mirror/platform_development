@@ -571,7 +571,7 @@ describe('RectsComputation', () => {
             cornerRadius: 0,
             layerStack: 0,
             bounds: {left: -50, top: -100, right: 50, bottom: 100},
-            screenBounds: {left: -49.999, top: -100, right: 50, bottom: 100},
+            screenBounds: {left: -49.996, top: -100, right: 50, bottom: 100},
             zOrderPath: [0],
             isComputedVisible: false,
             transform: Transform.EMPTY,
