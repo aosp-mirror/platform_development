@@ -16,7 +16,10 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
+import {
+  Transform,
+  TransformUtils,
+} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
@@ -117,18 +120,45 @@ class RectSfFactory {
 export class RectsComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
   private readonly rectsFactory = new RectSfFactory();
+  private readonly DEFAULT_INVALID_BOUNDS = new Rect(
+    -50000,
+    -50000,
+    100000,
+    100000,
+  );
 
   setRoot(value: HierarchyTreeNode): this {
     this.root = value;
     return this;
   }
 
-  getInvalidBoundsForDisplay(display: PropertyTreeNode): Rect {
-    const displaySize = assertDefined(display.getChildByName('size'));
-    const [invalidX, invalidY] = [
-      assertDefined(displaySize.getChildByName('w')?.getValue()) * 10,
-      assertDefined(displaySize.getChildByName('h')?.getValue()) * 10,
-    ];
+  // synced with getMaxDisplayBounds() in main/frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+  getInvalidBoundsFromDisplays(
+    displays: readonly PropertyTreeNode[],
+  ): Rect | undefined {
+    if (displays.length === 0) return undefined;
+    const [maxX, maxY] = displays.reduce(
+      (sizes, display) => {
+        //TODO(b/346503161): decide if we can use layerStackSpaceRect instead of size + transform
+        const displaySize = assertDefined(display.getChildByName('size'));
+        const w = assertDefined(displaySize.getChildByName('w')?.getValue());
+        const h = assertDefined(displaySize.getChildByName('h')?.getValue());
+
+        const transform = assertDefined(
+          Transform.from(assertDefined(display.getChildByName('transform'))),
+        );
+        const typeFlags = TransformUtils.getTypeFlags(transform.type);
+        const isRotated =
+          typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
+
+        return [
+          Math.max(sizes[0], isRotated ? h : w),
+          Math.max(sizes[1], isRotated ? w : h),
+        ];
+      },
+      [0, 0],
+    );
+    const [invalidX, invalidY] = [maxX * 10, maxY * 10];
     return new Rect(-invalidX, -invalidY, invalidX * 2, invalidY * 2);
   }
 
@@ -137,7 +167,6 @@ export class RectsComputation implements Computation {
       throw new Error('root not set in SF rects computation');
     }
     const groupIdToAbsoluteZ = new Map<number, number>();
-    const invalidBoundsForDisplay = new Map<number, Rect>();
 
     const displays =
       this.root.getEagerPropertyByName('displays')?.getAllChildren() ?? [];
@@ -146,15 +175,14 @@ export class RectsComputation implements Computation {
 
     displayRects.forEach((displayRect, i) => {
       groupIdToAbsoluteZ.set(displayRect.groupId, 1);
-      invalidBoundsForDisplay.set(
-        displayRect.groupId,
-        this.getInvalidBoundsForDisplay(displays[i]),
-      );
     });
+
+    const invalidBoundsFromDisplays =
+      this.getInvalidBoundsFromDisplays(displays);
 
     const layersWithRects = this.extractLayersWithRects(
       this.root,
-      invalidBoundsForDisplay,
+      invalidBoundsFromDisplays,
     );
     layersWithRects.sort(this.compareLayerZ);
 
@@ -176,16 +204,16 @@ export class RectsComputation implements Computation {
 
   private extractLayersWithRects(
     hierarchyRoot: HierarchyTreeNode,
-    invalidBoundsForDisplay: Map<number, Rect>,
+    invalidBoundsFromDisplays: Rect | undefined,
   ): HierarchyTreeNode[] {
     return hierarchyRoot.filterDfs((node) =>
-      this.hasLayerRect(node, invalidBoundsForDisplay),
+      this.hasLayerRect(node, invalidBoundsFromDisplays),
     );
   }
 
   private hasLayerRect(
     node: HierarchyTreeNode,
-    invalidBoundsForDisplay: Map<number, Rect>,
+    invalidBoundsFromDisplays: Rect | undefined,
   ): boolean {
     if (node.isRoot()) return false;
 
@@ -202,14 +230,14 @@ export class RectsComputation implements Computation {
     if (!screenBounds) return false;
 
     if (screenBounds && !isVisible) {
-      const layerStack = assertDefined(
-        node.getEagerPropertyByName('layerStack'),
-      ).getValue();
-      const invalidBounds = invalidBoundsForDisplay.get(layerStack);
-      if (invalidBounds === undefined) return true;
-
       const screenBoundsRect = Rect.from(screenBounds);
-      return !screenBoundsRect.isAlmostEqual(invalidBounds, 0.005);
+      const isInvalidFromDisplays =
+        invalidBoundsFromDisplays !== undefined &&
+        screenBoundsRect.isAlmostEqual(invalidBoundsFromDisplays, 0.005);
+      return (
+        !isInvalidFromDisplays &&
+        !screenBoundsRect.isAlmostEqual(this.DEFAULT_INVALID_BOUNDS, 0.005)
+      );
     }
 
     return true;
