@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import root from 'protos/transitions/udc/json';
@@ -78,7 +78,7 @@ export class ParserTransitionsShell extends AbstractParser<PropertyTreeNode> {
       ? this.timestampConverter.makeTimestampFromBootTimeNs(
           BigInt(entry.dispatchTimeNs.toString()),
         )
-      : this.timestampConverter.makeTimestampFromBootTimeNs(INVALID_TIME_NS);
+      : this.timestampConverter.makeZeroTimestamp();
   }
 
   protected getMagicNumber(): number[] | undefined {

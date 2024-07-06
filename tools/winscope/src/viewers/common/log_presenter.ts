@@ -32,7 +32,10 @@ export class LogPresenter {
   private currentIndex: number | undefined;
   private originalIndicesOfAllEntries: number[] = [];
 
-  constructor(private storeCurrentIndex: boolean) {}
+  constructor(
+    private storeCurrentIndex: boolean,
+    private timeOrderedEntries = true,
+  ) {}
 
   setAllEntries(value: LogEntry[]) {
     this.allEntries = value;
@@ -76,6 +79,7 @@ export class LogPresenter {
 
   applyLogEntryClick(index: number) {
     if (this.selectedIndex === index) {
+      this.scrollToIndex = undefined;
       return;
     }
     this.selectedIndex = index;
@@ -194,12 +198,19 @@ export class LogPresenter {
       this.currentIndex = undefined;
       return;
     }
+    const target = this.currentEntry.getIndex();
 
+    if (this.timeOrderedEntries) {
+      return (
+        ArrayUtils.binarySearchFirstGreaterOrEqual(
+          this.originalIndicesOfAllEntries,
+          this.currentEntry.getIndex(),
+        ) ?? this.originalIndicesOfAllEntries.length - 1
+      );
+    }
     return (
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.originalIndicesOfAllEntries,
-        this.currentEntry.getIndex(),
-      ) ?? this.originalIndicesOfAllEntries.length - 1
+      this.originalIndicesOfAllEntries.findIndex((i) => i === target) ??
+      this.originalIndicesOfAllEntries.length - 1
     );
   }
 }
