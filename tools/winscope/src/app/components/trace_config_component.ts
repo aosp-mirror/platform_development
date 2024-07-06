@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, Input} from '@angular/core';
 import {assertDefined} from 'common/assert_utils';
 import {
   EnableConfiguration,
@@ -98,8 +98,6 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
 
   @Input() traceConfig: TraceConfigurationMap | undefined;
-  @Output() readonly traceConfigChange =
-    new EventEmitter<TraceConfigurationMap>();
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];

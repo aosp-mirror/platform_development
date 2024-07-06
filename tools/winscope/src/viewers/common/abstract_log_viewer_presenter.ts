@@ -31,7 +31,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {UserOptions} from 'viewers/common/user_options';
 import {LogPresenter} from './log_presenter';
-import {LogFieldName, UiDataLog} from './ui_data_log';
+import {LogFieldType, UiDataLog} from './ui_data_log';
 import {
   LogFilterChangeDetail,
   TimestampClickDetail,
@@ -65,7 +65,7 @@ export abstract class AbstractLogViewerPresenter
       ViewerEvents.LogFilterChange,
       async (event) => {
         const detail: LogFilterChangeDetail = (event as CustomEvent).detail;
-        await this.onFilterChange(detail.name, detail.value);
+        await this.onFilterChange(detail.type, detail.value);
       },
     );
     htmlElement.addEventListener(ViewerEvents.LogEntryClick, async (event) => {
@@ -105,8 +105,8 @@ export abstract class AbstractLogViewerPresenter
     );
   }
 
-  async onFilterChange(name: LogFieldName, value: string[] | string) {
-    this.logPresenter.applyFilterChange(name, value);
+  async onFilterChange(type: LogFieldType, value: string[] | string) {
+    this.logPresenter.applyFilterChange(type, value);
     await this.updatePropertiesTree();
     this.uiData.currentIndex = this.logPresenter.getCurrentIndex();
     this.uiData.selectedIndex = this.logPresenter.getSelectedIndex();

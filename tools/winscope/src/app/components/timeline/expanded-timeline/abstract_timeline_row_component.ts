@@ -126,7 +126,7 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
     this.viewInitialized = true;
   }
 
-  async handleMouseDown(e: MouseEvent) {
+  handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     const mousePoint = {
@@ -134,15 +134,13 @@ export abstract class AbstractTimelineRowComponent<T extends {}> {
       y: e.offsetY,
     };
 
-    const transitionEntry = this.getEntryAt(mousePoint);
+    const entry = this.getEntryAt(mousePoint);
     // TODO: This can probably get made better by getting the transition and checking both the end and start timestamps match
-    if (transitionEntry && transitionEntry !== this.selectedEntry) {
+    if (entry && entry !== this.selectedEntry) {
       this.redraw();
-      this.selectedEntry = transitionEntry;
-      this.onTracePositionUpdate.emit(
-        TracePosition.fromTraceEntry(transitionEntry),
-      );
-    } else if (!transitionEntry && this.trace) {
+      this.selectedEntry = entry;
+      this.onTracePositionUpdate.emit(TracePosition.fromTraceEntry(entry));
+    } else if (!entry && this.trace) {
       this.onTraceClicked.emit(this.trace);
     }
   }

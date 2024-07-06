@@ -33,13 +33,13 @@ export class CorruptedArchive extends UserWarning {
   }
 }
 
-export class NoInputFiles extends UserWarning {
+export class NoValidFiles extends UserWarning {
   getDescriptor(): string {
-    return 'no input';
+    return 'no valid files';
   }
 
   getMessage(): string {
-    return `Input has no valid trace files`;
+    return `No valid trace files found`;
   }
 }
 

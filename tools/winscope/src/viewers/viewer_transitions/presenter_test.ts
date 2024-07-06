@@ -39,8 +39,9 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 4;
+  override readonly expectedIndexOfFirstPositionUpdate = 3;
   override readonly expectedIndexOfSecondPositionUpdate = 1;
-  override readonly logEntryClickIndex = 3;
+  override readonly logEntryClickIndex = 2;
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = await UnitTestUtils.getPerfettoParser(
@@ -100,10 +101,10 @@ class PresenterTransitionsTest extends AbstractLogViewerPresenterTest {
 
     const selectedTransition = assertDefined(uiData.propertiesTree);
     const wmData = assertDefined(selectedTransition.getChildByName('wmData'));
-    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('32');
+    expect(wmData.getChildByName('id')?.formattedValue()).toEqual('35');
     expect(wmData.getChildByName('type')?.formattedValue()).toEqual('OPEN');
     expect(wmData.getChildByName('createTimeNs')?.formattedValue()).toEqual(
-      '2023-11-21, 13:30:25.428',
+      '2023-11-21, 13:30:33.176',
     );
   }
 }

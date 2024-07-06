@@ -85,7 +85,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
-    (entry) => entry.getTimestamp().format(),
+    this.getEntryFormattedTimestamp,
   );
   protected override rectsPresenter = new RectsPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -130,6 +130,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       this.storage,
     ),
     Presenter.DENYLIST_PROPERTY_NAMES,
+    undefined,
+    ['a', 'type'],
   );
   protected override multiTraceType = undefined;
 
