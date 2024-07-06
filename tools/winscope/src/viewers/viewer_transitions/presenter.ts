@@ -50,7 +50,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   private windowTokenToTitle = new Map<string, string>();
 
   protected override keepCalculated = false;
-  protected override logPresenter = new LogPresenter(false);
+  protected override logPresenter = new LogPresenter(false, false);
   protected override propertiesPresenter = new PropertiesPresenter(
     {},
     [],

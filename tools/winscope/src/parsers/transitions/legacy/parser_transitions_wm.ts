@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {INVALID_TIME_NS, Timestamp} from 'common/time';
+import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
 import {ParserTransitionsUtils} from 'parsers/transitions/parser_transitions_utils';
 import root from 'protos/transitions/udc/json';
@@ -71,7 +71,7 @@ export class ParserTransitionsWm extends AbstractParser<PropertyTreeNode> {
     entry: com.android.server.wm.shell.ITransition,
   ): Timestamp {
     // for consistency with all transitions, elapsed nanos are defined as shell dispatch time else INVALID_TIME_NS
-    return this.timestampConverter.makeTimestampFromBootTimeNs(INVALID_TIME_NS);
+    return this.timestampConverter.makeZeroTimestamp();
   }
 
   private validateWmTransitionEntry(

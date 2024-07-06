@@ -39,6 +39,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 16;
+  override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 2;
   override readonly logEntryClickIndex = 3;
 
