@@ -15,6 +15,13 @@
  */
 
 export const logComponentStyles = `
+  .entries {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: auto;
+  }
+
   .entries .filters {
     display: flex;
     flex-direction: row;
@@ -22,7 +29,6 @@ export const logComponentStyles = `
 
   .entries .scroll {
     flex: 1;
-    height: 100%;
   }
 
   .scroll .entry {
@@ -124,11 +130,11 @@ export const logComponentStyles = `
     flex: 2;
   }
 
-  .dispatch-time {
-    flex: 4;
+  .jank_cuj-type {
+    flex: 5;
   }
 
-  .send-time {
+  .start-time, .end-time, .dispatch-time, .send-time {
     flex: 4;
   }
 
@@ -142,10 +148,10 @@ export const logComponentStyles = `
 
   .entry .status {
     display: flex;
-    justify-content: center;
     align-items: center;
     gap: 5px;
   }
+
   .status .mat-icon {
     font-size: 18px;
     width: 18px;

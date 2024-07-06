@@ -18,6 +18,7 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
@@ -54,7 +55,7 @@ class ViewerTransactions implements Viewer {
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Transactions',
+      TRACE_INFO[TraceType.TRANSACTIONS].name,
     );
   }
 

@@ -19,6 +19,7 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerScreenRecordingComponent} from './viewer_screen_recording_component';
@@ -37,7 +38,7 @@ class ViewerScreenshot implements Viewer {
       ViewType.OVERLAY,
       this.getTraces(),
       this.htmlElement,
-      'Screenshot',
+      TRACE_INFO[TraceType.SCREENSHOT].name,
     );
   }
 
