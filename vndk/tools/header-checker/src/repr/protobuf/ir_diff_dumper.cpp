@@ -59,10 +59,10 @@ static bool AddVTableLayoutDiff(
   abi_dump::VTableLayout *new_vtable =
       vtable_layout_diff_protobuf->mutable_new_vtable();
   if (old_vtable == nullptr || new_vtable == nullptr ||
-      !IRToProtobufConverter::ConvertVTableLayoutIR(
-          old_vtable, vtable_layout_diff_ir->GetOldVTable()) ||
-      !IRToProtobufConverter::ConvertVTableLayoutIR(
-          new_vtable, vtable_layout_diff_ir->GetNewVTable())) {
+      !ConvertVTableLayoutIR(old_vtable,
+                             vtable_layout_diff_ir->GetOldVTable()) ||
+      !ConvertVTableLayoutIR(new_vtable,
+                             vtable_layout_diff_ir->GetNewVTable())) {
     return false;
   }
   return true;
@@ -73,8 +73,7 @@ static bool CopyBaseSpecifiersDiffIRToProtobuf(
     const std::vector<CXXBaseSpecifierIR> &bases_ir) {
   for (auto &&base_ir : bases_ir) {
     abi_dump::CXXBaseSpecifier *added_base = dst->Add();
-    if (!IRToProtobufConverter::ConvertCXXBaseSpecifierIR(added_base,
-                                                          base_ir)) {
+    if (!ConvertCXXBaseSpecifierIR(added_base, base_ir)) {
       return false;
     }
   }
@@ -106,7 +105,7 @@ static bool AddRecordFields(
     } else {
       field = record_diff_protobuf->add_fields_added();
     }
-    if (!IRToProtobufConverter::ConvertRecordFieldIR(field, record_field_ir)) {
+    if (!ConvertRecordFieldIR(field, record_field_ir)) {
       return false;
     }
   }
@@ -129,10 +128,8 @@ static bool AddRecordFieldDiffs(
     if (old_field == nullptr || new_field == nullptr) {
       return false;
     }
-    IRToProtobufConverter::ConvertRecordFieldIR(
-        old_field, record_field_diff_ir.GetOldField());
-    IRToProtobufConverter::ConvertRecordFieldIR(
-        new_field, record_field_diff_ir.GetNewField());
+    ConvertRecordFieldIR(old_field, record_field_diff_ir.GetOldField());
+    ConvertRecordFieldIR(new_field, record_field_diff_ir.GetNewField());
   }
   return true;
 }
@@ -206,8 +203,7 @@ static bool AddEnumFields(
     const std::vector<const EnumFieldIR *> &enum_fields) {
   for (auto &&enum_field : enum_fields) {
     abi_dump::EnumFieldDecl *added_enum_field = dst->Add();
-    if (!IRToProtobufConverter::ConvertEnumFieldIR(added_enum_field,
-                                                   enum_field)) {
+    if (!ConvertEnumFieldIR(added_enum_field, enum_field)) {
       return false;
     }
   }
@@ -222,12 +218,10 @@ static bool AddEnumFieldDiffs(
     if (field_diff_protobuf == nullptr) {
       return false;
     }
-    if (!IRToProtobufConverter::ConvertEnumFieldIR(
-            field_diff_protobuf->mutable_old_field(),
-            field_diff_ir.GetOldField()) ||
-        !IRToProtobufConverter::ConvertEnumFieldIR(
-            field_diff_protobuf->mutable_new_field(),
-            field_diff_ir.GetNewField())) {
+    if (!ConvertEnumFieldIR(field_diff_protobuf->mutable_old_field(),
+                            field_diff_ir.GetOldField()) ||
+        !ConvertEnumFieldIR(field_diff_protobuf->mutable_new_field(),
+                            field_diff_ir.GetNewField())) {
       return false;
     }
   }
@@ -268,10 +262,8 @@ static abi_diff::GlobalVarDeclDiff ConvertGlobalVarDiffIR(
     llvm::errs() << "Globar Var diff could not be added\n";
     ::exit(1);
   }
-  *old_global_var = IRToProtobufConverter::ConvertGlobalVarIR(
-      global_var_diff_ir->GetOldGlobalVar());
-  *new_global_var = IRToProtobufConverter::ConvertGlobalVarIR(
-      global_var_diff_ir->GetNewGlobalVar());
+  *old_global_var = ConvertGlobalVarIR(global_var_diff_ir->GetOldGlobalVar());
+  *new_global_var = ConvertGlobalVarIR(global_var_diff_ir->GetNewGlobalVar());
   return global_var_diff;
 }
 
@@ -285,10 +277,8 @@ static abi_diff::FunctionDeclDiff ConvertFunctionDiffIR(
     llvm::errs() << "Function diff could not be added\n";
     ::exit(1);
   }
-  *old_function = IRToProtobufConverter::ConvertFunctionIR(
-      function_diff_ir->GetOldFunction());
-  *new_function = IRToProtobufConverter::ConvertFunctionIR(
-      function_diff_ir->GetNewFunction());
+  *old_function = ConvertFunctionIR(function_diff_ir->GetOldFunction());
+  *new_function = ConvertFunctionIR(function_diff_ir->GetNewFunction());
   return function_diff;
 }
 
@@ -426,8 +416,7 @@ bool ProtobufIRDiffDumper::AddElfFunctionIR(
   if (added_elf_function == nullptr) {
     return false;
   }
-  *added_elf_function =
-      IRToProtobufConverter::ConvertElfFunctionIR(elf_function_ir);
+  *added_elf_function = ConvertElfFunctionIR(elf_function_ir);
   return true;
 }
 
@@ -448,8 +437,7 @@ bool ProtobufIRDiffDumper::AddElfObjectIR(
   if (added_elf_object == nullptr) {
     return false;
   }
-  *added_elf_object =
-      IRToProtobufConverter::ConvertElfObjectIR(elf_object_ir);
+  *added_elf_object = ConvertElfObjectIR(elf_object_ir);
   return true;
 }
 
@@ -473,8 +461,7 @@ bool ProtobufIRDiffDumper::AddLoneRecordTypeDiffIR(
   if (added_record_type == nullptr) {
     return false;
   }
-  *added_record_type =
-      IRToProtobufConverter::ConvertRecordTypeIR(record_type_ir);
+  *added_record_type = ConvertRecordTypeIR(record_type_ir);
   return true;
 }
 
@@ -492,7 +479,7 @@ bool ProtobufIRDiffDumper::AddLoneFunctionDiffIR(
       llvm::errs() << "Invalid call to AddLoneFunctionDiffIR\n";
       return false;
   }
-  *added_function = IRToProtobufConverter::ConvertFunctionIR(function_ir);
+  *added_function = ConvertFunctionIR(function_ir);
   return true;
 }
 
@@ -516,7 +503,7 @@ bool ProtobufIRDiffDumper::AddLoneEnumTypeDiffIR(
   if (added_enum_type == nullptr) {
     return false;
   }
-  *added_enum_type = IRToProtobufConverter::ConvertEnumTypeIR(enum_type_ir);
+  *added_enum_type = ConvertEnumTypeIR(enum_type_ir);
   return true;
 }
 
@@ -534,7 +521,7 @@ bool ProtobufIRDiffDumper::AddLoneGlobalVarDiffIR(
       llvm::errs() << "Invalid call to AddLoneFunctionDiffIR\n";
       return false;
   }
-  *added_global_var = IRToProtobufConverter::ConvertGlobalVarIR(global_var_ir);
+  *added_global_var = ConvertGlobalVarIR(global_var_ir);
   return true;
 }
 
