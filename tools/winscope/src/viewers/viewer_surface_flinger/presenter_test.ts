@@ -54,7 +54,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   override readonly numberOfNonDefaultProperties = 24;
   override readonly expectedFirstRect = new Rect(0, 0, 1080, 2400);
   override readonly propertiesFilterString = 'bound';
-  override readonly expectedTotalRects = 7;
+  override readonly expectedTotalRects = 11;
   override readonly expectedVisibleRects = 6;
   override readonly treeNodeLongName =
     'ActivityRecord{64953af u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity#96';
@@ -316,7 +316,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
         await presenter.onAppEvent(positionUpdate);
         expect(
           uiData.rectsToDraw.filter((rect) => rect.hasContent).length,
-        ).toEqual(1);
+        ).toEqual(2);
       });
 
       it('keeps alpha and transform type regardless of show/hide defaults', async () => {
