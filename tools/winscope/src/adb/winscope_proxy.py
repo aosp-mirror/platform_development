@@ -813,7 +813,7 @@ class ListDevicesEndpoint(RequestEndpoint):
 
 class DeviceRequestEndpoint(RequestEndpoint):
     def process(self, server, path):
-        if len(path) > 0 and re.fullmatch("[A-Za-z0-9.:\\-]+", path[0]):
+        if len(path) > 0 and re.fullmatch("[A-Za-z0-9._:\\-]+", path[0]):
             self.process_with_device(server, path[1:], path[0])
         else:
             raise BadRequest("Device id not specified")

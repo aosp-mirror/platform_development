@@ -77,13 +77,19 @@ export abstract class AbstractLogViewerPresenterTest {
         await assertDefined(presenter).onAppEvent(
           assertDefined(this.getPositionUpdate()),
         );
-        expect(uiData.scrollToIndex).toEqual(0);
+        expect(uiData.scrollToIndex).toEqual(
+          this.expectedIndexOfFirstPositionUpdate,
+        );
 
         if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.currentIndex).toEqual(0);
+          expect(uiData.currentIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
           expect(uiData.selectedIndex).toBeUndefined();
         } else {
-          expect(uiData.selectedIndex).toEqual(0);
+          expect(uiData.selectedIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         }
 
         expect(uiData.entries.length).toEqual(this.totalOutputEntries);
@@ -212,14 +218,7 @@ export abstract class AbstractLogViewerPresenterTest {
       });
 
       it('updates selected entry ui data when entry changed by key press', async () => {
-        await presenter.onAppEvent(this.getPositionUpdate());
-        this.checkInitialTracePositionUpdate(uiData);
-
-        if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.selectedIndex).toEqual(undefined);
-        } else {
-          expect(uiData.selectedIndex).toEqual(0);
-        }
+        await presenter.onLogEntryClick(0);
 
         await presenter.onArrowDownPress();
         this.checkSelectedAndScrollIndices(uiData, 1);
@@ -241,9 +240,13 @@ export abstract class AbstractLogViewerPresenterTest {
       it('computes index based on trace position update', async () => {
         await presenter.onAppEvent(this.getPositionUpdate());
         if (this.shouldExecuteCurrentIndexTests) {
-          expect(uiData.currentIndex).toEqual(0);
+          expect(uiData.currentIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         } else {
-          expect(uiData.selectedIndex).toEqual(0);
+          expect(uiData.selectedIndex).toEqual(
+            this.expectedIndexOfFirstPositionUpdate,
+          );
         }
 
         await presenter.onAppEvent(this.getSecondPositionUpdate());
@@ -266,7 +269,9 @@ export abstract class AbstractLogViewerPresenterTest {
 
   checkInitialTracePositionUpdate(uiData: UiDataLog) {
     expect(uiData.entries.length).toEqual(this.totalOutputEntries);
-    expect(uiData.scrollToIndex).toEqual(0);
+    expect(uiData.scrollToIndex).toEqual(
+      this.expectedIndexOfFirstPositionUpdate,
+    );
 
     if (this.shouldExecuteFilterTests) {
       expect(uiData.filters?.length).toBeGreaterThan(0);
@@ -277,10 +282,14 @@ export abstract class AbstractLogViewerPresenterTest {
     }
 
     if (this.shouldExecuteCurrentIndexTests) {
-      expect(uiData.currentIndex).toEqual(0);
+      expect(uiData.currentIndex).toEqual(
+        this.expectedIndexOfFirstPositionUpdate,
+      );
       expect(uiData.selectedIndex).toBeUndefined();
     } else {
-      expect(uiData.selectedIndex).toEqual(0);
+      expect(uiData.selectedIndex).toEqual(
+        this.expectedIndexOfFirstPositionUpdate,
+      );
     }
 
     if (this.shouldExecutePropertiesTests) {
@@ -320,6 +329,7 @@ export abstract class AbstractLogViewerPresenterTest {
   abstract readonly shouldExecutePropertiesTests: boolean;
 
   abstract readonly totalOutputEntries: number;
+  abstract readonly expectedIndexOfFirstPositionUpdate: number;
   abstract readonly expectedIndexOfSecondPositionUpdate: number;
   abstract readonly logEntryClickIndex: number;
 

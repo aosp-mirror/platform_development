@@ -239,9 +239,7 @@ export class ProxyConnection implements AdbConnection {
       const isWaylandAvailable = await this.isWaylandAvailable();
       if (isWaylandAvailable) {
         const availableTracesConfig = TRACES['default'];
-        if (isWaylandAvailable) {
-          Object.assign(availableTracesConfig, TRACES['arc']);
-        }
+        Object.assign(availableTracesConfig, TRACES['arc']);
         this.traceConfigChangeCallback(availableTracesConfig);
       }
     }
