@@ -102,6 +102,7 @@ pub struct Crate {
 pub struct Extern {
     pub name: String,
     pub lib_name: String,
+    pub raw_name: String,
     pub extern_type: ExternType,
 }
 

@@ -115,7 +115,7 @@ bool HeaderASTVisitor::ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
     return true;
   }
   if (decl->getLinkageAndVisibility().getLinkage() !=
-      clang::Linkage::ExternalLinkage) {
+      clang::Linkage::External) {
     return true;
   }
   if (const clang::CXXMethodDecl *method_decl =
