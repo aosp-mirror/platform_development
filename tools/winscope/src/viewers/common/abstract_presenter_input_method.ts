@@ -50,7 +50,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     tree: HierarchyTreeNode,
   ) => {
     const where = tree.getEagerPropertyByName('where')?.formattedValue();
-    return entry.getTimestamp().format() + ' - ' + where;
+    return this.getEntryFormattedTimestamp(entry) + ' - ' + where;
   };
   protected override hierarchyPresenter = new HierarchyPresenter(
     PersistentStoreProxy.new<UserOptions>(

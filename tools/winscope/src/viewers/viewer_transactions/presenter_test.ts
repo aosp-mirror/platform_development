@@ -26,7 +26,7 @@ import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_pres
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {
   LogEntry,
-  LogFieldName,
+  LogFieldType,
   LogFieldValue,
 } from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
@@ -43,18 +43,19 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 1647;
+  override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 13;
   override readonly expectedInitialFilterOptions = new Map<
-    LogFieldName,
+    LogFieldType,
     string[] | number
   >([
     [
-      LogFieldName.PID,
+      LogFieldType.PID,
       ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
     ],
-    [LogFieldName.UID, ['N/A', '1000', '1003', '10169', '10235', '10239']],
+    [LogFieldType.UID, ['N/A', '1000', '1003', '10169', '10235', '10239']],
     [
-      LogFieldName.TRANSACTION_TYPE,
+      LogFieldType.TRANSACTION_TYPE,
       [
         'DISPLAY_CHANGED',
         'LAYER_ADDED',
@@ -64,16 +65,16 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
         'NO_OP',
       ],
     ],
-    [LogFieldName.TRANSACTION_ID, 1295],
-    [LogFieldName.LAYER_OR_DISPLAY_ID, 117],
+    [LogFieldType.TRANSACTION_ID, 1295],
+    [LogFieldType.LAYER_OR_DISPLAY_ID, 117],
   ]);
-  override readonly filterValuesToSet = new Map<LogFieldName, string[][]>([
-    [LogFieldName.TRANSACTION_ID, [[], ['2211908157465']]],
-    [LogFieldName.VSYNC_ID, [[], ['1'], ['1', '3', '10']]],
-    [LogFieldName.PID, [[], ['0'], ['0', '515']]],
-    [LogFieldName.UID, [[], ['1000'], ['1000', '1003']]],
+  override readonly filterValuesToSet = new Map<LogFieldType, string[][]>([
+    [LogFieldType.TRANSACTION_ID, [[], ['2211908157465']]],
+    [LogFieldType.VSYNC_ID, [[], ['1'], ['1', '3', '10']]],
+    [LogFieldType.PID, [[], ['0'], ['0', '515']]],
+    [LogFieldType.UID, [[], ['1000'], ['1000', '1003']]],
     [
-      LogFieldName.TRANSACTION_TYPE,
+      LogFieldType.TRANSACTION_TYPE,
       [
         [],
         [TransactionsEntryType.LAYER_ADDED],
@@ -83,17 +84,17 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
         ],
       ],
     ],
-    [LogFieldName.LAYER_OR_DISPLAY_ID, [[], ['1'], ['1', '3']]],
-    [LogFieldName.FLAGS, [[], ['Crop'], ['STRING_WITH_NO_MATCHES']]],
+    [LogFieldType.LAYER_OR_DISPLAY_ID, [[], ['1'], ['1', '3']]],
+    [LogFieldType.FLAGS, [[], ['Crop'], ['STRING_WITH_NO_MATCHES']]],
   ]);
   override readonly expectedFieldValuesAfterFilter = new Map<
-    LogFieldName,
+    LogFieldType,
     Array<LogFieldValue[] | number>
   >([
-    [LogFieldName.TRANSACTION_ID, [this.totalOutputEntries, ['2211908157465']]],
-    [LogFieldName.VSYNC_ID, [this.totalOutputEntries, [1], [1, 3, 10]]],
+    [LogFieldType.TRANSACTION_ID, [this.totalOutputEntries, ['2211908157465']]],
+    [LogFieldType.VSYNC_ID, [this.totalOutputEntries, [1], [1, 3, 10]]],
     [
-      LogFieldName.PID,
+      LogFieldType.PID,
       [
         ['N/A', '0', '515', '1593', '2022', '2322', '2463', '3300'],
         ['0'],
@@ -101,7 +102,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
       ],
     ],
     [
-      LogFieldName.UID,
+      LogFieldType.UID,
       [
         ['N/A', '1000', '1003', '10169', '10235', '10239'],
         ['1000'],
@@ -109,7 +110,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
       ],
     ],
     [
-      LogFieldName.TRANSACTION_TYPE,
+      LogFieldType.TRANSACTION_TYPE,
       [
         [
           TransactionsEntryType.DISPLAY_CHANGED,
@@ -127,13 +128,13 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
       ],
     ],
     [
-      LogFieldName.LAYER_OR_DISPLAY_ID,
+      LogFieldType.LAYER_OR_DISPLAY_ID,
       [this.totalOutputEntries, ['1'], ['1', '3']],
     ],
-    [LogFieldName.FLAGS, [this.totalOutputEntries, 980, 0]],
+    [LogFieldType.FLAGS, [this.totalOutputEntries, 980, 0]],
   ]);
   override readonly logEntryClickIndex = 10;
-  override readonly filterNameForCurrentIndexTest = LogFieldName.PID;
+  override readonly filterNameForCurrentIndexTest = LogFieldType.PID;
   override readonly filterChangeForCurrentIndexTest = ['0'];
   override readonly secondFilterChangeForCurrentIndexTest = ['0', '515'];
   override readonly expectedCurrentIndexAfterFilterChange = 10;
@@ -158,11 +159,11 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
       });
 
       it('includes no op transitions', async () => {
-        await presenter.onFilterChange(LogFieldName.TRANSACTION_TYPE, [
+        await presenter.onFilterChange(LogFieldType.TRANSACTION_TYPE, [
           TransactionsEntryType.NO_OP,
         ]);
         const fieldValues = assertDefined(uiData).entries.map((entry) =>
-          getFieldValue(entry, LogFieldName.TRANSACTION_TYPE),
+          getFieldValue(entry, LogFieldType.TRANSACTION_TYPE),
         );
         expect(new Set(fieldValues)).toEqual(
           new Set([TransactionsEntryType.NO_OP]),
@@ -170,15 +171,15 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
 
         for (const entry of assertDefined(uiData).entries) {
           expect(
-            getFieldValue(entry, LogFieldName.LAYER_OR_DISPLAY_ID),
+            getFieldValue(entry, LogFieldType.LAYER_OR_DISPLAY_ID),
           ).toEqual('');
-          expect(getFieldValue(entry, LogFieldName.FLAGS)).toEqual('');
+          expect(getFieldValue(entry, LogFieldType.FLAGS)).toEqual('');
           expect(entry.propertiesTree).toEqual(undefined);
         }
       });
 
-      function getFieldValue(entry: LogEntry, logFieldName: LogFieldName) {
-        return entry.fields.find((f) => f.name === logFieldName)?.value;
+      function getFieldValue(entry: LogEntry, logFieldName: LogFieldType) {
+        return entry.fields.find((f) => f.type === logFieldName)?.value;
       }
     });
   }

@@ -147,6 +147,9 @@ export const nodeInnerItemStyles = `
         vertical-align: middle;
         color: inherit;
         cursor: pointer;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
     }
 
     .expand-tree-btn {

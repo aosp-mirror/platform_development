@@ -16,12 +16,17 @@
 
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {TracesParserCujs} from 'parsers/events/traces_parser_cujs';
+import {TracesParserInput} from 'parsers/input/perfetto/traces_parser_input';
 import {TracesParserTransitions} from 'parsers/transitions/legacy/traces_parser_transitions';
 import {Parser} from 'trace/parser';
 import {Traces} from 'trace/traces';
 
 export class TracesParserFactory {
-  static readonly PARSERS = [TracesParserCujs, TracesParserTransitions];
+  static readonly PARSERS = [
+    TracesParserCujs,
+    TracesParserTransitions,
+    TracesParserInput,
+  ];
 
   async createParsers(
     traces: Traces,

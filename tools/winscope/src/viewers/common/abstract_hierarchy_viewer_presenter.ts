@@ -331,6 +331,15 @@ export abstract class AbstractHierarchyViewerPresenter
     this.notifyViewCallback(copy);
   }
 
+  protected getEntryFormattedTimestamp(
+    entry: TraceEntry<HierarchyTreeNode>,
+  ): string {
+    if (entry.getFullTrace().isDumpWithoutTimestamp()) {
+      return 'Dump';
+    }
+    return entry.getTimestamp().format();
+  }
+
   abstract onAppEvent(event: WinscopeEvent): Promise<void>;
   abstract onHighlightedNodeChange(node: UiHierarchyTreeNode): Promise<void>;
   abstract onHighlightedIdChange(id: string): Promise<void>;

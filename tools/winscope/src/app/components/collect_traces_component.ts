@@ -25,6 +25,7 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Analytics} from 'logging/analytics';
@@ -40,6 +41,11 @@ import {
   TraceConfigurationMap,
 } from 'trace_collection/trace_collection_utils';
 import {LoadProgressComponent} from './load_progress_component';
+import {
+  WarningDialogComponent,
+  WarningDialogData,
+  WarningDialogResult,
+} from './warning_dialog_component';
 
 @Component({
   selector: 'collect-traces',
@@ -110,10 +116,18 @@ import {LoadProgressComponent} from './load_progress_component';
                 <button
                   color="primary"
                   class="change-btn"
-                  mat-button
+                  mat-stroked-button
                   (click)="onChangeDeviceButton()"
-                  [disabled]="adbConnection.isEndTraceState() || isLoadOperationInProgress()">
+                  [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
                   Change device
+                </button>
+                <button
+                  color="primary"
+                  class="fetch-btn"
+                  mat-stroked-button
+                  (click)="fetchExistingTraces()"
+                  [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
+                  Fetch traces from last session
                 </button>
               </p>
             </mat-list-item>
@@ -122,12 +136,12 @@ import {LoadProgressComponent} from './load_progress_component';
           <mat-tab-group [selectedIndex]="selectedTabIndex" class="tracing-tabs">
             <mat-tab
               label="Trace"
-              [disabled]="adbConnection.isEndTraceState() || isLoadOperationInProgress() || refreshDumps">
+              [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress() || refreshDumps">
               <div class="tabbed-section">
-                <div class="trace-section" *ngIf="adbConnection.isStartTraceState()">
-                  <trace-config [(traceConfig)]="traceConfig"></trace-config>
+                <div class="trace-section" *ngIf="adbConnection.isConfigureTraceState()">
+                  <trace-config [traceConfig]="traceConfig"></trace-config>
                   <div class="start-btn">
-                    <button color="primary" mat-stroked-button (click)="startTracing()">
+                    <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
                     </button>
                   </div>
@@ -144,7 +158,7 @@ import {LoadProgressComponent} from './load_progress_component';
                   </div>
                 </div>
 
-                <div *ngIf="adbConnection.isEndTraceState()" class="end-tracing">
+                <div *ngIf="adbConnection.isTracingState()" class="end-tracing">
                   <load-progress
                     icon="cable"
                     message="Tracing...">
@@ -169,9 +183,9 @@ import {LoadProgressComponent} from './load_progress_component';
                 </div>
               </div>
             </mat-tab>
-            <mat-tab label="Dump" [disabled]="adbConnection.isEndTraceState() || isLoadOperationInProgress()">
+            <mat-tab label="Dump" [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
               <div class="tabbed-section">
-                <div class="dump-section" *ngIf="adbConnection.isStartTraceState() && !refreshDumps">
+                <div class="dump-section" *ngIf="adbConnection.isConfigureTraceState() && !refreshDumps">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -183,7 +197,7 @@ import {LoadProgressComponent} from './load_progress_component';
                     >
                   </div>
                   <div class="dump-btn" *ngIf="!refreshDumps">
-                    <button color="primary" mat-stroked-button (click)="dumpState()">
+                    <button color="primary" mat-raised-button (click)="dumpState()">
                       Dump state
                     </button>
                   </div>
@@ -215,7 +229,8 @@ import {LoadProgressComponent} from './load_progress_component';
   styles: [
     `
       .change-btn,
-      .retry-btn {
+      .retry-btn,
+      .fetch-btn {
         margin-left: 5px;
       }
       .mat-card.collect-card {
@@ -366,6 +381,8 @@ export class CollectTracesComponent
   refreshDumps = false;
   selectedTabIndex = 0;
 
+  private imeWarningStoreKey = 'doNotShowImeWarningDialog';
+
   @Input() traceConfig: TraceConfigurationMap | undefined;
   @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
@@ -374,6 +391,7 @@ export class CollectTracesComponent
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(MatDialog) private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -420,7 +438,7 @@ export class CollectTracesComponent
       return;
     }
     this.isExternalOperationInProgress = true;
-    this.adbConnection?.setLoadDataState();
+    this.adbConnection?.setLoadingDataState();
     this.progressMessage = message;
     this.progressPercentage = progressPercentage;
     this.lastUiProgressUpdateTimeMs = Date.now();
@@ -438,7 +456,7 @@ export class CollectTracesComponent
 
   isLoadOperationInProgress(): boolean {
     return (
-      assertDefined(this.adbConnection).isLoadDataState() ||
+      assertDefined(this.adbConnection).isLoadingDataState() ||
       this.isExternalOperationInProgress
     );
   }
@@ -467,12 +485,12 @@ export class CollectTracesComponent
     );
   }
 
-  showTraceCollectionConfig() {
+  showTraceCollectionConfig(): boolean {
     const connect = assertDefined(this.adbConnection);
     return (
-      connect.isStartTraceState() ||
+      connect.isConfigureTraceState() ||
       connect.isStartingTraceState() ||
-      connect.isEndTraceState() ||
+      connect.isTracingState() ||
       this.isLoadOperationInProgress()
     );
   }
@@ -486,29 +504,51 @@ export class CollectTracesComponent
   }
 
   async startTracing() {
-    console.log('begin tracing');
     const requestedTraces = this.getRequestedTraces();
-    Analytics.Tracing.logCollectTraces(requestedTraces);
-    const reqEnableConfig = this.requestedEnableConfig();
-    const reqSelectedSfConfig = this.requestedSelection('layers_trace');
-    const reqSelectedWmConfig = this.requestedSelection('window_trace');
-    if (requestedTraces.length < 1) {
-      await assertDefined(this.adbConnection).setErrorState(
-        'No targets selected',
-      );
+
+    const imeReq = requestedTraces.includes('ime');
+    const doNotShowDialog = !!this.storage?.getItem(this.imeWarningStoreKey);
+
+    if (!imeReq || doNotShowDialog) {
+      await this.requestTraces(requestedTraces);
       return;
     }
 
-    await assertDefined(this.adbConnection).startTrace(
-      requestedTraces,
-      reqEnableConfig,
-      reqSelectedSfConfig,
-      reqSelectedWmConfig,
-    );
+    const sfReq = requestedTraces.includes('layers_trace');
+    const transactionsReq = requestedTraces.includes('transactions');
+    const wmReq = requestedTraces.includes('window_trace');
+    const imeValidFrameMapping = sfReq && transactionsReq && wmReq;
+
+    if (imeValidFrameMapping) {
+      await this.requestTraces(requestedTraces);
+      return;
+    }
+
+    const closeText = 'Collect traces anyway';
+    const optionText = 'Do not show again';
+    const data: WarningDialogData = {
+      message: `Cannot build frame mapping for IME with selected traces - some Winscope features may not work properly.
+      Consider the following selection for valid frame mapping:
+      Surface Flinger, Transactions, Window Manager, IME`,
+      actions: ['Go back'],
+      options: [optionText],
+      closeText,
+    };
+    const dialogRef = this.dialog.open(WarningDialogComponent, {
+      data,
+      disableClose: true,
+    });
+    dialogRef.afterClosed().subscribe(async (result: WarningDialogResult) => {
+      if (this.storage && result.selectedOptions.includes(optionText)) {
+        this.storage.setItem(this.imeWarningStoreKey, 'true');
+      }
+      if (result.closeActionText === closeText) {
+        await this.requestTraces(requestedTraces);
+      }
+    });
   }
 
   async dumpState() {
-    console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
     Analytics.Tracing.logCollectDumps(requestedDumps);
     const dumpSuccessful = await assertDefined(this.adbConnection).dumpState(
@@ -521,7 +561,6 @@ export class CollectTracesComponent
   }
 
   async endTrace() {
-    console.log('end tracing');
     await assertDefined(this.adbConnection).endTrace();
     this.filesCollected.emit(assertDefined(this.adbConnection).getAdbData());
   }
@@ -541,16 +580,45 @@ export class CollectTracesComponent
     return props.model + `(${id})`;
   }
 
+  async fetchExistingTraces() {
+    await assertDefined(this.adbConnection).fetchExistingTraces();
+    const files = assertDefined(this.adbConnection).getAdbData();
+    this.filesCollected.emit(files);
+    if (files.length === 0) {
+      await assertDefined(this.adbConnection).restart();
+    }
+  }
+
+  private async requestTraces(requestedTraces: string[]) {
+    Analytics.Tracing.logCollectTraces(requestedTraces);
+    const reqEnableConfig = this.requestedEnableConfig();
+    const reqSelectedSfConfig = this.requestedSelection('layers_trace');
+    const reqSelectedWmConfig = this.requestedSelection('window_trace');
+    if (requestedTraces.length < 1) {
+      await assertDefined(this.adbConnection).setErrorState(
+        'No targets selected',
+      );
+      return;
+    }
+
+    await assertDefined(this.adbConnection).startTrace(
+      requestedTraces,
+      reqEnableConfig,
+      reqSelectedSfConfig,
+      reqSelectedWmConfig,
+    );
+  }
+
   private onProxyStateChange() {
     this.changeDetectorRef.detectChanges();
     if (
       !this.refreshDumps ||
-      this.adbConnection?.isLoadDataState() ||
+      this.adbConnection?.isLoadingDataState() ||
       this.adbConnection?.isConnectingState()
     ) {
       return;
     }
-    if (this.adbConnection?.isStartTraceState()) {
+    if (this.adbConnection?.isConfigureTraceState()) {
       this.dumpState();
     } else {
       // device is not connected or proxy is not started/invalid/in error state
@@ -559,7 +627,7 @@ export class CollectTracesComponent
     }
   }
 
-  private getRequestedTraces() {
+  private getRequestedTraces(): string[] {
     const tracesFromCollection: string[] = [];
     const tracingConfig = assertDefined(this.traceConfig);
     const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
@@ -570,7 +638,7 @@ export class CollectTracesComponent
     return requested;
   }
 
-  private getRequestedDumps() {
+  private getRequestedDumps(): string[] {
     const dumpConfig = assertDefined(this.dumpConfig);
     const requested = Object.keys(dumpConfig).filter((dumpKey: string) => {
       return dumpConfig[dumpKey].run;
