@@ -271,48 +271,6 @@ class IRToProtobufConverter {
       const ElfObjectIR *elf_object_ir);
 };
 
-// Convert IR to the messages defined in abi_diff.proto.
-class IRDiffToProtobufConverter {
- private:
-  static bool AddTypeInfoDiff(
-      abi_diff::TypeInfoDiff *type_info_diff_protobuf,
-      const TypeDiffIR *type_diff_ir);
-
-  static bool AddVTableLayoutDiff(
-      abi_diff::VTableLayoutDiff *vtable_layout_diff_protobuf,
-      const VTableLayoutDiffIR *vtable_layout_diff_ir);
-
-  static bool AddBaseSpecifierDiffs(
-      abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf,
-      const CXXBaseSpecifierDiffIR *base_specifier_diff_ir);
-
-  static bool AddRecordFields(
-      abi_diff::RecordTypeDiff *record_diff_protobuf,
-      const std::vector<const RecordFieldIR *> &record_fields_removed_ir,
-      bool removed);
-
-  static bool AddRecordFieldDiffs(
-      abi_diff::RecordTypeDiff *record_diff_protobuf,
-      const std::vector<RecordFieldDiffIR> &record_field_diff_ir);
-
-  static bool AddEnumUnderlyingTypeDiff(
-      abi_diff::UnderlyingTypeDiff *underlying_type_diff_protobuf,
-      const std::pair<std::string, std::string> *underlying_type_diff_ir);
-
- public:
-  static abi_diff::RecordTypeDiff ConvertRecordTypeDiffIR(
-      const RecordTypeDiffIR *record_type_diffp);
-
-  static abi_diff::EnumTypeDiff ConvertEnumTypeDiffIR(
-      const EnumTypeDiffIR *enum_type_diffp);
-
-  static abi_diff::FunctionDeclDiff ConvertFunctionDiffIR(
-      const FunctionDiffIR *function_diffp);
-
-  static abi_diff::GlobalVarDeclDiff ConvertGlobalVarDiffIR(
-      const GlobalVarDiffIR *global_var_diffp);
-};
-
 
 }  // namespace repr
 }  // namespace header_checker
