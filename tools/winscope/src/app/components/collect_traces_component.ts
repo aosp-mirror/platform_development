@@ -25,6 +25,7 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
 import {assertDefined} from 'common/assert_utils';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Analytics} from 'logging/analytics';
@@ -40,6 +41,11 @@ import {
   TraceConfigurationMap,
 } from 'trace_collection/trace_collection_utils';
 import {LoadProgressComponent} from './load_progress_component';
+import {
+  WarningDialogComponent,
+  WarningDialogData,
+  WarningDialogResult,
+} from './warning_dialog_component';
 
 @Component({
   selector: 'collect-traces',
@@ -133,7 +139,7 @@ import {LoadProgressComponent} from './load_progress_component';
               [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress() || refreshDumps">
               <div class="tabbed-section">
                 <div class="trace-section" *ngIf="adbConnection.isConfigureTraceState()">
-                  <trace-config [(traceConfig)]="traceConfig"></trace-config>
+                  <trace-config [traceConfig]="traceConfig"></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-raised-button (click)="startTracing()">
                       Start trace
@@ -375,6 +381,8 @@ export class CollectTracesComponent
   refreshDumps = false;
   selectedTabIndex = 0;
 
+  private imeWarningStoreKey = 'doNotShowImeWarningDialog';
+
   @Input() traceConfig: TraceConfigurationMap | undefined;
   @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
@@ -383,6 +391,7 @@ export class CollectTracesComponent
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(MatDialog) private dialog: MatDialog,
   ) {}
 
   ngOnInit() {
@@ -476,7 +485,7 @@ export class CollectTracesComponent
     );
   }
 
-  showTraceCollectionConfig() {
+  showTraceCollectionConfig(): boolean {
     const connect = assertDefined(this.adbConnection);
     return (
       connect.isConfigureTraceState() ||
@@ -495,29 +504,51 @@ export class CollectTracesComponent
   }
 
   async startTracing() {
-    console.log('begin tracing');
     const requestedTraces = this.getRequestedTraces();
-    Analytics.Tracing.logCollectTraces(requestedTraces);
-    const reqEnableConfig = this.requestedEnableConfig();
-    const reqSelectedSfConfig = this.requestedSelection('layers_trace');
-    const reqSelectedWmConfig = this.requestedSelection('window_trace');
-    if (requestedTraces.length < 1) {
-      await assertDefined(this.adbConnection).setErrorState(
-        'No targets selected',
-      );
+
+    const imeReq = requestedTraces.includes('ime');
+    const doNotShowDialog = !!this.storage?.getItem(this.imeWarningStoreKey);
+
+    if (!imeReq || doNotShowDialog) {
+      await this.requestTraces(requestedTraces);
       return;
     }
 
-    await assertDefined(this.adbConnection).startTrace(
-      requestedTraces,
-      reqEnableConfig,
-      reqSelectedSfConfig,
-      reqSelectedWmConfig,
-    );
+    const sfReq = requestedTraces.includes('layers_trace');
+    const transactionsReq = requestedTraces.includes('transactions');
+    const wmReq = requestedTraces.includes('window_trace');
+    const imeValidFrameMapping = sfReq && transactionsReq && wmReq;
+
+    if (imeValidFrameMapping) {
+      await this.requestTraces(requestedTraces);
+      return;
+    }
+
+    const closeText = 'Collect traces anyway';
+    const optionText = 'Do not show again';
+    const data: WarningDialogData = {
+      message: `Cannot build frame mapping for IME with selected traces - some Winscope features may not work properly.
+      Consider the following selection for valid frame mapping:
+      Surface Flinger, Transactions, Window Manager, IME`,
+      actions: ['Go back'],
+      options: [optionText],
+      closeText,
+    };
+    const dialogRef = this.dialog.open(WarningDialogComponent, {
+      data,
+      disableClose: true,
+    });
+    dialogRef.afterClosed().subscribe(async (result: WarningDialogResult) => {
+      if (this.storage && result.selectedOptions.includes(optionText)) {
+        this.storage.setItem(this.imeWarningStoreKey, 'true');
+      }
+      if (result.closeActionText === closeText) {
+        await this.requestTraces(requestedTraces);
+      }
+    });
   }
 
   async dumpState() {
-    console.log('begin dump');
     const requestedDumps = this.getRequestedDumps();
     Analytics.Tracing.logCollectDumps(requestedDumps);
     const dumpSuccessful = await assertDefined(this.adbConnection).dumpState(
@@ -530,7 +561,6 @@ export class CollectTracesComponent
   }
 
   async endTrace() {
-    console.log('end tracing');
     await assertDefined(this.adbConnection).endTrace();
     this.filesCollected.emit(assertDefined(this.adbConnection).getAdbData());
   }
@@ -551,13 +581,32 @@ export class CollectTracesComponent
   }
 
   async fetchExistingTraces() {
-    console.log('fetch existing traces from device');
     await assertDefined(this.adbConnection).fetchExistingTraces();
     const files = assertDefined(this.adbConnection).getAdbData();
     this.filesCollected.emit(files);
     if (files.length === 0) {
       await assertDefined(this.adbConnection).restart();
     }
+  }
+
+  private async requestTraces(requestedTraces: string[]) {
+    Analytics.Tracing.logCollectTraces(requestedTraces);
+    const reqEnableConfig = this.requestedEnableConfig();
+    const reqSelectedSfConfig = this.requestedSelection('layers_trace');
+    const reqSelectedWmConfig = this.requestedSelection('window_trace');
+    if (requestedTraces.length < 1) {
+      await assertDefined(this.adbConnection).setErrorState(
+        'No targets selected',
+      );
+      return;
+    }
+
+    await assertDefined(this.adbConnection).startTrace(
+      requestedTraces,
+      reqEnableConfig,
+      reqSelectedSfConfig,
+      reqSelectedWmConfig,
+    );
   }
 
   private onProxyStateChange() {
@@ -578,7 +627,7 @@ export class CollectTracesComponent
     }
   }
 
-  private getRequestedTraces() {
+  private getRequestedTraces(): string[] {
     const tracesFromCollection: string[] = [];
     const tracingConfig = assertDefined(this.traceConfig);
     const requested = Object.keys(tracingConfig).filter((traceKey: string) => {
@@ -589,7 +638,7 @@ export class CollectTracesComponent
     return requested;
   }
 
-  private getRequestedDumps() {
+  private getRequestedDumps(): string[] {
     const dumpConfig = assertDefined(this.dumpConfig);
     const requested = Object.keys(dumpConfig).filter((dumpKey: string) => {
       return dumpConfig[dumpKey].run;

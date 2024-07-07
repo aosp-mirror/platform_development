@@ -233,7 +233,7 @@ static std::string GetAnonymousEnumUniqueId(llvm::StringRef mangled_name,
     const std::ssub_match &old_name = match_result[1];
     old_suffix = std::to_string(old_name.length()) + match_result[0].str();
     nested_name_suffix = match_result[2].str();
-    if (!mangled_name.endswith(old_suffix)) {
+    if (!mangled_name.ends_with(old_suffix)) {
       llvm::errs() << "Unexpected length of anonymous enum type name: "
                    << mangled_name << "\n";
       ::exit(1);
