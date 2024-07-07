@@ -43,7 +43,7 @@ import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_s
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {LogComponent} from './log_component';
-import {LogEntry, LogFieldName} from './ui_data_log';
+import {LogEntry, LogFieldType} from './ui_data_log';
 
 describe('LogComponent', () => {
   describe('Main component', () => {
@@ -249,14 +249,14 @@ describe('LogComponent', () => {
       const fieldTime = TimestampConverterUtils.makeElapsedTimestamp(2n);
 
       const fields1 = [
-        {name: LogFieldName.TAG, value: 'Test tag 1'},
-        {name: LogFieldName.VSYNC_ID, value: 123},
-        {name: LogFieldName.SEND_TIME, value: fieldTime},
+        {type: LogFieldType.TAG, value: 'Test tag 1'},
+        {type: LogFieldType.VSYNC_ID, value: 123},
+        {type: LogFieldType.SEND_TIME, value: fieldTime},
       ];
       const fields2 = [
-        {name: LogFieldName.TAG, value: 'Test tag 2'},
-        {name: LogFieldName.VSYNC_ID, value: 1234},
-        {name: LogFieldName.SEND_TIME, value: fieldTime},
+        {type: LogFieldType.TAG, value: 'Test tag 2'},
+        {type: LogFieldType.VSYNC_ID, value: 1234},
+        {type: LogFieldType.SEND_TIME, value: fieldTime},
       ];
 
       const trace = new TraceBuilder<PropertyTreeNode>()
@@ -275,8 +275,8 @@ describe('LogComponent', () => {
       const entries = [entry1, entry2];
 
       const filters = [
-        {name: LogFieldName.TAG, options: ['Test tag 1', 'Test tag 2']},
-        {name: LogFieldName.VSYNC_ID},
+        {type: LogFieldType.TAG, options: ['Test tag 1', 'Test tag 2']},
+        {type: LogFieldType.VSYNC_ID},
       ];
 
       component.entries = entries;
@@ -294,7 +294,7 @@ describe('LogComponent', () => {
         }
         component.entries = allEntries.filter((entry) => {
           const entryValue = assertDefined(
-            entry.fields.find((f) => f.name === detail.name),
+            entry.fields.find((f) => f.type === detail.type),
           ).value.toString();
           if (Array.isArray(detail.value)) {
             return detail.value.includes(entryValue);

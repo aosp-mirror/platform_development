@@ -65,6 +65,10 @@ class TimestampConverterTestUtils {
       valueNs,
     );
   }
+
+  makeZeroTimestamp(): Timestamp {
+    return this.TIMESTAMP_CONVERTER_NO_RTE_OFFSET.makeZeroTimestamp();
+  }
 }
 
 export const TimestampConverterUtils = new TimestampConverterTestUtils();

@@ -25,14 +25,14 @@ export interface AdbConnection {
   selectDevice(id: string): Promise<void>;
   clearLastDevice(): Promise<void>;
   isDevicesState(): boolean;
-  isStartTraceState(): boolean;
+  isConfigureTraceState(): boolean;
   isErrorState(): boolean;
   isStartingTraceState(): boolean;
-  isEndTraceState(): boolean;
-  isLoadDataState(): boolean;
+  isTracingState(): boolean;
+  isLoadingDataState(): boolean;
   isConnectingState(): boolean;
   setErrorState(message: string): Promise<void>;
-  setLoadDataState(): void;
+  setLoadingDataState(): void;
   startTrace(
     requestedTraces: string[],
     reqEnableConfig?: string[],
@@ -40,6 +40,7 @@ export interface AdbConnection {
     reqSelectedWmConfig?: ConfigMap,
   ): Promise<void>;
   endTrace(): Promise<void>;
+  fetchExistingTraces(): Promise<void>;
   getAdbData(): File[];
   dumpState(requestedDumps: string[]): Promise<boolean>;
   getErrorText(): string;

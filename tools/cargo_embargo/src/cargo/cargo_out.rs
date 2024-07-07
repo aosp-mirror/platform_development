@@ -56,9 +56,14 @@ fn parse_cargo_out_str(
     assert!(cargo_out.cc_invocations.is_empty(), "cc not supported yet");
     assert!(cargo_out.ar_invocations.is_empty(), "ar not supported yet");
 
+    let mut raw_names = BTreeMap::new();
+    for rustc in cargo_out.rustc_invocations.iter() {
+        raw_name_from_rustc_invocation(rustc, &mut raw_names)
+    }
+
     let mut crates = Vec::new();
     for rustc in cargo_out.rustc_invocations.iter() {
-        let c = Crate::from_rustc_invocation(rustc, metadata, &cargo_out.tests)
+        let c = Crate::from_rustc_invocation(rustc, metadata, &cargo_out.tests, &raw_names)
             .with_context(|| format!("failed to process rustc invocation: {rustc}"))?;
         // Ignore build.rs crates.
         if c.name.starts_with("build_script_") {
@@ -72,6 +77,46 @@ fn parse_cargo_out_str(
     }
     crates.dedup();
     Ok(crates)
+}
+
+fn args_from_rustc_invocation(rustc: &str) -> Vec<&str> {
+    rustc
+        .split_whitespace()
+        // Remove quotes from simple strings, panic for others.
+        .map(|arg| match (arg.chars().next(), arg.chars().skip(1).last()) {
+            (Some('"'), Some('"')) => &arg[1..arg.len() - 1],
+            (Some('\''), Some('\'')) => &arg[1..arg.len() - 1],
+            (Some('"'), _) => panic!("can't handle strings with whitespace"),
+            (Some('\''), _) => panic!("can't handle strings with whitespace"),
+            _ => arg,
+        })
+        .collect()
+}
+
+/// Parse out the path name for a crate from a rustc invocation
+fn raw_name_from_rustc_invocation(rustc: &str, raw_names: &mut BTreeMap<String, String>) {
+    let mut crate_name = String::new();
+    // split into args
+    let mut arg_iter = args_from_rustc_invocation(rustc).into_iter();
+    // look for the crate name and a string ending in .rs and check whether the
+    // path string contains a kebab-case version of the crate name
+    while let Some(arg) = arg_iter.next() {
+        match arg {
+            "--crate-name" => crate_name = arg_iter.next().unwrap().to_string(),
+            _ if arg.ends_with(".rs") => {
+                assert_ne!(crate_name, "", "--crate-name option should precede input");
+                let snake_case_arg = arg.replace('-', "_");
+                if let Some(idx) = snake_case_arg.rfind(&crate_name) {
+                    let raw_name = arg[idx..idx + crate_name.len()].to_string();
+                    if crate_name != raw_name {
+                        raw_names.insert(crate_name, raw_name);
+                    }
+                }
+                break;
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Whether a test target contains any tests or benchmarks.
@@ -233,22 +278,13 @@ impl Crate {
         rustc: &str,
         metadata: &WorkspaceMetadata,
         tests: &BTreeMap<String, BTreeMap<PathBuf, TestContents>>,
+        raw_names: &BTreeMap<String, String>,
     ) -> Result<Crate> {
         let mut out = Crate::default();
         let mut extra_filename = String::new();
 
         // split into args
-        let args: Vec<&str> = rustc.split_whitespace().collect();
-        let mut arg_iter = args
-            .iter()
-            // Remove quotes from simple strings, panic for others.
-            .map(|arg| match (arg.chars().next(), arg.chars().skip(1).last()) {
-                (Some('"'), Some('"')) => &arg[1..arg.len() - 1],
-                (Some('\''), Some('\'')) => &arg[1..arg.len() - 1],
-                (Some('"'), _) => panic!("can't handle strings with whitespace"),
-                (Some('\''), _) => panic!("can't handle strings with whitespace"),
-                _ => arg,
-            });
+        let mut arg_iter = args_from_rustc_invocation(rustc).into_iter();
         // process each arg
         while let Some(arg) = arg_iter.next() {
             match arg {
@@ -293,9 +329,17 @@ impl Crate {
                             } else {
                                 bail!("Unexpected extension for extern filename {}", filename);
                             };
+
+                        let lib_name = lib_name.as_str().to_string();
+                        let raw_name = if let Some(raw_name) = raw_names.get(&lib_name) {
+                            raw_name.to_owned()
+                        } else {
+                            lib_name.clone()
+                        };
                         out.externs.push(Extern {
                             name: name.to_string(),
-                            lib_name: lib_name.as_str().to_string(),
+                            lib_name,
+                            raw_name,
                             extern_type,
                         });
                     } else if arg != "proc_macro" {

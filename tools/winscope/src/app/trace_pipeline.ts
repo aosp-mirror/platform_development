@@ -22,11 +22,11 @@ import {
 import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {CorruptedArchive, NoInputFiles} from 'messaging/user_warnings';
+import {CorruptedArchive, NoValidFiles} from 'messaging/user_warnings';
 import {FileAndParsers} from 'parsers/file_and_parsers';
 import {ParserFactory as LegacyParserFactory} from 'parsers/legacy/parser_factory';
-import {TracesParserFactory} from 'parsers/legacy/traces_parser_factory';
 import {ParserFactory as PerfettoParserFactory} from 'parsers/perfetto/parser_factory';
+import {TracesParserFactory} from 'parsers/traces/traces_parser_factory';
 import {FrameMapper} from 'trace/frame_mapper';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -65,7 +65,7 @@ export class TracePipeline {
       );
 
       if (unzippedArchives.length === 0) {
-        notificationListener.onNotifications([new NoInputFiles()]);
+        notificationListener.onNotifications([new NoValidFiles()]);
         return;
       }
 
@@ -102,9 +102,16 @@ export class TracePipeline {
         this.traces.deleteTracesByType(TraceType.SHELL_TRANSITION);
       }
 
-      const hasCujTrace = this.traces.getTrace(TraceType.CUJS);
+      const hasCujTrace = this.traces.getTrace(TraceType.CUJS) !== undefined;
       if (hasCujTrace) {
         this.traces.deleteTracesByType(TraceType.EVENT_LOG);
+      }
+
+      const hasMergedInputTrace =
+        this.traces.getTrace(TraceType.INPUT_EVENT_MERGED) !== undefined;
+      if (hasMergedInputTrace) {
+        this.traces.deleteTracesByType(TraceType.INPUT_KEY_EVENT);
+        this.traces.deleteTracesByType(TraceType.INPUT_MOTION_EVENT);
       }
     } finally {
       progressListener?.onOperationFinished(true);
@@ -193,7 +200,7 @@ export class TracePipeline {
     }
 
     if (!filterResult.perfetto && filterResult.legacy.length === 0) {
-      notificationListener.onNotifications([new NoInputFiles()]);
+      notificationListener.onNotifications([new NoValidFiles()]);
       return;
     }
 

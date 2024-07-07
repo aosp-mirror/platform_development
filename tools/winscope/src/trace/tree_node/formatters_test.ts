@@ -100,10 +100,10 @@ describe('Formatters', () => {
     it('translates non-empty color to string correctly', () => {
       expect(
         COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 1)),
-      ).toEqual('(1, 2, 3, 1)');
+      ).toEqual('(1, 2, 3), alpha: 1');
       expect(
         COLOR_FORMATTER.format(TreeNodeUtils.makeColorNode(1, 2, 3, 0.608)),
-      ).toEqual('(1, 2, 3, 0.608)');
+      ).toEqual('(1, 2, 3), alpha: 0.608');
     });
 
     it('translates rgb color without alpha to string correctly (transactions)', () => {
