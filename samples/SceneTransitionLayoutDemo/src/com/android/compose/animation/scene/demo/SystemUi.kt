@@ -59,13 +59,14 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toComposeRect
@@ -83,13 +84,14 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.window.layout.WindowMetricsCalculator
 import com.android.compose.animation.scene.ElementKey
+import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
+import com.android.compose.animation.scene.SceneTransitions
 import com.android.compose.animation.scene.demo.notification.NotificationList
 import com.android.compose.animation.scene.demo.notification.notifications
 import com.android.compose.animation.scene.demo.transitions.systemUiTransitions
-import com.android.compose.animation.scene.updateSceneTransitionLayoutState
 import com.android.compose.modifiers.thenIf
 import kotlin.math.max
 
@@ -156,6 +158,29 @@ object Scenes {
     }
 }
 
+/** A [Saver] that restores a [MutableSceneTransitionLayoutState] to its previous [currentScene]. */
+class MutableSceneTransitionLayoutSaver(
+    private val sceneSaver: Scenes.SceneSaver,
+    private val transitions: SceneTransitions,
+    private val canChangeScene: (SceneKey) -> Boolean,
+    private val enableInterruptions: Boolean,
+) : Saver<MutableSceneTransitionLayoutState, String> {
+    override fun SaverScope.save(state: MutableSceneTransitionLayoutState): String {
+        val currentScene = state.transitionState.currentScene
+        return with(sceneSaver) { save(currentScene) }
+    }
+
+    override fun restore(value: String): MutableSceneTransitionLayoutState {
+        val currentScene = sceneSaver.restore(value)
+        return MutableSceneTransitionLayoutState(
+            currentScene,
+            transitions,
+            canChangeScene,
+            enableInterruptions = enableInterruptions,
+        )
+    }
+}
+
 @Composable
 fun SystemUi(modifier: Modifier = Modifier) {
     var configuration by
@@ -166,7 +191,6 @@ fun SystemUi(modifier: Modifier = Modifier) {
 }
 
 @Composable
-@OptIn(ExperimentalComposeUiApi::class)
 fun SystemUi(
     configuration: DemoConfiguration,
     onConfigurationChange: (DemoConfiguration) -> Unit,
@@ -189,20 +213,6 @@ fun SystemUi(
         launcherColumns = 4
     }
 
-    val sceneSaver =
-        remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
-    var currentScene by
-        rememberSaveable(stateSaver = sceneSaver) {
-            mutableStateOf(
-                initialScene?.let {
-                    Scenes.ensureCorrectScene(
-                        initialScene,
-                        lockscreenScene = lockscreenScene,
-                        shadeScene = shadeScene,
-                    )
-                } ?: lockscreenScene
-            )
-        }
     val notificationCount =
         max(configuration.notificationsInLockscreen, configuration.notificationsInShade)
     val interactiveNotifications = configuration.interactiveNotifications
@@ -247,6 +257,58 @@ fun SystemUi(
     val nQuickSettingsRow = 4
     val nQuickSettingsSplitShadeRows = nQuickSettingsColumns
 
+    // The state of the quick settings pager in the phone (one column) layout.
+    val nQuickSettingsPages =
+        nQuickSettingsPages(
+            nTiles = quickSettingsTiles.size,
+            nRows = nQuickSettingsRow,
+            nColumns = nQuickSettingsColumns,
+        )
+    val quickSettingsPagerState = rememberPagerState { nQuickSettingsPages }
+
+    val springConfiguration = configuration.springConfigurations.systemUiSprings
+    val transitions =
+        remember(quickSettingsPagerState, springConfiguration, configuration) {
+            systemUiTransitions(
+                quickSettingsPagerState,
+                springConfiguration,
+                configuration,
+            )
+        }
+    val enableInterruptions = configuration.enableInterruptions
+
+    val sceneSaver =
+        remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
+    val canChangeScene = remember(configuration) { { _: SceneKey -> configuration.canChangeScene } }
+    val stateSaver =
+        remember(sceneSaver, transitions, canChangeScene, enableInterruptions) {
+            MutableSceneTransitionLayoutSaver(
+                sceneSaver,
+                transitions,
+                canChangeScene,
+                enableInterruptions
+            )
+        }
+    val layoutState =
+        rememberSaveable(transitions, canChangeScene, enableInterruptions, saver = stateSaver) {
+            val initialScene =
+                initialScene?.let {
+                    Scenes.ensureCorrectScene(
+                        initialScene,
+                        lockscreenScene = lockscreenScene,
+                        shadeScene = shadeScene,
+                    )
+                } ?: lockscreenScene
+
+            MutableSceneTransitionLayoutState(
+                initialScene,
+                transitions,
+                canChangeScene = canChangeScene,
+                enableInterruptions = enableInterruptions,
+            )
+        }
+
+    val coroutineScope = rememberCoroutineScope()
     fun onChangeScene(scene: SceneKey) {
         when (scene) {
             Scenes.Launcher -> isLockscreenDismissed = true
@@ -257,14 +319,17 @@ fun SystemUi(
 
         // Enforce that we are going to the right shade/lockscreen here depending on the windows
         // size class.
-        currentScene = Scenes.ensureCorrectScene(scene, lockscreenScene, shadeScene)
+        layoutState.setTargetScene(
+            Scenes.ensureCorrectScene(scene, lockscreenScene, shadeScene),
+            coroutineScope
+        )
     }
 
     fun onPowerButtonClicked() {
         isLockscreenDismissable = false
         isLockscreenDismissed = false
 
-        if (currentScene == Scenes.AlwaysOnDisplay) {
+        if (layoutState.transitionState.currentScene == Scenes.AlwaysOnDisplay) {
             onChangeScene(lockscreenScene)
         } else {
             onChangeScene(Scenes.AlwaysOnDisplay)
@@ -332,32 +397,6 @@ fun SystemUi(
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.onSurface
             ) {
-                // The state of the quick settings pager in the phone (one column) layout.
-                val nQuickSettingsPages =
-                    nQuickSettingsPages(
-                        nTiles = quickSettingsTiles.size,
-                        nRows = nQuickSettingsRow,
-                        nColumns = nQuickSettingsColumns,
-                    )
-                val quickSettingsPagerState = rememberPagerState { nQuickSettingsPages }
-
-                val springConfiguration = configuration.springConfigurations.systemUiSprings
-                val layoutState =
-                    updateSceneTransitionLayoutState(
-                        currentScene = currentScene,
-                        onChangeScene = { onChangeScene(it) },
-                        canChangeScene = { configuration.canChangeScene },
-                        transitions =
-                            remember(quickSettingsPagerState, springConfiguration, configuration) {
-                                systemUiTransitions(
-                                    quickSettingsPagerState,
-                                    springConfiguration,
-                                    configuration,
-                                )
-                            },
-                        enableInterruptions = configuration.enableInterruptions,
-                    )
-
                 var isMediaPlayerPlaying by remember { mutableStateOf(false) }
                 val mediaPlayer: (@Composable SceneScope.() -> Unit)? =
                     if (configuration.showMediaPlayer) {
@@ -371,129 +410,142 @@ fun SystemUi(
                         null
                     }
 
-                SceneTransitionLayout(
-                    state = layoutState,
-                    transitionInterceptionThreshold = configuration.transitionInterceptionThreshold,
-                    modifier =
-                        // Make this layout accessible to UiAutomator.
-                        Modifier.semantics { testTagsAsResourceId = true }
-                            .testTag("SystemUiSceneTransitionLayout"),
-                ) {
-                    scene(Scenes.Launcher, Launcher.userActions(shadeScene)) {
-                        Launcher(launcherColumns)
-                    }
-                    scene(
-                        Scenes.Lockscreen,
-                        Lockscreen.userActions(
-                            isLockscreenDismissable,
-                            shadeScene,
-                            requiresFullDistanceSwipeToShade =
-                                when (configuration.lsToShadeRequiresFullSwipe) {
-                                    ToggleableState.On -> true
-                                    ToggleableState.Off -> false
-                                    ToggleableState.Indeterminate ->
-                                        configuration.interactiveNotifications
-                                }
-                        )
+                // SceneTransitionLayout can only be bound to one SceneTransitionLayoutState, so
+                // make sure we recompose it fully when we create a new state object.
+                key(layoutState) {
+                    SceneTransitionLayout(
+                        state = layoutState,
+                        transitionInterceptionThreshold =
+                            configuration.transitionInterceptionThreshold,
+                        modifier =
+                            // Make this layout accessible to UiAutomator.
+                            Modifier.semantics { testTagsAsResourceId = true }
+                                .testTag("SystemUiSceneTransitionLayout"),
                     ) {
-                        Lockscreen(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInLockscreen
-                                )
-                            },
-                            mediaPlayer,
-                            isDismissable = isLockscreenDismissable,
-                            onToggleDismissable = {
-                                isLockscreenDismissable = !isLockscreenDismissable
-                            },
-                            ::onChangeScene,
-                        )
-                    }
-                    scene(
-                        Scenes.SplitLockscreen,
-                        SplitLockscreen.userActions(isLockscreenDismissable, shadeScene)
-                    ) {
-                        SplitLockscreen(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInLockscreen
-                                )
-                            },
-                            mediaPlayer,
-                            isDismissable = isLockscreenDismissable,
-                            onToggleDismissable = {
-                                isLockscreenDismissable = !isLockscreenDismissable
-                            },
-                            ::onChangeScene,
-                        )
-                    }
-                    scene(Scenes.StubLeft, Stub.leftUserActions(lockscreenScene)) {
-                        Stub(rootKey = Stub.Elements.SceneLeft, textKey = Stub.Elements.TextLeft)
-                    }
-                    scene(Scenes.StubRight, Stub.rightUserActions(lockscreenScene)) {
-                        Stub(rootKey = Stub.Elements.SceneRight, textKey = Stub.Elements.TextRight)
-                    }
-                    scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
-                    scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
-                        Bouncer(
-                            onBouncerCancelled = { onChangeScene(lockscreenScene) },
-                            onBouncerSolved = { onChangeScene(Scenes.Launcher) },
-                        )
-                    }
-                    scene(
-                        Scenes.QuickSettings,
-                        QuickSettings.userActions(
-                            shadeScene,
-                            lockscreenScene,
-                            isLockscreenDismissed,
-                        ),
-                    ) {
-                        QuickSettings(
-                            quickSettingsPagerState,
-                            quickSettingsTiles,
-                            nQuickSettingsRow,
-                            nQuickSettingsColumns,
-                            mediaPlayer,
-                            ::onSettingsButtonClicked,
-                            ::onPowerButtonClicked,
-                        )
-                    }
-                    scene(
-                        Scenes.Shade,
-                        Shade.userActions(isLockscreenDismissed, lockscreenScene),
-                    ) {
-                        Shade(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInShade
-                                )
-                            },
-                            mediaPlayer,
-                            quickSettingsTiles,
-                            nQuickSettingsColumns,
-                        )
-                    }
-                    scene(
-                        Scenes.SplitShade,
-                        SplitShade.userActions(isLockscreenDismissed, lockscreenScene)
-                    ) {
-                        SplitShade(
-                            notificationList = {
-                                NotificationList(
-                                    maxNotificationCount = configuration.notificationsInShade
-                                )
-                            },
-                            mediaPlayer,
-                            quickSettingsTiles,
-                            nQuickSettingsSplitShadeRows,
-                            nQuickSettingsColumns,
-                            ::onSettingsButtonClicked,
-                            ::onPowerButtonClicked,
-                        )
-                    }
-                    scene(Scenes.AlwaysOnDisplay) {
-                        AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                        scene(Scenes.Launcher, Launcher.userActions(shadeScene)) {
+                            Launcher(launcherColumns)
+                        }
+                        scene(
+                            Scenes.Lockscreen,
+                            Lockscreen.userActions(
+                                isLockscreenDismissable,
+                                shadeScene,
+                                requiresFullDistanceSwipeToShade =
+                                    when (configuration.lsToShadeRequiresFullSwipe) {
+                                        ToggleableState.On -> true
+                                        ToggleableState.Off -> false
+                                        ToggleableState.Indeterminate ->
+                                            configuration.interactiveNotifications
+                                    }
+                            )
+                        ) {
+                            Lockscreen(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount =
+                                            configuration.notificationsInLockscreen
+                                    )
+                                },
+                                mediaPlayer,
+                                isDismissable = isLockscreenDismissable,
+                                onToggleDismissable = {
+                                    isLockscreenDismissable = !isLockscreenDismissable
+                                },
+                                ::onChangeScene,
+                            )
+                        }
+                        scene(
+                            Scenes.SplitLockscreen,
+                            SplitLockscreen.userActions(isLockscreenDismissable, shadeScene)
+                        ) {
+                            SplitLockscreen(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount =
+                                            configuration.notificationsInLockscreen
+                                    )
+                                },
+                                mediaPlayer,
+                                isDismissable = isLockscreenDismissable,
+                                onToggleDismissable = {
+                                    isLockscreenDismissable = !isLockscreenDismissable
+                                },
+                                ::onChangeScene,
+                            )
+                        }
+                        scene(Scenes.StubLeft, Stub.leftUserActions(lockscreenScene)) {
+                            Stub(
+                                rootKey = Stub.Elements.SceneLeft,
+                                textKey = Stub.Elements.TextLeft
+                            )
+                        }
+                        scene(Scenes.StubRight, Stub.rightUserActions(lockscreenScene)) {
+                            Stub(
+                                rootKey = Stub.Elements.SceneRight,
+                                textKey = Stub.Elements.TextRight
+                            )
+                        }
+                        scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
+                        scene(Scenes.Bouncer, Bouncer.userActions(lockscreenScene)) {
+                            Bouncer(
+                                onBouncerCancelled = { onChangeScene(lockscreenScene) },
+                                onBouncerSolved = { onChangeScene(Scenes.Launcher) },
+                            )
+                        }
+                        scene(
+                            Scenes.QuickSettings,
+                            QuickSettings.userActions(
+                                shadeScene,
+                                lockscreenScene,
+                                isLockscreenDismissed,
+                            ),
+                        ) {
+                            QuickSettings(
+                                quickSettingsPagerState,
+                                quickSettingsTiles,
+                                nQuickSettingsRow,
+                                nQuickSettingsColumns,
+                                mediaPlayer,
+                                ::onSettingsButtonClicked,
+                                ::onPowerButtonClicked,
+                            )
+                        }
+                        scene(
+                            Scenes.Shade,
+                            Shade.userActions(isLockscreenDismissed, lockscreenScene),
+                        ) {
+                            Shade(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade
+                                    )
+                                },
+                                mediaPlayer,
+                                quickSettingsTiles,
+                                nQuickSettingsColumns,
+                            )
+                        }
+                        scene(
+                            Scenes.SplitShade,
+                            SplitShade.userActions(isLockscreenDismissed, lockscreenScene)
+                        ) {
+                            SplitShade(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade
+                                    )
+                                },
+                                mediaPlayer,
+                                quickSettingsTiles,
+                                nQuickSettingsSplitShadeRows,
+                                nQuickSettingsColumns,
+                                ::onSettingsButtonClicked,
+                                ::onPowerButtonClicked,
+                            )
+                        }
+                        scene(Scenes.AlwaysOnDisplay) {
+                            AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                        }
                     }
                 }
             }
