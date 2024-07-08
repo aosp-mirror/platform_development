@@ -33,6 +33,16 @@ export class Rect {
     return new Rect(left, top, right - left, bottom - top);
   }
 
+  isAlmostEqual(other: Rect, eps: number): boolean {
+    const isClose = (a: number, b: number) => Math.abs(a - b) <= eps;
+    return (
+      isClose(this.x, other.x) &&
+      isClose(this.y, other.y) &&
+      isClose(this.w, other.w) &&
+      isClose(this.h, other.h)
+    );
+  }
+
   containsPoint(point: Point): boolean {
     return (
       this.x <= point.x &&
