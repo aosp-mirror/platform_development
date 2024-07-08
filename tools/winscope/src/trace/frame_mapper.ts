@@ -69,12 +69,22 @@ export class FrameMapper {
     await this.tryPropagateMapping(
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS,
-      this.propagateFromSurfaceFlingerToTransactions,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
     );
     await this.tryPropagateMapping(
       TraceType.SURFACE_FLINGER,
       TraceType.VIEW_CAPTURE,
       this.propagateFromSurfaceFlingerToViewCapture,
+    );
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.INPUT_KEY_EVENT,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
+    );
+    await this.tryPropagateMapping(
+      TraceType.SURFACE_FLINGER,
+      TraceType.INPUT_MOTION_EVENT,
+      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
     );
     await this.tryPropagateMapping(
       TraceType.TRANSACTIONS,
@@ -124,12 +134,12 @@ export class FrameMapper {
     });
   }
 
-  private async propagateFromSurfaceFlingerToTransactions(
+  private async propagateFromSurfaceFlingerToTraceWithVsyncIds(
     surfaceFlinger: Trace<object>,
-    transactions: Trace<object>,
+    traceWithVsyncIds: Trace<object>,
     frameMapBuilder: FrameMapBuilder,
   ) {
-    const transactionEntries = await transactions.customQuery(
+    const entries = await traceWithVsyncIds.customQuery(
       CustomQueryType.VSYNCID,
     );
 
@@ -154,7 +164,7 @@ export class FrameMapper {
       vsyncIdToFrames.set(vsyncId, frames);
     });
 
-    transactionEntries.forEach((dstEntry) => {
+    entries.forEach((dstEntry) => {
       const vsyncId = dstEntry.getValue();
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {

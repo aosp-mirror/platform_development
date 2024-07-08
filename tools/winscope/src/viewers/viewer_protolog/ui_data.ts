@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-import {AbsoluteEntryIndex} from 'trace/index_types';
+import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {
+  LogEntry,
+  LogField,
+  LogFilter,
+  UiDataLog,
+} from 'viewers/common/ui_data_log';
 
-export interface UiDataMessage {
-  readonly traceIndex: AbsoluteEntryIndex;
-  readonly text: string;
-  readonly time: PropertyTreeNode;
-  readonly tag: string;
-  readonly level: string;
-  readonly at: string;
-}
-
-export class UiData {
+export class UiData implements UiDataLog {
   constructor(
-    public allLogLevels: string[],
-    public allTags: string[],
-    public allSourceFiles: string[],
-    public messages: UiDataMessage[],
-    public currentMessageIndex: undefined | number,
-    public selectedMessageIndex: undefined | number,
+    public filters: LogFilter[],
+    public entries: LogEntry[],
+    public currentIndex: undefined | number,
+    public selectedIndex: undefined | number,
+    public scrollToIndex: undefined | number,
   ) {}
 
-  static EMPTY = new UiData([], [], [], [], undefined, undefined);
+  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+}
+export class ProtologEntry implements LogEntry {
+  constructor(
+    public traceEntry: TraceEntry<PropertyTreeNode>,
+    public fields: LogField[],
+  ) {}
 }

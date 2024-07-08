@@ -53,8 +53,8 @@ export class TimelineData {
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
-      // Filter out dumps with invalid timestamp (would mess up the timeline)
-      if (trace.isDumpWithoutTimestamp()) {
+      // Filter out empty traces or dumps with invalid timestamp (would mess up the timeline)
+      if (trace.lengthEntries === 0 || trace.isDumpWithoutTimestamp()) {
         return;
       }
 
@@ -63,9 +63,14 @@ export class TimelineData {
 
     const transitionTrace = this.traces.getTrace(TraceType.TRANSITION);
     if (transitionTrace) {
-      this.transitions = await Promise.all(
-        transitionTrace.mapEntry(async (entry) => await entry.getValue()),
-      );
+      try {
+        this.transitions = await Promise.all(
+          transitionTrace.mapEntry(async (entry) => await entry.getValue()),
+        );
+      } catch (error) {
+        transitionTrace.setCorruptedState(true);
+        throw error;
+      }
     }
 
     this.screenRecordingVideo = screenRecordingVideo;
@@ -160,7 +165,9 @@ export class TimelineData {
 
   getFullTimeRange(): TimeRange {
     if (!this.firstEntry || !this.lastEntry) {
-      throw Error('Trying to get full time range when there are no timestamps');
+      throw new Error(
+        'Trying to get full time range when there are no timestamps',
+      );
     }
 
     const fullTimeRange = new TimeRange(
@@ -209,6 +216,10 @@ export class TimelineData {
     return this.traces;
   }
 
+  hasTrace(trace: Trace<object>): boolean {
+    return this.traces.hasTrace(trace);
+  }
+
   getScreenRecordingVideo(): Blob | undefined {
     return this.screenRecordingVideo;
   }
@@ -217,7 +228,7 @@ export class TimelineData {
     position: TracePosition,
   ): number | undefined {
     const trace = this.traces.getTrace(TraceType.SCREEN_RECORDING);
-    if (!trace || trace.lengthEntries === 0) {
+    if (!trace) {
       return undefined;
     }
 
@@ -324,9 +335,6 @@ export class TimelineData {
     let first: TraceEntry<{}> | undefined;
 
     this.traces.forEachTrace((trace) => {
-      if (trace.lengthEntries === 0) {
-        return;
-      }
       let candidate: TraceEntry<{}> | undefined;
       for (let i = 0; i < trace.lengthEntries; i++) {
         const entry = trace.getEntry(i);
@@ -350,9 +358,6 @@ export class TimelineData {
     let last: TraceEntry<{}> | undefined = undefined;
 
     this.traces.forEachTrace((trace) => {
-      if (trace.lengthEntries === 0) {
-        return;
-      }
       const candidate = trace.getEntry(trace.lengthEntries - 1);
       if (!last || candidate.getTimestamp() > last.getTimestamp()) {
         last = candidate;
@@ -363,7 +368,7 @@ export class TimelineData {
   }
 
   private getFirstEntryOfActiveViewTrace(): TraceEntry<{}> | undefined {
-    if (!this.activeTrace || this.activeTrace.lengthEntries === 0) {
+    if (!this.activeTrace) {
       return undefined;
     }
     return this.activeTrace.getEntry(0);

@@ -32,12 +32,14 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
-import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
+import {TraceBuilder} from 'test/unit/trace_builder';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {ProtologScrollDirective} from './scroll_strategy/protolog_scroll_directive';
-import {UiData, UiDataMessage} from './ui_data';
+import {ProtologEntry, UiData} from './ui_data';
 import {ViewerProtologComponent} from './viewer_protolog_component';
 
 describe('ViewerProtologComponent', () => {
@@ -60,6 +62,7 @@ describe('ViewerProtologComponent', () => {
         declarations: [
           ViewerProtologComponent,
           SelectWithFilterComponent,
+          LogComponent,
           ProtologScrollDirective,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -67,6 +70,9 @@ describe('ViewerProtologComponent', () => {
       fixture = TestBed.createComponent(ViewerProtologComponent);
       component = fixture.componentInstance;
       htmlElement = fixture.nativeElement;
+
+      component.inputData = makeUiData();
+      fixture.detectChanges();
     });
 
     it('can be created', () => {
@@ -81,169 +87,17 @@ describe('ViewerProtologComponent', () => {
     });
 
     it('renders log messages', () => {
-      expect(htmlElement.querySelector('.scroll-messages')).toBeTruthy();
+      expect(htmlElement.querySelector('.scroll')).toBeTruthy();
+      const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
+      expect(entry.innerHTML).toContain('INFO');
+      expect(entry.innerHTML).toContain('WindowManager');
+      expect(entry.innerHTML).toContain('test_source_file.java');
+      expect(entry.innerHTML).toContain('test information about message');
     });
-
-    it('applies log level filter correctly', async () => {
-      const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(
-        ViewerEvents.LogLevelsFilterChanged,
-        (event) => {
-          if ((event as CustomEvent).detail.length === 0) {
-            component.uiData.messages = allMessages;
-            return;
-          }
-          component.uiData.messages = allMessages.filter((message) =>
-            (event as CustomEvent).detail.includes(message.level),
-          );
-        },
-      );
-      await checkSelectFilter('.log-level');
-    });
-
-    it('applies tag filter correctly', async () => {
-      const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(ViewerEvents.TagsFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.messages = allMessages;
-          return;
-        }
-        component.uiData.messages = allMessages.filter((message) =>
-          (event as CustomEvent).detail.includes(message.tag),
-        );
-      });
-      await checkSelectFilter('.tag');
-    });
-
-    it('applies source file filter correctly', async () => {
-      const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(
-        ViewerEvents.SourceFilesFilterChanged,
-        (event) => {
-          if ((event as CustomEvent).detail.length === 0) {
-            component.uiData.messages = allMessages;
-            return;
-          }
-          component.uiData.messages = allMessages.filter((message) =>
-            (event as CustomEvent).detail.includes(message.at),
-          );
-        },
-      );
-      await checkSelectFilter('.source-file');
-    });
-
-    it('applies text filter correctly', () => {
-      const allMessages = makeUiData().messages;
-      htmlElement.addEventListener(
-        ViewerEvents.SearchStringFilterChanged,
-        (event) => {
-          component.uiData.messages = allMessages.filter((message) =>
-            message.text.includes((event as CustomEvent).detail),
-          );
-        },
-      );
-      component.inputData = makeUiData();
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(200);
-
-      const textFilterDiv = assertDefined(
-        htmlElement.querySelector('.filters .text'),
-      );
-      const inputEl = assertDefined(
-        textFilterDiv.querySelector('input'),
-      ) as HTMLInputElement;
-      inputEl.value = 'keep';
-      inputEl.dispatchEvent(new Event('input'));
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(100);
-      inputEl.value = '';
-      inputEl.dispatchEvent(new Event('input'));
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(200);
-    });
-
-    it('scrolls to current entry on button click', () => {
-      component.inputData = makeUiData();
-      fixture.detectChanges();
-      const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time'),
-      ) as HTMLButtonElement;
-      const spy = spyOn(
-        assertDefined(component.scrollComponent),
-        'scrollToIndex',
-      );
-      goToCurrentTimeButton.click();
-      expect(spy).toHaveBeenCalledWith(150);
-    });
-
-    it('changes css class on message click and does not scroll', () => {
-      const uiData = makeUiData();
-      component.inputData = uiData;
-      fixture.detectChanges();
-
-      htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
-        const index = (event as CustomEvent).detail;
-        uiData.selectedMessageIndex = index;
-        component.inputData = uiData;
-        fixture.detectChanges();
-      });
-
-      const message = assertDefined(
-        htmlElement.querySelector('.message[item-id="3"]'),
-      ) as HTMLButtonElement;
-      expect(message.className).not.toContain('selected');
-      const spy = spyOn(
-        assertDefined(component.scrollComponent),
-        'scrollToIndex',
-      );
-      message.click();
-      expect(spy).not.toHaveBeenCalled();
-      expect(message.className).toContain('selected');
-    });
-
-    it('propagates timestamp on click', () => {
-      component.inputData = makeUiData();
-      fixture.detectChanges();
-      let index: number | undefined;
-      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        index = (event as CustomEvent).detail.index;
-      });
-      const logTimestampButton = assertDefined(
-        htmlElement.querySelector('.time button'),
-      ) as HTMLButtonElement;
-      logTimestampButton.click();
-
-      expect(index).toEqual(0);
-    });
-
-    async function checkSelectFilter(filterSelector: string) {
-      component.inputData = makeUiData();
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(200);
-
-      const filterTrigger = assertDefined(
-        htmlElement.querySelector(
-          `.filters ${filterSelector} .mat-select-trigger`,
-        ),
-      ) as HTMLInputElement;
-      filterTrigger.click();
-      await fixture.whenStable();
-
-      const firstOption = assertDefined(
-        document.querySelector('.mat-select-panel .mat-option'),
-      ) as HTMLElement;
-      firstOption.click();
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(100);
-
-      firstOption.click();
-      fixture.detectChanges();
-      expect(component.uiData.messages.length).toEqual(200);
-    }
   });
 
   describe('Scroll component', () => {
-    executeScrollComponentTests('message', setUpTestEnvironment);
+    executeScrollComponentTests(setUpTestEnvironment);
     async function setUpTestEnvironment(): Promise<
       [
         ComponentFixture<ViewerProtologComponent>,
@@ -261,14 +115,21 @@ describe('ViewerProtologComponent', () => {
           BrowserAnimationsModule,
           MatSelectModule,
         ],
-        declarations: [ViewerProtologComponent, ProtologScrollDirective],
+        declarations: [
+          ViewerProtologComponent,
+          LogComponent,
+          ProtologScrollDirective,
+        ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
       const fixture = TestBed.createComponent(ViewerProtologComponent);
       const protologComponent = fixture.componentInstance;
       const htmlElement = fixture.nativeElement;
-      const viewport = assertDefined(protologComponent.scrollComponent);
       protologComponent.inputData = makeUiData();
+      fixture.detectChanges();
+      const viewport = assertDefined(
+        protologComponent.logComponent?.scrollComponent,
+      );
       return [fixture, htmlElement, viewport];
     }
   });
@@ -280,34 +141,48 @@ describe('ViewerProtologComponent', () => {
       'test_source_file.java',
       'other_test_source_file.java',
     ];
-
-    const time = new PropertyTreeBuilder()
-      .setRootId('ProtologMessage')
-      .setName('timestamp')
-      .setValue(TimestampConverterUtils.makeElapsedTimestamp(10n))
-      .setFormatter(TIMESTAMP_NODE_FORMATTER)
+    const propertiesTree = new PropertyTreeBuilder()
+      .setRootId('Protolog')
+      .setName('tree')
+      .setValue(null)
+      .build();
+    const ts = TimestampConverterUtils.makeElapsedTimestamp(10n);
+    const trace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries([propertiesTree, propertiesTree])
+      .setTimestamps([ts, ts])
       .build();
 
-    const messages = [];
+    const messages: ProtologEntry[] = [];
     const shortMessage = 'test information about message';
     const longMessage = shortMessage.repeat(10) + 'keep';
     for (let i = 0; i < 200; i++) {
-      const uiDataMessage: UiDataMessage = {
-        traceIndex: i,
-        text: i % 2 === 0 ? shortMessage : longMessage,
-        time,
-        tag: i % 2 === 0 ? allTags[0] : allTags[1],
-        level: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
-        at: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
-      };
-      messages.push(uiDataMessage);
+      const message = new ProtologEntry(trace.getEntry(0), [
+        {
+          type: LogFieldType.LOG_LEVEL,
+          value: i % 2 === 0 ? allLogLevels[0] : allLogLevels[1],
+        },
+        {type: LogFieldType.TAG, value: i % 2 === 0 ? allTags[0] : allTags[1]},
+        {
+          type: LogFieldType.SOURCE_FILE,
+          value: i % 2 === 0 ? allSourceFiles[0] : allSourceFiles[1],
+        },
+        {
+          type: LogFieldType.TEXT,
+          value: i % 2 === 0 ? shortMessage : longMessage,
+        },
+      ]);
+      messages.push(message);
     }
     return new UiData(
-      allLogLevels,
-      allTags,
-      allSourceFiles,
+      [
+        {type: LogFieldType.LOG_LEVEL, options: allLogLevels},
+        {type: LogFieldType.TAG, options: allTags},
+        {type: LogFieldType.SOURCE_FILE, options: allSourceFiles},
+        {type: LogFieldType.TEXT},
+      ],
       messages,
       150,
+      undefined,
       undefined,
     );
   }

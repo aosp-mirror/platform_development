@@ -14,139 +14,69 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils} from 'common/function_utils';
-import {
-  TracePositionUpdate,
-  WinscopeEvent,
-  WinscopeEventType,
-} from 'messaging/winscope_event';
-import {
-  EmitEvent,
-  WinscopeEventEmitter,
-} from 'messaging/winscope_event_emitter';
-import {AbsoluteEntryIndex, Trace, TraceEntry} from 'trace/trace';
-import {TraceEntryFinder} from 'trace/trace_entry_finder';
+import {Trace} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {UiData, UiDataMessage} from './ui_data';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
+import {LogPresenter} from 'viewers/common/log_presenter';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {ProtologEntry, UiData} from './ui_data';
 
-export class Presenter implements WinscopeEventEmitter {
-  private readonly trace: Trace<PropertyTreeNode>;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  private entry?: TraceEntry<PropertyTreeNode>;
-  private uiData = UiData.EMPTY;
-  private originalIndicesOfFilteredOutputMessages: number[] = [];
-
+export class Presenter extends AbstractLogViewerPresenter {
+  static readonly FIELD_TYPES = [
+    LogFieldType.LOG_LEVEL,
+    LogFieldType.TAG,
+    LogFieldType.SOURCE_FILE,
+    LogFieldType.TEXT,
+  ];
   private isInitialized = false;
-  private allUiDataMessages: UiDataMessage[] = [];
-  private allTags: string[] = [];
-  private allSourceFiles: string[] = [];
-  private allLogLevels: string[] = [];
 
-  private tagsFilter: string[] = [];
-  private filesFilter: string[] = [];
-  private levelsFilter: string[] = [];
-  private searchString = '';
+  protected override logPresenter = new LogPresenter(true);
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyUiDataCallback: (data: UiData) => void,
+    notifyViewCallback: NotifyLogViewCallbackType,
   ) {
-    this.trace = trace;
-    this.notifyUiDataCallback = notifyUiDataCallback;
-    this.notifyUiDataCallback(this.uiData);
+    super(trace, notifyViewCallback, UiData.EMPTY);
   }
 
-  setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async onAppEvent(event: WinscopeEvent) {
-    await event.visit(
-      WinscopeEventType.TRACE_POSITION_UPDATE,
-      async (event) => {
-        await this.initializeIfNeeded();
-        this.entry = TraceEntryFinder.findCorrespondingEntry(
-          this.trace,
-          event.position,
-        );
-        this.computeUiDataCurrentMessageIndex();
-        this.notifyUiDataCallback(this.uiData);
-      },
-    );
-  }
-
-  onLogLevelsFilterChanged(levels: string[]) {
-    this.levelsFilter = levels;
-    this.computeUiData();
-    this.computeUiDataCurrentMessageIndex();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onTagsFilterChanged(tags: string[]) {
-    this.tagsFilter = tags;
-    this.computeUiData();
-    this.computeUiDataCurrentMessageIndex();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onSourceFilesFilterChanged(files: string[]) {
-    this.filesFilter = files;
-    this.computeUiData();
-    this.computeUiDataCurrentMessageIndex();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onSearchStringFilterChanged(searchString: string) {
-    this.searchString = searchString;
-    this.computeUiData();
-    this.computeUiDataCurrentMessageIndex();
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  onMessageClicked(index: number) {
-    if (this.uiData.selectedMessageIndex === index) {
-      this.uiData.selectedMessageIndex = undefined;
-    } else {
-      this.uiData.selectedMessageIndex = index;
-    }
-    this.notifyUiDataCallback(this.uiData);
-  }
-
-  async onLogTimestampClicked(traceIndex: AbsoluteEntryIndex) {
-    await this.emitAppEvent(
-      TracePositionUpdate.fromTraceEntry(this.trace.getEntry(traceIndex), true),
-    );
-  }
-
-  private async initializeIfNeeded() {
+  protected override async initializeIfNeeded() {
     if (this.isInitialized) {
       return;
     }
-    this.allUiDataMessages = await this.makeAllUiDataMessages();
+    const allEntries = await this.makeAllUiDataMessages();
+    const filters: LogFilter[] = [];
 
-    this.allLogLevels = this.getUniqueMessageValues(
-      this.allUiDataMessages,
-      (message: UiDataMessage) => message.level,
-    );
-    this.allTags = this.getUniqueMessageValues(
-      this.allUiDataMessages,
-      (message: UiDataMessage) => message.tag,
-    );
-    this.allSourceFiles = this.getUniqueMessageValues(
-      this.allUiDataMessages,
-      (message: UiDataMessage) => message.at,
-    );
+    for (const type of Presenter.FIELD_TYPES) {
+      if (type === LogFieldType.TEXT) {
+        filters.push({
+          type,
+        });
+      } else {
+        filters.push({
+          type,
+          options: this.getUniqueMessageValues(
+            allEntries,
+            (entry: ProtologEntry) =>
+              assertDefined(
+                entry.fields.find((f) => f.type === type),
+              ).value.toString(),
+          ),
+        });
+      }
+    }
 
-    this.computeUiData();
-
+    this.logPresenter.setAllEntries(allEntries);
+    this.logPresenter.setFilters(filters);
+    this.refreshUIData(UiData.EMPTY);
     this.isInitialized = true;
   }
 
-  private async makeAllUiDataMessages(): Promise<UiDataMessage[]> {
-    const messages: PropertyTreeNode[] = [];
+  private async makeAllUiDataMessages(): Promise<ProtologEntry[]> {
+    const messages: ProtologEntry[] = [];
 
     for (
       let traceIndex = 0;
@@ -154,86 +84,42 @@ export class Presenter implements WinscopeEventEmitter {
       ++traceIndex
     ) {
       const entry = assertDefined(this.trace.getEntry(traceIndex));
-      const message = await entry.getValue();
-      messages.push(message);
+      const messageNode = await entry.getValue();
+      const fields: LogField[] = [
+        {
+          type: LogFieldType.LOG_LEVEL,
+          value: assertDefined(
+            messageNode.getChildByName('level'),
+          ).formattedValue(),
+        },
+        {
+          type: LogFieldType.TAG,
+          value: assertDefined(
+            messageNode.getChildByName('tag'),
+          ).formattedValue(),
+        },
+        {
+          type: LogFieldType.SOURCE_FILE,
+          value: assertDefined(
+            messageNode.getChildByName('at'),
+          ).formattedValue(),
+        },
+        {
+          type: LogFieldType.TEXT,
+          value: assertDefined(
+            messageNode.getChildByName('text'),
+          ).formattedValue(),
+        },
+      ];
+      messages.push(new ProtologEntry(entry, fields));
     }
 
-    return messages.map((messageNode, index) => {
-      return {
-        traceIndex: index,
-        text: assertDefined(
-          messageNode.getChildByName('text'),
-        ).formattedValue(),
-        time: assertDefined(messageNode.getChildByName('timestamp')),
-        tag: assertDefined(messageNode.getChildByName('tag')).formattedValue(),
-        level: assertDefined(
-          messageNode.getChildByName('level'),
-        ).formattedValue(),
-        at: assertDefined(messageNode.getChildByName('at')).formattedValue(),
-      };
-    });
-  }
-
-  private computeUiData() {
-    let filteredMessages = this.allUiDataMessages;
-
-    if (this.levelsFilter.length > 0) {
-      filteredMessages = filteredMessages.filter((value) =>
-        this.levelsFilter.includes(value.level),
-      );
-    }
-
-    if (this.tagsFilter.length > 0) {
-      filteredMessages = filteredMessages.filter((value) =>
-        this.tagsFilter.includes(value.tag),
-      );
-    }
-
-    if (this.filesFilter.length > 0) {
-      filteredMessages = filteredMessages.filter((value) =>
-        this.filesFilter.includes(value.at),
-      );
-    }
-
-    filteredMessages = filteredMessages.filter((value) =>
-      value.text.includes(this.searchString),
-    );
-
-    this.originalIndicesOfFilteredOutputMessages = filteredMessages.map(
-      (message) => message.traceIndex,
-    );
-
-    this.uiData = new UiData(
-      this.allLogLevels,
-      this.allTags,
-      this.allSourceFiles,
-      filteredMessages,
-      undefined,
-      undefined,
-    );
-  }
-
-  private computeUiDataCurrentMessageIndex() {
-    if (!this.entry) {
-      this.uiData.currentMessageIndex = undefined;
-      return;
-    }
-
-    if (this.originalIndicesOfFilteredOutputMessages.length === 0) {
-      this.uiData.currentMessageIndex = undefined;
-      return;
-    }
-
-    this.uiData.currentMessageIndex =
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.originalIndicesOfFilteredOutputMessages,
-        this.entry.getIndex(),
-      ) ?? this.originalIndicesOfFilteredOutputMessages.length - 1;
+    return messages;
   }
 
   private getUniqueMessageValues(
-    allMessages: UiDataMessage[],
-    getValue: (message: UiDataMessage) => string,
+    allMessages: ProtologEntry[],
+    getValue: (message: ProtologEntry) => string,
   ): string[] {
     const uniqueValues = new Set<string>();
     allMessages.forEach((message) => {

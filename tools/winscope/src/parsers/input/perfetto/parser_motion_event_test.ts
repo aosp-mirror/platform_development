@@ -15,8 +15,10 @@
  */
 import {assertDefined} from 'common/assert_utils';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
 import {CoarseVersion} from 'trace/coarse_version';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -43,13 +45,15 @@ describe('Perfetto ParserMotionEvent', () => {
   it('provides timestamps', () => {
     const timestamps = assertDefined(parser.getTimestamps());
 
-    expect(timestamps.length).toEqual(4);
+    expect(timestamps.length).toEqual(6);
 
     const expected = [
-      TimestampConverterUtils.makeRealTimestamp(1718163696245804410n),
-      TimestampConverterUtils.makeRealTimestamp(1718163696254923410n),
-      TimestampConverterUtils.makeRealTimestamp(1718163696262592410n),
-      TimestampConverterUtils.makeRealTimestamp(1718163696271081410n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903800330430n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903800330430n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903821511338n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903827304592n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903836681382n),
+      TimestampConverterUtils.makeRealTimestamp(1718386903841727281n),
     ];
     expect(timestamps).toEqual(expected);
   });
@@ -64,7 +68,7 @@ describe('Perfetto ParserMotionEvent', () => {
     const motionEvent = assertDefined(entry.getChildByName('motionEvent'));
 
     expect(motionEvent?.getChildByName('eventId')?.getValue()).toEqual(
-      856299947,
+      330184796,
     );
     expect(motionEvent?.getChildByName('action')?.formattedValue()).toEqual(
       'ACTION_DOWN',
@@ -114,7 +118,7 @@ describe('Perfetto ParserMotionEvent', () => {
         ?.getChildByName('0')
         ?.getChildByName('value')
         ?.getValue(),
-    ).toEqual(350);
+    ).toEqual(431);
 
     expect(
       firstPointer
@@ -130,7 +134,7 @@ describe('Perfetto ParserMotionEvent', () => {
         ?.getChildByName('1')
         ?.getChildByName('value')
         ?.getValue(),
-    ).toEqual(370);
+    ).toEqual(624);
   });
 
   it('merges motion event with all associated dispatch events', async () => {
@@ -139,42 +143,48 @@ describe('Perfetto ParserMotionEvent', () => {
       entry.getChildByName('windowDispatchEvents'),
     );
 
-    expect(windowDispatchEvents?.getAllChildren().length).toEqual(6);
+    expect(windowDispatchEvents?.getAllChildren().length).toEqual(5);
     expect(
       windowDispatchEvents
         ?.getChildByName('0')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(292));
+    ).toEqual(212n);
     expect(
       windowDispatchEvents
         ?.getChildByName('1')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(247));
+    ).toEqual(64n);
     expect(
       windowDispatchEvents
         ?.getChildByName('2')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(240));
+    ).toEqual(82n);
     expect(
       windowDispatchEvents
         ?.getChildByName('3')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(370));
+    ).toEqual(75n);
     expect(
       windowDispatchEvents
         ?.getChildByName('4')
         ?.getChildByName('windowId')
         ?.getValue(),
-    ).toEqual(BigInt(229));
-    expect(
-      windowDispatchEvents
-        ?.getChildByName('5')
-        ?.getChildByName('windowId')
-        ?.getValue(),
-    ).toEqual(BigInt(0));
+    ).toEqual(0n);
+  });
+
+  it('supports VSYNCID custom query', async () => {
+    const trace = new TraceBuilder()
+      .setType(TraceType.INPUT_MOTION_EVENT)
+      .setParser(parser)
+      .build();
+    const entries = await trace
+      .sliceEntries(1, 4)
+      .customQuery(CustomQueryType.VSYNCID);
+    const values = entries.map((entry) => entry.getValue());
+    expect(values).toEqual([89110n, 89111n, 89112n]);
   });
 });

@@ -17,9 +17,10 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -35,35 +36,21 @@ export class ViewerTransitions implements Viewer {
   constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-transitions');
-
-    this.presenter = new Presenter(trace, traces, (data: UiData) => {
+    const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
-    });
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.TransitionSelected,
-      (event) => {
-        this.presenter.onTransitionSelected((event as CustomEvent).detail);
-      },
+    };
+    this.presenter = new Presenter(
+      trace,
+      traces,
+      notifyViewCallback as NotifyLogViewCallbackType,
     );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.TimestampClick,
-      async (event) => {
-        const detail: TimestampClickDetail = (event as CustomEvent).detail;
-        if (detail.index !== undefined) {
-          await this.presenter.onLogTimestampClicked(detail.index);
-        } else if (detail.timestamp !== undefined) {
-          await this.presenter.onRawTimestampClicked(detail.timestamp);
-        }
-      },
-    );
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Transitions',
+      TRACE_INFO[TraceType.TRANSITION].name,
     );
   }
 

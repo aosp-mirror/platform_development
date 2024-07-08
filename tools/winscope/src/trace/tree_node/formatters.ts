@@ -62,15 +62,17 @@ class ColorFormatter implements PropertyFormatter {
     const r = formatNumber(rNode?.getValue() ?? 0);
     const g = formatNumber(gNode?.getValue() ?? 0);
     const b = formatNumber(bNode?.getValue() ?? 0);
+    const rgbString = `(${r}, ${g}, ${b})`;
     if (rNode && gNode && bNode && !alphaNode) {
-      return `(${r}, ${g}, ${b})`;
+      return rgbString;
     }
 
     const alpha = formatNumber(alphaNode?.getValue() ?? 0);
+    const alphaString = `alpha: ${alpha}`;
     if (RawDataUtils.isEmptyObj(node)) {
-      return `${EMPTY_OBJ_STRING}, alpha: ${alpha}`;
+      return `${EMPTY_OBJ_STRING}, ${alphaString}`;
     }
-    return `(${r}, ${g}, ${b}, ${alpha})`;
+    return `${rgbString}, ${alphaString}`;
   }
 }
 const COLOR_FORMATTER = new ColorFormatter();

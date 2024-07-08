@@ -15,6 +15,7 @@
  */
 
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {Operation} from 'trace/tree_node/operations/operation';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {TreeNode} from 'trace/tree_node/tree_node';
 import {IsModifiedCallbackType} from './add_diffs';
@@ -33,14 +34,16 @@ export class PropertiesPresenter {
 
   constructor(
     private userOptions: UserOptions,
-    private denylistProperties: string[],
+    private propertiesDenylist: string[],
+    private customOperations?: Array<Operation<UiPropertyTreeNode>>,
+    private defaultAllowlist: string[] = [],
   ) {}
 
   getUserOptions() {
     return this.userOptions;
   }
 
-  setPropertiesTree(tree: PropertyTreeNode) {
+  setPropertiesTree(tree: PropertyTreeNode | undefined) {
     this.propertiesTree = tree;
   }
 
@@ -95,7 +98,7 @@ export class PropertiesPresenter {
         : undefined;
       await new AddDiffsPropertiesTree(
         PropertiesPresenter.isPropertyNodeModified,
-        this.denylistProperties,
+        this.propertiesDenylist,
       ).executeInPlace(uiTree, prevEntryUiTree);
     }
 
@@ -106,27 +109,32 @@ export class PropertiesPresenter {
     const predicatesKeepingChildren = [this.propertiesFilter];
     const predicatesDiscardingChildren = [];
 
-    if (this.denylistProperties) {
+    if (this.propertiesDenylist) {
       predicatesDiscardingChildren.push(
-        UiTreeUtils.makeDenyListFilterByName(this.denylistProperties),
+        UiTreeUtils.makeDenyListFilterByName(this.propertiesDenylist),
       );
     }
 
     if (!this.userOptions['showDefaults']?.enabled) {
-      predicatesDiscardingChildren.push(UiTreeUtils.isNotDefault);
       predicatesDiscardingChildren.push(
-        UiTreeUtils.makePropertyMatchFilter('IDENTITY'),
+        UiTreeUtils.makeIsNotDefaultFilter(this.defaultAllowlist),
       );
     }
 
     if (!keepCalculated) {
       predicatesDiscardingChildren.push(UiTreeUtils.isNotCalculated);
     }
-    this.formattedTree = new UiTreeFormatter<UiPropertyTreeNode>()
-      .setUiTree(uiTree)
-      .addOperation(new Filter(predicatesDiscardingChildren, false))
-      .addOperation(new Filter(predicatesKeepingChildren, true))
-      .format();
+    const formatter = new UiTreeFormatter<UiPropertyTreeNode>().setUiTree(
+      uiTree,
+    );
+    if (predicatesDiscardingChildren.length > 0) {
+      formatter.addOperation(new Filter(predicatesDiscardingChildren, false));
+    }
+    formatter.addOperation(new Filter(predicatesKeepingChildren, true));
+
+    this.customOperations?.forEach((op) => formatter.addOperation(op));
+
+    this.formattedTree = formatter.format();
   }
 
   clear() {

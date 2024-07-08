@@ -40,11 +40,13 @@ import {TimeRange} from 'common/time';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
+  TracePositionUpdate,
   WinscopeEvent,
 } from 'messaging/winscope_event';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
@@ -63,7 +65,6 @@ describe('TimelineComponent', () => {
   const time110 = TimestampConverterUtils.makeRealTimestamp(110n);
   const time112 = TimestampConverterUtils.makeRealTimestamp(112n);
 
-  const time1000 = TimestampConverterUtils.makeRealTimestamp(1000n);
   const time2000 = TimestampConverterUtils.makeRealTimestamp(2000n);
   const time3000 = TimestampConverterUtils.makeRealTimestamp(3000n);
   const time4000 = TimestampConverterUtils.makeRealTimestamp(4000n);
@@ -393,6 +394,27 @@ describe('TimelineComponent', () => {
       TRACE_INFO[TraceType.WINDOW_MANAGER].icon,
       TRACE_INFO[TraceType.PROTO_LOG].icon,
     ]);
+  });
+
+  it('update name and disables option for dumps', async () => {
+    loadAllTraces(component, fixture, false);
+    await openSelectPanel();
+
+    const matOptions = assertDefined(
+      document.documentElement.querySelectorAll('mat-option'),
+    ); // [WM, SF, SR, ProtoLog]
+
+    for (const i of [0, 2]) {
+      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
+        'false',
+      );
+    }
+    for (const i of [1, 3]) {
+      expect((matOptions.item(i) as HTMLInputElement).ariaDisabled).toEqual(
+        'true',
+      );
+    }
+    expect(matOptions.item(3).textContent).toContain('ProtoLog Dump');
   });
 
   it('next button disabled if no next entry', () => {
@@ -922,6 +944,42 @@ describe('TimelineComponent', () => {
     expect(timelineComponent.bookmarks).toEqual([]);
   });
 
+  it('updates active trace then trace position on mini timeline click', async () => {
+    loadAllTraces();
+    const timelineComponent = assertDefined(component.timeline);
+
+    let firstEvent: WinscopeEvent | undefined;
+    let activeTrace: Trace<object> | undefined;
+    let position: TracePosition | undefined;
+    timelineComponent.setEmitEvent(async (event: WinscopeEvent) => {
+      if (!firstEvent) {
+        expect(event).toBeInstanceOf(ActiveTraceChanged);
+        firstEvent = event;
+        activeTrace = (event as ActiveTraceChanged).trace;
+      } else {
+        expect(event).toBeInstanceOf(TracePositionUpdate);
+        position = (event as TracePositionUpdate).position;
+      }
+    });
+    const miniTimelineComponent = assertDefined(timelineComponent.miniTimeline);
+    const trace = assertDefined(
+      component.timelineData.getTraces().getTrace(TraceType.WINDOW_MANAGER),
+    );
+    spyOn(
+      assertDefined(miniTimelineComponent.drawer),
+      'getTraceClicked',
+    ).and.returnValue(Promise.resolve(trace));
+    const canvas = miniTimelineComponent.getCanvas();
+    canvas.dispatchEvent(new MouseEvent('mousedown'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(activeTrace).toEqual(trace);
+    expect(position).toBeDefined();
+  });
+
   function loadSfWmTraces(hostComponent = component, hostFixture = fixture) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
@@ -940,10 +998,15 @@ describe('TimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
     timelineData.setPosition(position100);
+    hostComponent.allTraces = hostComponent.timelineData.getTraces();
     hostFixture.detectChanges();
   }
 
-  function loadAllTraces(hostComponent = component, hostFixture = fixture) {
+  function loadAllTraces(
+    hostComponent = component,
+    hostFixture = fixture,
+    loadAllTraces = true,
+  ) {
     const traces = new TracesBuilder()
       .setTimestamps(TraceType.SURFACE_FLINGER, [time100, time110])
       .setTimestamps(TraceType.WINDOW_MANAGER, [
@@ -956,11 +1019,24 @@ describe('TimelineComponent', () => {
       .setTimestamps(TraceType.PROTO_LOG, [time100])
       .build();
 
+    let timelineDataTraces: Traces | undefined;
+    if (loadAllTraces) {
+      timelineDataTraces = traces;
+    } else {
+      timelineDataTraces = new Traces();
+      traces.forEachTrace((trace) => {
+        if (trace.type !== TraceType.PROTO_LOG) {
+          assertDefined(timelineDataTraces).addTrace(trace);
+        }
+      });
+    }
+
     assertDefined(hostComponent.timelineData).initialize(
-      traces,
+      timelineDataTraces,
       undefined,
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
+    hostComponent.allTraces = traces;
     hostFixture.detectChanges();
   }
 
@@ -987,6 +1063,7 @@ describe('TimelineComponent', () => {
       TimestampConverterUtils.TIMESTAMP_CONVERTER,
     );
     timelineData.setPosition(position100);
+    component.allTraces = timelineData.getTraces();
     fixture.detectChanges();
   }
 
@@ -1106,18 +1183,22 @@ describe('TimelineComponent', () => {
     const miniTimelineCanvas = assertDefined(
       htmlElement.querySelector('#mini-timeline-canvas'),
     ) as HTMLElement;
-    const clickPosX =
+    const yOffset = clickBelowMarker
+      ? assertDefined(component.timeline?.miniTimeline?.drawer?.getHeight()) /
+          6 +
+        1
+      : 0;
+
+    const event = new MouseEvent('contextmenu');
+    spyOnProperty(event, 'offsetX').and.returnValue(
       miniTimelineCanvas.offsetLeft +
-      miniTimelineCanvas.offsetWidth / 2 +
-      xOffset;
-    const clickPosY =
-      miniTimelineCanvas.offsetTop + (clickBelowMarker ? 1000 : 0);
-    miniTimelineCanvas.dispatchEvent(
-      new MouseEvent('contextmenu', {
-        clientX: clickPosX,
-        clientY: clickPosY,
-      }),
+        miniTimelineCanvas.offsetWidth / 2 +
+        xOffset,
     );
+    spyOnProperty(event, 'offsetY').and.returnValue(
+      miniTimelineCanvas.offsetTop + yOffset,
+    );
+    miniTimelineCanvas.dispatchEvent(event);
     fixture.detectChanges();
   }
 
@@ -1141,12 +1222,14 @@ describe('TimelineComponent', () => {
     selector: 'host-component',
     template: `
       <timeline
+        [allTraces]="allTraces"
         [timelineData]="timelineData"
         [store]="store"></timeline>
     `,
   })
   class TestHostComponent {
     timelineData = new TimelineData();
+    allTraces = new Traces();
     store = new PersistentStore();
 
     @ViewChild(TimelineComponent)

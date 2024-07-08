@@ -66,10 +66,11 @@ export class PropertyTreeNodeDataViewComponent {
     return this.node?.getValue() instanceof Timestamp;
   }
 
-  onTimestampClicked(timestamp: UiPropertyTreeNode) {
+  onTimestampClicked(timestampNode: UiPropertyTreeNode) {
+    const timestamp: Timestamp = timestampNode.getValue();
     const customEvent = new CustomEvent(ViewerEvents.TimestampClick, {
       bubbles: true,
-      detail: new TimestampClickDetail(timestamp.getValue(), undefined),
+      detail: new TimestampClickDetail(undefined, timestamp),
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }

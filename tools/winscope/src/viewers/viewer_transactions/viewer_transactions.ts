@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {assertDefined} from 'common/assert_utils';
 import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {TimestampClickDetail, ViewerEvents} from 'viewers/common/viewer_events';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -41,92 +41,21 @@ class ViewerTransactions implements Viewer {
   ) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-transactions');
-
-    this.presenter = new Presenter(trace, storage, (data: UiData) => {
+    const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
-    });
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.VSyncIdFilterChanged,
-      (event) => {
-        this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
-      },
+    };
+    this.presenter = new Presenter(
+      trace,
+      storage,
+      notifyViewCallback as NotifyLogViewCallbackType,
     );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.PidFilterChanged,
-      (event) => {
-        this.presenter.onPidFilterChanged((event as CustomEvent).detail);
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.UidFilterChanged,
-      (event) => {
-        this.presenter.onUidFilterChanged((event as CustomEvent).detail);
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.TypeFilterChanged,
-      (event) => {
-        this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.LayerIdFilterChanged,
-      (event) => {
-        this.presenter.onLayerIdFilterChanged((event as CustomEvent).detail);
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.WhatFilterChanged,
-      (event) => {
-        this.presenter.onWhatFilterChanged((event as CustomEvent).detail);
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.TransactionIdFilterChanged,
-      (event) => {
-        this.presenter.onTransactionIdFilterChanged(
-          (event as CustomEvent).detail,
-        );
-      },
-    );
-
-    this.htmlElement.addEventListener(ViewerEvents.LogClicked, (event) => {
-      this.presenter.onEntryClicked((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(
-      ViewerEvents.LogChangedByKeyPress,
-      (event) => {
-        this.presenter.onEntryChangedByKeyPress((event as CustomEvent).detail);
-      },
-    );
-    this.htmlElement.addEventListener(
-      ViewerEvents.TimestampClick,
-      async (event) => {
-        const detail: TimestampClickDetail = (event as CustomEvent).detail;
-        await this.presenter.onLogTimestampClicked(assertDefined(detail.index));
-      },
-    );
-
-    this.htmlElement.addEventListener(
-      ViewerEvents.PropertiesUserOptionsChange,
-      (event) =>
-        this.presenter.onPropertiesUserOptionsChange(
-          (event as CustomEvent).detail.userOptions,
-        ),
-    );
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'Transactions',
+      TRACE_INFO[TraceType.TRANSACTIONS].name,
     );
   }
 

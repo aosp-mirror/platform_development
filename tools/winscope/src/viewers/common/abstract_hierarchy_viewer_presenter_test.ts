@@ -113,6 +113,28 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         });
       }
 
+      if (this.shouldExecuteDumpTests) {
+        it('shows correct hierarchy tree name for entry', async () => {
+          const update = this.getPositionUpdate();
+          const spy = spyOn(
+            assertDefined(update.position.entry?.getFullTrace()),
+            'isDumpWithoutTimestamp',
+          );
+
+          spy.and.returnValue(false);
+          await presenter.onAppEvent(update);
+          expect(
+            assertDefined(uiData.hierarchyTrees?.at(0)).getDisplayName(),
+          ).toContain(update.position.timestamp.format());
+
+          spy.and.returnValue(true);
+          await presenter.onAppEvent(update);
+          expect(
+            assertDefined(uiData.hierarchyTrees?.at(0)).getDisplayName(),
+          ).toContain('Dump');
+        });
+      }
+
       it('updates pinned items', () => {
         expect(uiData.pinnedItems).toEqual([]);
 
@@ -553,6 +575,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
   abstract readonly shouldExecuteFlatTreeTest: boolean;
   abstract readonly shouldExecuteRectTests: boolean;
   abstract readonly shouldExecuteShowDiffTests: boolean;
+  abstract readonly shouldExecuteDumpTests: boolean;
   abstract readonly shouldExecuteSimplifyNamesTest: boolean;
   abstract readonly numberOfDefaultProperties: number;
   abstract readonly numberOfNonDefaultProperties: number;

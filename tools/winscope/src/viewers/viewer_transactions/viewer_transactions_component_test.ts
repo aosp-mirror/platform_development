@@ -33,17 +33,19 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
+import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {LogComponent} from 'viewers/common/log_component';
 import {executeScrollComponentTests} from 'viewers/common/scroll_component_test_utils';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
 import {TransactionsScrollDirective} from './scroll_strategy/transactions_scroll_directive';
-import {UiData, UiDataEntry} from './ui_data';
+import {TransactionsEntry, UiData} from './ui_data';
 import {ViewerTransactionsComponent} from './viewer_transactions_component';
 
 describe('ViewerTransactionsComponent', () => {
@@ -71,6 +73,7 @@ describe('ViewerTransactionsComponent', () => {
           CollapsedSectionsComponent,
           CollapsibleSectionTitleComponent,
           PropertiesComponent,
+          LogComponent,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
       }).compileComponents();
@@ -87,11 +90,19 @@ describe('ViewerTransactionsComponent', () => {
       expect(component).toBeTruthy();
     });
 
+    it('renders log component', () => {
+      expect(htmlElement.querySelector('.log-view')).toBeTruthy();
+    });
+
     it('renders filters', () => {
-      expect(htmlElement.querySelector('.entries .filters .pid')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .uid')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .type')).toBeTruthy();
-      expect(htmlElement.querySelector('.entries .filters .id')).toBeTruthy();
+      expect(htmlElement.querySelector('.filters .pid')).toBeTruthy();
+      expect(htmlElement.querySelector('.filters .uid')).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.filters .transaction-type'),
+      ).toBeTruthy();
+      expect(
+        htmlElement.querySelector('.filters .transaction-id'),
+      ).toBeTruthy();
     });
 
     it('renders entries', () => {
@@ -109,170 +120,6 @@ describe('ViewerTransactionsComponent', () => {
 
     it('renders properties', () => {
       expect(htmlElement.querySelector('.properties-view')).toBeTruthy();
-    });
-
-    it('applies transaction id filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(
-        ViewerEvents.TransactionIdFilterChanged,
-        (event) => {
-          if ((event as CustomEvent).detail.length === 0) {
-            component.uiData.entries = allEntries;
-            return;
-          }
-          component.uiData.entries = allEntries.filter((entry) =>
-            (event as CustomEvent).detail.includes(entry.transactionId),
-          );
-        },
-      );
-      await checkSelectFilter('.transaction-id');
-    });
-
-    it('applies vsync id filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(
-        ViewerEvents.VSyncIdFilterChanged,
-        (event) => {
-          if ((event as CustomEvent).detail.length === 0) {
-            component.uiData.entries = allEntries;
-            return;
-          }
-          component.uiData.entries = allEntries.filter((entry) => {
-            return (event as CustomEvent).detail.includes(`${entry.vsyncId}`);
-          });
-        },
-      );
-      await checkSelectFilter('.vsyncid');
-    });
-
-    it('applies pid filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(ViewerEvents.PidFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.includes(entry.pid);
-        });
-      });
-      await checkSelectFilter('.pid');
-    });
-
-    it('applies uid filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(ViewerEvents.UidFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.includes(entry.uid);
-        });
-      });
-      await checkSelectFilter('.uid');
-    });
-
-    it('applies type filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(ViewerEvents.TypeFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.includes(entry.type);
-        });
-      });
-      await checkSelectFilter('.type');
-    });
-
-    it('applies layer/display id filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(
-        ViewerEvents.LayerIdFilterChanged,
-        (event) => {
-          if ((event as CustomEvent).detail.length === 0) {
-            component.uiData.entries = allEntries;
-            return;
-          }
-          component.uiData.entries = allEntries.filter((entry) => {
-            return (event as CustomEvent).detail.includes(
-              entry.layerOrDisplayId,
-            );
-          });
-        },
-      );
-      await checkSelectFilter('.layer-or-display-id');
-    });
-
-    it('applies what filter correctly', async () => {
-      const allEntries = makeUiData(0).entries;
-      htmlElement.addEventListener(ViewerEvents.WhatFilterChanged, (event) => {
-        if ((event as CustomEvent).detail.length === 0) {
-          component.uiData.entries = allEntries;
-          return;
-        }
-        component.uiData.entries = allEntries.filter((entry) => {
-          return (event as CustomEvent).detail.some((allowed: string) => {
-            return entry.what.includes(allowed);
-          });
-        });
-      });
-      await checkSelectFilter('.what');
-    });
-
-    it('scrolls to current entry on button click', () => {
-      const goToCurrentTimeButton = assertDefined(
-        htmlElement.querySelector('.go-to-current-time'),
-      ) as HTMLButtonElement;
-      const spy = spyOn(
-        assertDefined(component.scrollComponent),
-        'scrollToIndex',
-      );
-      goToCurrentTimeButton.click();
-      expect(spy).toHaveBeenCalledWith(1);
-    });
-
-    it('changes selected entry on arrow key press', () => {
-      htmlElement.addEventListener(
-        ViewerEvents.LogChangedByKeyPress,
-        (event) => {
-          component.inputData = makeUiData((event as CustomEvent).detail);
-          fixture.detectChanges();
-        },
-      );
-
-      // does not do anything if no prev entry available
-      component.handleKeyboardEvent(
-        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
-      );
-      expect(component.uiData.selectedEntryIndex).toEqual(0);
-
-      component.handleKeyboardEvent(
-        new KeyboardEvent('keydown', {key: 'ArrowDown'}),
-      );
-      expect(component.uiData.selectedEntryIndex).toEqual(1);
-
-      component.handleKeyboardEvent(
-        new KeyboardEvent('keydown', {key: 'ArrowUp'}),
-      );
-      expect(component.uiData.selectedEntryIndex).toEqual(0);
-    });
-
-    it('propagates timestamp on click', () => {
-      component.inputData = makeUiData(0);
-      fixture.detectChanges();
-      let index: number | undefined;
-      htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-        index = (event as CustomEvent).detail.index;
-      });
-      const logTimestampButton = assertDefined(
-        htmlElement.querySelector('.time button'),
-      ) as HTMLButtonElement;
-      logTimestampButton.click();
-
-      expect(index).toEqual(0);
     });
 
     it('creates collapsed sections with no buttons', () => {
@@ -295,48 +142,73 @@ describe('ViewerTransactionsComponent', () => {
         .setValue(null)
         .build();
 
-      const time = new PropertyTreeBuilder()
-        .setRootId(propertiesTree.id)
-        .setName('timestamp')
-        .setValue(TimestampConverterUtils.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_NODE_FORMATTER)
+      const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
+
+      const trace = new TraceBuilder<PropertyTreeNode>()
+        .setEntries([propertiesTree, propertiesTree])
+        .setTimestamps([ts, ts])
         .build();
 
-      const entry = new UiDataEntry(
-        0,
-        time,
-        -111,
-        'PID_VALUE',
-        'UID_VALUE',
-        'TYPE_VALUE',
-        'LAYER_OR_DISPLAY_ID_VALUE',
-        'TRANSACTION_ID_VALUE',
-        'flag1 | flag2',
+      const entry1 = new TransactionsEntry(
+        trace.getEntry(0),
+        [
+          {type: LogFieldType.VSYNC_ID, value: -111},
+          {type: LogFieldType.PID, value: 'PID_VALUE'},
+          {type: LogFieldType.UID, value: 'UID_VALUE'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: 'LAYER_OR_DISPLAY_ID_VALUE',
+          },
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE'},
+          {type: LogFieldType.FLAGS, value: 'flag1 | flag2'},
+        ],
         propertiesTree,
       );
 
-      const entry2 = new UiDataEntry(
-        1,
-        time,
-        -222,
-        'PID_VALUE_2',
-        'UID_VALUE_2',
-        'TYPE_VALUE_2',
-        'LAYER_OR_DISPLAY_ID_VALUE_2',
-        'TRANSACTION_ID_VALUE_2',
-        'flag3 | flag4',
+      const entry2 = new TransactionsEntry(
+        trace.getEntry(1),
+        [
+          {type: LogFieldType.VSYNC_ID, value: -222},
+          {type: LogFieldType.PID, value: 'PID_VALUE_2'},
+          {type: LogFieldType.UID, value: 'UID_VALUE_2'},
+          {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE_2'},
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            value: 'LAYER_OR_DISPLAY_ID_VALUE_2',
+          },
+          {type: LogFieldType.TRANSACTION_ID, value: 'TRANSACTION_ID_VALUE_2'},
+          {type: LogFieldType.FLAGS, value: 'flag3 | flag4'},
+        ],
         propertiesTree,
       );
 
       return new UiData(
-        ['-111', '-222'],
-        ['PID_VALUE', 'PID_VALUE_2'],
-        ['UID_VALUE', 'UID_VALUE_2'],
-        ['TYPE_VALUE', 'TYPE_VALUE_2'],
-        ['LAYER_OR_DISPLAY_ID_VALUE', 'LAYER_OR_DISPLAY_ID_VALUE_2'],
-        ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
-        ['flag1', 'flag2', 'flag3', 'flag4'],
-        [entry, entry2],
+        [
+          {type: LogFieldType.VSYNC_ID, options: ['-111', '-222']},
+          {type: LogFieldType.PID, options: ['PID_VALUE', 'PID_VALUE_2']},
+          {type: LogFieldType.UID, options: ['UID_VALUE', 'UID_VALUE_2']},
+          {
+            type: LogFieldType.TRANSACTION_TYPE,
+            options: ['TYPE_VALUE', 'TYPE_VALUE_2'],
+          },
+          {
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
+            options: [
+              'LAYER_OR_DISPLAY_ID_VALUE',
+              'LAYER_OR_DISPLAY_ID_VALUE_2',
+            ],
+          },
+          {
+            type: LogFieldType.TRANSACTION_ID,
+            options: ['TRANSACTION_ID_VALUE', 'TRANSACTION_ID_VALUE_2'],
+          },
+          {
+            type: LogFieldType.FLAGS,
+            options: ['flag1', 'flag2', 'flag3', 'flag4'],
+          },
+        ],
+        [entry1, entry2],
         1,
         selectedEntryIndex,
         0,
@@ -344,34 +216,10 @@ describe('ViewerTransactionsComponent', () => {
         {},
       );
     }
-
-    async function checkSelectFilter(filterSelector: string) {
-      component.inputData = makeUiData(0);
-      fixture.detectChanges();
-      expect(component.uiData.entries.length).toEqual(2);
-      const filterTrigger = assertDefined(
-        htmlElement.querySelector(
-          `.filters ${filterSelector} .mat-select-trigger`,
-        ),
-      ) as HTMLInputElement;
-      filterTrigger.click();
-      await fixture.whenStable();
-
-      const firstOption = assertDefined(
-        document.querySelector('.mat-select-panel .mat-option'),
-      ) as HTMLElement;
-      firstOption.click();
-      fixture.detectChanges();
-      expect(component.uiData.entries.length).toEqual(1);
-
-      firstOption.click();
-      fixture.detectChanges();
-      expect(component.uiData.entries.length).toEqual(2);
-    }
   });
 
   describe('Scroll component', () => {
-    executeScrollComponentTests('entry', setUpTestEnvironment);
+    executeScrollComponentTests(setUpTestEnvironment);
 
     function makeUiDataForScroll(): UiData {
       const propertiesTree = new PropertyTreeBuilder()
@@ -380,20 +228,14 @@ describe('ViewerTransactionsComponent', () => {
         .setValue(null)
         .build();
 
-      const time = new PropertyTreeBuilder()
-        .setRootId(propertiesTree.id)
-        .setName('timestamp')
-        .setValue(TimestampConverterUtils.makeElapsedTimestamp(1n))
-        .setFormatter(TIMESTAMP_NODE_FORMATTER)
+      const ts = TimestampConverterUtils.makeElapsedTimestamp(1n);
+
+      const trace = new TraceBuilder<PropertyTreeNode>()
+        .setEntries([propertiesTree, propertiesTree])
+        .setTimestamps([ts, ts])
         .build();
 
       const uiData = new UiData(
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
         [],
         [],
         0,
@@ -405,16 +247,26 @@ describe('ViewerTransactionsComponent', () => {
       const shortMessage = 'flag1 | flag2';
       const longMessage = shortMessage.repeat(20);
       for (let i = 0; i < 200; i++) {
-        const entry = new UiDataEntry(
-          0,
-          time,
-          -111,
-          'PID_VALUE',
-          'UID_VALUE',
-          'TYPE_VALUE',
-          'LAYER_OR_DISPLAY_ID_VALUE',
-          'TRANSACTION_ID_VALUE',
-          i % 2 === 0 ? shortMessage : longMessage,
+        const entry = new TransactionsEntry(
+          trace.getEntry(0),
+          [
+            {type: LogFieldType.VSYNC_ID, value: -111},
+            {type: LogFieldType.PID, value: 'PID_VALUE'},
+            {type: LogFieldType.UID, value: 'UID_VALUE'},
+            {type: LogFieldType.TRANSACTION_TYPE, value: 'TYPE_VALUE'},
+            {
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
+              value: 'LAYER_OR_DISPLAY_ID_VALUE',
+            },
+            {
+              type: LogFieldType.TRANSACTION_ID,
+              value: 'TRANSACTION_ID_VALUE',
+            },
+            {
+              type: LogFieldType.FLAGS,
+              value: i % 2 === 0 ? shortMessage : longMessage,
+            },
+          ],
           propertiesTree,
         );
         uiData.entries.push(entry);
@@ -434,6 +286,7 @@ describe('ViewerTransactionsComponent', () => {
         imports: [ScrollingModule],
         declarations: [
           ViewerTransactionsComponent,
+          LogComponent,
           TransactionsScrollDirective,
         ],
         schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -441,8 +294,11 @@ describe('ViewerTransactionsComponent', () => {
       const fixture = TestBed.createComponent(ViewerTransactionsComponent);
       const transactionsComponent = fixture.componentInstance;
       const htmlElement = fixture.nativeElement;
-      const viewport = assertDefined(transactionsComponent.scrollComponent);
       transactionsComponent.inputData = makeUiDataForScroll();
+      fixture.detectChanges();
+      const viewport = assertDefined(
+        transactionsComponent.logComponent?.scrollComponent,
+      );
       return [fixture, htmlElement, viewport];
     }
   });
