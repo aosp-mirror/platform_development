@@ -23,8 +23,9 @@
 
     <string name="secure_text" translatable="false">You shall only be able to read this on the host device screen</string>
 
-    <string name="request_permissions" translatable="false">Request permissions</string>
-    <string name="revoke_permissions" translatable="false">Revoke permissions</string>
+    <string name="request_device_aware_permissions" translatable="false">Request device aware permissions</string>
+    <string name="revoke_device_aware_permissions" translatable="false">Revoke device aware permissions</string>
+    <string name="request_non_device_aware_permissions" translatable="false">Request non-device aware permissions</string>
 
     <string name="vibrate" translatable="false">Vibrate</string>
     <string name="perform_haptic_feedback" translatable="false">Perform haptic feedback</string>
