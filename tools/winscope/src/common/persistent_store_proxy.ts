@@ -57,7 +57,7 @@ function wrapWithPersistentStoreProxy(
   const proxyObj = new Proxy(object, {
     set: (target, prop, newValue) => {
       if (typeof prop === 'symbol') {
-        throw Error("Can't use symbol keys only strings");
+        throw new Error("Can't use symbol keys only strings");
       }
       if (Array.isArray(target) && typeof prop === 'number') {
         target[prop] = newValue;
@@ -69,7 +69,7 @@ function wrapWithPersistentStoreProxy(
         storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
-      throw Error(
+      throw new Error(
         `Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`,
       );
     },

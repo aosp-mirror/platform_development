@@ -220,6 +220,23 @@ describe('Traces', () => {
     expect(TracesUtils.extractTraces(traces)).toEqual([]);
   });
 
+  it('hasTrace()', () => {
+    const trace0 = new TraceBuilder<string>()
+      .setType(TraceType.TEST_TRACE_STRING)
+      .setEntries([])
+      .build();
+    const trace1 = new TraceBuilder<number>()
+      .setType(TraceType.TEST_TRACE_NUMBER)
+      .setEntries([])
+      .build();
+
+    const traces = new Traces();
+    traces.addTrace(trace0);
+
+    expect(traces.hasTrace(trace0)).toBeTrue();
+    expect(traces.hasTrace(trace1)).toBeFalse();
+  });
+
   it('sliceTime()', async () => {
     // empty
     {

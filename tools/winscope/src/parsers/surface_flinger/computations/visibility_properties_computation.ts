@@ -41,7 +41,7 @@ export class VisibilityPropertiesComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root || !this.rootLayers) {
-      throw Error('root not set');
+      throw new Error('root not set in SF visibility computation');
     }
 
     this.displays =
@@ -389,7 +389,7 @@ export class VisibilityPropertiesComputation implements Computation {
   }
 
   private isHiddenByParent(layer: HierarchyTreeNode): boolean {
-    const parentLayer = assertDefined(layer.getZParent());
+    const parentLayer = assertDefined(layer.getParent());
     return (
       !parentLayer.isRoot() &&
       (this.isHiddenByPolicy(parentLayer) || this.isHiddenByParent(parentLayer))

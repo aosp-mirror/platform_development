@@ -34,9 +34,9 @@ import com.google.common.primitives.Floats;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.android.scopes.ActivityScoped;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -86,20 +86,24 @@ final class VirtualSensorController implements AutoCloseable {
     }
 
     public List<SensorCapabilities> getSensorCapabilities() {
-        return mSensorManager.getSensorList(Sensor.TYPE_ALL).stream()
-                .map(
-                        sensor ->
-                                SensorCapabilities.newBuilder()
-                                        .setType(sensor.getType())
-                                        .setName(sensor.getName())
-                                        .setVendor(sensor.getVendor())
-                                        .setMaxRange(sensor.getMaximumRange())
-                                        .setResolution(sensor.getResolution())
-                                        .setPower(sensor.getPower())
-                                        .setMinDelayUs(sensor.getMinDelay())
-                                        .setMaxDelayUs(sensor.getMaxDelay())
-                                        .build())
-                .collect(Collectors.toList());
+        // For demo purposes we only need a single accelerometer.
+        Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        return sensor == null
+                ? Collections.emptyList()
+                : List.of(createSensorCapabilitiesFromSensor(sensor));
+    }
+
+    private static SensorCapabilities createSensorCapabilitiesFromSensor(Sensor sensor) {
+        return SensorCapabilities.newBuilder()
+                .setType(sensor.getType())
+                .setName(sensor.getName())
+                .setVendor(sensor.getVendor())
+                .setMaxRange(sensor.getMaximumRange())
+                .setResolution(sensor.getResolution())
+                .setPower(sensor.getPower())
+                .setMinDelayUs(sensor.getMinDelay())
+                .setMaxDelayUs(sensor.getMaxDelay())
+                .build();
     }
 
     private void processRemoteEvent(RemoteEvent remoteEvent) {

@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Output} from '@angular/core';
 import {UrlUtils} from 'common/url_utils';
-import {
-  proxyClient,
-  ProxyClient,
-  ProxyState,
-} from 'trace_collection/proxy_client';
+import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
 
 @Component({
   selector: 'adb-proxy',
   template: `
-    <ng-container [ngSwitch]="proxy.state">
-      <ng-container *ngSwitchCase="states.NO_PROXY">
+    <ng-container [ngSwitch]="client.getState()">
+      <ng-container *ngSwitchCase="state.NO_PROXY">
         <div class="further-adb-info-text">
           <p class="mat-body-1">
             Launch the Winscope ADB Connect proxy to capture traces directly from your browser.
@@ -58,14 +54,14 @@ import {
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="states.INVALID_VERSION">
+      <ng-container *ngSwitchCase="state.INVALID_VERSION">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">update</mat-icon>
             <span class="adb-info">Your local proxy version is incompatible with Winscope.</span>
           </p>
           <p class="mat-body-1">
-            Please update the proxy to version {{ proxyVersion }}. Run this command:
+            Please update the proxy to version {{ clientVersion }}. Run this command:
           </p>
           <mat-form-field class="proxy-command-container" appearance="outline">
             <input matInput readonly [value]="proxyCommand" />
@@ -94,7 +90,7 @@ import {
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="states.UNAUTH">
+      <ng-container *ngSwitchCase="state.UNAUTH">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">lock</mat-icon>
@@ -156,18 +152,13 @@ import {
   ],
 })
 export class AdbProxyComponent {
-  @Input()
-  proxy: ProxyClient = proxyClient;
-
-  @Output()
-  readonly proxyChange = new EventEmitter<ProxyClient>();
-
   @Output()
   readonly addKey = new EventEmitter<string>();
 
-  states = ProxyState;
+  client = proxyClient;
+  state = ProxyState;
   proxyKeyItem = '';
-  readonly proxyVersion = this.proxy.VERSION;
+  readonly clientVersion = this.client.VERSION;
   readonly downloadProxyUrl: string =
     UrlUtils.getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
@@ -177,8 +168,7 @@ export class AdbProxyComponent {
     if (this.proxyKeyItem.length > 0) {
       this.addKey.emit(this.proxyKeyItem);
     }
-    await this.proxy.setState(this.states.CONNECTING);
-    this.proxyChange.emit(this.proxy);
+    await this.client.setState(this.state.CONNECTING);
   }
 
   async onKeydownEnterProxyKeyInput(event: MouseEvent) {

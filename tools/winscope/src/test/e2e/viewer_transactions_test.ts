@@ -18,13 +18,9 @@ import {browser, by, element, ElementFinder} from 'protractor';
 import {E2eTestUtils} from './utils';
 
 describe('Viewer Transactions', () => {
-  const scrollSelectors = {
-    viewer: 'viewer-transactions',
-    scroll: '.scroll',
-    entry: '.entry',
-  };
+  const viewerSelector = 'viewer-transactions';
   const totalEntries = 9534;
-  const scrollToTotalBottomOffset = 980000;
+  const scrollToTotalBottomOffset = 1000000;
 
   beforeEach(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
@@ -36,10 +32,10 @@ describe('Viewer Transactions', () => {
     await E2eTestUtils.loadTraceAndCheckViewer(
       'traces/deployment_full_trace_phone.zip',
       'Transactions',
-      scrollSelectors.viewer,
+      viewerSelector,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,
@@ -59,13 +55,11 @@ describe('Viewer Transactions', () => {
 
     await checkSelectFilter('.pid', ['6914'], 2);
     await checkSelectFilter('.uid', ['10161'], 16);
-    await checkSelectFilter('.what', ['eBackgroundBlurRadiusChanged'], 10);
+    await checkSelectFilter('.flags', ['eBackgroundBlurRadiusChanged'], 10);
   });
 
   async function checkSelectedEntry() {
-    const selectedEntry = element(
-      by.css(`${scrollSelectors.viewer} ${scrollSelectors.scroll} .current`),
-    );
+    const selectedEntry = element(by.css(`${viewerSelector} .scroll .current`));
     expect(await selectedEntry.isPresent()).toBeTruthy();
 
     const transactionId = selectedEntry.element(by.css('.transaction-id'));
@@ -80,7 +74,7 @@ describe('Viewer Transactions', () => {
     const uid = selectedEntry.element(by.css('.uid'));
     expect(await uid.getText()).toEqual('1000');
 
-    const type = selectedEntry.element(by.css('.type'));
+    const type = selectedEntry.element(by.css('.transaction-type'));
     expect(await type.getText()).toEqual('LAYER_CHANGED');
 
     const layerOrDisplayId = selectedEntry.element(
@@ -90,16 +84,16 @@ describe('Viewer Transactions', () => {
 
     const whatString =
       'eLayerChanged | eAlphaChanged | eFlagsChanged | eReparent | eColorChanged | eHasListenerCallbacksChanged';
-    const what = selectedEntry.element(by.css('.what'));
+    const what = selectedEntry.element(by.css('.flags'));
     expect(await what.getText()).toEqual(whatString);
 
     await E2eTestUtils.checkItemInPropertiesTree(
-      scrollSelectors.viewer,
+      viewerSelector,
       'what',
       'what:\n' + whatString,
     );
     await E2eTestUtils.checkItemInPropertiesTree(
-      scrollSelectors.viewer,
+      viewerSelector,
       'color',
       'color:\n(0.106, 0.106, 0.106)',
     );
@@ -111,23 +105,23 @@ describe('Viewer Transactions', () => {
     expectedFilteredEntries: number,
   ) {
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       expectedFilteredEntries,
     );
 
     await E2eTestUtils.toggleSelectFilterOptions(
-      scrollSelectors.viewer,
+      viewerSelector,
       filterSelector,
       options,
     );
     await E2eTestUtils.checkTotalScrollEntries(
-      scrollSelectors,
+      viewerSelector,
       scrollViewport,
       totalEntries,
       scrollToTotalBottomOffset,

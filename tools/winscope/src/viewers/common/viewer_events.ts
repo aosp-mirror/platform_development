@@ -13,24 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const ViewerEvents = {
-  HierarchyPinnedChange: 'HierarchyPinnedChange',
-  HighlightedNodeChange: 'HighlightedNodeChange',
-  HighlightedIdChange: 'HighlightedIdChange',
-  HighlightedPropertyChange: 'HighlightedPropertyChange',
-  HierarchyUserOptionsChange: 'HierarchyUserOptionsChange',
-  HierarchyFilterChange: 'HierarchyFilterChange',
-  PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
-  PropertiesFilterChange: 'PropertiesFilterChange',
-  AdditionalPropertySelected: 'AdditionalPropertySelected',
-  RectsDblClick: 'RectsDblClick',
-  MiniRectsDblClick: 'MiniRectsDblClick',
-  TimestampClick: 'TimestampClick',
-  RectGroupIdChange: 'RectGroupIdChange',
-  RectShowStateChange: 'RectShowStateChange',
-  RectsUserOptionsChange: 'RectsUserOptionsChange',
-};
+
+import {Timestamp} from 'common/time';
+import {TraceEntry} from 'trace/trace';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {LogFieldType} from './ui_data_log';
+
+export enum ViewerEvents {
+  HighlightedNodeChange = 'HighlightedNodeChange',
+  HighlightedIdChange = 'HighlightedIdChange',
+
+  HierarchyPinnedChange = 'HierarchyPinnedChange',
+  HierarchyUserOptionsChange = 'HierarchyUserOptionsChange',
+  HierarchyFilterChange = 'HierarchyFilterChange',
+  RectShowStateChange = 'RectShowStateChange',
+
+  PropertiesUserOptionsChange = 'PropertiesUserOptionsChange',
+  PropertiesFilterChange = 'PropertiesFilterChange',
+  HighlightedPropertyChange = 'HighlightedPropertyChange',
+
+  RectGroupIdChange = 'RectGroupIdChange',
+  RectsUserOptionsChange = 'RectsUserOptionsChange',
+
+  AdditionalPropertySelected = 'AdditionalPropertySelected',
+  RectsDblClick = 'RectsDblClick',
+  MiniRectsDblClick = 'MiniRectsDblClick',
+
+  TimestampClick = 'TimestampClick',
+  LogEntryClick = 'LogEntryClick',
+  LogFilterChange = 'LogFilterChange',
+  ArrowDownPress = 'ArrowDownPress',
+  ArrowUpPress = 'ArrowUpPress',
+}
 
 export class RectDblClickDetail {
   constructor(public clickedRectId: string) {}
+}
+
+export class TimestampClickDetail {
+  constructor(
+    public entry?: TraceEntry<PropertyTreeNode>,
+    public timestamp?: Timestamp,
+  ) {}
+}
+
+export class LogFilterChangeDetail {
+  constructor(public type: LogFieldType, public value: string[] | string) {}
 }

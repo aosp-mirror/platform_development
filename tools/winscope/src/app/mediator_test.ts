@@ -24,6 +24,7 @@ import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
+import {NoValidFiles} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   AppFilesCollected,
@@ -49,6 +50,7 @@ import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub'
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
@@ -68,14 +70,10 @@ describe('Mediator', () => {
     .setType(TraceType.WINDOW_MANAGER)
     .setEntries([])
     .build();
-  const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
-  const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
-  const viewerOverlay = new ViewerStub(
-    'TitleOverlay',
-    undefined,
-    traceWm,
-    ViewType.OVERLAY,
-  );
+  const traceDump = new TraceBuilder<HierarchyTreeNode>()
+    .setType(TraceType.SURFACE_FLINGER)
+    .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+    .build();
 
   let inputFiles: File[];
   let userNotificationsListener: UserNotificationsListener;
@@ -91,7 +89,16 @@ describe('Mediator', () => {
   let mediator: Mediator;
   let spies: Array<jasmine.Spy<any>>;
 
-  const viewers = [viewerStub0, viewerStub1, viewerOverlay];
+  const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
+  const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
+  const viewerOverlay = new ViewerStub(
+    'TitleOverlay',
+    undefined,
+    traceWm,
+    ViewType.OVERLAY,
+  );
+  const viewerDump = new ViewerStub('TitleDump', undefined, traceDump);
+  const viewers = [viewerStub0, viewerStub1, viewerOverlay, viewerDump];
   let tracePositionUpdateListeners: WinscopeEventListener[];
 
   const TIMESTAMP_10 = TimestampConverterUtils.makeRealTimestamp(10n);
@@ -178,6 +185,7 @@ describe('Mediator', () => {
       spyOn(viewerStub0, 'onWinscopeEvent'),
       spyOn(viewerStub1, 'onWinscopeEvent'),
       spyOn(viewerOverlay, 'onWinscopeEvent'),
+      spyOn(viewerDump, 'onWinscopeEvent'),
     ];
   });
 
@@ -207,6 +215,14 @@ describe('Mediator', () => {
   it('handles collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(new AppFilesCollected(inputFiles));
     await checkLoadTraceViewEvents(collectTracesComponent);
+  });
+
+  it('handles empty collected traces from Winscope', async () => {
+    await mediator.onWinscopeEvent(new AppFilesCollected([]));
+    expect(userNotificationsListener.onNotifications).toHaveBeenCalledWith([
+      new NoValidFiles(),
+    ]);
+    expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
   });
 
   it('handles request to refresh dumps', async () => {
@@ -416,10 +432,15 @@ describe('Mediator', () => {
       await loadTraceView();
       resetSpyCalls();
 
-      const view = viewerStub0.getViews()[0];
+      const view = viewerStub1.getViews()[0];
       await mediator.onWinscopeEvent(new TabbedViewSwitched(view));
       expect(timelineComponent.onWinscopeEvent).toHaveBeenCalledWith(
         new ActiveTraceChanged(view.traces[0]),
+      );
+      const viewDump = viewerDump.getViews()[0];
+      await mediator.onWinscopeEvent(new TabbedViewSwitched(viewDump));
+      expect(timelineComponent.onWinscopeEvent).not.toHaveBeenCalledWith(
+        new ActiveTraceChanged(viewDump.traces[0]),
       );
     });
 
@@ -490,6 +511,15 @@ describe('Mediator', () => {
   async function loadFiles(files = inputFiles) {
     await mediator.onWinscopeEvent(new AppFilesUploaded(files));
     expect(userNotificationsListener.onNotifications).not.toHaveBeenCalled();
+    reassignViewerStubTrace(viewerStub0);
+    reassignViewerStubTrace(viewerStub1);
+  }
+
+  function reassignViewerStubTrace(viewerStub: ViewerStub) {
+    const viewerStubTraces = viewerStub.getViews()[0].traces;
+    viewerStubTraces[0] = tracePipeline
+      .getTraces()
+      .getTrace(viewerStubTraces[0].type) as Trace<object>;
   }
 
   async function loadTraceView() {
@@ -516,7 +546,7 @@ describe('Mediator', () => {
     expect(progressListener.onOperationFinished).toHaveBeenCalled();
     expect(timelineData.initialize).toHaveBeenCalledTimes(1);
     expect(appComponent.onWinscopeEvent).toHaveBeenCalledOnceWith(
-      new ViewersLoaded([viewerStub0, viewerStub1, viewerOverlay]),
+      new ViewersLoaded([viewerStub0, viewerStub1, viewerOverlay, viewerDump]),
     );
 
     // Mediator triggers the viewers initialization
@@ -525,6 +555,7 @@ describe('Mediator', () => {
       viewerStub0,
       viewerStub1,
       viewerOverlay,
+      viewerDump,
       timelineComponent,
     ]);
   }

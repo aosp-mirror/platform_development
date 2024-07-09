@@ -80,9 +80,9 @@ impl<'template> ReportEngine<'template> {
             table.add_row(&[
                 &linkify(&krate.name(), &krate.crates_io_url()),
                 &krate.version().to_string(),
-                &krate.aosp_url().map_or(format!("{}", krate.relpath().display()), |url| {
-                    linkify(&krate.relpath().display(), &url)
-                }),
+                &krate
+                    .aosp_url()
+                    .map_or(format!("{}", krate.path()), |url| linkify(&krate.path(), &url)),
             ]);
         }
         Ok(self.tt.render("table", &table)?)
@@ -103,10 +103,10 @@ impl<'template> ReportEngine<'template> {
             table.add_row(&[
                 &linkify(&krate.name(), &krate.crates_io_url()),
                 &krate.version().to_string(),
-                &krate.aosp_url().map_or(format!("{}", krate.relpath().display()), |url| {
-                    linkify(&krate.relpath().display(), &url)
-                }),
-                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
+                &krate
+                    .aosp_url()
+                    .map_or(format!("{}", krate.path()), |url| linkify(&krate.path(), &url)),
+                &prefer_yes(krate.android_bp().abs().exists()),
                 &prefer_yes_or_summarize(
                     krate.generate_android_bp_success(),
                     krate
@@ -126,7 +126,7 @@ impl<'template> ReportEngine<'template> {
                         .android_bp_diff()
                         .map_or("Error", |o| from_utf8(&o.stdout).unwrap_or("Error")),
                 ),
-                &prefer_yes(krate.cargo_embargo_json().exists()),
+                &prefer_yes(krate.cargo_embargo_json().abs().exists()),
                 &prefer_no(krate.is_migration_denied()),
             ]);
         }
@@ -149,9 +149,9 @@ impl<'template> ReportEngine<'template> {
                 &linkify(&source.name(), &source.crates_io_url()),
                 &source.version().to_string(),
                 &dest_version,
-                &source.aosp_url().map_or(format!("{}", source.relpath().display()), |url| {
-                    linkify(&source.relpath().display(), &url)
-                }),
+                &source
+                    .aosp_url()
+                    .map_or(format!("{}", source.path()), |url| linkify(&source.path(), &url)),
             ]);
         }
         Ok(self.tt.render("table", &table)?)
@@ -174,13 +174,13 @@ impl<'template> ReportEngine<'template> {
             table.add_row(&[
                 &linkify(&krate.name(), &krate.crates_io_url()),
                 &krate.version().to_string(),
-                &krate.aosp_url().map_or(format!("{}", krate.relpath().display()), |url| {
-                    linkify(&krate.relpath().display(), &url)
-                }),
+                &krate
+                    .aosp_url()
+                    .map_or(format!("{}", krate.path()), |url| linkify(&krate.path(), &url)),
                 &prefer_yes(krate.is_crates_io()),
                 &prefer_no(krate.is_migration_denied()),
-                &prefer_yes(krate.root().join(krate.android_bp()).exists()),
-                &prefer_yes(krate.cargo_embargo_json().exists()),
+                &prefer_yes(krate.android_bp().abs().exists()),
+                &prefer_yes(krate.cargo_embargo_json().abs().exists()),
             ]);
         }
         Ok(self.tt.render("table", &table)?)
@@ -205,9 +205,9 @@ impl<'template> ReportEngine<'template> {
             table.add_row(&[
                 &linkify(&source.name(), &source.crates_io_url()),
                 &source.version().to_string(),
-                &source.aosp_url().map_or(format!("{}", source.relpath().display()), |url| {
-                    linkify(&source.relpath().display(), &url)
-                }),
+                &source
+                    .aosp_url()
+                    .map_or(format!("{}", source.path()), |url| linkify(&source.path(), &url)),
                 maybe_dest.map_or(&"None", |dest| {
                     if dest.version() != source.version() {
                         dest.version()

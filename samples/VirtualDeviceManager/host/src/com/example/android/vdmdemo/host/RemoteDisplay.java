@@ -38,6 +38,9 @@ import android.hardware.input.VirtualMouseRelativeEvent;
 import android.hardware.input.VirtualMouseScrollEvent;
 import android.hardware.input.VirtualNavigationTouchpad;
 import android.hardware.input.VirtualNavigationTouchpadConfig;
+import android.hardware.input.VirtualRotaryEncoder;
+import android.hardware.input.VirtualRotaryEncoderConfig;
+import android.hardware.input.VirtualRotaryEncoderScrollEvent;
 import android.hardware.input.VirtualStylus;
 import android.hardware.input.VirtualStylusButtonEvent;
 import android.hardware.input.VirtualStylusConfig;
@@ -110,6 +113,7 @@ class RemoteDisplay implements AutoCloseable {
     private VirtualNavigationTouchpad mNavigationTouchpad;
     private VirtualKeyboard mKeyboard;
     private VirtualStylus mStylus;
+    private VirtualRotaryEncoder mRotary;
 
     @SuppressLint("WrongConstant")
     RemoteDisplay(
@@ -258,6 +262,13 @@ class RemoteDisplay implements AutoCloseable {
             goHome();
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
+        } else if (event.hasDisplayRotation()) {
+            int rotation = mVirtualDisplay.getDisplay().getRotation();
+            // Change the rotation of the display. The rotation is a Surface rotation and has
+            // only 4 possible values.
+            rotation += 1;
+            rotation %= 4;
+            mVirtualDisplay.setRotation(rotation);
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
             if (mVideoManager != null) {
                 mVideoManager.stop();
@@ -300,6 +311,8 @@ class RemoteDisplay implements AutoCloseable {
             case DEVICE_TYPE_KEYBOARD:
                 mKeyboard.sendKeyEvent(remoteEventToVirtualKeyEvent(inputEvent));
                 break;
+            case DEVICE_TYPE_ROTARY_ENCODER:
+                processRotaryEvent(remoteEventToVirtualRotaryEncoderEvent(inputEvent));
             default:
                 Log.e(
                         TAG,
@@ -319,6 +332,9 @@ class RemoteDisplay implements AutoCloseable {
                 break;
             case DEVICE_TYPE_KEYBOARD:
                 mKeyboard.sendKeyEvent(keyEventToVirtualKeyEvent((KeyEvent) event));
+                break;
+            case DEVICE_TYPE_ROTARY_ENCODER:
+                processRotaryEvent(motionEventToVirtualRotaryEncoderEvent((MotionEvent) event));
                 break;
             default:
                 Log.e(
@@ -372,6 +388,17 @@ class RemoteDisplay implements AutoCloseable {
         } else if (stylusEvent instanceof VirtualStylusButtonEvent) {
             mStylus.sendButtonEvent((VirtualStylusButtonEvent) stylusEvent);
         }
+    }
+
+    void processRotaryEvent(VirtualRotaryEncoderScrollEvent rotaryEvent) {
+        if (mRotary == null) {
+            mRotary = mVirtualDevice.createVirtualRotaryEncoder(
+                    new VirtualRotaryEncoderConfig.Builder()
+                            .setAssociatedDisplayId(getDisplayId())
+                            .setInputDeviceName("vdmdemo-rotary" + mRemoteDisplayId)
+                            .build());
+        }
+        mRotary.sendScrollEvent(rotaryEvent);
     }
 
     private void processMouseEvent(RemoteInputEvent inputEvent) {
@@ -436,8 +463,8 @@ class RemoteDisplay implements AutoCloseable {
     private static int displayRotationToDegrees(int displayRotation) {
         return switch (displayRotation) {
             case Surface.ROTATION_90 -> -90;
-            case Surface.ROTATION_180 -> 180;
-            case Surface.ROTATION_270 -> 90;
+            case Surface.ROTATION_180 -> -180;
+            case Surface.ROTATION_270 -> -270;
             default -> 0;
         };
     }
@@ -484,6 +511,22 @@ class RemoteDisplay implements AutoCloseable {
                 .build();
     }
 
+    private static VirtualRotaryEncoderScrollEvent remoteEventToVirtualRotaryEncoderEvent(
+            RemoteInputEvent event) {
+        return new VirtualRotaryEncoderScrollEvent.Builder()
+                .setEventTimeNanos((long) (event.getTimestampMs() * 1e6))
+                .setScrollAmount(event.getMouseScrollEvent().getX())
+                .build();
+    }
+
+    private static VirtualRotaryEncoderScrollEvent motionEventToVirtualRotaryEncoderEvent(
+            MotionEvent motionEvent) {
+        return new VirtualRotaryEncoderScrollEvent.Builder()
+                .setEventTimeNanos((long) (motionEvent.getEventTime() * 1e6))
+                .setScrollAmount(motionEvent.getAxisValue(MotionEvent.AXIS_SCROLL))
+                .build();
+    }
+
     @Override
     public void close() {
         if (mClosed.getAndSet(true)) { // Prevent double closure.
@@ -498,6 +541,9 @@ class RemoteDisplay implements AutoCloseable {
         mDpad.close();
         mTouchscreen.close();
         mKeyboard.close();
+        if (mRotary != null) {
+            mRotary.close();
+        }
         if (mStylus != null) {
             mStylus.close();
         }
