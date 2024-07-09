@@ -18,9 +18,11 @@ import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {
   Component,
   ElementRef,
+  EventEmitter,
   HostListener,
   Inject,
   Input,
+  Output,
   ViewChild,
 } from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
@@ -35,7 +37,10 @@ import {timeButtonStyle} from 'viewers/components/styles/clickable_property.styl
 import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
 import {logComponentStyles} from 'viewers/components/styles/log_component.styles';
 import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
-import {viewerCardStyle} from 'viewers/components/styles/viewer_card.styles';
+import {
+  viewerCardInnerStyle,
+  viewerCardStyle,
+} from 'viewers/components/styles/viewer_card.styles';
 import {
   LogEntry,
   LogField,
@@ -49,6 +54,15 @@ import {
 @Component({
   selector: 'log-view',
   template: `
+    <div class="view-header" *ngIf="title">
+      <div class="title-section">
+        <collapsible-section-title
+            class="log-title"
+            [title]="title"
+            (collapseButtonClicked)="collapseButtonClicked.emit()"></collapsible-section-title>
+      </div>
+    </div>
+
     <div class="entries">
       <div class="headers" *ngIf="headers.length > 0">
         <div *ngFor="let header of headers" class="mat-body-2" [class]="getLogFieldClass(header)">{{getLogFieldName(header)}}</div>
@@ -157,10 +171,18 @@ import {
     </div>
   `,
   styles: [
+    `
+        .view-header {
+          display: flex;
+          flex-direction: column;
+          flex: 0 0 auto
+        }
+      `,
     selectedElementStyle,
     currentElementStyle,
     timeButtonStyle,
     viewerCardStyle,
+    viewerCardInnerStyle,
     logComponentStyles,
   ],
 })
@@ -168,6 +190,7 @@ export class LogComponent {
   emptyFilterValue = '';
   private lastClickedTimestamp: Timestamp | undefined;
 
+  @Input() title: string | undefined;
   @Input() selectedIndex: number | undefined;
   @Input() scrollToIndex: number | undefined;
   @Input() currentIndex: number | undefined;
@@ -177,6 +200,8 @@ export class LogComponent {
   @Input() showCurrentTimeButton = true;
   @Input() traceType: TraceType | undefined;
   @Input() showTraceEntryTimes = true;
+
+  @Output() collapseButtonClicked = new EventEmitter();
 
   @ViewChild(CdkVirtualScrollViewport)
   scrollComponent?: CdkVirtualScrollViewport;

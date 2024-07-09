@@ -32,10 +32,6 @@ export const viewerCardStyle = `
         box-shadow: 0px 1px 3px var(--border-color), 0px 1px 2px var(--border-color);
     }
 
-    .log-view:not(.collapsed) {
-        padding: 12px;
-    }
-
     .rects-view:not(.collapsed),
     .hierarchy-view:not(.collapsed),
     .ime-additional-properties:not(.collapsed),
