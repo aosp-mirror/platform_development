@@ -144,7 +144,7 @@ describe('ViewerTransitionsComponent', () => {
       ),
     ];
 
-    const uiData = UiData.EMPTY;
+    const uiData = UiData.createEmpty();
     uiData.entries = transitions;
     uiData.selectedIndex = 0;
     uiData.headers = Presenter.FIELD_TYPES;

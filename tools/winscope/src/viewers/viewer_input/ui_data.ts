@@ -38,13 +38,9 @@ export class UiData implements UiDataLog {
   highlightedProperty: string = '';
   dispatchPropertiesTree: UiPropertyTreeNode | undefined;
 
-  static readonly EMPTY = new UiData(
-    [],
-    [],
-    undefined,
-    undefined,
-    undefined,
-  );
+  static createEmpty(): UiData {
+    return new UiData([], [], undefined, undefined, undefined);
+  }
 }
 
 export class InputEntry implements LogEntry {

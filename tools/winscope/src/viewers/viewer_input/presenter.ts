@@ -45,7 +45,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   static readonly DENYLIST_DISPATCH_PROPERTIES = ['eventId'];
 
   private readonly traces: Traces;
-  protected override uiData: UiData = UiData.EMPTY;
+  protected override uiData: UiData = UiData.createEmpty();
   private allEntries: InputEntry[] | undefined;
 
   protected override logPresenter = new LogPresenter(false);
@@ -64,7 +64,7 @@ export class Presenter extends AbstractLogViewerPresenter {
     super(
       mergedInputEventTrace,
       (uiData) => notifyInputViewCallback(uiData as UiData),
-      Object.assign({}, UiData.EMPTY),
+      UiData.createEmpty(),
     );
     this.traces = traces;
   }
@@ -78,7 +78,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(this.allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.refreshUIData(Object.assign({}, UiData.EMPTY));
+    this.refreshUIData(UiData.createEmpty());
   }
 
   private async makeInputEntries(): Promise<InputEntry[]> {
