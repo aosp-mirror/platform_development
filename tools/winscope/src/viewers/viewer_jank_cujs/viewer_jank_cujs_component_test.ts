@@ -111,7 +111,7 @@ describe('ViewerJankCujsComponent', () => {
       createMockCujEntry(entry, 59, 58, 70, CujStatus.EXECUTED),
     ];
 
-    const uiData = UiData.EMPTY;
+    const uiData = UiData.createEmpty();
     uiData.entries = cujEntries;
     uiData.selectedIndex = 0;
     uiData.headers = Presenter.FIELD_NAMES;

@@ -148,7 +148,7 @@ describe('ViewerInputComponent', () => {
       createInputEntry(entry, 3),
     ];
 
-    const uiData = Object.assign({}, UiData.EMPTY);
+    const uiData = UiData.createEmpty();
     uiData.entries = entries;
     uiData.selectedIndex = 0;
     uiData.headers = Presenter.FIELD_TYPES;
