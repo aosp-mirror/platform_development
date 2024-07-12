@@ -40,7 +40,7 @@ export class Presenter extends AbstractLogViewerPresenter {
     trace: Trace<PropertyTreeNode>,
     notifyViewCallback: NotifyLogViewCallbackType,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
   protected override async initializeIfNeeded() {
@@ -71,7 +71,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUIData(UiData.createEmpty());
     this.isInitialized = true;
   }
 
