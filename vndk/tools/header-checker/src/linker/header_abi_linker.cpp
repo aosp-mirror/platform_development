@@ -223,9 +223,12 @@ static void DeDuplicateAbiElementsThread(
     const std::set<std::string> *exported_headers,
     linker::ModuleMerger *merger) {
   for (auto it = dump_files_begin; it != dump_files_end; it++) {
-    std::unique_ptr<repr::IRReader> reader =
-        repr::IRReader::CreateIRReader(input_format, exported_headers);
-    assert(reader != nullptr);
+    std::unique_ptr<repr::IRReader> reader = repr::IRReader::CreateIRReader(
+        input_format, std::make_unique<repr::ModuleIR>(exported_headers));
+    if (reader == nullptr) {
+      llvm::errs() << "Failed to create IRReader for " << input_format << "\n";
+      ::exit(1);
+    }
     if (!reader->ReadDump(*it)) {
       llvm::errs() << "ReadDump failed\n";
       ::exit(1);
