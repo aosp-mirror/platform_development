@@ -33,6 +33,7 @@ export class TraceRect extends Rect implements Item {
     readonly isDisplay: boolean,
     readonly depth: number,
     readonly opacity: number | undefined,
+    readonly isSpy: boolean,
   ) {
     super(x, y, w, h);
   }

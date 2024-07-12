@@ -42,6 +42,7 @@ class RectWmFactory {
       .setIsVisible(false)
       .setIsDisplay(true)
       .setDepth(absoluteZ)
+      .setIsSpy(false)
       .build();
   }
 
@@ -89,6 +90,7 @@ class RectWmFactory {
       .setIsDisplay(false)
       .setDepth(absoluteZ)
       .setOpacity(alpha)
+      .setIsSpy(false)
       .build();
   }
 }

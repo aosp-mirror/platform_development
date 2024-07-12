@@ -78,6 +78,7 @@ class RectVcFactory {
       .setIsDisplay(false)
       .setDepth(depth * RectVcFactory.DEPTH_MAGNIFICATION)
       .setOpacity(nodeAlpha)
+      .setIsSpy(false)
       .build();
 
     return rect;

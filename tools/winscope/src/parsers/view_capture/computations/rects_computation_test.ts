@@ -102,6 +102,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setDepth(0)
         .setOpacity(1)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -117,6 +118,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setDepth(4)
         .setOpacity(1)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -132,6 +134,7 @@ describe('RectsComputation', () => {
         .setIsDisplay(false)
         .setDepth(8)
         .setOpacity(1)
+        .setIsSpy(false)
         .build(),
     ];
 

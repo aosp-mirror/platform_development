@@ -32,6 +32,7 @@ export class TraceRectBuilder {
   isDisplay: boolean | undefined;
   depth: number | undefined;
   opacity: number | undefined;
+  isSpy: boolean | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -98,6 +99,11 @@ export class TraceRectBuilder {
     return this;
   }
 
+  setIsSpy(value: boolean) {
+    this.isSpy = value;
+    return this;
+  }
+
   build(): TraceRect {
     if (this.x === undefined) {
       throw new Error('x not set');
@@ -143,6 +149,10 @@ export class TraceRectBuilder {
       throw new Error('depth not set');
     }
 
+    if (this.isSpy === undefined) {
+      throw new Error('isSpy not set');
+    }
+
     return new TraceRect(
       this.x,
       this.y,
@@ -157,6 +167,7 @@ export class TraceRectBuilder {
       this.isDisplay,
       this.depth,
       this.opacity,
+      this.isSpy,
     );
   }
 }
