@@ -18,7 +18,6 @@
 #include "repr/ir_representation.h"
 
 #include <memory>
-#include <set>
 #include <string>
 
 
@@ -28,24 +27,19 @@ namespace repr {
 
 class IRReader {
  public:
+  // Construct an IRReader that loads a dump file to module_ir.
+  // If module_ir is nullptr, create a ModuleIR with the default constructor.
   static std::unique_ptr<IRReader> CreateIRReader(
-      TextFormatIR text_format,
-      const std::set<std::string> *exported_headers = nullptr);
+      TextFormatIR text_format, std::unique_ptr<ModuleIR> module_ir = nullptr);
 
-  IRReader(const std::set<std::string> *exported_headers)
-      : module_(new ModuleIR(exported_headers)) {}
+  IRReader(std::unique_ptr<ModuleIR> module_ir)
+      : module_(std::move(module_ir)) {}
 
   virtual ~IRReader() {}
 
   bool ReadDump(const std::string &dump_file);
 
-  ModuleIR &GetModule() {
-    return *module_;
-  }
-
-  std::unique_ptr<ModuleIR> TakeModule() {
-    return std::move(module_);
-  }
+  const ModuleIR &GetModule() const { return *module_; }
 
  private:
   virtual bool ReadDumpImpl(const std::string &dump_file) = 0;
