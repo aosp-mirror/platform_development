@@ -66,6 +66,7 @@ android_app {
     static_libs: [
         "androidx.annotation_annotation",
         "androidx.appcompat_appcompat",
+        "com.google.android.material_material",
     ],
 }
 

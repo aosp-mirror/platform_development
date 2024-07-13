@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,16 +23,14 @@ import {
 import {MatDividerModule} from '@angular/material/divider';
 import {MatIconModule} from '@angular/material/icon';
 import {assertDefined} from 'common/assert_utils';
-import {TimeDuration} from 'common/time_duration';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
-import {Parser} from 'trace/parser';
 import {Trace, TraceEntry} from 'trace/trace';
-import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {LogEntry, LogField, LogFieldType} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
@@ -40,27 +38,28 @@ import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tre
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
-import {CujStatus, CujType, UiData} from './ui_data';
-import {ViewerJankCujsComponent} from './viewer_jank_cujs_component';
+import {InputEntry, UiData} from './ui_data';
+import {ViewerInputComponent} from './viewer_input_component';
 
-describe('ViewerJankCujsComponent', () => {
-  let fixture: ComponentFixture<ViewerJankCujsComponent>;
-  let component: ViewerJankCujsComponent;
+describe('ViewerInputComponent', () => {
+  let fixture: ComponentFixture<ViewerInputComponent>;
+  let component: ViewerInputComponent;
   let htmlElement: HTMLElement;
 
+  let tree: PropertyTreeNode;
   let trace: Trace<PropertyTreeNode>;
   let entry: TraceEntry<PropertyTreeNode>;
 
   beforeAll(async () => {
-    const parser = (await UnitTestUtils.getTracesParser([
-      'traces/eventlog.winscope',
-    ])) as Parser<PropertyTreeNode>;
-
-    trace = new TraceBuilder<PropertyTreeNode>()
-      .setParser(parser)
-      .setType(TraceType.CUJS)
+    tree = new PropertyTreeBuilder()
+      .setIsRoot(true)
+      .setRootId('AndroidMotionEvent')
+      .setName('entry')
       .build();
-
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries([tree])
+      .setTimestamps([TimestampConverterUtils.makeElapsedTimestamp(20n)])
+      .build();
     entry = trace.getEntry(0);
   });
 
@@ -69,7 +68,7 @@ describe('ViewerJankCujsComponent', () => {
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       imports: [MatDividerModule, ScrollingModule, MatIconModule],
       declarations: [
-        ViewerJankCujsComponent,
+        ViewerInputComponent,
         TreeComponent,
         TreeNodeComponent,
         PropertyTreeNodeDataViewComponent,
@@ -81,7 +80,7 @@ describe('ViewerJankCujsComponent', () => {
       schemas: [],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ViewerJankCujsComponent);
+    fixture = TestBed.createComponent(ViewerInputComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
@@ -97,65 +96,96 @@ describe('ViewerJankCujsComponent', () => {
     expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
     const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
-    expect(entry.innerHTML).toContain('LOCKSCREEN_PASSWORD_DISAPPEAR');
-    expect(entry.innerHTML).toContain('30ns');
+    expect(entry.innerHTML).toContain(`MOTION #1`);
+    expect(entry.innerHTML).toContain(`EXAMPLE SOURCE #1`);
+    expect(entry.innerHTML).toContain(`EXAMPLE ACTION #1`);
+    expect(entry.innerHTML).toContain(`EXAMPLE DETAILS #1`);
+  });
+
+  it('shows message when no event is selected', () => {
+    assertDefined(component.inputData).propertiesTree = undefined;
+    assertDefined(component.inputData).dispatchPropertiesTree = undefined;
+    fixture.detectChanges();
+    expect(
+      htmlElement.querySelector('.event-properties .placeholder-text')
+        ?.innerHTML,
+    ).toContain('No selected entry');
+    expect(
+      htmlElement.querySelector('.dispatch-properties .placeholder-text')
+        ?.innerHTML,
+    ).toContain('No selected entry');
+  });
+
+  it('creates collapsed sections with no buttons', () => {
+    UnitTestUtils.checkNoCollapsedSectionButtons(htmlElement);
+  });
+
+  it('handles collapse/expand', () => {
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.event-properties',
+      'EVENT DETAILS',
+    );
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.dispatch-properties',
+      'DISPATCH DETAILS',
+    );
+    UnitTestUtils.checkSectionCollapseAndExpand(
+      htmlElement,
+      fixture,
+      '.log-view',
+      'EVENT LOG',
+    );
   });
 
   function makeUiData(): UiData {
-    let mockTransitionIdCounter = 0;
-
-    const cujEntries = [
-      createMockCujEntry(entry, 20, 30, mockTransitionIdCounter++),
-      createMockCujEntry(entry, 66, 42, 50, CujStatus.CANCELLED),
-      createMockCujEntry(entry, 46, 49, mockTransitionIdCounter++),
-      createMockCujEntry(entry, 59, 58, 70, CujStatus.EXECUTED),
+    const entries = [
+      createInputEntry(entry, 1),
+      createInputEntry(entry, 2),
+      createInputEntry(entry, 3),
     ];
 
     const uiData = UiData.createEmpty();
-    uiData.entries = cujEntries;
+    uiData.entries = entries;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_NAMES;
+    uiData.headers = Presenter.FIELD_TYPES;
     return uiData;
   }
 
-  function createMockCujEntry(
+  function createInputEntry(
     entry: TraceEntry<PropertyTreeNode>,
-    cujTypeId: number,
-    startTsNanos: number,
-    endTsNanos: number,
-    status = CujStatus.EXECUTED,
-  ): LogEntry {
+    num: number,
+  ): InputEntry {
     const fields: LogField[] = [
       {
-        type: LogFieldType.CUJ_TYPE,
-        value: `${CujType[cujTypeId]} (${cujTypeId})`,
+        type: LogFieldType.INPUT_TYPE,
+        value: `MOTION #${num}`,
       },
       {
-        type: LogFieldType.START_TIME,
-        value: TimestampConverterUtils.makeElapsedTimestamp(
-          BigInt(startTsNanos),
-        ),
+        type: LogFieldType.INPUT_SOURCE,
+        value: `EXAMPLE SOURCE #${num}`,
       },
       {
-        type: LogFieldType.END_TIME,
-        value: TimestampConverterUtils.makeElapsedTimestamp(BigInt(endTsNanos)),
+        type: LogFieldType.INPUT_ACTION,
+        value: `EXAMPLE ACTION #${num}`,
       },
       {
-        type: LogFieldType.DURATION,
-        value: new TimeDuration(BigInt(endTsNanos - startTsNanos)).format(),
+        type: LogFieldType.INPUT_DEVICE_ID,
+        value: 42,
       },
       {
-        type: LogFieldType.STATUS,
-        value: status,
-        icon: 'check',
-        iconColor: 'green',
+        type: LogFieldType.INPUT_DISPLAY_ID,
+        value: 2,
+      },
+      {
+        type: LogFieldType.INPUT_EVENT_DETAILS,
+        value: `EXAMPLE DETAILS #${num}`,
       },
     ];
 
-    return {
-      traceEntry: entry,
-      fields,
-      propertiesTree: undefined,
-    };
+    return new InputEntry(entry, fields, tree, tree);
   }
 });
