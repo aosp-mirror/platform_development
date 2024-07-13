@@ -19,6 +19,7 @@ import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 import {Viewer} from './viewer';
+import {ViewerInput} from './viewer_input/viewer_input';
 import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
 import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
@@ -61,13 +62,26 @@ class ViewerFactory {
       });
     });
 
-    // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
     const availableTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
-    const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
-      (traceType: TraceType) => availableTraceTypes.has(traceType),
-    );
-    if (isViewerDepSatisfied) {
-      viewers.push(new ViewerViewCapture(traces, storage));
+
+    {
+      // ViewCapture viewer (instantiate one viewer for N ViewCapture traces)
+      const isViewerDepSatisfied = ViewerViewCapture.DEPENDENCIES.some(
+        (traceType: TraceType) => availableTraceTypes.has(traceType),
+      );
+      if (isViewerDepSatisfied) {
+        viewers.push(new ViewerViewCapture(traces, storage));
+      }
+    }
+
+    {
+      // Input viewer
+      const isViewerDepSatisfied = ViewerInput.DEPENDENCIES.some(
+        (traceType: TraceType) => availableTraceTypes.has(traceType),
+      );
+      if (isViewerDepSatisfied) {
+        viewers.push(new ViewerInput(traces, storage));
+      }
     }
 
     // Note:
