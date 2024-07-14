@@ -36,15 +36,9 @@ export class UiData implements UiDataLog {
     public propertiesUserOptions: UserOptions,
   ) {}
 
-  static EMPTY = new UiData(
-    [],
-    [],
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    {},
-  );
+  static createEmpty(): UiData {
+    return new UiData([], [], undefined, undefined, undefined, undefined, {});
+  }
 }
 
 export class TransactionsEntry implements LogEntry {
