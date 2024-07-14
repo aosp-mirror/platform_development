@@ -33,7 +33,9 @@ export class UiData implements UiDataLog {
     public propertiesTree: undefined | UiPropertyTreeNode,
   ) {}
 
-  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+  static createEmpty() {
+    return new UiData([], [], undefined, undefined, undefined);
+  }
 }
 export class CujEntry implements LogEntry {
   constructor(
