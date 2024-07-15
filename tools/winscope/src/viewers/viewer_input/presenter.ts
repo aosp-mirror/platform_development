@@ -15,9 +15,13 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceType} from 'trace/trace_type';
+import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {AbstractLogViewerPresenter} from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
@@ -48,6 +52,9 @@ export class Presenter extends AbstractLogViewerPresenter {
   protected override uiData: UiData = UiData.createEmpty();
   private allEntries: InputEntry[] | undefined;
 
+  private readonly layerIdToName = new Map<number, string>();
+  private readonly allInputLayerIds = new Set<number>();
+
   protected override logPresenter = new LogPresenter(false);
   protected override propertiesPresenter = new PropertiesPresenter({}, []);
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
@@ -74,10 +81,27 @@ export class Presenter extends AbstractLogViewerPresenter {
       return;
     }
 
+    const sfTrace = this.traces.getTrace(TraceType.SURFACE_FLINGER);
+    if (sfTrace !== undefined) {
+      const layerMappings = await sfTrace.customQuery(
+        CustomQueryType.SF_LAYERS_ID_AND_NAME,
+      );
+      layerMappings.forEach(({id, name}) => this.layerIdToName.set(id, name));
+    }
+
     this.allEntries = await this.makeInputEntries();
 
     this.logPresenter.setAllEntries(this.allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
+    this.logPresenter.setFilters([
+      {
+        type: LogFieldType.INPUT_DISPATCH_WINDOWS,
+        options: [...this.allInputLayerIds.values()].map((layerId) => {
+          return this.getLayerDisplayName(layerId);
+        }),
+      },
+    ]);
+
     this.refreshUIData(UiData.createEmpty());
   }
 
@@ -99,11 +123,26 @@ export class Presenter extends AbstractLogViewerPresenter {
         wrapperTree.getChildByName('windowDispatchEvents'),
       );
       dispatchTree.setIsRoot(true);
+      dispatchTree.getAllChildren().forEach((dispatchEntry) => {
+        const windowIdNode = dispatchEntry.getChildByName('windowId');
+        const windowId = Number(windowIdNode?.getValue() ?? -1);
+        this.allInputLayerIds.add(windowId);
+        // For now, add a new node to display the layer name in the dispatch properties view.
+        // TODO(b/332714237): Use a custom view to display dispatch properties.
+        const windowNameNode =
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
+            windowIdNode?.id ?? '',
+            'windowName',
+            this.getLayerDisplayName(windowId),
+          );
+        windowNameNode.setFormatter(DEFAULT_PROPERTY_FORMATTER);
+        dispatchEntry.addOrReplaceChild(windowNameNode);
+      });
 
       entries.push(
         new InputEntry(
           entry,
-          Presenter.extractLogFields(eventTree, type),
+          this.extractLogFields(eventTree, dispatchTree, type),
           eventTree,
           dispatchTree,
         ),
@@ -112,10 +151,27 @@ export class Presenter extends AbstractLogViewerPresenter {
     return Promise.resolve(entries);
   }
 
-  private static extractLogFields(
+  private getLayerDisplayName(layerId: number): string {
+    // Surround the name using the invisible zero-width non-joiner character to ensure
+    // the full string is matched while filtering.
+    return `\u{200C}${
+      this.layerIdToName.get(layerId) ?? layerId.toString()
+    }\u{200C}`;
+  }
+
+  private extractLogFields(
     eventTree: PropertyTreeNode,
+    dispatchTree: PropertyTreeNode,
     type: InputEventType,
   ): LogField[] {
+    const targetWindows: string[] = [];
+    dispatchTree.getAllChildren().forEach((dispatchEntry) => {
+      const windowId = Number(
+        dispatchEntry.getChildByName('windowId')?.getValue() ?? -1,
+      );
+      targetWindows.push(this.getLayerDisplayName(windowId));
+    });
+
     return [
       {
         type: LogFieldType.INPUT_TYPE,
@@ -147,6 +203,10 @@ export class Presenter extends AbstractLogViewerPresenter {
           type === InputEventType.KEY
             ? Presenter.extractKeyDetails(eventTree)
             : Presenter.extractMotionDetails(eventTree),
+      },
+      {
+        type: LogFieldType.INPUT_DISPATCH_WINDOWS,
+        value: targetWindows.join(', '),
       },
     ];
   }
