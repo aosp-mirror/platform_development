@@ -38,9 +38,9 @@ import {
   ViewerEvents,
 } from './viewer_events';
 
-export type NotifyLogViewCallbackType = (uiData: UiDataLog) => void;
+export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractLogViewerPresenter
+export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   implements WinscopeEventEmitter
 {
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
@@ -48,10 +48,10 @@ export abstract class AbstractLogViewerPresenter
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
 
-  constructor(
+  protected constructor(
     protected readonly trace: Trace<PropertyTreeNode>,
-    private readonly notifyViewCallback: NotifyLogViewCallbackType,
-    protected uiData: UiDataLog,
+    private readonly notifyViewCallback: NotifyLogViewCallbackType<UiData>,
+    protected uiData: UiData,
   ) {
     this.notifyViewCallback(this.uiData);
   }
@@ -159,7 +159,7 @@ export abstract class AbstractLogViewerPresenter
     this.notifyViewCallback(this.uiData);
   }
 
-  protected refreshUIData(uiData: UiDataLog) {
+  protected refreshUIData(uiData: UiData) {
     this.uiData = uiData;
     this.uiData.headers = this.logPresenter.getHeaders();
     this.uiData.filters = this.logPresenter.getFilters();

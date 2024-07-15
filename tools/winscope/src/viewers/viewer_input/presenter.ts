@@ -22,21 +22,22 @@ import {TraceType} from 'trace/trace_type';
 import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {AbstractLogViewerPresenter} from 'viewers/common/abstract_log_viewer_presenter';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {InputEntry, UiData} from './ui_data';
 
-type NotifyViewCallbackType = (uiData: UiData) => void;
-
 enum InputEventType {
   KEY,
   MOTION,
 }
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.INPUT_TYPE,
     LogFieldType.INPUT_SOURCE,
@@ -66,7 +67,7 @@ export class Presenter extends AbstractLogViewerPresenter {
     traces: Traces,
     mergedInputEventTrace: Trace<PropertyTreeNode>,
     private readonly storage: Storage,
-    private readonly notifyInputViewCallback: NotifyViewCallbackType,
+    private readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(
       mergedInputEventTrace,

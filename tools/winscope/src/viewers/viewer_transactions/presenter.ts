@@ -29,7 +29,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private static readonly FIELD_TYPES = [
     LogFieldType.TRANSACTION_ID,
     LogFieldType.VSYNC_ID,
@@ -67,7 +67,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     readonly storage: Storage,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }

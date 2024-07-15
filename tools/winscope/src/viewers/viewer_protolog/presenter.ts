@@ -25,7 +25,7 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.LOG_LEVEL,
     LogFieldType.TAG,
@@ -38,7 +38,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
   }
