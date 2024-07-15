@@ -45,14 +45,14 @@ fun SceneTransitionsBuilder.lockscreenTransitions(configuration: DemoConfigurati
     if (configuration.useOverscrollSpec) {
         overscroll(Scenes.Lockscreen, Orientation.Vertical) {}
 
-        overscroll(Scenes.StubLeft, Orientation.Horizontal) {
+        overscroll(Scenes.StubStart, Orientation.Horizontal) {
             progressConverter = configuration.overscrollProgress::convert
-            translate(Stub.Elements.TextLeft, x = { absoluteDistance })
+            translate(Stub.Elements.TextStart, x = { absoluteDistance })
         }
 
-        overscroll(Scenes.StubRight, Orientation.Horizontal) {
+        overscroll(Scenes.StubEnd, Orientation.Horizontal) {
             progressConverter = configuration.overscrollProgress::convert
-            translate(Stub.Elements.TextRight, x = { absoluteDistance })
+            translate(Stub.Elements.TextEnd, x = { absoluteDistance })
         }
     }
 }
@@ -88,18 +88,18 @@ fun SceneTransitionsBuilder.commonLockscreenTransitions(lockscreenScene: SceneKe
         }
     }
 
-    from(lockscreenScene, to = Scenes.StubLeft) {
+    from(lockscreenScene, to = Scenes.StubStart) {
         spec = tween(durationMillis = 500)
 
-        translate(Stub.Elements.SceneLeft, Edge.Left)
-        translate(Lockscreen.Elements.Scene, Edge.Right)
+        translate(Stub.Elements.SceneStart, Edge.Start)
+        translate(Lockscreen.Elements.Scene, Edge.End)
     }
 
-    from(lockscreenScene, to = Scenes.StubRight) {
+    from(lockscreenScene, to = Scenes.StubEnd) {
         spec = tween(durationMillis = 500)
 
-        translate(Stub.Elements.SceneRight, Edge.Right)
-        translate(Lockscreen.Elements.Scene, Edge.Left)
+        translate(Stub.Elements.SceneEnd, Edge.End)
+        translate(Lockscreen.Elements.Scene, Edge.Start)
     }
 
     from(lockscreenScene, to = Scenes.Camera) {
