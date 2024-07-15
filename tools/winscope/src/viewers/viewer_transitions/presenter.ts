@@ -100,7 +100,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

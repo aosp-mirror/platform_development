@@ -103,7 +103,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
       },
     ]);
 
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
   }
 
   private async makeInputEntries(): Promise<InputEntry[]> {
@@ -287,5 +287,6 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     this.propertiesPresenter.applyHighlightedPropertyChange(id);
     this.dispatchPropertiesPresenter.applyHighlightedPropertyChange(id);
     this.uiData.highlightedProperty = id;
+    this.notifyViewChanged();
   }
 }
