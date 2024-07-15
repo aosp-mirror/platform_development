@@ -106,9 +106,9 @@ object Scenes {
     val Shade = SceneKey("Shade")
     val SplitShade = SceneKey("SplitShade")
 
-    // Stub scenes on the left and right of the lockscreen.
-    val StubLeft = SceneKey("StubLeft")
-    val StubRight = SceneKey("StubRight")
+    // Stub scenes on the start and end of the lockscreen.
+    val StubStart = SceneKey("StubStart")
+    val StubEnd = SceneKey("StubEnd")
 
     val AllScenes =
         listOf(
@@ -121,8 +121,8 @@ object Scenes {
                 QuickSettings,
                 Shade,
                 SplitShade,
-                StubLeft,
-                StubRight,
+                StubStart,
+                StubEnd,
             )
             .associateBy { it.debugName }
 
@@ -473,16 +473,18 @@ fun SystemUi(
                                 ::onChangeScene,
                             )
                         }
-                        scene(Scenes.StubLeft, Stub.leftUserActions(lockscreenScene)) {
+                        scene(Scenes.StubStart, Stub.startUserActions(lockscreenScene)) {
                             Stub(
-                                rootKey = Stub.Elements.SceneLeft,
-                                textKey = Stub.Elements.TextLeft
+                                rootKey = Stub.Elements.SceneStart,
+                                textKey = Stub.Elements.TextStart,
+                                text = "Stub scene (start)",
                             )
                         }
-                        scene(Scenes.StubRight, Stub.rightUserActions(lockscreenScene)) {
+                        scene(Scenes.StubEnd, Stub.endUserActions(lockscreenScene)) {
                             Stub(
-                                rootKey = Stub.Elements.SceneRight,
-                                textKey = Stub.Elements.TextRight
+                                rootKey = Stub.Elements.SceneEnd,
+                                textKey = Stub.Elements.TextEnd,
+                                text = "Stub scene (end)",
                             )
                         }
                         scene(Scenes.Camera, Camera.userActions(lockscreenScene)) { Camera() }
