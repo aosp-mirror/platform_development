@@ -19,9 +19,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
 import {
   AbstractLogViewerPresenter,
   NotifyLogViewCallbackType,
@@ -30,6 +28,7 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {TargetWindowFormatter} from './operations/target_window_formatter';
 import {InputEntry, UiData} from './ui_data';
 
 enum InputEventType {
@@ -61,6 +60,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
+    [new TargetWindowFormatter(this.layerIdToName)],
   );
 
   constructor(
@@ -128,16 +128,6 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
         const windowIdNode = dispatchEntry.getChildByName('windowId');
         const windowId = Number(windowIdNode?.getValue() ?? -1);
         this.allInputLayerIds.add(windowId);
-        // For now, add a new node to display the layer name in the dispatch properties view.
-        // TODO(b/332714237): Use a custom view to display dispatch properties.
-        const windowNameNode =
-          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
-            windowIdNode?.id ?? '',
-            'windowName',
-            this.getLayerDisplayName(windowId),
-          );
-        windowNameNode.setFormatter(DEFAULT_PROPERTY_FORMATTER);
-        dispatchEntry.addOrReplaceChild(windowNameNode);
       });
 
       entries.push(
