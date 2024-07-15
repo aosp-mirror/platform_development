@@ -67,7 +67,7 @@ export class Presenter extends AbstractLogViewerPresenter {
     traces: Traces,
     notifyViewCallback: NotifyLogViewCallbackType,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
     this.surfaceFlingerTrace = traces.getTrace(TraceType.SURFACE_FLINGER);
     this.windowManagerTrace = traces.getTrace(TraceType.WINDOW_MANAGER);
@@ -100,7 +100,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUIData(UiData.createEmpty());
     this.isInitialized = true;
   }
 

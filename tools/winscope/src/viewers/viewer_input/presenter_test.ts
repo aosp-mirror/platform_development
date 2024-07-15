@@ -43,6 +43,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 8;
+  override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 2;
   override readonly logEntryClickIndex = 3;
 
@@ -183,10 +184,10 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
       const time35 = TimestampConverterUtils.makeRealTimestamp(35n);
       const time36 = TimestampConverterUtils.makeRealTimestamp(36n);
 
-      let uiData: UiData = UiData.EMPTY;
+      let uiData: UiData = UiData.createEmpty();
 
       beforeAll(async () => {
-        uiData = Object.assign({}, UiData.EMPTY);
+        uiData = UiData.createEmpty();
         await this.setUpTestEnvironment();
       });
 
