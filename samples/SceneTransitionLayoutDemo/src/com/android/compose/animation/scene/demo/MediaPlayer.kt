@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -169,50 +170,59 @@ private fun BoxScope.Sinusoid(
     val color = MaterialTheme.colorScheme.onTertiary
     val waveWidth = 10.dp
     val maxWaveHeight = 5.dp
+    val lineWidth = 3.dp
 
     val waveHeight by
         animateDpAsState(
             if (isPlaying) maxWaveHeight else 0.dp,
             spring(stiffness = Spring.StiffnessMediumLow)
         )
-    val translation by
-        rememberInfiniteTransition()
-            .animateFloat(
-                0f,
-                1f,
-                infiniteRepeatable(tween(durationMillis = 1_000, easing = LinearEasing)),
-            )
 
-    val path = remember { Path() }
-    Canvas(modifier.align(Alignment.BottomCenter).fillMaxWidth().height(maxWaveHeight * 2)) {
-        val lineWidth = 3.dp.toPx()
-        if (waveHeight == 0.dp) {
-            drawLine(
-                color,
-                start = Offset(0f, center.y),
-                end = Offset(size.width, center.y),
-                strokeWidth = lineWidth,
-            )
-            return@Canvas
-        }
+    val shouldAnimateWave by remember { derivedStateOf { waveHeight > 0.dp } }
+    Box(
+        modifier.align(Alignment.BottomCenter).fillMaxWidth().height(maxWaveHeight * 2),
+        propagateMinConstraints = true,
+    ) {
+        if (shouldAnimateWave) {
+            val translation by
+                rememberInfiniteTransition()
+                    .animateFloat(
+                        0f,
+                        1f,
+                        infiniteRepeatable(tween(durationMillis = 1_000, easing = LinearEasing)),
+                    )
 
-        val waveWidthPx = waveWidth.toPx()
-        val waveHeightPx = waveHeight.toPx()
+            val path = remember { Path() }
+            Canvas(Modifier) {
+                val waveWidthPx = waveWidth.toPx()
+                val waveHeightPx = waveHeight.toPx()
+                val lineWidthPx = lineWidth.toPx()
 
-        clipRect {
-            path.reset()
+                clipRect {
+                    path.reset()
 
-            repeat(ceil(size.width / (waveWidthPx * 2)).roundToInt() + 1) { i ->
-                path.moveTo((i - translation) * waveWidthPx * 2, center.y - lineWidth / 2)
-                path.relativeQuadraticBezierTo(waveWidthPx / 2, -waveHeightPx, waveWidthPx, 0f)
-                path.relativeQuadraticBezierTo(waveWidthPx / 2, waveHeightPx, waveWidthPx, 0f)
-                path.relativeLineTo(0f, lineWidth)
-                path.relativeQuadraticBezierTo(-waveWidthPx / 2, waveHeightPx, -waveWidthPx, 0f)
-                path.relativeQuadraticBezierTo(-waveWidthPx / 2, -waveHeightPx, -waveWidthPx, 0f)
-                path.close()
+                    repeat(ceil(size.width / (waveWidthPx * 2)).roundToInt() + 1) { i ->
+                        path.moveTo((i - translation) * waveWidthPx * 2, center.y - lineWidthPx / 2)
+                        path.relativeQuadraticTo(waveWidthPx / 2, -waveHeightPx, waveWidthPx, 0f)
+                        path.relativeQuadraticTo(waveWidthPx / 2, waveHeightPx, waveWidthPx, 0f)
+                        path.relativeLineTo(0f, lineWidthPx)
+                        path.relativeQuadraticTo(-waveWidthPx / 2, waveHeightPx, -waveWidthPx, 0f)
+                        path.relativeQuadraticTo(-waveWidthPx / 2, -waveHeightPx, -waveWidthPx, 0f)
+                        path.close()
+                    }
+
+                    drawPath(path, color)
+                }
             }
-
-            drawPath(path, color)
+        } else {
+            Canvas(Modifier) {
+                drawLine(
+                    color,
+                    start = Offset(0f, center.y),
+                    end = Offset(size.width, center.y),
+                    strokeWidth = lineWidth.toPx(),
+                )
+            }
         }
     }
 }

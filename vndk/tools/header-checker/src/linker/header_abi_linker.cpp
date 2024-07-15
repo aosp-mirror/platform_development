@@ -238,8 +238,8 @@ static void DeDuplicateAbiElementsThread(
 }
 
 std::unique_ptr<linker::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
-  std::unique_ptr<linker::ModuleMerger> merger(
-      new linker::ModuleMerger(&exported_headers_));
+  std::unique_ptr<linker::ModuleMerger> merger =
+      std::make_unique<linker::ModuleMerger>();
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads = std::max<std::size_t>(
       std::min(dump_files_.size() / sources_per_thread, max_threads), 1);
@@ -255,7 +255,7 @@ std::unique_ptr<linker::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
     if (i == 0) {
       first_end_index = cnt;
     } else {
-      thread_mergers.emplace_back(&exported_headers_);
+      thread_mergers.emplace_back();
       threads.emplace_back(DeDuplicateAbiElementsThread,
                            dump_files_.begin() + dump_files_index,
                            dump_files_.begin() + dump_files_index + cnt,
@@ -294,16 +294,15 @@ bool HeaderAbiLinker::LinkAndDump() {
   const repr::ModuleIR &module = merger->GetModule();
 
   // Link input ABI dumps.
-  std::unique_ptr<repr::ModuleIR> linked_module(
-      new repr::ModuleIR(&exported_headers_));
+  repr::ModuleIR linked_module;
 
-  if (!LinkExportedSymbols(linked_module.get())) {
+  if (!LinkExportedSymbols(&linked_module)) {
     return false;
   }
 
-  if (!LinkTypes(module, linked_module.get()) ||
-      !LinkFunctions(module, linked_module.get()) ||
-      !LinkGlobalVars(module, linked_module.get())) {
+  if (!LinkTypes(module, &linked_module) ||
+      !LinkFunctions(module, &linked_module) ||
+      !LinkGlobalVars(module, &linked_module)) {
     llvm::errs() << "Failed to link elements\n";
     return false;
   }
@@ -312,7 +311,7 @@ bool HeaderAbiLinker::LinkAndDump() {
   std::unique_ptr<repr::IRDumper> ir_dumper =
       repr::IRDumper::CreateIRDumper(output_format, out_dump_name_);
   assert(ir_dumper != nullptr);
-  if (!ir_dumper->Dump(*linked_module)) {
+  if (!ir_dumper->Dump(linked_module)) {
     llvm::errs() << "Failed to serialize the linked output to ostream\n";
     return false;
   }
