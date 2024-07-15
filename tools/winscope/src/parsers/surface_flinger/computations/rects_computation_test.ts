@@ -27,6 +27,10 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {RectsComputation} from './rects_computation';
 
 describe('RectsComputation', () => {
+  const rotationTransform = new Transform(
+    TransformType.ROT_90_VAL,
+    IDENTITY_MATRIX,
+  );
   let computation: RectsComputation;
 
   beforeEach(() => {
@@ -271,6 +275,22 @@ describe('RectsComputation', () => {
             name: 'Test Display',
             size: {w: 5, h: 5},
           },
+          {
+            id: 2,
+            layerStack: 0,
+            layerStackSpaceRect: null,
+            size: {w: 5, h: 10},
+            transform: Transform.EMPTY,
+            name: 'Test Display 2',
+          },
+          {
+            id: 3,
+            layerStack: 0,
+            layerStackSpaceRect: null,
+            size: {w: 5, h: 10},
+            transform: rotationTransform,
+            name: 'Test Display 3',
+          },
         ],
       })
       .build();
@@ -286,6 +306,36 @@ describe('RectsComputation', () => {
         .setCornerRadius(0)
         .setTransform(Transform.EMPTY.matrix)
         .setDepth(0)
+        .setGroupId(0)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsVirtual(false)
+        .build(),
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(5)
+        .setHeight(10)
+        .setId('Display - 2')
+        .setName('Test Display 2')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(false)
+        .setIsDisplay(true)
+        .setIsVirtual(false)
+        .build(),
+      new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(10)
+        .setHeight(5)
+        .setId('Display - 3')
+        .setName('Test Display 3')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(2)
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
@@ -628,11 +678,6 @@ describe('RectsComputation', () => {
   });
 
   it('calculates invalid screen bounds from all displays present', () => {
-    const rotationTransform = new Transform(
-      TransformType.ROT_90_VAL,
-      IDENTITY_MATRIX,
-    );
-
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
