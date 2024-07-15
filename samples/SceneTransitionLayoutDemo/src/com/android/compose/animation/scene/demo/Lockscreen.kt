@@ -58,8 +58,8 @@ object Lockscreen {
                             requiresFullDistanceSwipe = requiresFullDistanceSwipeToShade,
                         )
                 )
-                add(Swipe.Left to Scenes.StubRight)
-                add(Swipe.Right to Scenes.StubLeft)
+                add(Swipe.Start to Scenes.StubEnd)
+                add(Swipe.End to Scenes.StubStart)
                 add(
                     Swipe.Up to
                         if (isLockscreenDismissable) {

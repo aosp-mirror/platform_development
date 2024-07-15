@@ -31,23 +31,23 @@ import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.Swipe
 
 object Stub {
-    fun leftUserActions(lockscreenScene: SceneKey) =
+    fun startUserActions(lockscreenScene: SceneKey) =
         mapOf(
             Back to lockscreenScene,
-            Swipe.Left to lockscreenScene,
+            Swipe.Start to lockscreenScene,
         )
 
-    fun rightUserActions(lockscreenScene: SceneKey) =
+    fun endUserActions(lockscreenScene: SceneKey) =
         mapOf(
             Back to lockscreenScene,
-            Swipe.Right to lockscreenScene,
+            Swipe.End to lockscreenScene,
         )
 
     object Elements {
-        val SceneLeft = ElementKey("StubSceneLeft")
-        val SceneRight = ElementKey("StubSceneRight")
-        val TextLeft = ElementKey("StubTextLeft")
-        val TextRight = ElementKey("StubTextRight")
+        val SceneStart = ElementKey("StubSceneStart")
+        val SceneEnd = ElementKey("StubSceneEnd")
+        val TextStart = ElementKey("StubTextStart")
+        val TextEnd = ElementKey("StubTextEnd")
     }
 }
 
@@ -55,6 +55,7 @@ object Stub {
 fun SceneScope.Stub(
     rootKey: ElementKey,
     textKey: ElementKey,
+    text: String,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -62,7 +63,7 @@ fun SceneScope.Stub(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "Stub scene",
+            text,
             modifier = modifier.element(textKey),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground

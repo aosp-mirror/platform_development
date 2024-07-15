@@ -44,6 +44,8 @@ import {UiData} from './ui_data';
           [currentIndex]="inputData?.currentIndex"
           [entries]="inputData?.entries"
           [headers]="inputData?.headers"
+          [filters]="inputData?.filters"
+          [showFiltersInTitle]="true"
           [traceType]="${TraceType.INPUT_EVENT_MERGED}"
           [showTraceEntryTimes]="false"
           [showCurrentTimeButton]="false"
