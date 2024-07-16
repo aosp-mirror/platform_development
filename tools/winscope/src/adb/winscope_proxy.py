@@ -60,8 +60,8 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     return parser
 
-# Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '2.2.0'
+# Keep in sync with ProxyConnection#VERSION in Winscope
+VERSION = '2.3.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
@@ -719,7 +719,7 @@ class RequestRouter:
 
     def __bad_token(self):
         log.info("Bad token")
-        self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorisation token!\nThis is Winscope ADB proxy.\n",
+        self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorization token!\nThis is Winscope ADB proxy.\n",
                              'text/txt')
 
     def process(self, method: RequestType):
@@ -802,7 +802,7 @@ class ListDevicesEndpoint(RequestEndpoint):
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
         devices = {m.group(1): {
-            'authorised': str(m.group(2)) != 'unauthorized',
+            'authorized': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
         self._foundDevices = devices
@@ -1031,15 +1031,19 @@ while true; do sleep 0.1; done
 """
 
     def process_with_device(self, server, path, device_id):
-        requested_types = self.get_request(server)
-        log.debug(f"Client requested trace types {requested_types} for {device_id}")
-        requested_traces = []
-        for t in requested_types:
+        trace_request = self.get_request(server)
+        log.debug(trace_request)
+        trace_types = [t.get("name") for t in trace_request]
+        log.debug(f"Client requested trace types {trace_types} for {device_id}")
+        requested_trace_targets = []
+        for t in trace_request:
             try:
-                requested_traces.append(TRACE_TARGETS[t])
+                requested_trace_targets.append(TRACE_TARGETS[t.get("name")])
+                #TODO(b/350710696): apply trace config here (app no longer calls Config endpoints)
             except KeyError as err:
                 log.warning("Unsupported trace target\n" + str(err))
-        requested_traces = self.move_perfetto_target_to_end_of_list(requested_traces)
+        requested_trace_targets = self.move_perfetto_target_to_end_of_list(requested_trace_targets)
+
         if device_id in TRACE_THREADS:
             log.warning("Trace already in progress for {}", device_id)
             server.respond(HTTPStatus.OK, b'', "text/plain")
@@ -1052,12 +1056,14 @@ while true; do sleep 0.1; done
 
         command = StartTraceEndpoint.TRACE_COMMAND.format(
             perfetto_utils=PERFETTO_UTILS,
-            stop_commands='\n'.join([t.trace_stop for t in requested_traces]),
+            stop_commands='\n'.join([t.trace_stop for t in requested_trace_targets]),
             perfetto_config_file=PERFETTO_TRACE_CONFIG_FILE,
-            start_commands='\n'.join([t.trace_start for t in requested_traces]))
+            start_commands='\n'.join([t.trace_start for t in requested_trace_targets]))
+
         log.debug("Trace requested for {} with targets {}".format(
-            device_id, ','.join(requested_types)))
+            device_id, ','.join([t.get("name") for t in trace_request])))
         log.debug(f"Executing command \"{command}\" on {device_id}...")
+
         TRACE_THREADS[device_id] = TraceThread(
             device_id, command.encode('utf-8'))
         TRACE_THREADS[device_id].start()

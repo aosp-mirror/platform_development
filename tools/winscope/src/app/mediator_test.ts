@@ -84,7 +84,9 @@ describe('Mediator', () => {
   let appComponent: WinscopeEventListener;
   let timelineComponent: WinscopeEventEmitter & WinscopeEventListener;
   let uploadTracesComponent: ProgressListenerStub;
-  let collectTracesComponent: ProgressListenerStub & WinscopeEventListenerStub;
+  let collectTracesComponent: ProgressListenerStub &
+    WinscopeEventEmitterStub &
+    WinscopeEventListenerStub;
   let traceViewComponent: WinscopeEventEmitter & WinscopeEventListener;
   let mediator: Mediator;
   let spies: Array<jasmine.Spy<any>>;
@@ -140,8 +142,11 @@ describe('Mediator', () => {
     );
     uploadTracesComponent = new ProgressListenerStub();
     collectTracesComponent = FunctionUtils.mixin(
-      new ProgressListenerStub(),
-      new WinscopeEventListenerStub(),
+      FunctionUtils.mixin(
+        new ProgressListenerStub(),
+        new WinscopeEventListenerStub(),
+      ),
+      new WinscopeEventEmitterStub(),
     );
     traceViewComponent = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),

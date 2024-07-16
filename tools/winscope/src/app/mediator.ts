@@ -21,7 +21,11 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
-import {CannotVisualizeAllTraces, NoValidFiles} from 'messaging/user_warnings';
+import {
+  CannotVisualizeAllTraces,
+  NoTraceTargetsSelected,
+  NoValidFiles,
+} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -46,7 +50,9 @@ export class Mediator {
     WinscopeEventListener;
   private crossToolProtocol: CrossToolProtocol;
   private uploadTracesComponent?: ProgressListener;
-  private collectTracesComponent?: ProgressListener & WinscopeEventListener;
+  private collectTracesComponent?: ProgressListener &
+    WinscopeEventEmitter &
+    WinscopeEventListener;
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
@@ -92,9 +98,14 @@ export class Mediator {
   }
 
   setCollectTracesComponent(
-    component: (ProgressListener & WinscopeEventListener) | undefined,
+    component:
+      | (ProgressListener & WinscopeEventEmitter & WinscopeEventListener)
+      | undefined,
   ) {
     this.collectTracesComponent = component;
+    this.collectTracesComponent?.setEmitEvent(async (event) => {
+      await this.onWinscopeEvent(event);
+    });
   }
 
   setTraceViewComponent(
@@ -233,6 +244,15 @@ export class Mediator {
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
     });
+
+    await event.visit(
+      WinscopeEventType.NO_TRACE_TARGETS_SELECTED,
+      async (event) => {
+        this.userNotificationsListener.onNotifications([
+          new NoTraceTargetsSelected(),
+        ]);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {

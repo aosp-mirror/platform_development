@@ -28,8 +28,8 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {AdbConnection} from 'trace_collection/adb_connection';
-import {DeviceProperties} from 'trace_collection/proxy_client';
+import {AdbDevice} from 'trace_collection/adb_device';
+import {ConnectionState} from 'trace_collection/connection_state';
 import {
   TraceConfigurationMap,
   TRACES,
@@ -45,10 +45,11 @@ describe('CollectTracesComponent', () => {
   let fixture: ComponentFixture<CollectTracesComponent>;
   let component: CollectTracesComponent;
   let htmlElement: HTMLElement;
-  const mockDevice: [string, DeviceProperties] = [
-    '35562',
-    {model: 'Pixel 6', authorised: true},
-  ];
+  const mockDevice: AdbDevice = {
+    id: '35562',
+    model: 'Pixel 6',
+    authorized: true,
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -114,9 +115,9 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays connecting message', () => {
-    assertDefined(component.adbConnection).isConnectingState = jasmine
+    assertDefined(component.adbConnection).getState = jasmine
       .createSpy()
-      .and.returnValue(true);
+      .and.returnValue(ConnectionState.CONNECTING);
     fixture.detectChanges();
 
     const connectingMessage = assertDefined(
@@ -126,7 +127,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays adb set up', () => {
-    assertDefined(component.adbConnection).adbSuccess = jasmine
+    assertDefined(component).adbSuccess = jasmine
       .createSpy()
       .and.returnValue(false);
     fixture.detectChanges();
@@ -136,7 +137,7 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays adb proxy element', () => {
-    assertDefined(component.adbConnection).adbSuccess = jasmine
+    assertDefined(component).adbSuccess = jasmine
       .createSpy()
       .and.returnValue(false);
     component.isAdbProxy = true;
@@ -147,20 +148,24 @@ describe('CollectTracesComponent', () => {
 
   it('displays no connected devices', () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isDevicesState = jasmine.createSpy().and.returnValue(true);
-    connection.getDevices = jasmine.createSpy().and.returnValue({});
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.IDLE);
+    connection.getDevices = jasmine.createSpy().and.returnValue([]);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
     expect(el.innerHTML).toContain('No devices detected');
   });
 
-  it('displays connected authorised devices', () => {
+  it('displays connected authorized devices', () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.IDLE);
     connection.getDevices = jasmine
       .createSpy()
-      .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
+      .and.returnValue([{id: '35562', model: 'Pixel 6', authorized: true}]);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -168,22 +173,26 @@ describe('CollectTracesComponent', () => {
     expect(el.innerHTML).toContain('smartphone');
   });
 
-  it('displays connected unauthorised devices', () => {
+  it('displays connected unauthorized devices', () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.IDLE);
     connection.getDevices = jasmine
       .createSpy()
-      .and.returnValue({'35562': {model: 'Pixel 6', authorised: false}});
+      .and.returnValue([{id: '35562', model: 'Pixel 6', authorized: false}]);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
-    expect(el.innerHTML).toContain('unauthorised');
+    expect(el.innerHTML).toContain('unauthorized');
     expect(el.innerHTML).toContain('screen_lock_portrait');
   });
 
-  it('auto detects changes in devices', async () => {
+  it('detects changes in devices', async () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isDevicesState = jasmine.createSpy().and.returnValue(true);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.IDLE);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.devices-connecting'));
@@ -191,9 +200,10 @@ describe('CollectTracesComponent', () => {
 
     connection.getDevices = jasmine
       .createSpy()
-      .and.returnValue({'35562': {model: 'Pixel 6', authorised: true}});
-
+      .and.returnValue([{id: '35562', model: 'Pixel 6', authorized: true}]);
+    fixture.detectChanges();
     await fixture.whenStable();
+
     expect(el.textContent).toContain(
       'Select a device: smartphone  Pixel 6 (35562)',
     );
@@ -237,28 +247,30 @@ describe('CollectTracesComponent', () => {
 
   it('change device button works as expected', () => {
     goToConfigSection();
+    expect(component.getSelectedDevice()).toBeDefined();
 
     const spy = spyOn(
       assertDefined(component.adbConnection),
-      'clearLastDevice',
+      'restartConnection',
     );
+
     const change = assertDefined(
       htmlElement.querySelector('.change-btn'),
     ) as HTMLButtonElement;
     change.click();
+
     expect(spy).toHaveBeenCalled();
   });
 
   it('fetch existing traces button emits files and restarts connection if no files found', async () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
-      .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
-    const fetchSpy = spyOn(connection, 'fetchExistingTraces');
+    const fetchSpy = spyOn(
+      connection,
+      'fetchLastTracingSessionData',
+    ).and.returnValue(Promise.resolve([] as File[]));
     const emitSpy = spyOn(component.filesCollected, 'emit');
-    const restartSpy = spyOn(connection, 'restart');
-    fixture.detectChanges();
+    const restartSpy = spyOn(connection, 'restartConnection');
+    goToConfigSection();
 
     const fetchButton = assertDefined(
       htmlElement.querySelector('.fetch-btn'),
@@ -271,23 +283,13 @@ describe('CollectTracesComponent', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(emitSpy).toHaveBeenCalledTimes(1);
     expect(restartSpy).toHaveBeenCalledTimes(1);
-
-    spyOn(connection, 'getAdbData').and.returnValue([
-      new File([], 'test_file'),
-    ]);
-
-    fetchButton.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-    expect(emitSpy).toHaveBeenCalledTimes(2);
-    expect(restartSpy).toHaveBeenCalledTimes(1);
   });
 
   it('displays unknown error message', () => {
     const connection = assertDefined(component.adbConnection);
-    connection.isErrorState = jasmine.createSpy().and.returnValue(true);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.ERROR);
     fixture.detectChanges();
 
     const testErrorMessage = 'bad things are happening';
@@ -300,7 +302,7 @@ describe('CollectTracesComponent', () => {
     expect(el.innerHTML).toContain('Error:');
     expect(el.innerHTML).toContain(testErrorMessage);
 
-    const spy = spyOn(connection, 'restart').and.callThrough();
+    const spy = spyOn(connection, 'restartConnection').and.callThrough();
     const retryButton = assertDefined(
       htmlElement.querySelector('.retry-btn'),
     ) as HTMLButtonElement;
@@ -309,9 +311,12 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays starting trace elements', () => {
+    goToConfigSection();
+
     const connection = assertDefined(component.adbConnection);
-    connection.isStartingTraceState = jasmine.createSpy().and.returnValue(true);
-    setDeviceSpies(connection);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.STARTING_TRACE);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.starting-trace'));
@@ -324,13 +329,16 @@ describe('CollectTracesComponent', () => {
     expect(endButton.disabled).toBeTrue();
   });
 
-  it('displays end tracing elements', () => {
+  it('displays tracing elements', () => {
+    goToConfigSection();
+
     const connection = assertDefined(component.adbConnection);
-    connection.isTracingState = jasmine.createSpy().and.returnValue(true);
-    setDeviceSpies(connection);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.TRACING);
     fixture.detectChanges();
 
-    const el = assertDefined(htmlElement.querySelector('.end-tracing'));
+    const el = assertDefined(htmlElement.querySelector('.tracing'));
     const progress = assertDefined(el.querySelector('load-progress'));
     expect(progress.innerHTML).toContain('Tracing...');
     expect(progress.innerHTML).toContain('cable');
@@ -345,9 +353,12 @@ describe('CollectTracesComponent', () => {
   });
 
   it('displays loading data elements', () => {
+    goToConfigSection();
+
     const connection = assertDefined(component.adbConnection);
-    connection.isLoadingDataState = jasmine.createSpy().and.returnValue(true);
-    setDeviceSpies(connection);
+    connection.getState = jasmine
+      .createSpy()
+      .and.returnValue(ConnectionState.LOADING_DATA);
     fixture.detectChanges();
 
     const el = assertDefined(htmlElement.querySelector('.load-data'));
@@ -358,14 +369,6 @@ describe('CollectTracesComponent', () => {
       el.querySelector('.end-btn button'),
     ) as HTMLButtonElement;
     expect(endButton.disabled).toBeTrue();
-  });
-
-  it('opens IME warning dialog', async () => {
-    goToConfigSection();
-    const dialog = await openAndReturnDialog();
-    expect(dialog.textContent).toContain(
-      'Cannot build frame mapping for IME with selected traces',
-    );
   });
 
   it('starts traces after IME warning dialog', async () => {
@@ -423,21 +426,18 @@ describe('CollectTracesComponent', () => {
     expect(document.querySelector('warning-dialog')).toBeNull();
   });
 
-  function setDeviceSpies(connection: AdbConnection) {
-    connection.getDevices = jasmine
-      .createSpy()
-      .and.returnValue({'35562': mockDevice[1]});
-    connection.getSelectedDevice = jasmine
-      .createSpy()
-      .and.returnValue(mockDevice);
-  }
-
   function goToConfigSection() {
     const connection = assertDefined(component.adbConnection);
-    connection.isConfigureTraceState = jasmine
+    connection.getState = jasmine
       .createSpy()
-      .and.returnValue(true);
-    setDeviceSpies(connection);
+      .and.returnValue(ConnectionState.IDLE);
+
+    connection.getDevices = jasmine.createSpy().and.returnValue([mockDevice]);
+    fixture.detectChanges();
+    const device = assertDefined(
+      htmlElement.querySelector('.available-device'),
+    ) as HTMLElement;
+    device.click();
     fixture.detectChanges();
   }
 
@@ -459,8 +459,12 @@ describe('CollectTracesComponent', () => {
   async function openAndReturnDialog(): Promise<HTMLElement> {
     updateTraceConfigToInvalidIMEFrameMapping();
     await clickStartTraceButton();
-    return assertDefined(
+    const dialog = assertDefined(
       document.querySelector('warning-dialog'),
     ) as HTMLElement;
+    expect(dialog.textContent).toContain(
+      'Cannot build frame mapping for IME with selected traces',
+    );
+    return dialog;
   }
 });

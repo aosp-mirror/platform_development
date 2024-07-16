@@ -30,6 +30,7 @@ export class Analytics {
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
+  private static PROXY_ERROR = 'proxy_error';
   private static RECT_SETTINGS = 'rect_settings';
   private static REFRESH_DUMPS = 'refresh_dumps';
   private static TIME_BOOKMARK = 'time_bookmark';
@@ -46,6 +47,11 @@ export class Analytics {
   static Error = class {
     static logGlobalException(description: string) {
       Analytics.doLogEvent(Analytics.GLOBAL_EXCEPTION, {
+        description,
+      } as Gtag.CustomParams);
+    }
+    static logProxyError(description: string) {
+      Analytics.doLogEvent(Analytics.PROXY_ERROR, {
         description,
       } as Gtag.CustomParams);
     }

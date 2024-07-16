@@ -134,3 +134,13 @@ export class CannotVisualizeAllTraces extends UserWarning {
     return `Cannot visualize all traces: ${this.errorMessage}.\nTry removing some traces.`;
   }
 }
+
+export class NoTraceTargetsSelected extends UserWarning {
+  getDescriptor(): string {
+    return 'No trace targets selected';
+  }
+
+  getMessage(): string {
+    return 'No trace targets selected.';
+  }
+}

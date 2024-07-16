@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {UrlUtils} from 'common/url_utils';
-import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
+import {ConnectionState} from 'trace_collection/connection_state';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
 
 @Component({
   selector: 'adb-proxy',
   template: `
-    <ng-container [ngSwitch]="client.getState()">
-      <ng-container *ngSwitchCase="state.NO_PROXY">
+    <ng-container [ngSwitch]="connection?.getState()">
+      <ng-container *ngSwitchCase="${ConnectionState.NOT_FOUND}">
         <div class="further-adb-info-text">
           <p class="mat-body-1">
             Launch the Winscope ADB Connect proxy to capture traces directly from your browser.
@@ -54,7 +55,7 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="state.INVALID_VERSION">
+      <ng-container *ngSwitchCase="${ConnectionState.INVALID_VERSION}">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">update</mat-icon>
@@ -90,11 +91,11 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
         </div>
       </ng-container>
 
-      <ng-container *ngSwitchCase="state.UNAUTH">
+      <ng-container *ngSwitchCase="${ConnectionState.UNAUTH}">
         <div class="further-adb-info-text">
           <p class="icon-information mat-body-1">
             <mat-icon class="adb-icon">lock</mat-icon>
-            <span class="adb-info">Proxy authorisation required.</span>
+            <span class="adb-info">Proxy authorization required.</span>
           </p>
           <p class="mat-body-1">Enter Winscope proxy token:</p>
           <mat-form-field
@@ -152,23 +153,26 @@ import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
   ],
 })
 export class AdbProxyComponent {
-  @Output()
-  readonly addKey = new EventEmitter<string>();
+  @Input() connection: ProxyConnection | undefined;
+  @Output() readonly addKey = new EventEmitter<string>();
 
-  client = proxyClient;
-  state = ProxyState;
   proxyKeyItem = '';
-  readonly clientVersion = this.client.VERSION;
   readonly downloadProxyUrl: string =
     UrlUtils.getRootUrl() + 'winscope_proxy.py';
   readonly proxyCommand: string =
     'python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py';
 
+  clientVersion: string | undefined;
+
+  ngOnInit() {
+    this.clientVersion = this.connection?.getClientVersion();
+  }
+
   async onRetryButtonClick() {
     if (this.proxyKeyItem.length > 0) {
       this.addKey.emit(this.proxyKeyItem);
     }
-    await this.client.setState(this.state.CONNECTING);
+    await this.connection?.restartConnection();
   }
 
   async onKeydownEnterProxyKeyInput(event: MouseEvent) {

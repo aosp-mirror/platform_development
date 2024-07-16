@@ -13,36 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {DeviceProperties, Devices} from 'trace_collection/proxy_client';
-import {ConfigMap} from './trace_collection_utils';
+
+import {AdbDevice} from './adb_device';
+import {ConnectionState} from './connection_state';
+import {TraceRequest} from './trace_request';
 
 export interface AdbConnection {
-  adbSuccess: () => boolean;
-  setSecurityKey(key: string): void;
-  getDevices(): Devices;
-  getSelectedDevice(): [string, DeviceProperties];
-  restart(): Promise<void>;
-  selectDevice(id: string): Promise<void>;
-  clearLastDevice(): Promise<void>;
-  isDevicesState(): boolean;
-  isConfigureTraceState(): boolean;
-  isErrorState(): boolean;
-  isStartingTraceState(): boolean;
-  isTracingState(): boolean;
-  isLoadingDataState(): boolean;
-  isConnectingState(): boolean;
-  setErrorState(message: string): Promise<void>;
-  setLoadingDataState(): void;
-  startTrace(
-    requestedTraces: string[],
-    reqEnableConfig?: string[],
-    reqSelectedSfConfig?: ConfigMap,
-    reqSelectedWmConfig?: ConfigMap,
-  ): Promise<void>;
-  endTrace(): Promise<void>;
-  fetchExistingTraces(): Promise<void>;
-  getAdbData(): File[];
-  dumpState(requestedDumps: string[]): Promise<boolean>;
+  restartConnection(): Promise<void>;
+  setSecurityToken(token: string): void;
+  getDevices(): AdbDevice[];
+  getState(): ConnectionState;
   getErrorText(): string;
+  startTrace(device: AdbDevice, requestedTraces: TraceRequest[]): Promise<void>;
+  endTrace(device: AdbDevice): Promise<void>;
+  dumpState(device: AdbDevice, requestedDumps: TraceRequest[]): Promise<void>;
+  fetchLastTracingSessionData(device: AdbDevice): Promise<File[]>;
   onDestroy(): void;
 }
