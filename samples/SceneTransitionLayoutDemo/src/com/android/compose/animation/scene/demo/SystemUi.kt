@@ -67,6 +67,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toComposeRect
@@ -83,8 +84,10 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.window.layout.WindowMetricsCalculator
+import com.android.compose.animation.scene.DefaultEdgeDetector
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
+import com.android.compose.animation.scene.OverlayKey
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitionLayout
@@ -154,6 +157,11 @@ object Scenes {
             else -> scene
         }
     }
+}
+
+object Overlays {
+    val Notifications = OverlayKey("NotificationsOverlay")
+    val QuickSettings = OverlayKey("QuickSettingsOverlay")
 }
 
 /** A [Saver] that restores a [MutableSceneTransitionLayoutState] to its previous [currentScene]. */
@@ -285,7 +293,7 @@ fun SystemUi(
     val canChangeScene =
         remember(configuration) {
             { scene: SceneKey ->
-                if (configuration.canChangeScene) {
+                if (configuration.canChangeSceneOrOverlays) {
                     maybeUpdateLockscreenDismissed(scene)
                     true
                 } else {
@@ -304,7 +312,13 @@ fun SystemUi(
             )
         }
     val layoutState =
-        rememberSaveable(transitions, canChangeScene, enableInterruptions, saver = stateSaver) {
+        rememberSaveable(
+            transitions,
+            canChangeScene,
+            enableInterruptions,
+            configuration,
+            saver = stateSaver,
+        ) {
             val initialScene =
                 initialScene?.let {
                     Scenes.ensureCorrectScene(
@@ -318,6 +332,9 @@ fun SystemUi(
                 initialScene,
                 transitions,
                 canChangeScene = canChangeScene,
+                canShowOverlay = { configuration.canChangeSceneOrOverlays },
+                canHideOverlay = { configuration.canChangeSceneOrOverlays },
+                canReplaceOverlay = { _, _ -> configuration.canChangeSceneOrOverlays },
                 enableInterruptions = enableInterruptions,
             )
         }
@@ -385,6 +402,21 @@ fun SystemUi(
                         .forEach { (scene, name) ->
                             Button(onClick = { onChangeScene(scene) }) { Text(name) }
                         }
+
+                    listOf(Overlays.Notifications to "NS", Overlays.QuickSettings to "QSS")
+                        .forEach { (overlay, name) ->
+                            Button(
+                                onClick = {
+                                    if (layoutState.currentOverlays.contains(overlay)) {
+                                        layoutState.hideOverlay(overlay, coroutineScope)
+                                    } else {
+                                        layoutState.showOverlay(overlay, coroutineScope)
+                                    }
+                                }
+                            ) {
+                                Text(name)
+                            }
+                        }
                 }
             }
         }
@@ -430,8 +462,11 @@ fun SystemUi(
                             // Make this layout accessible to UiAutomator.
                             Modifier.semantics { testTagsAsResourceId = true }
                                 .testTag("SystemUiSceneTransitionLayout"),
+                        swipeSourceDetector =
+                            if (configuration.enableOverlays) HorizontalHalfScreenDetector
+                            else DefaultEdgeDetector,
                     ) {
-                        scene(Scenes.Launcher, Launcher.userActions(shadeScene)) {
+                        scene(Scenes.Launcher, Launcher.userActions(shadeScene, configuration)) {
                             Launcher(launcherColumns)
                         }
                         scene(
@@ -446,6 +481,7 @@ fun SystemUi(
                                         ToggleableState.Indeterminate ->
                                             configuration.interactiveNotifications
                                     },
+                                configuration,
                             ),
                         ) {
                             Lockscreen(
@@ -465,7 +501,11 @@ fun SystemUi(
                         }
                         scene(
                             Scenes.SplitLockscreen,
-                            SplitLockscreen.userActions(isLockscreenDismissable, shadeScene),
+                            SplitLockscreen.userActions(
+                                isLockscreenDismissable,
+                                shadeScene,
+                                configuration,
+                            ),
                         ) {
                             SplitLockscreen(
                                 notificationList = {
@@ -554,8 +594,30 @@ fun SystemUi(
                                 ::onPowerButtonClicked,
                             )
                         }
+
                         scene(Scenes.AlwaysOnDisplay) {
                             AlwaysOnDisplay(Modifier.clickable { onChangeScene(lockscreenScene) })
+                        }
+
+                        overlay(
+                            Overlays.Notifications,
+                            userActions = NotificationShade.UserActions,
+                            alignment = Alignment.TopEnd,
+                        ) {
+                            NotificationShade(
+                                notificationList = {
+                                    NotificationList(
+                                        maxNotificationCount = configuration.notificationsInShade
+                                    )
+                                }
+                            )
+                        }
+                        overlay(
+                            Overlays.QuickSettings,
+                            userActions = QuickSettingsShade.UserActions,
+                            alignment = Alignment.TopStart,
+                        ) {
+                            QuickSettingsShade(mediaPlayer)
                         }
                     }
                 }
