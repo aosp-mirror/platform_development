@@ -108,11 +108,13 @@ import {
           *ngIf="showTraceCollectionConfig()"
           class="trace-collection-config">
           <mat-list>
-            <mat-list-item>
+            <mat-list-item class="selected-device">
               <mat-icon matListIcon>smartphone</mat-icon>
               <p matLine>
                 {{ getSelectedDevice()}}
+              </p>
 
+              <div class="device-actions">
                 <button
                   color="primary"
                   class="change-btn"
@@ -129,7 +131,7 @@ import {
                   [disabled]="adbConnection.isTracingState() || isLoadOperationInProgress()">
                   Fetch traces from last session
                 </button>
-              </p>
+              </div>
             </mat-list-item>
           </mat-list>
 
@@ -232,6 +234,12 @@ import {
       .retry-btn,
       .fetch-btn {
         margin-left: 5px;
+      }
+      .fetch-btn {
+        margin-top: 5px;
+      }
+      .selected-device {
+        height: fit-content !important;
       }
       .mat-card.collect-card {
         display: flex;
