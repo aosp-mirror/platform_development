@@ -319,8 +319,8 @@ void ProtobufIRReader::ReadElfObjects(const abi_dump::TranslationUnit &tu) {
 }
 
 std::unique_ptr<IRReader> CreateProtobufIRReader(
-    const std::set<std::string> *exported_headers) {
-  return std::make_unique<ProtobufIRReader>(exported_headers);
+    std::unique_ptr<ModuleIR> module_ir) {
+  return std::make_unique<ProtobufIRReader>(std::move(module_ir));
 }
 
 

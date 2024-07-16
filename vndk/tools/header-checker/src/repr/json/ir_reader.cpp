@@ -445,8 +445,8 @@ void JsonIRReader::ReadElfObjects(const JsonObjectRef &tu) {
 }
 
 std::unique_ptr<IRReader> CreateJsonIRReader(
-    const std::set<std::string> *exported_headers) {
-  return std::make_unique<JsonIRReader>(exported_headers);
+    std::unique_ptr<ModuleIR> module_ir) {
+  return std::make_unique<JsonIRReader>(std::move(module_ir));
 }
 
 
