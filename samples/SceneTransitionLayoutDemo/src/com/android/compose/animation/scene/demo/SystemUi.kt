@@ -279,7 +279,27 @@ fun SystemUi(
 
     val sceneSaver =
         remember(lockscreenScene, shadeScene) { Scenes.SceneSaver(lockscreenScene, shadeScene) }
-    val canChangeScene = remember(configuration) { { _: SceneKey -> configuration.canChangeScene } }
+    fun maybeUpdateLockscreenDismissed(scene: SceneKey) {
+        when (scene) {
+            Scenes.Launcher -> isLockscreenDismissed = true
+            Scenes.Lockscreen,
+            Scenes.SplitLockscreen -> isLockscreenDismissed = false
+            else -> {}
+        }
+    }
+
+    val canChangeScene =
+        remember(configuration) {
+            { scene: SceneKey ->
+                if (configuration.canChangeScene) {
+                    maybeUpdateLockscreenDismissed(scene)
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+
     val stateSaver =
         remember(sceneSaver, transitions, canChangeScene, enableInterruptions) {
             MutableSceneTransitionLayoutSaver(
@@ -310,12 +330,7 @@ fun SystemUi(
 
     val coroutineScope = rememberCoroutineScope()
     fun onChangeScene(scene: SceneKey) {
-        when (scene) {
-            Scenes.Launcher -> isLockscreenDismissed = true
-            Scenes.Lockscreen,
-            Scenes.SplitLockscreen -> isLockscreenDismissed = false
-            else -> {}
-        }
+        maybeUpdateLockscreenDismissed(scene)
 
         // Enforce that we are going to the right shade/lockscreen here depending on the windows
         // size class.
