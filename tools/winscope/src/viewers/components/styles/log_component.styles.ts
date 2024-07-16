@@ -117,6 +117,10 @@ export const logComponentStyles = `
     font-size: 12px;
   }
 
+  .title-section .filters {
+    margin-top: 8px;
+  }
+
   .transition-id {
     flex: 1;
   }
@@ -178,5 +182,13 @@ export const logComponentStyles = `
   }
   .input-details {
     flex: 4;
+  }
+  .entry .input-windows {
+    display: none;
+    flex: 0;
+  }
+  .filters .input-windows {
+    display: flex;
+    flex: 10;
   }
 `;
