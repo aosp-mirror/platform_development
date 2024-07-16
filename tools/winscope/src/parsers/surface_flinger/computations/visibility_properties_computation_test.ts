@@ -493,7 +493,7 @@ describe('VisibilityPropertiesComputation', () => {
     ]);
   });
 
-  it('adds occludedBy layers and updates isVisible', () => {
+  it('adds occludedBy layers and updates isVisible and visibilityReason', () => {
     const hierarchyRoot = new HierarchyTreeBuilder()
       .setId('LayerTraceEntry')
       .setName('root')
@@ -588,9 +588,7 @@ describe('VisibilityPropertiesComputation', () => {
     expect(
       invisibleLayer.getEagerPropertyByName('partiallyOccludedBy')?.getValue(),
     ).toEqual([]);
-    expect(
-      invisibleLayer.getEagerPropertyByName('visibilityReason'),
-    ).toBeUndefined();
+    expect(getVisibilityReasons(invisibleLayer)).toEqual(['occluded']);
 
     expect(
       assertDefined(
@@ -745,9 +743,7 @@ describe('VisibilityPropertiesComputation', () => {
         ?.getChildByName('0')
         ?.getValue(),
     ).toEqual('3 coveringLayer');
-    expect(
-      occludedLayer.getEagerPropertyByName('visibilityReason'),
-    ).toBeUndefined();
+    expect(getVisibilityReasons(occludedLayer)).toEqual(['occluded']);
 
     expect(
       assertDefined(
