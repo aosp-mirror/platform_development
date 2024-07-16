@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/function_utils';
-import {Timestamp} from 'common/time';
-import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {ViewerEvents} from 'viewers/common/viewer_events';
+import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
-import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
@@ -35,53 +33,24 @@ class ViewerProtoLog implements Viewer {
   private readonly htmlElement: HTMLElement;
   private readonly presenter: Presenter;
   private readonly view: View;
-  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
 
   constructor(trace: Trace<PropertyTreeNode>, traces: Traces) {
     this.trace = trace;
     this.htmlElement = document.createElement('viewer-protolog');
-
-    this.presenter = new Presenter(trace, (data: UiData) => {
+    const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
-    });
-
-    this.htmlElement.addEventListener(
-      Events.LogLevelsFilterChanged,
-      (event) => {
-        this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
-      },
+    };
+    this.presenter = new Presenter(
+      trace,
+      notifyViewCallback as NotifyLogViewCallbackType,
     );
-    this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
-      this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(
-      Events.SourceFilesFilterChanged,
-      (event) => {
-        this.presenter.onSourceFilesFilterChanged(
-          (event as CustomEvent).detail,
-        );
-      },
-    );
-    this.htmlElement.addEventListener(
-      Events.SearchStringFilterChanged,
-      (event) => {
-        this.presenter.onSearchStringFilterChanged(
-          (event as CustomEvent).detail,
-        );
-      },
-    );
-    this.htmlElement.addEventListener(Events.MessageClicked, (event) => {
-      this.presenter.onMessageClicked((event as CustomEvent).detail);
-    });
-    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      this.propagateTimestamp((event as CustomEvent).detail);
-    });
+    this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'ProtoLog',
+      TRACE_INFO[TraceType.PROTO_LOG].name,
     );
   }
 
@@ -90,12 +59,7 @@ class ViewerProtoLog implements Viewer {
   }
 
   setEmitEvent(callback: EmitEvent) {
-    this.emitAppEvent = callback;
-  }
-
-  async propagateTimestamp(timestampNode: PropertyTreeNode) {
-    const timestamp: Timestamp = timestampNode.getValue();
-    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
+    this.presenter.setEmitEvent(callback);
   }
 
   getViews(): View[] {

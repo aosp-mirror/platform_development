@@ -21,6 +21,7 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
+import {CannotVisualizeAllTraces, NoValidFiles} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -126,8 +127,12 @@ export class Mediator {
 
     await event.visit(WinscopeEventType.APP_FILES_COLLECTED, async (event) => {
       this.currentProgressListener = this.collectTracesComponent;
-      await this.loadFiles(event.files, FilesSource.COLLECTED);
-      await this.loadViewers();
+      if (event.files.length > 0) {
+        await this.loadFiles(event.files, FilesSource.COLLECTED);
+        await this.loadViewers();
+      } else {
+        this.userNotificationsListener.onNotifications([new NoValidFiles()]);
+      }
     });
 
     await event.visit(WinscopeEventType.APP_RESET_REQUEST, async () => {
@@ -191,10 +196,11 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.TABBED_VIEW_SWITCHED, async (event) => {
-      this.timelineData.setActiveTrace(event.newFocusedView.traces[0]);
-      await this.timelineComponent?.onWinscopeEvent(
-        new ActiveTraceChanged(event.newFocusedView.traces[0]),
-      );
+      if (this.timelineData.trySetActiveTrace(event.newFocusedView.traces[0])) {
+        await this.timelineComponent?.onWinscopeEvent(
+          new ActiveTraceChanged(event.newFocusedView.traces[0]),
+        );
+      }
       this.focusedTabView = event.newFocusedView;
       await this.propagateTracePosition(
         this.timelineData.getCurrentPosition(),
@@ -220,7 +226,7 @@ export class Mediator {
     );
 
     await event.visit(WinscopeEventType.ACTIVE_TRACE_CHANGED, async (event) => {
-      this.timelineData.setActiveTrace(event.trace);
+      this.timelineData.trySetActiveTrace(event.trace);
       await this.timelineComponent?.onWinscopeEvent(event);
     });
 
@@ -336,7 +342,7 @@ export class Mediator {
 
     this.tracePipeline.filterTracesWithoutVisualization();
     await this.tracePipeline.buildTraces();
-    this.currentProgressListener?.onOperationFinished();
+    this.currentProgressListener?.onOperationFinished(true);
 
     this.currentProgressListener?.onProgressUpdate(
       'Initializing UI...',
@@ -347,11 +353,19 @@ export class Mediator {
     // allow the UI to update before making the main thread very busy
     await TimeUtils.sleepMs(10);
 
-    await this.timelineData.initialize(
-      this.tracePipeline.getTraces(),
-      await this.tracePipeline.getScreenRecordingVideo(),
-      this.tracePipeline.getTimestampConverter(),
-    );
+    try {
+      await this.timelineData.initialize(
+        this.tracePipeline.getTraces(),
+        await this.tracePipeline.getScreenRecordingVideo(),
+        this.tracePipeline.getTimestampConverter(),
+      );
+    } catch {
+      this.currentProgressListener?.onOperationFinished(false);
+      this.userNotificationsListener.onNotifications([
+        new CannotVisualizeAllTraces('Failed to initialize timeline data'),
+      ]);
+      return;
+    }
 
     this.viewers = new ViewerFactory().createViewers(
       this.tracePipeline.getTraces(),
@@ -372,6 +386,9 @@ export class Mediator {
     // The viewers initialization is triggered by sending them a "trace position update".
     await this.propagateTracePosition(initialPosition, true);
 
+    this.focusedTabView = this.viewers
+      .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)
+      ?.getViews()[0];
     this.areViewersLoaded = true;
 
     // Notify app component (i.e. render viewers), only after all viewers have been initialized

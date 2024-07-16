@@ -528,7 +528,11 @@ public final class VdmService extends Hilt_VdmService {
         mPendingRemoteIntent = null;
         mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_HOME;
         mRemoteIo.sendMessage(RemoteEvent.newBuilder()
-                .setStartStreaming(StartStreaming.newBuilder().setHomeEnabled(true)).build());
+                .setStartStreaming(StartStreaming.newBuilder()
+                        .setHomeEnabled(true)
+                        .setRotationSupported(mPreferenceController.getBoolean(
+                                R.string.internal_pref_display_rotation_supported)))
+                .build());
     }
 
     void startMirroring() {
@@ -536,7 +540,10 @@ public final class VdmService extends Hilt_VdmService {
         mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_MIRROR;
         mRemoteIo.sendMessage(
                 RemoteEvent.newBuilder()
-                        .setStartStreaming(StartStreaming.newBuilder().setHomeEnabled(true))
+                        .setStartStreaming(StartStreaming.newBuilder()
+                                .setHomeEnabled(true)
+                                .setRotationSupported(mPreferenceController.getBoolean(
+                                        R.string.internal_pref_display_rotation_supported)))
                         .build());
     }
 
@@ -545,7 +552,11 @@ public final class VdmService extends Hilt_VdmService {
         mPendingRemoteIntent.addFlags(
                 Intent.FLAG_ACTIVITY_MULTIPLE_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         mRemoteIo.sendMessage(
-                RemoteEvent.newBuilder().setStartStreaming(StartStreaming.newBuilder()).build());
+                RemoteEvent.newBuilder()
+                        .setStartStreaming(StartStreaming.newBuilder()
+                                .setRotationSupported(mPreferenceController.getBoolean(
+                                        R.string.internal_pref_display_rotation_supported)))
+                        .build());
     }
 
     void startIntentOnDisplayIndex(Intent intent, int displayIndex) {

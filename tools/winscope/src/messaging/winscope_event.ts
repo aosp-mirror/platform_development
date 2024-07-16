@@ -171,7 +171,7 @@ export class TracePositionUpdate extends WinscopeEvent {
   }
 
   static fromTraceEntry(
-    entry: TraceEntry<object>,
+    entry: TraceEntry<any>,
     updateTimeline = false,
   ): TracePositionUpdate {
     const position = TracePosition.fromTraceEntry(entry);

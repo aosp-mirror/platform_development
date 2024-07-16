@@ -70,6 +70,10 @@ export class Traces {
     });
   }
 
+  hasTrace(trace: Trace<{}>) {
+    return this.traces.has(trace);
+  }
+
   sliceTime(start?: Timestamp, end?: Timestamp): Traces {
     const slice = new Traces();
     this.traces.forEach((trace) => {

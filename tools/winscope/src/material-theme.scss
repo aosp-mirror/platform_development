@@ -98,6 +98,7 @@ body:not(.dark-mode) {
   --slider-border-color: #8AB4F8;
   --trace-view-background-color: #E4E4E4;
   --warning-background-color: #{mat.get-color-from-palette(mat.$amber-palette, 50)};
+  --error-background-color: #{mat.get-color-from-palette(mat.$red-palette, 50)};
   --icon-accent-color: #d9d9d9;
 }
 
@@ -123,5 +124,6 @@ body.dark-mode {
   --slider-border-color: #E8F0FE;
   --trace-view-background-color: #383838;
   --warning-background-color: #{mat.get-color-from-palette(mat.$brown-palette, 700)};
+  --error-background-color: #641212;
   --icon-accent-color: #969696;
 }

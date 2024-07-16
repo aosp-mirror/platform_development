@@ -808,7 +808,7 @@ class TypeDefinition {
 
 class ModuleIR {
  public:
-  ModuleIR(const std::set<std::string> *exported_headers)
+  ModuleIR(const std::set<std::string> *exported_headers = nullptr)
       : exported_headers_(exported_headers) {}
 
   const std::string &GetCompilationUnitPath() const {

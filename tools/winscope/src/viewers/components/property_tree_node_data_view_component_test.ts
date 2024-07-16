@@ -21,10 +21,10 @@ import {
 import {MatButtonModule} from '@angular/material/button';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {Timestamp} from 'common/time';
 import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TIMESTAMP_NODE_FORMATTER} from 'trace/tree_node/formatters';
-import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {PropertyTreeNodeDataViewComponent} from './property_tree_node_data_view_component';
@@ -50,9 +50,9 @@ describe('PropertyTreeNodeDataViewComponent', () => {
   });
 
   it('can emit timestamp', () => {
-    let timestamp: PropertyTreeNode | undefined;
+    let timestamp: Timestamp | undefined;
     htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
-      timestamp = (event as CustomEvent).detail;
+      timestamp = (event as CustomEvent).detail.timestamp;
     });
     const node = UiPropertyTreeNode.from(
       new PropertyTreeBuilder()
@@ -73,7 +73,7 @@ describe('PropertyTreeNodeDataViewComponent', () => {
     timestampButton.click();
     fixture.detectChanges();
 
-    expect(assertDefined(timestamp).formattedValue()).toEqual(
+    expect(assertDefined(timestamp).format()).toEqual(
       '2022-07-29, 20:34:49.102',
     );
   });

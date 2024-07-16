@@ -182,8 +182,8 @@ Each input screen has a "Back", "Home" and "Forward" buttons.
 -   **Remote** allows the host device to act as a pointer that controls the
     mouse movement on the focused display.
 
--   **Navigation** shows an on-screen D-Pad and touchpad for navigating the
-    activity on the focused display.
+-   **Navigation** shows an on-screen D-Pad, rotary and touchpad for navigating
+    the activity on the focused display.
 
 -   **Keyboard** shows the host device's on-screen keyboard and sends any key
     events to the activity on the focused display.
@@ -346,10 +346,10 @@ device: System -> Language and input -> Physical keyboard.
 
 ### Input
 
-The input menu button enables **on-screen D-Pad and touchpad** for navigating
-the activity on the focused display. The focused display is indicated by the
-frame around its header whenever there are more than one displays. The display
-focus is based on user interaction.
+The input menu button enables **on-screen D-Pad, rotary and touchpad** for
+navigating the activity on the focused display. The focused display is indicated
+by the frame around its header whenever there are more than one displays. The
+display focus is based on user interaction.
 
 In addition, any input events generated from an **externally connected
 keyboard** are forwarded to the activity streamed on the focused display.
@@ -397,7 +397,15 @@ display, if the mouse pointer is currently positioned on a streamed display.
 
 ## SDK Version
 
+### Beyond Android 15
+
+-   Added support for virtual display rotation.
+
+-   Added support for virtual rotary input.
+
 ### Android 15 / Vanilla Ice Cream / SDK level 35
+
+-   Added support for virtual stylus input.
 
 -   Added support for cross-device clipboard.
 

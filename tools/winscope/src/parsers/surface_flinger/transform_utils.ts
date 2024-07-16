@@ -139,7 +139,7 @@ export class TransformUtils {
     }
 
     if (typeFlags.length === 0) {
-      throw Error(`Unknown transform type ${type}`);
+      throw TransformUtils.makeUnknownTransformTypeError(type);
     }
     return typeFlags.join('|');
   }
@@ -226,7 +226,11 @@ export class TransformUtils {
       });
     }
 
-    throw new Error(`Unknown transform type ${type}`);
+    throw TransformUtils.makeUnknownTransformTypeError(type);
+  }
+
+  static makeUnknownTransformTypeError(type: TransformType): Error {
+    return new Error(`Unknown transform type ${type} found in SF trace entry`);
   }
 
   static isSimpleTransform(type: TransformType): boolean {

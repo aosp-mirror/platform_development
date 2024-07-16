@@ -96,6 +96,7 @@ message CameraFrame {
 
 message StartStreaming {
   bool home_enabled = 1;
+  bool rotation_supported = 2;
 }
 
 message StopStreaming {
@@ -122,6 +123,7 @@ enum InputDeviceType {
   DEVICE_TYPE_NAVIGATION_TOUCHPAD = 3;
   DEVICE_TYPE_TOUCHSCREEN = 4;
   DEVICE_TYPE_KEYBOARD = 5;
+  DEVICE_TYPE_ROTARY_ENCODER = 6;
 }
 
 message RemoteInputEvent {

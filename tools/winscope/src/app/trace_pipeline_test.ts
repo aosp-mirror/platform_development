@@ -21,7 +21,7 @@ import {UserWarning} from 'messaging/user_warning';
 import {
   CorruptedArchive,
   InvalidPerfettoTrace,
-  NoInputFiles,
+  NoValidFiles,
   TraceOverridden,
   UnsupportedFileFormat,
 } from 'messaging/user_warnings';
@@ -217,7 +217,7 @@ describe('TracePipeline', () => {
 
     await expectLoadResult(0, [
       new CorruptedArchive(corruptedArchive),
-      new NoInputFiles(),
+      new NoValidFiles(),
     ]);
   });
 
@@ -252,6 +252,8 @@ describe('TracePipeline', () => {
         'Perfetto trace has no Transactions entries',
         'Perfetto trace has no Transitions entries',
         'Perfetto trace has no ViewCapture windows',
+        'Perfetto trace has no Motion Events entries',
+        'Perfetto trace has no Key Events entries',
       ]),
     ]);
   });
