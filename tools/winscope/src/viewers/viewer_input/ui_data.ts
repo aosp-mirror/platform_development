@@ -21,6 +21,7 @@ import {
   LogEntry,
   LogField,
   LogFieldType,
+  LogFilter,
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
@@ -29,6 +30,7 @@ export class UiData implements UiDataLog {
   constructor(
     public headers: LogFieldType[],
     public entries: LogEntry[],
+    public filters: LogFilter[],
     public selectedIndex: undefined | number,
     public scrollToIndex: undefined | number,
     public propertiesTree: undefined | UiPropertyTreeNode,
@@ -39,7 +41,7 @@ export class UiData implements UiDataLog {
   dispatchPropertiesTree: UiPropertyTreeNode | undefined;
 
   static createEmpty(): UiData {
-    return new UiData([], [], undefined, undefined, undefined);
+    return new UiData([], [], [], undefined, undefined, undefined);
   }
 }
 
