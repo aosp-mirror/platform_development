@@ -21,24 +21,39 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
-import {LogFieldType, UiDataLog} from 'viewers/common/ui_data_log';
+import {
+  LogFieldType,
+  LogFieldValue,
+  UiDataLog,
+} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class PresenterInputTest extends AbstractLogViewerPresenterTest {
   private trace: Trace<PropertyTreeNode> | undefined;
+  private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
+  private layerIdToName: Array<{id: number; name: string}> = [
+    {id: 0, name: 'win-zero-not-98'},
+    {id: 212, name: 'win-212'},
+    {id: 64, name: 'win-64'},
+    {id: 82, name: 'win-82'},
+    {id: 75, name: 'win-75'},
+    // The layer name for window with id 98 is omitted to test incomplete mapping.
+  ];
 
   override readonly shouldExecuteHeaderTests = true;
-  override readonly shouldExecuteFilterTests = false;
+  override readonly shouldExecuteFilterTests = true;
   override readonly shouldExecuteCurrentIndexTests = false;
   override readonly shouldExecutePropertiesTests = true;
 
@@ -46,6 +61,67 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
   override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 2;
   override readonly logEntryClickIndex = 3;
+  override readonly expectedInitialFilterOptions = new Map<
+    LogFieldType,
+    string[] | number
+  >([
+    [
+      LogFieldType.INPUT_DISPATCH_WINDOWS,
+      [
+        wrappedName('win-212'),
+        wrappedName('win-64'),
+        wrappedName('win-82'),
+        wrappedName('win-75'),
+        wrappedName('win-zero-not-98'),
+        wrappedName('98'),
+      ],
+    ],
+  ]);
+  override readonly filterValuesToSet = new Map<
+    LogFieldType,
+    Array<string | string[]>
+  >([
+    [
+      LogFieldType.INPUT_DISPATCH_WINDOWS,
+      [
+        // Case 1: No filter.
+        [],
+        // Case 2: The second entry is dispatched only to window '98'. Also ensure
+        // that this does not match events dispatched to window 'win-zero-not-98'.
+        [wrappedName('98')],
+        // Case 3: Events dispatched to 64 are also dispatched to other windows.
+        [wrappedName('win-64')],
+        // Case 4: Multiple filters that match all events.
+        [wrappedName('win-zero-not-98'), wrappedName('98')],
+      ],
+    ],
+  ]);
+  override readonly expectedFieldValuesAfterFilter = new Map<
+    LogFieldType,
+    Array<LogFieldValue[] | number>
+  >([
+    [
+      LogFieldType.INPUT_DISPATCH_WINDOWS,
+      [
+        // Case 1
+        this.totalOutputEntries,
+        // Case 2
+        [wrappedName('98')],
+        // Case 3
+        [
+          [
+            wrappedName('win-212'),
+            wrappedName('win-64'),
+            wrappedName('win-82'),
+            wrappedName('win-75'),
+            wrappedName('win-zero-not-98'),
+          ].join(', '),
+        ],
+        // Case 4
+        this.totalOutputEntries,
+      ],
+    ],
+  ]);
 
   override async setUpTestEnvironment(): Promise<void> {
     const parser = (await UnitTestUtils.getTracesParser([
@@ -55,6 +131,15 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
     this.trace = new TraceBuilder<PropertyTreeNode>()
       .setType(TraceType.INPUT_EVENT_MERGED)
       .setParser(parser)
+      .build();
+
+    this.surfaceFlingerTrace = new TraceBuilder<HierarchyTreeNode>()
+      .setType(TraceType.SURFACE_FLINGER)
+      .setEntries([])
+      .setParserCustomQueryResult(
+        CustomQueryType.SF_LAYERS_ID_AND_NAME,
+        this.layerIdToName,
+      )
       .build();
 
     this.positionUpdate = TracePositionUpdate.fromTraceEntry(
@@ -77,9 +162,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
   override async createPresenter(
     callback: NotifyLogViewCallbackType,
   ): Promise<Presenter> {
-    const trace = assertDefined(this.trace);
     const traces = new Traces();
-    traces.addTrace(trace);
+    traces.addTrace(assertDefined(this.trace));
+    traces.addTrace(assertDefined(this.surfaceFlingerTrace));
     const presenter = PresenterInputTest.createPresenterWithTraces(
       traces,
       callback,
@@ -137,6 +222,16 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
         type: LogFieldType.INPUT_EVENT_DETAILS,
         value: '[0: (431, 624)]',
       },
+      {
+        type: LogFieldType.INPUT_DISPATCH_WINDOWS,
+        value: [
+          wrappedName('win-212'),
+          wrappedName('win-64'),
+          wrappedName('win-82'),
+          wrappedName('win-75'),
+          wrappedName('win-zero-not-98'),
+        ].join(', '),
+      },
     ];
     expectedFields.forEach((field) => {
       expect(curEntry.fields).toContain(field);
@@ -159,6 +254,12 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
         ?.getChildByName('windowId')
         ?.getValue(),
     ).toEqual(212n);
+    expect(
+      dispatchProperties
+        .getChildByName('0')
+        ?.getChildByName('windowName')
+        ?.getValue(),
+    ).toEqual(wrappedName('win-212'));
   }
 
   private expectEventPresented(
@@ -319,6 +420,10 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
       });
     });
   }
+}
+
+function wrappedName(name: string): string {
+  return `\u{200C}${name}\u{200C}`;
 }
 
 describe('PresenterInput', async () => {

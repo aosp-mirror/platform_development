@@ -147,6 +147,16 @@ export class LogPresenter {
     }
   }
 
+  private static shouldFilterBySubstring(type: LogFieldType) {
+    switch (type) {
+      case LogFieldType.FLAGS:
+      case LogFieldType.INPUT_DISPATCH_WINDOWS:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   private updateFilteredEntries() {
     this.filteredEntries = this.allEntries.filter((entry) => {
       for (const [filterType, filterValue] of this.filterValues) {
@@ -160,7 +170,10 @@ export class LogPresenter {
 
         const entryValueStr = entryValue.toString();
 
-        if (Array.isArray(filterValue) && filterType === LogFieldType.FLAGS) {
+        if (
+          Array.isArray(filterValue) &&
+          LogPresenter.shouldFilterBySubstring(filterType)
+        ) {
           if (!filterValue.some((flag) => entryValueStr.includes(flag))) {
             return false;
           }
