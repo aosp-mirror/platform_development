@@ -69,6 +69,13 @@ export class VisibilityPropertiesComputation implements Computation {
             isVisible,
           ),
         );
+        layer.addEagerProperty(
+          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeCalculatedProperty(
+            layer.id,
+            'isHiddenByPolicy',
+            this.isHiddenByPolicy(layer),
+          ),
+        );
       } else {
         const displaySize = this.getDisplaySize(layer);
 
