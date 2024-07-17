@@ -248,18 +248,19 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     const uiData = uiDataLog as UiData;
     const dispatchProperties = assertDefined(uiData.dispatchPropertiesTree);
     expect(dispatchProperties.getAllChildren().length).toEqual(5);
+
     expect(
       dispatchProperties
         .getChildByName('0')
         ?.getChildByName('windowId')
-        ?.getValue(),
-    ).toEqual(212n);
+        ?.getDisplayName(),
+    ).toEqual('TargetWindow');
     expect(
       dispatchProperties
         .getChildByName('0')
-        ?.getChildByName('windowName')
-        ?.getValue(),
-    ).toEqual(wrappedName('win-212'));
+        ?.getChildByName('windowId')
+        ?.formattedValue(),
+    ).toEqual('212 - win-212');
   }
 
   private expectEventPresented(
