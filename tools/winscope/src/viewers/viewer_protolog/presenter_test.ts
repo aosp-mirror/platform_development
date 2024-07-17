@@ -29,8 +29,9 @@ import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_pres
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {LogFieldType, LogFieldValue} from 'viewers/common/ui_data_log';
 import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
-class PresenterProtologTest extends AbstractLogViewerPresenterTest {
+class PresenterProtologTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -195,7 +196,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
       .setEntries([])
@@ -204,7 +205,7 @@ class PresenterProtologTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const presenter = new Presenter(assertDefined(this.trace), callback);
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
