@@ -40,19 +40,11 @@ impl CrateCollection {
     pub fn new<P: Into<PathBuf>>(repo_root: P) -> CrateCollection {
         CrateCollection { crates: BTreeMap::new(), repo_root: repo_root.into() }
     }
-    pub fn add_from(
-        &mut self,
-        path: &impl AsRef<Path>,
-        pseudo_crate: Option<&impl AsRef<Path>>,
-    ) -> Result<()> {
+    pub fn add_from(&mut self, path: &impl AsRef<Path>) -> Result<()> {
         for entry_or_err in WalkDir::new(self.repo_root.join(path)) {
             let entry = entry_or_err?;
             if entry.file_name() == "Cargo.toml" {
-                match Crate::from(
-                    &entry.path(),
-                    &self.repo_root.as_path(),
-                    pseudo_crate.map(|p| p.as_ref()),
-                ) {
+                match Crate::from(&entry.path(), &self.repo_root.as_path()) {
                     Ok(krate) => self.crates.insert_or_error(
                         NameAndVersion::new(krate.name().to_string(), krate.version().clone()),
                         krate,

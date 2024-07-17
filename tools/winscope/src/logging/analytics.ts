@@ -21,17 +21,18 @@ import {TraceType} from 'trace/trace_type';
 
 /* eslint-disable no-undef */
 export class Analytics {
-  private static GLOBAL_EXCEPTION = 'global_exception';
+  private static BUGANIZER_OPENED = 'buganizer_opened';
   private static CROSS_TOOL_SYNC = 'cross_tool_sync';
   private static DARK_MODE_ENABLED = 'dark_mode_enabled';
   private static DOCUMENTATION_OPENED = 'documentation_opened';
-  private static BUGANIZER_OPENED = 'buganizer_opened';
   private static EXPANDED_TIMELINE_OPENED = 'expanded_timeline_opened';
+  private static GLOBAL_EXCEPTION = 'global_exception';
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
   private static RECT_SETTINGS = 'rect_settings';
   private static REFRESH_DUMPS = 'refresh_dumps';
+  private static TIME_BOOKMARK = 'time_bookmark';
   private static TIME_COPIED = 'time_copied';
   private static TIME_INPUT = 'time_input';
   private static TRACE_TAB_SWITCHED = 'trace_tab_switched';
@@ -130,6 +131,10 @@ export class Analytics {
       } as Gtag.CustomParams);
     }
 
+    static logTimeBookmark() {
+      Analytics.doLogEvent(Analytics.TIME_BOOKMARK);
+    }
+
     static logTraceTimelineDeselected(type: string) {
       Analytics.doLogEvent(Analytics.TRACE_TIMELINE_DESELECTED, {
         type,
@@ -137,7 +142,7 @@ export class Analytics {
     }
 
     static logZoom(
-      type: 'scroll' | 'button' | 'reset',
+      type: 'scroll' | 'button' | 'reset' | 'key',
       component: 'rects' | 'timeline',
       direction?: 'in' | 'out',
     ) {

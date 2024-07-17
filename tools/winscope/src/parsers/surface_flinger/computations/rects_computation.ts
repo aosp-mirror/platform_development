@@ -16,12 +16,28 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {Rect} from 'common/rect';
-import {Transform} from 'parsers/surface_flinger/transform_utils';
+import {
+  Transform,
+  TransformUtils,
+} from 'parsers/surface_flinger/transform_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+
+function getDisplayWidthAndHeight(display: PropertyTreeNode): [number, number] {
+  const displaySize = assertDefined(display.getChildByName('size'));
+  const w = assertDefined(displaySize.getChildByName('w')?.getValue());
+  const h = assertDefined(displaySize.getChildByName('h')?.getValue());
+  const transformType =
+    display.getChildByName('transform')?.getChildByName('type')?.getValue() ??
+    0;
+  const typeFlags = TransformUtils.getTypeFlags(transformType);
+  const isRotated =
+    typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
+  return [isRotated ? h : w, isRotated ? w : h];
+}
 
 class RectSfFactory {
   makeDisplayRects(displays: readonly PropertyTreeNode[]): TraceRect[] {
@@ -30,7 +46,15 @@ class RectSfFactory {
       const layerStackSpaceRect = assertDefined(
         display.getChildByName('layerStackSpaceRect'),
       );
-      const displayRect = Rect.from(layerStackSpaceRect);
+
+      let displayRect = Rect.from(layerStackSpaceRect);
+      const isEmptyLayerStackRect = displayRect.isEmpty();
+
+      if (isEmptyLayerStackRect) {
+        const [w, h] = getDisplayWidthAndHeight(display);
+        displayRect = new Rect(0, 0, w, h);
+      }
+
       const layerStack = assertDefined(
         display.getChildByName('layerStack'),
       ).getValue();
@@ -117,15 +141,37 @@ class RectSfFactory {
 export class RectsComputation implements Computation {
   private root: HierarchyTreeNode | undefined;
   private readonly rectsFactory = new RectSfFactory();
+  private readonly DEFAULT_INVALID_BOUNDS = new Rect(
+    -50000,
+    -50000,
+    100000,
+    100000,
+  );
 
   setRoot(value: HierarchyTreeNode): this {
     this.root = value;
     return this;
   }
 
+  // synced with getMaxDisplayBounds() in main/frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+  getInvalidBoundsFromDisplays(
+    displays: readonly PropertyTreeNode[],
+  ): Rect | undefined {
+    if (displays.length === 0) return undefined;
+    const [maxX, maxY] = displays.reduce(
+      (sizes, display) => {
+        const [w, h] = getDisplayWidthAndHeight(display);
+        return [Math.max(sizes[0], w), Math.max(sizes[1], h)];
+      },
+      [0, 0],
+    );
+    const [invalidX, invalidY] = [maxX * 10, maxY * 10];
+    return new Rect(-invalidX, -invalidY, invalidX * 2, invalidY * 2);
+  }
+
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in SF rects computation');
     }
     const groupIdToAbsoluteZ = new Map<number, number>();
 
@@ -134,11 +180,17 @@ export class RectsComputation implements Computation {
     const displayRects = this.rectsFactory.makeDisplayRects(displays);
     this.root.setRects(displayRects);
 
-    displayRects.forEach((displayRect) =>
-      groupIdToAbsoluteZ.set(displayRect.groupId, 1),
-    );
+    displayRects.forEach((displayRect, i) => {
+      groupIdToAbsoluteZ.set(displayRect.groupId, 1);
+    });
 
-    const layersWithRects = this.extractLayersWithRects(this.root);
+    const invalidBoundsFromDisplays =
+      this.getInvalidBoundsFromDisplays(displays);
+
+    const layersWithRects = this.extractLayersWithRects(
+      this.root,
+      invalidBoundsFromDisplays,
+    );
     layersWithRects.sort(this.compareLayerZ);
 
     for (let i = layersWithRects.length - 1; i > -1; i--) {
@@ -159,30 +211,41 @@ export class RectsComputation implements Computation {
 
   private extractLayersWithRects(
     hierarchyRoot: HierarchyTreeNode,
+    invalidBoundsFromDisplays: Rect | undefined,
   ): HierarchyTreeNode[] {
-    return hierarchyRoot.filterDfs(this.hasLayerRect);
+    return hierarchyRoot.filterDfs((node) =>
+      this.hasLayerRect(node, invalidBoundsFromDisplays),
+    );
   }
 
-  private hasLayerRect(node: HierarchyTreeNode): boolean {
+  private hasLayerRect(
+    node: HierarchyTreeNode,
+    invalidBoundsFromDisplays: Rect | undefined,
+  ): boolean {
     if (node.isRoot()) return false;
 
     const isVisible = node
       .getEagerPropertyByName('isComputedVisible')
       ?.getValue();
     if (isVisible === undefined) {
-      throw Error('Visibility has not been computed');
+      throw new Error(
+        'SF rects computation attempted before visibility computation',
+      );
     }
 
-    const occludedBy = node.getEagerPropertyByName('occludedBy');
-    if (
-      !isVisible &&
-      (occludedBy === undefined || occludedBy.getAllChildren().length === 0)
-    ) {
-      return false;
-    }
+    const screenBounds = node.getEagerPropertyByName('screenBounds');
+    if (!screenBounds) return false;
 
-    const bounds = node.getEagerPropertyByName('bounds');
-    if (!bounds) return false;
+    if (screenBounds && !isVisible) {
+      const screenBoundsRect = Rect.from(screenBounds);
+      const isInvalidFromDisplays =
+        invalidBoundsFromDisplays !== undefined &&
+        screenBoundsRect.isAlmostEqual(invalidBoundsFromDisplays, 0.005);
+      return (
+        !isInvalidFromDisplays &&
+        !screenBoundsRect.isAlmostEqual(this.DEFAULT_INVALID_BOUNDS, 0.005)
+      );
+    }
 
     return true;
   }

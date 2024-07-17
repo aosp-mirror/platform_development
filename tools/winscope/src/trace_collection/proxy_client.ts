@@ -19,7 +19,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {OnRequestSuccessCallback} from './on_request_success_callback';
 import {ConfigMap} from './trace_collection_utils';
 
-export interface Device {
+export interface Devices {
   [key: string]: DeviceProperties;
 }
 
@@ -35,10 +35,10 @@ export enum ProxyState {
   INVALID_VERSION,
   UNAUTH,
   DEVICES,
-  START_TRACE,
-  END_TRACE,
-  LOAD_DATA,
+  CONFIGURE_TRACE,
   STARTING_TRACE,
+  TRACING,
+  LOADING_DATA,
 }
 
 export enum ProxyEndpoint {
@@ -188,7 +188,7 @@ class ProxyRequest {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
-      throw Error('Trace not started before stopping');
+      throw new Error('Trace not started before stopping');
     }
     await proxyRequest.call(
       'POST',
@@ -234,13 +234,22 @@ class ProxyRequest {
     );
   }
 
-  async fetchFiles(dev: string, adbParams: AdbParams): Promise<void> {
+  async fetchExistingFiles(deviceId: string) {
+    await proxyRequest.call(
+      'GET',
+      `${ProxyEndpoint.FETCH}${deviceId}/`,
+      this.onSuccessFetchFiles,
+      'arraybuffer',
+    );
+  }
+
+  async fetchFiles(deviceId: string, adbParams: AdbParams): Promise<void> {
     const files = adbParams.files;
     const idx = adbParams.idx;
 
     await proxyRequest.call(
       'GET',
-      `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`,
+      `${ProxyEndpoint.FETCH}${deviceId}/${files[idx]}/`,
       this.onSuccessFetchFiles,
       'arraybuffer',
     );
@@ -304,19 +313,19 @@ interface AdbParams {
 // stores all the changing variables from proxy and sets up calls from ProxyRequest
 export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
-  readonly VERSION = '2.1.0';
-  state: ProxyState = ProxyState.CONNECTING;
+  readonly VERSION = '2.2.0';
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
   refresh_worker: NodeJS.Timeout | undefined;
-  devices: Device = {};
+  devices: Devices = {};
   selectedDevice = '';
   errorText = '';
   adbData: File[] = [];
   proxyKey = '';
   lastDevice = '';
   store = new PersistentStore();
+  private state: ProxyState = ProxyState.CONNECTING;
 
   async setState(state: ProxyState, errorText = '') {
     this.state = state;
@@ -324,6 +333,10 @@ export class ProxyClient {
     for (const listener of this.stateChangeListeners) {
       await listener(state, errorText);
     }
+  }
+
+  getState() {
+    return this.state;
   }
 
   onProxyChange(fn: (state: ProxyState, errorText: string) => Promise<void>) {
@@ -339,11 +352,15 @@ export class ProxyClient {
     );
   }
 
+  clearStateChangeListeners() {
+    this.stateChangeListeners = [];
+  }
+
   async getDevices() {
     if (
       proxyClient.state !== ProxyState.DEVICES &&
       proxyClient.state !== ProxyState.CONNECTING &&
-      proxyClient.state !== ProxyState.START_TRACE
+      proxyClient.state !== ProxyState.CONFIGURE_TRACE
     ) {
       if (proxyClient.refresh_worker !== undefined) {
         clearInterval(proxyClient.refresh_worker);
@@ -357,7 +374,7 @@ export class ProxyClient {
   async selectDevice(device_id: string) {
     this.selectedDevice = device_id;
     this.store.add('adb.lastDevice', device_id);
-    this.setState(ProxyState.START_TRACE);
+    this.setState(ProxyState.CONFIGURE_TRACE);
   }
 
   async updateAdbData(

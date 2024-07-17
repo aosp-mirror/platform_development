@@ -106,7 +106,7 @@ export class RectsComputation implements Computation {
 
   executeInPlace(): void {
     if (!this.root) {
-      throw Error('root not set');
+      throw new Error('root not set in WM rects computation');
     }
 
     this.root.getAllChildren().forEach((displayContent) => {

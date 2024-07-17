@@ -57,13 +57,13 @@ export class PropertyTreeBuilderFromProto {
 
   build(): PropertyTreeNode {
     if (this.proto === undefined) {
-      throw Error('proto not set');
+      throw new Error('proto not set');
     }
     if (this.rootId === undefined) {
-      throw Error('rootId not set');
+      throw new Error('rootId not set');
     }
     if (this.rootName === undefined) {
-      throw Error('rootName not set');
+      throw new Error('rootName not set');
     }
     const factory = new PropertyTreeNodeFactory(
       this.denylistProperties,

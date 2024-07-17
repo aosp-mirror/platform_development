@@ -80,8 +80,9 @@ export abstract class VariableHeightScrollStrategy
     if (!this.viewport) {
       return;
     }
-
-    const offset = this.getOffsetByItemIndex(index);
+    // scroll previous index to top, so when previous index is partially rendered the target index is still fully rendered
+    const previousIndex = Math.max(0, index - 1);
+    const offset = this.getOffsetByItemIndex(previousIndex);
     this.viewport.scrollToOffset(offset);
   }
 

@@ -1354,4 +1354,21 @@ describe('Trace', () => {
       );
     }
   });
+
+  it('isDump()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([time10])
+      .build();
+    expect(trace.isDump()).toBeTrue();
+    expect(trace.isDumpWithoutTimestamp()).toBeFalse();
+  });
+
+  it('isDumpWithoutTimestamp()', () => {
+    const trace = new TraceBuilder<string>()
+      .setEntries(['entry-0'])
+      .setTimestamps([TimestampConverterUtils.makeZeroTimestamp()])
+      .build();
+    expect(trace.isDumpWithoutTimestamp()).toBeTrue();
+  });
 });

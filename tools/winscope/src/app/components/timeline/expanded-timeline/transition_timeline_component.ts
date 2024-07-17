@@ -101,10 +101,8 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
         return;
       }
       const rowToUse = this.getRowToUseFor(entry);
-      const aborted = assertDefined(
-        transition.getChildByName('aborted'),
-      ).getValue();
-      this.drawSegment(timeRange.from, timeRange.to, rowToUse, aborted);
+
+      this.drawSegment(timeRange.from, timeRange.to, rowToUse, transition);
     });
     this.drawSelectedTransitionEntry();
   }
@@ -224,11 +222,25 @@ export class TransitionTimelineComponent extends AbstractTimelineRowComponent<Pr
     start: Timestamp,
     end: Timestamp,
     rowToUse: number,
-    aborted: boolean,
+    transition: PropertyTreeNode,
   ) {
     const rect = this.getSegmentRect(start, end, rowToUse);
+
+    const aborted = assertDefined(
+      transition.getChildByName('aborted'),
+    ).getValue();
     const alpha = aborted ? 0.25 : 1.0;
-    this.canvasDrawer.drawRect(rect, this.color, alpha);
+
+    const hasUnknownStart =
+      TimelineUtils.isTransitionWithUnknownStart(transition);
+    const hasUnknownEnd = TimelineUtils.isTransitionWithUnknownEnd(transition);
+    this.canvasDrawer.drawRect(
+      rect,
+      this.color,
+      alpha,
+      hasUnknownStart,
+      hasUnknownEnd,
+    );
   }
 
   private drawSelectedTransitionEntry() {

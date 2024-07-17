@@ -111,15 +111,19 @@ export class Canvas {
       100,
     );
 
-    const rotationAngleX = (scene.camera.rotationFactor * Math.PI * 45) / 360;
-    const rotationAngleY = rotationAngleX * 1.5;
     const cameraPosition = new THREE.Vector3(
       0,
       0,
       Canvas.TARGET_SCENE_DIAGONAL,
     );
-    cameraPosition.applyAxisAngle(new THREE.Vector3(1, 0, 0), -rotationAngleX);
-    cameraPosition.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngleY);
+    cameraPosition.applyAxisAngle(
+      new THREE.Vector3(1, 0, 0),
+      -scene.camera.rotationAngleX,
+    );
+    cameraPosition.applyAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      scene.camera.rotationAngleY,
+    );
 
     this.camera.position.set(
       cameraPosition.x,
@@ -220,6 +224,7 @@ export class Canvas {
     const div: HTMLElement = document.createElement('div');
     div.className = 'rect-label';
     div.style.display = 'inline';
+    div.style.whiteSpace = 'nowrap';
     div.appendChild(spanText);
     div.appendChild(spanPlaceholder);
 
