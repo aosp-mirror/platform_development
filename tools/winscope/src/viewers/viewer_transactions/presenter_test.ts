@@ -32,7 +32,7 @@ import {
 import {Presenter} from './presenter';
 import {TransactionsEntryType, UiData} from './ui_data';
 
-class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
+class PresenterTransactionsTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -153,9 +153,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
         const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
-        presenter = await this.createPresenter(
-          notifyViewCallback as NotifyLogViewCallbackType,
-        );
+        presenter = await this.createPresenter(notifyViewCallback);
       });
 
       it('includes no op transitions', async () => {
@@ -198,7 +196,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const emptyTrace = new TraceBuilder<PropertyTreeNode>()
       .setEntries([])
@@ -207,7 +205,7 @@ class PresenterTransactionsTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const presenter = new Presenter(
       assertDefined(this.trace),

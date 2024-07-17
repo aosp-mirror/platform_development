@@ -27,8 +27,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
-class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
+class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -62,7 +63,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
@@ -72,16 +73,13 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const trace = assertDefined(this.trace);
     const traces = new Traces();
     traces.addTrace(trace);
 
-    const presenter = new Presenter(
-      trace,
-      callback as NotifyLogViewCallbackType,
-    );
+    const presenter = new Presenter(trace, callback);
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }
