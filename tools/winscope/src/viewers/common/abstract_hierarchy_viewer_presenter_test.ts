@@ -37,6 +37,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
       let uiData: UiDataHierarchy;
       let presenter: AbstractHierarchyViewerPresenter;
       beforeAll(async () => {
+        jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
         await this.setUpTestEnvironment();
       });
 
@@ -74,6 +75,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
       });
 
       it('processes trace position updates', async () => {
+        pinNode(this.getSelectedTree());
+
         await assertDefined(presenter).onAppEvent(
           assertDefined(this.getPositionUpdate()),
         );
@@ -88,6 +91,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         assertDefined(uiData.hierarchyTrees).forEach((tree) => {
           expect(tree.getAllChildren().length > 0).toBeTrue();
         });
+        expect(uiData.pinnedItems.length).toBeGreaterThan(0);
+
         if (this.shouldExecuteRectTests) {
           expect(
             Object.keys(assertDefined(uiData.rectsUserOptions)).length,
@@ -123,19 +128,22 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
           spy.and.returnValue(false);
           await presenter.onAppEvent(update);
-          expect(
-            assertDefined(uiData.hierarchyTrees?.at(0)).getDisplayName(),
-          ).toContain(update.position.timestamp.format());
+          const entryNode = assertDefined(uiData.hierarchyTrees?.at(0));
+          expect(entryNode.getDisplayName()).toContain(
+            update.position.timestamp.format(),
+          );
+
+          pinNode(entryNode);
 
           spy.and.returnValue(true);
           await presenter.onAppEvent(update);
-          expect(
-            assertDefined(uiData.hierarchyTrees?.at(0)).getDisplayName(),
-          ).toContain('Dump');
+          const newEntryNode = assertDefined(uiData.hierarchyTrees?.at(0));
+          expect(newEntryNode.getDisplayName()).toContain('Dump');
+          expect(uiData.pinnedItems).toEqual([newEntryNode]);
         });
       }
 
-      it('updates pinned items', () => {
+      it('handles pinned item change', () => {
         expect(uiData.pinnedItems).toEqual([]);
 
         const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
@@ -144,7 +152,10 @@ export abstract class AbstractHierarchyViewerPresenterTest {
         });
 
         presenter.onPinnedItemChange(pinnedItem);
-        expect(uiData.pinnedItems).toContain(pinnedItem);
+        expect(uiData.pinnedItems).toEqual([pinnedItem]);
+
+        presenter.onPinnedItemChange(pinnedItem);
+        expect(uiData.pinnedItems).toEqual([]);
       });
 
       it('updates highlighted property', () => {
@@ -174,11 +185,24 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           this.getExpectedChildrenBeforeVisibilityFilter(),
         );
 
+        const nonVisibleNode = assertDefined(
+          uiData.hierarchyTrees
+            ?.at(0)
+            ?.findDfs(
+              (node) =>
+                !node.isRoot() &&
+                !node.getEagerPropertyByName('isComputedVisible')?.getValue(),
+            ),
+        );
+        pinNode(nonVisibleNode);
+        expect(uiData.pinnedItems).toEqual([nonVisibleNode]);
+
         userOptions['showOnlyVisible'].enabled = true;
         await presenter.onHierarchyUserOptionsChange(userOptions);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.getExpectedChildrenAfterVisibilityFilter(),
         );
+        expect(uiData.pinnedItems).toEqual([nonVisibleNode]);
       });
 
       if (this.shouldExecuteFlatTreeTest) {
@@ -254,6 +278,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             ),
           );
           expect(nodeWithLongName.getDisplayName()).toEqual(shortName);
+          pinNode(nodeWithLongName);
+          expect(uiData.pinnedItems).toEqual([nodeWithLongName]);
 
           await presenter.onHierarchyUserOptionsChange(userOptions);
           expect(uiData.hierarchyUserOptions).toEqual(userOptions);
@@ -263,6 +289,7 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             ),
           );
           expect(longName).toContain(nodeWithLongName.getDisplayName());
+          expect(uiData.pinnedItems).toEqual([nodeWithLongName]);
         });
       }
 
@@ -292,10 +319,22 @@ export abstract class AbstractHierarchyViewerPresenterTest {
           this.getExpectedHierarchyChildrenBeforeStringFilter(),
         );
 
+        const nonMatchNode = assertDefined(
+          uiData.hierarchyTrees
+            ?.at(0)
+            ?.findDfs(
+              (node) =>
+                !node.isRoot() && !node.id.includes(this.hierarchyFilterString),
+            ),
+        );
+        pinNode(nonMatchNode);
+        expect(uiData.pinnedItems).toEqual([nonMatchNode]);
+
         await presenter.onHierarchyFilterChange(this.hierarchyFilterString);
         expect(this.getTotalHierarchyChildren(uiData)).toEqual(
           this.expectedHierarchyChildrenAfterStringFilter,
         );
+        expect(uiData.pinnedItems).toEqual([nonMatchNode]);
       });
 
       it('sets properties tree and associated ui data from tree node', async () => {
@@ -315,9 +354,8 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
       it('after highlighting a node, updates properties tree on position update', async () => {
         await presenter.onAppEvent(this.getPositionUpdate());
-        await presenter.onHighlightedNodeChange(
-          this.getSelectedTreeAfterPositionUpdate(),
-        );
+        const selectedTree = this.getSelectedTreeAfterPositionUpdate();
+        await presenter.onHighlightedNodeChange(selectedTree);
         this.executeChecksForPropertiesTreeAfterPositionUpdate(uiData);
 
         const secondUpdate = this.getSecondPositionUpdate();
@@ -540,6 +578,11 @@ export abstract class AbstractHierarchyViewerPresenterTest {
             )(uiData);
           }
         });
+      }
+
+      function pinNode(node: UiHierarchyTreeNode) {
+        presenter.onPinnedItemChange(node);
+        expect(uiData.pinnedItems).toEqual([node]);
       }
     });
 
