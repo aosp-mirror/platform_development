@@ -103,7 +103,7 @@ fun SceneScope.Lockscreen(
             Box(Modifier.padding(horizontal = 16.dp)) { mediaPlayer() }
         }
 
-        Box(Modifier.weight(1f).verticalNestedScrollToScene()) { notificationList() }
+        Box(Modifier.weight(1f)) { notificationList() }
 
         LockButton(
             isDismissable,
