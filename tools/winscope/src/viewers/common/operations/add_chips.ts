@@ -19,6 +19,7 @@ import {Operation} from 'trace/tree_node/operations/operation';
 import {
   DUPLICATE_CHIP,
   GPU_CHIP,
+  HIDDEN_BY_POLICY_CHIP,
   HWC_CHIP,
   MISSING_Z_PARENT_CHIP,
   RELATIVE_Z_CHIP,
@@ -52,6 +53,10 @@ export class AddChips implements Operation<UiHierarchyTreeNode> {
 
       if (node.getEagerPropertyByName('isDuplicate')?.getValue()) {
         node.addChip(DUPLICATE_CHIP);
+      }
+
+      if (node.getEagerPropertyByName('isHiddenByPolicy')?.getValue()) {
+        node.addChip(HIDDEN_BY_POLICY_CHIP);
       }
 
       const zOrderRelativeOfId = node

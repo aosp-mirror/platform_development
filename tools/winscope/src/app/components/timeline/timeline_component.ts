@@ -266,6 +266,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         flex-direction: column;
         align-items: end;
         position: relative;
+        max-height: 20vh;
+        overflow: auto;
       }
       #toggle {
         width: fit-content;
@@ -292,6 +294,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         flex-direction: row;
         border-bottom: 1px solid #3333;
         border-top: 1px solid #3333;
+        max-height: 60vh;
+        overflow: hidden;
       }
       #time-selector {
         display: flex;
@@ -379,7 +383,7 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
       #video-content {
         position: relative;
         min-width: 20rem;
-        min-height: 35rem;
+        max-height: 60vh;
         align-self: stretch;
         text-align: center;
         border: 2px solid black;
@@ -397,6 +401,8 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
       }
       #expanded-timeline {
         flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       #trace-selector .mat-form-field-infix {
         width: 80px;
@@ -437,6 +443,11 @@ import {MiniTimelineComponent} from './mini-timeline/mini_timeline_component';
         font-family: 'Roboto', sans-serif;
         position: relative;
         bottom: 120px;
+      }
+      .select-traces-panel {
+        max-height: 60vh;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       .tip {
         padding: 16px;

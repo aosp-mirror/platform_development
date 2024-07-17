@@ -77,7 +77,10 @@ export class ParserMock<T> implements Parser<T> {
         `This mock was not configured to support custom query type '${type}'. Something missing in your test set up?`,
       );
     }
-    if (Array.isArray(result)) {
+    if (
+      type !== CustomQueryType.SF_LAYERS_ID_AND_NAME &&
+      Array.isArray(result)
+    ) {
       result = result.slice(entriesRange.start, entriesRange.end);
     }
     return Promise.resolve(result) as Promise<
