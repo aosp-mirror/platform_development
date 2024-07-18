@@ -108,6 +108,7 @@ impl BpProperties {
             "defaults",
             "stem",
             "host_supported",
+            "host_cross_supported",
             "crate_name",
             "cargo_env_compat",
             "cargo_pkg_version",
