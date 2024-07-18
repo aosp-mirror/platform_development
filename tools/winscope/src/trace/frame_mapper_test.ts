@@ -377,8 +377,7 @@ describe('FrameMapper', () => {
 
   const TRACES_WITH_VSYNC_IDS = [
     TraceType.TRANSACTIONS,
-    TraceType.INPUT_KEY_EVENT,
-    TraceType.INPUT_MOTION_EVENT,
+    TraceType.INPUT_EVENT_MERGED,
   ];
 
   TRACES_WITH_VSYNC_IDS.forEach((traceType) => {
