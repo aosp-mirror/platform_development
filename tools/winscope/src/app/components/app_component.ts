@@ -52,6 +52,8 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {AdbConnection} from 'trace_collection/adb_connection';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   TraceConfigurationMap,
   TRACES,
@@ -225,6 +227,7 @@ import {UploadTracesComponent} from './upload_traces_component';
               [traceConfig]="traceConfig"
               [dumpConfig]="dumpConfig"
               [storage]="traceConfigStorage"
+              [adbConnection]="adbConnection"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
@@ -350,6 +353,7 @@ export class AppComponent implements WinscopeEventListener {
       Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
     ]),
   );
+  adbConnection: AdbConnection = new ProxyConnection();
   traceConfig: TraceConfigurationMap;
   dumpConfig: TraceConfigurationMap;
   traceConfigStorage: Storage;

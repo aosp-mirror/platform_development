@@ -45,21 +45,31 @@ export class ProxyConnection implements AdbConnection {
   private adbData: File[] = [];
   private keep_trace_alive_worker: NodeJS.Timeout | undefined;
   private refresh_devices_worker: NodeJS.Timeout | undefined;
+  private detectStateChangeInUi: () => Promise<void> =
+    FunctionUtils.DO_NOTHING_ASYNC;
+  private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
+  private availableTracesChangeCallback: (
+    availableTracesConfig: TraceConfigurationMap,
+  ) => void = FunctionUtils.DO_NOTHING;
 
-  constructor(
-    private detectStateChangeInUi: () => Promise<void>,
-    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING,
-    private availableTracesChangeCallback: (
+  async initialize(
+    detectStateChangeInUi: () => Promise<void>,
+    progressCallback: OnProgressUpdateType,
+    availableTracesChangeCallback: (
       availableTracesConfig: TraceConfigurationMap,
     ) => void,
-  ) {
-    this.setState(ConnectionState.CONNECTING);
+  ): Promise<void> {
+    this.detectStateChangeInUi = detectStateChangeInUi;
+    this.progressCallback = progressCallback;
+    this.availableTracesChangeCallback = availableTracesChangeCallback;
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
       this.securityToken = assertDefined(urlParams.get('token'));
     } else {
       this.securityToken = this.store?.get(this.storeKeySecurityToken) ?? '';
     }
+    this.setState(ConnectionState.CONNECTING);
   }
 
   async restartConnection(): Promise<void> {
@@ -84,7 +94,9 @@ export class ProxyConnection implements AdbConnection {
   }
 
   onDestroy() {
+    clearInterval(this.refresh_devices_worker);
     this.refresh_devices_worker = undefined;
+    clearInterval(this.keep_trace_alive_worker);
     this.keep_trace_alive_worker = undefined;
   }
 

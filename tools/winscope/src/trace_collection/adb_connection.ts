@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
+import {OnProgressUpdateType} from 'common/function_utils';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
+import {TraceConfigurationMap} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export interface AdbConnection {
+  initialize(
+    detectStateChangeInUi: () => Promise<void>,
+    progressCallback: OnProgressUpdateType,
+    availableTracesChangeCallback: (
+      availableTracesConfig: TraceConfigurationMap,
+    ) => void,
+  ): Promise<void>;
   restartConnection(): Promise<void>;
   setSecurityToken(token: string): void;
   getDevices(): AdbDevice[];

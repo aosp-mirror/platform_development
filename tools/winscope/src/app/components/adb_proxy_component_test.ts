@@ -16,15 +16,14 @@
 import {CommonModule} from '@angular/common';
 import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {FunctionUtils} from 'common/function_utils';
 import {ConnectionState} from 'trace_collection/connection_state';
-import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {AdbProxyComponent} from './adb_proxy_component';
 
 describe('AdbProxyComponent', () => {
@@ -41,6 +40,7 @@ describe('AdbProxyComponent', () => {
         MatInputModule,
         BrowserAnimationsModule,
         MatButtonModule,
+        FormsModule,
       ],
       declarations: [AdbProxyComponent],
       schemas: [NO_ERRORS_SCHEMA],
@@ -48,11 +48,8 @@ describe('AdbProxyComponent', () => {
     fixture = TestBed.createComponent(AdbProxyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.connection = new ProxyConnection(
-      FunctionUtils.DO_NOTHING_ASYNC,
-      FunctionUtils.DO_NOTHING,
-      FunctionUtils.DO_NOTHING,
-    );
+    component.state = ConnectionState.CONNECTING;
+    component.version = '1.1.1';
   });
 
   it('can be created', () => {
@@ -60,9 +57,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('correct icon and message displays if no proxy', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.NOT_FOUND,
-    );
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
     expect(
       htmlElement.querySelector('.further-adb-info-text')?.innerHTML,
@@ -70,9 +65,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('correct icon and message displays if invalid proxy', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.INVALID_VERSION,
-    );
+    component.state = ConnectionState.INVALID_VERSION;
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
       'Your local proxy version is incompatible with Winscope.',
@@ -81,9 +74,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('correct icon and message displays if unauthorized proxy', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.UNAUTH,
-    );
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
       'Proxy authorization required.',
@@ -92,9 +83,7 @@ describe('AdbProxyComponent', () => {
   });
 
   it('download proxy button downloads proxy', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.NOT_FOUND,
-    );
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
     const spy = spyOn(window, 'open');
     const button: HTMLButtonElement | null = htmlElement.querySelector(
@@ -106,60 +95,61 @@ describe('AdbProxyComponent', () => {
     expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
   });
 
-  it('retry button tries to reconnect proxy', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.NOT_FOUND,
-    );
+  it('retry button emits event', () => {
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
 
-    const spy = spyOn(assertDefined(component.connection), 'restartConnection');
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
     const button: HTMLButtonElement | null =
       htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('');
   });
 
   it('input proxy token saved as expected', () => {
-    const spy = spyOn(component.addKey, 'emit');
-
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.UNAUTH,
-    );
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
-    let button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
-    button?.click();
+
+    const button = assertDefined(
+      htmlElement.querySelector('.retry'),
+    ) as HTMLElement;
+    button.click();
     fixture.detectChanges();
     expect(spy).not.toHaveBeenCalled();
 
-    component.proxyKeyItem = '12345';
+    const proxyTokenInput = assertDefined(
+      htmlElement.querySelector('.proxy-token-input-field input'),
+    ) as HTMLInputElement;
+    proxyTokenInput.value = '12345';
+    proxyTokenInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    button = htmlElement.querySelector('.retry');
-    button?.click();
+
+    (assertDefined(htmlElement.querySelector('.retry')) as HTMLElement).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('12345');
   });
 
-  it('retries proxy connection on enter key', () => {
-    spyOn(assertDefined(component.connection), 'getState').and.returnValue(
-      ConnectionState.UNAUTH,
-    );
+  it('emits event on enter key', () => {
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
-    const proxyKeyInputField = assertDefined(
-      htmlElement.querySelector('.proxy-key-input-field'),
+
+    const proxyTokenInputField = assertDefined(
+      htmlElement.querySelector('.proxy-token-input-field'),
     ) as HTMLInputElement;
-    const proxyKeyInput = assertDefined(
-      proxyKeyInputField.querySelector('input'),
+    const proxyTokenInput = assertDefined(
+      proxyTokenInputField.querySelector('input'),
     ) as HTMLInputElement;
 
-    const spy = spyOn(assertDefined(component.connection), 'restartConnection');
-
-    proxyKeyInput.value = '12345';
-    proxyKeyInputField.dispatchEvent(
+    proxyTokenInput.value = '12345';
+    proxyTokenInput.dispatchEvent(new Event('input'));
+    proxyTokenInputField.dispatchEvent(
       new KeyboardEvent('keydown', {key: 'Enter'}),
     );
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('12345');
   });
 });

@@ -21,7 +21,6 @@ import {
   Inject,
   Input,
   NgZone,
-  OnInit,
   Output,
   ViewEncapsulation,
 } from '@angular/core';
@@ -74,16 +73,16 @@ import {
             class="proxy-tab"
             color="primary"
             mat-stroked-button
-            [ngClass]="tabClass(true)"
-            (click)="displayAdbProxyTab()">
+            [ngClass]="tabClass(true)">
             ADB Proxy
           </button>
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
           <adb-proxy
-            *ngIf="isAdbProxy"
-            [connection]="adbConnection"
-            (addKey)="onAddKey($event)"></adb-proxy>
-          <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
+            *ngIf="isAdbProxy()"
+            [state]="adbConnection.getState()"
+            [version]="adbConnection.getClientVersion()"
+            (retryConnection)="onRetryConnection($event)"></adb-proxy>
+          <!-- <web-adb *ngIf="!isAdbProxy()"></web-adb> TODO: fix web adb workflow -->
         </div>
 
         <div *ngIf="showAllDevices()" class="devices-connecting">
@@ -229,6 +228,7 @@ import {
                 </div>
 
                 <load-progress
+                  class="dumping-state"
                   *ngIf="isDumpingState()"
                   [progressPercentage]="progressPercentage"
                   [message]="progressMessage">
@@ -402,15 +402,9 @@ import {
   encapsulation: ViewEncapsulation.None,
 })
 export class CollectTracesComponent
-  implements
-    OnInit,
-    ProgressListener,
-    WinscopeEventListener,
-    WinscopeEventEmitter
+  implements ProgressListener, WinscopeEventListener, WinscopeEventEmitter
 {
   objectKeys = Object.keys;
-  isAdbProxy = true;
-  adbConnection: AdbConnection | undefined;
   isExternalOperationInProgress = false;
   progressMessage = 'Fetching...';
   progressPercentage: number | undefined;
@@ -430,6 +424,7 @@ export class CollectTracesComponent
     ConnectionState.INVALID_VERSION,
   ];
 
+  @Input() adbConnection: AdbConnection | undefined;
   @Input() traceConfig: TraceConfigurationMap | undefined;
   @Input() dumpConfig: TraceConfigurationMap | undefined;
   @Input() storage: Storage | undefined;
@@ -442,8 +437,11 @@ export class CollectTracesComponent
     @Inject(NgZone) private ngZone: NgZone,
   ) {}
 
-  ngOnInit() {
-    this.adbConnection = new ProxyConnection(
+  ngOnChanges() {
+    if (!this.adbConnection) {
+      throw new Error('component created without adb connection');
+    }
+    this.adbConnection.initialize(
       () => this.onConnectionStateChange(),
       (progress) => this.onLoadProgressUpdate(progress),
       this.setTraceConfigForAvailableTraces,
@@ -505,28 +503,10 @@ export class CollectTracesComponent
     );
   }
 
-  async onAddKey(key: string) {
-    this.adbConnection?.setSecurityToken(key);
-    await assertDefined(this.adbConnection).restartConnection();
-  }
-
-  displayAdbProxyTab() {
-    this.isAdbProxy = true;
-    this.adbConnection = new ProxyConnection(
-      () => this.onConnectionStateChange(),
-      (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces,
-    );
-  }
-
-  displayWebAdbTab() {
-    this.isAdbProxy = false;
-    //TODO: change to WebAdbConnection
-    this.adbConnection = new ProxyConnection(
-      () => this.onConnectionStateChange(),
-      (progress) => this.onLoadProgressUpdate(progress),
-      this.setTraceConfigForAvailableTraces,
-    );
+  async onRetryConnection(token: string) {
+    const connection = assertDefined(this.adbConnection);
+    connection.setSecurityToken(token);
+    await connection.restartConnection();
   }
 
   showAllDevices(): boolean {
@@ -538,7 +518,6 @@ export class CollectTracesComponent
 
     const devices = connection.getDevices();
     const lastId = this.storage?.getItem(this.storeKeyLastDevice) ?? undefined;
-
     if (
       this.selectedDevice &&
       !devices.find((d) => d.id === this.selectedDevice?.id)
@@ -664,12 +643,16 @@ export class CollectTracesComponent
     );
   }
 
+  isAdbProxy(): boolean {
+    return this.adbConnection instanceof ProxyConnection;
+  }
+
   tabClass(adbTab: boolean) {
     let isActive: string;
     if (adbTab) {
-      isActive = this.isAdbProxy ? 'active' : 'inactive';
+      isActive = this.isAdbProxy() ? 'active' : 'inactive';
     } else {
-      isActive = !this.isAdbProxy ? 'active' : 'inactive';
+      isActive = !this.isAdbProxy() ? 'active' : 'inactive';
     }
     return ['tab', isActive];
   }
@@ -745,6 +728,7 @@ export class CollectTracesComponent
     this.changeDetectorRef.detectChanges();
 
     const state = this.adbConnection?.getState();
+
     if (
       !this.refreshDumps ||
       state === ConnectionState.LOADING_DATA ||
