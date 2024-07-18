@@ -154,10 +154,8 @@ export class RectsComputation implements Computation {
   }
 
   // synced with getMaxDisplayBounds() in main/frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
-  getInvalidBoundsFromDisplays(
-    displays: readonly PropertyTreeNode[],
-  ): Rect | undefined {
-    if (displays.length === 0) return undefined;
+  getInvalidBoundsFromDisplays(displays: readonly PropertyTreeNode[]): Rect[] {
+    if (displays.length === 0) return [];
     const [maxX, maxY] = displays.reduce(
       (sizes, display) => {
         const [w, h] = getDisplayWidthAndHeight(display);
@@ -166,7 +164,22 @@ export class RectsComputation implements Computation {
       [0, 0],
     );
     const [invalidX, invalidY] = [maxX * 10, maxY * 10];
-    return new Rect(-invalidX, -invalidY, invalidX * 2, invalidY * 2);
+    const invalidBounds = new Rect(
+      -invalidX,
+      -invalidY,
+      invalidX * 2,
+      invalidY * 2,
+    );
+    const rotatedInvalidBounds = new Rect(
+      invalidBounds.y,
+      invalidBounds.x,
+      invalidBounds.h,
+      invalidBounds.w,
+    );
+    return [
+      invalidBounds,
+      rotatedInvalidBounds,
+    ];
   }
 
   executeInPlace(): void {
@@ -211,7 +224,7 @@ export class RectsComputation implements Computation {
 
   private extractLayersWithRects(
     hierarchyRoot: HierarchyTreeNode,
-    invalidBoundsFromDisplays: Rect | undefined,
+    invalidBoundsFromDisplays: Rect[],
   ): HierarchyTreeNode[] {
     return hierarchyRoot.filterDfs((node) =>
       this.hasLayerRect(node, invalidBoundsFromDisplays),
@@ -220,7 +233,7 @@ export class RectsComputation implements Computation {
 
   private hasLayerRect(
     node: HierarchyTreeNode,
-    invalidBoundsFromDisplays: Rect | undefined,
+    invalidBoundsFromDisplays: Rect[],
   ): boolean {
     if (node.isRoot()) return false;
 
@@ -239,11 +252,13 @@ export class RectsComputation implements Computation {
     if (screenBounds && !isVisible) {
       const screenBoundsRect = Rect.from(screenBounds);
       const isInvalidFromDisplays =
-        invalidBoundsFromDisplays !== undefined &&
-        screenBoundsRect.isAlmostEqual(invalidBoundsFromDisplays, 0.005);
+        invalidBoundsFromDisplays.length > 0 &&
+        invalidBoundsFromDisplays.some((invalid) => {
+          return screenBoundsRect.isAlmostEqual(invalid, 0.01);
+        });
       return (
         !isInvalidFromDisplays &&
-        !screenBoundsRect.isAlmostEqual(this.DEFAULT_INVALID_BOUNDS, 0.005)
+        !screenBoundsRect.isAlmostEqual(this.DEFAULT_INVALID_BOUNDS, 0.01)
       );
     }
 
