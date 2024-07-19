@@ -64,7 +64,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private readonly layerIdToName = new Map<number, string>();
   private readonly allInputLayerIds = new Set<number>();
 
-  protected override logPresenter = new LogPresenter(false);
+  protected override logPresenter = new LogPresenter<InputEntry>(false);
   protected override propertiesPresenter = new PropertiesPresenter({}, []);
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
@@ -341,7 +341,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
     if (index === undefined) {
       return undefined;
     }
-    return entries[index] as InputEntry;
+    return entries[index];
   }
 
   override addEventListeners(htmlElement: HTMLElement) {
