@@ -928,6 +928,18 @@ fn crate_to_bp_modules(
             m.props.set("host_supported", true);
         }
 
+        if module_type != "rust_proc_macro" {
+            if package_cfg.host_supported && !package_cfg.host_cross_supported {
+                m.props.set("host_cross_supported", false);
+            } else if crate_.externs.iter().any(|extern_dep| extern_dep.name == "proc_macro2") {
+                // proc_macro2 is host_cross_supported: false.
+                // If there's a dependency on it, then we shouldn't build for HostCross.
+                m.props.set("host_cross_supported", false);
+            } else if crate_.package_name == "proc-macro2" {
+                m.props.set("host_cross_supported", false);
+            }
+        }
+
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }

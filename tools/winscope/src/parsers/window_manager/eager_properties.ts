@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import {WmProtoType} from './wm_proto_type';
+import {ProtoType} from './proto_type';
 
 const commonEagerProperties = ['identifier', 'id', 'name'];
 
-export const WM_EAGER_PROPERTIES = new Map<WmProtoType, string[]>([
+export const EAGER_PROPERTIES = new Map<ProtoType, string[]>([
   [
-    WmProtoType.WindowManagerService,
+    ProtoType.WindowManagerService,
     commonEagerProperties.concat([
       'focusedApp',
       'focusedWindow',
       'focusedDisplayId',
     ]),
   ],
-  [WmProtoType.RootWindowContainer, commonEagerProperties],
-  [WmProtoType.WindowContainer, commonEagerProperties.concat(['visible'])],
+  [ProtoType.RootWindowContainer, commonEagerProperties],
+  [ProtoType.WindowContainer, commonEagerProperties.concat(['visible'])],
   [
-    WmProtoType.DisplayContent,
+    ProtoType.DisplayContent,
     commonEagerProperties.concat([
       'resumedActivity',
       'displayInfo',
@@ -41,19 +41,19 @@ export const WM_EAGER_PROPERTIES = new Map<WmProtoType, string[]>([
       'windowContainer',
     ]),
   ],
-  [WmProtoType.DisplayArea, commonEagerProperties],
+  [ProtoType.DisplayArea, commonEagerProperties],
   [
-    WmProtoType.Task,
+    ProtoType.Task,
     commonEagerProperties.concat([
       'displayId',
       'rootTaskId',
       'createdByOrganizer',
     ]),
   ],
-  [WmProtoType.Activity, commonEagerProperties.concat(['state', 'visible'])],
-  [WmProtoType.WindowToken, commonEagerProperties],
+  [ProtoType.Activity, commonEagerProperties.concat(['state', 'visible'])],
+  [ProtoType.WindowToken, commonEagerProperties],
   [
-    WmProtoType.WindowState,
+    ProtoType.WindowState,
     commonEagerProperties.concat([
       'isVisible',
       'windowFrames',
@@ -66,5 +66,5 @@ export const WM_EAGER_PROPERTIES = new Map<WmProtoType, string[]>([
       'animatingExit',
     ]),
   ],
-  [WmProtoType.TaskFragment, commonEagerProperties.concat(['displayId'])],
+  [ProtoType.TaskFragment, commonEagerProperties.concat(['displayId'])],
 ]);
