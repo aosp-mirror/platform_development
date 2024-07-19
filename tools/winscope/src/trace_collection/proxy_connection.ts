@@ -30,8 +30,8 @@ import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection implements AdbConnection {
-  private static readonly VERSION = '2.3.0';
-  private static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
+  static readonly VERSION = '2.3.0';
+  static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
   private readonly store = new PersistentStore();
   private readonly storeKeySecurityToken = 'adb.proxyKey';
@@ -69,7 +69,7 @@ export class ProxyConnection implements AdbConnection {
     } else {
       this.securityToken = this.store?.get(this.storeKeySecurityToken) ?? '';
     }
-    this.setState(ConnectionState.CONNECTING);
+    await this.setState(ConnectionState.CONNECTING);
   }
 
   async restartConnection(): Promise<void> {
@@ -104,6 +104,9 @@ export class ProxyConnection implements AdbConnection {
     device: AdbDevice,
     requestedTraces: TraceRequest[],
   ): Promise<void> {
+    if (requestedTraces.length === 0) {
+      throw new Error('No traces requested');
+    }
     this.selectedDevice = device;
     this.requestedTraces = requestedTraces;
     await this.setState(ConnectionState.STARTING_TRACE);
@@ -120,12 +123,10 @@ export class ProxyConnection implements AdbConnection {
     device: AdbDevice,
     requestedDumps: TraceRequest[],
   ): Promise<void> {
-    this.progressCallback(0);
-    if (requestedDumps.length < 1) {
-      console.error('No targets selected');
-      await this.setState(ConnectionState.ERROR, 'No targets selected');
-      return;
+    if (requestedDumps.length === 0) {
+      throw new Error('No dumps requested');
     }
+    this.progressCallback(0);
     this.selectedDevice = device;
     this.requestedTraces = requestedDumps;
     await this.setState(ConnectionState.DUMPING_STATE);
@@ -135,6 +136,7 @@ export class ProxyConnection implements AdbConnection {
     this.adbData = [];
     this.selectedDevice = device;
     await this.setState(ConnectionState.LOADING_DATA);
+    this.selectedDevice = undefined;
     return this.adbData;
   }
 
@@ -157,10 +159,6 @@ export class ProxyConnection implements AdbConnection {
       }
       this.requestedTraces = [];
     }
-  }
-
-  getClientVersion() {
-    return ProxyConnection.VERSION;
   }
 
   private async onConnectionStateChange() {
@@ -187,14 +185,10 @@ export class ProxyConnection implements AdbConnection {
         return;
 
       case ConnectionState.STARTING_TRACE:
-        if (this.requestedTraces.length === 0) {
-          throw new Error('No traces requested');
-        }
-        if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
-        }
         await this.postToProxy(
-          `${ProxyEndpoint.START_TRACE}${this.selectedDevice.id}/`,
+          `${ProxyEndpoint.START_TRACE}${
+            assertDefined(this.selectedDevice).id
+          }/`,
           () => this.keepTraceAlive(this),
           this.requestedTraces,
         );
@@ -206,26 +200,14 @@ export class ProxyConnection implements AdbConnection {
         return;
 
       case ConnectionState.ENDING_TRACE:
-        if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
-        }
-        if (this.requestedTraces.length === 0) {
-          throw new Error('Trace not started before stopping');
-        }
         await this.postToProxy(
-          `${ProxyEndpoint.END_TRACE}${this.selectedDevice.id}/`,
+          `${ProxyEndpoint.END_TRACE}${assertDefined(this.selectedDevice).id}/`,
         );
         return;
 
       case ConnectionState.DUMPING_STATE:
-        if (this.requestedTraces.length === 0) {
-          throw new Error('No dumps requested');
-        }
-        if (this.selectedDevice === undefined) {
-          throw new Error('No device found');
-        }
         await this.postToProxy(
-          `${ProxyEndpoint.DUMP}${this.selectedDevice.id}/`,
+          `${ProxyEndpoint.DUMP}${assertDefined(this.selectedDevice).id}/`,
           FunctionUtils.DO_NOTHING,
           this.requestedTraces.map((t) => t.name),
         );
