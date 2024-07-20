@@ -28,7 +28,7 @@ import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {ViewerEvents} from 'viewers/common/viewer_events';
-import {TargetWindowFormatter} from './operations/target_window_formatter';
+import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
 import {InputEntry, UiData} from './ui_data';
 
 enum InputEventType {
@@ -60,7 +60,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
-    [new TargetWindowFormatter(this.layerIdToName)],
+    [new DispatchEntryFormatter(this.layerIdToName)],
   );
 
   constructor(
