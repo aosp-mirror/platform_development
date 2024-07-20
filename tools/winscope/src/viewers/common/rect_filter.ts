@@ -23,9 +23,9 @@ export class RectFilter {
   filterRects(
     rects: UiRect[],
     isOnlyVisibleMode: boolean,
-    isIgnoreNonHiddenMode: boolean,
+    isIgnoreRectShowStateMode: boolean,
   ): UiRect[] {
-    if (!(isOnlyVisibleMode || !isIgnoreNonHiddenMode)) {
+    if (!isOnlyVisibleMode && isIgnoreRectShowStateMode) {
       return rects;
     }
     return rects.filter((rect) => {
@@ -33,7 +33,7 @@ export class RectFilter {
       const forceHidden = this.forcedStates.get(rect.id) === RectShowState.HIDE;
       const forceShow = this.forcedStates.get(rect.id) === RectShowState.SHOW;
 
-      if (isOnlyVisibleMode && !isIgnoreNonHiddenMode) {
+      if (isOnlyVisibleMode && !isIgnoreRectShowStateMode) {
         return forceShow || (satisfiesOnlyVisible && !forceHidden);
       }
       if (isOnlyVisibleMode) {
