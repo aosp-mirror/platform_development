@@ -78,12 +78,7 @@ export class FrameMapper {
     );
     await this.tryPropagateMapping(
       TraceType.SURFACE_FLINGER,
-      TraceType.INPUT_KEY_EVENT,
-      this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
-    );
-    await this.tryPropagateMapping(
-      TraceType.SURFACE_FLINGER,
-      TraceType.INPUT_MOTION_EVENT,
+      TraceType.INPUT_EVENT_MERGED,
       this.propagateFromSurfaceFlingerToTraceWithVsyncIds,
     );
     await this.tryPropagateMapping(

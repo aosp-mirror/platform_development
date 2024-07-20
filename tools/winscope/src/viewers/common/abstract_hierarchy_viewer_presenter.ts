@@ -160,12 +160,14 @@ export abstract class AbstractHierarchyViewerPresenter
     await this.hierarchyPresenter.applyHierarchyUserOptionsChange(userOptions);
     this.uiData.hierarchyUserOptions = this.hierarchyPresenter.getUserOptions();
     this.uiData.hierarchyTrees = this.hierarchyPresenter.getAllFormattedTrees();
+    this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.copyUiDataAndNotifyView();
   }
 
   async onHierarchyFilterChange(filterString: string) {
     await this.hierarchyPresenter.applyHierarchyFilterChange(filterString);
     this.uiData.hierarchyTrees = this.hierarchyPresenter.getAllFormattedTrees();
+    this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.copyUiDataAndNotifyView();
   }
 

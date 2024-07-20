@@ -27,7 +27,7 @@ import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CujEntry, CujStatus, CujType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_NAMES = [
     LogFieldType.CUJ_TYPE,
     LogFieldType.START_TIME,
@@ -45,7 +45,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
@@ -60,7 +60,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_NAMES);
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
