@@ -94,12 +94,12 @@ export class RectsPresenter {
   private filterRects(rects: UiRect[]): UiRect[] {
     const isOnlyVisibleMode =
       this.userOptions['showOnlyVisible']?.enabled ?? false;
-    const isIgnoreHiddenMode =
-      this.userOptions['ignoreNonHidden']?.enabled ?? false;
+    const isIgnoreRectShowStateMode =
+      this.userOptions['ignoreRectShowState']?.enabled ?? false;
     return this.rectFilter.filterRects(
       rects,
       isOnlyVisibleMode,
-      isIgnoreHiddenMode,
+      isIgnoreRectShowStateMode,
     );
   }
 }

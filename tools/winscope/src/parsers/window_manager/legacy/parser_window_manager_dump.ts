@@ -17,7 +17,11 @@
 import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {AbstractParser} from 'parsers/legacy/abstract_parser';
-import {com} from 'protos/windowmanager/latest/static';
+import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';
+import {WmCustomQueryUtils} from 'parsers/window_manager/custom_query_utils';
+import {HierarchyTreeBuilderWm} from 'parsers/window_manager/hierarchy_tree_builder_wm';
+import {ParserUtils} from 'parsers/window_manager/parser_utils';
+import {com} from 'protos/windowmanager/udc/static';
 import {
   CustomQueryParserResultTypeMap,
   CustomQueryType,
@@ -27,13 +31,11 @@ import {EntriesRange} from 'trace/index_types';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
-import {RectsComputation} from './computations/rects_computation';
-import {WmCustomQueryUtils} from './custom_query_utils';
-import {HierarchyTreeBuilderWm} from './hierarchy_tree_builder_wm';
-import {ParserWmUtils} from './parser_window_manager_utils';
-import {WindowManagerServiceField} from './wm_tampered_protos';
+import {TAMPERED_PROTOS_UDC} from './tampered_protos_udc';
 
 class ParserWindowManagerDump extends AbstractParser {
+  private readonly utils = new ParserUtils(TAMPERED_PROTOS_UDC);
+
   override getTraceType(): TraceType {
     return TraceType.WINDOW_MANAGER;
   }
@@ -54,7 +56,7 @@ class ParserWindowManagerDump extends AbstractParser {
     buffer: Uint8Array,
   ): com.android.server.wm.IWindowManagerServiceDumpProto[] {
     const entryProto = assertDefined(
-      WindowManagerServiceField.tamperedMessageType,
+      TAMPERED_PROTOS_UDC.windowManagerServiceField.tamperedMessageType,
     ).decode(buffer) as com.android.server.wm.IWindowManagerServiceDumpProto;
 
     // This parser is prone to accepting invalid inputs because it lacks a magic
@@ -83,11 +85,11 @@ class ParserWindowManagerDump extends AbstractParser {
   private makeHierarchyTree(
     entryProto: com.android.server.wm.IWindowManagerServiceDumpProto,
   ): HierarchyTreeNode {
-    const containers: PropertiesProvider[] = ParserWmUtils.extractContainers(
+    const containers: PropertiesProvider[] = this.utils.extractContainers(
       assertDefined(entryProto),
     );
 
-    const entry = ParserWmUtils.makeEntryProperties(entryProto);
+    const entry = this.utils.makeEntryProperties(entryProto);
 
     return new HierarchyTreeBuilderWm()
       .setRoot(entry)

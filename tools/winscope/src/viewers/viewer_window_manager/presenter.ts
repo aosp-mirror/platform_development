@@ -79,7 +79,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     PersistentStoreProxy.new<UserOptions>(
       'WmRectsOptions',
       {
-        ignoreNonHidden: {
+        ignoreRectShowState: {
           name: 'Ignore',
           icon: 'visibility',
           enabled: false,
