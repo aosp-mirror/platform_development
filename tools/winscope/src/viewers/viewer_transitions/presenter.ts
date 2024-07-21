@@ -31,7 +31,7 @@ import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {UpdateTransitionChangesNames} from './operations/update_transition_changes_names';
 import {TransitionsEntry, TransitionStatus, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.TRANSITION_ID,
     LogFieldType.TRANSITION_TYPE,
@@ -65,7 +65,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     traces: Traces,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(trace, notifyViewCallback, UiData.createEmpty());
     this.transitionTrace = trace;
@@ -100,7 +100,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setHeaders(Presenter.FIELD_TYPES);
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

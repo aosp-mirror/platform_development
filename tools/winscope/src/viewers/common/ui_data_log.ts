@@ -79,6 +79,7 @@ export enum LogFieldType {
   INPUT_DEVICE_ID,
   INPUT_DISPLAY_ID,
   INPUT_EVENT_DETAILS,
+  INPUT_DISPATCH_WINDOWS,
 }
 
 export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
@@ -108,6 +109,7 @@ export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.INPUT_DEVICE_ID, 'Device'],
   [LogFieldType.INPUT_DISPLAY_ID, 'Display'],
   [LogFieldType.INPUT_EVENT_DETAILS, 'Details'],
+  [LogFieldType.INPUT_DISPATCH_WINDOWS, 'Target Windows'],
 ]);
 
 export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
@@ -137,4 +139,5 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.INPUT_DEVICE_ID, 'input-device-id'],
   [LogFieldType.INPUT_DISPLAY_ID, 'input-display-id'],
   [LogFieldType.INPUT_EVENT_DETAILS, 'input-details'],
+  [LogFieldType.INPUT_DISPATCH_WINDOWS, 'input-windows'],
 ]);

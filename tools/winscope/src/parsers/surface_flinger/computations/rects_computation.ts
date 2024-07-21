@@ -26,6 +26,19 @@ import {Computation} from 'trace/tree_node/computation';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 
+function getDisplayWidthAndHeight(display: PropertyTreeNode): [number, number] {
+  const displaySize = assertDefined(display.getChildByName('size'));
+  const w = assertDefined(displaySize.getChildByName('w')?.getValue());
+  const h = assertDefined(displaySize.getChildByName('h')?.getValue());
+  const transformType =
+    display.getChildByName('transform')?.getChildByName('type')?.getValue() ??
+    0;
+  const typeFlags = TransformUtils.getTypeFlags(transformType);
+  const isRotated =
+    typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
+  return [isRotated ? h : w, isRotated ? w : h];
+}
+
 class RectSfFactory {
   makeDisplayRects(displays: readonly PropertyTreeNode[]): TraceRect[] {
     const nameCounts = new Map<string, number>();
@@ -33,7 +46,15 @@ class RectSfFactory {
       const layerStackSpaceRect = assertDefined(
         display.getChildByName('layerStackSpaceRect'),
       );
-      const displayRect = Rect.from(layerStackSpaceRect);
+
+      let displayRect = Rect.from(layerStackSpaceRect);
+      const isEmptyLayerStackRect = displayRect.isEmpty();
+
+      if (isEmptyLayerStackRect) {
+        const [w, h] = getDisplayWidthAndHeight(display);
+        displayRect = new Rect(0, 0, w, h);
+      }
+
       const layerStack = assertDefined(
         display.getChildByName('layerStack'),
       ).getValue();
@@ -139,22 +160,8 @@ export class RectsComputation implements Computation {
     if (displays.length === 0) return undefined;
     const [maxX, maxY] = displays.reduce(
       (sizes, display) => {
-        //TODO(b/346503161): decide if we can use layerStackSpaceRect instead of size + transform
-        const displaySize = assertDefined(display.getChildByName('size'));
-        const w = assertDefined(displaySize.getChildByName('w')?.getValue());
-        const h = assertDefined(displaySize.getChildByName('h')?.getValue());
-
-        const transform = assertDefined(
-          Transform.from(assertDefined(display.getChildByName('transform'))),
-        );
-        const typeFlags = TransformUtils.getTypeFlags(transform.type);
-        const isRotated =
-          typeFlags.includes('ROT_90') || typeFlags.includes('ROT_270');
-
-        return [
-          Math.max(sizes[0], isRotated ? h : w),
-          Math.max(sizes[1], isRotated ? w : h),
-        ];
+        const [w, h] = getDisplayWidthAndHeight(display);
+        return [Math.max(sizes[0], w), Math.max(sizes[1], h)];
       },
       [0, 0],
     );
