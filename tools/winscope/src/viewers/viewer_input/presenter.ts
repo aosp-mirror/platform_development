@@ -19,24 +19,24 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceType} from 'trace/trace_type';
-import {DEFAULT_PROPERTY_FORMATTER} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {DEFAULT_PROPERTY_TREE_NODE_FACTORY} from 'trace/tree_node/property_tree_node_factory';
-import {AbstractLogViewerPresenter} from 'viewers/common/abstract_log_viewer_presenter';
+import {
+  AbstractLogViewerPresenter,
+  NotifyLogViewCallbackType,
+} from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {DispatchEntryFormatter} from './operations/dispatch_entry_formatter';
 import {InputEntry, UiData} from './ui_data';
-
-type NotifyViewCallbackType = (uiData: UiData) => void;
 
 enum InputEventType {
   KEY,
   MOTION,
 }
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.INPUT_TYPE,
     LogFieldType.INPUT_SOURCE,
@@ -60,13 +60,14 @@ export class Presenter extends AbstractLogViewerPresenter {
   protected dispatchPropertiesPresenter = new PropertiesPresenter(
     {},
     Presenter.DENYLIST_DISPATCH_PROPERTIES,
+    [new DispatchEntryFormatter(this.layerIdToName)],
   );
 
   constructor(
     traces: Traces,
     mergedInputEventTrace: Trace<PropertyTreeNode>,
     private readonly storage: Storage,
-    private readonly notifyInputViewCallback: NotifyViewCallbackType,
+    private readonly notifyInputViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
     super(
       mergedInputEventTrace,
@@ -102,7 +103,7 @@ export class Presenter extends AbstractLogViewerPresenter {
       },
     ]);
 
-    this.refreshUIData(UiData.createEmpty());
+    this.refreshUiData();
   }
 
   private async makeInputEntries(): Promise<InputEntry[]> {
@@ -127,16 +128,6 @@ export class Presenter extends AbstractLogViewerPresenter {
         const windowIdNode = dispatchEntry.getChildByName('windowId');
         const windowId = Number(windowIdNode?.getValue() ?? -1);
         this.allInputLayerIds.add(windowId);
-        // For now, add a new node to display the layer name in the dispatch properties view.
-        // TODO(b/332714237): Use a custom view to display dispatch properties.
-        const windowNameNode =
-          DEFAULT_PROPERTY_TREE_NODE_FACTORY.makeProtoProperty(
-            windowIdNode?.id ?? '',
-            'windowName',
-            this.getLayerDisplayName(windowId),
-          );
-        windowNameNode.setFormatter(DEFAULT_PROPERTY_FORMATTER);
-        dispatchEntry.addOrReplaceChild(windowNameNode);
       });
 
       entries.push(
@@ -286,5 +277,6 @@ export class Presenter extends AbstractLogViewerPresenter {
     this.propertiesPresenter.applyHighlightedPropertyChange(id);
     this.dispatchPropertiesPresenter.applyHighlightedPropertyChange(id);
     this.uiData.highlightedProperty = id;
+    this.notifyViewChanged();
   }
 }

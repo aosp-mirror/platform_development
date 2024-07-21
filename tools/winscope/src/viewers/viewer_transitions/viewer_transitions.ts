@@ -20,7 +20,6 @@ import {Traces} from 'trace/traces';
 import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -39,11 +38,7 @@ export class ViewerTransitions implements Viewer {
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     };
-    this.presenter = new Presenter(
-      trace,
-      traces,
-      notifyViewCallback as NotifyLogViewCallbackType,
-    );
+    this.presenter = new Presenter(trace, traces, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(

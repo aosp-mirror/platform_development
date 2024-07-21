@@ -61,9 +61,7 @@ fun SceneScope.SplitLockscreen(
                 }
             }
 
-            Box(Modifier.weight(1f).padding(16.dp).verticalNestedScrollToScene()) {
-                notificationList()
-            }
+            Box(Modifier.weight(1f).padding(16.dp)) { notificationList() }
         }
 
         LockButton(
