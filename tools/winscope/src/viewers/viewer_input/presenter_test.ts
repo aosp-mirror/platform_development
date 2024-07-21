@@ -38,7 +38,7 @@ import {
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class PresenterInputTest extends AbstractLogViewerPresenterTest {
+class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private surfaceFlingerTrace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
@@ -151,7 +151,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const traces = new TracesBuilder()
       .setEntries(TraceType.INPUT_EVENT_MERGED, [])
@@ -160,7 +160,7 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const traces = new Traces();
     traces.addTrace(assertDefined(this.trace));
@@ -175,13 +175,13 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
 
   private static createPresenterWithTraces(
     traces: Traces,
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     return new Presenter(
       traces,
       assertDefined(traces.getTrace(TraceType.INPUT_EVENT_MERGED)),
       new InMemoryStorage(),
-      callback as NotifyLogViewCallbackType,
+      callback,
     );
   }
 
@@ -248,18 +248,19 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest {
     const uiData = uiDataLog as UiData;
     const dispatchProperties = assertDefined(uiData.dispatchPropertiesTree);
     expect(dispatchProperties.getAllChildren().length).toEqual(5);
+
     expect(
       dispatchProperties
         .getChildByName('0')
         ?.getChildByName('windowId')
-        ?.getValue(),
-    ).toEqual(212n);
+        ?.getDisplayName(),
+    ).toEqual('TargetWindow');
     expect(
       dispatchProperties
         .getChildByName('0')
-        ?.getChildByName('windowName')
-        ?.getValue(),
-    ).toEqual(wrappedName('win-212'));
+        ?.getChildByName('windowId')
+        ?.formattedValue(),
+    ).toEqual('212 - win-212');
   }
 
   private expectEventPresented(

@@ -23,11 +23,11 @@ import {
 } from './abstract_log_viewer_presenter';
 import {LogEntry, LogFieldType, LogFieldValue, UiDataLog} from './ui_data_log';
 
-export abstract class AbstractLogViewerPresenterTest {
+export abstract class AbstractLogViewerPresenterTest<UiData extends UiDataLog> {
   execute() {
     describe('AbstractLogViewerPresenterTest', () => {
-      let uiData: UiDataLog;
-      let presenter: AbstractLogViewerPresenter;
+      let uiData: UiData;
+      let presenter: AbstractLogViewerPresenter<UiData>;
       beforeAll(async () => {
         await this.setUpTestEnvironment();
       });
@@ -39,7 +39,7 @@ export abstract class AbstractLogViewerPresenterTest {
       });
 
       it('is robust to empty trace', async () => {
-        const notifyViewCallback = (newData: UiDataLog) => {
+        const notifyViewCallback = (newData: UiData) => {
           uiData = newData;
         };
         const presenter =
@@ -350,11 +350,11 @@ export abstract class AbstractLogViewerPresenterTest {
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
-    callback: NotifyLogViewCallbackType,
-  ): Promise<AbstractLogViewerPresenter>;
+    callback: NotifyLogViewCallbackType<UiData>,
+  ): Promise<AbstractLogViewerPresenter<UiData>>;
   abstract createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
-  ): AbstractLogViewerPresenter;
+    callback: NotifyLogViewCallbackType<UiData>,
+  ): AbstractLogViewerPresenter<UiData>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate;
 
