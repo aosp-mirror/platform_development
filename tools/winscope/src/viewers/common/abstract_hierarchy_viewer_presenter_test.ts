@@ -31,11 +31,13 @@ import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 
-export abstract class AbstractHierarchyViewerPresenterTest {
+export abstract class AbstractHierarchyViewerPresenterTest<
+  UiData extends UiDataHierarchy,
+> {
   execute() {
     describe('AbstractHierarchyViewerPresenter', () => {
       let uiData: UiDataHierarchy;
-      let presenter: AbstractHierarchyViewerPresenter;
+      let presenter: AbstractHierarchyViewerPresenter<UiData>;
       beforeAll(async () => {
         jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
         await this.setUpTestEnvironment();
@@ -637,11 +639,11 @@ export abstract class AbstractHierarchyViewerPresenterTest {
 
   abstract setUpTestEnvironment(): Promise<void>;
   abstract createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
-  ): AbstractHierarchyViewerPresenter;
+    callback: NotifyHierarchyViewCallbackType<UiData>,
+  ): AbstractHierarchyViewerPresenter<UiData>;
   abstract getPositionUpdate(): TracePositionUpdate;
   abstract getSecondPositionUpdate(): TracePositionUpdate | undefined;
   abstract getShowDiffPositionUpdate(): TracePositionUpdate;

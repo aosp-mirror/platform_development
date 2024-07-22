@@ -44,7 +44,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = ['children', 'isComputedVisible'];
 
   private windowNames: string[] = [];
@@ -131,7 +131,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   constructor(
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(undefined, traces, storage, notifyViewCallback, new UiData());
     this.viewCaptureTraces = traces.getTraces(TraceType.VIEW_CAPTURE);
@@ -311,8 +311,8 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new UiData(this.sfRects, this.curatedProperties),
-    );
+    this.uiData.sfRects = this.sfRects;
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.refreshHierarchyViewerUiData();
   }
 }
