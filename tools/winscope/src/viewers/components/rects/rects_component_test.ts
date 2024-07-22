@@ -429,7 +429,6 @@ describe('RectsComponent', () => {
       .setIsDisplay(false)
       .setId('test-id-1234')
       .setGroupId(groupId)
-      .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)
