@@ -1,5 +1,5 @@
 /*
- * Copyright 2022, The Android Open Source Project
+ * Copyright 2024, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,23 @@
 
 import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {
+  HttpRequest,
+  HttpRequestHeaderType,
+  HttpRequestStatus,
+  HttpResponse,
+} from 'common/http_request';
 import {PersistentStore} from 'common/persistent_store';
 import {TimeUtils} from 'common/time_utils';
 import {Analytics} from 'logging/analytics';
-import {AdbConnection} from './adb_connection';
+import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
-import {HttpRequest} from './http_request';
-import {OnRequestSuccessCallback} from './on_request_success_callback';
 import {ProxyEndpoint} from './proxy_endpoint';
-import {RequestHeaderType} from './request_header_type';
 import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
-export class ProxyConnection implements AdbConnection {
+export class ProxyConnection extends AdbConnection {
   static readonly VERSION = '2.3.0';
   static readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
 
@@ -170,7 +173,7 @@ export class ProxyConnection implements AdbConnection {
         return;
 
       case ConnectionState.CONNECTING:
-        await this.requestDevices(this);
+        await this.requestDevices();
         return;
 
       case ConnectionState.IDLE:
@@ -189,7 +192,7 @@ export class ProxyConnection implements AdbConnection {
           `${ProxyEndpoint.START_TRACE}${
             assertDefined(this.selectedDevice).id
           }/`,
-          () => this.keepTraceAlive(this),
+          () => this.keepTraceAlive(),
           this.requestedTraces,
         );
         // TODO(b/330118129): identify source of additional start latency that affects some traces
@@ -225,27 +228,26 @@ export class ProxyConnection implements AdbConnection {
     }
   }
 
-  private async keepTraceAlive(view: ProxyConnection) {
-    const state = view.getState();
+  private async keepTraceAlive() {
+    const state = this.getState();
     if (
       state !== ConnectionState.STARTING_TRACE &&
       state !== ConnectionState.TRACING
     ) {
-      clearInterval(view.keep_trace_alive_worker);
-      view.keep_trace_alive_worker = undefined;
+      clearInterval(this.keep_trace_alive_worker);
+      this.keep_trace_alive_worker = undefined;
       return;
     }
 
-    await view.getFromProxy(
-      `${ProxyEndpoint.STATUS}${assertDefined(view.selectedDevice).id}/`,
-      async (request: XMLHttpRequest) => {
-        if (request.responseText !== 'True') {
-          view.endTrace();
-        } else if (view.keep_trace_alive_worker === undefined) {
-          view.keep_trace_alive_worker = setInterval(
-            view.keepTraceAlive,
+    await this.getFromProxy(
+      `${ProxyEndpoint.STATUS}${assertDefined(this.selectedDevice).id}/`,
+      async (request: HttpResponse) => {
+        if (request.text !== 'True') {
+          this.endTrace();
+        } else if (this.keep_trace_alive_worker === undefined) {
+          this.keep_trace_alive_worker = setInterval(
+            () => this.keepTraceAlive(),
             1000,
-            view,
           );
         }
       },
@@ -258,111 +260,60 @@ export class ProxyConnection implements AdbConnection {
     await this.onConnectionStateChange();
   }
 
-  private async requestDevices(view: ProxyConnection) {
+  private async requestDevices() {
     if (
-      view.state !== ConnectionState.IDLE &&
-      view.state !== ConnectionState.CONNECTING
+      this.state !== ConnectionState.IDLE &&
+      this.state !== ConnectionState.CONNECTING
     ) {
-      if (view.refresh_devices_worker !== undefined) {
-        clearInterval(view.refresh_devices_worker);
-        view.refresh_devices_worker = undefined;
+      if (this.refresh_devices_worker !== undefined) {
+        clearInterval(this.refresh_devices_worker);
+        this.refresh_devices_worker = undefined;
       }
       return;
     }
 
-    const onSuccessGetDevices: OnRequestSuccessCallback = (
-      req: XMLHttpRequest,
-    ) => view.onSuccessGetDevices(view, req);
-
-    await view.getFromProxy(ProxyEndpoint.DEVICES, onSuccessGetDevices);
+    await this.getFromProxy(ProxyEndpoint.DEVICES, this.onSuccessGetDevices);
   }
 
-  private async onReadyStateChange(
-    view: ProxyConnection,
-    req: XMLHttpRequest,
-    resolve: (value: void | PromiseLike<void>) => void,
-    onSuccess: OnRequestSuccessCallback,
-  ) {
-    if (req.readyState !== XMLHttpRequest.DONE) {
-      return;
-    }
-    if (req.status === XMLHttpRequest.UNSENT) {
-      view.setState(ConnectionState.NOT_FOUND);
-      resolve();
-    } else if (req.status === 200) {
-      if (
-        !view.areVersionsCompatible(
-          req.getResponseHeader('Winscope-Proxy-Version'),
-        )
-      ) {
-        view.setState(ConnectionState.INVALID_VERSION);
-        resolve();
-      } else if (onSuccess) {
-        try {
-          await onSuccess(req);
-        } catch (err) {
-          console.error(err);
-          view.setState(
-            ConnectionState.ERROR,
-            `Error handling request response:\n${err}\n\n` +
-              `Request:\n ${req.responseText}`,
-          );
-          resolve();
-        }
-      }
-      resolve();
-    } else if (req.status === 403) {
-      view.setState(ConnectionState.UNAUTH);
-      resolve();
-    } else {
-      let errorMsg = '';
-      if (req.responseType === 'text' || !req.responseType) {
-        errorMsg = req.responseText;
-      } else if (req.responseType === 'arraybuffer') {
-        errorMsg = String.fromCharCode.apply(null, new Array(req.response));
-      }
-      view.setState(ConnectionState.ERROR, errorMsg);
-      resolve();
-    }
-  }
-
-  private onSuccessGetDevices = async (
-    view: ProxyConnection,
-    request: XMLHttpRequest,
+  private onSuccessGetDevices: OnRequestSuccessCallback = async (
+    resp: HttpResponse,
   ) => {
     try {
-      const devices = JSON.parse(request.responseText);
-      view.devices = Object.keys(devices).map((deviceId) => {
+      const devices = JSON.parse(resp.text);
+      this.devices = Object.keys(devices).map((deviceId) => {
         return {
           id: deviceId,
           authorized: devices[deviceId].authorized,
           model: devices[deviceId].model,
         };
       });
-      if (view.refresh_devices_worker === undefined) {
-        view.refresh_devices_worker = setInterval(
-          () => view.requestDevices(view),
+      if (this.refresh_devices_worker === undefined) {
+        this.refresh_devices_worker = setInterval(
+          () => this.requestDevices(),
           1000,
         );
       }
-      view.setState(ConnectionState.IDLE);
+      this.setState(ConnectionState.IDLE);
     } catch (err) {
-      view.setState(ConnectionState.ERROR, request.responseText);
+      this.setState(
+        ConnectionState.ERROR,
+        `Could not find devices. Received:\n${resp.text}`,
+      );
     }
   };
 
   private onSuccessFetchFiles: OnRequestSuccessCallback = async (
-    request: XMLHttpRequest,
+    httpResponse: HttpResponse,
   ) => {
     try {
       const enc = new TextDecoder('utf-8');
-      const resp = enc.decode(request.response);
+      const resp = enc.decode(httpResponse.body);
       const filesByType = JSON.parse(resp);
 
       for (const filetype of Object.keys(filesByType)) {
         const files = filesByType[filetype];
         for (const encodedFileBuffer of files) {
-          const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) =>
+          const buffer = Uint8Array.from(window.atob(encodedFileBuffer), (c) =>
             c.charCodeAt(0),
           );
           const blob = new Blob([buffer]);
@@ -371,12 +322,69 @@ export class ProxyConnection implements AdbConnection {
         }
       }
     } catch (error) {
-      this.setState(ConnectionState.ERROR, request.responseText);
-      throw error;
+      this.setState(
+        ConnectionState.ERROR,
+        `Could not fetch files. Received:\n${httpResponse.text}`,
+      );
     }
   };
 
-  private areVersionsCompatible(proxyVersion: string | null): boolean {
+  private isWaylandAvailable(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.getFromProxy(
+        ProxyEndpoint.CHECK_WAYLAND,
+        (request: HttpResponse) => {
+          resolve(request.text === 'true');
+        },
+      );
+    });
+  }
+
+  private async getFromProxy(
+    path: string,
+    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    type?: XMLHttpRequest['responseType'],
+  ) {
+    const response = await HttpRequest.get(
+      this.makeRequestPath(path),
+      this.getSecurityTokenHeader(),
+      type,
+    );
+    await this.processProxyResponse(response, onSuccess);
+  }
+
+  private async postToProxy(
+    path: string,
+    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+    jsonRequest?: object,
+  ) {
+    const response = await HttpRequest.post(
+      this.makeRequestPath(path),
+      this.getSecurityTokenHeader(),
+      jsonRequest,
+    );
+    await this.processProxyResponse(response, onSuccess);
+  }
+
+  private async processProxyResponse(
+    response: HttpResponse,
+    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
+  ) {
+    if (
+      response.status === HttpRequestStatus.SUCCESS &&
+      !this.isVersionCompatible(response)
+    ) {
+      await this.setState(ConnectionState.INVALID_VERSION);
+      return;
+    }
+    const adbResponse = await this.processHttpResponse(response, onSuccess);
+    if (adbResponse !== undefined) {
+      await this.setState(adbResponse.newState, adbResponse.errorMsg);
+    }
+  }
+
+  private isVersionCompatible(req: HttpResponse): boolean {
+    const proxyVersion = req.getHeader('Winscope-Proxy-Version');
     if (!proxyVersion) return false;
     const [proxyMajor, proxyMinor, proxyPatch] = proxyVersion
       .split('.')
@@ -396,46 +404,7 @@ export class ProxyConnection implements AdbConnection {
     return proxyMinor > clientMinor;
   }
 
-  private isWaylandAvailable(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.getFromProxy(
-        ProxyEndpoint.CHECK_WAYLAND,
-        (request: XMLHttpRequest) => {
-          resolve(request.responseText === 'true');
-        },
-      );
-    });
-  }
-
-  private async getFromProxy(
-    path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
-    type?: XMLHttpRequest['responseType'],
-  ) {
-    await HttpRequest.get(
-      this.makeRequestPath(path),
-      this.getSecurityTokenHeader(),
-      (req: XMLHttpRequest, resolve: ResolvePromiseType) =>
-        this.onReadyStateChange(this, req, resolve, onSuccess),
-      type,
-    );
-  }
-
-  private async postToProxy(
-    path: string,
-    onSuccess: OnRequestSuccessCallback = FunctionUtils.DO_NOTHING,
-    jsonRequest?: object,
-  ) {
-    await HttpRequest.post(
-      this.makeRequestPath(path),
-      this.getSecurityTokenHeader(),
-      (req: XMLHttpRequest, resolve: ResolvePromiseType) =>
-        this.onReadyStateChange(this, req, resolve, onSuccess),
-      jsonRequest,
-    );
-  }
-
-  private getSecurityTokenHeader(): RequestHeaderType {
+  private getSecurityTokenHeader(): HttpRequestHeaderType {
     const lastKey = this.store?.get('adb.proxyKey');
     if (lastKey !== undefined) {
       this.securityToken = lastKey;
@@ -447,5 +416,3 @@ export class ProxyConnection implements AdbConnection {
     return ProxyConnection.WINSCOPE_PROXY_URL + path;
   }
 }
-
-type ResolvePromiseType = (value: void | PromiseLike<void>) => void;

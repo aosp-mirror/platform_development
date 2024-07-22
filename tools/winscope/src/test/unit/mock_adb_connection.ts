@@ -20,7 +20,7 @@ import {AdbDevice} from 'trace_collection/adb_device';
 import {ConnectionState} from 'trace_collection/connection_state';
 import {TraceRequest} from 'trace_collection/trace_request';
 
-export class MockAdbConnection implements AdbConnection {
+export class MockAdbConnection extends AdbConnection {
   state: ConnectionState = ConnectionState.CONNECTING;
   errorText = '';
   files = [new File([], 'test_file')];
