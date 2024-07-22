@@ -85,7 +85,6 @@ class RectSfFactory {
         .setGroupId(layerStack)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(display.getChildByName('isVirtual')?.getValue() ?? false)
         .setDepth(index)
         .build();
     });
@@ -131,7 +130,6 @@ class RectSfFactory {
       .setGroupId(layerStack)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
-      .setIsVirtual(false)
       .setDepth(absoluteZ)
       .setOpacity(opacity)
       .build();

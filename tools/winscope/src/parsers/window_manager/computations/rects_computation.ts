@@ -41,7 +41,6 @@ class RectWmFactory {
       )
       .setIsVisible(false)
       .setIsDisplay(true)
-      .setIsVirtual(false)
       .setDepth(absoluteZ)
       .build();
   }
@@ -88,7 +87,6 @@ class RectWmFactory {
       .setGroupId(displayId)
       .setIsVisible(isVisible)
       .setIsDisplay(false)
-      .setIsVirtual(false)
       .setDepth(absoluteZ)
       .setOpacity(alpha)
       .build();

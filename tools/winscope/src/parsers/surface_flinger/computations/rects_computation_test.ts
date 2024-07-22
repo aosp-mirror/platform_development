@@ -124,7 +124,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(0)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -140,7 +139,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -156,7 +154,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -173,7 +170,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -236,7 +232,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -253,7 +248,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -309,7 +303,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
       new TraceRectBuilder()
         .setX(0)
@@ -324,7 +317,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
       new TraceRectBuilder()
         .setX(0)
@@ -339,7 +331,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -386,7 +377,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
       new TraceRectBuilder()
         .setX(0)
@@ -401,7 +391,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -464,7 +453,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -481,7 +469,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -544,7 +531,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
 
       new TraceRectBuilder()
@@ -561,7 +547,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(1)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -669,7 +654,6 @@ describe('RectsComputation', () => {
         .setIsVisible(true)
         .setOpacity(0)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -749,7 +733,6 @@ describe('RectsComputation', () => {
         .setGroupId(0)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .build(),
     ];
 
