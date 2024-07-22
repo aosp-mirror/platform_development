@@ -157,7 +157,6 @@ describe('RectFilter', () => {
       .setIsDisplay(isDisplay)
       .setId(id)
       .setGroupId(0)
-      .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)

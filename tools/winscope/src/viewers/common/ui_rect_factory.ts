@@ -38,7 +38,6 @@ class UiRectFactory {
         .setIsDisplay(traceRect.isDisplay)
         .setId(traceRect.id)
         .setGroupId(traceRect.groupId)
-        .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(!traceRect.isDisplay)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(
@@ -68,7 +67,6 @@ class UiRectFactory {
         .setIsDisplay(traceRect.isDisplay)
         .setId(traceRect.id)
         .setGroupId(groupId)
-        .setIsVirtual(traceRect.isVirtual)
         .setIsClickable(true)
         .setCornerRadius(traceRect.cornerRadius)
         .setHasContent(traceRect.isVisible)

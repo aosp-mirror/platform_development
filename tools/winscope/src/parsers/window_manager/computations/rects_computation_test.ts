@@ -75,7 +75,6 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
         .build(),
     ];
 
@@ -126,7 +125,6 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(true)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
         .build(),
 
@@ -142,7 +140,6 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
         .build(),
     ];

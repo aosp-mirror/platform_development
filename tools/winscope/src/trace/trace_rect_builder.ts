@@ -30,7 +30,6 @@ export class TraceRectBuilder {
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
-  isVirtual: boolean | undefined;
   depth: number | undefined;
   opacity: number | undefined;
 
@@ -89,11 +88,6 @@ export class TraceRectBuilder {
     return this;
   }
 
-  setIsVirtual(value: boolean) {
-    this.isVirtual = value;
-    return this;
-  }
-
   setDepth(value: number) {
     this.depth = value;
     return this;
@@ -145,10 +139,6 @@ export class TraceRectBuilder {
       throw new Error('isDisplay not set');
     }
 
-    if (this.isVirtual === undefined) {
-      throw new Error('isVirtual not set');
-    }
-
     if (this.depth === undefined) {
       throw new Error('depth not set');
     }
@@ -165,7 +155,6 @@ export class TraceRectBuilder {
       this.groupId,
       this.isVisible,
       this.isDisplay,
-      this.isVirtual,
       this.depth,
       this.opacity,
     );
