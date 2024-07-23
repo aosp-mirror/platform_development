@@ -102,4 +102,33 @@ describe('ParserWindowManager', () => {
       expect(entry.id).toEqual('WindowManagerState root');
     });
   });
+
+  describe('critical mode trace', () => {
+    let parser: Parser<HierarchyTreeNode>;
+
+    beforeAll(async () => {
+      parser = (await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/window_trace_critical.winscope',
+      )) as Parser<HierarchyTreeNode>;
+    });
+
+    it('has expected trace type', () => {
+      expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+    });
+
+    it('provides timestamps', () => {
+      const expected = [
+        TimestampConverterUtils.makeRealTimestamp(1721405245732015868n),
+        TimestampConverterUtils.makeRealTimestamp(1721405246510267496n),
+        TimestampConverterUtils.makeRealTimestamp(1721405246549639200n),
+      ];
+      expect(parser.getTimestamps()?.slice(0, 3)).toEqual(expected);
+    });
+
+    it('retrieves trace entry', async () => {
+      const entry = await parser.getEntry(0);
+      expect(entry).toBeInstanceOf(HierarchyTreeNode);
+      expect(entry.id).toEqual('WindowManagerState root');
+    });
+  });
 });

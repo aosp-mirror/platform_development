@@ -131,7 +131,7 @@ export class CannotVisualizeAllTraces extends UserWarning {
   }
 
   getMessage(): string {
-    return `Cannot visualize all traces: ${this.errorMessage}.\nTry removing some traces.`;
+    return this.errorMessage;
   }
 }
 
