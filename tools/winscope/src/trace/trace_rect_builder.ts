@@ -30,9 +30,9 @@ export class TraceRectBuilder {
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
-  isVirtual: boolean | undefined;
   depth: number | undefined;
   opacity: number | undefined;
+  isSpy: boolean | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -89,11 +89,6 @@ export class TraceRectBuilder {
     return this;
   }
 
-  setIsVirtual(value: boolean) {
-    this.isVirtual = value;
-    return this;
-  }
-
   setDepth(value: number) {
     this.depth = value;
     return this;
@@ -101,6 +96,11 @@ export class TraceRectBuilder {
 
   setOpacity(value: number) {
     this.opacity = value;
+    return this;
+  }
+
+  setIsSpy(value: boolean) {
+    this.isSpy = value;
     return this;
   }
 
@@ -145,12 +145,12 @@ export class TraceRectBuilder {
       throw new Error('isDisplay not set');
     }
 
-    if (this.isVirtual === undefined) {
-      throw new Error('isVirtual not set');
-    }
-
     if (this.depth === undefined) {
       throw new Error('depth not set');
+    }
+
+    if (this.isSpy === undefined) {
+      throw new Error('isSpy not set');
     }
 
     return new TraceRect(
@@ -165,9 +165,9 @@ export class TraceRectBuilder {
       this.groupId,
       this.isVisible,
       this.isDisplay,
-      this.isVirtual,
       this.depth,
       this.opacity,
+      this.isSpy,
     );
   }
 }

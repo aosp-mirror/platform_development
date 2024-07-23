@@ -31,7 +31,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {UserOptions} from 'viewers/common/user_options';
 import {LogPresenter} from './log_presenter';
-import {LogFieldType, UiDataLog} from './ui_data_log';
+import {LogEntry, LogFieldType, UiDataLog} from './ui_data_log';
 import {
   LogFilterChangeDetail,
   TimestampClickDetail,
@@ -44,7 +44,7 @@ export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   implements WinscopeEventEmitter
 {
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  protected abstract logPresenter: LogPresenter;
+  protected abstract logPresenter: LogPresenter<LogEntry>;
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
 
