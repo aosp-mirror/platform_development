@@ -341,6 +341,16 @@ export class HierarchyPresenter {
     this.updatePinnedIds(pinnedId);
   }
 
+  clear() {
+    this.previousEntries = undefined;
+    this.previousHierarchyTrees = undefined;
+    this.currentEntries = undefined;
+    this.currentHierarchyTrees = undefined;
+    this.currentHierarchyTreeNames = undefined;
+    this.currentFormattedTrees = undefined;
+    this.selectedHierarchyTree = undefined;
+  }
+
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
       this.pinnedIds = this.pinnedIds.filter((pinned) => pinned !== newId);

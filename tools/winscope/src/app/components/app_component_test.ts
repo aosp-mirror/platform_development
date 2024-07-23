@@ -162,7 +162,13 @@ describe('AppComponent', () => {
     goToTraceView();
     checkTraceViewPage();
 
-    (htmlElement.querySelector('.upload-new') as HTMLButtonElement).click();
+    (
+      assertDefined(
+        htmlElement.querySelector('.upload-new'),
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     await fixture.whenStable();
     checkHomepage();
@@ -177,7 +183,13 @@ describe('AppComponent', () => {
       component.mediator,
       'onWinscopeEvent',
     ).and.callThrough();
-    (htmlElement.querySelector('.refresh-dumps') as HTMLButtonElement).click();
+    (
+      assertDefined(
+        htmlElement.querySelector('.refresh-dumps'),
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     await fixture.whenStable();
     checkHomepage();
