@@ -96,10 +96,13 @@ export class RectsPresenter {
       this.userOptions['showOnlyVisible']?.enabled ?? false;
     const isIgnoreRectShowStateMode =
       this.userOptions['ignoreRectShowState']?.enabled ?? false;
+    const isOnlyWithContentMode =
+      this.userOptions['showOnlyWithContent']?.enabled ?? false;
     return this.rectFilter.filterRects(
       rects,
       isOnlyVisibleMode,
       isIgnoreRectShowStateMode,
+      isOnlyWithContentMode,
     );
   }
 }

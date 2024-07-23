@@ -106,7 +106,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     ),
     (tree: HierarchyTreeNode) =>
       UI_RECT_FACTORY.makeUiRects(tree, this.viewCapturePackageNames),
-    this.getDisplays,
+    makeDisplayIdentifiers,
   );
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
@@ -207,39 +207,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       return packageAndWindow.packageName;
     });
     this.viewCapturePackageNames = await Promise.all(promisesPackageName);
-  }
-
-  private getDisplays(rects: UiRect[]): DisplayIdentifier[] {
-    const ids: DisplayIdentifier[] = [];
-
-    rects.forEach((rect: UiRect) => {
-      if (!rect.isDisplay) return;
-      const displayId = rect.id.slice(10, rect.id.length);
-      ids.push({displayId, groupId: rect.groupId, name: rect.label});
-    });
-
-    let offscreenDisplayCount = 0;
-    rects.forEach((rect: UiRect) => {
-      if (rect.isDisplay) return;
-
-      if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
-        offscreenDisplayCount++;
-        const name =
-          'Offscreen Display' +
-          (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
-        ids.push({displayId: -1, groupId: rect.groupId, name});
-      }
-    });
-
-    return ids.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      }
-      if (a.name > b.name) {
-        return 1;
-      }
-      return 0;
-    });
   }
 
   private updateCuratedProperties() {
@@ -417,4 +384,39 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
       new UiData(this.curatedProperties, this.displayPropertyGroups),
     );
   }
+}
+
+export function makeDisplayIdentifiers(
+  displayRects: UiRect[],
+): DisplayIdentifier[] {
+  const ids: DisplayIdentifier[] = [];
+
+  displayRects.forEach((rect: UiRect) => {
+    if (!rect.isDisplay) return;
+    const displayId = rect.id.slice(10, rect.id.length);
+    ids.push({displayId, groupId: rect.groupId, name: rect.label});
+  });
+
+  let offscreenDisplayCount = 0;
+  displayRects.forEach((rect: UiRect) => {
+    if (rect.isDisplay) return;
+
+    if (!ids.find((identifier) => identifier.groupId === rect.groupId)) {
+      offscreenDisplayCount++;
+      const name =
+        'Offscreen Display' +
+        (offscreenDisplayCount > 1 ? ` ${offscreenDisplayCount}` : '');
+      ids.push({displayId: -1, groupId: rect.groupId, name});
+    }
+  });
+
+  return ids.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  });
 }

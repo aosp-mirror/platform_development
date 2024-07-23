@@ -16,7 +16,10 @@
 
 import {TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {DisplayIdentifier} from 'viewers/common/display_identifier';
+import {RectShowState} from 'viewers/common/rect_show_state';
 import {
   LogEntry,
   LogField,
@@ -25,6 +28,8 @@ import {
   UiDataLog,
 } from 'viewers/common/ui_data_log';
 import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
+import {UserOptions} from 'viewers/common/user_options';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData implements UiDataLog {
   constructor(
@@ -40,6 +45,14 @@ export class UiData implements UiDataLog {
   highlightedProperty: string = '';
   dispatchPropertiesTree: UiPropertyTreeNode | undefined;
 
+  rectsToDraw: UiRect[] | undefined;
+  rectIdToShowState: Map<string, RectShowState> | undefined;
+  highlightedRect = '';
+  rectsUserOptions: UserOptions | undefined;
+  displays: DisplayIdentifier[] = [];
+
+  readonly dependencies: TraceType[] = [TraceType.INPUT_EVENT_MERGED];
+
   static createEmpty(): UiData {
     return new UiData([], [], [], undefined, undefined, undefined);
   }
@@ -51,5 +64,6 @@ export class InputEntry implements LogEntry {
     public fields: LogField[],
     public propertiesTree: PropertyTreeNode | undefined,
     public dispatchPropertiesTree: PropertyTreeNode | undefined,
+    public surfaceFlingerEntry: TraceEntry<HierarchyTreeNode> | undefined,
   ) {}
 }
