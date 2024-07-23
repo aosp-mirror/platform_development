@@ -160,6 +160,9 @@ export class ProxyConnection extends AdbConnection {
         );
         this.progressCallback((100 * (idx + 1)) / fileNames.length);
       }
+      if (this.adbData.length === 0) {
+        Analytics.Proxy.logNoFilesFound();
+      }
       this.requestedTraces = [];
     }
   }
@@ -255,6 +258,20 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private async setState(state: ConnectionState, errorText = '') {
+    const connectedStates = [
+      ConnectionState.IDLE,
+      ConnectionState.STARTING_TRACE,
+      ConnectionState.TRACING,
+      ConnectionState.ENDING_TRACE,
+      ConnectionState.DUMPING_STATE,
+      ConnectionState.LOADING_DATA,
+    ];
+    if (
+      state === ConnectionState.NOT_FOUND &&
+      connectedStates.includes(this.state)
+    ) {
+      Analytics.Proxy.logServerNotFound();
+    }
     this.state = state;
     this.errorText = errorText;
     await this.onConnectionStateChange();
