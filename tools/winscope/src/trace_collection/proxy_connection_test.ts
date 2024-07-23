@@ -229,6 +229,15 @@ describe('ProxyConnection', () => {
       checkGetDevicesRequest('test_token');
     });
 
+    it('does not set empty token', async () => {
+      connection.setSecurityToken('test_initial_token');
+      connection = await createProxyConnection();
+      resetSpies();
+      connection.setSecurityToken('');
+      await connection.restartConnection();
+      checkGetDevicesRequest('test_initial_token');
+    });
+
     it('throws error on startTrace if no traces requested', async () => {
       await expectAsync(
         connection.startTrace(mockDevice, []),
