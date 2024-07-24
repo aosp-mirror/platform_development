@@ -15,26 +15,26 @@
  */
 
 import {Parser} from 'trace/parser';
-import {TracesParserCujs} from './traces_parser_cujs';
-import {TracesParserTransitions} from './traces_parser_transitions';
+import {Traces} from 'trace/traces';
+import {TracesParserCujs} from './events/traces_parser_cujs';
+import {TracesParserTransitions} from './transitions/traces_parser_transitions';
 
 export class TracesParserFactory {
   static readonly PARSERS = [TracesParserCujs, TracesParserTransitions];
 
-  async createParsers(parsers: Array<Parser<object>>): Promise<Array<Parser<object>>> {
-    const tracesParsers: Array<Parser<object>> = [];
+  async createParsers(traces: Traces): Promise<Array<Parser<object>>> {
+    const parsers: Array<Parser<object>> = [];
 
     for (const ParserType of TracesParserFactory.PARSERS) {
       try {
-        const parser = new ParserType(parsers);
+        const parser = new ParserType(traces);
         await parser.parse();
-        tracesParsers.push(parser);
-        break;
+        parsers.push(parser);
       } catch (error) {
         // skip current parser
       }
     }
 
-    return tracesParsers;
+    return parsers;
   }
 }

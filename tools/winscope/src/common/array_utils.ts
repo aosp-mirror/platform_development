@@ -41,7 +41,7 @@ class ArrayUtils {
 
   static searchSubarray<T>(
     array: T[] | TypedArray,
-    subarray: T[] | TypedArray
+    subarray: T[] | TypedArray,
   ): number | undefined {
     for (let i = 0; i + subarray.length <= array.length; ++i) {
       let match = true;
@@ -63,7 +63,7 @@ class ArrayUtils {
 
   static binarySearchFirstGreaterOrEqual<T>(
     values: T[] | TypedArray,
-    target: T
+    target: T,
   ): number | undefined {
     if (values.length === 0) {
       return undefined;
@@ -93,7 +93,10 @@ class ArrayUtils {
     return result;
   }
 
-  static binarySearchFirstGreater<T>(values: T[] | TypedArray, target: T): number | undefined {
+  static binarySearchFirstGreater<T>(
+    values: T[] | TypedArray,
+    target: T,
+  ): number | undefined {
     if (values.length === 0) {
       return undefined;
     }
@@ -121,7 +124,11 @@ class ArrayUtils {
     return result;
   }
 
-  static toUintLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
+  static toUintLittleEndian(
+    buffer: Uint8Array,
+    start: number,
+    end: number,
+  ): bigint {
     let result = 0n;
     for (let i = end - 1; i >= start; --i) {
       result *= 256n;
@@ -130,7 +137,11 @@ class ArrayUtils {
     return result;
   }
 
-  static toIntLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
+  static toIntLittleEndian(
+    buffer: Uint8Array,
+    start: number,
+    end: number,
+  ): bigint {
     const numOfBits = BigInt(Math.max(0, 8 * (end - start)));
     if (numOfBits <= 0n) {
       return 0n;

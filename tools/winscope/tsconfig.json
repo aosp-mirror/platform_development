@@ -3,6 +3,9 @@
   "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./src",
+    "paths":{
+      "protos/*": ["../deps_build/protos/*"]
+    },
     "outDir": "./dist/out-tsc",
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,

@@ -19,15 +19,13 @@ import {TraceType} from 'trace/trace_type';
 const WINDOW_MANAGER_ICON = 'web';
 const SURFACE_FLINGER_ICON = 'layers';
 const SCREEN_RECORDING_ICON = 'videocam';
+const SCREENSHOT_ICON = 'image';
 const TRANSACTION_ICON = 'show_chart';
 const WAYLAND_ICON = 'filter_none';
 const PROTO_LOG_ICON = 'notes';
 const SYSTEM_UI_ICON = 'filter_none';
-const LAUNCHER_ICON = 'filter_none';
+const VIEW_CAPTURE_ICON = 'filter_none';
 const IME_ICON = 'keyboard_alt';
-const ACCESSIBILITY_ICON = 'accessibility_new';
-const TAG_ICON = 'details';
-const TRACE_ERROR_ICON = 'warning';
 const EVENT_LOG_ICON = 'description';
 const TRANSITION_ICON = 'animation';
 const CUJ_ICON = 'label';
@@ -42,12 +40,6 @@ interface TraceInfoMap {
 }
 
 export const TRACE_INFO: TraceInfoMap = {
-  [TraceType.ACCESSIBILITY]: {
-    name: 'Accessibility',
-    icon: ACCESSIBILITY_ICON,
-    color: '#FF63B8',
-    downloadArchiveDir: 'accessibility',
-  },
   [TraceType.WINDOW_MANAGER]: {
     name: 'Window Manager',
     icon: WINDOW_MANAGER_ICON,
@@ -63,6 +55,12 @@ export const TRACE_INFO: TraceInfoMap = {
   [TraceType.SCREEN_RECORDING]: {
     name: 'Screen Recording',
     icon: SCREEN_RECORDING_ICON,
+    color: '#8A9CF9',
+    downloadArchiveDir: '',
+  },
+  [TraceType.SCREENSHOT]: {
+    name: 'Screenshot',
+    icon: SCREENSHOT_ICON,
     color: '#8A9CF9',
     downloadArchiveDir: '',
   },
@@ -102,18 +100,23 @@ export const TRACE_INFO: TraceInfoMap = {
     color: '#7A86FF',
     downloadArchiveDir: 'sysui',
   },
-  [TraceType.LAUNCHER]: {
-    name: 'Launcher',
-    icon: LAUNCHER_ICON,
+  [TraceType.VIEW_CAPTURE_LAUNCHER_ACTIVITY]: {
+    name: 'View Capture - Nexuslauncher',
+    icon: VIEW_CAPTURE_ICON,
     color: '#137333',
-    downloadArchiveDir: 'launcher',
+    downloadArchiveDir: 'vc',
   },
-  // TODO: Choose ViewCapture icon, color, title name, and download archive directory
-  [TraceType.VIEW_CAPTURE]: {
-    name: 'View Capture',
-    icon: LAUNCHER_ICON,
+  [TraceType.VIEW_CAPTURE_TASKBAR_DRAG_LAYER]: {
+    name: 'View Capture - Taskbar',
+    icon: VIEW_CAPTURE_ICON,
     color: '#137333',
-    downloadArchiveDir: 'launcher',
+    downloadArchiveDir: 'vc',
+  },
+  [TraceType.VIEW_CAPTURE_TASKBAR_OVERLAY_DRAG_LAYER]: {
+    name: 'View Capture - Taskbar Overlay',
+    icon: VIEW_CAPTURE_ICON,
+    color: '#137333',
+    downloadArchiveDir: 'vc',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
     name: 'IME Clients',
@@ -132,18 +135,6 @@ export const TRACE_INFO: TraceInfoMap = {
     icon: IME_ICON,
     color: '#D93025',
     downloadArchiveDir: 'ime',
-  },
-  [TraceType.TAG]: {
-    name: 'Tag',
-    icon: TAG_ICON,
-    color: '#4575B4',
-    downloadArchiveDir: '',
-  },
-  [TraceType.ERROR]: {
-    name: 'Error',
-    icon: TRACE_ERROR_ICON,
-    color: '#D73027',
-    downloadArchiveDir: '',
   },
   [TraceType.EVENT_LOG]: {
     name: 'Event Log',

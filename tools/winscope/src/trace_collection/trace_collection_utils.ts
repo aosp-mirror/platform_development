@@ -110,7 +110,7 @@ const sfTraceSelectionConfigs: SelectionConfiguration[] = [
   },
 ];
 
-export const traceConfigurations: TraceConfigurationMap = {
+const traceConfigurations: TraceConfigurationMap = {
   layers_trace: {
     name: 'Surface Flinger',
     run: true,
@@ -178,12 +178,6 @@ export const traceConfigurations: TraceConfigurationMap = {
     run: true,
     config: undefined,
   },
-  accessibility_trace: {
-    name: 'Accessibility',
-    isTraceCollection: undefined,
-    run: false,
-    config: undefined,
-  },
   transactions: {
     name: 'Transaction',
     isTraceCollection: undefined,
@@ -214,12 +208,17 @@ export const traceConfigurations: TraceConfigurationMap = {
     run: false,
     config: undefined,
   },
+  view_capture_traces: {
+    name: 'View Capture',
+    isTraceCollection: undefined,
+    run: false,
+    config: undefined,
+  },
 };
 
 export const TRACES: {[key: string]: TraceConfigurationMap} = {
   default: {
     window_trace: traceConfigurations['window_trace'],
-    accessibility_trace: traceConfigurations['accessibility_trace'],
     layers_trace: traceConfigurations['layers_trace'],
     transactions: traceConfigurations['transactions'],
     proto_log: traceConfigurations['proto_log'],
@@ -227,6 +226,7 @@ export const TRACES: {[key: string]: TraceConfigurationMap} = {
     ime_tracing: traceConfigurations['ime_tracing'],
     eventlog: traceConfigurations['eventlog'],
     transition_traces: traceConfigurations['transition_traces'],
+    view_capture_trace: traceConfigurations['view_capture_traces'],
   },
   arc: {
     wayland_trace: traceConfigurations['wayland_trace'],

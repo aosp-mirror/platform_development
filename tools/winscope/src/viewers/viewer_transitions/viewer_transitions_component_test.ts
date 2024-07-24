@@ -15,18 +15,34 @@
  */
 
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
-import {MatDividerModule} from '@angular/material/divider';
 import {
-  CrossPlatform,
-  ShellTransitionData,
-  Transition,
-  TransitionChange,
-  TransitionType,
-  WmTransitionData,
-} from 'trace/flickerlib/common';
-import {TimestampType} from 'trace/timestamp';
+  ComponentFixture,
+  ComponentFixtureAutoDetect,
+  TestBed,
+} from '@angular/core/testing';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {assertDefined} from 'common/assert_utils';
+import {TimestampType} from 'common/time';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TracePositionUpdate} from 'messaging/winscope_event';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
+import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from 'trace/parser';
+import {Trace} from 'trace/trace';
+import {Traces} from 'trace/traces';
+import {TracePosition} from 'trace/trace_position';
+import {TraceType} from 'trace/trace_type';
+import {Transition} from 'trace/transition';
+import {TIMESTAMP_FORMATTER} from 'trace/tree_node/formatters';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {PropertiesComponent} from 'viewers/components/properties_component';
+import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
+import {TreeComponent} from 'viewers/components/tree_component';
+import {TreeNodeComponent} from 'viewers/components/tree_node_component';
+import {Events} from './events';
+import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 import {ViewerTransitionsComponent} from './viewer_transitions_component';
 
@@ -35,12 +51,18 @@ describe('ViewerTransitionsComponent', () => {
   let component: ViewerTransitionsComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
-      imports: [MatDividerModule, ScrollingModule],
-      declarations: [ViewerTransitionsComponent],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
+      imports: [MatDividerModule, ScrollingModule, MatIconModule],
+      declarations: [
+        ViewerTransitionsComponent,
+        TreeComponent,
+        TreeNodeComponent,
+        PropertyTreeNodeDataViewComponent,
+        PropertiesComponent,
+      ],
+      schemas: [],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerTransitionsComponent);
@@ -58,68 +80,173 @@ describe('ViewerTransitionsComponent', () => {
   it('renders entries', () => {
     expect(htmlElement.querySelector('.scroll')).toBeTruthy();
 
-    const entry = htmlElement.querySelector('.scroll .entry');
-    expect(entry).toBeTruthy();
-    expect(entry!.innerHTML).toContain('TO_FRONT');
-    expect(entry!.innerHTML).toContain('10ns');
+    const entry = assertDefined(htmlElement.querySelector('.scroll .entry'));
+    expect(entry.innerHTML).toContain('TO_FRONT');
+    expect(entry.innerHTML).toContain('10ns');
   });
 
   it('shows message when no transition is selected', () => {
-    expect(htmlElement.querySelector('.container-properties')?.innerHTML).toContain(
-      'No selected transition'
+    expect(
+      htmlElement.querySelector('.properties-view .placeholder-text')
+        ?.innerHTML,
+    ).toContain('No selected transition');
+  });
+
+  it('emits TransitionSelected event on transition clicked', () => {
+    const emitEventSpy = spyOn(component, 'emitEvent');
+
+    const entries = htmlElement.querySelectorAll('.entry.table-row');
+    const entry1 = assertDefined(entries[0]) as HTMLElement;
+    const entry2 = assertDefined(entries[1]) as HTMLElement;
+    const treeView = assertDefined(
+      htmlElement.querySelector('.properties-view'),
+    ) as HTMLElement;
+    expect(
+      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
+    ).toContain('No selected transition');
+
+    expect(emitEventSpy).not.toHaveBeenCalled();
+
+    const id0 = assertDefined(entry1.querySelector('.id')).textContent;
+    expect(id0).toEqual('0');
+    entry1.click();
+    fixture.detectChanges();
+
+    expect(emitEventSpy).toHaveBeenCalled();
+    expect(emitEventSpy).toHaveBeenCalledWith(
+      Events.TransitionSelected,
+      jasmine.any(Object),
     );
+    expect(
+      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+    ).toEqual(0);
+
+    const id1 = assertDefined(entry2.querySelector('.id')).textContent;
+    expect(id1).toEqual('1');
+    entry2.click();
+    fixture.detectChanges();
+
+    expect(emitEventSpy).toHaveBeenCalled();
+    expect(emitEventSpy).toHaveBeenCalledWith(
+      Events.TransitionSelected,
+      jasmine.any(Object),
+    );
+    expect(
+      emitEventSpy.calls.mostRecent().args[1].getChildByName('id')?.getValue(),
+    ).toEqual(1);
+  });
+
+  it('updates tree view on TracePositionUpdate event', async () => {
+    const parser = (await UnitTestUtils.getTracesParser([
+      'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
+    ])) as Parser<PropertyTreeNode>;
+    const trace = Trace.fromParser(parser, TimestampType.REAL);
+    const traces = new Traces();
+    traces.setTrace(TraceType.TRANSITION, trace);
+
+    let treeView = assertDefined(
+      htmlElement.querySelector('.properties-view'),
+    ) as any as HTMLElement;
+    expect(
+      assertDefined(treeView.querySelector('.placeholder-text')).textContent,
+    ).toContain('No selected transition');
+
+    const presenter = new Presenter(traces, (data) => {
+      component.inputData = data;
+    });
+    const selectedTransitionEntry = assertDefined(
+      traces.getTrace(TraceType.TRANSITION)?.getEntry(2),
+    );
+    const selectedTransition = await selectedTransitionEntry.getValue();
+    const selectedTransitionId = assertDefined(
+      selectedTransition.getChildByName('id'),
+    ).getValue();
+    await presenter.onAppEvent(
+      new TracePositionUpdate(
+        TracePosition.fromTraceEntry(selectedTransitionEntry),
+      ),
+    );
+
+    expect(
+      assertDefined(
+        component.uiData.selectedTransition
+          ?.getChildByName('wmData')
+          ?.getChildByName('id'),
+      ).getValue(),
+    ).toEqual(selectedTransitionId);
+
+    fixture.detectChanges();
+
+    treeView = assertDefined(
+      fixture.nativeElement.querySelector('.properties-view'),
+    ) as any as HTMLElement;
+    const textContentWithoutWhitespaces = treeView.textContent?.replace(
+      /(\s|\t|\n)*/g,
+      '',
+    );
+    expect(textContentWithoutWhitespaces).toContain(
+      `id:${selectedTransitionId}`,
+    );
+  });
+
+  it('propagates timestamp on click', () => {
+    let timestamp = '';
+    htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
+      timestamp = (event as CustomEvent).detail.formattedValue();
+    });
+    const logTimestampButton = assertDefined(
+      htmlElement.querySelector('.time button'),
+    ) as HTMLButtonElement;
+    logTimestampButton.click();
+
+    expect(timestamp).toEqual('20ns');
   });
 });
 
 function makeUiData(): UiData {
+  let mockTransitionIdCounter = 0;
+
   const transitions = [
-    createMockTransition(10, 20, 30),
-    createMockTransition(40, 42, 50),
-    createMockTransition(45, 46, 49),
-    createMockTransition(55, 58, 70),
+    createMockTransition(20, 30, mockTransitionIdCounter++),
+    createMockTransition(42, 50, mockTransitionIdCounter++),
+    createMockTransition(46, 49, mockTransitionIdCounter++),
+    createMockTransition(58, 70, mockTransitionIdCounter++),
   ];
 
-  const selectedTransition = undefined;
-  const selectedTransitionPropertiesTree = undefined;
-  const timestampType = TimestampType.REAL;
-
-  return new UiData(
-    transitions,
-    selectedTransition,
-    timestampType,
-    selectedTransitionPropertiesTree
-  );
+  return new UiData(transitions, undefined);
 }
 
 function createMockTransition(
-  createTimeNanos: number,
   sendTimeNanos: number,
-  finishTimeNanos: number
+  finishTimeNanos: number,
+  id: number,
 ): Transition {
-  const createTime = CrossPlatform.timestamp.fromString(createTimeNanos.toString(), null, null);
-  const sendTime = CrossPlatform.timestamp.fromString(sendTimeNanos.toString(), null, null);
-  const abortTime = null;
-  const finishTime = CrossPlatform.timestamp.fromString(finishTimeNanos.toString(), null, null);
+  const transitionTree = new PropertyTreeBuilder()
+    .setIsRoot(true)
+    .setRootId('TransitionTraceEntry')
+    .setName('transition')
+    .setChildren([{name: 'id', value: id}])
+    .build();
 
-  const startTransactionId = '-1';
-  const finishTransactionId = '-1';
-  const type = TransitionType.TO_FRONT;
-  const changes: TransitionChange[] = [];
+  const sendTimeNode = new PropertyTreeBuilder()
+    .setRootId(transitionTree.id)
+    .setName('sendTimeNs')
+    .setValue(
+      NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(BigInt(sendTimeNanos)),
+    )
+    .setFormatter(TIMESTAMP_FORMATTER)
+    .build();
 
-  return new Transition(
-    id++,
-    new WmTransitionData(
-      createTime,
-      sendTime,
-      abortTime,
-      finishTime,
-      startTransactionId,
-      finishTransactionId,
-      type,
-      changes
-    ),
-    new ShellTransitionData()
-  );
+  return {
+    id,
+    type: 'TO_FRONT',
+    sendTime: sendTimeNode,
+    dispatchTime: undefined,
+    duration: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
+    merged: false,
+    aborted: false,
+    played: false,
+    propertiesTree: transitionTree,
+  };
 }
-
-let id = 0;

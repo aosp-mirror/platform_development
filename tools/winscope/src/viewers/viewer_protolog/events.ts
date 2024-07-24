@@ -16,8 +16,11 @@
 class Events {
   static LogLevelsFilterChanged = 'ViewerProtoLogEvent_LogLevelsFilterChanged';
   static TagsFilterChanged = 'ViewerProtoLogEvent_TagsFilterChanged';
-  static SourceFilesFilterChanged = 'ViewerProtoLogEvent_SourceFilesFilterChanged';
-  static SearchStringFilterChanged = 'ViewerProtoLogEvent_SearchStringFilterChanged';
+  static SourceFilesFilterChanged =
+    'ViewerProtoLogEvent_SourceFilesFilterChanged';
+  static SearchStringFilterChanged =
+    'ViewerProtoLogEvent_SearchStringFilterChanged';
+  static MessageClicked = 'ViewerProtoLogEvent_MessageClicked';
 }
 
 export {Events};

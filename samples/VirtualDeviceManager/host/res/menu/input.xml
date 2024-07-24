@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- LINT.IfChange -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mouse"
+        android:icon="@drawable/input_mouse"
+        android:title="@string/touchpad" />
+    <item
+        android:id="@+id/remote"
+        android:icon="@drawable/input_remote"
+        android:title="@string/remote_control" />
+    <item
+        android:id="@+id/navigation"
+        android:icon="@drawable/input_navigation"
+        android:title="@string/navigation" />
+    <item
+        android:id="@+id/stylus"
+        android:icon="@drawable/input_stylus"
+        android:title="@string/stylus" />
+    <item
+        android:id="@+id/keyboard"
+        android:icon="@drawable/input_keyboard"
+        android:title="@string/keyboard" />
+</menu>
+<!-- LINT.ThenChange(/samples/VirtualDeviceManager/README.md:host_options) -->

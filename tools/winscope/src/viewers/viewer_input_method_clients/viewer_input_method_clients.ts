@@ -15,38 +15,44 @@
  */
 
 import {Traces} from 'trace/traces';
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType, TraceType} from 'trace/trace_type';
 import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
 import {View, ViewType} from 'viewers/viewer';
 import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
 class ViewerInputMethodClients extends ViewerInputMethod {
-  override getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'Input Method Clients',
-        TraceType.INPUT_METHOD_CLIENTS
-      ),
-    ];
+  static readonly DEPENDENCIES: ImeTraceType[] = [
+    TraceType.INPUT_METHOD_CLIENTS,
+  ];
+
+  override readonly view: View;
+
+  constructor(traces: Traces, storage: Storage) {
+    super(traces, storage);
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'Input Method Clients',
+      TraceType.INPUT_METHOD_CLIENTS,
+    );
   }
 
-  override getDependencies(): TraceType[] {
+  override getDependencies(): ImeTraceType[] {
     return ViewerInputMethodClients.DEPENDENCIES;
   }
 
-  override initialisePresenter(traces: Traces, storage: Storage): PresenterInputMethodClients {
+  override initialisePresenter(
+    traces: Traces,
+    storage: Storage,
+  ): PresenterInputMethodClients {
     return new PresenterInputMethodClients(
       traces,
       storage,
       this.getDependencies(),
-      this.imeUiCallback
+      this.imeUiCallback,
     );
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_CLIENTS];
 }
 
 export {ViewerInputMethodClients};

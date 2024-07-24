@@ -198,7 +198,7 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def test_libgolden_cpp_add_function(self):
         self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp", "libgolden_cpp_add_function", 4)
+            "libgolden_cpp", "libgolden_cpp_add_function", 6)
 
     def test_libgolden_cpp_add_function_allow_extension(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -208,7 +208,7 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_add_function_and_elf_symbol(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf",
-            4)
+            6)
 
     def test_libgolden_cpp_fabricated_function_ast_removed_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -221,7 +221,7 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def test_libgolden_cpp_add_global_variable(self):
         self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp", "libgolden_cpp_add_global_variable", 4)
+            "libgolden_cpp", "libgolden_cpp_add_global_variable", 6)
 
     def test_libgolden_cpp_change_global_var_access(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -278,6 +278,11 @@ class HeaderCheckerTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_unreferenced_elf_symbol_removed",
             16)
+
+    def test_libgolden_cpp_unreferenced_elf_symbol_added(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_unreferenced_elf_symbol_removed", "libgolden_cpp",
+            2, create_old=True, create_new=False)
 
     def test_libreproducability(self):
         self.prepare_and_absolute_diff_all_archs(
@@ -538,6 +543,14 @@ class HeaderCheckerTest(unittest.TestCase):
         return_code = run_abi_diff(lsdump_path, lsdump_path, read_only_path,
                                    'x86_64', 'libtest', diff_flags)
         self.assertEqual(return_code, 1)
+
+    def test_bit_field_diff(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libbit_field", "libbit_field")
+        self.prepare_and_run_abi_diff_all_archs(
+            "libbit_field", "libbit_field_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=True)
 
 
 if __name__ == '__main__':

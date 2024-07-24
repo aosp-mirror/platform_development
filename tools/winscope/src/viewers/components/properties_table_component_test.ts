@@ -19,7 +19,6 @@ import {PropertiesTableComponent} from './properties_table_component';
 describe('PropertiesTableComponent', () => {
   let fixture: ComponentFixture<PropertiesTableComponent>;
   let component: PropertiesTableComponent;
-  let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
@@ -31,7 +30,6 @@ describe('PropertiesTableComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PropertiesTableComponent);
     component = fixture.componentInstance;
-    htmlElement = fixture.nativeElement;
   });
 
   it('can be created', () => {

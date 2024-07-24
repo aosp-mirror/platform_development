@@ -24,4 +24,24 @@ export class FunctionUtils {
   static readonly DO_NOTHING_ASYNC = (): Promise<void> => {
     return Promise.resolve();
   };
+
+  static mixin<T extends object, U extends object>(a: T, b: U): T & U {
+    const ret = {};
+    Object.assign(ret, a);
+    Object.assign(ret, b);
+
+    const assignMethods = (dst: object, src: object) => {
+      for (const methodName of Object.getOwnPropertyNames(
+        Object.getPrototypeOf(src),
+      )) {
+        const method = (src as any)[methodName];
+        (dst as any)[methodName] = method;
+      }
+    };
+
+    assignMethods(ret, a);
+    assignMethods(ret, b);
+
+    return ret as T & U;
+  }
 }

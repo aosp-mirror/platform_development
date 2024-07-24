@@ -1,0 +1,4 @@
+TEST DUMPSTATE BOARD
+[persist.sys.locale]: [en-US]
+[persist.sys.timezone]: [Asia/Kolkata]
+EOF

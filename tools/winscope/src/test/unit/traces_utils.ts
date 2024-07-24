@@ -21,7 +21,9 @@ import {TraceType} from 'trace/trace_type';
 import {TraceUtils} from './trace_utils';
 
 export class TracesUtils {
-  static async extractEntries(traces: Traces): Promise<Map<TraceType, Array<{}>>> {
+  static async extractEntries(
+    traces: Traces,
+  ): Promise<Map<TraceType, Array<{}>>> {
     const entries = new Map<TraceType, Array<{}>>();
 
     const promises = traces.mapTrace(async (trace) => {
@@ -33,14 +35,17 @@ export class TracesUtils {
   }
 
   static async extractFrames(
-    traces: Traces
+    traces: Traces,
   ): Promise<Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>> {
     const frames = new Map<AbsoluteFrameIndex, Map<TraceType, Array<{}>>>();
 
     const framePromises = traces.mapFrame(async (frame, index) => {
       frames.set(index, new Map<TraceType, Array<{}>>());
       const tracePromises = frame.mapTrace(async (trace, type) => {
-        assertDefined(frames.get(index)).set(type, await TraceUtils.extractEntries(trace));
+        assertDefined(frames.get(index)).set(
+          type,
+          await TraceUtils.extractEntries(trace),
+        );
       });
       await Promise.all(tracePromises);
     });

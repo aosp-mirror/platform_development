@@ -1,0 +1,4 @@
+libbit_field {
+  global:
+    function;
+};

@@ -16,6 +16,11 @@
 import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
 import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
 import {MatSelectChange} from '@angular/material/select';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {currentElementStyle} from 'viewers/components/styles/current_element.styles';
+import {selectedElementStyle} from 'viewers/components/styles/selected_element.styles';
+import {timeButtonStyle} from 'viewers/components/styles/timestamp_button.styles';
 import {Events} from './events';
 import {UiData} from './ui_data';
 
@@ -25,49 +30,67 @@ import {UiData} from './ui_data';
     <div class="card-grid container">
       <div class="filters">
         <div class="log-level">
-          <mat-form-field appearance="fill">
-            <mat-label>Log level</mat-label>
-            <mat-select (selectionChange)="onLogLevelsChange($event)" multiple>
-              <mat-option *ngFor="let level of uiData.allLogLevels" [value]="level">
-                {{ level }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Log level"
+            flex="3"
+            [options]="uiData.allLogLevels"
+            outerFilterWidth="225"
+            (selectChange)="onLogLevelsChange($event)">
+          </select-with-filter>
         </div>
         <div class="tag">
-          <mat-form-field appearance="fill">
-            <mat-label>Tags</mat-label>
-            <mat-select (selectionChange)="onTagsChange($event)" multiple>
-              <mat-option *ngFor="let tag of uiData.allTags" [value]="tag">
-                {{ tag }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Tags"
+            flex="2"
+            [options]="uiData.allTags"
+            outerFilterWidth="150"
+            innerFilterWidth="150"
+            (selectChange)="onTagsChange($event)">
+          </select-with-filter>
         </div>
         <div class="source-file">
-          <mat-form-field appearance="fill">
-            <mat-label>Source files</mat-label>
-            <mat-select (selectionChange)="onSourceFilesChange($event)" multiple>
-              <mat-option *ngFor="let file of uiData.allSourceFiles" [value]="file">
-                {{ file }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <select-with-filter
+            label="Source files"
+            flex="4"
+            [options]="uiData.allSourceFiles"
+            outerFilterWidth="300"
+            innerFilterWidth="300"
+            (selectChange)="onSourceFilesChange($event)">
+          </select-with-filter>
         </div>
         <div class="text">
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="fill" (keydown.enter)="$event.target.blur()">
             <mat-label>Search text</mat-label>
-            <input matInput [(ngModel)]="searchString" (input)="onSearchStringChange()" />
+            <input matInput name="protologTextInput" [(ngModel)]="searchString" (input)="onSearchStringChange()" />
           </mat-form-field>
         </div>
+
+        <button
+          color="primary"
+          mat-stroked-button
+          class="go-to-current-time"
+          (click)="onGoToCurrentTimeClick()">
+          Go to Current Time
+        </button>
       </div>
-      <cdk-virtual-scroll-viewport itemSize="16" class="scroll-messages">
+      <cdk-virtual-scroll-viewport
+        protologVirtualScroll
+        class="scroll-messages"
+        [scrollItems]="uiData.messages">
         <div
           *cdkVirtualFor="let message of uiData.messages; let i = index"
           class="message"
-          [class.current-message]="isCurrentMessage(i)">
+          [attr.item-id]="i"
+          [class.current]="isCurrentMessage(i)"
+          [class.selected]="isSelectedMessage(i)"
+          (click)="onMessageClicked(i)">
           <div class="time">
-            <span class="mat-body-1">{{ message.time }}</span>
+            <button
+              mat-button
+              [color]="isCurrentMessage(i) ? 'secondary' : 'primary'"
+              (click)="onTimestampClicked(message.time)">
+              {{ message.time.formattedValue() }}
+            </button>
           </div>
           <div class="log-level">
             <span class="mat-body-1">{{ message.level }}</span>
@@ -111,11 +134,6 @@ import {UiData} from './ui_data';
         overflow-wrap: anywhere;
       }
 
-      .message.current-message {
-        background-color: #365179;
-        color: white;
-      }
-
       .time {
         flex: 2;
       }
@@ -140,6 +158,17 @@ import {UiData} from './ui_data';
         flex: 10;
       }
 
+      .filters .text mat-form-field {
+        width: 80%;
+      }
+
+      .go-to-current-time {
+        margin-top: 4px;
+        font-size: 12px;
+        height: 65%;
+        width: fit-content;
+      }
+
       .filters div {
         margin: 4px;
       }
@@ -150,21 +179,42 @@ import {UiData} from './ui_data';
 
       mat-form-field {
         width: 100%;
+        font-size: 12px;
       }
     `,
+    selectedElementStyle,
+    currentElementStyle,
+    timeButtonStyle,
   ],
 })
 export class ViewerProtologComponent {
-  constructor(@Inject(ElementRef) elementRef: ElementRef) {
-    this.elementRef = elementRef;
-  }
+  uiData: UiData = UiData.EMPTY;
+
+  private searchString = '';
+  private lastClicked = '';
+  private lastSelectedMessage: undefined | number;
+
+  @ViewChild(CdkVirtualScrollViewport)
+  scrollComponent?: CdkVirtualScrollViewport;
+
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   @Input()
   set inputData(data: UiData) {
     this.uiData = data;
-    if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
+    if (
+      this.lastSelectedMessage === undefined &&
+      this.uiData.currentMessageIndex !== undefined &&
+      this.scrollComponent &&
+      this.lastClicked !==
+        this.uiData.messages[
+          this.uiData.currentMessageIndex
+        ].time.formattedValue()
+    ) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }
+
+    this.lastSelectedMessage = undefined;
   }
 
   onLogLevelsChange(event: MatSelectChange) {
@@ -183,8 +233,28 @@ export class ViewerProtologComponent {
     this.emitEvent(Events.SearchStringFilterChanged, this.searchString);
   }
 
+  onGoToCurrentTimeClick() {
+    if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
+      this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
+    }
+  }
+
+  onTimestampClicked(timestamp: PropertyTreeNode) {
+    this.lastClicked = timestamp.formattedValue();
+    this.emitEvent(ViewerEvents.TimestampClick, timestamp);
+  }
+
+  onMessageClicked(index: number) {
+    this.lastSelectedMessage = index;
+    this.emitEvent(Events.MessageClicked, index);
+  }
+
   isCurrentMessage(index: number): boolean {
     return index === this.uiData.currentMessageIndex;
+  }
+
+  isSelectedMessage(index: number): boolean {
+    return index === this.uiData.selectedMessageIndex;
   }
 
   private emitEvent(event: string, data: any) {
@@ -194,10 +264,4 @@ export class ViewerProtologComponent {
     });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
-
-  @ViewChild(CdkVirtualScrollViewport) scrollComponent!: CdkVirtualScrollViewport;
-
-  uiData: UiData = UiData.EMPTY;
-  private searchString = '';
-  private elementRef: ElementRef;
 }

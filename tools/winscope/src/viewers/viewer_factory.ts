@@ -21,11 +21,16 @@ import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_inp
 import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
 import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
 import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
+import {ViewerScreenshot} from './viewer_screen_recording/viewer_screenshot';
 import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_recording';
 import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
 import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
 import {ViewerTransitions} from './viewer_transitions/viewer_transitions';
-import {ViewerViewCapture} from './viewer_view_capture/viewer_view_capture';
+import {
+  ViewerViewCaptureLauncherActivity,
+  ViewerViewCaptureTaskbarDragLayer,
+  ViewerViewCaptureTaskbarOverlayDragLayer,
+} from './viewer_view_capture/viewer_view_capture';
 import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
@@ -41,16 +46,20 @@ class ViewerFactory {
     ViewerTransactions,
     ViewerProtoLog,
     ViewerScreenRecording,
+    ViewerScreenshot,
     ViewerTransitions,
-    ViewerViewCapture,
+    ViewerViewCaptureLauncherActivity,
+    ViewerViewCaptureTaskbarDragLayer,
+    ViewerViewCaptureTaskbarOverlayDragLayer,
   ];
 
-  createViewers(activeTraceTypes: Set<TraceType>, traces: Traces, storage: Storage): Viewer[] {
+  createViewers(traces: Traces, storage: Storage): Viewer[] {
+    const activeTraceTypes = new Set(traces.mapTrace((trace) => trace.type));
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
-        activeTraceTypes.has(traceType)
+      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every(
+        (traceType: TraceType) => activeTraceTypes.has(traceType),
       );
 
       if (areViewerDepsSatisfied) {

@@ -214,6 +214,9 @@ android_sdk_repo_host {
         linux: {
             strip_files: ["lib64/*.so"],
         },
+        linux_bionic: {
+            enabled: false,
+        },
         darwin: {
             strip_files: ["lib64/*.dylib"],
         },

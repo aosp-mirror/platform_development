@@ -21,7 +21,7 @@
 // and change the hardcoded version here
 
 exports.config = {
-  specs: ['dist/e2e_test/e2e/*_test.js'],
+  specs: ['dist/e2e_test/*_test.js'],
 
   directConnect: true,
   capabilities: {
@@ -30,7 +30,7 @@ exports.config = {
       args: ['--headless', '--disable-gpu', '--window-size=1280x1024'],
     },
   },
-  chromeDriver: './node_modules/webdriver-manager/selenium/chromedriver_114.0.5735.90',
+  chromeDriver: './deps_build/chromedriver-linux64/chromedriver',
 
   allScriptsTimeout: 10000,
   getPageTimeout: 10000,

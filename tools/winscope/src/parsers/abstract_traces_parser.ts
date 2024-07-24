@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
+import {
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
+import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 
 export abstract class AbstractTracesParser<T> implements Parser<T> {
-  private timestampsSet: boolean = false;
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+  private timestamps = new Map<TimestampType, Timestamp[]>();
 
   abstract parse(): Promise<void>;
 
@@ -28,7 +32,17 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
 
   abstract getTraceType(): TraceType;
 
-  abstract getEntry(index: number, timestampType: TimestampType): Promise<T>;
+  abstract getEntry(
+    index: AbsoluteEntryIndex,
+    timestampType: TimestampType,
+  ): Promise<T>;
+
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    throw new Error('Not implemented');
+  }
 
   abstract getLengthEntries(): number;
 
@@ -55,9 +69,10 @@ export abstract class AbstractTracesParser<T> implements Parser<T> {
         this.timestamps.set(type, timestamps);
       }
     }
-
-    this.timestampsSet = true;
   }
 
-  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
+  protected abstract getTimestamp(
+    type: TimestampType,
+    decodedEntry: any,
+  ): undefined | Timestamp;
 }

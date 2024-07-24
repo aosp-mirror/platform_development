@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <google/protobuf/text_format.h>
+#include <llvm/Support/raw_ostream.h>
 
 
 namespace header_checker {
@@ -133,9 +134,10 @@ std::vector<RecordFieldIR> ProtobufIRReader::RecordFieldsProtobufToIR(
     const google::protobuf::RepeatedPtrField<abi_dump::RecordFieldDecl> &rfp) {
   std::vector<RecordFieldIR> record_type_fields_ir;
   for (auto &&field : rfp) {
-    RecordFieldIR record_field_ir(field.field_name(), field.referenced_type(),
-                                  field.field_offset(),
-                                  AccessProtobufToIR(field.access()));
+    RecordFieldIR record_field_ir(
+        field.field_name(), field.referenced_type(), field.field_offset(),
+        AccessProtobufToIR(field.access()), field.is_bit_field(),
+        field.bit_width());
     record_type_fields_ir.emplace_back(std::move(record_field_ir));
   }
   return record_type_fields_ir;
@@ -317,8 +319,8 @@ void ProtobufIRReader::ReadElfObjects(const abi_dump::TranslationUnit &tu) {
 }
 
 std::unique_ptr<IRReader> CreateProtobufIRReader(
-    const std::set<std::string> *exported_headers) {
-  return std::make_unique<ProtobufIRReader>(exported_headers);
+    std::unique_ptr<ModuleIR> module_ir) {
+  return std::make_unique<ProtobufIRReader>(std::move(module_ir));
 }
 
 

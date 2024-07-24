@@ -1,0 +1,109 @@
+package {
+    default_team: "trendy_team_xr_framework",
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_app {
+    name: "VdmHost",
+    manifest: "host/AndroidManifest.xml",
+    sdk_version: "system_current",
+    min_sdk_version: "34",
+    privileged: true,
+    srcs: [
+        "host/src/**/*.java",
+    ],
+    resource_dirs: [
+        "host/res",
+    ],
+    static_libs: [
+        "VdmCommonLib",
+        "android.companion.virtual.flags-aconfig-java",
+        "android.companion.virtualdevice.flags-aconfig-java",
+        "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
+        "androidx.core_core",
+        "androidx.preference_preference",
+        "com.google.android.material_material",
+        "guava",
+        "hilt_android",
+    ],
+}
+
+android_app {
+    name: "VdmClient",
+    manifest: "client/AndroidManifest.xml",
+    sdk_version: "current",
+    min_sdk_version: "33",
+    srcs: [
+        "client/src/**/*.java",
+    ],
+    resource_dirs: [
+        "client/res",
+    ],
+    static_libs: [
+        "VdmCommonLib",
+        "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
+        "androidx.recyclerview_recyclerview",
+        "androidx-constraintlayout_constraintlayout",
+        "guava",
+        "hilt_android",
+    ],
+}
+
+android_app {
+    name: "VdmDemos",
+    manifest: "demos/AndroidManifest.xml",
+    sdk_version: "current",
+    min_sdk_version: "34",
+    srcs: [
+        "demos/src/**/*.java",
+    ],
+    resource_dirs: [
+        "demos/res",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
+    ],
+}
+
+android_library {
+    name: "VdmCommonLib",
+    manifest: "common/AndroidManifest.xml",
+    sdk_version: "current",
+    min_sdk_version: "33",
+    srcs: [
+        "common/src/**/*.java",
+        "common/proto/*.proto",
+    ],
+    resource_dirs: [
+        "common/res",
+    ],
+    proto: {
+        type: "lite",
+    },
+    static_libs: [
+        "androidx.appcompat_appcompat",
+        "guava",
+        "hilt_android",
+    ],
+}
+
+android_app {
+    name: "VirtualCameraDemo",
+    manifest: "virtualcamera/AndroidManifest.xml",
+    privileged: true,
+    platform_apis: true,
+    srcs: [
+        "virtualcamera/src/**/*.java",
+    ],
+    resource_dirs: [
+        "virtualcamera/res",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.appcompat_appcompat",
+        "hilt_android",
+    ],
+}

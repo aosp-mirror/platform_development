@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
+import {FunctionUtils} from 'common/function_utils';
+import {Timestamp} from 'common/time';
+import {TracePositionUpdate, WinscopeEvent} from 'messaging/winscope_event';
+import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Events} from './events';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerProtoLog implements Viewer {
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
+
+  private readonly htmlElement: HTMLElement;
+  private readonly presenter: Presenter;
+  private readonly view: View;
+  private emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
   constructor(traces: Traces) {
     this.htmlElement = document.createElement('viewer-protolog');
 
@@ -30,43 +42,67 @@ class ViewerProtoLog implements Viewer {
       (this.htmlElement as any).inputData = data;
     });
 
-    this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
-      this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
-    });
+    this.htmlElement.addEventListener(
+      Events.LogLevelsFilterChanged,
+      (event) => {
+        this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
+      },
+    );
     this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
       this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
-      this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(
+      Events.SourceFilesFilterChanged,
+      (event) => {
+        this.presenter.onSourceFilesFilterChanged(
+          (event as CustomEvent).detail,
+        );
+      },
+    );
+    this.htmlElement.addEventListener(
+      Events.SearchStringFilterChanged,
+      (event) => {
+        this.presenter.onSearchStringFilterChanged(
+          (event as CustomEvent).detail,
+        );
+      },
+    );
+    this.htmlElement.addEventListener(Events.MessageClicked, (event) => {
+      this.presenter.onMessageClicked((event as CustomEvent).detail);
     });
-    this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
-      this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
+    this.htmlElement.addEventListener(ViewerEvents.TimestampClick, (event) => {
+      this.propagateTimestamp((event as CustomEvent).detail);
     });
+
+    this.view = new View(
+      ViewType.TAB,
+      this.getDependencies(),
+      this.htmlElement,
+      'ProtoLog',
+      TraceType.PROTO_LOG,
+    );
   }
 
-  async onTracePositionUpdate(position: TracePosition) {
-    await this.presenter.onTracePositionUpdate(position);
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await this.presenter.onAppEvent(event);
+  }
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitAppEvent = callback;
+  }
+
+  async propagateTimestamp(timestampNode: PropertyTreeNode) {
+    const timestamp: Timestamp = timestampNode.getValue();
+    await this.emitAppEvent(TracePositionUpdate.fromTimestamp(timestamp, true));
   }
 
   getViews(): View[] {
-    return [
-      new View(
-        ViewType.TAB,
-        this.getDependencies(),
-        this.htmlElement,
-        'ProtoLog',
-        TraceType.PROTO_LOG
-      ),
-    ];
+    return [this.view];
   }
 
   getDependencies(): TraceType[] {
     return ViewerProtoLog.DEPENDENCIES;
   }
-
-  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerProtoLog};

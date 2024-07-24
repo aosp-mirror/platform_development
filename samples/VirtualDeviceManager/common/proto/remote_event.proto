@@ -1,0 +1,193 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package com.example.android.vdmdemo.common;
+
+option java_outer_classname = "RemoteEventProto";
+option java_package = "com.example.android.vdmdemo.common";
+
+// Next ID: 19
+message RemoteEvent {
+  int32 display_id = 1;
+
+  oneof event {
+    DeviceCapabilities device_capabilities = 2;
+    StartStreaming start_streaming = 3;
+    StopStreaming stop_streaming = 4;
+    DisplayCapabilities display_capabilities = 5;
+    DisplayRotation display_rotation = 6;
+    EncodedFrame display_frame = 7;
+    SensorConfiguration sensor_configuration = 8;
+    RemoteInputEvent input_event = 9;
+    RemoteSensorEvent sensor_event = 10;
+    StartAudio start_audio = 11;
+    AudioFrame audio_frame = 12;
+    StopAudio stop_audio = 13;
+    RemoteHomeEvent home_event = 14;
+    DisplayChangeEvent display_change_event = 15;
+    KeyboardVisibilityEvent keyboard_visibility_event = 16;
+    StartAudioInput start_audio_input = 17;
+    StopAudioInput stop_audio_input = 18;
+    StartCameraStream start_camera_stream = 19;
+    StopCameraStream stop_camera_stream = 20;
+    CameraFrame camera_frame = 21;
+  }
+}
+
+message DeviceCapabilities {
+  string device_name = 1;
+  repeated SensorCapabilities sensor_capabilities = 2;
+  repeated CameraCapabilities camera_capabilities = 5;
+  bool supports_audio_input = 3;
+  bool supports_audio_output = 4;
+}
+
+message DisplayRotation {
+  int32 rotation_degrees = 1;
+}
+
+message SensorCapabilities {
+  int32 type = 1;
+  string name = 2;
+  string vendor = 3;
+  float max_range = 4;
+  float resolution = 5;
+  float power = 6;
+  int32 min_delay_us = 7;
+  int32 max_delay_us = 8;
+}
+
+message CameraCapabilities {
+  string camera_id = 1;
+  int32 width = 2;
+  int32 height = 3;
+  int32 fps = 4;
+  int32 lens_facing = 5;
+  int32 sensor_orientation = 6;
+}
+
+message StartCameraStream {
+  string camera_id = 1;
+}
+
+message StopCameraStream {
+  string camera_id = 2;
+}
+
+message CameraFrame {
+  string camera_id = 1;
+  EncodedFrame camera_frame = 2;
+}
+
+message StartStreaming {
+  bool home_enabled = 1;
+}
+
+message StopStreaming {
+  bool pause = 1;
+}
+
+message DisplayCapabilities {
+  int32 viewport_width = 1;
+  int32 viewport_height = 2;
+  int32 density_dpi = 3;
+}
+
+message EncodedFrame {
+  bytes frame_data = 1;
+  int32 frame_index = 2;
+  int32 flags = 3;
+  int64 presentation_time_us = 4;
+}
+
+enum InputDeviceType {
+  DEVICE_TYPE_NONE = 0;
+  DEVICE_TYPE_MOUSE = 1;
+  DEVICE_TYPE_DPAD = 2;
+  DEVICE_TYPE_NAVIGATION_TOUCHPAD = 3;
+  DEVICE_TYPE_TOUCHSCREEN = 4;
+  DEVICE_TYPE_KEYBOARD = 5;
+}
+
+message RemoteInputEvent {
+  int64 timestamp_ms = 1;
+
+  InputDeviceType device_type = 2;
+
+  oneof event {
+    RemoteMotionEvent mouse_relative_event = 3;
+    RemoteKeyEvent mouse_button_event = 4;
+    RemoteMotionEvent mouse_scroll_event = 5;
+
+    RemoteKeyEvent key_event = 6;
+
+    RemoteMotionEvent touch_event = 7;
+  }
+}
+
+message RemoteMotionEvent {
+  int32 pointer_id = 1;
+  int32 action = 2;
+  float x = 3;
+  float y = 4;
+  float pressure = 5;
+}
+
+message RemoteKeyEvent {
+  int32 action = 1;
+  int32 key_code = 2;
+}
+
+message SensorConfiguration {
+  int32 sensor_type = 1;
+  bool enabled = 2;
+  int32 sampling_period_us = 3;
+  int32 batch_reporting_latency_us = 4;
+}
+
+message RemoteSensorEvent {
+  int32 sensor_type = 1;
+  repeated float values = 2;
+}
+
+message StartAudio {}
+
+message StopAudio {}
+
+message StartAudioInput {
+  int32 sample_rate = 1;
+  int32 channel_mask = 2;
+  int32 encoding = 3;
+}
+
+message StopAudioInput {}
+
+message AudioFrame {
+  bytes data = 1;
+}
+
+message RemoteHomeEvent {}
+
+message DisplayChangeEvent {
+  string title = 1;
+  bool focused = 2;
+}
+
+message KeyboardVisibilityEvent {
+  bool visible = 1;
+}

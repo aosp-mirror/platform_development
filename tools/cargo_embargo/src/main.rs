@@ -34,6 +34,7 @@ use crate::config::Config;
 use crate::config::PackageConfig;
 use crate::config::PackageVariantConfig;
 use crate::config::VariantConfig;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Context;
 use anyhow::Result;
@@ -52,10 +53,10 @@ use std::collections::VecDeque;
 use std::env;
 use std::fs::{read_to_string, write, File};
 use std::io::{Read, Write};
-use std::os::fd::{FromRawFd, OwnedFd};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use tempfile::tempdir;
 
 // Major TODOs
 //  * handle errors, esp. in cargo.out parsing. they should fail the program with an error code
@@ -82,18 +83,38 @@ pub static RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
     .collect()
 });
 
+/// This map tracks Rust crates that have special rules.mk modules that were not
+/// generated automatically by this script. Examples include compiler builtins
+/// and other foundational libraries. It also tracks the location of rules.mk
+/// build files for crates that are not under external/rust/crates.
+pub static RULESMK_RENAME_MAP: Lazy<BTreeMap<&str, &str>> = Lazy::new(|| {
+    [
+        ("liballoc", "trusty/user/base/lib/liballoc-rust"),
+        ("libcompiler_builtins", "trusty/user/base/lib/libcompiler_builtins-rust"),
+        ("libcore", "trusty/user/base/lib/libcore-rust"),
+        ("libhashbrown", "trusty/user/base/lib/libhashbrown-rust"),
+        ("libpanic_abort", "trusty/user/base/lib/libpanic_abort-rust"),
+        ("libstd", "trusty/user/base/lib/libstd-rust"),
+        ("libstd_detect", "trusty/user/base/lib/libstd_detect-rust"),
+        ("libunwind", "trusty/user/base/lib/libunwind-rust"),
+    ]
+    .into_iter()
+    .collect()
+});
+
 /// Given a proposed module name, returns `None` if it is blocked by the given config, or
 /// else apply any name overrides and returns the name to use.
 fn override_module_name(
     module_name: &str,
     blocklist: &[String],
     module_name_overrides: &BTreeMap<String, String>,
+    rename_map: &BTreeMap<&str, &str>,
 ) -> Option<String> {
     if blocklist.iter().any(|blocked_name| blocked_name == module_name) {
         None
     } else if let Some(overridden_name) = module_name_overrides.get(module_name) {
         Some(overridden_name.to_string())
-    } else if let Some(renamed) = RENAME_MAP.get(module_name) {
+    } else if let Some(renamed) = rename_map.get(module_name) {
         Some(renamed.to_string())
     } else {
         Some(module_name.to_string())
@@ -106,8 +127,11 @@ struct Args {
     /// Use the cargo binary in the `cargo_bin` directory. Defaults to using the Android prebuilt.
     #[clap(long)]
     cargo_bin: Option<PathBuf>,
+    /// Store `cargo build` output in this directory. If not set, a temporary directory is created and used.
+    #[clap(long)]
+    cargo_out_dir: Option<PathBuf>,
     /// Skip the `cargo build` commands and reuse the "cargo.out" file from a previous run if
-    /// available.
+    /// available. Requires setting --cargo_out_dir.
     #[clap(long)]
     reuse_cargo_out: bool,
     #[command(subcommand)]
@@ -141,15 +165,21 @@ fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
 
+    if args.reuse_cargo_out && args.cargo_out_dir.is_none() {
+        return Err(anyhow!("Must specify --cargo_out_dir with --reuse_cargo_out"));
+    }
+    let tempdir = tempdir()?;
+    let intermediates_dir = args.cargo_out_dir.as_deref().unwrap_or(tempdir.path());
+
     match &args.mode {
         Mode::DumpCrates { config, crates } => {
-            dump_crates(&args, config, crates)?;
+            dump_crates(&args, config, crates, intermediates_dir)?;
         }
         Mode::Generate { config } => {
-            run_embargo(&args, config)?;
+            run_embargo(&args, config, intermediates_dir)?;
         }
         Mode::Autoconfig { config } => {
-            autoconfig(&args, config)?;
+            autoconfig(&args, config, intermediates_dir)?;
         }
     }
 
@@ -158,9 +188,14 @@ fn main() -> Result<()> {
 
 /// Runs cargo_embargo with the given JSON configuration string, but dumps the crate data to the
 /// given `crates.json` file rather than generating an `Android.bp`.
-fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> Result<()> {
+fn dump_crates(
+    args: &Args,
+    config_filename: &Path,
+    crates_filename: &Path,
+    intermediates_dir: &Path,
+) -> Result<()> {
     let cfg = Config::from_file(config_filename)?;
-    let crates = make_all_crates(args, &cfg)?;
+    let crates = make_all_crates(args, &cfg, intermediates_dir)?;
     serde_json::to_writer(
         File::create(crates_filename)
             .with_context(|| format!("Failed to create {:?}", crates_filename))?,
@@ -171,13 +206,13 @@ fn dump_crates(args: &Args, config_filename: &Path, crates_filename: &Path) -> R
 
 /// Tries to automatically generate a suitable `cargo_embargo.json` for the package in the current
 /// directory.
-fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
+fn autoconfig(args: &Args, config_filename: &Path, intermediates_dir: &Path) -> Result<()> {
     println!("Trying default config with tests...");
     let mut config_with_build = Config {
         variants: vec![VariantConfig { tests: true, ..Default::default() }],
         package: Default::default(),
     };
-    let mut crates_with_build = make_all_crates(args, &config_with_build)?;
+    let mut crates_with_build = make_all_crates(args, &config_with_build, intermediates_dir)?;
 
     let has_tests =
         crates_with_build[0].iter().any(|c| c.types.contains(&CrateType::Test) && !c.empty_test);
@@ -185,7 +220,7 @@ fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
         println!("No tests, removing from config.");
         config_with_build =
             Config { variants: vec![Default::default()], package: Default::default() };
-        crates_with_build = make_all_crates(args, &config_with_build)?;
+        crates_with_build = make_all_crates(args, &config_with_build, intermediates_dir)?;
     }
 
     println!("Trying without cargo build...");
@@ -193,7 +228,7 @@ fn autoconfig(args: &Args, config_filename: &Path) -> Result<()> {
         variants: vec![VariantConfig { run_cargo: false, tests: has_tests, ..Default::default() }],
         package: Default::default(),
     };
-    let crates_without_build = make_all_crates(args, &config_no_build)?;
+    let crates_without_build = make_all_crates(args, &config_no_build, intermediates_dir)?;
 
     let config = if crates_with_build == crates_without_build {
         println!("Output without build was the same, using that.");
@@ -246,11 +281,11 @@ fn add_to_path(extra_path: PathBuf) -> Result<()> {
 }
 
 /// Calls make_crates for each variant in the given config.
-fn make_all_crates(args: &Args, cfg: &Config) -> Result<Vec<Vec<Crate>>> {
-    cfg.variants.iter().map(|variant| make_crates(args, variant)).collect()
+fn make_all_crates(args: &Args, cfg: &Config, intermediates_dir: &Path) -> Result<Vec<Vec<Crate>>> {
+    cfg.variants.iter().map(|variant| make_crates(args, variant, intermediates_dir)).collect()
 }
 
-fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
+fn make_crates(args: &Args, cfg: &VariantConfig, intermediates_dir: &Path) -> Result<Vec<Crate>> {
     if !Path::new("Cargo.toml").try_exists().context("when checking Cargo.toml")? {
         bail!("Cargo.toml missing. Run in a directory with a Cargo.toml file.");
     }
@@ -267,16 +302,19 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
     };
     add_to_path(cargo_bin)?;
 
-    let cargo_out_path = "cargo.out";
-    let cargo_metadata_path = "cargo.metadata";
-    let cargo_output = if args.reuse_cargo_out && Path::new(cargo_out_path).exists() {
+    let cargo_out_path = intermediates_dir.join("cargo.out");
+    let cargo_metadata_path = intermediates_dir.join("cargo.metadata");
+    let cargo_output = if args.reuse_cargo_out && cargo_out_path.exists() {
         CargoOutput {
             cargo_out: read_to_string(cargo_out_path)?,
             cargo_metadata: read_to_string(cargo_metadata_path)?,
         }
     } else {
-        let cargo_output = generate_cargo_out(cfg).context("generate_cargo_out failed")?;
-        write(cargo_out_path, &cargo_output.cargo_out)?;
+        let cargo_output =
+            generate_cargo_out(cfg, intermediates_dir).context("generate_cargo_out failed")?;
+        if cfg.run_cargo {
+            write(cargo_out_path, &cargo_output.cargo_out)?;
+        }
         write(cargo_metadata_path, &cargo_output.cargo_metadata)?;
         cargo_output
     };
@@ -289,9 +327,15 @@ fn make_crates(args: &Args, cfg: &VariantConfig) -> Result<Vec<Crate>> {
 }
 
 /// Runs cargo_embargo with the given JSON configuration file.
-fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
+fn run_embargo(args: &Args, config_filename: &Path, intermediates_dir: &Path) -> Result<()> {
+    let intermediates_glob = intermediates_dir
+        .to_str()
+        .ok_or(anyhow!("Failed to convert intermediate dir path to string"))?
+        .to_string()
+        + "target.tmp/**/build/*/out/*";
+
     let cfg = Config::from_file(config_filename)?;
-    let crates = make_all_crates(args, &cfg)?;
+    let crates = make_all_crates(args, &cfg, intermediates_dir)?;
 
     // TODO: Use different directories for different variants.
     // Find out files.
@@ -300,7 +344,7 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
     let mut package_out_files: BTreeMap<String, Vec<Vec<PathBuf>>> = BTreeMap::new();
     for (variant_index, variant_cfg) in cfg.variants.iter().enumerate() {
         if variant_cfg.package.iter().any(|(_, v)| v.copy_out) {
-            for entry in glob::glob("target.tmp/**/build/*/out/*")? {
+            for entry in glob::glob(&intermediates_glob)? {
                 match entry {
                     Ok(path) => {
                         let package_name = || -> Option<_> {
@@ -325,13 +369,13 @@ fn run_embargo(args: &Args, config_filename: &Path) -> Result<()> {
         for variant in &mut cfg_no_cargo.variants {
             variant.run_cargo = false;
         }
-        let crates_no_cargo = make_all_crates(args, &cfg_no_cargo)?;
+        let crates_no_cargo = make_all_crates(args, &cfg_no_cargo, intermediates_dir)?;
         if crates_no_cargo == crates {
             eprintln!("Running cargo appears to be unnecessary for this crate, consider adding `\"run_cargo\": false` to your cargo_embargo.json.");
         }
     }
 
-    write_all_bp(&cfg, crates, &package_out_files)
+    write_all_build_files(&cfg, crates, &package_out_files)
 }
 
 /// Input is indexed by variant, then all crates for that variant.
@@ -352,7 +396,7 @@ fn group_by_package(crates: Vec<Vec<Crate>>) -> BTreeMap<PathBuf, Vec<Vec<Crate>
     module_by_package
 }
 
-fn write_all_bp(
+fn write_all_build_files(
     cfg: &Config,
     crates: Vec<Vec<Crate>>,
     package_out_files: &BTreeMap<String, Vec<Vec<PathBuf>>>,
@@ -362,16 +406,24 @@ fn write_all_bp(
 
     let num_variants = cfg.variants.len();
     let empty_package_out_files = vec![vec![]; num_variants];
-    // Write an Android.bp file per package.
+    let mut has_error = false;
+    // Write a build file per package.
     for (package_dir, crates) in module_by_package {
         let package_name = &crates.iter().flatten().next().unwrap().package_name;
-        write_android_bp(
+        if let Err(e) = write_build_files(
             cfg,
             package_name,
             package_dir,
             &crates,
             package_out_files.get(package_name).unwrap_or(&empty_package_out_files),
-        )?;
+        ) {
+            // print the error, but continue to accumulate all of the errors
+            eprintln!("ERROR: {:#}", e);
+            has_error = true;
+        }
+    }
+    if has_error {
+        panic!("Encountered fatal errors that must be fixed.");
     }
 
     Ok(())
@@ -379,7 +431,7 @@ fn write_all_bp(
 
 /// Runs the given command, and returns its standard output and standard error as a string.
 fn run_cargo(cmd: &mut Command) -> Result<String> {
-    let (pipe_read, pipe_write) = pipe()?;
+    let (pipe_read, pipe_write) = pipe2(OFlag::O_CLOEXEC)?;
     cmd.stdout(pipe_write.try_clone()?).stderr(pipe_write).stdin(Stdio::null());
     debug!("Running: {:?}\n", cmd);
     let mut child = cmd.spawn()?;
@@ -404,13 +456,6 @@ fn run_cargo(cmd: &mut Command) -> Result<String> {
     Ok(output)
 }
 
-/// Creates a new pipe and returns the file descriptors for each end of it.
-fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
-    let (a, b) = pipe2(OFlag::O_CLOEXEC)?;
-    // SAFETY: We just created the file descriptors, so we own them.
-    unsafe { Ok((OwnedFd::from_raw_fd(a), OwnedFd::from_raw_fd(b))) }
-}
-
 /// The raw output from running `cargo metadata`, `cargo build` and other commands.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CargoOutput {
@@ -419,12 +464,12 @@ pub struct CargoOutput {
 }
 
 /// Run various cargo commands and returns the output.
-fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
+fn generate_cargo_out(cfg: &VariantConfig, intermediates_dir: &Path) -> Result<CargoOutput> {
     let verbose_args = ["-v"];
-    let target_dir_args = ["--target-dir", "target.tmp"];
+    let target_dir = intermediates_dir.join("target.tmp");
 
     // cargo clean
-    run_cargo(Command::new("cargo").arg("clean").args(target_dir_args))
+    run_cargo(Command::new("cargo").arg("clean").arg("--target-dir").arg(&target_dir))
         .context("Running cargo clean")?;
 
     let default_target = "x86_64-unknown-linux-gnu";
@@ -464,12 +509,27 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
 
     let mut cargo_out = String::new();
     if cfg.run_cargo {
+        let envs = if cfg.extra_cfg.is_empty() {
+            vec![]
+        } else {
+            vec![(
+                "RUSTFLAGS",
+                cfg.extra_cfg
+                    .iter()
+                    .map(|cfg_flag| format!("--cfg {}", cfg_flag))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            )]
+        };
+
         // cargo build
         cargo_out += &run_cargo(
             Command::new("cargo")
+                .envs(envs.clone())
                 .args(["build", "--target", default_target])
                 .args(verbose_args)
-                .args(target_dir_args)
+                .arg("--target-dir")
+                .arg(&target_dir)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
@@ -478,17 +538,21 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
             // cargo build --tests
             cargo_out += &run_cargo(
                 Command::new("cargo")
+                    .envs(envs.clone())
                     .args(["build", "--target", default_target, "--tests"])
                     .args(verbose_args)
-                    .args(target_dir_args)
+                    .arg("--target-dir")
+                    .arg(&target_dir)
                     .args(&workspace_args)
                     .args(&feature_args),
             )?;
             // cargo test -- --list
             cargo_out += &run_cargo(
                 Command::new("cargo")
+                    .envs(envs)
                     .args(["test", "--target", default_target])
-                    .args(target_dir_args)
+                    .arg("--target-dir")
+                    .arg(&target_dir)
                     .args(&workspace_args)
                     .args(&feature_args)
                     .args(["--", "--list"]),
@@ -499,10 +563,36 @@ fn generate_cargo_out(cfg: &VariantConfig) -> Result<CargoOutput> {
     Ok(CargoOutput { cargo_metadata, cargo_out })
 }
 
-/// Create the Android.bp file for `package_dir`.
+/// Read and return license and other header lines from a build file.
+///
+/// Skips initial comment lines, then returns all lines before the first line
+/// starting with `rust_`, `genrule {`, or `LOCAL_DIR`.
+///
+/// If `path` could not be read, return a placeholder license TODO line.
+fn read_license_header(path: &Path) -> Result<String> {
+    // Keep the old license header.
+    match std::fs::read_to_string(path) {
+        Ok(s) => Ok(s
+            .lines()
+            .skip_while(|l| l.starts_with("//") || l.starts_with('#'))
+            .take_while(|l| {
+                !l.starts_with("rust_")
+                    && !l.starts_with("genrule {")
+                    && !l.starts_with("LOCAL_DIR")
+            })
+            .collect::<Vec<&str>>()
+            .join("\n")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            Ok("// DO NOT SUBMIT: Add license before submitting.\n".to_string())
+        }
+        Err(e) => Err(anyhow!("error when reading {path:?}: {e}")),
+    }
+}
+
+/// Create the build file for `package_dir`.
 ///
 /// `crates` and `out_files` are both indexed by variant.
-fn write_android_bp(
+fn write_build_files(
     cfg: &Config,
     package_name: &str,
     package_dir: PathBuf,
@@ -510,21 +600,9 @@ fn write_android_bp(
     out_files: &[Vec<PathBuf>],
 ) -> Result<()> {
     assert_eq!(crates.len(), out_files.len());
-    let bp_path = package_dir.join("Android.bp");
-
-    // Keep the old license header.
-    let license_section = match std::fs::read_to_string(&bp_path) {
-        Ok(s) => s
-            .lines()
-            .skip_while(|l| l.starts_with("//"))
-            .take_while(|l| !l.starts_with("rust_") && !l.starts_with("genrule {"))
-            .collect::<Vec<&str>>()
-            .join("\n"),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => "// TODO: Add license.\n".to_string(),
-        Err(e) => bail!("error when reading {bp_path:?}: {e}"),
-    };
 
     let mut bp_contents = String::new();
+    let mut mk_contents = String::new();
     for (variant_index, variant_config) in cfg.variants.iter().enumerate() {
         let variant_crates = &crates[variant_index];
         let def = PackageVariantConfig::default();
@@ -544,13 +622,24 @@ fn write_android_bp(
             }
         }
 
-        bp_contents += &generate_android_bp(
-            variant_config,
-            package_cfg,
-            package_name,
-            variant_crates,
-            &out_files[variant_index],
-        )?;
+        if variant_config.generate_androidbp {
+            bp_contents += &generate_android_bp(
+                variant_config,
+                package_cfg,
+                package_name,
+                variant_crates,
+                &out_files[variant_index],
+            )?;
+        }
+        if variant_config.generate_rulesmk {
+            mk_contents += &generate_rules_mk(
+                variant_config,
+                package_cfg,
+                package_name,
+                variant_crates,
+                &out_files[variant_index],
+            )?;
+        }
     }
 
     let def = PackageConfig::default();
@@ -561,12 +650,29 @@ fn write_android_bp(
         bp_contents += "\n";
     }
     if !bp_contents.is_empty() {
+        let output_path = package_dir.join("Android.bp");
         let bp_contents = "// This file is generated by cargo_embargo.\n".to_owned()
-            + "// Do not modify this file as changes will be overridden on upgrade.\n\n"
-            + license_section.trim()
+            + "// Do not modify this file after the first \"rust_*\" or \"genrule\" module\n"
+            + "// because the changes will be overridden on upgrade.\n"
+            + "// Content before the first \"rust_*\" or \"genrule\" module is preserved.\n\n"
+            + read_license_header(&output_path)?.trim()
             + "\n"
             + &bp_contents;
-        write_format_android_bp(&bp_path, &bp_contents, package_cfg.patch.as_deref())?;
+        write_format_android_bp(&output_path, &bp_contents, package_cfg.patch.as_deref())?;
+    }
+    if !mk_contents.is_empty() {
+        let output_path = package_dir.join("rules.mk");
+        let mk_contents = "# This file is generated by cargo_embargo.\n".to_owned()
+            + "# Do not modify this file after the LOCAL_DIR line\n"
+            + "# because the changes will be overridden on upgrade.\n"
+            + "# Content before the first line starting with LOCAL_DIR is preserved.\n"
+            + read_license_header(&output_path)?.trim()
+            + "\n"
+            + &mk_contents;
+        File::create(&output_path)?.write_all(mk_contents.as_bytes())?;
+        if let Some(patch) = package_cfg.rulesmk_patch.as_deref() {
+            apply_patch_file(&output_path, patch)?;
+        }
     }
 
     Ok(())
@@ -596,6 +702,7 @@ fn generate_android_bp(
             &format!("copy_{}_build_out", package_name),
             &cfg.module_blocklist,
             &cfg.module_name_overrides,
+            &RENAME_MAP,
         ) {
             m.props.set("name", module_name.clone());
             m.props.set("srcs", vec!["out/*"]);
@@ -636,6 +743,66 @@ fn generate_android_bp(
     Ok(bp_contents)
 }
 
+/// Generates and returns a Trusty rules.mk file for the given set of crates.
+fn generate_rules_mk(
+    cfg: &VariantConfig,
+    package_cfg: &PackageVariantConfig,
+    package_name: &str,
+    crates: &[Crate],
+    out_files: &[PathBuf],
+) -> Result<String> {
+    let out_files = if package_cfg.copy_out && !out_files.is_empty() {
+        out_files.iter().map(|f| f.file_name().unwrap().to_str().unwrap().to_string()).collect()
+    } else {
+        vec![]
+    };
+
+    let crates: Vec<_> = crates
+        .iter()
+        .filter(|c| {
+            if c.types.contains(&CrateType::Bin) {
+                eprintln!("WARNING: skipped generation of rules.mk for binary crate: {}", c.name);
+                false
+            } else if c.types.iter().any(|t| t.is_test()) {
+                // Test build file generation is not yet implemented
+                eprintln!("WARNING: skipped generation of rules.mk for test crate: {}", c.name);
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
+    let [crate_] = &crates[..] else {
+        bail!(
+            "Expected exactly one library crate for package {package_name} when generating \
+               rules.mk, found: {crates:?}"
+        );
+    };
+    crate_to_rulesmk(crate_, cfg, package_cfg, &out_files).with_context(|| {
+        format!(
+            "failed to generate rules.mk for crate \"{}\" with package name \"{}\"",
+            crate_.name, crate_.package_name
+        )
+    })
+}
+
+/// Apply patch from `patch_path` to file `output_path`.
+///
+/// Warns but still returns ok if the patch did not cleanly apply,
+fn apply_patch_file(output_path: &Path, patch_path: &Path) -> Result<()> {
+    let patch_output = Command::new("patch")
+        .arg("-s")
+        .arg(output_path)
+        .arg(patch_path)
+        .output()
+        .context("Running patch")?;
+    if !patch_output.status.success() {
+        // These errors will cause the cargo_embargo command to fail, but not yet!
+        return Err(anyhow!("failed to apply patch {patch_path:?}"));
+    }
+    Ok(())
+}
+
 /// Writes the given contents to the given `Android.bp` file, formats it with `bpfmt`, and applies
 /// the patch if there is one.
 fn write_format_android_bp(
@@ -656,15 +823,7 @@ fn write_format_android_bp(
     }
 
     if let Some(patch_path) = patch_path {
-        let patch_output = Command::new("patch")
-            .arg("-s")
-            .arg(bp_path)
-            .arg(patch_path)
-            .output()
-            .context("Running patch")?;
-        if !patch_output.status.success() {
-            eprintln!("WARNING: failed to apply patch {:?}", patch_path);
-        }
+        apply_patch_file(bp_path, patch_path)?;
         // Re-run bpfmt after the patch so
         let bpfmt_output = Command::new("bpfmt")
             .arg("-w")
@@ -737,9 +896,12 @@ fn crate_to_bp_modules(
         };
 
         let mut m = BpModule::new(module_type.clone());
-        let Some(module_name) =
-            override_module_name(&module_name, &cfg.module_blocklist, &cfg.module_name_overrides)
-        else {
+        let Some(module_name) = override_module_name(
+            &module_name,
+            &cfg.module_blocklist,
+            &cfg.module_name_overrides,
+            &RENAME_MAP,
+        ) else {
             continue;
         };
         if matches!(
@@ -766,6 +928,18 @@ fn crate_to_bp_modules(
             m.props.set("host_supported", true);
         }
 
+        if module_type != "rust_proc_macro" {
+            if package_cfg.host_supported && !package_cfg.host_cross_supported {
+                m.props.set("host_cross_supported", false);
+            } else if crate_.externs.iter().any(|extern_dep| extern_dep.name == "proc_macro2") {
+                // proc_macro2 is host_cross_supported: false.
+                // If there's a dependency on it, then we shouldn't build for HostCross.
+                m.props.set("host_cross_supported", false);
+            } else if crate_.package_name == "proc-macro2" {
+                m.props.set("host_cross_supported", false);
+            }
+        }
+
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }
@@ -788,9 +962,8 @@ fn crate_to_bp_modules(
             }
         }
 
-        let mut srcs = vec![crate_.main_src.to_string_lossy().to_string()];
-        srcs.extend(extra_srcs.iter().cloned());
-        m.props.set("srcs", srcs);
+        m.props.set("crate_root", crate_.main_src.clone());
+        m.props.set_if_nonempty("srcs", extra_srcs.to_owned());
 
         m.props.set("edition", crate_.edition.clone());
         m.props.set_if_nonempty("features", crate_.features.clone());
@@ -801,7 +974,6 @@ fn crate_to_bp_modules(
                 .clone()
                 .into_iter()
                 .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
-                .chain(cfg.extra_cfg.clone().into_iter())
                 .collect(),
         );
 
@@ -814,10 +986,14 @@ fn crate_to_bp_modules(
 
         let mut rust_libs = Vec::new();
         let mut proc_macro_libs = Vec::new();
+        let mut aliases = Vec::new();
         for extern_dep in &crate_.externs {
             match extern_dep.extern_type {
                 ExternType::Rust => rust_libs.push(extern_dep.lib_name.clone()),
                 ExternType::ProcMacro => proc_macro_libs.push(extern_dep.lib_name.clone()),
+            }
+            if extern_dep.name != extern_dep.lib_name {
+                aliases.push(format!("{}:{}", extern_dep.lib_name, extern_dep.name));
             }
         }
 
@@ -830,6 +1006,7 @@ fn crate_to_bp_modules(
                     &module_name,
                     &package_cfg.dep_blocklist,
                     &cfg.module_name_overrides,
+                    &RENAME_MAP,
                 ) {
                     result.push(module_name);
                 }
@@ -846,6 +1023,7 @@ fn crate_to_bp_modules(
         m.props.set_if_nonempty("static_libs", static_libs);
         m.props.set_if_nonempty("whole_static_libs", whole_static_libs);
         m.props.set_if_nonempty("shared_libs", process_lib_deps(crate_.shared_libs.clone()));
+        m.props.set_if_nonempty("aliases", aliases);
 
         if package_cfg.device_supported {
             if !crate_type.is_test() {
@@ -907,9 +1085,118 @@ fn crate_to_bp_modules(
     Ok(modules)
 }
 
+/// Convert a `Crate` into a rules.mk file.
+///
+/// If messy business logic is necessary, prefer putting it here.
+fn crate_to_rulesmk(
+    crate_: &Crate,
+    cfg: &VariantConfig,
+    package_cfg: &PackageVariantConfig,
+    out_files: &[String],
+) -> Result<String> {
+    let mut contents = String::new();
+
+    contents += "LOCAL_DIR := $(GET_LOCAL_DIR)\n";
+    contents += "MODULE := $(LOCAL_DIR)\n";
+    contents += &format!("MODULE_CRATE_NAME := {}\n", crate_.name);
+
+    if !crate_.types.is_empty() {
+        contents += "MODULE_RUST_CRATE_TYPES :=";
+        for crate_type in &crate_.types {
+            contents += match crate_type {
+                CrateType::Lib => " rlib",
+                CrateType::StaticLib => " staticlib",
+                CrateType::ProcMacro => " proc-macro",
+                _ => bail!("Cannot generate rules.mk for crate type {crate_type:?}"),
+            };
+        }
+        contents += "\n";
+    }
+
+    contents += &format!("MODULE_SRCS := $(LOCAL_DIR)/{}\n", crate_.main_src.display());
+
+    if !out_files.is_empty() {
+        contents += &format!("OUT_FILES := {}\n", out_files.join(" "));
+        contents += "BUILD_OUT_FILES := $(addprefix $(call TOBUILDDIR,$(MODULE))/,$(OUT_FILES))\n";
+        contents += "$(BUILD_OUT_FILES): $(call TOBUILDDIR,$(MODULE))/% : $(MODULE)/out/%\n";
+        contents += "\t@echo copying $^ to $@\n";
+        contents += "\t@$(MKDIR)\n";
+        contents += "\t@cp $^ $@\n\n";
+        contents += "MODULE_RUST_ENV += OUT_DIR=$(call TOBUILDDIR,$(MODULE))\n\n";
+        contents += "MODULE_SRCDEPS += $(BUILD_OUT_FILES)\n\n";
+        contents += "OUT_FILES :=\n";
+        contents += "BUILD_OUT_FILES :=\n";
+        contents += "\n";
+    }
+
+    // crate dependencies without lib- prefix. Since paths to trusty modules may
+    // contain hyphens, we generate the module path using the raw name output by
+    // cargo metadata or cargo build.
+    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.raw_name.clone()).collect();
+    if package_cfg.no_std {
+        contents += "MODULE_ADD_IMPLICIT_DEPS := false\n";
+        library_deps.push("compiler_builtins".to_string());
+        library_deps.push("core".to_string());
+        if package_cfg.alloc {
+            library_deps.push("alloc".to_string());
+        }
+    }
+
+    contents += &format!("MODULE_RUST_EDITION := {}\n", crate_.edition);
+
+    let mut flags = Vec::new();
+    if !crate_.cap_lints.is_empty() {
+        flags.push(crate_.cap_lints.clone());
+    }
+    flags.extend(crate_.codegens.iter().map(|codegen| format!("-C {}", codegen)));
+    flags.extend(crate_.features.iter().map(|feat| format!("--cfg 'feature=\"{feat}\"'")));
+    flags.extend(
+        crate_
+            .cfgs
+            .iter()
+            .filter(|crate_cfg| !cfg.cfg_blocklist.contains(crate_cfg))
+            .map(|cfg| format!("--cfg '{cfg}'")),
+    );
+    if !flags.is_empty() {
+        contents += "MODULE_RUSTFLAGS += \\\n\t";
+        contents += &flags.join(" \\\n\t");
+        contents += "\n\n";
+    }
+
+    let mut library_deps: Vec<String> = library_deps
+        .into_iter()
+        .flat_map(|dep| {
+            override_module_name(
+                &format!("lib{dep}"),
+                &package_cfg.dep_blocklist,
+                &cfg.module_name_overrides,
+                &RULESMK_RENAME_MAP,
+            )
+        })
+        .map(|dep| {
+            // Rewrite dependency name to module path for Trusty build system
+            if let Some(dep) = dep.strip_prefix("lib") {
+                format!("external/rust/crates/{dep}")
+            } else {
+                dep
+            }
+        })
+        .collect();
+    library_deps.sort();
+    library_deps.dedup();
+    contents += "MODULE_LIBRARY_DEPS := \\\n\t";
+    contents += &library_deps.join(" \\\n\t");
+    contents += "\n\n";
+
+    contents += "include make/library.mk\n";
+    Ok(contents)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use googletest::matchers::eq;
+    use googletest::prelude::assert_that;
     use std::env::{current_dir, set_current_dir};
     use std::fs::{self, read_to_string};
     use std::path::PathBuf;
@@ -991,7 +1278,7 @@ mod tests {
                 .unwrap();
             }
 
-            assert_eq!(output, expected_output);
+            assert_that!(output, eq(expected_output));
 
             set_current_dir(old_current_dir).unwrap();
         }
@@ -1045,7 +1332,7 @@ mod tests {
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libname".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
-                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("crate_root".to_string(), BpValue::String("".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()
@@ -1088,7 +1375,7 @@ mod tests {
                         ("host_supported".to_string(), BpValue::Bool(true)),
                         ("name".to_string(), BpValue::String("libash_rust".to_string())),
                         ("product_available".to_string(), BpValue::Bool(true)),
-                        ("srcs".to_string(), BpValue::List(vec![BpValue::String("".to_string())])),
+                        ("crate_root".to_string(), BpValue::String("".to_string())),
                         ("vendor_available".to_string(), BpValue::Bool(true)),
                     ]
                     .into_iter()

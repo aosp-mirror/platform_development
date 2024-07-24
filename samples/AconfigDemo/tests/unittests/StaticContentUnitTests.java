@@ -29,7 +29,7 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public final class StaticContentUnitTests {
-    @Rule public final SetFlagsRule mSetFlagsRule = new SetFlagsRule();
+    @Rule public final SetFlagsRule mSetFlagsRule;
 
     @Parameterized.Parameters(name = "isInitWithDefault={0}")
     public static Object[] data() {
@@ -38,9 +38,9 @@ public final class StaticContentUnitTests {
 
     public StaticContentUnitTests(boolean isInitWithDefault) {
         mIsInitWithDefault = isInitWithDefault;
-        if (isInitWithDefault) {
-            mSetFlagsRule.initAllFlagsToReleaseConfigDefault();
-        }
+        mSetFlagsRule = new SetFlagsRule(isInitWithDefault
+                ? SetFlagsRule.DefaultInitValueType.DEVICE_DEFAULT
+                : SetFlagsRule.DefaultInitValueType.NULL_DEFAULT);
     }
 
     private boolean mIsInitWithDefault;

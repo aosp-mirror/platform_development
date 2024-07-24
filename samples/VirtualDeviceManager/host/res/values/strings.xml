@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name" translatable="false">VDM Host</string>
+    <string name="launcher_name" translatable="false">VDM Launcher</string>
+    <string name="create_home_display" translatable="false">Create Home Display</string>
+    <string name="create_mirror_display" translatable="false">Create Mirror Display</string>
+    <string name="app_icon_description" translatable="false">Application Icon</string>
+    <string name="settings" translatable="false">Settings</string>
+    <string name="input" translatable="false">Input</string>
+    <string name="touchpad" translatable="false">Touchpad</string>
+    <string name="remote_control" translatable="false">Remote</string>
+    <string name="navigation" translatable="false">Navigation</string>
+    <string name="stylus" translatable="false">Stylus</string>
+    <string name="stylus_hover" translatable="false">Hover</string>
+    <string name="stylus_button_primary" translatable="false">Button 1</string>
+    <string name="stylus_button_secondary" translatable="false">Button 2</string>
+    <string name="stylus_eraser" translatable="false">Eraser</string>
+    <string name="stylus_tilt" translatable="false">Tilt</string>
+    <string name="stylus_label" translatable="false">Touch to simulate stylus</string>
+    <string name="keyboard" translatable="false">Keyboard</string>
+    <string name="touchpad_label" translatable="false">
+        Swipe to move the pointer\n\n
+        Tap to select (left click)\n\n
+        Long press for options (right click)\n\n
+        Swipe with 2 fingers to scroll
+    </string>
+    <string name="remote_control_label" translatable="false">
+        Move the device to move the pointer\n\n
+        Tap to select (left click)\n\n
+        Long press for options (right click)\n\n
+        Swipe to scroll
+    </string>
+    <string name="button_back" translatable="false">Back</string>
+    <string name="button_forward" translatable="false">Forward</string>
+    <string name="button_home" translatable="false">Home</string>
+
+    <string name="pref_device_profile" translatable="false">device_profile</string>
+    <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
+    <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
+    <string name="pref_enable_client_camera" translatable="false">enable_client_camera</string>
+    <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
+    <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>
+    <string name="pref_enable_display_rotation" translatable="false">enable_display_rotation</string>
+    <string name="pref_always_unlocked_device" translatable="false">always_unlocked_device</string>
+    <string name="pref_show_pointer_icon" translatable="false">show_pointer_icon</string>
+    <string name="pref_enable_custom_home" translatable="false">enable_custom_home</string>
+    <string name="pref_display_ime_policy" translatable="false">display_ime_policy</string>
+    <string name="pref_enable_client_native_ime" translatable="false">enable_client_native_ime</string>
+    <string name="pref_record_encoder_output" translatable="false">record_encoder_output</string>
+
+    <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
+    <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
+    <string name="internal_pref_virtual_stylus_supported" translatable="false">virtual_stylus_supported</string>
+
+    <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
+    <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>
+</resources>

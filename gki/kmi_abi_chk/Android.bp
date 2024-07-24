@@ -1,0 +1,54 @@
+//
+// Copyright (C) 2021 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: [
+        "Android-Apache-2.0",
+    ],
+}
+
+genrule {
+    name: "a14_5_15_kmi_compatibility_test",
+    srcs: [
+        "sym-5.15/Module.symvers-10342779",
+    ],
+    tool_files: ["kmi_compatibility_test.sh"],
+    out: ["a14_5_15_kmi_compatibility_test"],
+    // kmi_compatibility_test.sh $(CURR_SYMVERS) $(PREV_SYMVERS)
+    cmd: "$(location kmi_compatibility_test.sh) $(location sym-5.15/Module.symvers-10342779) $(location sym-5.15/Module.symvers-10342779) && " +
+        "touch $(out)",
+}
+
+genrule {
+    name: "a14_6_1_kmi_compatibility_test",
+    srcs: [
+        "sym-6.1/Module.symvers-10816536",
+    ],
+    tool_files: ["kmi_compatibility_test.sh"],
+    out: ["a14_6_1_kmi_compatibility_test"],
+    // kmi_compatibility_test.sh $(CURR_SYMVERS) $(PREV_SYMVERS)
+    cmd: "$(location kmi_compatibility_test.sh) $(location sym-6.1/Module.symvers-10816536) $(location sym-6.1/Module.symvers-10816536) && " +
+        "touch $(out)",
+}
+
+phony_rule {
+    name: "a14_kmi_compatibility_test",
+    phony_deps: [
+        "a14_5_15_kmi_compatibility_test",
+        "a14_6_1_kmi_compatibility_test",
+    ],
+}

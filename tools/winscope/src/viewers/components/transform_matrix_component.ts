@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {Transform} from 'trace/flickerlib/common';
+import {assertDefined} from 'common/assert_utils';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 
 @Component({
   selector: 'transform-matrix',
   template: `
-    <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString()">
+    <div *ngIf="matrix" class="matrix">
       <p class="mat-body-1">
-        {{ formatFloat(transform.matrix.dsdx) }}
+        {{ getVal('dsdx') }}
       </p>
       <p class="mat-body-1">
-        {{ formatFloat(transform.matrix.dsdy) }}
+        {{ getVal('dsdy') }}
       </p>
       <p class="mat-body-1" matTooltip="Translate x">
-        {{ formatFloat(transform.matrix.tx) }}
+        {{ getVal('tx') }}
       </p>
 
       <p class="mat-body-1">
-        {{ formatFloat(transform.matrix.dtdx) }}
+        {{ getVal('dtdx') }}
       </p>
       <p class="mat-body-1">
-        {{ formatFloat(transform.matrix.dtdy) }}
+        {{ getVal('dtdy') }}
       </p>
       <p class="mat-body-1" matTooltip="Translate y">
-        {{ formatFloat(transform.matrix.ty) }}
+        {{ getVal('ty') }}
       </p>
 
       <p class="mat-body-1">0</p>
@@ -57,6 +58,12 @@ import {Transform} from 'trace/flickerlib/common';
   ],
 })
 export class TransformMatrixComponent {
-  @Input() transform!: Transform;
-  @Input() formatFloat!: (num: number) => number;
+  @Input() matrix: UiPropertyTreeNode | undefined;
+
+  getVal(name: string): string {
+    return (
+      assertDefined(this.matrix).getChildByName(name)?.formattedValue() ??
+      'null'
+    );
+  }
 }

@@ -30,65 +30,69 @@ describe('Upload traces', () => {
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
+  it('can clear all files', async () => {
+    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
+    await E2eTestUtils.clickClearAllButton();
+    await checkNoFilesUploaded();
+  });
+
+  it('can remove a file using the close icon', async () => {
+    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
+    await E2eTestUtils.clickCloseIcon();
+    await checkFileRemoved();
+  });
+
+  it('can replace an uploaded file with a new file', async () => {
+    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
+    await E2eTestUtils.uploadFixture(
+      'traces/perfetto/layers_trace.perfetto-trace',
+    );
+    await checkFileReplaced();
+  });
+
   it('can process bugreport', async () => {
-    await E2eTestUtils.uploadFixture('bugreports/bugreport_stripped.zip');
-    await checkHasLoadedTraces();
-    expect(await areMessagesEmitted()).toBeTruthy();
-    await checkEmitsUnsupportedFileFormatMessages();
-    await checkEmitsOverriddenTracesMessages();
-    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.loadBugReport(DEFAULT_TIMEOUT_MS);
     await E2eTestUtils.clickViewTracesButton();
     await checkRendersSurfaceFlingerView();
   });
 
+  async function checkRendersSurfaceFlingerView() {
+    const viewerPresent = await element(
+      by.css('viewer-surface-flinger'),
+    ).isPresent();
+    expect(viewerPresent).toBeTruthy();
+  }
+
   it("doesn't emit messages for valid trace file", async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb');
-    expect(await areMessagesEmitted()).toBeFalsy();
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/SurfaceFlinger.pb',
+    );
+    expect(
+      await E2eTestUtils.areMessagesEmitted(DEFAULT_TIMEOUT_MS),
+    ).toBeFalsy();
   });
 
-  const checkHasLoadedTraces = async () => {
-    const text = await element(by.css('.uploaded-files')).getText();
-    expect(text).toContain('ProtoLog');
-    expect(text).toContain('IME Service');
-    expect(text).toContain('IME Manager Service');
-    expect(text).toContain('Window Manager');
-    expect(text).toContain('Surface Flinger');
-    expect(text).toContain('IME Clients');
-    expect(text).toContain('Transactions');
-    expect(text).toContain('Transitions');
-
-    expect(text).toContain('wm_log.winscope');
-    expect(text).toContain('ime_trace_service.winscope');
-    expect(text).toContain('ime_trace_managerservice.winscope');
-    expect(text).toContain('wm_trace.winscope');
-    expect(text).toContain('layers_trace_from_transactions.winscope');
-    expect(text).toContain('ime_trace_clients.winscope');
-    expect(text).toContain('transactions_trace.winscope');
-    expect(text).toContain('wm_transition_trace.winscope');
-    expect(text).toContain('shell_transition_trace.winscope');
-  };
-
-  const checkEmitsUnsupportedFileFormatMessages = async () => {
-    const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('unsupported file format');
-  };
-
-  const checkEmitsOverriddenTracesMessages = async () => {
-    const text = await element(by.css('snack-bar')).getText();
-    expect(text).toContain('overridden by another trace');
-  };
-
-  const areMessagesEmitted = async (): Promise<boolean> => {
-    // Messages are emitted quickly. There is no Need to wait for the entire
+  async function checkNoFilesUploaded() {
     // default timeout to understand whether the messages where emitted or not.
     await browser.manage().timeouts().implicitlyWait(1000);
-    const emitted = await element(by.css('snack-bar')).isPresent();
+    const filesUploaded = await element(by.css('.uploaded-files')).isPresent();
     await browser.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT_MS);
-    return emitted;
-  };
+    expect(filesUploaded).toBeFalsy();
+  }
 
-  const checkRendersSurfaceFlingerView = async () => {
-    const viewerPresent = await element(by.css('viewer-surface-flinger')).isPresent();
-    expect(viewerPresent).toBeTruthy();
-  };
+  async function checkFileRemoved() {
+    const text = await element(by.css('.uploaded-files')).getText();
+    expect(text).toContain('Window Manager');
+    expect(text).not.toContain('Surface Flinger');
+    expect(text).toContain('Transactions');
+    expect(text).toContain('Transitions');
+  }
+
+  async function checkFileReplaced() {
+    const text = await element(by.css('.uploaded-files')).getText();
+    expect(text).toContain('Surface Flinger');
+
+    expect(text).not.toContain('layers_trace_from_transactions.winscope');
+    expect(text).toContain('layers_trace.perfetto-trace');
+  }
 });

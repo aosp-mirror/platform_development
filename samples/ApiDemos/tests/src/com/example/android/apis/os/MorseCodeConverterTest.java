@@ -16,8 +16,9 @@
 
 package com.example.android.apis.os;
 
+import androidx.test.filters.SmallTest;
+
 import junit.framework.TestCase;
-import android.test.suitebuilder.annotation.SmallTest;
 
 /**
  * An example of a true unit test that tests the utility class {@link MorseCodeConverter}.

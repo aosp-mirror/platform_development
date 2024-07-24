@@ -19,9 +19,10 @@
     package="com.example.android.pushapiauthenticator">
     <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <!-- Uses API introduced in O (26) -->
     <uses-sdk android:minSdkVersion="1"
-          android:targetSdkVersion="26"/>
+          android:targetSdkVersion="30"/>
     <application android:label="Auth Tester" android:icon="@drawable/push">
         <activity android:name="MainActivity">
             <intent-filter>

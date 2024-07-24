@@ -1,0 +1,33 @@
+syntax = "proto2";
+
+package winscope.test;
+
+// Message used for testing the fake proto machinery
+message RootMessage {
+  optional Entry entry = 1;
+}
+
+enum Enum0 {
+    ENUM0_VALUE_ZERO = 0;
+    ENUM0_VALUE_ONE = 1;
+}
+
+message Entry {
+  enum Enum1 {
+    ENUM1_VALUE_ZERO = 0;
+    ENUM1_VALUE_ONE = 1;
+  }
+  optional Enum0 enum0 = 1;
+  optional Enum1 enum1 = 2;
+  repeated int32 array = 3;
+  optional int32 number_32bit = 4;
+  optional int64 number_64bit = 5;
+
+  optional int64 _case_64bit = 6;
+  optional int64 case_64bit = 7;
+  optional int64 case_64bit_lsb = 8;
+  optional int64 case_64_bit = 9;
+  optional int64 case_64_bit_lsb = 10;
+
+  optional bool bool_value = 11;
+}

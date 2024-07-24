@@ -608,7 +608,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     add_common_parse_args(parser)
     parser.add_argument('--format', default='json',
-                        choices=['json', 'oneline'],
+                        choices=['json', 'oneline', 'porcelain'],
                         help='Print format')
     return parser.parse_args()
 
@@ -635,16 +635,22 @@ def main():
     if args.format == 'json':
         json.dump(change_lists, sys.stdout, indent=4, separators=(', ', ': '))
         print()  # Print the end-of-line
-    elif args.format == 'oneline':
+    else:
+        if args.format == 'oneline':
+            format_str = ('{i:<8} {number:<16} {status:<20} '
+                          '{change_id:<60} {project:<120} '
+                          '{subject}')
+        else:
+            format_str = ('{i}\t{number}\t{status}\t'
+                          '{change_id}\t{project}\t{subject}')
+
         for i, change in enumerate(change_lists):
-            print('{i:<8} {number:<16} {status:<20} ' \
-                  '{change_id:<60} {project:<120} ' \
-                  '{subject}'.format(i=i,
-                                     project=change['project'],
-                                     change_id=change['change_id'],
-                                     status=change['status'],
-                                     number=change['_number'],
-                                     subject=change['subject']))
+            print(format_str.format(i=i,
+                                    project=change['project'],
+                                    change_id=change['change_id'],
+                                    status=change['status'],
+                                    number=change['_number'],
+                                    subject=change['subject']))
 
 
 if __name__ == '__main__':

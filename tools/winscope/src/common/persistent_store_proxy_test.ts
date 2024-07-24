@@ -25,7 +25,11 @@ describe('PersistentStoreObject', () => {
       key1: 'value',
       key2: true,
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
 
     expect(storeObject['key1']).toBe('value');
     expect(storeObject['key2']).toBe(true);
@@ -38,7 +42,11 @@ describe('PersistentStoreObject', () => {
       key1: 'value',
       key2: true,
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
 
     storeObject['key1'] = 'someOtherValue';
     storeObject['key2'] = false;
@@ -53,11 +61,19 @@ describe('PersistentStoreObject', () => {
       key1: 'value',
       key2: true,
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
     storeObject['key1'] = 'someOtherValue';
     storeObject['key2'] = false;
 
-    const newStoreObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const newStoreObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
     expect(newStoreObject['key1']).toBe('someOtherValue');
     expect(newStoreObject['key2']).toBe(false);
   });
@@ -69,7 +85,11 @@ describe('PersistentStoreObject', () => {
       key1: 'value',
       key2: true,
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
     expect(storeObject['key1']).toBe('value');
     expect(storeObject['key2']).toBe(true);
 
@@ -77,7 +97,11 @@ describe('PersistentStoreObject', () => {
       key1: 'someOtherValue',
       key2: false,
     };
-    const newStoreObject = PersistentStoreProxy.new('storeKey', newDefaultValues, mockStorage);
+    const newStoreObject = PersistentStoreProxy.new(
+      'storeKey',
+      newDefaultValues,
+      mockStorage,
+    );
     expect(newStoreObject['key1']).toBe('someOtherValue');
     expect(newStoreObject['key2']).toBe(false);
   });
@@ -91,7 +115,11 @@ describe('PersistentStoreObject', () => {
         key3: true,
       },
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
     expect(() => (storeObject['key2'] = {key3: false})).toThrow();
   });
 
@@ -104,7 +132,11 @@ describe('PersistentStoreObject', () => {
         key3: true,
       },
     };
-    const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
+    const storeObject = PersistentStoreProxy.new(
+      'storeKey',
+      defaultValues,
+      mockStorage,
+    );
     expect(storeObject['key2']['key3']).toBe(true);
   });
 
@@ -117,7 +149,11 @@ describe('PersistentStoreObject', () => {
         key3: true,
       },
     };
-    const storeObject1 = PersistentStoreProxy.new('storeKey', schema1, mockStorage);
+    const storeObject1 = PersistentStoreProxy.new(
+      'storeKey',
+      schema1,
+      mockStorage,
+    );
     expect(storeObject1['key1']).toBe('value1');
     expect(storeObject1['key2']['key3']).toBe(true);
 
@@ -131,7 +167,11 @@ describe('PersistentStoreObject', () => {
       },
       key2: true,
     };
-    const storeObject2 = PersistentStoreProxy.new('storeKey', schema2, mockStorage);
+    const storeObject2 = PersistentStoreProxy.new(
+      'storeKey',
+      schema2,
+      mockStorage,
+    );
     expect(storeObject2['key1']['key3']).toBe('value2');
     expect(storeObject2['key2']).toBe(true);
   });

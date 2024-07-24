@@ -821,6 +821,25 @@ TEST_MODULES = [
         linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libbit_field',
+        arch='arm64',
+        srcs=['integration/bit_field/include/base.h'],
+        version_script='integration/bit_field/map.txt',
+        export_include_dirs=['integration/bit_field/include'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='libbit_field_diff',
+        arch='arm64',
+        srcs=['integration/bit_field/include/diff.h'],
+        version_script='integration/bit_field/map.txt',
+        export_include_dirs=['integration/bit_field/include'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}

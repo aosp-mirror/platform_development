@@ -17,8 +17,9 @@
 package com.example.android.apis;
 
 import android.test.ApplicationTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
-import android.test.suitebuilder.annotation.SmallTest;
+
+import androidx.test.filters.MediumTest;
+import androidx.test.filters.SmallTest;
 
 /**
  * This is a simple framework for a test of an Application.  See 

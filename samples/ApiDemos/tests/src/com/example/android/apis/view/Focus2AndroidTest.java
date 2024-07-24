@@ -16,16 +16,17 @@
 
 package com.example.android.apis.view;
 
-import com.example.android.apis.R;
-
 import android.content.Context;
 import android.test.AndroidTestCase;
-import android.test.suitebuilder.annotation.SmallTest;
 import android.view.FocusFinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+
+import androidx.test.filters.SmallTest;
+
+import com.example.android.apis.R;
 
 /**
  * This exercises the same logic as {@link Focus2ActivityTest} but in a lighter

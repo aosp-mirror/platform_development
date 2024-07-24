@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {RealTimestamp} from './timestamp';
 import {Trace} from './trace';
 
 describe('TraceEntry', () => {
@@ -24,14 +24,21 @@ describe('TraceEntry', () => {
   beforeAll(() => {
     trace = new TraceBuilder<string>()
       .setTimestamps([
-        new RealTimestamp(10n),
-        new RealTimestamp(11n),
-        new RealTimestamp(12n),
-        new RealTimestamp(13n),
-        new RealTimestamp(14n),
-        new RealTimestamp(15n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(13n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(14n),
+        NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(15n),
       ])
-      .setEntries(['entry-0', 'entry-1', 'entry-2', 'entry-3', 'entry-4', 'entry-5'])
+      .setEntries([
+        'entry-0',
+        'entry-1',
+        'entry-2',
+        'entry-3',
+        'entry-4',
+        'entry-5',
+      ])
       .setFrame(0, 0)
       .setFrame(0, 1)
       .setFrame(1, 1)
@@ -53,8 +60,12 @@ describe('TraceEntry', () => {
   });
 
   it('getTimestamp()', () => {
-    expect(trace.getEntry(0).getTimestamp()).toEqual(new RealTimestamp(10n));
-    expect(trace.getEntry(1).getTimestamp()).toEqual(new RealTimestamp(11n));
+    expect(trace.getEntry(0).getTimestamp()).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n),
+    );
+    expect(trace.getEntry(1).getTimestamp()).toEqual(
+      NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n),
+    );
   });
 
   it('getFramesRange()', () => {

@@ -24,14 +24,13 @@ contain the proto definitions for their internal states.
 m framework-minus-apex-intdefs
 ```
 
-* Copy the generated `intDefMapping.json` files to the `prebuilts` repo.
+* Copy the generated `intDefMapping.json` files to the `winscope`.
 ```
-python3 -c 'import sys,json,collections; print(json.dumps(collections.OrderedDict(sorted(collections.ChainMap(*map(lambda x:json.load(open(x)), sys.argv[1:])).items())), indent=2))' $(find out/soong/.intermediates/frameworks/base -iname intDefMapping.json) > ./prebuilts/misc/common/winscope/intDefMapping.json
+python3 -c 'import sys,json,collections; print(json.dumps(collections.OrderedDict(sorted(collections.ChainMap(*map(lambda x:json.load(open(x)), sys.argv[1:])).items())), indent=2))' $(find out/soong/.intermediates/frameworks/base -iname intDefMapping.json) > ./development/tools/winscope/src/common/intDefMapping.json
 ```
 
 * Upload the changes.
 ```
-cd ./prebuilts/misc/common/winscope
 repo start intdef-update
 git commit -am "Update intdef mapping" "Test: N/A"
 repo upload --cbr .

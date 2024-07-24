@@ -16,10 +16,18 @@
 export const ViewerEvents = {
   HierarchyPinnedChange: 'HierarchyPinnedChange',
   HighlightedChange: 'HighlightedChange',
+  HighlightedPropertyChange: 'HighlightedPropertyChange',
   HierarchyUserOptionsChange: 'HierarchyUserOptionsChange',
   HierarchyFilterChange: 'HierarchyFilterChange',
   SelectedTreeChange: 'SelectedTreeChange',
   PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
   PropertiesFilterChange: 'PropertiesFilterChange',
   AdditionalPropertySelected: 'AdditionalPropertySelected',
+  RectsDblClick: 'RectsDblClick',
+  MiniRectsDblClick: 'MiniRectsDblClick',
+  TimestampClick: 'TimestampClick',
 };
+
+export class RectDblClickDetail {
+  constructor(public clickedRectId: string) {}
+}

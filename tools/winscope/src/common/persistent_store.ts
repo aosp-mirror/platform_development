@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export class PersistentStore {
   add(key: string, value: string) {
     localStorage.setItem(key, value);
   }
 
-  get(key: string) {
-    return localStorage.getItem(key);
+  get(key: string): string | undefined {
+    return localStorage.getItem(key) ?? undefined;
+  }
+
+  clear(keySubstring: string) {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.includes(keySubstring)) localStorage.removeItem(key);
+    });
   }
 }

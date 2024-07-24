@@ -144,7 +144,7 @@ def get_pids(device, process_name):
 
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                     target_pid, run_cmd, debug_socket, port, run_as_cmd=[],
-                    lldb=False, chroot=""):
+                    lldb=False, chroot="", cwd=""):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
@@ -156,6 +156,8 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
         debug_socket: Device path to place gdbserver unix domain socket.
         port: Host port to forward the debug_socket to.
         run_as_cmd: run-as or su command to prepend to commands.
+        chroot: The directory to pass to chroot when running the command. Cannot be set with cwd.
+        cwd: The working directory for the command. Cannot be set with chroot.
 
     Returns:
         Popen handle to the `adb shell` process gdbserver was started with.
@@ -164,6 +166,12 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     assert target_pid is None or run_cmd is None
 
     if chroot:
+        # Chroot changes the working directory, so cd won't work if ran before chroot.
+        # On the other hand naively passing cd to chroot also won't work: chroot
+        # executes a binary, while cd is a bash command.
+        # They are unlikely to be used together anyway, so we simply disallow it.
+        if cwd:
+            raise ValueError('chroot and cwd cannot be set together')
         run_as_cmd = ["chroot", chroot] + run_as_cmd
 
     # Remove the old socket file.
@@ -209,6 +217,9 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                                              "gdbclient.log")
         print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
     gdbserver_output = open(gdbserver_output_path, 'w')
+
+    if cwd:
+        gdbserver_cmd = ["cd", cwd, "&&"] + gdbserver_cmd
     return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
                               stderr=gdbserver_output)
 

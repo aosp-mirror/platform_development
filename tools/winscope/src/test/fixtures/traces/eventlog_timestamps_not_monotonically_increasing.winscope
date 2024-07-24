@@ -1,0 +1,6 @@
+EventLog
+
+--------- beginning of events
+         1681207047.981157174  1000  1654  1821 I input_interaction: Interaction with: 454ee48 com.google.android.gm/com.google.android.gm.welcome.WelcomeTourActivity (server), [Gesture Monitor] swipe-up (server), [Gesture Monitor] edge-swipe (server), PointerEventDispatcher0 (server),
+         1681207047.991310494  1000  1654  6209 I input_cancel: [[Gesture Monitor] edge-swipe (server),reason=input channel stole pointer stream]
+         1681207047.991161039  1000  1654  6209 I input_cancel: [454ee48 com.google.android.gm/com.google.android.gm.welcome.WelcomeTourActivity (server),reason=input channel stole pointer stream]

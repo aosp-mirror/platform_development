@@ -16,18 +16,19 @@
 package com.example.android.testingfun.tests.lesson3;
 
 
-import com.example.android.testingfun.R;
-import com.example.android.testingfun.lesson3.ClickFunActivity;
-
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.TouchUtils;
 import android.test.ViewAsserts;
-import android.test.suitebuilder.annotation.MediumTest;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+
+import androidx.test.filters.MediumTest;
+
+import com.example.android.testingfun.R;
+import com.example.android.testingfun.lesson3.ClickFunActivity;
 
 /**
  * Tests for ClickFunActivity. Introduces touch mode, test size annotations and TouchUtils.

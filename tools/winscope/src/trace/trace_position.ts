@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {AbsoluteFrameIndex} from './index_types';
-import {Timestamp} from './timestamp';
 import {TraceEntry} from './trace';
 
 export class TracePosition {
@@ -23,13 +23,19 @@ export class TracePosition {
     return new TracePosition(timestamp);
   }
 
-  static fromTraceEntry(entry: TraceEntry<{}>): TracePosition {
+  static fromTraceEntry(
+    entry: TraceEntry<{}>,
+    explicitTimestamp?: Timestamp,
+  ): TracePosition {
     let frame: AbsoluteFrameIndex | undefined;
     if (entry.getFullTrace().hasFrameInfo()) {
       const frames = entry.getFramesRange();
       frame = frames && frames.start < frames.end ? frames.start : undefined;
     }
-    return new TracePosition(entry.getTimestamp(), frame, entry);
+    const timestamp = explicitTimestamp
+      ? explicitTimestamp
+      : entry.getTimestamp();
+    return new TracePosition(timestamp, frame, entry);
   }
 
   isEqual(other: TracePosition): boolean {
@@ -44,6 +50,6 @@ export class TracePosition {
   private constructor(
     readonly timestamp: Timestamp,
     readonly frame?: AbsoluteFrameIndex,
-    readonly entry?: TraceEntry<{}>
+    readonly entry?: TraceEntry<{}>,
   ) {}
 }

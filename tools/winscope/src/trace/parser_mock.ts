@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
+import {Timestamp, TimestampType} from 'common/time';
+import {CustomQueryParserResultTypeMap, CustomQueryType} from './custom_query';
+import {AbsoluteEntryIndex, EntriesRange} from './index_types';
 import {Parser} from './parser';
-import {RealTimestamp, Timestamp, TimestampType} from './timestamp';
 import {TraceType} from './trace_type';
 
 export class ParserMock<T> implements Parser<T> {
-  constructor(private readonly timestamps: RealTimestamp[], private readonly entries: T[]) {
+  constructor(
+    private readonly type: TraceType,
+    private readonly timestamps: Timestamp[],
+    private readonly entries: T[],
+    private readonly customQueryResult: Map<CustomQueryType, object>,
+    private readonly descriptors: string[],
+  ) {
     if (timestamps.length !== entries.length) {
       throw new Error(`Timestamps and entries must have the same length`);
     }
   }
 
   getTraceType(): TraceType {
-    return TraceType.SURFACE_FLINGER;
+    return this.type;
   }
 
   getLengthEntries(): number {
@@ -40,11 +48,29 @@ export class ParserMock<T> implements Parser<T> {
     return this.timestamps;
   }
 
-  getEntry(index: number): Promise<T> {
+  getEntry(index: AbsoluteEntryIndex): Promise<T> {
     return Promise.resolve(this.entries[index]);
   }
 
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    let result = this.customQueryResult.get(type);
+    if (result === undefined) {
+      throw new Error(
+        `This mock was not configured to support custom query type '${type}'. Something missing in your test set up?`,
+      );
+    }
+    if (Array.isArray(result)) {
+      result = result.slice(entriesRange.start, entriesRange.end);
+    }
+    return Promise.resolve(result) as Promise<
+      CustomQueryParserResultTypeMap[Q]
+    >;
+  }
+
   getDescriptors(): string[] {
-    return ['MockTrace'];
+    return this.descriptors;
   }
 }

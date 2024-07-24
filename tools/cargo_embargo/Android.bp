@@ -13,12 +13,13 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_android_rust",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 rust_defaults {
     name: "cargo_embargo.defaults",
-    srcs: ["src/main.rs"],
+    crate_root: "src/main.rs",
     // Disable LTO for faster builds. Don't need the performance here.
     flags: ["-C lto=off"],
     rustlibs: [
@@ -32,6 +33,7 @@ rust_defaults {
         "libregex",
         "libserde",
         "libserde_json",
+        "libtempfile",
     ],
 }
 
@@ -43,6 +45,7 @@ rust_binary_host {
 rust_test_host {
     name: "cargo_embargo.test",
     defaults: ["cargo_embargo.defaults"],
+    rustlibs: ["libgoogletest_rust"],
     test_config: "AndroidTest.xml",
     data: ["testdata/**/*"],
 }

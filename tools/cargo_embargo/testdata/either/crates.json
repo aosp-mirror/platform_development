@@ -3,7 +3,7 @@
     {
       "name": "either",
       "package_name": "either",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "types": ["lib"],
       "target": "x86_64-unknown-linux-gnu",
       "features": ["default", "use_std"],
@@ -14,14 +14,14 @@
       "static_libs": [],
       "shared_libs": [],
       "edition": "2018",
-      "package_dir": ".",
+      "package_dir": ".../external/rust/crates/either",
       "main_src": "src/lib.rs",
       "empty_test": false
     },
     {
       "name": "either",
       "package_name": "either",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "types": ["test"],
       "target": "x86_64-unknown-linux-gnu",
       "features": ["default", "use_std"],
@@ -30,6 +30,7 @@
         {
           "name": "serde_json",
           "lib_name": "serde_json",
+          "raw_name": "serde_json",
           "extern_type": "Rust"
         }
       ],
@@ -38,7 +39,7 @@
       "static_libs": [],
       "shared_libs": [],
       "edition": "2018",
-      "package_dir": ".",
+      "package_dir": ".../external/rust/crates/either",
       "main_src": "src/lib.rs",
       "empty_test": false
     }

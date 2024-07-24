@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ProxyClient} from 'trace_collection/proxy_client';
+import {
+  Device,
+  DeviceProperties,
+  ProxyClient,
+} from 'trace_collection/proxy_client';
 import {ConfigMap} from './trace_collection_utils';
-
-export interface Device {
-  [key: string]: DeviceProperties;
-}
-
-export interface DeviceProperties {
-  authorised: boolean;
-  model: string;
-}
 
 export interface Connection {
   adbSuccess: () => boolean;
@@ -44,12 +39,13 @@ export interface Connection {
   isConnectingState(): boolean;
   throwNoTargetsError(): any;
   startTrace(
+    requestedTraces: string[],
     reqEnableConfig?: string[],
     reqSelectedSfConfig?: ConfigMap,
-    reqSelectedWmConfig?: ConfigMap
+    reqSelectedWmConfig?: ConfigMap,
   ): any;
   endTrace(): any;
   adbData(): File[];
-  dumpState(): any;
+  dumpState(requestedDumps: string[]): any;
   proxy?: ProxyClient;
 }

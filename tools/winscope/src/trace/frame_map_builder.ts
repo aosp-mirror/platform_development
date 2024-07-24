@@ -15,7 +15,11 @@
  */
 
 import {FrameMap} from './frame_map';
-import {AbsoluteEntryIndex, AbsoluteFrameIndex, FramesRange} from './index_types';
+import {
+  AbsoluteEntryIndex,
+  AbsoluteFrameIndex,
+  FramesRange,
+} from './index_types';
 
 export class FrameMapBuilder {
   private readonly lengthEntries: number;
@@ -33,21 +37,24 @@ export class FrameMapBuilder {
     this.lengthEntries = lengthEntries;
     this.lengthFrames = lengthFrames;
 
-    this.entryToStartFrame = new Array<AbsoluteFrameIndex | undefined>(this.lengthEntries).fill(
-      undefined
-    );
-    this.entryToEndFrame = new Array<AbsoluteFrameIndex | undefined>(this.lengthEntries).fill(
-      undefined
-    );
-    this.frameToStartEntry = new Array<AbsoluteEntryIndex | undefined>(this.lengthFrames).fill(
-      undefined
-    );
-    this.frameToEndEntry = new Array<AbsoluteEntryIndex | undefined>(this.lengthFrames).fill(
-      undefined
-    );
+    this.entryToStartFrame = new Array<AbsoluteFrameIndex | undefined>(
+      this.lengthEntries,
+    ).fill(undefined);
+    this.entryToEndFrame = new Array<AbsoluteFrameIndex | undefined>(
+      this.lengthEntries,
+    ).fill(undefined);
+    this.frameToStartEntry = new Array<AbsoluteEntryIndex | undefined>(
+      this.lengthFrames,
+    ).fill(undefined);
+    this.frameToEndEntry = new Array<AbsoluteEntryIndex | undefined>(
+      this.lengthFrames,
+    ).fill(undefined);
   }
 
-  setFrames(entry: AbsoluteEntryIndex, range: FramesRange | undefined): FrameMapBuilder {
+  setFrames(
+    entry: AbsoluteEntryIndex,
+    range: FramesRange | undefined,
+  ): FrameMapBuilder {
     this.checkIsNotFinalized();
     if (!range || range.start === range.end) {
       return this;
@@ -77,11 +84,15 @@ export class FrameMapBuilder {
       this.entryToStartFrame,
       this.entryToEndFrame,
       this.frameToStartEntry,
-      this.frameToEndEntry
+      this.frameToEndEntry,
     );
   }
 
-  private setStartArrayValue(array: Array<number | undefined>, index: number, value: number) {
+  private setStartArrayValue(
+    array: Array<number | undefined>,
+    index: number,
+    value: number,
+  ) {
     const currentValue = array[index];
     if (currentValue === undefined) {
       array[index] = value;
@@ -90,7 +101,11 @@ export class FrameMapBuilder {
     }
   }
 
-  private setEndArrayValue(array: Array<number | undefined>, index: number, value: number) {
+  private setEndArrayValue(
+    array: Array<number | undefined>,
+    index: number,
+    value: number,
+  ) {
     const currentValue = array[index];
     if (currentValue === undefined) {
       array[index] = value;
