@@ -80,8 +80,10 @@ export class ProxyConnection extends AdbConnection {
   }
 
   setSecurityToken(token: string) {
-    this.securityToken = token;
-    this.store?.add(this.storeKeySecurityToken, token);
+    if (token.length > 0) {
+      this.securityToken = token;
+      this.store?.add(this.storeKeySecurityToken, token);
+    }
   }
 
   getDevices(): AdbDevice[] {
@@ -422,7 +424,7 @@ export class ProxyConnection extends AdbConnection {
   }
 
   private getSecurityTokenHeader(): HttpRequestHeaderType {
-    const lastKey = this.store?.get('adb.proxyKey');
+    const lastKey = this.store?.get(this.storeKeySecurityToken);
     if (lastKey !== undefined) {
       this.securityToken = lastKey;
     }

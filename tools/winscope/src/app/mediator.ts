@@ -24,6 +24,7 @@ import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
 import {
   CannotVisualizeAllTraces,
+  IncompleteFrameMapping,
   NoTraceTargetsSelected,
   NoValidFiles,
 } from 'messaging/user_warnings';
@@ -279,9 +280,9 @@ export class Mediator {
   private async propagateTracePosition(
     position: TracePosition | undefined,
     omitCrossToolProtocol: boolean,
-  ) {
+  ): Promise<boolean> {
     if (!position) {
-      return;
+      return false;
     }
 
     const event = new TracePositionUpdate(position);
@@ -378,8 +379,15 @@ export class Mediator {
     await TimeUtils.sleepMs(10);
 
     this.tracePipeline.filterTracesWithoutVisualization();
-    await this.tracePipeline.buildTraces();
-    this.currentProgressListener?.onOperationFinished(true);
+    try {
+      await this.tracePipeline.buildTraces();
+      this.currentProgressListener?.onOperationFinished(true);
+    } catch (e) {
+      this.userNotificationsListener.onNotifications([
+        new IncompleteFrameMapping((e as Error).message),
+      ]);
+      this.currentProgressListener?.onOperationFinished(false);
+    }
 
     this.currentProgressListener?.onProgressUpdate(
       'Initializing UI...',
