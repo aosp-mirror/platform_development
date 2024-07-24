@@ -119,17 +119,13 @@ export abstract class AbstractInputEventParser extends AbstractParser<PropertyTr
   ): Promise<CustomQueryParserResultTypeMap[Q]> {
     return new VisitableParserCustomQuery(type)
       .visit(CustomQueryType.VSYNCID, async () => {
-        try {
-          return await Utils.queryVsyncId(
-            this.traceProcessor,
-            this.getTableName(),
-            this.entryIndexToRowIdMap,
-            entriesRange,
-            AbstractInputEventParser.createVsyncIdQuery,
-          );
-        } catch (e) {
-          return [];
-        }
+        return Utils.queryVsyncId(
+          this.traceProcessor,
+          this.getTableName(),
+          this.entryIndexToRowIdMap,
+          entriesRange,
+          AbstractInputEventParser.createVsyncIdQuery,
+        );
       })
       .getResult();
   }
