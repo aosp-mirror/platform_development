@@ -18,5 +18,6 @@ export interface UserOptions {
     name: string;
     enabled: boolean;
     tooltip?: string;
+    isUnavailable?: boolean;
   };
 }

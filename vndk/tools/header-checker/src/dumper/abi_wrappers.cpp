@@ -233,7 +233,7 @@ static std::string GetAnonymousEnumUniqueId(llvm::StringRef mangled_name,
     const std::ssub_match &old_name = match_result[1];
     old_suffix = std::to_string(old_name.length()) + match_result[0].str();
     nested_name_suffix = match_result[2].str();
-    if (!mangled_name.endswith(old_suffix)) {
+    if (!mangled_name.ends_with(old_suffix)) {
       llvm::errs() << "Unexpected length of anonymous enum type name: "
                    << mangled_name << "\n";
       ::exit(1);
@@ -605,9 +605,11 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
     }
     std::string field_name(field->getName());
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
+    uint64_t bit_width =
+        field->isBitField() ? field->getBitWidthValue(*ast_contextp_) : 0;
     recordp->AddRecordField(repr::RecordFieldIR(
         field_name, GetTypeUniqueId(field_type), field_offset,
-        AccessClangToIR(field->getAccess())));
+        AccessClangToIR(field->getAccess()), field->isBitField(), bit_width));
     field++;
     field_index++;
   }
@@ -718,7 +720,7 @@ repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         const clang::CXXMethodDecl *method_decl =
             vtable_component.getFunctionDecl();
         assert(method_decl != nullptr);
-        is_pure = method_decl->isPure();
+        is_pure = method_decl->isPureVirtual();
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
             kind = repr::VTableComponentIR::Kind::FunctionPointer;

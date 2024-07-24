@@ -15,20 +15,19 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {
+  INVALID_TIME_NS,
+  TimeRange,
+  Timestamp,
+  TimestampType,
+} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'trace/timestamp';
-import {TraceEntry} from 'trace/trace';
+import {Trace, TraceEntry} from 'trace/trace';
 import {Traces} from 'trace/traces';
 import {TraceEntryFinder} from 'trace/trace_entry_finder';
 import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
-
-export interface TimeRange {
-  from: Timestamp;
-  to: Timestamp;
-}
-const INVALID_TIMESTAMP = 0n
+import {TraceType, TraceTypeUtils} from 'trace/trace_type';
 
 export class TimelineData {
   private traces = new Traces();
@@ -38,6 +37,13 @@ export class TimelineData {
   private lastEntry?: TraceEntry<{}>;
   private explicitlySetPosition?: TracePosition;
   private explicitlySetSelection?: TimeRange;
+  private explicitlySetZoomRange?: TimeRange;
+  private lastReturnedCurrentPosition?: TracePosition;
+  private lastReturnedFullTimeRange?: TimeRange;
+  private lastReturnedCurrentEntries = new Map<
+    TraceType,
+    TraceEntry<any> | undefined
+  >();
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
 
   initialize(traces: Traces, screenRecordingVideo: Blob | undefined) {
@@ -45,14 +51,12 @@ export class TimelineData {
 
     this.traces = new Traces();
     traces.forEachTrace((trace, type) => {
-      if (type === TraceType.WINDOW_MANAGER) {
-        // Filter out WindowManager dumps with no timestamp from timeline
-        if (
-          trace.lengthEntries === 1 &&
-          trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIMESTAMP
-        ) {
-          return;
-        }
+      // Filter out dumps with invalid timestamp (would mess up the timeline)
+      const isDump =
+        trace.lengthEntries === 1 &&
+        trace.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS;
+      if (isDump) {
+        return;
       }
 
       this.traces.setTrace(type, trace);
@@ -62,38 +66,86 @@ export class TimelineData {
     this.firstEntry = this.findFirstEntry();
     this.lastEntry = this.findLastEntry();
     this.timestampType = this.firstEntry?.getTimestamp().getType();
+
+    const types = traces
+      .mapTrace((trace, type) => type)
+      .filter(
+        (type) =>
+          TraceTypeUtils.isTraceTypeWithViewer(type) &&
+          type !== TraceType.SCREEN_RECORDING,
+      )
+      .sort(TraceTypeUtils.compareByDisplayOrder);
+    if (types.length > 0) {
+      this.setActiveViewTraceTypes([types[0]]);
+    }
   }
 
   getCurrentPosition(): TracePosition | undefined {
     if (this.explicitlySetPosition) {
       return this.explicitlySetPosition;
     }
+
+    let currentPosition: TracePosition | undefined = undefined;
+    if (this.firstEntry) {
+      currentPosition = TracePosition.fromTraceEntry(this.firstEntry);
+    }
+
     const firstActiveEntry = this.getFirstEntryOfActiveViewTraces();
     if (firstActiveEntry) {
-      return TracePosition.fromTraceEntry(firstActiveEntry);
+      currentPosition = TracePosition.fromTraceEntry(firstActiveEntry);
     }
-    if (this.firstEntry) {
-      return TracePosition.fromTraceEntry(this.firstEntry);
+
+    if (
+      this.lastReturnedCurrentPosition === undefined ||
+      currentPosition === undefined ||
+      !this.lastReturnedCurrentPosition.isEqual(currentPosition)
+    ) {
+      this.lastReturnedCurrentPosition = currentPosition;
     }
-    return undefined;
+
+    return this.lastReturnedCurrentPosition;
   }
 
   setPosition(position: TracePosition | undefined) {
     if (!this.hasTimestamps()) {
-      console.warn('Attempted to set position on traces with no timestamps/entries...');
+      console.warn(
+        'Attempted to set position on traces with no timestamps/entries...',
+      );
       return;
     }
 
     if (position) {
       if (this.timestampType === undefined) {
-        throw Error('Attempted to set explicit position but no timestamp type is available');
+        throw Error(
+          'Attempted to set explicit position but no timestamp type is available',
+        );
       }
       if (position.timestamp.getType() !== this.timestampType) {
-        throw Error('Attempted to set explicit position with incompatible timestamp type');
+        throw Error(
+          'Attempted to set explicit position with incompatible timestamp type',
+        );
       }
     }
 
     this.explicitlySetPosition = position;
+  }
+
+  makePositionFromActiveTrace(timestamp: Timestamp): TracePosition {
+    let trace: Trace<{}> | undefined;
+    if (this.activeViewTraceTypes.length > 0) {
+      trace = this.traces.getTrace(this.activeViewTraceTypes[0]);
+    }
+
+    if (!trace) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    const entry = trace.findClosestEntry(timestamp);
+    if (!entry) {
+      return TracePosition.fromTimestamp(timestamp);
+    }
+
+    return TracePosition.fromTraceEntry(entry, timestamp);
   }
 
   setActiveViewTraceTypes(types: TraceType[]) {
@@ -108,10 +160,23 @@ export class TimelineData {
     if (!this.firstEntry || !this.lastEntry) {
       throw Error('Trying to get full time range when there are no timestamps');
     }
-    return {
+
+    const fullTimeRange = {
       from: this.firstEntry.getTimestamp(),
       to: this.lastEntry.getTimestamp(),
     };
+
+    if (
+      this.lastReturnedFullTimeRange === undefined ||
+      this.lastReturnedFullTimeRange.from.getValueNs() !==
+        fullTimeRange.from.getValueNs() ||
+      this.lastReturnedFullTimeRange.to.getValueNs() !==
+        fullTimeRange.to.getValueNs()
+    ) {
+      this.lastReturnedFullTimeRange = fullTimeRange;
+    }
+
+    return this.lastReturnedFullTimeRange;
   }
 
   getSelectionTimeRange(): TimeRange {
@@ -126,6 +191,18 @@ export class TimelineData {
     this.explicitlySetSelection = selection;
   }
 
+  getZoomRange(): TimeRange {
+    if (this.explicitlySetZoomRange === undefined) {
+      return this.getFullTimeRange();
+    } else {
+      return this.explicitlySetZoomRange;
+    }
+  }
+
+  setZoom(zoomRange: TimeRange) {
+    this.explicitlySetZoomRange = zoomRange;
+  }
+
   getTraces(): Traces {
     return this.traces;
   }
@@ -134,7 +211,9 @@ export class TimelineData {
     return this.screenRecordingVideo;
   }
 
-  searchCorrespondingScreenRecordingTimeSeconds(position: TracePosition): number | undefined {
+  searchCorrespondingScreenRecordingTimeSeconds(
+    position: TracePosition,
+  ): number | undefined {
     const trace = this.traces.getTrace(TraceType.SCREEN_RECORDING);
     if (!trace || trace.lengthEntries === 0) {
       return undefined;
@@ -146,7 +225,10 @@ export class TimelineData {
       return undefined;
     }
 
-    return ScreenRecordingUtils.timestampToVideoTimeSeconds(firstTimestamp, entry.getTimestamp());
+    return ScreenRecordingUtils.timestampToVideoTimeSeconds(
+      firstTimestamp,
+      entry.getTimestamp(),
+    );
   }
 
   hasTimestamps(): boolean {
@@ -156,13 +238,14 @@ export class TimelineData {
   hasMoreThanOneDistinctTimestamp(): boolean {
     return (
       this.hasTimestamps() &&
-      this.firstEntry?.getTimestamp().getValueNs() !== this.lastEntry?.getTimestamp().getValueNs()
+      this.firstEntry?.getTimestamp().getValueNs() !==
+        this.lastEntry?.getTimestamp().getValueNs()
     );
   }
 
   getPreviousEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
@@ -175,8 +258,8 @@ export class TimelineData {
   }
 
   getNextEntryFor(type: TraceType): TraceEntry<{}> | undefined {
-    const trace = assertDefined(this.traces.getTrace(type));
-    if (trace.lengthEntries === 0) {
+    const trace = this.traces.getTrace(type);
+    if (!trace || trace.lengthEntries === 0) {
       return undefined;
     }
 
@@ -197,10 +280,20 @@ export class TimelineData {
     if (!position) {
       return undefined;
     }
-    return TraceEntryFinder.findCorrespondingEntry(
+
+    const entry = TraceEntryFinder.findCorrespondingEntry(
       assertDefined(this.traces.getTrace(type)),
-      position
+      position,
     );
+
+    if (
+      this.lastReturnedCurrentEntries.get(type)?.getIndex() !==
+      entry?.getIndex()
+    ) {
+      this.lastReturnedCurrentEntries.set(type, entry);
+    }
+
+    return this.lastReturnedCurrentEntries.get(type);
   }
 
   moveToPreviousEntryFor(type: TraceType) {
@@ -224,7 +317,10 @@ export class TimelineData {
     this.explicitlySetPosition = undefined;
     this.timestampType = undefined;
     this.explicitlySetSelection = undefined;
+    this.lastReturnedCurrentPosition = undefined;
     this.screenRecordingVideo = undefined;
+    this.lastReturnedFullTimeRange = undefined;
+    this.lastReturnedCurrentEntries.clear();
     this.activeViewTraceTypes = [];
   }
 

@@ -161,7 +161,7 @@ public class MainActivity extends Activity {
                             am.setAccountVisibility(currentAccount, packageName,
                                     AccountManager.VISIBILITY_USER_MANAGED_VISIBLE);
                             Toast.makeText(
-                                    getApplicationContext(), "Set UM_VISIBLE(2) "
+                                    getApplicationContext(), "Set UM_VISIBLE (2) "
                                             + currentAccount.name + " to " + packageName,
                                     Toast.LENGTH_SHORT).show();
                             break;
@@ -169,7 +169,7 @@ public class MainActivity extends Activity {
                             am.setAccountVisibility(currentAccount, packageName,
                                     AccountManager.VISIBILITY_USER_MANAGED_NOT_VISIBLE);
                             Toast.makeText(
-                                    getApplicationContext(), "Set UM_NOT_VISIBLE(4) "
+                                    getApplicationContext(), "Set UM_NOT_VISIBLE (4) "
                                             + currentAccount.name + " to " + packageName,
                                     Toast.LENGTH_SHORT).show();
                             break;
@@ -177,20 +177,21 @@ public class MainActivity extends Activity {
                             am.setAccountVisibility(currentAccount, packageName,
                                     AccountManager.VISIBILITY_NOT_VISIBLE);
                             Toast.makeText(
-                                    getApplicationContext(), "Removing visibility(3) "
+                                    getApplicationContext(), "Removing visibility (3) "
                                             + currentAccount.name + " of " + packageName,
                                     Toast.LENGTH_SHORT).show();
                             break;
                         case R.id.getButton:
                             Toast.makeText(getApplicationContext(),
-                                    "Is " + currentAccount.name + " visible to " + packageName
-                                            + "?\n"
-                                            + am.getAccountVisibility(currentAccount, packageName),
+                                    "Visibility = "
+                                            + am.getAccountVisibility(currentAccount, packageName)
+                                            + " for " + currentAccount.name + ", app= "
+                                            + packageName,
                                     Toast.LENGTH_SHORT).show();
                             break;
                         case R.id.addAccountButton:
                             Toast.makeText(getApplicationContext(),
-                                    "Adding account explicitly!"
+                                    "Adding account "
                                             + am.addAccountExplicitly(currentAccount, null, null),
                                     Toast.LENGTH_SHORT).show();
                             break;
@@ -199,7 +200,7 @@ public class MainActivity extends Activity {
                             packageAndVisibilitys.put(packageName,
                                     AccountManager.VISIBILITY_USER_MANAGED_VISIBLE);
                             Toast.makeText(getApplicationContext(),
-                                    "Adding account explicitly!"
+                                    "Adding account "
                                             + am.addAccountExplicitly(currentAccount, null, null,
                                                     packageAndVisibilitys)
                                             + " with visibility for  " + packageName + "!",
@@ -207,7 +208,7 @@ public class MainActivity extends Activity {
                             break;
                         case R.id.removeAccount:
                             Toast.makeText(getApplicationContext(),
-                                    "Removing account explicitly!"
+                                    "Removing account "
                                             + am.removeAccountExplicitly(currentAccount),
                                     Toast.LENGTH_SHORT).show();
                             break;

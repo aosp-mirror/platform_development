@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {Rectangle, Size} from 'viewers/common/rectangle';
+import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
+import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {
   Box3D,
   ColorType,
@@ -23,11 +24,11 @@ import {
   Point3D,
   Rect3D,
   Scene3D,
-  Transform3D,
 } from './types3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
+  private static readonly Z_FIGHTING_EPSILON = 5;
   private static readonly Z_SPACING_FACTOR_INIT = 1;
   private static readonly Z_SPACING_MAX = 200;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
@@ -37,31 +38,22 @@ class Mapper3D {
   private static readonly ZOOM_FACTOR_MIN = 0.1;
   private static readonly ZOOM_FACTOR_MAX = 8.5;
   private static readonly ZOOM_FACTOR_STEP = 0.2;
-  private static readonly IDENTITY_TRANSFORM: Transform3D = {
-    dsdx: 1,
-    dsdy: 0,
-    tx: 0,
-    dtdx: 0,
-    dtdy: 1,
-    ty: 0,
-  };
 
-  private rects: Rectangle[] = [];
-  private highlightedRectIds: string[] = [];
+  private rects: UiRect[] = [];
+  private highlightedRectId = '';
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private panScreenDistance: Distance2D = new Distance2D(0, 0);
+  private panScreenDistance = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
-  private showVirtualMode = false; // by default don't show virtual displays
-  private currentDisplayId = 0; // default stack id is usually 0
+  private currentGroupId = 0; // default stack id is usually 0
 
-  setRects(rects: Rectangle[]) {
+  setRects(rects: UiRect[]) {
     this.rects = rects;
   }
 
-  setHighlightedRectIds(ids: string[]) {
-    this.highlightedRectIds = ids;
+  setHighlightedRectId(id: string) {
+    this.highlightedRectId = id;
   }
 
   getCameraRotationFactor(): number {
@@ -80,13 +72,13 @@ class Mapper3D {
     this.zSpacingFactor = Math.min(Math.max(factor, 0), 1);
   }
 
-  increaseZoomFactor() {
-    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP;
+  increaseZoomFactor(times = 1) {
+    this.zoomFactor += Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.min(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MAX);
   }
 
-  decreaseZoomFactor() {
-    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP;
+  decreaseZoomFactor(times = 1) {
+    this.zoomFactor -= Mapper3D.ZOOM_FACTOR_STEP * times;
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
@@ -111,24 +103,21 @@ class Mapper3D {
     this.showOnlyVisibleMode = enabled;
   }
 
-  getShowVirtualMode(): boolean {
-    return this.showVirtualMode;
+  getCurrentGroupId(): number {
+    return this.currentGroupId;
   }
 
-  setShowVirtualMode(enabled: boolean) {
-    this.showVirtualMode = enabled;
+  setCurrentGroupId(id: number) {
+    this.currentGroupId = id;
   }
 
-  getCurrentDisplayId(): number {
-    return this.currentDisplayId;
-  }
-
-  setCurrentDisplayId(id: number) {
-    this.currentDisplayId = id;
+  private compareDepth(a: UiRect, b: UiRect): number {
+    return a.depth > b.depth ? -1 : 1;
   }
 
   computeScene(): Scene3D {
     const rects2d = this.selectRectsToDraw(this.rects);
+    rects2d.sort(this.compareDepth);
     const rects3d = this.computeRects(rects2d);
     const labels3d = this.computeLabels(rects2d, rects3d);
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
@@ -147,21 +136,17 @@ class Mapper3D {
     return scene;
   }
 
-  private selectRectsToDraw(rects: Rectangle[]): Rectangle[] {
-    rects = rects.filter((rect) => rect.displayId === this.currentDisplayId);
+  private selectRectsToDraw(rects: UiRect[]): UiRect[] {
+    rects = rects.filter((rect) => rect.groupId === this.currentGroupId);
 
     if (this.showOnlyVisibleMode) {
       rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
     }
 
-    if (!this.showVirtualMode) {
-      rects = rects.filter((rect) => !rect.isVirtual);
-    }
-
     return rects;
   }
 
-  private computeRects(rects2d: Rectangle[]): Rect3D[] {
+  private computeRects(rects2d: UiRect[]): Rect3D[] {
     let visibleRectsSoFar = 0;
     let visibleRectsTotal = 0;
     let nonVisibleRectsSoFar = 0;
@@ -175,31 +160,42 @@ class Mapper3D {
       }
     });
 
-    let z = 0;
-
     const maxDisplaySize = this.getMaxDisplaySize(rects2d);
 
+    const depthToCountOfRects = new Map<number, number>();
+    const computeAntiZFightingOffset = (rectDepth: number) => {
+      // Rendering overlapping rects with equal Z value causes Z-fighting (b/307951779).
+      // Here we compute a Z-offset to be applied to the rect to guarantee that
+      // eventually all rects will have unique Z-values.
+      const countOfRectsAtSameDepth = depthToCountOfRects.get(rectDepth) ?? 0;
+      const antiZFightingOffset =
+        countOfRectsAtSameDepth * Mapper3D.Z_FIGHTING_EPSILON;
+      depthToCountOfRects.set(rectDepth, countOfRectsAtSameDepth + 1);
+      return antiZFightingOffset;
+    };
+
+    let z = 0;
     const rects3d = rects2d.map((rect2d): Rect3D => {
-      if (rect2d.depth !== undefined) {
-        z = Mapper3D.Z_SPACING_MAX * this.zSpacingFactor * rect2d.depth;
-      } else {
-        z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
-      }
+      z =
+        this.zSpacingFactor *
+        (Mapper3D.Z_SPACING_MAX * rect2d.depth +
+          computeAntiZFightingOffset(rect2d.depth));
 
       const darkFactor = rect2d.isVisible
         ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
-        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) / nonVisibleRectsTotal;
+        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
+          nonVisibleRectsTotal;
 
       const rect = {
         id: rect2d.id,
         topLeft: {
-          x: rect2d.topLeft.x,
-          y: rect2d.topLeft.y,
+          x: rect2d.x,
+          y: rect2d.y,
           z,
         },
         bottomRight: {
-          x: rect2d.bottomRight.x,
-          y: rect2d.bottomRight.y,
+          x: rect2d.x + rect2d.w,
+          y: rect2d.y + rect2d.h,
           z,
         },
         isOversized: false,
@@ -207,7 +203,7 @@ class Mapper3D {
         darkFactor,
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
-        transform: this.getTransform(rect2d),
+        transform: rect2d.transform ?? IDENTITY_MATRIX,
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });
@@ -215,10 +211,12 @@ class Mapper3D {
     return rects3d;
   }
 
-  private getColorType(rect2d: Rectangle): ColorType {
+  private getColorType(rect2d: UiRect): ColorType {
     let colorType: ColorType;
-    if (this.highlightedRectIds.includes(rect2d.id)) {
+    if (this.highlightedRectId === rect2d.id && rect2d.isClickable) {
       colorType = ColorType.HIGHLIGHTED;
+    } else if (rect2d.hasContent === true) {
+      colorType = ColorType.HAS_CONTENT;
     } else if (rect2d.isVisible) {
       colorType = ColorType.VISIBLE;
     } else {
@@ -227,35 +225,18 @@ class Mapper3D {
     return colorType;
   }
 
-  private getTransform(rect2d: Rectangle): Transform3D {
-    let transform: Transform3D;
-    if (rect2d.transform?.matrix) {
-      transform = {
-        dsdx: rect2d.transform.matrix.dsdx,
-        dsdy: rect2d.transform.matrix.dsdy,
-        tx: rect2d.transform.matrix.tx,
-        dtdx: rect2d.transform.matrix.dtdx,
-        dtdy: rect2d.transform.matrix.dtdy,
-        ty: rect2d.transform.matrix.ty,
-      };
-    } else {
-      transform = Mapper3D.IDENTITY_TRANSFORM;
-    }
-    return transform;
-  }
-
-  private getMaxDisplaySize(rects2d: Rectangle[]): Size {
+  private getMaxDisplaySize(rects2d: UiRect[]): Size {
     const displays = rects2d.filter((rect2d) => rect2d.isDisplay);
 
     let maxWidth = 0;
     let maxHeight = 0;
     if (displays.length > 0) {
       maxWidth = Math.max(
-        ...displays.map((rect2d): number => Math.abs(rect2d.topLeft.x - rect2d.bottomRight.x))
+        ...displays.map((rect2d): number => Math.abs(rect2d.w)),
       );
 
       maxHeight = Math.max(
-        ...displays.map((rect2d): number => Math.abs(rect2d.topLeft.y - rect2d.bottomRight.y))
+        ...displays.map((rect2d): number => Math.abs(rect2d.h)),
       );
     }
     return {
@@ -288,14 +269,14 @@ class Mapper3D {
     return rect3d;
   }
 
-  private computeLabels(rects2d: Rectangle[], rects3d: Rect3D[]): Label3D[] {
+  private computeLabels(rects2d: UiRect[], rects3d: Rect3D[]): Label3D[] {
     const labels3d: Label3D[] = [];
 
     let labelY =
       Math.max(
         ...rects3d.map((rect) => {
           return this.matMultiply(rect.transform, rect.bottomRight).y;
-        })
+        }),
       ) + Mapper3D.LABEL_FIRST_Y_OFFSET;
 
     rects2d.forEach((rect2d, index) => {
@@ -307,12 +288,12 @@ class Mapper3D {
 
       const bottomLeft: Point3D = {
         x: rect3d.topLeft.x,
-        y: rect3d.bottomRight.y,
+        y: rect3d.topLeft.y,
         z: rect3d.topLeft.z,
       };
       const topRight: Point3D = {
         x: rect3d.bottomRight.x,
-        y: rect3d.topLeft.y,
+        y: rect3d.bottomRight.y,
         z: rect3d.bottomRight.z,
       };
       const lineStarts = [
@@ -336,7 +317,8 @@ class Mapper3D {
         z: lineStart.z,
       };
 
-      const isHighlighted = this.highlightedRectIds.includes(rect2d.id);
+      const isHighlighted =
+        rect2d.isClickable && this.highlightedRectId === rect2d.id;
 
       const label3d: Label3D = {
         circle: {
@@ -361,7 +343,7 @@ class Mapper3D {
     return labels3d;
   }
 
-  private matMultiply(mat: Transform3D, point: Point3D): Point3D {
+  private matMultiply(mat: TransformMatrix, point: Point3D): Point3D {
     return {
       x: mat.dsdx * point.x + mat.dsdy * point.y + mat.tx,
       y: mat.dtdx * point.x + mat.dtdy * point.y + mat.ty,

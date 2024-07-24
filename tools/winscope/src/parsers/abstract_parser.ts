@@ -14,37 +14,86 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from 'common/array_utils';
+import {Timestamp, TimestampType} from 'common/time';
+import {TimestampFactory} from 'common/timestamp_factory';
+import {
+  CustomQueryParamTypeMap,
+  CustomQueryParserResultTypeMap,
+  CustomQueryType,
+} from 'trace/custom_query';
+import {AbsoluteEntryIndex, EntriesRange} from 'trace/index_types';
 import {Parser} from 'trace/parser';
-import {Timestamp, TimestampType} from 'trace/timestamp';
 import {TraceFile} from 'trace/trace_file';
 import {TraceType} from 'trace/trace_type';
+import {ParsingUtils} from './parsing_utils';
 
 abstract class AbstractParser<T extends object = object> implements Parser<T> {
+  private timestamps = new Map<TimestampType, Timestamp[]>();
   protected traceFile: TraceFile;
   protected decodedEntries: any[] = [];
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+  protected timestampFactory: TimestampFactory;
 
-  protected constructor(trace: TraceFile) {
+  protected abstract getMagicNumber(): undefined | number[];
+  protected abstract decodeTrace(trace: Uint8Array): any[];
+  protected abstract getTimestamp(
+    type: TimestampType,
+    decodedEntry: any,
+  ): undefined | Timestamp;
+  protected abstract processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    decodedEntry: any,
+  ): any;
+
+  constructor(trace: TraceFile, timestampFactory: TimestampFactory) {
     this.traceFile = trace;
+    this.timestampFactory = timestampFactory;
   }
 
   async parse() {
     const traceBuffer = new Uint8Array(await this.traceFile.file.arrayBuffer());
+    ParsingUtils.throwIfMagicNumberDoesNotMatch(
+      traceBuffer,
+      this.getMagicNumber(),
+    );
+    this.decodedEntries = this.decodeTrace(traceBuffer);
+    this.timestamps = this.decodeTimestamps();
+  }
 
-    const magicNumber = this.getMagicNumber();
-    if (magicNumber !== undefined) {
-      const bufferContainsMagicNumber = ArrayUtils.equal(
-        magicNumber,
-        traceBuffer.slice(0, magicNumber.length)
-      );
-      if (!bufferContainsMagicNumber) {
-        throw TypeError("buffer doesn't contain expected magic number");
-      }
-    }
+  getDescriptors(): string[] {
+    return [this.traceFile.getDescriptor()];
+  }
 
-    this.decodedEntries = this.decodeTrace(traceBuffer).map((it) => this.addDefaultProtoFields(it));
+  getLengthEntries(): number {
+    return this.decodedEntries.length;
+  }
 
+  getTimestamps(type: TimestampType): undefined | Timestamp[] {
+    return this.timestamps.get(type);
+  }
+
+  getEntry(
+    index: AbsoluteEntryIndex,
+    timestampType: TimestampType,
+  ): Promise<T> {
+    const entry = this.processDecodedEntry(
+      index,
+      timestampType,
+      this.decodedEntries[index],
+    );
+    return Promise.resolve(entry);
+  }
+
+  customQuery<Q extends CustomQueryType>(
+    type: Q,
+    entriesRange: EntriesRange,
+    param?: CustomQueryParamTypeMap[Q],
+  ): Promise<CustomQueryParserResultTypeMap[Q]> {
+    throw new Error('Not implemented');
+  }
+
+  private decodeTimestamps(): Map<TimestampType, Timestamp[]> {
+    const timeStampMap = new Map<TimestampType, Timestamp[]>();
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
       const timestamps: Timestamp[] = [];
       let areTimestampsValid = true;
@@ -59,72 +108,13 @@ abstract class AbstractParser<T extends object = object> implements Parser<T> {
       }
 
       if (areTimestampsValid) {
-        this.timestamps.set(type, timestamps);
+        timeStampMap.set(type, timestamps);
       }
     }
+    return timeStampMap;
   }
 
   abstract getTraceType(): TraceType;
-
-  getDescriptors(): string[] {
-    return [this.traceFile.getDescriptor()];
-  }
-
-  getLengthEntries(): number {
-    return this.decodedEntries.length;
-  }
-
-  getTimestamps(type: TimestampType): undefined | Timestamp[] {
-    return this.timestamps.get(type);
-  }
-
-  getEntry(index: number, timestampType: TimestampType): Promise<T> {
-    const entry = this.processDecodedEntry(index, timestampType, this.decodedEntries[index]);
-    return Promise.resolve(entry);
-  }
-
-  // Add default values to the proto objects.
-  private addDefaultProtoFields(protoObj: any): any {
-    if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
-      return protoObj;
-    }
-
-    for (const fieldName in protoObj.$type.fields) {
-      if (Object.prototype.hasOwnProperty.call(protoObj.$type.fields, fieldName)) {
-        const fieldProperties = protoObj.$type.fields[fieldName];
-        const field = protoObj[fieldName];
-
-        if (Array.isArray(field)) {
-          field.forEach((item, _) => {
-            this.addDefaultProtoFields(item);
-          });
-          continue;
-        }
-
-        if (!field) {
-          protoObj[fieldName] = fieldProperties.defaultValue;
-        }
-
-        if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-          protoObj[fieldName] =
-            fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-          continue;
-        }
-        this.addDefaultProtoFields(protoObj[fieldName]);
-      }
-    }
-
-    return protoObj;
-  }
-
-  protected abstract getMagicNumber(): undefined | number[];
-  protected abstract decodeTrace(trace: Uint8Array): any[];
-  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
-  protected abstract processDecodedEntry(
-    index: number,
-    timestampType: TimestampType,
-    decodedEntry: any
-  ): any;
 }
 
 export {AbstractParser};

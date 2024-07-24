@@ -16,56 +16,73 @@
 
 import {FunctionUtils} from 'common/function_utils';
 import {
-  BuganizerAttachmentsDownloadEmitter,
-  OnBuganizerAttachmentsDownloaded,
-  OnBuganizerAttachmentsDownloadStart,
-} from 'interfaces/buganizer_attachments_download_emitter';
-import {MessageType, OpenBuganizerResponse, OpenRequest, WebCommandMessage} from './messages';
+  BuganizerAttachmentsDownloaded,
+  BuganizerAttachmentsDownloadStart,
+  WinscopeEvent,
+  WinscopeEventType,
+} from 'messaging/winscope_event';
+import {
+  EmitEvent,
+  WinscopeEventEmitter,
+} from 'messaging/winscope_event_emitter';
+import {WinscopeEventListener} from 'messaging/winscope_event_listener';
+import {
+  MessageType,
+  OpenBuganizerResponse,
+  OpenRequest,
+  WebCommandMessage,
+} from './messages';
 
-export class AbtChromeExtensionProtocol implements BuganizerAttachmentsDownloadEmitter {
+export class AbtChromeExtensionProtocol
+  implements WinscopeEventEmitter, WinscopeEventListener
+{
   static readonly ABT_EXTENSION_ID = 'mbbaofdfoekifkfpgehgffcpagbbjkmj';
-  private onAttachmentsDownloadStart: OnBuganizerAttachmentsDownloadStart =
-    FunctionUtils.DO_NOTHING;
-  private onAttachmentsDownloaded: OnBuganizerAttachmentsDownloaded =
-    FunctionUtils.DO_NOTHING_ASYNC;
 
-  setOnBuganizerAttachmentsDownloadStart(callback: OnBuganizerAttachmentsDownloadStart) {
-    this.onAttachmentsDownloadStart = callback;
+  private emitEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
+
+  setEmitEvent(callback: EmitEvent) {
+    this.emitEvent = callback;
   }
 
-  setOnBuganizerAttachmentsDownloaded(callback: OnBuganizerAttachmentsDownloaded) {
-    this.onAttachmentsDownloaded = callback;
-  }
+  async onWinscopeEvent(event: WinscopeEvent) {
+    await event.visit(WinscopeEventType.APP_INITIALIZED, async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('source') !== 'openFromExtension' || !chrome) {
+        return;
+      }
 
-  run() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('source') !== 'openFromExtension' || !chrome) {
-      return;
-    }
+      await this.emitEvent(new BuganizerAttachmentsDownloadStart());
 
-    this.onAttachmentsDownloadStart();
+      const openRequestMessage: OpenRequest = {
+        action: MessageType.OPEN_REQUEST,
+      };
 
-    const openRequestMessage: OpenRequest = {
-      action: MessageType.OPEN_REQUEST,
-    };
-
-    chrome.runtime.sendMessage(
-      AbtChromeExtensionProtocol.ABT_EXTENSION_ID,
-      openRequestMessage,
-      async (message) => await this.onMessageReceived(message)
-    );
+      chrome.runtime.sendMessage(
+        AbtChromeExtensionProtocol.ABT_EXTENSION_ID,
+        openRequestMessage,
+        async (message) => await this.onMessageReceived(message),
+      );
+    });
   }
 
   private async onMessageReceived(message: WebCommandMessage) {
     if (this.isOpenBuganizerResponseMessage(message)) {
       await this.onOpenBuganizerResponseMessageReceived(message);
     } else {
-      console.warn('ABT chrome extension protocol received unexpected message:', message);
+      console.warn(
+        'ABT chrome extension protocol received unexpected message:',
+        message,
+      );
     }
   }
 
-  private async onOpenBuganizerResponseMessageReceived(message: OpenBuganizerResponse) {
-    console.log('ABT chrome extension protocol received OpenBuganizerResponse message:', message);
+  private async onOpenBuganizerResponseMessageReceived(
+    message: OpenBuganizerResponse,
+  ) {
+    console.log(
+      'ABT chrome extension protocol received OpenBuganizerResponse message:',
+      message,
+    );
 
     if (message.attachments.length === 0) {
       console.warn('ABT chrome extension protocol received no attachments');
@@ -84,11 +101,11 @@ export class AbtChromeExtensionProtocol implements BuganizerAttachmentsDownloadE
     });
 
     const files = await Promise.all(filesBlobPromises);
-    await this.onAttachmentsDownloaded(files);
+    await this.emitEvent(new BuganizerAttachmentsDownloaded(files));
   }
 
   private isOpenBuganizerResponseMessage(
-    message: WebCommandMessage
+    message: WebCommandMessage,
   ): message is OpenBuganizerResponse {
     return message.action === MessageType.OPEN_BUGANIZER_RESPONSE;
   }

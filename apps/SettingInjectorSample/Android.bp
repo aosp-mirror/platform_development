@@ -1,4 +1,5 @@
 package {
+    default_team: "trendy_team_renderscript_nnapi",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 

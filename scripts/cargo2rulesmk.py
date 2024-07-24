@@ -870,8 +870,11 @@ class Runner(object):
             cmd_v_flag = " -vv " if self.args.vv else " -v "
             cmd = self.cargo_path + cmd_v_flag
             cmd += c + features + cmd_tail_target + cmd_tail_redir
-            if self.args.rustflags and c != "clean":
-                cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
+            if c != "clean":
+                rustflags = self.args.rustflags if self.args.rustflags else ""
+                # linting issues shouldn't prevent us from generating rules.mk
+                rustflags = f'RUSTFLAGS="{rustflags} --cap-lints allow" '
+                cmd = rustflags + cmd
             self.run_cmd(cmd, cargo_out)
         if self.args.tests:
             cmd = (

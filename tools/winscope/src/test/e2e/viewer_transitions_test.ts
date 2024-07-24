@@ -25,16 +25,18 @@ describe('Viewer Transitions', () => {
   it('processes trace and renders view', async () => {
     await E2eTestUtils.uploadFixture(
       'traces/elapsed_and_real_timestamp/wm_transition_trace.pb',
-      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb'
+      'traces/elapsed_and_real_timestamp/shell_transition_trace.pb',
     );
     await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 
-    const isViewerRendered = await element(by.css('viewer-transitions')).isPresent();
+    const isViewerRendered = await element(
+      by.css('viewer-transitions'),
+    ).isPresent();
     expect(isViewerRendered).toBeTruthy();
 
     const isFirstEntryRendered = await element(
-      by.css('viewer-transitions .scroll .entry')
+      by.css('viewer-transitions .scroll .entry'),
     ).isPresent();
     expect(isFirstEntryRendered).toBeTruthy();
   });

@@ -232,7 +232,8 @@ void JsonIRReader::ReadRecordFields(const JsonObjectRef &record_type,
   for (auto &&field : record_type.GetObjects("fields")) {
     RecordFieldIR record_field_ir(
         field.GetString("field_name"), field.GetString("referenced_type"),
-        field.GetUint("field_offset"), GetAccess(field));
+        field.GetUint("field_offset"), GetAccess(field),
+        field.GetBool("is_bit_field"), field.GetUint("bit_width"));
     record_ir->AddRecordField(std::move(record_field_ir));
   }
 }
@@ -444,8 +445,8 @@ void JsonIRReader::ReadElfObjects(const JsonObjectRef &tu) {
 }
 
 std::unique_ptr<IRReader> CreateJsonIRReader(
-    const std::set<std::string> *exported_headers) {
-  return std::make_unique<JsonIRReader>(exported_headers);
+    std::unique_ptr<ModuleIR> module_ir) {
+  return std::make_unique<JsonIRReader>(std::move(module_ir));
 }
 
 

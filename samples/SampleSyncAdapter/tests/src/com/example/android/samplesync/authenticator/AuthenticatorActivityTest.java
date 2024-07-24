@@ -20,8 +20,9 @@ import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.SmallTest;
 import android.view.View;
+
+import androidx.test.filters.SmallTest;
 
 /**
  * This is a series of unit tests for the {@link AuthenticatorActivity} class.

@@ -123,7 +123,10 @@ def parse_args() -> argparse.Namespace:
         help="set environment variable when running a binary")
     parser.add_argument(
         "--chroot", nargs='?', default="", metavar="PATH",
-        help="run command in a chroot in the given directory")
+        help="run command in a chroot in the given directory. Cannot be used with --cwd.")
+    parser.add_argument(
+        "--cwd", nargs='?', default="", metavar="PATH",
+        help="working directory for the command. Cannot be used with --chroot.")
 
     return parser.parse_args()
 
@@ -134,6 +137,11 @@ def verify_device(device: adb.AndroidDevice) -> None:
     if target_device not in names:
         msg = "You used the wrong lunch: TARGET_PRODUCT ({}) does not match attached device ({})"
         sys.exit(msg.format(target_device, ", ".join(n if n else "None" for n in names)))
+
+
+def get_device_dir_exists(device: adb.AndroidDevice, dir: str) -> bool:
+    exit_code, _, _ = device.shell_nocheck(['[', '-d', dir, ']'])
+    return exit_code == 0
 
 
 def get_remote_pid(device: adb.AndroidDevice, process_name: str) -> int:
@@ -334,6 +342,8 @@ def generate_lldb_script(root: str, sysroot: str, binary_name: str, port: str | 
     commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
     commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
+    commands.append('# If the below `gdb-remote` fails, run the command manually, '
+                    + 'as it may have raced with lldbserver startup.')
     commands.append('gdb-remote {}'.format(str(port)))
     return '\n'.join(commands)
 
@@ -456,6 +466,13 @@ def do_main() -> None:
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
 
+    if args.cwd:
+        if not get_device_dir_exists(device, args.cwd):
+            raise ValueError('Working directory does not exist on device: {}'.format(args.cwd))
+        if args.chroot:
+            # See the comment in start_gdbserver about why this is not implemented.
+            raise ValueError('--cwd and --chroot cannot be used together')
+
     # Make sure the environment matches the attached device.
     # Skip when running in a chroot because the chroot lunch target may not
     # match the device's lunch target.
@@ -515,7 +532,7 @@ def do_main() -> None:
             gdbrunner.start_gdbserver(
                 device, server_local_path, server_remote_path,
                 target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-                port=args.port, run_as_cmd=cmd_prefix, lldb=True, chroot=args.chroot)
+                port=args.port, run_as_cmd=cmd_prefix, lldb=True, chroot=args.chroot, cwd=args.cwd)
         else:
             print(
                 "Connecting to tracing pid {} using local port {}".format(

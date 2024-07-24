@@ -13,6 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// organize-imports-ignore
+import 'common/global_init';
+import {globalConfig} from './common/global_config';
+globalConfig.set({
+  MODE: 'PROD',
+});
+
 import {enableProdMode} from '@angular/core';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import {AppModule} from './app/app_module';

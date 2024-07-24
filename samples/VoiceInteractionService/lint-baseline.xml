@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.0.0-dev" type="baseline" dependencies="true" variant="all" version="8.0.0-dev">
+<issues format="6" by="lint 8.4.0-alpha01" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha01">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="                mService.mHotwordDetector.startRecognition();"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/MainActivity.java"
+            line="56"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 31 (current min is 30): `android.service.voice.HotwordDetectionService`"
+        errorLine1="public class SampleHotwordDetectionService extends HotwordDetectionService {"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="41"
+            column="52"/>
+    </issue>
 
     <issue
         id="NewApi"
@@ -14,100 +36,12 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.media.AudioRecord#shareAudioHistory`"
-        errorLine1='                                record.shareAudioHistory("com.example.android.voiceinteractor", 0))'
-        errorLine2="                                       ~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="128"
-            column="40"/>
-    </issue>
-
-    <issue
-        id="NewApi"
         message="Call requires API level 31 (current min is 30): `android.media.AudioRecord.Builder#setMaxSharedAudioHistoryMillis`"
         errorLine1="                .setMaxSharedAudioHistoryMillis(AudioRecord.getMaxSharedAudioHistoryMillis())"
         errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
             line="65"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.media.AudioRecord.Builder#setSharedAudioEvent`"
-        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
-        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="83"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.AlwaysOnHotwordDetector.EventPayload#getHotwordDetectedResult`"
-        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
-        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="83"
-            column="51"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult#getMediaSyncEvent`"
-        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
-        errorLine2="                                                                             ~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="83"
-            column="78"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#build`"
-        errorLine1="                        .build());"
-        errorLine2="                         ~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="130"
-            column="26"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#setHotwordPhraseId`"
-        errorLine1="                        .setHotwordPhraseId(getKeyphraseId(eventPayload))"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="129"
-            column="26"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#setMediaSyncEvent`"
-        errorLine1="                        .setMediaSyncEvent("
-        errorLine2="                         ~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="127"
-            column="26"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectionService.Callback#onDetected`"
-        errorLine1="        callback.onDetected("
-        errorLine2="                 ~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="125"
             column="18"/>
     </issue>
 
@@ -124,72 +58,6 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                    mHotwordDetector.startRecognition();"
-        errorLine2="                                     ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="253"
-            column="38"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                    mHotwordDetector.startRecognition();"
-        errorLine2="                                     ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="318"
-            column="38"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                    mService.mHotwordDetector.startRecognition();"
-        errorLine2="                                              ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/MainActivity.java"
-            line="57"
-            column="47"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                mHotwordDetector.startRecognition();"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="207"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                mHotwordDetector.startRecognition();"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="286"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
-        errorLine1="                mHotwordDetector.startRecognition();"
-        errorLine2="                                 ~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="296"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="NewApi"
         message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordRejectedResult.Builder#build`"
         errorLine1="            callback.onRejected(new HotwordRejectedResult.Builder().build());"
         errorLine2="                                                                    ~~~~~">
@@ -197,28 +65,6 @@
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
             line="111"
             column="69"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `android.service.voice.VoiceInteractionService#createAlwaysOnHotwordDetector`"
-        errorLine1="        mHotwordDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE,"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="105"
-            column="28"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 31 (current min is 30): `new android.service.voice.HotwordDetectedResult.Builder`"
-        errorLine1="                new HotwordDetectedResult.Builder()"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="126"
-            column="17"/>
     </issue>
 
     <issue
@@ -234,13 +80,79 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetectionService#finishQuery`"
-        errorLine1="                finishQuery();"
-        errorLine2="                ~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectionService.Callback#onDetected`"
+        errorLine1="        callback.onDetected("
+        errorLine2="                 ~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="125"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `new android.service.voice.HotwordDetectedResult.Builder`"
+        errorLine1="                new HotwordDetectedResult.Builder()"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="126"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#setMediaSyncEvent`"
+        errorLine1="                        .setMediaSyncEvent("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="127"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.media.AudioRecord#shareAudioHistory`"
+        errorLine1='                                record.shareAudioHistory("com.example.android.voiceinteractor", 0))'
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="128"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#setHotwordPhraseId`"
+        errorLine1="                        .setHotwordPhraseId(getKeyphraseId(eventPayload))"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="129"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult.Builder#build`"
+        errorLine1="                        .build());"
+        errorLine2="                         ~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
+            line="130"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Class requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetectionService`"
+        errorLine1="public class SampleVisualQueryDetectionService extends VisualQueryDetectionService {"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVisualQueryDetectionService.java"
-            line="146"
-            column="17"/>
+            line="55"
+            column="56"/>
     </issue>
 
     <issue
@@ -278,35 +190,57 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetector#startRecognition`"
-        errorLine1="                        mVisualQueryDetector.startRecognition();"
-        errorLine2="                                             ~~~~~~~~~~~~~~~~">
+        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetectionService#finishQuery`"
+        errorLine1="                finishQuery();"
+        errorLine2="                ~~~~~~~~~~~">
         <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="144"
-            column="46"/>
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVisualQueryDetectionService.java"
+            line="146"
+            column="17"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetector#startRecognition`"
-        errorLine1="                    mVisualQueryDetector.startRecognition();"
-        errorLine2="                                         ~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.media.AudioRecord.Builder#setSharedAudioEvent`"
+        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="155"
-            column="42"/>
+            line="82"
+            column="18"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level 34 (current min is 30): `android.service.voice.VoiceInteractionService#createVisualQueryDetector`"
-        errorLine1="            mVisualQueryDetector = createVisualQueryDetector(null, null,"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.AlwaysOnHotwordDetector.EventPayload#getHotwordDetectedResult`"
+        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="324"
-            column="36"/>
+            line="82"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetectedResult#getMediaSyncEvent`"
+        errorLine1="                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())"
+        errorLine2="                                                                             ~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
+            line="82"
+            column="78"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.VoiceInteractionService#createAlwaysOnHotwordDetector`"
+        errorLine1="        mHotwordDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE,"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
+            line="104"
+            column="28"/>
     </issue>
 
     <issue
@@ -316,41 +250,8 @@
         errorLine2="                           ^">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="105"
+            line="104"
             column="28"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Cast from `HotwordDetector` to `AlwaysOnHotwordDetector` requires API level 31 (current min is 30)"
-        errorLine1="                    enrollIntent = ((AlwaysOnHotwordDetector) mHotwordDetector).createEnrollIntent();"
-        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="186"
-            column="37"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Class requires API level 31 (current min is 30): `android.service.voice.HotwordDetectionService`"
-        errorLine1="public class SampleHotwordDetectionService extends HotwordDetectionService {"
-        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleHotwordDetectionService.java"
-            line="41"
-            column="52"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Class requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetectionService`"
-        errorLine1="public class SampleVisualQueryDetectionService extends VisualQueryDetectionService {"
-        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVisualQueryDetectionService.java"
-            line="55"
-            column="56"/>
     </issue>
 
     <issue
@@ -360,107 +261,107 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="123"
+            line="122"
             column="50"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                    } catch (IllegalDetectorStateException e) {"
-        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetector#startRecognition`"
+        errorLine1="                    mVisualQueryDetector.startRecognition();"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="145"
+            line="142"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 30): `android.service.voice.VisualQueryDetector#startRecognition`"
+        errorLine1="                mVisualQueryDetector.startRecognition();"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
+            line="149"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast from `HotwordDetector` to `AlwaysOnHotwordDetector` requires API level 31 (current min is 30)"
+        errorLine1="                enrollIntent = ((AlwaysOnHotwordDetector) mHotwordDetector).createEnrollIntent();"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
+            line="183"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="            mHotwordDetector.startRecognition();"
+        errorLine2="                             ~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
+            line="200"
             column="30"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                } catch (HotwordDetector.IllegalDetectorStateException e) {"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/MainActivity.java"
-            line="58"
-            column="26"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                } catch (IllegalDetectorStateException e) {"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="                mHotwordDetector.startRecognition();"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="156"
-            column="26"/>
+            line="242"
+            column="34"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                } catch (IllegalDetectorStateException e) {"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="            mHotwordDetector.startRecognition();"
+        errorLine2="                             ~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="187"
-            column="26"/>
+            line="270"
+            column="30"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                } catch (IllegalDetectorStateException e) {"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="            mHotwordDetector.startRecognition();"
+        errorLine2="                             ~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="254"
-            column="26"/>
+            line="276"
+            column="30"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="                } catch (IllegalDetectorStateException e) {"
-        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 31 (current min is 30): `android.service.voice.HotwordDetector#startRecognition`"
+        errorLine1="                mHotwordDetector.startRecognition();"
+        errorLine2="                                 ~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="319"
-            column="26"/>
+            line="294"
+            column="34"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="            } catch (IllegalDetectorStateException e) {"
-        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="208"
-            column="22"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="            } catch (IllegalDetectorStateException e) {"
-        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
-            line="287"
-            column="22"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Exception requires API level 34 (current min is 30): `android.service.voice.HotwordDetector.IllegalDetectorStateException`"
-        errorLine1="            } catch (IllegalDetectorStateException e) {"
-        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 34 (current min is 30): `android.service.voice.VoiceInteractionService#createVisualQueryDetector`"
+        errorLine1="            mVisualQueryDetector = createVisualQueryDetector(null, null,"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="development/samples/VoiceInteractionService/src/com/example/android/voiceinteractor/SampleVoiceInteractionService.java"
             line="297"
-            column="22"/>
+            column="36"/>
     </issue>
 
 </issues>

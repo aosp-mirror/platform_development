@@ -43,6 +43,8 @@ export class OriginAllowList {
     switch (mode) {
       case 'DEV':
         return OriginAllowList.ALLOW_LIST_DEV;
+      case 'KARMA_TEST':
+        return OriginAllowList.ALLOW_LIST_DEV;
       case 'PROD':
         return OriginAllowList.ALLOW_LIST_PROD;
       default:

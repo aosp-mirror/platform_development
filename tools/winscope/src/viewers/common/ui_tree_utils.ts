@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,92 +14,76 @@
  * limitations under the License.
  */
 
-import {Chip} from './chip';
+import {
+  PropertySource,
+  PropertyTreeNode,
+} from 'trace/tree_node/property_tree_node';
+import {TreeNode} from 'trace/tree_node/tree_node';
+import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
-
-export class HierarchyTreeNode {
-  constructor(
-    public name: string,
-    public kind: string,
-    public stableId: string,
-    children?: HierarchyTreeNode[]
-  ) {
-    this.children = children ?? [];
-  }
-
-  children: HierarchyTreeNode[];
-  shortName?: string;
-  type?: string;
-  id?: string | number;
-  layerId?: number;
-  displayId?: number;
-  stackId?: number;
-  isVisible?: boolean;
-  isMissing?: boolean;
-  hwcCompositionType?: number;
-  zOrderRelativeOfId?: number;
-  zOrderRelativeOf?: any;
-  zOrderRelativeParentOf?: any;
-  isRootLayer?: boolean;
-  showInFilteredView?: boolean;
-  showInOnlyVisibleView?: boolean;
-  simplifyNames?: boolean;
-  chips: Chip[] = [];
-  diffType?: string;
-  skip?: any;
-}
-
-export interface PropertiesDump {
-  [key: string]: any;
-}
-
-export interface PropertiesTreeNode {
-  properties?: any;
-  kind?: string;
-  stableId?: string;
-  children?: PropertiesTreeNode[];
-  propertyKey?: string | Terminal | null;
-  propertyValue?: string | Terminal | null;
-  name?: string | Terminal;
-  diffType?: string;
-  combined?: boolean;
-} //TODO: make specific
-
-export const DiffType = {
-  NONE: 'none',
-  ADDED: 'added',
-  DELETED: 'deleted',
-  ADDED_MOVE: 'addedMove',
-  DELETED_MOVE: 'deletedMove',
-  MODIFIED: 'modified',
-};
-
-export class Terminal {}
+export type TreeNodeFilter = (node: TreeNode) => boolean;
 
 export class UiTreeUtils {
-  static diffClass(item: UiTreeNode): string {
-    const diffType = item.diffType;
-    return diffType ?? '';
+  static isHighlighted(item: TreeNode, highlighted: string): boolean {
+    return highlighted === item.id;
   }
 
-  static isHighlighted(item: UiTreeNode, highlightedItems: string[]) {
-    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.stableId}`);
+  static isVisible: TreeNodeFilter = (node: TreeNode) => {
+    return (
+      node instanceof UiHierarchyTreeNode &&
+      node.getEagerPropertyByName('isComputedVisible')?.getValue()
+    );
+  };
+
+  static isNotDefault: TreeNodeFilter = (node: TreeNode) => {
+    return (
+      node instanceof UiPropertyTreeNode &&
+      node.source !== PropertySource.DEFAULT
+    );
+  };
+
+  static isNotCalculated: TreeNodeFilter = (node: TreeNode) => {
+    return (
+      node instanceof UiPropertyTreeNode &&
+      node.source !== PropertySource.CALCULATED
+    );
+  };
+
+  static makeIdFilter(filterString: string): TreeNodeFilter {
+    const filter = (node: TreeNode) => {
+      const regex = new RegExp(filterString, 'i');
+      return filterString.length === 0 || regex.test(node.id);
+    };
+    return filter;
   }
 
-  static isVisibleNode(kind: string, type?: string) {
-    return kind === 'WindowState' || kind === 'Activity' || type?.includes('Layer');
+  static makePropertyFilter(filterString: string): TreeNodeFilter {
+    const filter = (node: TreeNode) => {
+      const regex = new RegExp(filterString, 'i');
+      return (
+        filterString.length === 0 ||
+        regex.test(node.name) ||
+        (node instanceof PropertyTreeNode && regex.test(node.formattedValue()))
+      );
+    };
+    return filter;
   }
 
-  static isParentNode(kind: string) {
-    return UiTreeUtils.PARENT_NODE_KINDS.includes(kind);
+  static makeIdMatchFilter(targetId: string): TreeNodeFilter {
+    return (node: TreeNode) => node.id === targetId;
   }
 
-  private static readonly PARENT_NODE_KINDS = [
-    'entry',
-    'WindowManagerState',
-    'InputMethodClient entry',
-    'InputMethodService entry',
-    'InputMethodManagerService entry',
-  ];
+  static makePropertyMatchFilter(targetValue: string): TreeNodeFilter {
+    return (node: TreeNode) => {
+      return (
+        node instanceof UiPropertyTreeNode &&
+        node.formattedValue() !== targetValue
+      );
+    };
+  }
+
+  static makeDenyListFilter(denylist: string[]): TreeNodeFilter {
+    return (node: TreeNode) => !denylist.includes(node.name);
+  }
 }

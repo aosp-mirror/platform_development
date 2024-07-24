@@ -16,7 +16,6 @@
 #define HEADER_CHECKER_REPR_JSON_IR_DUMPER_H_
 
 #include "repr/ir_dumper.h"
-#include "repr/ir_reader.h"
 #include "repr/ir_representation.h"
 #include "repr/json/converter.h"
 
@@ -25,58 +24,7 @@ namespace header_checker {
 namespace repr {
 
 
-class IRToJsonConverter {
- private:
-  static void AddTemplateInfo(JsonObject &type_decl,
-                              const TemplatedArtifactIR *template_ir);
-
-  // BasicNamedAndTypedDecl
-  static void AddTypeInfo(JsonObject &type_decl, const TypeIR *type_ir);
-
-  static void AddRecordFields(JsonObject &record_type,
-                              const RecordTypeIR *record_ir);
-
-  static void AddBaseSpecifiers(JsonObject &record_type,
-                                const RecordTypeIR *record_ir);
-
-  static void AddVTableLayout(JsonObject &record_type,
-                              const RecordTypeIR *record_ir);
-
-  static void AddEnumFields(JsonObject &enum_type, const EnumTypeIR *enum_ir);
-
- public:
-  static JsonObject ConvertEnumTypeIR(const EnumTypeIR *enump);
-
-  static JsonObject ConvertRecordTypeIR(const RecordTypeIR *recordp);
-
-  static JsonObject ConvertFunctionTypeIR(const FunctionTypeIR *function_typep);
-
-  static void AddFunctionParametersAndSetReturnType(
-      JsonObject &function, const CFunctionLikeIR *cfunction_like_ir);
-
-  static void AddFunctionParameters(JsonObject &function,
-                                    const CFunctionLikeIR *cfunction_like_ir);
-
-  static JsonObject ConvertFunctionIR(const FunctionIR *functionp);
-
-  static JsonObject ConvertGlobalVarIR(const GlobalVarIR *global_varp);
-
-  static JsonObject ConvertPointerTypeIR(const PointerTypeIR *pointerp);
-
-  static JsonObject ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep);
-
-  static JsonObject ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep);
-
-  static JsonObject ConvertArrayTypeIR(const ArrayTypeIR *array_typep);
-
-  static JsonObject ConvertLvalueReferenceTypeIR(
-      const LvalueReferenceTypeIR *lvalue_reference_typep);
-
-  static JsonObject ConvertRvalueReferenceTypeIR(
-      const RvalueReferenceTypeIR *rvalue_reference_typep);
-};
-
-class JsonIRDumper : public IRDumper, public IRToJsonConverter {
+class JsonIRDumper : public IRDumper {
  public:
   JsonIRDumper(const std::string &dump_path);
 

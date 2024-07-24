@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.app.PictureInPictureParams;
+import android.app.PictureInPictureUiState;
 import android.app.RemoteAction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -197,6 +198,12 @@ public class PictureInPicture extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        findViewById(R.id.text_to_hide).setVisibility(View.VISIBLE);
+    }
+
+    @Override
     protected void onUserLeaveHint() {
         // Only used when auto PiP is disabled. This is to simulate the behavior that an app
         // supports regular PiP but not auto PiP.
@@ -219,6 +226,13 @@ public class PictureInPicture extends Activity {
             // If position is previously set to end, this should demonstrate the exit
             // source rect hint behavior introduced in S.
             mCurrentPositionGroup.check(R.id.radio_current_start);
+        }
+    }
+
+    @Override
+    public void onPictureInPictureUiStateChanged(PictureInPictureUiState pipState) {
+        if (pipState.isTransitioningToPip()) {
+            findViewById(R.id.text_to_hide).setVisibility(View.INVISIBLE);
         }
     }
 

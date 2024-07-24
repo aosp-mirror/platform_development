@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import {FunctionUtils, OnProgressUpdateType} from './function_utils';
 export type OnFile = (file: File, parentArchive: File | undefined) => void;
 
 class FileUtils {
-  static getFileExtension(file: File) {
+  static getFileExtension(file: File): string | undefined {
     const split = file.name.split('.');
     if (split.length > 1) {
       return split.pop();
@@ -27,10 +27,19 @@ class FileUtils {
     return undefined;
   }
 
-  static removeDirFromFileName(name: string) {
+  static removeDirFromFileName(name: string): string {
     if (name.includes('/')) {
       const startIndex = name.lastIndexOf('/') + 1;
       return name.slice(startIndex);
+    } else {
+      return name;
+    }
+  }
+
+  static removeExtensionFromFilename(name: string): string {
+    if (name.includes('.')) {
+      const lastIndex = name.lastIndexOf('.');
+      return name.slice(0, lastIndex);
     } else {
       return name;
     }
@@ -47,8 +56,8 @@ class FileUtils {
   }
 
   static async unzipFile(
-    file: File,
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    file: Blob,
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING,
   ): Promise<File[]> {
     const unzippedFiles: File[] = [];
     const zip = new JSZip();
@@ -72,31 +81,13 @@ class FileUtils {
     return unzippedFiles;
   }
 
-  static async unzipFilesIfNeeded(
-    files: File[],
-    onFile: OnFile,
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
-  ) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
-      const onSubprogressUpdate = (subPercentage: number) => {
-        const percentage = (100 * i) / files.length + subPercentage / files.length;
-        onProgressUpdate(percentage);
-      };
-
-      if (FileUtils.isZipFile(file)) {
-        const unzippedFile = await FileUtils.unzipFile(file, onSubprogressUpdate);
-        unzippedFile.forEach((unzippedFile) => onFile(unzippedFile, file));
-      } else {
-        onFile(file, undefined);
-      }
-    }
-  }
-
   static isZipFile(file: File) {
     return FileUtils.getFileExtension(file) === 'zip';
   }
+
+  //allow: letters/numbers/underscores with delimeters . - # (except at start and end)
+  static readonly DOWNLOAD_FILENAME_REGEX = /^\w+?((|#|-|\.)\w+)+$/;
+  static readonly ILLEGAL_FILENAME_CHARACTERS_REGEX = /[^A-Za-z0-9-#._]/g;
 }
 
 export {FileUtils};

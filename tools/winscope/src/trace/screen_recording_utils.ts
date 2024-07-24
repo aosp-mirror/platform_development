@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-import {Timestamp} from './timestamp';
+import {Timestamp} from 'common/time';
 
 class ScreenRecordingUtils {
   // Video time correction epsilon. Without correction, we could display the previous frame.
   // This correction was already present in the legacy Winscope.
   private static readonly EPSILON_SECONDS = 0.00001;
 
-  static timestampToVideoTimeSeconds(firstTimestamp: Timestamp, currentTimestamp: Timestamp) {
+  static timestampToVideoTimeSeconds(
+    firstTimestamp: Timestamp,
+    currentTimestamp: Timestamp,
+  ) {
     if (firstTimestamp.getType() !== currentTimestamp.getType()) {
       throw new Error('Attempted to use timestamps with different type');
     }
     const videoTimeSeconds =
-      Number(currentTimestamp.getValueNs() - firstTimestamp.getValueNs()) / 1000000000 +
+      Number(currentTimestamp.getValueNs() - firstTimestamp.getValueNs()) /
+        1000000000 +
       ScreenRecordingUtils.EPSILON_SECONDS;
     return videoTimeSeconds;
   }

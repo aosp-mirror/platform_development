@@ -5,13 +5,14 @@
 /tmp
 /out-tsc
 /bazel-out
+/kotlin_build
 
 # Node
 /node_modules
 npm-debug.log
 
-# Kotlin transpiled code
-/kotlin_build
+# Dependencies build artifacts (flickerlib, perfetto's trace processor, ...)
+/deps_build
 
 # IDEs and editors
 .idea/

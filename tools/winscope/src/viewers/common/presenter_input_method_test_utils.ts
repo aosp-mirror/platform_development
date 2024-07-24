@@ -15,140 +15,159 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TracePositionUpdate} from 'messaging/winscope_event';
 import {MockStorage} from 'test/unit/mock_storage';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
-import {TraceType} from 'trace/trace_type';
+import {ImeTraceType, TraceType} from 'trace/trace_type';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {PresenterInputMethodClients} from 'viewers/viewer_input_method_clients/presenter_input_method_clients';
 import {PresenterInputMethodManagerService} from 'viewers/viewer_input_method_manager_service/presenter_input_method_manager_service';
 import {PresenterInputMethodService} from 'viewers/viewer_input_method_service/presenter_input_method_service';
 import {PresenterInputMethod} from './presenter_input_method';
+import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from './ui_property_tree_node';
 
 export function executePresenterInputMethodTests(
   selected: HierarchyTreeNode,
   propertiesTreeFilterString: string,
-  expectedChildren: [number, number],
+  expectedChildren: number[],
   expectHierarchyTreeWithSfSubtree: boolean,
   PresenterInputMethod:
     | typeof PresenterInputMethodClients
     | typeof PresenterInputMethodService
     | typeof PresenterInputMethodManagerService,
-  imeTraceType: TraceType
+  imeTraceType: ImeTraceType,
+  selectedPropertyTree?: PropertyTreeNode,
 ) {
   describe('PresenterInputMethod', () => {
     let presenter: PresenterInputMethod;
     let uiData: ImeUiData;
-    let position: TracePosition;
-    let selectedTree: HierarchyTreeNode;
+    let positionUpdate: TracePositionUpdate;
+    let selectedTree: UiHierarchyTreeNode;
+    let traces: Traces;
+    let entries: Map<TraceType, HierarchyTreeNode>;
 
-    beforeEach(async () => {
-      selectedTree = selected;
-      await setUpTestEnvironment([
+    beforeAll(async () => {
+      jasmine.addCustomEqualityTester(TreeNodeUtils.treeNodeEqualityTester);
+      await loadTraces();
+    });
+
+    it('is robust to empty trace', async () => {
+      const traceWithEntries = new TraceBuilder<HierarchyTreeNode>()
+        .setEntries([assertDefined(entries.get(imeTraceType))])
+        .setFrame(0, 0)
+        .build();
+      const traces = new TracesBuilder().setEntries(imeTraceType, []).build();
+      presenter = createPresenter(traces);
+
+      const entry = traceWithEntries.getEntry(0);
+      positionUpdate = TracePositionUpdate.fromTraceEntry(entry);
+      selectedTree = UiHierarchyTreeNode.from(selected);
+
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeUndefined();
+
+      await presenter.onAppEvent(positionUpdate);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeUndefined();
+    });
+
+    it('is robust to traces without SF', async () => {
+      setUpPresenter([imeTraceType, TraceType.WINDOW_MANAGER]);
+      await presenter.onAppEvent(positionUpdate);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeDefined();
+    });
+
+    it('is robust to traces without WM', async () => {
+      setUpPresenter([imeTraceType, TraceType.SURFACE_FLINGER]);
+      await presenter.onAppEvent(positionUpdate);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeDefined();
+    });
+
+    it('is robust to traces without WM and SF', async () => {
+      setUpPresenter([imeTraceType]);
+      await presenter.onAppEvent(positionUpdate);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeDefined();
+    });
+
+    it('processes trace position updates', async () => {
+      setUpPresenter([imeTraceType]);
+      await presenter.onAppEvent(positionUpdate);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(uiData.tree).toBeDefined();
+    });
+
+    it('can update pinned items', () => {
+      setUpPresenter([imeTraceType]);
+      expect(uiData.pinnedItems).toEqual([]);
+      const pinnedItem = TreeNodeUtils.makeUiHierarchyNode({
+        id: 'TestItem 4',
+        name: 'FirstPinnedItem',
+      });
+      presenter.onPinnedItemChange(pinnedItem);
+      expect(uiData.pinnedItems).toContain(pinnedItem);
+    });
+
+    it('can update highlighted item', () => {
+      setUpPresenter([imeTraceType]);
+      expect(uiData.highlightedItem).toEqual('');
+      const id = 'entry';
+      presenter.onHighlightedItemChange(id);
+      expect(uiData.highlightedItem).toEqual(id);
+    });
+
+    it('flattens hierarchy tree', async () => {
+      setUpPresenter([imeTraceType, TraceType.SURFACE_FLINGER]);
+      //change flat view to true
+      const userOptions: UserOptions = {
+        simplifyNames: {
+          name: 'Simplify names',
+          enabled: false,
+        },
+        onlyVisible: {
+          name: 'Only visible',
+          enabled: false,
+        },
+        flat: {
+          name: 'Flat',
+          enabled: true,
+        },
+      };
+
+      await presenter.onAppEvent(positionUpdate);
+      uiData.sfSubtrees?.forEach((tree) =>
+        expect(tree.getAllChildren().length).toEqual(1),
+      );
+
+      presenter.onHierarchyUserOptionsChange(userOptions);
+      expect(uiData.hierarchyUserOptions).toEqual(userOptions);
+      uiData.sfSubtrees?.forEach((tree) =>
+        expect(tree.getAllChildren().length).toEqual(10),
+      );
+    });
+
+    it('can filter hierarchy tree', async () => {
+      setUpPresenter([
         imeTraceType,
         TraceType.SURFACE_FLINGER,
         TraceType.WINDOW_MANAGER,
       ]);
-    });
-
-    it('is robust to empty trace', async () => {
-      const traces = new TracesBuilder().setEntries(imeTraceType, []).build();
-      presenter = createPresenter(traces);
-
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeFalsy();
-
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(uiData.tree).toBeFalsy();
-    });
-
-    it('is robust to traces without SF', async () => {
-      await setUpTestEnvironment([imeTraceType, TraceType.WINDOW_MANAGER]);
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
-    });
-
-    it('is robust to traces without WM', async () => {
-      await setUpTestEnvironment([imeTraceType, TraceType.SURFACE_FLINGER]);
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
-    });
-
-    it('is robust to traces without WM and SF', async () => {
-      await setUpTestEnvironment([imeTraceType]);
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
-    });
-
-    it('processes trace position updates', async () => {
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.hierarchyUserOptions).toBeTruthy();
-      expect(uiData.propertiesUserOptions).toBeTruthy();
-      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
-    });
-
-    it('can update pinned items', () => {
-      expect(uiData.pinnedItems).toEqual([]);
-      const pinnedItem = new HierarchyTreeBuilder()
-        .setName('FirstPinnedItem')
-        .setStableId('TestItem 4')
-        .setLayerId(4)
-        .build();
-      presenter.updatePinnedItems(pinnedItem);
-      expect(uiData.pinnedItems).toContain(pinnedItem);
-    });
-
-    it('can update highlighted items', () => {
-      expect(uiData.highlightedItems).toEqual([]);
-      const id = 'entry';
-      presenter.updateHighlightedItems(id);
-      expect(uiData.highlightedItems).toContain(id);
-    });
-
-    it('can update hierarchy tree', async () => {
-      //change flat view to true
-      const userOptions: UserOptions = {
-        onlyVisible: {
-          name: 'Only visible',
-          enabled: true,
-        },
-        simplifyNames: {
-          name: 'Simplify names',
-          enabled: true,
-        },
-        flat: {
-          name: 'Flat',
-          enabled: false,
-        },
-      };
-
-      let expectedChildren = expectHierarchyTreeWithSfSubtree ? 2 : 1;
-      await presenter.onTracePositionUpdate(position);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
-
-      // Filter out non-visible child
-      expectedChildren = expectHierarchyTreeWithSfSubtree ? 1 : 0;
-      presenter.updateHierarchyTree(userOptions);
-      expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
-    });
-
-    it('can filter hierarchy tree', async () => {
       const userOptions: UserOptions = {
         onlyVisible: {
           name: 'Only visible',
@@ -164,69 +183,133 @@ export function executePresenterInputMethodTests(
         },
       };
 
-      const expectedChildren = expectHierarchyTreeWithSfSubtree ? 12 : 1;
-      await presenter.onTracePositionUpdate(position);
-      presenter.updateHierarchyTree(userOptions);
-      expect(uiData.tree?.children.length).toEqual(expectedChildren);
+      const expectedChildren = expectHierarchyTreeWithSfSubtree ? 11 : 1;
+      await presenter.onAppEvent(positionUpdate);
+      presenter.onHierarchyUserOptionsChange(userOptions);
+      let subtreeChildren = 0;
+      uiData.sfSubtrees.forEach(
+        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
+      );
+      expect(
+        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
+      ).toEqual(expectedChildren);
 
       // Filter out all children
-      presenter.filterHierarchyTree('Reject all');
-      expect(uiData.tree?.children.length).toEqual(0);
+      presenter.onHierarchyFilterChange('Reject all');
+      subtreeChildren = 0;
+      uiData.sfSubtrees.forEach(
+        (subtree) => (subtreeChildren += subtree.getAllChildren().length),
+      );
+      expect(
+        assertDefined(uiData.tree).getAllChildren().length + subtreeChildren,
+      ).toEqual(0);
     });
 
     it('can set new properties tree and associated ui data', async () => {
-      await presenter.onTracePositionUpdate(position);
-      presenter.newPropertiesTree(selectedTree);
-      // does not check specific tree values as tree transformation method may change
-      expect(uiData.propertiesTree).toBeTruthy();
+      setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.name).toEqual(selectedTree.name);
+    });
+
+    it('can show/hide defaults in properties tree', async () => {
+      setUpPresenter([imeTraceType]);
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[0]);
+      await presenter.onPropertiesUserOptionsChange({
+        showDefaults: {
+          name: 'Show defaults',
+          enabled: true,
+        },
+      });
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[2]);
     });
 
     it('can filter properties tree', async () => {
-      await presenter.onTracePositionUpdate(position);
-      presenter.newPropertiesTree(selectedTree);
-      let nonTerminalChildren =
-        uiData.propertiesTree?.children?.filter(
-          (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
-        ) ?? [];
+      setUpPresenter([imeTraceType]);
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onSelectedHierarchyTreeChange(selectedTree);
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[0]);
+      await presenter.onPropertiesFilterChange(propertiesTreeFilterString);
 
-      expect(nonTerminalChildren.length).toEqual(expectedChildren[0]);
-      presenter.filterPropertiesTree(propertiesTreeFilterString);
-
-      nonTerminalChildren =
-        uiData.propertiesTree?.children?.filter(
-          (child: PropertiesTreeNode) => typeof child.propertyKey === 'string'
-        ) ?? [];
-      expect(nonTerminalChildren.length).toEqual(expectedChildren[1]);
+      expect(
+        assertDefined(uiData.propertiesTree).getAllChildren().length,
+      ).toEqual(expectedChildren[1]);
     });
 
-    const setUpTestEnvironment = async (traceTypes: TraceType[]) => {
-      const traces = new Traces();
-      const entries = await UnitTestUtils.getImeTraceEntries();
+    it('can set new additional properties tree and associated ui data from hierarchy tree node', async () => {
+      setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onAdditionalPropertySelected({
+        name: 'Test Tree',
+        treeNode: selectedTree,
+      });
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.getDisplayName()).toEqual('Test Tree');
+      expect(uiData.highlightedItem).toEqual(selectedTree.id);
+    });
 
+    it('can set new additional properties tree and associated ui data from property tree node', async () => {
+      if (!selectedPropertyTree) {
+        return;
+      }
+      setUpPresenter([imeTraceType]);
+      expect(uiData.propertiesTree).toBeUndefined();
+      await presenter.onAppEvent(positionUpdate);
+      await presenter.onAdditionalPropertySelected({
+        name: 'Additional Properties Tree',
+        treeNode: selectedPropertyTree,
+      });
+      const propertiesTree = assertDefined(uiData.propertiesTree);
+      expect(propertiesTree.getDisplayName()).toEqual(
+        'Additional Properties Tree',
+      );
+      expect(propertiesTree).toEqual(
+        UiPropertyTreeNode.from(selectedPropertyTree),
+      );
+      expect(uiData.highlightedItem).toEqual(selectedPropertyTree.id);
+    });
+
+    async function loadTraces() {
+      traces = new Traces();
+      entries = await UnitTestUtils.getImeTraceEntries();
+    }
+
+    function setUpPresenter(traceTypes: TraceType[]) {
       traceTypes.forEach((traceType) => {
-        const trace = new TraceBuilder<object>()
-          .setEntries([entries.get(traceType)])
+        const trace = new TraceBuilder<HierarchyTreeNode>()
+          .setEntries([assertDefined(entries.get(traceType))])
           .setFrame(0, 0)
           .build();
+
         traces.setTrace(traceType, trace);
       });
-
       presenter = createPresenter(traces);
 
-      position = TracePosition.fromTraceEntry(
-        assertDefined(traces.getTrace(imeTraceType)).getEntry(0)
-      );
-    };
+      const entry = assertDefined(traces.getTrace(imeTraceType)).getEntry(0);
+      positionUpdate = TracePositionUpdate.fromTraceEntry(entry);
+      selectedTree = UiHierarchyTreeNode.from(selected);
+    }
 
-    const createPresenter = (traces: Traces): PresenterInputMethod => {
+    function createPresenter(traces: Traces): PresenterInputMethod {
       return new PresenterInputMethod(
         traces,
         new MockStorage(),
         [imeTraceType],
         (newData: ImeUiData) => {
           uiData = newData;
-        }
+        },
       );
-    };
+    }
   });
 }

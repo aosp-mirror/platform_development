@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,81 +13,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {DiffType, HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
+import {assertDefined} from 'common/assert_utils';
+import {DiffType} from 'viewers/common/diff_type';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
   selector: 'tree-node',
   template: `
-    <button *ngIf="showChevron()" class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
-      <mat-icon>
-        {{ isCollapsed ? 'arrow_drop_down' : 'chevron_right' }}
-      </mat-icon>
-    </button>
+    <div *ngIf="showChevron()" class="icon-wrapper">
+      <button class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
+        <mat-icon>
+          {{ isExpanded ? 'arrow_drop_down' : 'chevron_right' }}
+        </mat-icon>
+      </button>
+    </div>
 
-    <div *ngIf="showLeafNodeIcon()" class="leaf-node-icon-wrapper">
+    <div *ngIf="showLeafNodeIcon()" class="icon-wrapper leaf-node-icon-wrapper">
       <mat-icon class="leaf-node-icon"></mat-icon>
     </div>
 
-    <button *ngIf="showPinNodeIcon()" class="icon-button pin-node-btn" (click)="pinNode($event)">
-      <mat-icon>
-        {{ isPinned ? 'star' : 'star_border' }}
-      </mat-icon>
-    </button>
-
-    <div class="description">
-      <tree-node-data-view *ngIf="!isPropertiesTreeNode()" [item]="item"></tree-node-data-view>
-      <tree-node-properties-data-view
-        *ngIf="isPropertiesTreeNode()"
-        [item]="item"></tree-node-properties-data-view>
+    <div *ngIf="showPinNodeIcon()" class="icon-wrapper">
+      <button class="icon-button pin-node-btn" (click)="pinNode($event)">
+        <mat-icon>
+          {{ isPinned ? 'star' : 'star_border' }}
+        </mat-icon>
+      </button>
     </div>
 
-    <button
-      *ngIf="hasChildren && !isCollapsed"
-      class="icon-button expand-tree-btn"
-      [class]="collapseDiffClass"
-      (click)="expandTree($event)">
-      <mat-icon aria-hidden="true"> more_horiz </mat-icon>
-    </button>
+    <div class="description">
+      <hierarchy-tree-node-data-view
+        *ngIf="node && !isPropertyTreeNode()"
+        [node]="node"></hierarchy-tree-node-data-view>
+      <property-tree-node-data-view
+        *ngIf="isPropertyTreeNode()"
+        [node]="node"></property-tree-node-data-view>
+    </div>
+
+    <div *ngIf="!isLeaf && !isExpanded" class="icon-wrapper">
+      <button
+        class="icon-button expand-tree-btn"
+        [class]="collapseDiffClass"
+        (click)="expandTree($event)">
+        <mat-icon aria-hidden="true"> more_horiz </mat-icon>
+      </button>
+    </div>
   `,
   styles: [nodeInnerItemStyles],
 })
 export class TreeNodeComponent {
-  @Input() item!: UiTreeNode;
+  @Input() node?: UiHierarchyTreeNode | UiPropertyTreeNode;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
-  @Input() isCollapsed?: boolean;
-  @Input() hasChildren?: boolean = false;
-  @Input() isPinned?: boolean = false;
-  @Input() isInPinnedSection?: boolean = false;
-  @Input() isAlwaysCollapsed?: boolean;
+  @Input() isExpanded?: boolean;
+  @Input() isPinned = false;
+  @Input() isInPinnedSection = false;
+  @Input() isSelected = false;
 
-  @Output() toggleTreeChange = new EventEmitter<void>();
-  @Output() expandTreeChange = new EventEmitter<boolean>();
-  @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
+  @Output() readonly toggleTreeChange = new EventEmitter<void>();
+  @Output() readonly expandTreeChange = new EventEmitter<boolean>();
+  @Output() readonly pinNodeChange = new EventEmitter<UiHierarchyTreeNode>();
 
   collapseDiffClass = '';
+  private el: HTMLElement;
+  private treeWrapper: HTMLElement | undefined;
+
+  constructor(@Inject(ElementRef) public elementRef: ElementRef) {
+    this.el = elementRef.nativeElement;
+  }
+
+  ngAfterViewInit() {
+    this.treeWrapper = this.getTreeWrapper();
+  }
 
   ngOnChanges() {
     this.collapseDiffClass = this.updateCollapseDiffClass();
+    if (!this.isPinned && this.isSelected && !this.isNodeInView()) {
+      this.el.scrollIntoView({block: 'center', inline: 'nearest'});
+    }
   }
 
-  isPropertiesTreeNode() {
-    return !(this.item instanceof HierarchyTreeNode);
+  isNodeInView() {
+    if (!this.treeWrapper) {
+      return false;
+    }
+    const rect = this.el.getBoundingClientRect();
+    const parentRect = this.treeWrapper.getBoundingClientRect();
+    return rect.top >= parentRect.top && rect.bottom <= parentRect.bottom;
+  }
+
+  getTreeWrapper(): HTMLElement | undefined {
+    let parent = this.el;
+    while (
+      !parent.className.includes('tree-wrapper') &&
+      parent?.parentElement
+    ) {
+      parent = parent.parentElement;
+    }
+    if (!parent.className.includes('tree-wrapper')) {
+      return undefined;
+    }
+    return parent;
+  }
+
+  isPropertyTreeNode() {
+    return this.node instanceof UiPropertyTreeNode;
   }
 
   showPinNodeIcon() {
     return (
-      (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? '')) ?? false
+      (this.node instanceof UiHierarchyTreeNode && !this.node.isRoot()) ?? false
     );
   }
 
   toggleTree(event: MouseEvent) {
-    if (!this.isAlwaysCollapsed) {
-      event.stopPropagation();
-      this.toggleTreeChange.emit();
-    }
+    event.stopPropagation();
+    this.toggleTreeChange.emit();
   }
 
   showChevron() {
@@ -105,15 +155,17 @@ export class TreeNodeComponent {
 
   pinNode(event: MouseEvent) {
     event.stopPropagation();
-    this.pinNodeChange.emit(this.item);
+    this.pinNodeChange.emit(assertDefined(this.node) as UiHierarchyTreeNode);
   }
 
   updateCollapseDiffClass() {
-    if (this.isCollapsed) {
+    if (this.isExpanded) {
       return '';
     }
 
-    const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
+    const childrenDiffClasses = this.getAllDiffTypesOfChildren(
+      assertDefined(this.node),
+    );
 
     childrenDiffClasses.delete(DiffType.NONE);
     childrenDiffClasses.delete(undefined);
@@ -128,16 +180,12 @@ export class TreeNodeComponent {
     return DiffType.MODIFIED;
   }
 
-  private getAllDiffTypesOfChildren(item: UiTreeNode) {
-    if (!item.children) {
-      return new Set();
-    }
-
+  private getAllDiffTypesOfChildren(
+    node: UiHierarchyTreeNode | UiPropertyTreeNode,
+  ) {
     const classes = new Set();
-    for (const child of item.children) {
-      if (child.diffType) {
-        classes.add(child.diffType);
-      }
+    for (const child of node.getAllChildren().values()) {
+      classes.add(child.getDiff());
       for (const diffClass of this.getAllDiffTypesOfChildren(child)) {
         classes.add(diffClass);
       }

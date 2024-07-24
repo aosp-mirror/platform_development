@@ -14,28 +14,47 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
-import {proxyClient, ProxyEndpoint, proxyRequest, ProxyState} from 'trace_collection/proxy_client';
-import {Connection, DeviceProperties} from './connection';
-import {ConfigMap} from './trace_collection_utils';
-import {TracingConfig} from './tracing_config';
+import {
+  DeviceProperties,
+  proxyClient,
+  ProxyEndpoint,
+  proxyRequest,
+  ProxyState,
+} from 'trace_collection/proxy_client';
+import {Connection} from './connection';
+import {
+  ConfigMap,
+  TraceConfigurationMap,
+  TRACES,
+} from './trace_collection_utils';
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
   keep_alive_worker: any = null;
-  notConnected = [ProxyState.NO_PROXY, ProxyState.UNAUTH, ProxyState.INVALID_VERSION];
+  notConnected = [
+    ProxyState.NO_PROXY,
+    ProxyState.UNAUTH,
+    ProxyState.INVALID_VERSION,
+  ];
 
   constructor(
     private proxyStateChangeCallback: (state: ProxyState) => void,
-    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING,
+    private traceConfigChangeCallback: (
+      availableTracesConfig: TraceConfigurationMap,
+    ) => void,
   ) {
     this.proxy.setState(ProxyState.CONNECTING);
-    this.proxy.onProxyChange((newState) => this.onConnectChange(newState));
+    this.proxy.onProxyChange(
+      async (newState) => await this.onConnectChange(newState),
+    );
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
-      this.proxy.proxyKey = urlParams.get('token')!;
+      this.proxy.proxyKey = assertDefined(urlParams.get('token'));
     } else if (this.proxy.store.get('adb.proxyKey')) {
-      this.proxy.proxyKey = this.proxy.store.get('adb.proxyKey')!;
+      this.proxy.proxyKey = assertDefined(this.proxy.store.get('adb.proxyKey'));
     }
     this.proxy.getDevices();
   }
@@ -83,7 +102,6 @@ export class ProxyConnection implements Connection {
   setProxyKey(key: string) {
     this.proxy.proxyKey = key;
     this.proxy.store.add('adb.proxyKey', key);
-    this.restart();
   }
 
   adbSuccess() {
@@ -120,10 +138,11 @@ export class ProxyConnection implements Connection {
     proxyRequest.keepTraceAlive(view);
   }
 
-  startTrace(
+  async startTrace(
+    requestedTraces: string[],
     reqEnableConfig?: string[],
     reqSelectedSfConfig?: ConfigMap,
-    reqSelectedWmConfig?: ConfigMap
+    reqSelectedWmConfig?: ConfigMap,
   ) {
     if (reqEnableConfig) {
       proxyRequest.setEnabledConfig(this, reqEnableConfig);
@@ -132,47 +151,47 @@ export class ProxyConnection implements Connection {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_SF_CONFIG_TRACE,
         this,
-        reqSelectedSfConfig
+        reqSelectedSfConfig,
       );
     }
     if (reqSelectedWmConfig) {
       proxyRequest.setSelectedConfig(
         ProxyEndpoint.SELECTED_WM_CONFIG_TRACE,
         this,
-        reqSelectedWmConfig
+        reqSelectedWmConfig,
       );
     }
-    proxyClient.setState(ProxyState.END_TRACE);
-    proxyRequest.startTrace(this, TracingConfig.getInstance().requestedTraces);
+    await proxyClient.setState(ProxyState.END_TRACE);
+    proxyRequest.startTrace(this, requestedTraces);
   }
 
   async endTrace() {
     this.progressCallback(0);
-    this.proxy.setState(ProxyState.LOAD_DATA);
+    await this.proxy.setState(ProxyState.LOAD_DATA);
     await proxyRequest.endTrace(this, this.progressCallback);
   }
 
-  async dumpState(): Promise<boolean> {
+  async dumpState(requestedDumps: string[]): Promise<boolean> {
     this.progressCallback(0);
-    if (TracingConfig.getInstance().requestedDumps.length < 1) {
+    if (requestedDumps.length < 1) {
       console.error('No targets selected');
-      this.proxy.setState(ProxyState.ERROR, 'No targets selected');
+      await this.proxy.setState(ProxyState.ERROR, 'No targets selected');
       return false;
     }
-    this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.dumpState(
-      this,
-      TracingConfig.getInstance().requestedDumps,
-      this.progressCallback
-    );
+    await this.proxy.setState(ProxyState.LOAD_DATA);
+    await proxyRequest.dumpState(this, requestedDumps, this.progressCallback);
     return true;
   }
 
-  async isWaylandAvailable(): Promise<boolean> {
+  isWaylandAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      proxyRequest.call('GET', ProxyEndpoint.CHECK_WAYLAND, (request: XMLHttpRequest) => {
-        resolve(request.responseText === 'true');
-      });
+      proxyRequest.call(
+        'GET',
+        ProxyEndpoint.CHECK_WAYLAND,
+        (request: XMLHttpRequest) => {
+          resolve(request.responseText === 'true');
+        },
+      );
     });
   }
 
@@ -182,7 +201,13 @@ export class ProxyConnection implements Connection {
     }
     if (newState === ProxyState.START_TRACE) {
       const isWaylandAvailable = await this.isWaylandAvailable();
-      TracingConfig.getInstance().setTraceConfigForAvailableTraces(isWaylandAvailable);
+      if (isWaylandAvailable) {
+        const availableTracesConfig = TRACES['default'];
+        if (isWaylandAvailable) {
+          Object.assign(availableTracesConfig, TRACES['arc']);
+        }
+        this.traceConfigChangeCallback(availableTracesConfig);
+      }
     }
     this.proxyStateChangeCallback(newState);
   }

@@ -15,6 +15,7 @@
 //
 
 package {
+    default_team: "trendy_team_treble",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -49,7 +50,6 @@ cc_defaults {
     ],
 
     compile_multilib: "64",
-    stl: "none",
 }
 
 cc_binary_host {
@@ -77,7 +77,6 @@ cc_binary_host {
     shared_libs: [
         "libprotobuf-cpp-full",
         "libclang-cpp_host",
-        "libc++_host",
     ],
 }
 
@@ -95,7 +94,6 @@ cc_defaults {
     shared_libs: [
         "libprotobuf-cpp-full",
         "libclang-cpp_host",
-        "libc++_host",
     ],
 }
 
@@ -148,7 +146,6 @@ cc_library_host_static {
         "src/repr/json/converter.cpp",
         "src/repr/json/ir_dumper.cpp",
         "src/repr/json/ir_reader.cpp",
-        "src/repr/protobuf/converter.cpp",
         "src/repr/protobuf/ir_diff_dumper.cpp",
         "src/repr/protobuf/ir_dumper.cpp",
         "src/repr/protobuf/ir_reader.cpp",
@@ -170,7 +167,6 @@ cc_library_host_static {
 
     shared_libs: [
         "libclang-cpp_host",
-        "libc++_host",
         "libprotobuf-cpp-full",
     ],
 
@@ -209,7 +205,6 @@ cc_test_host {
 
     shared_libs: [
         "libclang-cpp_host",
-        "libc++_host",
     ],
 
     test_suites: ["general-tests"],

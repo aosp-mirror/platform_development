@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {CustomQueryType} from './custom_query';
 import {FrameMapBuilder} from './frame_map_builder';
 import {FramesRange, TraceEntry} from './trace';
 import {Traces} from './traces';
@@ -39,14 +40,17 @@ export class FrameMapper {
     ];
 
     const type = TRACES_IN_PREFERENCE_ORDER.find(
-      (type) => this.traces.getTrace(type) !== undefined
+      (type) => this.traces.getTrace(type) !== undefined,
     );
     if (type === undefined) {
       return;
     }
 
     const trace = assertDefined(this.traces.getTrace(type));
-    const frameMapBuilder = new FrameMapBuilder(trace.lengthEntries, trace.lengthEntries);
+    const frameMapBuilder = new FrameMapBuilder(
+      trace.lengthEntries,
+      trace.lengthEntries,
+    );
 
     for (let i = 0; i < trace.lengthEntries; ++i) {
       frameMapBuilder.setFrames(i, {start: i, end: i + 1});
@@ -67,22 +71,31 @@ export class FrameMapper {
   private tryPropagateFromScreenRecordingToSurfaceFlinger() {
     const frameMapBuilder = this.tryStartFrameMapping(
       TraceType.SCREEN_RECORDING,
-      TraceType.SURFACE_FLINGER
+      TraceType.SURFACE_FLINGER,
     );
     if (!frameMapBuilder) {
       return;
     }
 
-    const screenRecording = assertDefined(this.traces.getTrace(TraceType.SCREEN_RECORDING));
-    const surfaceFlinger = assertDefined(this.traces.getTrace(TraceType.SURFACE_FLINGER));
+    const screenRecording = assertDefined(
+      this.traces.getTrace(TraceType.SCREEN_RECORDING),
+    );
+    const surfaceFlinger = assertDefined(
+      this.traces.getTrace(TraceType.SURFACE_FLINGER),
+    );
 
     screenRecording.forEachEntry((srcEntry) => {
-      const startSearchTime = srcEntry.getTimestamp().add(-FrameMapper.MAX_UI_PIPELINE_LATENCY_NS);
+      const startSearchTime = srcEntry
+        .getTimestamp()
+        .add(-FrameMapper.MAX_UI_PIPELINE_LATENCY_NS);
       const endSearchTime = srcEntry.getTimestamp();
       const matches = surfaceFlinger.sliceTime(startSearchTime, endSearchTime);
       if (matches.lengthEntries > 0) {
         const dstEntry = matches.getEntry(matches.lengthEntries - 1);
-        frameMapBuilder.setFrames(dstEntry.getIndex(), srcEntry.getFramesRange());
+        frameMapBuilder.setFrames(
+          dstEntry.getIndex(),
+          srcEntry.getFramesRange(),
+        );
       }
     });
 
@@ -93,26 +106,33 @@ export class FrameMapper {
   private async tryPropagateFromSurfaceFlingerToTransactions() {
     const frameMapBuilder = this.tryStartFrameMapping(
       TraceType.SURFACE_FLINGER,
-      TraceType.TRANSACTIONS
+      TraceType.TRANSACTIONS,
     );
     if (!frameMapBuilder) {
       return;
     }
 
-    const transactions = assertDefined(this.traces.getTrace(TraceType.TRANSACTIONS));
-    const surfaceFlinger = assertDefined(this.traces.getTrace(TraceType.SURFACE_FLINGER));
+    const transactions = assertDefined(
+      this.traces.getTrace(TraceType.TRANSACTIONS),
+    );
+    const transactionEntries = await transactions.customQuery(
+      CustomQueryType.VSYNCID,
+    );
+
+    const surfaceFlinger = assertDefined(
+      this.traces.getTrace(TraceType.SURFACE_FLINGER),
+    );
+    const surfaceFlingerEntries = await surfaceFlinger.customQuery(
+      CustomQueryType.VSYNCID,
+    );
 
     const vsyncIdToFrames = new Map<bigint, FramesRange>();
 
-    for (let srcEntryIndex = 0; srcEntryIndex < surfaceFlinger.lengthEntries; ++srcEntryIndex) {
-      const srcEntry = surfaceFlinger.getEntry(srcEntryIndex);
-      const vsyncId = await this.getVsyncIdProperty(srcEntry, 'vSyncId');
-      if (vsyncId === undefined) {
-        continue;
-      }
+    surfaceFlingerEntries.forEach((srcEntry) => {
+      const vsyncId = srcEntry.getValue();
       const srcFrames = srcEntry.getFramesRange();
       if (!srcFrames) {
-        continue;
+        return;
       }
       let frames = vsyncIdToFrames.get(vsyncId);
       if (!frames) {
@@ -121,20 +141,16 @@ export class FrameMapper {
       frames.start = Math.min(frames.start, srcFrames.start);
       frames.end = Math.max(frames.end, srcFrames.end);
       vsyncIdToFrames.set(vsyncId, frames);
-    }
+    });
 
-    for (let dstEntryIndex = 0; dstEntryIndex < transactions.lengthEntries; ++dstEntryIndex) {
-      const dstEntry = transactions.getEntry(dstEntryIndex);
-      const vsyncId = await this.getVsyncIdProperty(dstEntry, 'vsyncId');
-      if (vsyncId === undefined) {
-        continue;
-      }
+    transactionEntries.forEach((dstEntry) => {
+      const vsyncId = dstEntry.getValue();
       const frames = vsyncIdToFrames.get(vsyncId);
       if (frames === undefined) {
-        continue;
+        return;
       }
       frameMapBuilder.setFrames(dstEntry.getIndex(), frames);
-    }
+    });
 
     const frameMap = frameMapBuilder.build();
     transactions.setFrameInfo(frameMap, frameMap.getFullTraceFramesRange());
@@ -143,23 +159,30 @@ export class FrameMapper {
   private tryPropagateFromTransactionsToWindowManager() {
     const frameMapBuilder = this.tryStartFrameMapping(
       TraceType.TRANSACTIONS,
-      TraceType.WINDOW_MANAGER
+      TraceType.WINDOW_MANAGER,
     );
     if (!frameMapBuilder) {
       return;
     }
 
-    const windowManager = assertDefined(this.traces.getTrace(TraceType.WINDOW_MANAGER));
-    const transactions = assertDefined(this.traces.getTrace(TraceType.TRANSACTIONS));
+    const windowManager = assertDefined(
+      this.traces.getTrace(TraceType.WINDOW_MANAGER),
+    );
+    const transactions = assertDefined(
+      this.traces.getTrace(TraceType.TRANSACTIONS),
+    );
 
     let prevWindowManagerEntry: TraceEntry<object> | undefined;
     windowManager.forEachEntry((windowManagerEntry) => {
       if (prevWindowManagerEntry) {
         const matches = transactions.sliceTime(
           prevWindowManagerEntry.getTimestamp(),
-          windowManagerEntry.getTimestamp()
+          windowManagerEntry.getTimestamp(),
         );
-        frameMapBuilder.setFrames(prevWindowManagerEntry.getIndex(), matches.getFramesRange());
+        frameMapBuilder.setFrames(
+          prevWindowManagerEntry.getIndex(),
+          matches.getFramesRange(),
+        );
       }
       prevWindowManagerEntry = windowManagerEntry;
     });
@@ -167,9 +190,14 @@ export class FrameMapper {
     if (windowManager.lengthEntries > 0) {
       const lastWindowManagerEntry = windowManager.getEntry(-1);
       const startSearchTime = lastWindowManagerEntry.getTimestamp();
-      const endSearchTime = startSearchTime.add(FrameMapper.MAX_UI_PIPELINE_LATENCY_NS);
+      const endSearchTime = startSearchTime.add(
+        FrameMapper.MAX_UI_PIPELINE_LATENCY_NS,
+      );
       const matches = transactions.sliceTime(startSearchTime, endSearchTime);
-      frameMapBuilder.setFrames(lastWindowManagerEntry.getIndex(), matches.getFramesRange());
+      frameMapBuilder.setFrames(
+        lastWindowManagerEntry.getIndex(),
+        matches.getFramesRange(),
+      );
     }
 
     const frameMap = frameMapBuilder.build();
@@ -179,14 +207,16 @@ export class FrameMapper {
   private tryPropagateFromWindowManagerToProtoLog() {
     const frameMapBuilder = this.tryStartFrameMapping(
       TraceType.WINDOW_MANAGER,
-      TraceType.PROTO_LOG
+      TraceType.PROTO_LOG,
     );
     if (!frameMapBuilder) {
       return;
     }
 
     const protoLog = assertDefined(this.traces.getTrace(TraceType.PROTO_LOG));
-    const windowManager = assertDefined(this.traces.getTrace(TraceType.WINDOW_MANAGER));
+    const windowManager = assertDefined(
+      this.traces.getTrace(TraceType.WINDOW_MANAGER),
+    );
 
     windowManager.forEachEntry((prevSrcEntry) => {
       const srcEntryIndex = prevSrcEntry.getIndex() + 1;
@@ -201,7 +231,10 @@ export class FrameMapper {
       const endSearchTime = srcEntry.getTimestamp().add(1n);
       const matches = protoLog.sliceTime(startSearchTime, endSearchTime);
       matches.forEachEntry((dstEntry) => {
-        frameMapBuilder.setFrames(dstEntry.getIndex(), srcEntry.getFramesRange());
+        frameMapBuilder.setFrames(
+          dstEntry.getIndex(),
+          srcEntry.getFramesRange(),
+        );
       });
     });
 
@@ -213,7 +246,10 @@ export class FrameMapper {
       const endSearchTime = firstEntry.getTimestamp().add(1n);
       const matches = protoLog.sliceTime(startSearchTime, endSearchTime);
       matches.forEachEntry((dstEntry) => {
-        frameMapBuilder.setFrames(dstEntry.getIndex(), firstEntry.getFramesRange());
+        frameMapBuilder.setFrames(
+          dstEntry.getIndex(),
+          firstEntry.getFramesRange(),
+        );
       });
     }
 
@@ -228,7 +264,10 @@ export class FrameMapper {
       TraceType.INPUT_METHOD_SERVICE,
     ];
     for (const imeType of imeTypes) {
-      const frameMapBuilder = this.tryStartFrameMapping(TraceType.WINDOW_MANAGER, imeType);
+      const frameMapBuilder = this.tryStartFrameMapping(
+        TraceType.WINDOW_MANAGER,
+        imeType,
+      );
       if (frameMapBuilder) {
         this.propagateFromWindowManagerToIme(imeType, frameMapBuilder);
       }
@@ -237,13 +276,15 @@ export class FrameMapper {
 
   private propagateFromWindowManagerToIme(
     imeTraceType: TraceType,
-    frameMapBuilder: FrameMapBuilder
+    frameMapBuilder: FrameMapBuilder,
   ) {
     // Value used to narrow time-based searches of corresponding WindowManager entries
     const MAX_TIME_DIFFERENCE_NS = 200000000n; // 200 ms
 
     const ime = assertDefined(this.traces.getTrace(imeTraceType));
-    const windowManager = assertDefined(this.traces.getTrace(TraceType.WINDOW_MANAGER));
+    const windowManager = assertDefined(
+      this.traces.getTrace(TraceType.WINDOW_MANAGER),
+    );
     const abs = (n: bigint): bigint => (n < 0n ? -n : n);
 
     ime.forEachEntry((dstEntry) => {
@@ -252,7 +293,8 @@ export class FrameMapper {
         return;
       }
       const timeDifferenceNs = abs(
-        srcEntry.getTimestamp().getValueNs() - dstEntry.getTimestamp().getValueNs()
+        srcEntry.getTimestamp().getValueNs() -
+          dstEntry.getTimestamp().getValueNs(),
       );
       if (timeDifferenceNs > MAX_TIME_DIFFERENCE_NS) {
         return;
@@ -266,7 +308,7 @@ export class FrameMapper {
 
   private tryStartFrameMapping(
     srcTraceType: TraceType,
-    dstTraceType: TraceType
+    dstTraceType: TraceType,
   ): FrameMapBuilder | undefined {
     const srcTrace = this.traces.getTrace(srcTraceType);
     const dstTrace = this.traces.getTrace(dstTraceType);
@@ -277,23 +319,5 @@ export class FrameMapper {
     const framesRange = srcTrace.getFramesRange();
     const lengthFrames = framesRange ? framesRange.end : 0;
     return new FrameMapBuilder(dstTrace.lengthEntries, lengthFrames);
-  }
-
-  private async getVsyncIdProperty(
-    entry: TraceEntry<object>,
-    propertyKey: string
-  ): Promise<bigint | undefined> {
-    const entryValue = await entry.getValue();
-    const vsyncId = (entryValue as any)[propertyKey];
-    if (vsyncId === undefined) {
-      console.error(`Failed to get trace entry's '${propertyKey}' property:`, entryValue);
-      return undefined;
-    }
-    try {
-      return BigInt(vsyncId.toString());
-    } catch (e) {
-      console.error(`Failed to convert trace entry's vsyncId to bigint:`, entryValue);
-      return undefined;
-    }
   }
 }

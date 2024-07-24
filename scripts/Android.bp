@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_native_tools_libraries",
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
@@ -57,7 +58,7 @@ python_test_host {
     ],
     libs: [
         "pyfakefs",
-    ]
+    ],
 }
 
 python_test_host {

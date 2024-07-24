@@ -39,3 +39,13 @@ app-root {
     flex-direction: row;
     overflow: auto;
 }
+
+rects-view .mat-tab-label {
+    min-width: 60px;
+    height: 32px;
+    font-size: 12px;
+}
+
+rects-view .mat-tab-body {
+    padding-bottom: 0px;
+}

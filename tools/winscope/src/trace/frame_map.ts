@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import {AbsoluteEntryIndex, AbsoluteFrameIndex, EntriesRange, FramesRange} from './index_types';
+import {
+  AbsoluteEntryIndex,
+  AbsoluteFrameIndex,
+  EntriesRange,
+  FramesRange,
+} from './index_types';
 
 export class FrameMap {
   readonly lengthEntries: number;
@@ -56,7 +61,7 @@ export class FrameMap {
     entryToStartFrame: Array<AbsoluteFrameIndex | undefined>,
     entryToEndFrame: Array<AbsoluteFrameIndex | undefined>,
     frameToStartEntry: Array<AbsoluteEntryIndex | undefined>,
-    frameToEndEntry: Array<AbsoluteEntryIndex | undefined>
+    frameToEndEntry: Array<AbsoluteEntryIndex | undefined>,
   ) {
     this.lengthEntries = lengthEntries;
     this.lengthFrames = lengthFrames;
@@ -72,10 +77,18 @@ export class FrameMap {
       return undefined;
     }
 
-    const startFrame = this.getStartFrameOfFirstGreaterOrEqualMappedEntry(entries.start);
-    const endFrame = this.getEndFrameOfLastLowerOrEqualMappedEntry(entries.end - 1);
+    const startFrame = this.getStartFrameOfFirstGreaterOrEqualMappedEntry(
+      entries.start,
+    );
+    const endFrame = this.getEndFrameOfLastLowerOrEqualMappedEntry(
+      entries.end - 1,
+    );
 
-    if (startFrame === undefined || endFrame === undefined || startFrame >= endFrame) {
+    if (
+      startFrame === undefined ||
+      endFrame === undefined ||
+      startFrame >= endFrame
+    ) {
       return undefined;
     }
 
@@ -92,10 +105,18 @@ export class FrameMap {
       return undefined;
     }
 
-    const startEntry = this.getStartEntryOfFirstGreaterOrEqualMappedFrame(frames.start);
-    const endEntry = this.getEndEntryOfLastLowerOrEqualMappedFrame(frames.end - 1);
+    const startEntry = this.getStartEntryOfFirstGreaterOrEqualMappedFrame(
+      frames.start,
+    );
+    const endEntry = this.getEndEntryOfLastLowerOrEqualMappedFrame(
+      frames.end - 1,
+    );
 
-    if (startEntry === undefined || endEntry === undefined || startEntry >= endEntry) {
+    if (
+      startEntry === undefined ||
+      endEntry === undefined ||
+      startEntry >= endEntry
+    ) {
       return undefined;
     }
 
@@ -103,7 +124,7 @@ export class FrameMap {
   }
 
   private getStartFrameOfFirstGreaterOrEqualMappedEntry(
-    entry: AbsoluteEntryIndex
+    entry: AbsoluteEntryIndex,
   ): AbsoluteFrameIndex | undefined {
     if (entry < 0 || entry >= this.lengthEntries) {
       throw Error(`Entry index out of bounds: ${entry}`);
@@ -112,7 +133,7 @@ export class FrameMap {
   }
 
   private getEndFrameOfLastLowerOrEqualMappedEntry(
-    entry: AbsoluteEntryIndex
+    entry: AbsoluteEntryIndex,
   ): AbsoluteFrameIndex | undefined {
     if (entry < 0 || entry >= this.lengthEntries) {
       throw Error(`Entry index out of bounds: ${entry}`);
@@ -121,7 +142,7 @@ export class FrameMap {
   }
 
   private getStartEntryOfFirstGreaterOrEqualMappedFrame(
-    frame: AbsoluteFrameIndex
+    frame: AbsoluteFrameIndex,
   ): AbsoluteEntryIndex | undefined {
     if (frame < 0 || frame >= this.lengthFrames) {
       throw Error(`Frame index out of bounds: ${frame}`);
@@ -130,7 +151,7 @@ export class FrameMap {
   }
 
   private getEndEntryOfLastLowerOrEqualMappedFrame(
-    frame: AbsoluteFrameIndex
+    frame: AbsoluteFrameIndex,
   ): AbsoluteEntryIndex | undefined {
     if (frame < 0 || frame >= this.lengthFrames) {
       throw Error(`Frame index out of bounds: ${frame}`);

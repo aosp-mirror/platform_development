@@ -15,7 +15,11 @@
  */
 
 export class PersistentStoreProxy {
-  static new<T extends object>(key: string, defaultState: T, storage: Storage): T {
+  static new<T extends object>(
+    key: string,
+    defaultState: T,
+    storage: Storage,
+  ): T {
     const storedState = JSON.parse(storage.getItem(key) ?? '{}');
     const currentState = mergeDeep({}, structuredClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
@@ -27,17 +31,26 @@ function wrapWithPersistentStoreProxy(
   storeKey: string,
   object: object,
   storage: Storage,
-  baseObject: object = object
+  baseObject: object = object,
 ): object {
   const updatableProps: string[] = [];
 
   for (const [key, value] of Object.entries(object)) {
-    if (typeof value === 'string' || typeof value === 'boolean' || value === undefined) {
+    if (
+      typeof value === 'string' ||
+      typeof value === 'boolean' ||
+      value === undefined
+    ) {
       if (!Array.isArray(object)) {
         updatableProps.push(key);
       }
     } else {
-      (object as any)[key] = wrapWithPersistentStoreProxy(storeKey, value, storage, baseObject);
+      (object as any)[key] = wrapWithPersistentStoreProxy(
+        storeKey,
+        value,
+        storage,
+        baseObject,
+      );
     }
   }
 
@@ -57,7 +70,7 @@ function wrapWithPersistentStoreProxy(
         return true;
       }
       throw Error(
-        `Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`
+        `Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`,
       );
     },
   });

@@ -1,0 +1,173 @@
+// Definitions for SurfaceFlinger layers.
+
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+
+import "protos/surfaceflinger/udc/common.proto";
+
+package android.surfaceflinger;
+
+// Contains a list of all layers.
+message LayersProto {
+  repeated LayerProto layers = 1;
+}
+
+// Must match definition in the IComposerClient HAL
+enum HwcCompositionType {
+    // Invalid composition type
+    INVALID = 0;
+    // Layer was composited by the client into the client target buffer
+    CLIENT = 1;
+    // Layer was composited by the device through hardware overlays
+    DEVICE = 2;
+    // Layer was composited by the device using a color
+    SOLID_COLOR = 3;
+    // Similar to DEVICE, but the layer position may have been asynchronously set
+    // through setCursorPosition
+    CURSOR = 4;
+    // Layer was composited by the device via a sideband stream
+    SIDEBAND = 5;
+    // Layer was composited by hardware optimized for display decoration
+    DISPLAY_DECORATION = 6;
+}
+
+// Information about each layer.
+message LayerProto {
+  // unique id per layer.
+  int32 id = 1;
+  // unique name per layer.
+  string name = 2;
+  // list of children this layer may have. May be empty.
+  repeated int32 children = 3;
+  // list of layers that are z order relative to this layer.
+  repeated int32 relatives = 4;
+  // The type of layer, ex Color, Layer
+  string type = 5;
+  RegionProto transparent_region = 6;
+  RegionProto visible_region = 7;
+  RegionProto damage_region = 8;
+  uint32 layer_stack = 9;
+  // The layer's z order. Can be z order in layer stack, relative to parent,
+  // or relative to another layer specified in zOrderRelative.
+  int32 z = 10;
+  // The layer's position on the display.
+  PositionProto position = 11;
+  // The layer's requested position.
+  PositionProto requested_position = 12;
+  // The layer's size.
+  SizeProto size = 13;
+  // The layer's crop in it's own bounds.
+  RectProto crop = 14;
+  // The layer's crop in it's parent's bounds.
+  RectProto final_crop = 15 [deprecated=true];
+  bool is_opaque = 16;
+  bool invalidate = 17;
+  string dataspace = 18;
+  string pixel_format = 19;
+  // The layer's actual color.
+  ColorProto color = 20;
+  // The layer's requested color.
+  ColorProto requested_color = 21;
+  // Can be any combination of
+  //    hidden = 0x01
+  //    opaque = 0x02,
+  //    secure = 0x80,
+  uint32 flags = 22;
+  // The layer's actual transform
+  TransformProto transform = 23;
+  // The layer's requested transform.
+  TransformProto requested_transform = 24;
+  // The parent layer. This value can be null if there is no parent.
+  int32 parent = 25;
+  // The layer that this layer has a z order relative to. This value can be null.
+  int32 z_order_relative_of = 26;
+  // This value can be null if there's nothing to draw.
+  ActiveBufferProto active_buffer = 27;
+  // The number of frames available.
+  int32 queued_frames = 28;
+  bool refresh_pending = 29;
+  // The layer's composer backend destination frame
+  RectProto hwc_frame = 30;
+  // The layer's composer backend source crop
+  FloatRectProto hwc_crop = 31;
+  // The layer's composer backend transform
+  int32 hwc_transform = 32;
+  int32 window_type = 33 [deprecated=true];
+  int32 app_id = 34 [deprecated=true];
+  // The layer's composition type
+  HwcCompositionType hwc_composition_type = 35;
+  // If it's a buffer layer, indicate if the content is protected
+  bool is_protected = 36;
+  // Current frame number being rendered.
+  uint64 curr_frame = 37;
+  // A list of barriers that the layer is waiting to update state.
+  repeated BarrierLayerProto barrier_layer = 38;
+  // If active_buffer is not null, record its transform.
+  TransformProto buffer_transform = 39;
+  int32 effective_scaling_mode = 40;
+  // Layer's corner radius.
+  float corner_radius = 41;
+  // Metadata map. May be empty.
+  map<int32, bytes> metadata = 42;
+
+  TransformProto effective_transform = 43;
+  FloatRectProto source_bounds = 44;
+  FloatRectProto bounds = 45;
+  FloatRectProto screen_bounds = 46;
+
+  InputWindowInfoProto input_window_info = 47;
+
+  // Crop used to draw the rounded corner.
+  FloatRectProto corner_radius_crop = 48;
+
+  // length of the shadow to draw around the layer, it may be set on the
+  // layer or set by a parent layer.
+  float shadow_radius = 49;
+  ColorTransformProto color_transform = 50;
+
+  bool is_relative_of = 51;
+  // Layer's background blur radius in pixels.
+  int32 background_blur_radius = 52;
+
+  uint32 owner_uid = 53;
+
+  // Regions of a layer, where blur should be applied.
+  repeated BlurRegion blur_regions = 54;
+
+  bool is_trusted_overlay = 55;
+
+  // Corner radius explicitly set on layer rather than inherited
+  float requested_corner_radius = 56;
+
+  RectProto destination_frame = 57;
+
+  uint32 original_id = 58;
+}
+
+message PositionProto {
+  float x = 1;
+  float y = 2;
+}
+
+message FloatRectProto {
+  float left = 1;
+  float top = 2;
+  float right = 3;
+  float bottom = 4;
+}
+
+message ActiveBufferProto {
+  uint32 width = 1;
+  uint32 height = 2;
+  uint32 stride = 3;
+  int32 format = 4;
+  uint64 usage = 5;
+}
+
+message BarrierLayerProto {
+  // layer id the barrier is waiting on.
+  int32 id = 1;
+  // frame number the barrier is waiting on.
+  uint64 frame_number = 2;
+}
+

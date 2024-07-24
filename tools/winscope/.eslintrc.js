@@ -30,6 +30,12 @@ module.exports = {
     jasmine: true,
     protractor: true,
   },
+  ignorePatterns: [
+    // Perfetto trace processor sources. Either auto-generated (we want to keep them untouched)
+    // or copied from external/perfetto (we want to touch them as little as possible to allow
+    // future upgrading, diffing, conflicts merging, ...)
+    'src/trace_processor/',
+  ],
   rules: {
     'no-unused-vars': 'off', // not very robust rule
 

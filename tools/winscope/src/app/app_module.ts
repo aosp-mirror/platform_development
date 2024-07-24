@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {ClipboardModule} from '@angular/cdk/clipboard';
 import {DragDropModule} from '@angular/cdk/drag-drop';
 import {ScrollingModule} from '@angular/cdk/scrolling';
 import {CommonModule} from '@angular/common';
@@ -38,24 +39,28 @@ import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {BrowserModule} from '@angular/platform-browser';
+import {BrowserModule, Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {CoordinatesTableComponent} from 'viewers/components/coordinates_table_component';
 import {HierarchyComponent} from 'viewers/components/hierarchy_component';
+import {HierarchyTreeNodeDataViewComponent} from 'viewers/components/hierarchy_tree_node_data_view_component';
 import {ImeAdditionalPropertiesComponent} from 'viewers/components/ime_additional_properties_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
 import {PropertiesTableComponent} from 'viewers/components/properties_table_component';
-import {PropertyGroupsComponent} from 'viewers/components/property_groups_component';
+import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tree_node_data_view_component';
 import {RectsComponent} from 'viewers/components/rects/rects_component';
+import {SelectWithFilterComponent} from 'viewers/components/select_with_filter_component';
+import {SurfaceFlingerPropertyGroupsComponent} from 'viewers/components/surface_flinger_property_groups_component';
 import {TransformMatrixComponent} from 'viewers/components/transform_matrix_component';
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
-import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view_component';
-import {TreeNodePropertiesDataViewComponent} from 'viewers/components/tree_node_properties_data_view_component';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
+import {ViewCapturePropertyGroupsComponent} from 'viewers/components/view_capture_property_groups_component';
+import {ProtologScrollDirective} from 'viewers/viewer_protolog/scroll_strategy/protolog_scroll_directive';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
 import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording_component';
 import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger_component';
+import {TransactionsScrollDirective} from 'viewers/viewer_transactions/scroll_strategy/transactions_scroll_directive';
 import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions_component';
 import {ViewerTransitionsComponent} from 'viewers/viewer_transitions/viewer_transitions_component';
 import {ViewerViewCaptureComponent} from 'viewers/viewer_view_capture/viewer_view_capture_component';
@@ -70,9 +75,11 @@ import {
 import {CollectTracesComponent} from './components/collect_traces_component';
 import {LoadProgressComponent} from './components/load_progress_component';
 import {SnackBarComponent} from './components/snack_bar_component';
-import {ExpandedTimelineComponent} from './components/timeline/expanded_timeline_component';
-import {MiniTimelineComponent} from './components/timeline/mini_timeline_component';
-import {SingleTimelineComponent} from './components/timeline/single_timeline_component';
+import {DefaultTimelineRowComponent} from './components/timeline/expanded-timeline/default_timeline_row_component';
+import {ExpandedTimelineComponent} from './components/timeline/expanded-timeline/expanded_timeline_component';
+import {TransitionTimelineComponent} from './components/timeline/expanded-timeline/transition_timeline_component';
+import {MiniTimelineComponent} from './components/timeline/mini-timeline/mini_timeline_component';
+import {SliderComponent} from './components/timeline/mini-timeline/slider_component';
 import {TimelineComponent} from './components/timeline/timeline_component';
 import {TraceConfigComponent} from './components/trace_config_component';
 import {TraceViewComponent} from './components/trace_view_component';
@@ -101,9 +108,9 @@ import {WebAdbComponent} from './components/web_adb_component';
     TraceViewComponent,
     TreeComponent,
     TreeNodeComponent,
-    TreeNodeDataViewComponent,
-    TreeNodePropertiesDataViewComponent,
-    PropertyGroupsComponent,
+    HierarchyTreeNodeDataViewComponent,
+    PropertyTreeNodeDataViewComponent,
+    SurfaceFlingerPropertyGroupsComponent,
     TransformMatrixComponent,
     PropertiesTableComponent,
     ImeAdditionalPropertiesComponent,
@@ -111,12 +118,18 @@ import {WebAdbComponent} from './components/web_adb_component';
     TimelineComponent,
     MiniTimelineComponent,
     ExpandedTimelineComponent,
-    SingleTimelineComponent,
+    DefaultTimelineRowComponent,
+    TransitionTimelineComponent,
     SnackBarComponent,
     MatDrawer,
     MatDrawerContent,
     MatDrawerContainer,
     LoadProgressComponent,
+    SliderComponent,
+    ProtologScrollDirective,
+    TransactionsScrollDirective,
+    ViewCapturePropertyGroupsComponent,
+    SelectWithFilterComponent,
   ],
   imports: [
     BrowserModule,
@@ -145,8 +158,10 @@ import {WebAdbComponent} from './components/web_adb_component';
     MatSnackBarModule,
     ScrollingModule,
     DragDropModule,
+    ClipboardModule,
     ReactiveFormsModule,
   ],
+  providers: [Title],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   bootstrap: [AppComponent],
 })

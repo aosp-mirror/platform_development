@@ -171,14 +171,14 @@
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SET UM_NOT_VISIBLE(4)"
+                android:text="SET UM_NOT_VISIBLE (4)"
                 android:id="@+id/notVisibleButton"
                 android:checked="false" />
 
             <RadioButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SET NOT_VISIBLE(3)"
+                android:text="SET NOT_VISIBLE (3)"
                 android:id="@+id/forcedNotVisibleButton"
                 android:checked="false" />
 

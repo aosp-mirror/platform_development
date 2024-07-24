@@ -34,8 +34,6 @@ cc_library_host_static {
         canonical_path_from_root: false,
     },
 
-    shared_libs: ["libc++_host"],
-
     cflags: [
         "-Wall",
         "-Werror",
@@ -52,6 +50,5 @@ cc_library_host_static {
         },
     },
 
-    stl: "none",
     compile_multilib: "64",
 }

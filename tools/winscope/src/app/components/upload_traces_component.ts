@@ -24,22 +24,51 @@ import {
 } from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
 import {TracePipeline} from 'app/trace_pipeline';
-import {ProgressListener} from 'interfaces/progress_listener';
+import {ProgressListener} from 'messaging/progress_listener';
 import {Trace} from 'trace/trace';
+import {TraceTypeUtils} from 'trace/trace_type';
 import {LoadProgressComponent} from './load_progress_component';
 
 @Component({
   selector: 'upload-traces',
   template: `
     <mat-card class="upload-card">
-      <mat-card-title class="title">Upload Traces</mat-card-title>
+      <div class="card-header">
+        <mat-card-title class="title">Upload Traces</mat-card-title>
+        <div
+          *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
+          class="trace-actions-container">
+          <button
+            color="primary"
+            mat-raised-button
+            class="load-btn"
+            matTooltip="Upload trace with an associated viewer to visualise"
+            [matTooltipDisabled]="hasLoadedFilesWithViewers()"
+            [disabled]="!hasLoadedFilesWithViewers()"
+            (click)="onViewTracesButtonClick()">
+            View traces
+          </button>
+
+          <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
+            Upload another file
+          </button>
+
+          <button
+            class="clear-all-btn"
+            color="primary"
+            mat-stroked-button
+            (click)="onClearButtonClick()">
+            Clear all
+          </button>
+        </div>
+      </div>
 
       <mat-card-content
         class="drop-box"
         ref="drop-box"
         (dragleave)="onFileDragOut($event)"
         (dragover)="onFileDragIn($event)"
-        (drop)="onHandleFileDrop($event)"
+        (drop)="onFileDrop($event)"
         (click)="fileDropRef.click()">
         <input
           id="fileDropRef"
@@ -80,24 +109,6 @@ import {LoadProgressComponent} from './load_progress_component';
           <p class="mat-body-1">Drag your .winscope file(s) or click to upload</p>
         </div>
       </mat-card-content>
-
-      <div
-        *ngIf="!isLoadingFiles && tracePipeline.getTraces().getSize() > 0"
-        class="trace-actions-container">
-        <button
-          color="primary"
-          mat-raised-button
-          class="load-btn"
-          (click)="onViewTracesButtonClick()">
-          View traces
-        </button>
-
-        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
-          Upload another file
-        </button>
-
-        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">Clear all</button>
-      </div>
     </mat-card>
   `,
   styles: [
@@ -108,6 +119,23 @@ import {LoadProgressComponent} from './load_progress_component';
         flex-direction: column;
         overflow: auto;
         margin: 10px;
+        padding-top: 0px;
+      }
+      .card-header {
+        justify-content: space-between;
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+      }
+      .title {
+        padding-top: 16px;
+        text-align: center;
+      }
+      .trace-actions-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
       }
       .drop-box {
         display: flex;
@@ -135,12 +163,6 @@ import {LoadProgressComponent} from './load_progress_component';
       .drop-info .icon {
         font-size: 3rem;
         margin: 0;
-      }
-      .trace-actions-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 10px;
       }
       .div-progress {
         display: flex;
@@ -180,15 +202,20 @@ export class UploadTracesComponent implements ProgressListener {
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(NgZone) private ngZone: NgZone
+    @Inject(NgZone) private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
     this.tracePipeline.clear();
   }
 
-  onProgressUpdate(message: string | undefined, progressPercentage: number | undefined) {
-    if (!LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)) {
+  onProgressUpdate(
+    message: string | undefined,
+    progressPercentage: number | undefined,
+  ) {
+    if (
+      !LoadProgressComponent.canUpdateComponent(this.lastUiProgressUpdateTimeMs)
+    ) {
       return;
     }
     this.isLoadingFiles = true;
@@ -228,7 +255,7 @@ export class UploadTracesComponent implements ProgressListener {
     e.stopPropagation();
   }
 
-  onHandleFileDrop(e: DragEvent) {
+  onFileDrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
@@ -241,6 +268,19 @@ export class UploadTracesComponent implements ProgressListener {
     event.stopPropagation();
     this.tracePipeline.removeTrace(trace);
     this.onOperationFinished();
+  }
+
+  hasLoadedFilesWithViewers(): boolean {
+    return this.ngZone.run(() => {
+      let hasFilesWithViewers = false;
+      this.tracePipeline.getTraces().forEachTrace((trace) => {
+        if (TraceTypeUtils.isTraceTypeWithViewer(trace.type)) {
+          hasFilesWithViewers = true;
+        }
+      });
+
+      return hasFilesWithViewers;
+    });
   }
 
   private getInputFiles(event: Event): File[] {

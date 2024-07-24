@@ -15,21 +15,25 @@
  */
 
 import {TraceType} from 'trace/trace_type';
-import {Rectangle} from 'viewers/common/rectangle';
-import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {VcCuratedProperties} from 'viewers/common/curated_properties';
+import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
+import {UiPropertyTreeNode} from 'viewers/common/ui_property_tree_node';
 import {UserOptions} from 'viewers/common/user_options';
+import {UiRect} from 'viewers/components/rects/types2d';
 
 export class UiData {
   readonly dependencies: TraceType[] = [TraceType.VIEW_CAPTURE];
   readonly displayPropertyGroups = false;
 
   constructor(
-    readonly rects: Rectangle[],
-    public tree: HierarchyTreeNode | null,
+    readonly rects: UiRect[],
+    public sfRects: UiRect[] | undefined,
+    public tree: UiHierarchyTreeNode | undefined,
     public hierarchyUserOptions: UserOptions,
     public propertiesUserOptions: UserOptions,
-    public pinnedItems: HierarchyTreeNode[],
-    public highlightedItems: string[],
-    public propertiesTree: PropertiesTreeNode | null
+    public pinnedItems: UiHierarchyTreeNode[],
+    public highlightedItem: string,
+    public propertiesTree: UiPropertyTreeNode | undefined,
+    public curatedProperties: VcCuratedProperties | undefined,
   ) {}
 }

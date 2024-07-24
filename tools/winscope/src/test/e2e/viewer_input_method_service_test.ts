@@ -13,22 +13,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {browser, by, element} from 'protractor';
 import {E2eTestUtils} from './utils';
 
-describe('Viewer InputMethodService', () => {
-  beforeAll(async () => {
+describe('Viewer Input Method Service', () => {
+  const viewerSelector = 'viewer-input-method';
+
+  beforeEach(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     await E2eTestUtils.checkServerIsUp('Winscope', E2eTestUtils.WINSCOPE_URL);
     await browser.get(E2eTestUtils.WINSCOPE_URL);
   });
 
-  it('processes trace and renders view', async () => {
-    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/InputMethodService.pb');
-    await E2eTestUtils.closeSnackBarIfNeeded();
-    await E2eTestUtils.clickViewTracesButton();
+  it('processes trace from zip and navigates correctly', async () => {
+    await E2eTestUtils.loadTraceAndCheckViewer(
+      'traces/deployment_full_trace_phone.zip',
+      'Input Method Service',
+      viewerSelector,
+    );
+    await E2eTestUtils.checkTimelineTraceSelector({
+      icon: 'keyboard_alt',
+      color: 'rgba(242, 153, 0, 1)',
+    });
+    await E2eTestUtils.checkInitialRealTimestamp(
+      '2022-11-21T18:05:12.497050996',
+    );
+    await E2eTestUtils.checkFinalRealTimestamp('2022-11-21T18:05:18.060151811');
 
-    const viewerPresent = await element(by.css('viewer-input-method')).isPresent();
-    expect(viewerPresent).toBeTruthy();
+    await E2eTestUtils.changeRealTimestampInWinscope(
+      '2022-11-21T18:05:14.721076009',
+    );
+    await E2eTestUtils.checkWinscopeRealTimestamp(
+      '2022-11-21T18:05:14.721076009',
+    );
+
+    await E2eTestUtils.applyStateToHierarchyCheckboxes(viewerSelector, true);
+    await checkHierarchy();
+
+    await E2eTestUtils.selectItemInHierarchy(
+      viewerSelector,
+      'com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity#786',
+    );
+    await checkProperties();
   });
+
+  async function checkHierarchy() {
+    const nodes = await element.all(
+      by.css(`${viewerSelector} hierarchy-view .node`),
+    );
+    expect(nodes.length).toEqual(3);
+    expect(await nodes[0].getText()).toContain(
+      'InputMethodService - 2022-11-21T18:05:14.721076009 - InputMethodService#applyVisibilityInInsetsConsumerIfNecessary',
+    );
+    expect(await nodes[1].getText()).toContain('253 - SfSubtree - Task=8#253');
+    expect(await nodes[2].getText()).toContain(
+      '786 - com.google.(...).ZeroStateSearchActivity#786 GPU V',
+    );
+  }
+
+  async function checkProperties() {
+    await E2eTestUtils.checkItemInPropertiesTree(
+      viewerSelector,
+      'damageRegion',
+      'damageRegion:\nSkRegion((398, 42, 615, 1596))',
+    );
+
+    await E2eTestUtils.checkItemInPropertiesTree(
+      viewerSelector,
+      'color',
+      'color:\n{empty}, alpha: 0.589',
+    );
+
+    await E2eTestUtils.checkItemInPropertiesTree(
+      viewerSelector,
+      'destinationFrame',
+      'destinationFrame:\n(0, 0) - (2204, 1080)',
+    );
+
+    await E2eTestUtils.checkItemInPropertiesTree(
+      viewerSelector,
+      'layoutParamsFlags',
+      'layoutParamsFlags:\nFLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS | FLAG_HARDWARE_ACCELERATED | FLAG_SPLIT_TOUCH | FLAG_LAYOUT_INSET_DECOR | FLAG_LAYOUT_IN_SCREEN | FLAG_NOT_TOUCH_MODAL',
+    );
+  }
 });

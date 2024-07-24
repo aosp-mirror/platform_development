@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Display name" />
+            <EditText
+                android:id="@+id/camera_name_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="text"
+                android:text="Virtual Camera" />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+            <TextView
+                android:id="@+id/camera_input_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Virtual Camera input type" />
+            <RadioGroup
+                android:id="@+id/camera_type_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+                <RadioButton
+                    android:id="@+id/radio_canvas"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Canvas" />
+                <RadioButton
+                    android:id="@+id/radio_video_file"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="MediaPlayer" />
+                <RadioButton
+                    android:id="@+id/radio_virtual_display"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="VirtualDisplay"
+                    android:enabled="false" />
+            </RadioGroup>
+        </TableRow>
+    </TableLayout>
+    <Button
+        android:id="@+id/create_camera_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create camera" />
+    <ListView
+        android:id="@+id/cameras_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>

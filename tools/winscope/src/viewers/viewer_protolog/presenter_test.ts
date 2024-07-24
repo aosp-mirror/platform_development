@@ -15,48 +15,148 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {NO_TIMEZONE_OFFSET_FACTORY} from 'common/timestamp_factory';
+import {TracePositionUpdate} from 'messaging/winscope_event';
+import {PropertyTreeBuilder} from 'test/unit/property_tree_builder';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
-import {LogMessage} from 'trace/protolog';
-import {RealTimestamp} from 'trace/timestamp';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
-import {TracePosition} from 'trace/trace_position';
 import {TraceType} from 'trace/trace_type';
+import {
+  DEFAULT_PROPERTY_FORMATTER,
+  TIMESTAMP_FORMATTER,
+} from 'trace/tree_node/formatters';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {Presenter} from './presenter';
 import {UiData, UiDataMessage} from './ui_data';
 
 describe('ViewerProtoLogPresenter', () => {
   let presenter: Presenter;
   let inputMessages: UiDataMessage[];
-  let trace: Trace<LogMessage>;
-  let position10: TracePosition;
-  let position11: TracePosition;
-  let position12: TracePosition;
+  let trace: Trace<PropertyTreeNode>;
+  let positionUpdate10: TracePositionUpdate;
+  let positionUpdate11: TracePositionUpdate;
+  let positionUpdate12: TracePositionUpdate;
   let outputUiData: undefined | UiData;
 
   beforeEach(async () => {
-    const time10 = new RealTimestamp(10n);
-    const time11 = new RealTimestamp(11n);
-    const time12 = new RealTimestamp(12n);
+    const time10 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(10n);
+    const time11 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(11n);
+    const time12 = NO_TIMEZONE_OFFSET_FACTORY.makeRealTimestamp(12n);
+    const elapsedTime10 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(10n);
+    const elapsedTime20 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(20n);
+    const elapsedTime30 = NO_TIMEZONE_OFFSET_FACTORY.makeElapsedTimestamp(30n);
+
+    const entries = [
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime10,
+            formatter: TIMESTAMP_FORMATTER,
+          },
+          {name: 'tag', value: 'tag0', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level0',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile0',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+        ])
+        .build(),
+
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime20,
+            formatter: TIMESTAMP_FORMATTER,
+          },
+          {name: 'tag', value: 'tag1', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level1',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile1',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+        ])
+        .build(),
+
+      new PropertyTreeBuilder()
+        .setRootId('ProtologTrace')
+        .setName('message')
+        .setChildren([
+          {name: 'text', value: 'text2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'timestamp',
+            value: elapsedTime30,
+            formatter: TIMESTAMP_FORMATTER,
+          },
+          {name: 'tag', value: 'tag2', formatter: DEFAULT_PROPERTY_FORMATTER},
+          {
+            name: 'level',
+            value: 'level2',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+          {
+            name: 'at',
+            value: 'sourcefile2',
+            formatter: DEFAULT_PROPERTY_FORMATTER,
+          },
+        ])
+        .build(),
+    ];
 
     inputMessages = [
-      new LogMessage('text0', 'time', 'tag0', 'level0', 'sourcefile0', 10n),
-      new LogMessage('text1', 'time', 'tag1', 'level1', 'sourcefile1', 11n),
-      new LogMessage('text2', 'time', 'tag2', 'level2', 'sourcefile2', 12n),
-    ].map((message, index) => {
-      (message as UiDataMessage).originalIndex = index;
-      return message as UiDataMessage;
-    });
+      {
+        originalIndex: 0,
+        text: 'text0',
+        time: assertDefined(entries[0].getChildByName('timestamp')),
+        tag: 'tag0',
+        level: 'level0',
+        at: 'sourcefile0',
+      },
+      {
+        originalIndex: 1,
+        text: 'text1',
+        time: assertDefined(entries[1].getChildByName('timestamp')),
+        tag: 'tag1',
+        level: 'level1',
+        at: 'sourcefile1',
+      },
+      {
+        originalIndex: 2,
+        text: 'text2',
+        time: assertDefined(entries[2].getChildByName('timestamp')),
+        tag: 'tag2',
+        level: 'level2',
+        at: 'sourcefile2',
+      },
+    ];
 
-    trace = new TraceBuilder<LogMessage>()
-      .setEntries(inputMessages)
+    trace = new TraceBuilder<PropertyTreeNode>()
+      .setEntries(entries)
       .setTimestamps([time10, time11, time12])
       .build();
 
-    position10 = TracePosition.fromTimestamp(time10);
-    position11 = TracePosition.fromTimestamp(time11);
-    position12 = TracePosition.fromTimestamp(time12);
+    positionUpdate10 = TracePositionUpdate.fromTimestamp(time10);
+    positionUpdate11 = TracePositionUpdate.fromTimestamp(time11);
+    positionUpdate12 = TracePositionUpdate.fromTimestamp(time12);
 
     outputUiData = undefined;
 
@@ -65,35 +165,41 @@ describe('ViewerProtoLogPresenter', () => {
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
-    await presenter.onTracePositionUpdate(position10); // trigger initialization
+    await presenter.onAppEvent(positionUpdate10); // trigger initialization
   });
 
   it('is robust to empty trace', async () => {
-    const traces = new TracesBuilder().setEntries(TraceType.PROTO_LOG, []).build();
+    const traces = new TracesBuilder()
+      .setEntries(TraceType.PROTO_LOG, [])
+      .build();
     presenter = new Presenter(traces, (data: UiData) => {
       outputUiData = data;
     });
 
-    expect(assertDefined(outputUiData).messages).toEqual([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.messages).toEqual([]);
+    expect(uiData.currentMessageIndex).toBeUndefined();
 
-    await presenter.onTracePositionUpdate(position10);
-    expect(assertDefined(outputUiData).messages).toEqual([]);
-    expect(assertDefined(outputUiData).currentMessageIndex).toBeUndefined();
+    await presenter.onAppEvent(positionUpdate10);
+
+    const newUiData = assertDefined(outputUiData);
+    expect(newUiData.messages).toEqual([]);
+    expect(newUiData.currentMessageIndex).toBeUndefined();
   });
 
   it('processes trace position updates', async () => {
-    await presenter.onTracePositionUpdate(position10);
+    await presenter.onAppEvent(positionUpdate10);
 
-    expect(assertDefined(outputUiData).allLogLevels).toEqual(['level0', 'level1', 'level2']);
-    expect(assertDefined(outputUiData).allTags).toEqual(['tag0', 'tag1', 'tag2']);
-    expect(assertDefined(outputUiData).allSourceFiles).toEqual([
+    const uiData = assertDefined(outputUiData);
+    expect(uiData.allLogLevels).toEqual(['level0', 'level1', 'level2']);
+    expect(uiData.allTags).toEqual(['tag0', 'tag1', 'tag2']);
+    expect(uiData.allSourceFiles).toEqual([
       'sourcefile0',
       'sourcefile1',
       'sourcefile2',
     ]);
-    expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
-    expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
+    expect(uiData.messages).toEqual(inputMessages);
+    expect(uiData.currentMessageIndex).toEqual(0);
   });
 
   it('updates displayed messages according to log levels filter', () => {
@@ -131,7 +237,11 @@ describe('ViewerProtoLogPresenter', () => {
     presenter.onSourceFilesFilterChanged(['sourcefile1']);
     expect(assertDefined(outputUiData).messages).toEqual([inputMessages[1]]);
 
-    presenter.onSourceFilesFilterChanged(['sourcefile0', 'sourcefile1', 'sourcefile2']);
+    presenter.onSourceFilesFilterChanged([
+      'sourcefile0',
+      'sourcefile1',
+      'sourcefile2',
+    ]);
     expect(assertDefined(outputUiData).messages).toEqual(inputMessages);
   });
 
@@ -153,7 +263,7 @@ describe('ViewerProtoLogPresenter', () => {
 
   it('computes current message index', async () => {
     // Position -> entry #0
-    await presenter.onTracePositionUpdate(position10);
+    await presenter.onAppEvent(positionUpdate10);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
@@ -164,7 +274,7 @@ describe('ViewerProtoLogPresenter', () => {
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(0);
 
     // Position -> entry #1
-    await presenter.onTracePositionUpdate(position11);
+    await presenter.onAppEvent(positionUpdate11);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
@@ -178,8 +288,14 @@ describe('ViewerProtoLogPresenter', () => {
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(1);
 
     // Position -> entry #2
-    await presenter.onTracePositionUpdate(position12);
+    await presenter.onAppEvent(positionUpdate12);
     presenter.onLogLevelsFilterChanged([]);
     expect(assertDefined(outputUiData).currentMessageIndex).toEqual(2);
+  });
+
+  it('updates selected message index', () => {
+    expect(assertDefined(outputUiData).selectedMessageIndex).toBeUndefined();
+    presenter.onMessageClicked(3);
+    expect(assertDefined(outputUiData).selectedMessageIndex).toEqual(3);
   });
 });

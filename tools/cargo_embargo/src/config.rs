@@ -325,6 +325,12 @@ pub struct VariantConfig {
     /// from the cargo metadata.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub run_cargo: bool,
+    /// Generate an Android.bp build file for this variant if true.
+    #[serde(default = "default_true", skip_serializing_if = "is_true")]
+    pub generate_androidbp: bool,
+    /// Generate a rules.mk build file for this variant if true.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub generate_rulesmk: bool,
 }
 
 impl Default for VariantConfig {
@@ -350,6 +356,8 @@ impl Default for VariantConfig {
             module_blocklist: Default::default(),
             module_visibility: Default::default(),
             run_cargo: true,
+            generate_androidbp: true,
+            generate_rulesmk: false,
         }
     }
 }
@@ -365,11 +373,14 @@ pub struct PackageConfig {
     /// Patch file to apply after Android.bp is generated.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub patch: Option<PathBuf>,
+    /// Patch file to apply after rules.mk is generated.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rulesmk_patch: Option<PathBuf>,
 }
 
 impl PackageConfig {
     /// Names of all the fields on `PackageConfig`.
-    const FIELD_NAMES: [&'static str; 2] = ["add_toplevel_block", "patch"];
+    const FIELD_NAMES: [&'static str; 3] = ["add_toplevel_block", "patch", "rulesmk_patch"];
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
@@ -386,6 +397,9 @@ pub struct PackageVariantConfig {
     /// Whether to compile for host. Defaults to true.
     #[serde(default = "default_true", skip_serializing_if = "is_true")]
     pub host_supported: bool,
+    /// Whether to compile for non-build host targets. Defaults to true.
+    #[serde(default = "default_true", skip_serializing_if = "is_true")]
+    pub host_cross_supported: bool,
     /// Add a `compile_multilib: "first"` property to host modules.
     #[serde(default, skip_serializing_if = "is_false")]
     pub host_first_multilib: bool,
@@ -429,6 +443,7 @@ impl Default for PackageVariantConfig {
             alloc: false,
             device_supported: true,
             host_supported: true,
+            host_cross_supported: true,
             host_first_multilib: false,
             force_rlib: false,
             no_presubmit: false,
@@ -460,11 +475,16 @@ mod tests {
                     "add_toplevel_block": "block.bp",
                     "device_supported": false,
                     "force_rlib": true
+                },
+                "rulesmk": {
+                    "rulesmk_patch": "patches/rules.mk.patch"
                 }
             },
             "variants": [
                 {},
                 {
+                    "generate_androidbp": false,
+                    "generate_rulesmk": true,
                     "tests": false,
                     "features": ["feature"],
                     "vendor_available": false,
@@ -488,6 +508,8 @@ mod tests {
             Config {
                 variants: vec![
                     VariantConfig {
+                        generate_androidbp: true,
+                        generate_rulesmk: false,
                         tests: true,
                         features: None,
                         vendor_available: true,
@@ -501,12 +523,15 @@ mod tests {
                                     ..Default::default()
                                 },
                             ),
+                            ("rulesmk".to_string(), PackageVariantConfig { ..Default::default() }),
                         ]
                         .into_iter()
                         .collect(),
                         ..Default::default()
                     },
                     VariantConfig {
+                        generate_androidbp: false,
+                        generate_rulesmk: true,
                         tests: false,
                         features: Some(vec!["feature".to_string()]),
                         vendor_available: false,
@@ -521,6 +546,7 @@ mod tests {
                                     ..Default::default()
                                 },
                             ),
+                            ("rulesmk".to_string(), PackageVariantConfig { ..Default::default() }),
                             (
                                 "variant_package".to_string(),
                                 PackageVariantConfig {
@@ -546,6 +572,13 @@ mod tests {
                         "another".to_string(),
                         PackageConfig {
                             add_toplevel_block: Some("block.bp".into()),
+                            ..Default::default()
+                        },
+                    ),
+                    (
+                        "rulesmk".to_string(),
+                        PackageConfig {
+                            rulesmk_patch: Some("patches/rules.mk.patch".into()),
                             ..Default::default()
                         },
                     ),

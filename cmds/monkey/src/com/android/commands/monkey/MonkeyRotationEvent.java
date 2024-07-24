@@ -50,9 +50,9 @@ public class MonkeyRotationEvent extends MonkeyEvent {
 
         // inject rotation event
         try {
-            iwm.freezeRotation(mRotationDegree);
+            iwm.freezeRotation(mRotationDegree, /* caller= */ "MonkeyRotationEven#injectEvent");
             if (!mPersist) {
-                iwm.thawRotation();
+                iwm.thawRotation(/* caller= */ "MonkeyRotationEven#injectEvent");
             }
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (RemoteException ex) {

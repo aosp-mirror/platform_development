@@ -74,6 +74,9 @@ export class LoadProgressComponent {
     // Limit the amount of UI updates, because the progress bar component
     // renders weird stuff when updated too frequently.
     // Also, this way we save some resources.
-    return Date.now() - lastUpdateTimeMs >= LoadProgressComponent.MIN_UI_UPDATE_PERIOD_MS;
+    return (
+      Date.now() - lastUpdateTimeMs >=
+      LoadProgressComponent.MIN_UI_UPDATE_PERIOD_MS
+    );
   }
 }

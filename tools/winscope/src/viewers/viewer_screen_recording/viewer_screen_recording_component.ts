@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {Component, Inject, Input, SimpleChanges} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 
@@ -24,7 +24,7 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
       <mat-card-title class="header">
         <button mat-button class="button-drag" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
-          <span class="mat-body-2">Screen recording</span>
+          <span class="mat-body-2">{{ title }}</span>
         </button>
 
         <button mat-button class="button-minimize" (click)="onMinimizeButtonClick()">
@@ -34,20 +34,22 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
         </button>
       </mat-card-title>
       <div class="video-container" [style.height]="isMinimized ? '0px' : ''">
-        <ng-container *ngIf="hasFrameToShow; then video; else noVideo"> </ng-container>
+        <ng-container *ngIf="hasFrameToShow(); then video; else noVideo"> </ng-container>
       </div>
     </mat-card>
 
     <ng-template #video>
       <video
-        *ngIf="hasFrameToShow"
-        [currentTime]="videoCurrentTime"
-        [src]="videoUrl"
+        *ngIf="hasFrameToShow()"
+        [currentTime]="currentTraceEntry.videoTimeSeconds"
+        [src]="safeUrl"
         cdkDragHandle></video>
     </ng-template>
 
     <ng-template #noVideo>
-      <div class="no-video">
+      <img *ngIf="hasImage()" [src]="safeUrl" />
+
+      <div class="no-video" *ngIf="!hasImage()">
         <p class="mat-body-2">No screen recording frame to show.</p>
         <p class="mat-body-1">Current timestamp is still before first frame.</p>
       </div>
@@ -86,7 +88,8 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
       }
 
       .video-container,
-      video {
+      video,
+      img {
         border: 1px solid var(--default-border);
         max-width: max(250px, 15vw);
         cursor: grab;
@@ -101,41 +104,43 @@ import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
   ],
 })
 class ViewerScreenRecordingComponent {
-  constructor(
-    @Inject(ElementRef) elementRef: ElementRef,
-    @Inject(DomSanitizer) sanitizer: DomSanitizer
-  ) {
-    this.elementRef = elementRef;
-    this.sanitizer = sanitizer;
-  }
+  safeUrl: undefined | SafeUrl = undefined;
+  isMinimized = false;
 
-  @Input()
-  set currentTraceEntry(entry: undefined | ScreenRecordingTraceEntry) {
-    if (entry === undefined) {
-      this.videoCurrentTime = undefined;
+  constructor(@Inject(DomSanitizer) private sanitizer: DomSanitizer) {}
+
+  @Input() currentTraceEntry: ScreenRecordingTraceEntry | undefined;
+  @Input() title = 'Screen recording';
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (this.currentTraceEntry === undefined) {
       return;
     }
 
-    if (this.videoUrl === undefined) {
-      this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(entry.videoData));
+    if (!changes['currentTraceEntry']) {
+      return;
     }
 
-    this.videoCurrentTime = entry.videoTimeSeconds;
+    if (this.safeUrl === undefined) {
+      this.safeUrl = this.sanitizer.bypassSecurityTrustUrl(
+        URL.createObjectURL(this.currentTraceEntry.videoData),
+      );
+    }
   }
 
   onMinimizeButtonClick() {
     this.isMinimized = !this.isMinimized;
   }
 
-  videoUrl: undefined | SafeUrl = undefined;
-  videoCurrentTime: number | undefined = undefined;
-  isMinimized = false;
+  hasFrameToShow() {
+    return (
+      !this.currentTraceEntry?.isImage &&
+      this.currentTraceEntry?.videoTimeSeconds !== undefined
+    );
+  }
 
-  private elementRef: ElementRef;
-  private sanitizer: DomSanitizer;
-
-  get hasFrameToShow() {
-    return this.videoCurrentTime !== undefined;
+  hasImage() {
+    return this.currentTraceEntry?.isImage ?? false;
   }
 }
 

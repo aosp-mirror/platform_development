@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {TRACE_INFO} from 'app/trace_info';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {viewerCardStyle} from './styles/viewer_card.styles';
 
 @Component({
   selector: 'viewer-input-method',
@@ -26,29 +26,31 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
       <div class="left-views">
         <hierarchy-view
           class="hierarchy-view"
-          [tree]="inputData?.tree ?? null"
+          [tree]="inputData?.tree"
+          [subtrees]="inputData?.sfSubtrees ?? []"
           [dependencies]="inputData?.dependencies ?? []"
-          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [highlightedItem]="inputData?.highlightedItem"
           [pinnedItems]="inputData?.pinnedItems ?? []"
           [tableProperties]="inputData?.hierarchyTableProperties"
           [store]="store"
           [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
 
-        <ng-container *ngIf="inputData?.additionalProperties">
-          <mat-divider></mat-divider>
+        <mat-divider></mat-divider>
 
-          <ime-additional-properties
-            class="ime-additional-properties"
-            [additionalProperties]="inputData?.additionalProperties!"></ime-additional-properties>
-        </ng-container>
+        <ime-additional-properties
+          class="ime-additional-properties"
+          [isImeManagerService]="isImeManagerService()"
+          [highlightedItem]="inputData?.highlightedItem ?? ''"
+          [additionalProperties]="inputData?.additionalProperties"></ime-additional-properties>
       </div>
 
       <mat-divider [vertical]="true"></mat-divider>
 
       <properties-view
         class="properties-view"
+        [store]="store"
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
-        [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view>
+        [propertiesTree]="inputData?.propertiesTree"></properties-view>
     </div>
   `,
   styles: [
@@ -58,23 +60,20 @@ import {ImeUiData} from 'viewers/common/ime_ui_data';
         display: flex;
         flex-direction: column;
       }
-
-      .hierarchy-view,
-      .ime-additional-properties,
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-      }
     `,
+    viewerCardStyle,
   ],
 })
 export class ViewerInputMethodComponent {
-  @Input() inputData: ImeUiData | null = null;
+  @Input() inputData: ImeUiData | undefined;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
-  TRACE_INFO = TRACE_INFO;
-  TraceType = TraceType;
+
+  isImeManagerService(): boolean {
+    return (
+      this.inputData?.dependencies.includes(
+        TraceType.INPUT_METHOD_MANAGER_SERVICE,
+      ) ?? false
+    );
+  }
 }

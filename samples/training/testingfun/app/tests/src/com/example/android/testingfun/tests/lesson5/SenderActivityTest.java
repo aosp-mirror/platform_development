@@ -15,17 +15,18 @@
  */
 package com.example.android.testingfun.tests.lesson5;
 
-import com.example.android.testingfun.R;
-import com.example.android.testingfun.lesson5.ReceiverActivity;
-import com.example.android.testingfun.lesson5.SenderActivity;
-
 import android.app.Instrumentation;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.TouchUtils;
-import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.test.filters.MediumTest;
+
+import com.example.android.testingfun.R;
+import com.example.android.testingfun.lesson5.ReceiverActivity;
+import com.example.android.testingfun.lesson5.SenderActivity;
 
 /**
  * Functional test across multiple Activities. Tests SenderActivity and ReceiverActivity. Introduces

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import {Timestamp} from 'common/time';
 import {AbsoluteFrameIndex} from './index_types';
-import {Timestamp} from './timestamp';
 import {Trace} from './trace';
 import {TraceEntryTypeMap, TraceType} from './trace_type';
 
@@ -26,7 +26,9 @@ export class Traces {
     this.traces.set(type, trace);
   }
 
-  getTrace<T extends TraceType>(type: T): Trace<TraceEntryTypeMap[T]> | undefined {
+  getTrace<T extends TraceType>(
+    type: T,
+  ): Trace<TraceEntryTypeMap[T]> | undefined {
     return this.traces.get(type) as Trace<TraceEntryTypeMap[T]> | undefined;
   }
 
@@ -64,7 +66,9 @@ export class Traces {
     return result;
   }
 
-  forEachFrame(callback: (traces: Traces, index: AbsoluteFrameIndex) => void): void {
+  forEachFrame(
+    callback: (traces: Traces, index: AbsoluteFrameIndex) => void,
+  ): void {
     let startFrameIndex: AbsoluteFrameIndex = Number.MAX_VALUE;
     let endFrameIndex: AbsoluteFrameIndex = Number.MIN_VALUE;
 

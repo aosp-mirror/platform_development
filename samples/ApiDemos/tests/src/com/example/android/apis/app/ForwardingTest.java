@@ -16,14 +16,15 @@
 
 package com.example.android.apis.app;
 
-import com.example.android.apis.R;
-import com.example.android.apis.view.Focus2ActivityTest;
-
 import android.content.Context;
 import android.content.Intent;
 import android.test.ActivityUnitTestCase;
-import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.Button;
+
+import androidx.test.filters.MediumTest;
+
+import com.example.android.apis.R;
+import com.example.android.apis.view.Focus2ActivityTest;
 
 /**
  * This demonstrates completely isolated "unit test" of an Activity class.

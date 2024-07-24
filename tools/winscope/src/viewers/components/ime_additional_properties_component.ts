@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {Item} from 'trace/item';
+import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
+import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
+import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
+import {TreeNode} from 'trace/tree_node/tree_node';
 import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
-import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {
+  ImeContainerProperties,
+  InputMethodSurfaceProperties,
+} from 'viewers/common/ime_utils';
 import {ViewerEvents} from 'viewers/common/viewer_events';
+import {selectedElementStyle} from './styles/selected_element.styles';
 
 @Component({
   selector: 'ime-additional-properties',
   template: `
     <h2 class="view-header mat-title">WM & SF Properties</h2>
-    <div class="additional-properties-content">
-      <div *ngIf="isAllPropertiesNull()" class="group">
+    <div class="additional-properties-content" *ngIf="additionalProperties">
+      <div *ngIf="isAllPropertiesUndefined()" class="group">
         <p class="mat-body-1">
           There is no corresponding WM / SF additionalProperties for this IME entry – no WM / SF
           entry is recorded before this IME entry in time. View later frames for WM & SF properties.
@@ -31,121 +40,114 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
       </div>
 
       <ng-container *ngIf="isImeManagerService">
-        <div class="group">
+        <div class="group ime-manager-service">
           <button
-            *ngIf="wmProtoOrNull()"
+            *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmProtoOrNull())}"
-            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
+            [class]="{selected: isHighlighted(wmHierarchyTree())}"
+            (click)="onClickShowInPropertiesPanelWm(wmHierarchyTree(), 'Window Manager State')">
             WMState
           </button>
-          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
-          <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
-              {{ additionalProperties.wm.name }}
+          <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
+          <div class="left-column wm-state">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
+              {{ wmRootLabel() }}
             </p>
-            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
             </p>
           </div>
         </div>
-        <div *ngIf="wmInsetsSourceProviderOrNull()" class="group">
+        <div *ngIf="wmInsetsSourceProvider()" class="group insets-source-provider">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmInsetsSourceProviderOrNull())}"
+            [class]="{selected: isHighlighted(wmInsetsSourceProvider())}"
             (click)="
-              onClickShowInPropertiesPanel(
-                wmInsetsSourceProviderOrNull(),
-                'Ime Insets Source Provider'
-              )
+              onClickShowInPropertiesPanelWm(wmInsetsSourceProvider(), 'Ime Insets Source Provider')
             ">
             IME Insets Source Provider
           </button>
           <div class="left-column">
             <p class="mat-body-2">Source Frame:</p>
             <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"></coordinates-table>
+              [coordinates]="wmInsetsSourceProviderSourceFrame()"></coordinates-table>
             <p class="mat-body-1">
               <span class="mat-body-2">Source Visible:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderSourceVisibleOrNull() }}
+              {{ wmInsetsSourceProviderSourceVisible() }}
             </p>
             <p class="mat-body-2">Source Visible Frame:</p>
             <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceVisibleFrameOrNull()"></coordinates-table>
+              [coordinates]="wmInsetsSourceProviderSourceVisibleFrame()"></coordinates-table>
             <p class="mat-body-1">
               <span class="mat-body-2">Position:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderPositionOrNull() }}
+              {{ wmInsetsSourceProviderPosition() }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">IsLeashReadyForDispatching:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderIsLeashReadyOrNull() }}
+              {{ wmInsetsSourceProviderIsLeashReady() }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Controllable:</span>
               &ngsp;
-              {{ wmInsetsSourceProviderControllableOrNull() }}
+              {{ wmInsetsSourceProviderControllable() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeControlTargetOrNull()" class="group">
+        <div *ngIf="wmImeControlTarget()" class="group ime-control-target">
           <button
             color="primary"
             mat-button
-            class="group-header"
-            [class]="{selected: isHighlighted(wmImeControlTargetOrNull())}"
-            (click)="
-              onClickShowInPropertiesPanel(wmImeControlTargetOrNull(), 'Ime Control Target')
-            ">
+            class="group-header ime-control-target-button"
+            [class]="{selected: isHighlighted(wmImeControlTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeControlTarget(), 'Ime Control Target')">
             IME Control Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeControlTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeControlTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeControlTargetTitleOrNull() }}
+              {{ wmImeControlTargetTitle() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeInputTargetOrNull()" class="group">
+        <div *ngIf="wmImeInputTarget()" class="group ime-input-target">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmImeInputTargetOrNull())}"
-            (click)="onClickShowInPropertiesPanel(wmImeInputTargetOrNull(), 'Ime Input Target')">
+            [class]="{selected: isHighlighted(wmImeInputTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeInputTarget(), 'Ime Input Target')">
             IME Input Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeInputTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeInputTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeInputTargetTitleOrNull() }}
+              {{ wmImeInputTargetTitle() }}
             </p>
           </div>
         </div>
-        <div *ngIf="wmImeLayeringTargetOrNull()" class="group">
+        <div *ngIf="wmImeLayeringTarget()" class="group ime-layering-target">
           <button
             color="primary"
             mat-button
             class="group-header"
-            [class]="{selected: isHighlighted(wmImeLayeringTargetOrNull())}"
-            (click)="
-              onClickShowInPropertiesPanel(wmImeLayeringTargetOrNull(), 'Ime Layering Target')
-            ">
+            [class]="{selected: isHighlighted(wmImeLayeringTarget())}"
+            (click)="onClickShowInPropertiesPanelWm(wmImeLayeringTarget(), 'Ime Layering Target')">
             IME Layering Target
           </button>
           <div class="left-column">
-            <p *ngIf="wmImeLayeringTargetTitleOrNull()" class="mat-body-1">
+            <p *ngIf="wmImeLayeringTargetTitle()" class="mat-body-1">
               <span class="mat-body-2">Title:</span>
               &ngsp;
-              {{ wmImeLayeringTargetTitleOrNull() }}
+              {{ wmImeLayeringTargetTitle() }}
             </p>
           </div>
         </div>
@@ -155,116 +157,121 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         <!-- Ime Client or Ime Service -->
         <div class="group">
           <button
-            *ngIf="wmProtoOrNull()"
+            *ngIf="wmHierarchyTree()"
             color="primary"
             mat-button
-            class="group-header"
-            [class]="{selected: isHighlighted(wmProtoOrNull())}"
-            (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
+            class="group-header wm-state-button"
+            [class]="{selected: isHighlighted(wmHierarchyTree())}"
+            (click)="onClickShowInPropertiesPanelWm(wmHierarchyTree(), 'Window Manager State')">
             WMState
           </button>
-          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
-          <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
-              {{ additionalProperties.wm.name }}
+          <h3 *ngIf="!wmHierarchyTree()" class="group-header mat-subheading-2">WMState</h3>
+          <div class="left-column wm-state">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
+              {{ wmRootLabel() }}
             </p>
-            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.wm" class="mat-body-1">
               There is no corresponding WMState entry.
             </p>
           </div>
         </div>
         <div class="group">
           <h3 class="group-header mat-subheading-2">SFLayer</h3>
-          <div class="left-column">
-            <p *ngIf="additionalProperties.sf" class="mat-body-1">
-              {{ additionalProperties.sf.name }}
+          <div class="left-column sf-state">
+            <p *ngIf="additionalProperties?.sf" class="mat-body-1">
+              {{ sfRootLabel() }}
             </p>
-            <p *ngIf="!additionalProperties.sf" class="mat-body-1">
+            <p *ngIf="!additionalProperties?.sf" class="mat-body-1">
               There is no corresponding SFLayer entry.
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.wm" class="group">
+        <div *ngIf="additionalProperties?.wm" class="group focus">
           <h3 class="group-header mat-subheading-2">Focus</h3>
           <div class="left-column">
             <p class="mat-body-1">
               <span class="mat-body-2">Focused App:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedApp }}
+              {{ additionalProperties.wm.wmStateProperties.focusedApp }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Focused Activity:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedActivity }}
+              {{ additionalProperties.wm.wmStateProperties.focusedActivity }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Focused Window:</span>
               &ngsp;
-              {{ additionalProperties.wm.focusedWindow }}
+              {{ additionalProperties.wm.wmStateProperties.focusedWindow ?? 'null' }}
             </p>
             <p *ngIf="additionalProperties.sf" class="mat-body-1">
               <span class="mat-body-2">Focused Window Color:</span>
               &ngsp;
-              {{ additionalProperties.sf.focusedWindow?.color }}
+              {{ formattedWindowColor() }}
             </p>
             <p class="mat-body-2">Input Control Target Frame:</p>
-            <coordinates-table [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table>
+            <coordinates-table [coordinates]="wmControlTargetFrame()"></coordinates-table>
           </div>
         </div>
-        <div class="group">
+        <div class="group visibility">
           <h3 class="group-header mat-subheading-2">Visibility</h3>
           <div class="left-column">
-            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+            <p *ngIf="additionalProperties?.wm" class="mat-body-1">
               <span class="mat-body-2">InputMethod Window:</span>
               &ngsp;
-              {{ additionalProperties.wm.isInputMethodWindowVisible }}
+              {{ additionalProperties.wm.wmStateProperties.isInputMethodWindowVisible }}
             </p>
-            <p *ngIf="additionalProperties.sf" class="mat-body-1">
+            <p *ngIf="additionalProperties?.sf" class="mat-body-1">
               <span class="mat-body-2">InputMethod Surface:</span>
               &ngsp;
-              {{ additionalProperties.sf.inputMethodSurface?.isInputMethodSurfaceVisible ?? false }}
+              {{ additionalProperties.sf.properties.inputMethodSurface?.isVisible ?? false }}
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group ime-container">
           <button
             color="primary"
             mat-button
-            class="group-header"
-            [class]="{selected: isHighlighted(additionalProperties.sf.imeContainer)}"
-            (click)="onClickShowInPropertiesPanel(additionalProperties.sf.imeContainer)">
+            class="group-header ime-container-button"
+            [class]="{selected: isHighlighted(additionalProperties.sf.properties.imeContainer)}"
+            (click)="
+              onClickShowInPropertiesPanelSf(additionalProperties.sf.properties.imeContainer)
+            ">
             Ime Container
           </button>
           <div class="left-column">
             <p class="mat-body-1">
               <span class="mat-body-2">ZOrderRelativeOfId:</span>
               &ngsp;
-              {{ additionalProperties.sf.imeContainer.zOrderRelativeOfId }}
+              {{ additionalProperties.sf.properties.imeContainer.zOrderRelativeOfId }}
             </p>
             <p class="mat-body-1">
               <span class="mat-body-2">Z:</span>
               &ngsp;
-              {{ additionalProperties.sf.imeContainer.z }}
+              {{ additionalProperties.sf.properties.imeContainer.z }}
             </p>
           </div>
         </div>
-        <div *ngIf="additionalProperties.sf" class="group">
+        <div *ngIf="additionalProperties?.sf" class="group input-method-surface">
           <button
             color="primary"
             mat-button
-            class="group-header"
-            [class]="{selected: isHighlighted(additionalProperties.sf.inputMethodSurface)}"
-            (click)="onClickShowInPropertiesPanel(additionalProperties.sf.inputMethodSurface)">
+            class="group-header input-method-surface-button"
+            [class]="{
+              selected: isHighlighted(additionalProperties.sf.properties.inputMethodSurface)
+            }"
+            (click)="
+              onClickShowInPropertiesPanelSf(additionalProperties.sf.properties.inputMethodSurface)
+            ">
             Input Method Surface
           </button>
           <div class="left-column">
             <p class="mat-body-2">ScreenBounds:</p>
-            <coordinates-table
-              [coordinates]="sfImeContainerScreenBoundsOrNull()"></coordinates-table>
+            <coordinates-table [coordinates]="sfImeContainerScreenBounds()"></coordinates-table>
           </div>
           <div class="right-column">
             <p class="mat-body-2">Rect:</p>
-            <coordinates-table [coordinates]="sfImeContainerRectOrNull()"></coordinates-table>
+            <coordinates-table [coordinates]="sfImeContainerRect()"></coordinates-table>
           </div>
         </div>
       </ng-container>
@@ -315,157 +322,194 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
         flex: 1;
         padding: 0 5px;
       }
+
+      .selected {
+        color: black;
+      }
     `,
+    selectedElementStyle,
   ],
 })
 export class ImeAdditionalPropertiesComponent {
-  @Input() additionalProperties!: ImeAdditionalProperties;
-  @Input() isImeManagerService?: boolean;
-  @Input() highlightedItems: string[] = [];
+  @Input() additionalProperties: ImeAdditionalProperties | undefined;
+  @Input() isImeManagerService: boolean | undefined;
+  @Input() highlightedItem: string = '';
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  isHighlighted(item: any) {
-    return UiTreeUtils.isHighlighted(item, this.highlightedItems);
+  isHighlighted(
+    item:
+      | TreeNode
+      | ImeContainerProperties
+      | InputMethodSurfaceProperties
+      | undefined,
+  ): boolean {
+    return item ? item.id === this.highlightedItem : false;
   }
 
-  formatProto(item: any) {
-    if (item?.prettyPrint) {
-      return item.prettyPrint();
+  formattedWindowColor(): string {
+    const color = this.additionalProperties?.sf?.properties.focusedWindowColor;
+    if (!color) return EMPTY_OBJ_STRING;
+    return color.formattedValue();
+  }
+
+  sfRootLabel(): string {
+    const rootProps = this.additionalProperties?.sf?.properties.root;
+    if (!rootProps) {
+      return this.additionalProperties?.sf?.name ?? 'root';
     }
+
+    return rootProps.timestamp;
   }
 
-  wmProtoOrNull() {
-    return this.additionalProperties.wm?.proto;
+  wmRootLabel(): string {
+    const timestamp =
+      this.additionalProperties?.wm?.wmStateProperties.timestamp;
+    if (!timestamp) {
+      return this.additionalProperties?.wm?.name ?? 'root';
+    }
+    return timestamp;
   }
 
-  wmInsetsSourceProviderOrNull() {
-    return this.additionalProperties.wm?.protoImeInsetsSourceProvider
-      ? Object.assign(
-          {name: 'Ime Insets Source Provider'},
-          this.additionalProperties.wm.protoImeInsetsSourceProvider
-        )
-      : null;
+  wmHierarchyTree(): HierarchyTreeNode | undefined {
+    return this.additionalProperties?.wm?.hierarchyTree;
   }
 
-  wmControlTargetFrameOrNull() {
+  wmInsetsSourceProvider(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties
+      .imeInsetsSourceProvider;
+  }
+
+  wmControlTargetFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('insetsSourceProvider')
+      ?.getChildByName('controlTarget')
+      ?.getChildByName('windowFrames')
+      ?.getChildByName('frame');
+  }
+
+  wmInsetsSourceProviderPosition(): string {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.controlTarget?.windowFrames?.frame || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('control')
+        ?.getChildByName('position')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderPositionOrNull() {
+  wmInsetsSourceProviderIsLeashReady(): string {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.control
-        ?.position || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('isLeashReadyForDispatching')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderIsLeashReadyOrNull() {
+  wmInsetsSourceProviderControllable(): string {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.isLeashReadyForDispatching || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('insetsSourceProvider')
+        ?.getChildByName('controllable')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderControllableOrNull() {
+  wmInsetsSourceProviderSourceFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('source')
+      ?.getChildByName('frame');
+  }
+
+  wmInsetsSourceProviderSourceVisible(): string {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
-        ?.controllable || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+        ?.getChildByName('source')
+        ?.getChildByName('visible')
+        ?.formattedValue() ?? 'null'
     );
   }
 
-  wmInsetsSourceProviderSourceFrameOrNull() {
+  wmInsetsSourceProviderSourceVisibleFrame(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInsetsSourceProvider
+      ?.getChildByName('source')
+      ?.getChildByName('visibleFrame');
+  }
+
+  wmImeControlTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeControlTarget;
+  }
+
+  wmImeControlTargetTitle(): string | undefined {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.frame || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeControlTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
     );
   }
 
-  wmInsetsSourceProviderSourceVisibleOrNull() {
+  wmImeInputTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeInputTarget;
+  }
+
+  wmImeInputTargetTitle(): string | undefined {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.visible || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeInputTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
     );
   }
 
-  wmInsetsSourceProviderSourceVisibleFrameOrNull() {
+  wmImeLayeringTarget(): PropertyTreeNode | undefined {
+    return this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget;
+  }
+
+  wmImeLayeringTargetTitle(): string | undefined {
     return (
-      this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
-        ?.visibleFrame || 'null'
+      this.additionalProperties?.wm?.wmStateProperties.imeLayeringTarget
+        ?.getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.formattedValue() ?? undefined
     );
   }
 
-  wmImeControlTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeControlTarget
-      ? Object.assign(
-          {name: 'IME Control Target'},
-          this.additionalProperties.wm.protoImeControlTarget
-        )
-      : null;
-  }
-
-  wmImeControlTargetTitleOrNull() {
+  sfImeContainerScreenBounds(): PropertyTreeNode | undefined {
     return (
-      this.additionalProperties?.wm?.protoImeControlTarget?.windowContainer?.identifier?.title ||
-      'null'
+      this.additionalProperties?.sf?.properties.inputMethodSurface
+        ?.screenBounds ?? undefined
     );
   }
 
-  wmImeInputTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeInputTarget
-      ? Object.assign({name: 'IME Input Target'}, this.additionalProperties.wm.protoImeInputTarget)
-      : null;
-  }
-
-  wmImeInputTargetTitleOrNull() {
+  sfImeContainerRect(): PropertyTreeNode | undefined {
     return (
-      this.additionalProperties?.wm?.protoImeInputTarget?.windowContainer?.identifier?.title ||
-      'null'
-    );
-  }
-  wmImeLayeringTargetOrNull() {
-    return this.additionalProperties?.wm?.protoImeLayeringTarget
-      ? Object.assign(
-          {name: 'IME Layering Target'},
-          this.additionalProperties.wm.protoImeLayeringTarget
-        )
-      : null;
-  }
-
-  wmImeLayeringTargetTitleOrNull() {
-    return (
-      this.additionalProperties?.wm?.protoImeLayeringTarget?.windowContainer?.identifier?.title ||
-      'null'
+      this.additionalProperties?.sf?.properties.inputMethodSurface?.rect ??
+      undefined
     );
   }
 
-  sfImeContainerScreenBoundsOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.screenBounds || 'null';
-  }
-
-  sfImeContainerRectOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.rect || 'null';
-  }
-
-  isAllPropertiesNull() {
+  isAllPropertiesUndefined(): boolean {
     if (this.isImeManagerService) {
-      return !this.additionalProperties.wm;
+      return !this.additionalProperties?.wm;
     } else {
-      return !(this.additionalProperties.wm || this.additionalProperties.sf);
+      return !(this.additionalProperties?.wm || this.additionalProperties?.sf);
     }
   }
 
-  onClickShowInPropertiesPanel(item: any, name?: string) {
-    if (item.id) {
-      this.updateHighlightedItems(item.id);
-    } else {
-      this.updateAdditionalPropertySelected(item, name);
-    }
+  onClickShowInPropertiesPanelWm(item: TreeNode, name: string) {
+    this.updateAdditionalPropertySelected(item, name);
   }
 
-  private updateHighlightedItems(newId: string) {
+  onClickShowInPropertiesPanelSf(item: Item) {
+    this.updateHighlightedItem(item.id);
+  }
+
+  private updateHighlightedItem(newId: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},
@@ -473,15 +517,18 @@ export class ImeAdditionalPropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  private updateAdditionalPropertySelected(item: any, name?: string) {
+  private updateAdditionalPropertySelected(item: TreeNode, name: string) {
     const itemWrapper = {
       name,
-      proto: item,
+      treeNode: item,
     };
-    const event: CustomEvent = new CustomEvent(ViewerEvents.AdditionalPropertySelected, {
-      bubbles: true,
-      detail: {selectedItem: itemWrapper},
-    });
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.AdditionalPropertySelected,
+      {
+        bubbles: true,
+        detail: {selectedItem: itemWrapper},
+      },
+    );
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

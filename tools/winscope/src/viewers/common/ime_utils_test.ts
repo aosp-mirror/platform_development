@@ -13,75 +13,130 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {assertDefined} from 'common/assert_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {TraceType} from 'trace/trace_type';
+import {EMPTY_OBJ_STRING} from 'trace/tree_node/formatters';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {
   it('processes WindowManager trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processed = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)
+      assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
+      undefined,
     );
 
-    expect(processed.focusedApp).toEqual(
-      'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity'
+    expect(processed.wmStateProperties.focusedApp).toEqual(
+      'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity',
     );
 
-    expect(processed.focusedActivity.token).toEqual('9d8c2ef');
-    expect(processed.focusedActivity.layerId).toEqual(260);
-
-    expect(processed.focusedWindow.token).toEqual('928b3d');
-    expect(processed.focusedWindow.title).toEqual(
-      'com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity'
+    expect(processed.wmStateProperties.focusedActivity).toEqual(
+      '{9d8c2ef com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity} state=RESUMED visible=true',
     );
 
-    expect(processed.protoImeControlTarget.windowContainer.identifier.title).toEqual(
-      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
+    expect(processed.wmStateProperties.focusedWindow).toEqual(
+      '{928b3d com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity EXITING} type=TYPE_BASE_APPLICATION cf={empty} pf=(0, 0) - (1080, 2400)',
     );
-    expect(processed.protoImeControlTarget.windowContainer.identifier.hashCode).toEqual(247026562);
 
-    expect(processed.protoImeInputTarget.windowContainer.identifier.title).toEqual(
-      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity'
+    const imeControlTarget = assertDefined(
+      processed.wmStateProperties.imeControlTarget,
     );
-    expect(processed.protoImeInputTarget.windowContainer.identifier.hashCode).toEqual(247026562);
 
-    expect(processed.protoImeInsetsSourceProvider.insetsSourceProvider).toBeDefined();
-
-    expect(processed.protoImeLayeringTarget.windowContainer.identifier.title).toEqual(
-      'SnapshotStartingWindow for taskId=1393'
+    expect(
+      imeControlTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue(),
+    ).toEqual(
+      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity',
     );
-    expect(processed.protoImeLayeringTarget.windowContainer.identifier.hashCode).toEqual(222907471);
 
-    expect(processed.isInputMethodWindowVisible).toBeFalse();
+    const imeInputTarget = assertDefined(
+      processed.wmStateProperties.imeInputTarget,
+    );
+    expect(
+      imeInputTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue(),
+    ).toEqual(
+      'com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity',
+    );
+
+    expect(
+      processed.wmStateProperties.imeInsetsSourceProvider?.getChildByName(
+        'insetsSourceProvider',
+      ),
+    ).toBeDefined();
+
+    const imeLayeringTarget = assertDefined(
+      processed.wmStateProperties.imeLayeringTarget,
+    );
+    expect(
+      imeLayeringTarget
+        .getChildByName('windowContainer')
+        ?.getChildByName('identifier')
+        ?.getChildByName('title')
+        ?.getValue(),
+    ).toEqual('SnapshotStartingWindow for taskId=1393');
+
+    expect(processed.wmStateProperties.isInputMethodWindowVisible).toBeFalse();
   });
 
   it('processes SurfaceFlinger trace entry', async () => {
     const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
-      entries.get(TraceType.WINDOW_MANAGER)
+      assertDefined(entries.get(TraceType.WINDOW_MANAGER)),
+      undefined,
     );
-    const layers = ImeUtils.getImeLayers(
-      entries.get(TraceType.SURFACE_FLINGER),
-      processedWindowManagerState
-    )!;
-
-    expect(layers.inputMethodSurface.id).toEqual(280);
-    expect(layers.inputMethodSurface.isVisible).toEqual(false);
-    expect(layers.inputMethodSurface.rect.label).toEqual(
-      'Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280'
+    const layers = assertDefined(
+      ImeUtils.getImeLayers(
+        assertDefined(entries.get(TraceType.SURFACE_FLINGER)),
+        processedWindowManagerState,
+        undefined,
+      ),
     );
-    expect(layers.inputMethodSurface.screenBounds).toBeDefined();
 
-    expect(layers.imeContainer.id).toEqual(12);
-    expect(layers.imeContainer.z).toEqual(1);
-    expect(layers.imeContainer.zOrderRelativeOfId).toEqual(115);
+    const inputMethodSurface = assertDefined(
+      layers.properties.inputMethodSurface,
+    );
+    const inputMethodSurfaceRect = assertDefined(inputMethodSurface.rect);
+    expect(inputMethodSurface.id).toEqual(
+      '280 Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280',
+    );
+    expect(inputMethodSurface.isVisible).toEqual(false);
+    expect(inputMethodSurfaceRect.getChildByName('left')?.getValue()).toEqual(
+      -10800,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('top')?.getValue()).toEqual(
+      -24136,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('right')?.getValue()).toEqual(
+      10800,
+    );
+    expect(inputMethodSurfaceRect.getChildByName('bottom')?.getValue()).toEqual(
+      23864,
+    );
+    expect(inputMethodSurface.screenBounds).toBeDefined();
 
-    expect(String(layers.focusedWindow.color)).toEqual('r:0 g:0 b:0 a:1');
+    const imeContainer = assertDefined(layers.properties.imeContainer);
+    expect(imeContainer.id).toEqual('12 ImeContainer#12');
+    expect(imeContainer.z).toEqual(1);
+    expect(imeContainer.zOrderRelativeOfId).toEqual(115);
 
-    expect(layers.taskOfImeContainer.kind).toEqual('SF subtree - 114');
-    expect(layers.taskOfImeContainer.name).toEqual('Task=1391#114');
+    expect(
+      assertDefined(layers.properties.focusedWindowColor).formattedValue(),
+    ).toEqual(`${EMPTY_OBJ_STRING}, alpha: 1`);
 
-    expect(layers.taskOfImeSnapshot).toBeUndefined();
+    const taskLayerOfImeContainer = assertDefined(
+      layers.taskLayerOfImeContainer,
+    );
+    expect(taskLayerOfImeContainer.id).toEqual('114 Task=1391#114');
+    expect(taskLayerOfImeContainer.name).toEqual('Task=1391#114');
+
+    expect(layers.taskLayerOfImeSnapshot).toBeUndefined();
   });
 });
