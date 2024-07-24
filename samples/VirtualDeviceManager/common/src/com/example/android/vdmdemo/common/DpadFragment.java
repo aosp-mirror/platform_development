@@ -86,8 +86,8 @@ public final class DpadFragment extends Hilt_DpadFragment {
         if (mInputEventListener != null) {
             mInputEventListener.accept(
                     new KeyEvent(
-                            /* downTime= */ System.currentTimeMillis(),
-                            /* eventTime= */ System.currentTimeMillis(),
+                            e.getDownTime(),
+                            e.getEventTime(),
                             action,
                             keyCode,
                             /* repeat= */ 0));

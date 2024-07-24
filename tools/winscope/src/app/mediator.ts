@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {assertDefined} from 'common/assert_utils';
 import {Timestamp} from 'common/time';
 import {TimeUtils} from 'common/time_utils';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
@@ -21,7 +22,11 @@ import {Analytics} from 'logging/analytics';
 import {ProgressListener} from 'messaging/progress_listener';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserWarning} from 'messaging/user_warning';
-import {CannotVisualizeAllTraces, NoValidFiles} from 'messaging/user_warnings';
+import {
+  CannotVisualizeAllTraces,
+  NoTraceTargetsSelected,
+  NoValidFiles,
+} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   ExpandedTimelineToggled,
@@ -34,6 +39,7 @@ import {
 import {WinscopeEventEmitter} from 'messaging/winscope_event_emitter';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {TraceEntry} from 'trace/trace';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TracePosition} from 'trace/trace_position';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
@@ -46,7 +52,9 @@ export class Mediator {
     WinscopeEventListener;
   private crossToolProtocol: CrossToolProtocol;
   private uploadTracesComponent?: ProgressListener;
-  private collectTracesComponent?: ProgressListener & WinscopeEventListener;
+  private collectTracesComponent?: ProgressListener &
+    WinscopeEventEmitter &
+    WinscopeEventListener;
   private traceViewComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private timelineComponent?: WinscopeEventEmitter & WinscopeEventListener;
   private appComponent: WinscopeEventListener;
@@ -92,9 +100,14 @@ export class Mediator {
   }
 
   setCollectTracesComponent(
-    component: (ProgressListener & WinscopeEventListener) | undefined,
+    component:
+      | (ProgressListener & WinscopeEventEmitter & WinscopeEventListener)
+      | undefined,
   ) {
     this.collectTracesComponent = component;
+    this.collectTracesComponent?.setEmitEvent(async (event) => {
+      await this.onWinscopeEvent(event);
+    });
   }
 
   setTraceViewComponent(
@@ -233,6 +246,15 @@ export class Mediator {
     await event.visit(WinscopeEventType.DARK_MODE_TOGGLED, async (event) => {
       await this.timelineComponent?.onWinscopeEvent(event);
     });
+
+    await event.visit(
+      WinscopeEventType.NO_TRACE_TARGETS_SELECTED,
+      async (event) => {
+        this.userNotificationsListener.onNotifications([
+          new NoTraceTargetsSelected(),
+        ]);
+      },
+    );
   }
 
   private async loadFiles(files: File[], source: FilesSource) {
@@ -263,23 +285,38 @@ export class Mediator {
     }
 
     const event = new TracePositionUpdate(position);
-    const receivers: WinscopeEventListener[] = [...this.viewers].filter(
-      (viewer) => this.isViewerVisible(viewer),
+    const viewers: Viewer[] = [...this.viewers].filter((viewer) =>
+      this.isViewerVisible(viewer),
     );
-    if (this.timelineComponent) {
-      receivers.push(this.timelineComponent);
+
+    const warnings: UserWarning[] = [];
+
+    for (const viewer of viewers) {
+      try {
+        await viewer.onWinscopeEvent(event);
+      } catch (e) {
+        const traceType = assertDefined(viewer.getTraces().at(0)?.type);
+        warnings.push(
+          new CannotVisualizeAllTraces(
+            `Cannot parse entry for ${TRACE_INFO[traceType].name} trace: Trace may be corrupted.`,
+          ),
+        );
+      }
     }
 
-    const promises = receivers.map((receiver) => {
-      return receiver.onWinscopeEvent(event);
-    });
+    if (this.timelineComponent) {
+      await this.timelineComponent.onWinscopeEvent(event);
+    }
 
     if (!omitCrossToolProtocol) {
-      const event = new TracePositionUpdate(position);
-      promises.push(this.crossToolProtocol.onWinscopeEvent(event));
+      await this.crossToolProtocol.onWinscopeEvent(event);
     }
 
-    await Promise.all(promises);
+    if (warnings.length > 0) {
+      this.userNotificationsListener.onNotifications(warnings);
+      return false;
+    }
+    return true;
   }
 
   private isViewerVisible(viewer: Viewer): boolean {
@@ -362,7 +399,9 @@ export class Mediator {
     } catch {
       this.currentProgressListener?.onOperationFinished(false);
       this.userNotificationsListener.onNotifications([
-        new CannotVisualizeAllTraces('Failed to initialize timeline data'),
+        new CannotVisualizeAllTraces(
+          'Cannot visualize all traces: Failed to initialize timeline data.\nTry removing some traces.',
+        ),
       ]);
       return;
     }
@@ -384,7 +423,11 @@ export class Mediator {
     // Make sure all viewers are initialized and have performed the heavy pre-processing they need
     // at this stage, while the "initializing UI" progress message is still being displayed.
     // The viewers initialization is triggered by sending them a "trace position update".
-    await this.propagateTracePosition(initialPosition, true);
+    const success = await this.propagateTracePosition(initialPosition, true);
+    if (!success) {
+      this.currentProgressListener?.onOperationFinished(false);
+      return;
+    }
 
     this.focusedTabView = this.viewers
       .find((v) => v.getViews()[0].type !== ViewType.OVERLAY)

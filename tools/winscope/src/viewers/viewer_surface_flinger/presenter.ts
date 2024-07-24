@@ -49,7 +49,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {UiRect} from 'viewers/components/rects/types2d';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = [
     'name',
     'children',
@@ -143,7 +143,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
@@ -380,9 +380,9 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new UiData(this.curatedProperties, this.displayPropertyGroups),
-    );
+    this.uiData.curatedProperties = this.curatedProperties;
+    this.uiData.displayPropertyGroups = this.displayPropertyGroups;
+    this.refreshHierarchyViewerUiData();
   }
 }
 
