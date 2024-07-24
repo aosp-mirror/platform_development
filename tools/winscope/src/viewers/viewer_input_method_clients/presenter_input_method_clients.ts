@@ -22,6 +22,7 @@ import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy
 import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_input_method';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyPresenter} from 'viewers/common/hierarchy_presenter';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {UpdateSfSubtreeDisplayNames} from 'viewers/common/operations/update_sf_subtree_display_names';
 import {TableProperties} from 'viewers/common/table_properties';
 import {UserOptions} from 'viewers/common/user_options';
@@ -61,7 +62,7 @@ export class PresenterInputMethodClients extends AbstractPresenterInputMethod {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback);
   }
