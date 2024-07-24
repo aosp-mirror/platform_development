@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
-export type OnRequestSuccessCallback = (
-  request: XMLHttpRequest,
-) => void | Promise<void>;
+export interface AdbDevice {
+  id: string;
+  authorized: boolean;
+  model: string;
+}

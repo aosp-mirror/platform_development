@@ -94,7 +94,12 @@ export class TraceEntryLazy<T> extends TraceEntry<T> {
   }
 
   override async getValue(): Promise<T> {
-    return await this.parser.getEntry(this.index);
+    try {
+      return await this.parser.getEntry(this.index);
+    } catch (e) {
+      this.fullTrace.setCorruptedState(true);
+      throw e;
+    }
   }
 }
 

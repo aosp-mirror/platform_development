@@ -31,6 +31,7 @@ export class ParserBuilder<T> {
   private customQueryResult = new Map<CustomQueryType, {}>();
   private descriptors = ['file descriptor'];
   private noOffsets = false;
+  private isCorrupted = false;
 
   setType(type: TraceType): this {
     this.type = type;
@@ -49,6 +50,11 @@ export class ParserBuilder<T> {
 
   setNoOffsets(value: boolean): this {
     this.noOffsets = value;
+    return this;
+  }
+
+  setIsCorrupted(value: boolean): this {
+    this.isCorrupted = value;
     return this;
   }
 
@@ -93,6 +99,7 @@ export class ParserBuilder<T> {
       this.customQueryResult,
       this.descriptors,
       this.noOffsets,
+      this.isCorrupted,
     );
   }
 
