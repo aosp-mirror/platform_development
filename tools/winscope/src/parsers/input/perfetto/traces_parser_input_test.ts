@@ -27,7 +27,7 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 describe('TracesParserInput', () => {
   let parser: Parser<PropertyTreeNode>;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     jasmine.addCustomEqualityTester(UnitTestUtils.timestampEqualityTester);
     parser = (await UnitTestUtils.getTracesParser([
       'traces/perfetto/input-events.perfetto-trace',
@@ -81,5 +81,17 @@ describe('TracesParserInput', () => {
       .customQuery(CustomQueryType.VSYNCID);
     const values = entries.map((entry) => entry.getValue());
     expect(values).toEqual([89113n, 89113n, 89114n]);
+  });
+
+  it('supports VSYNCID custom query with missing vsync_ids', async () => {
+    const missingVsyncIdsParser = (await UnitTestUtils.getTracesParser([
+      'traces/perfetto/input-missing-vsync-ids.perfetto-trace',
+    ])) as Parser<PropertyTreeNode>;
+    const trace = new TraceBuilder()
+      .setType(TraceType.INPUT_EVENT_MERGED)
+      .setParser(missingVsyncIdsParser)
+      .build();
+    const entries = await trace.customQuery(CustomQueryType.VSYNCID);
+    expect(entries).toHaveSize(missingVsyncIdsParser.getLengthEntries());
   });
 });
