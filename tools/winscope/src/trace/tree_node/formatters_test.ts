@@ -22,6 +22,7 @@ import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {
   BUFFER_FORMATTER,
   COLOR_FORMATTER,
+  CUJ_TYPE_FORMATTER,
   DEFAULT_PROPERTY_FORMATTER,
   EMPTY_ARRAY_STRING,
   EMPTY_OBJ_STRING,
@@ -283,6 +284,30 @@ describe('Formatters', () => {
       expect(REGION_FORMATTER.format(region)).toEqual(
         'SkRegion((0, 0, 1080, 2340))',
       );
+    });
+  });
+
+  describe('CujTypeFormatter', () => {
+    it('translates known cuj type correctly', () => {
+      const cujType = new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('cujType')
+        .setValue(66)
+        .build();
+
+      expect(CUJ_TYPE_FORMATTER.format(cujType)).toEqual(
+        'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      );
+    });
+
+    it('translates unknown cuj type correctly', () => {
+      const cujType = new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('cujType')
+        .setValue(-1)
+        .build();
+
+      expect(CUJ_TYPE_FORMATTER.format(cujType)).toEqual('UNKNOWN (-1)');
     });
   });
 });

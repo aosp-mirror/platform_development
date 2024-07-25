@@ -18,6 +18,7 @@ import {Timestamp} from 'common/time';
 import {TimeDuration} from 'common/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {CujType} from 'trace/cuj_type';
 import {PropertyTreeNode} from './property_tree_node';
 
 const EMPTY_OBJ_STRING = '{empty}';
@@ -223,6 +224,20 @@ class TimestampNodeFormatter implements PropertyFormatter {
 }
 const TIMESTAMP_NODE_FORMATTER = new TimestampNodeFormatter();
 
+class CujTypeFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    const cujTypeId: string = `${node.getValue()}`;
+    let cujTypeString: string | undefined;
+    if (cujTypeId in CujType) {
+      cujTypeString = CujType[cujTypeId as keyof typeof CujType];
+    } else {
+      cujTypeString = 'UNKNOWN';
+    }
+    return `${cujTypeString} (${cujTypeId})`;
+  }
+}
+const CUJ_TYPE_FORMATTER = new CujTypeFormatter();
+
 export {
   EMPTY_OBJ_STRING,
   EMPTY_ARRAY_STRING,
@@ -240,4 +255,5 @@ export {
   FixedStringFormatter,
   TIMESTAMP_NODE_FORMATTER,
   MATRIX_FORMATTER,
+  CUJ_TYPE_FORMATTER,
 };

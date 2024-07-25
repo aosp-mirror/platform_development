@@ -27,6 +27,7 @@ import {TimeDuration} from 'common/time_duration';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
 import {UnitTestUtils} from 'test/unit/utils';
+import {CujType} from 'trace/cuj_type';
 import {Parser} from 'trace/parser';
 import {Trace, TraceEntry} from 'trace/trace';
 import {TraceType} from 'trace/trace_type';
@@ -40,7 +41,7 @@ import {PropertyTreeNodeDataViewComponent} from 'viewers/components/property_tre
 import {TreeComponent} from 'viewers/components/tree_component';
 import {TreeNodeComponent} from 'viewers/components/tree_node_component';
 import {Presenter} from './presenter';
-import {CujStatus, CujType, UiData} from './ui_data';
+import {CujStatus, UiData} from './ui_data';
 import {ViewerJankCujsComponent} from './viewer_jank_cujs_component';
 
 describe('ViewerJankCujsComponent', () => {
@@ -105,10 +106,10 @@ describe('ViewerJankCujsComponent', () => {
     let mockTransitionIdCounter = 0;
 
     const cujEntries = [
-      createMockCujEntry(entry, 20, 30, mockTransitionIdCounter++),
-      createMockCujEntry(entry, 66, 42, 50, CujStatus.CANCELLED),
-      createMockCujEntry(entry, 46, 49, mockTransitionIdCounter++),
-      createMockCujEntry(entry, 59, 58, 70, CujStatus.EXECUTED),
+      createMockCujEntry(entry, 20, CujType[20], 30, mockTransitionIdCounter++),
+      createMockCujEntry(entry, 66, CujType[66], 42, 50, CujStatus.CANCELLED),
+      createMockCujEntry(entry, 46, CujType[46], 49, mockTransitionIdCounter++),
+      createMockCujEntry(entry, 59, CujType[59], 58, 70, CujStatus.EXECUTED),
     ];
 
     const uiData = UiData.createEmpty();
@@ -121,6 +122,7 @@ describe('ViewerJankCujsComponent', () => {
   function createMockCujEntry(
     entry: TraceEntry<PropertyTreeNode>,
     cujTypeId: number,
+    cujTypeStr: string,
     startTsNanos: number,
     endTsNanos: number,
     status = CujStatus.EXECUTED,
@@ -128,7 +130,7 @@ describe('ViewerJankCujsComponent', () => {
     const fields: LogField[] = [
       {
         type: LogFieldType.CUJ_TYPE,
-        value: `${CujType[cujTypeId]} (${cujTypeId})`,
+        value: `${cujTypeStr} (${cujTypeId})`,
       },
       {
         type: LogFieldType.START_TIME,
