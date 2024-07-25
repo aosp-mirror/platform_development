@@ -27,13 +27,14 @@ namespace repr {
 
 inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
     CompatibilityStatusIR status) {
-  switch (status) {
-    case CompatibilityStatusIR::Incompatible:
-      return abi_diff::CompatibilityStatus::INCOMPATIBLE;
-    case CompatibilityStatusIR::Extension:
-      return abi_diff::CompatibilityStatus::EXTENSION;
-    default:
-      break;
+  if (status & (CompatibilityStatusIR::Incompatible |
+                CompatibilityStatusIR::ElfIncompatible |
+                CompatibilityStatusIR::UnreferencedChanges)) {
+    return abi_diff::CompatibilityStatus::INCOMPATIBLE;
+  }
+  if (status & (CompatibilityStatusIR::Extension |
+                CompatibilityStatusIR::ElfExtension)) {
+    return abi_diff::CompatibilityStatus::EXTENSION;
   }
   return abi_diff::CompatibilityStatus::COMPATIBLE;
 }
