@@ -115,8 +115,8 @@ class MatrixFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const dsdx = formatNumber(node.getChildByName('dsdx')?.getValue() ?? 0);
     const dtdx = formatNumber(node.getChildByName('dtdx')?.getValue() ?? 0);
-    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
     const dtdy = formatNumber(node.getChildByName('dtdy')?.getValue() ?? 0);
+    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
     const tx = node.getChildByName('tx');
     const ty = node.getChildByName('ty');
     if (
@@ -129,7 +129,7 @@ class MatrixFormatter implements PropertyFormatter {
     ) {
       return 'null';
     }
-    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dsdy: ${dsdy}, dtdy: ${dtdy}`;
+    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dtdy: ${dtdy}, dsdy: ${dsdy}`;
     if (!tx && !ty) {
       return matrix22;
     }
