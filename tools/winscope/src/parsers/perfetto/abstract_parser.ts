@@ -15,7 +15,7 @@
  */
 
 import {assertDefined, assertTrue} from 'common/assert_utils';
-import {Timestamp} from 'common/time';
+import {INVALID_TIME_NS, Timestamp} from 'common/time';
 import {ParserTimestampConverter} from 'common/timestamp_converter';
 import {CoarseVersion} from 'trace/coarse_version';
 import {
@@ -83,6 +83,9 @@ export abstract class AbstractParser<T> implements Parser<T> {
 
   createTimestamps() {
     this.timestamps = this.bootTimeTimestampsNs.map((ns) => {
+      if (ns === INVALID_TIME_NS) {
+        return this.timestampConverter.makeZeroTimestamp();
+      }
       return this.timestampConverter.makeTimestampFromBootTimeNs(ns);
     });
   }

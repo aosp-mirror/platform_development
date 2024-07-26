@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {assertTrue} from 'common/assert_utils';
+import {assertDefined, assertTrue} from 'common/assert_utils';
 import {AbsoluteEntryIndex, EntriesRange} from 'trace/trace';
 import {WasmEngineProxy} from 'trace_processor/wasm_engine_proxy';
 import {FakeProto, FakeProtoBuilder} from './fake_proto_builder';
@@ -59,6 +59,11 @@ export class Utils {
     tableName: string,
     entryIndexToRowIdMap: number[],
     entriesRange: EntriesRange,
+    createVsyncIdQuery: (
+      tableName: string,
+      minRowId: number,
+      maxRowId: number,
+    ) => string = Utils.createDefaultVsyncIdQuery,
   ): Promise<Array<bigint>> {
     let minRowId = Number.MAX_VALUE;
     let maxRowId = Number.MIN_VALUE;
@@ -71,33 +76,43 @@ export class Utils {
       minRowId = Math.min(minRowId, rowId);
       maxRowId = Math.max(maxRowId, rowId);
     }
+    const numEntries = maxRowId - minRowId + 1;
 
-    const sql = `
-      SELECT
-        tbl.id,
-        args.key,
-        args.value_type,
-        args.int_value
-      FROM ${tableName} AS tbl
-      INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
-      WHERE
-        tbl.id BETWEEN ${minRowId} AND ${maxRowId}
-        AND args.key = 'vsync_id'
-        ORDER BY tbl.id;
-    `;
-
+    const sql = createVsyncIdQuery(tableName, minRowId, maxRowId);
     const result = await traceProcessor.query(sql).waitAllRows();
 
     const vsyncIdOrderedByRow: Array<bigint> = [];
+    let curRowId = BigInt(minRowId);
     for (const it = result.iter({}); it.valid(); it.next()) {
+      const id = assertDefined(it.get('id') as bigint | undefined);
+      while (curRowId < id) {
+        // Handle missing table rows that don't have a vsync_id
+        vsyncIdOrderedByRow.push(-1n);
+        curRowId++;
+      }
+      assertTrue(
+        curRowId === id,
+        () => 'query for vsyncId contains duplicate rows with the same id',
+      );
       const value = it.get('int_value') as bigint | undefined;
       const valueType = it.get('value_type') as string;
       assertTrue(
         valueType === 'uint' || valueType === 'int',
-        () => 'expected vsyncid to have integer type',
+        () => 'expected vsync_id to have integer type',
       );
       vsyncIdOrderedByRow.push(value ?? -1n);
+      curRowId++;
     }
+    while (curRowId <= maxRowId) {
+      // Handle missing table rows at the end of the trace
+      vsyncIdOrderedByRow.push(-1n);
+      curRowId++;
+    }
+
+    assertTrue(
+      vsyncIdOrderedByRow.length === numEntries,
+      () => 'missing vsync_id value for one or more entries',
+    );
 
     const vsyncIdOrderedByEntry: Array<bigint> = [];
     for (
@@ -111,5 +126,28 @@ export class Utils {
     }
 
     return vsyncIdOrderedByEntry;
+  }
+
+  // Creates a sql query for the vsync_id of the table rows that have
+  // an id in the range [minRowId, maxRowId]. The query may be created in a way
+  // where rows that don't have a vsync_id can be omitted from the query result.
+  private static createDefaultVsyncIdQuery(
+    tableName: string,
+    minRowId: number,
+    maxRowId: number,
+  ): string {
+    return `
+      SELECT
+        tbl.id AS id,
+        args.key,
+        args.value_type,
+        args.int_value
+      FROM ${tableName} AS tbl
+      INNER JOIN args ON tbl.arg_set_id = args.arg_set_id
+      WHERE
+        tbl.id BETWEEN ${minRowId} AND ${maxRowId}
+        AND args.key = 'vsync_id'
+        ORDER BY tbl.id;
+    `;
   }
 }

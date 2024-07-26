@@ -204,6 +204,26 @@ export class TreeNodeUtils {
       }
     }
 
+    if (
+      node instanceof UiHierarchyTreeNode &&
+      expectedNode instanceof UiHierarchyTreeNode
+    ) {
+      if (node.heading() !== expectedNode.heading()) {
+        return false;
+      }
+      if (node.getDisplayName() !== expectedNode.getDisplayName()) {
+        return false;
+      }
+      if (
+        !(
+          node.getChips().length === 0 && expectedNode.getChips().length === 0
+        ) &&
+        node.getChips() !== expectedNode.getChips()
+      ) {
+        return false;
+      }
+    }
+
     const nodeChildren = node.getAllChildren();
     const expectedChildren = expectedNode.getAllChildren();
     if (nodeChildren.length !== expectedChildren.length) return false;

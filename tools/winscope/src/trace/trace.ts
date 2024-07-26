@@ -94,7 +94,12 @@ export class TraceEntryLazy<T> extends TraceEntry<T> {
   }
 
   override async getValue(): Promise<T> {
-    return await this.parser.getEntry(this.index);
+    try {
+      return await this.parser.getEntry(this.index);
+    } catch (e) {
+      this.fullTrace.setCorruptedState(true);
+      throw e;
+    }
   }
 }
 
@@ -456,11 +461,12 @@ export class Trace<T> {
     return this.framesRange;
   }
 
+  isDump() {
+    return this.lengthEntries === 1;
+  }
+
   isDumpWithoutTimestamp() {
-    return (
-      this.lengthEntries === 1 &&
-      this.getEntry(0).getTimestamp().getValueNs() === INVALID_TIME_NS
-    );
+    return this.isDump() && !this.getEntry(0).hasValidTimestamp();
   }
 
   isCorrupted() {

@@ -13,35 +13,90 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {DeviceProperties, Devices} from 'trace_collection/proxy_client';
-import {ConfigMap} from './trace_collection_utils';
 
-export interface AdbConnection {
-  adbSuccess: () => boolean;
-  setSecurityKey(key: string): void;
-  getDevices(): Devices;
-  getSelectedDevice(): [string, DeviceProperties];
-  restart(): Promise<void>;
-  selectDevice(id: string): Promise<void>;
-  clearLastDevice(): Promise<void>;
-  isDevicesState(): boolean;
-  isStartTraceState(): boolean;
-  isErrorState(): boolean;
-  isStartingTraceState(): boolean;
-  isEndTraceState(): boolean;
-  isLoadDataState(): boolean;
-  isConnectingState(): boolean;
-  setErrorState(message: string): Promise<void>;
-  setLoadDataState(): void;
-  startTrace(
-    requestedTraces: string[],
-    reqEnableConfig?: string[],
-    reqSelectedSfConfig?: ConfigMap,
-    reqSelectedWmConfig?: ConfigMap,
+import {assertUnreachable} from 'common/assert_utils';
+import {OnProgressUpdateType} from 'common/function_utils';
+import {HttpRequestStatus, HttpResponse} from 'common/http_request';
+import {AdbDevice} from './adb_device';
+import {ConnectionState} from './connection_state';
+import {TraceConfigurationMap} from './trace_collection_utils';
+import {TraceRequest} from './trace_request';
+
+export abstract class AdbConnection {
+  abstract initialize(
+    detectStateChangeInUi: () => Promise<void>,
+    progressCallback: OnProgressUpdateType,
+    availableTracesChangeCallback: (
+      availableTracesConfig: TraceConfigurationMap,
+    ) => void,
   ): Promise<void>;
-  endTrace(): Promise<void>;
-  getAdbData(): File[];
-  dumpState(requestedDumps: string[]): Promise<boolean>;
-  getErrorText(): string;
-  onDestroy(): void;
+  abstract restartConnection(): Promise<void>;
+  abstract setSecurityToken(token: string): void;
+  abstract getDevices(): AdbDevice[];
+  abstract getState(): ConnectionState;
+  abstract getErrorText(): string;
+  abstract startTrace(
+    device: AdbDevice,
+    requestedTraces: TraceRequest[],
+  ): Promise<void>;
+  abstract endTrace(device: AdbDevice): Promise<void>;
+  abstract dumpState(
+    device: AdbDevice,
+    requestedDumps: TraceRequest[],
+  ): Promise<void>;
+  abstract fetchLastTracingSessionData(device: AdbDevice): Promise<File[]>;
+  abstract onDestroy(): void;
+
+  protected async processHttpResponse(
+    resp: HttpResponse,
+    onSuccess: OnRequestSuccessCallback,
+  ): Promise<AdbResponse | undefined> {
+    let newState: ConnectionState | undefined;
+    let errorMsg: string | undefined;
+
+    switch (resp.status) {
+      case HttpRequestStatus.UNSENT:
+        newState = ConnectionState.NOT_FOUND;
+        break;
+
+      case HttpRequestStatus.UNAUTH:
+        newState = ConnectionState.UNAUTH;
+        break;
+
+      case HttpRequestStatus.SUCCESS:
+        try {
+          await onSuccess(resp);
+        } catch (err) {
+          console.error(err);
+          newState = ConnectionState.ERROR;
+          errorMsg =
+            `Error handling request response:\n${err}\n\n` +
+            `Request:\n ${resp.text}`;
+        }
+        break;
+
+      case HttpRequestStatus.ERROR:
+        if (resp.type === 'text' || !resp.type) {
+          errorMsg = resp.text;
+        } else if (resp.type === 'arraybuffer') {
+          errorMsg = String.fromCharCode.apply(null, new Array(resp.body));
+        }
+        newState = ConnectionState.ERROR;
+        break;
+
+      default:
+        assertUnreachable(resp.status);
+    }
+
+    return newState !== undefined ? {newState, errorMsg} : undefined;
+  }
 }
+
+interface AdbResponse {
+  newState: ConnectionState;
+  errorMsg: string | undefined;
+}
+
+export type OnRequestSuccessCallback = (
+  resp: HttpResponse,
+) => void | Promise<void>;
