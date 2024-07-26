@@ -85,6 +85,7 @@ interface Tab {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        overflow-x: auto;
       }
 
       .tabs-navigation-bar {
