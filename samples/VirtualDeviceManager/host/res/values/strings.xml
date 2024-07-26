@@ -38,6 +38,8 @@
     <string name="unlock_dialog_title" translatable="false">Device locked</string>
     <string name="unlock_dialog_message" translatable="false">Unlock your %s to continue.</string>
 
+    <string name="display_category" translatable="false">com.example.android.vdmdemo.DISPLAY_CATEGORY</string>
+
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
     <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
@@ -46,6 +48,7 @@
     <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
     <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>
     <string name="pref_enable_display_rotation" translatable="false">enable_display_rotation</string>
+    <string name="pref_enable_display_category" translatable="false">enable_display_category</string>
     <string name="pref_always_unlocked_device" translatable="false">always_unlocked_device</string>
     <string name="pref_show_pointer_icon" translatable="false">show_pointer_icon</string>
     <string name="pref_enable_custom_home" translatable="false">enable_custom_home</string>

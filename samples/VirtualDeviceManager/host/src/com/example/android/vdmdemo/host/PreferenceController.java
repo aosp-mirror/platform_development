@@ -83,6 +83,8 @@ final class PreferenceController {
                     VANILLA_ICE_CREAM, Flags::consistentDisplayFlags)
                     .withDefaultValue(true),
 
+            new BoolRule(R.string.pref_enable_display_category, UPSIDE_DOWN_CAKE),
+
             new BoolRule(R.string.pref_always_unlocked_device, TIRAMISU)
                     .withDefaultValue(true),
 

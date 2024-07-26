@@ -49,6 +49,7 @@ public class MainActivity extends Hilt_MainActivity {
     private GridView mLauncher = null;
     private Button mHomeDisplayButton = null;
     private Button mMirrorDisplayButton = null;
+    private LauncherAdapter mLauncherAdapter = null;
 
     private final ServiceConnection mServiceConnection =
             new ServiceConnection() {
@@ -89,13 +90,13 @@ public class MainActivity extends Hilt_MainActivity {
         mMirrorDisplayButton.setEnabled(
                 mPreferenceController.getBoolean(R.string.internal_pref_mirror_displays_supported));
 
+        mLauncherAdapter = new LauncherAdapter(this, mPreferenceController);
         mLauncher = requireViewById(R.id.app_grid);
         mLauncher.setVisibility(View.GONE);
-        LauncherAdapter launcherAdapter = new LauncherAdapter(getPackageManager());
-        mLauncher.setAdapter(launcherAdapter);
+        mLauncher.setAdapter(mLauncherAdapter);
         mLauncher.setOnItemClickListener(
                 (parent, v, position, id) -> {
-                    Intent intent = launcherAdapter.createPendingRemoteIntent(position);
+                    Intent intent = mLauncherAdapter.createPendingRemoteIntent(position);
                     if (intent == null || mVdmService == null) {
                         return;
                     }
@@ -103,7 +104,7 @@ public class MainActivity extends Hilt_MainActivity {
                 });
         mLauncher.setOnItemLongClickListener(
                 (parent, v, position, id) -> {
-                    Intent intent = launcherAdapter.createPendingRemoteIntent(position);
+                    Intent intent = mLauncherAdapter.createPendingRemoteIntent(position);
                     if (intent == null || mVdmService == null) {
                         return true;
                     }
@@ -157,6 +158,7 @@ public class MainActivity extends Hilt_MainActivity {
         runOnUiThread(
                 () -> {
                     if (mLauncher != null) {
+                        mLauncherAdapter.update();
                         mLauncher.setVisibility(visibility);
                     }
                     if (mHomeDisplayButton != null) {

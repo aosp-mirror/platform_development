@@ -77,6 +77,12 @@
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.FullScreen" />
         <activity
+            android:name=".CustomLauncherActivityWithRequiredDisplayCategory"
+            android:requiredDisplayCategory="@string/display_category"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.FullScreen" />
+        <activity
             android:name=".UnlockKeyguardDialog"
             android:exported="false"
             android:excludeFromRecents="true"
