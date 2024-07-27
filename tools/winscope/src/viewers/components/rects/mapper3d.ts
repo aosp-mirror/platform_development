@@ -32,8 +32,11 @@ class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
   private static readonly LABEL_FIRST_Y_OFFSET = 100;
   private static readonly LABEL_CIRCLE_RADIUS = 15;
-  private static readonly LABEL_SPACING_FACTOR = 12.5;
+  private static readonly LABEL_SPACING_INIT_FACTOR = 12.5;
+  private static readonly LABEL_SPACING_PER_RECT_FACTOR = 5;
   private static readonly LABEL_SPACING_MIN = 200;
+  private static readonly MAX_RENDERED_LABELS = 30;
+  private static readonly SINGLE_LABEL_SPACING_FACTOR = 1.75;
   private static readonly Y_AXIS_ROTATION_FACTOR = 1.5;
   private static readonly Z_FIGHTING_EPSILON = 5;
   private static readonly ZOOM_FACTOR_INIT = 1;
@@ -158,7 +161,7 @@ class Mapper3D {
 
   computeScene(): Scene3D {
     const rects2d = this.selectRectsToDraw(this.rects);
-    rects2d.sort(this.compareDepth);
+    rects2d.sort(this.compareDepth); // decreasing order of depth
     const rects3d = this.computeRects(rects2d);
     const labels3d = this.computeLabels(rects2d, rects3d);
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
@@ -220,11 +223,11 @@ class Mapper3D {
     };
 
     let z = 0;
-    const rects3d = rects2d.map((rect2d): Rect3D => {
+    const rects3d = rects2d.map((rect2d, i): Rect3D => {
+      const j = rects2d.length - 1 - i; // rects sorted in decreasing order of depth; increment z by L - 1 - i
       z =
         this.zSpacingFactor *
-        (Mapper3D.Z_SPACING_MAX * rect2d.depth +
-          computeAntiZFightingOffset(rect2d.depth));
+        (Mapper3D.Z_SPACING_MAX * j + computeAntiZFightingOffset(j));
 
       let darkFactor = 0;
       if (rect2d.isVisible) {
@@ -263,7 +266,7 @@ class Mapper3D {
   }
 
   private getColorType(rect2d: UiRect): ColorType {
-    if (this.highlightedRectId === rect2d.id && rect2d.isClickable) {
+    if (this.isHighlighted(rect2d)) {
       return ColorType.HIGHLIGHTED;
     }
     if (this.isWireFrame()) {
@@ -340,10 +343,13 @@ class Mapper3D {
     const cameraTiltFactor =
       Math.sin(this.getCameraXAxisAngle()) / Mapper3D.Y_AXIS_ROTATION_FACTOR;
     const labelTextYSpacing = Math.max(
-      Mapper3D.LABEL_SPACING_MIN,
-      lowestYPoint / Mapper3D.LABEL_SPACING_FACTOR,
+      (rects2d.length * Mapper3D.LABEL_SPACING_MIN) /
+        Mapper3D.LABEL_SPACING_PER_RECT_FACTOR,
+      lowestYPoint / Mapper3D.LABEL_SPACING_INIT_FACTOR,
     );
-    const scaleFactor = Math.min(this.zoomFactor, 1) ** 2;
+    const scaleFactor =
+      Math.min(this.zoomFactor, Math.max(1, Math.sqrt(rects2d.length)) / 2) **
+      2;
 
     let labelY = lowestYPoint + Mapper3D.LABEL_FIRST_Y_OFFSET / scaleFactor;
     let lastDepth: number | undefined;
@@ -351,6 +357,24 @@ class Mapper3D {
     rects2d.forEach((rect2d, index) => {
       if (!rect2d.label) {
         return;
+      }
+      const j = rects2d.length - 1 - index; // rects sorted in decreasing order of depth; increment labelY by depth at L - 1 - i
+      if (rects2d.length > Mapper3D.MAX_RENDERED_LABELS) {
+        // only render the selected rect label
+        if (!this.isHighlighted(rect2d)) {
+          return;
+        }
+        labelY +=
+          ((rects2d[j].depth / rects2d[0].depth) *
+            labelTextYSpacing *
+            Mapper3D.SINGLE_LABEL_SPACING_FACTOR *
+            this.zSpacingFactor) /
+          Math.sqrt(scaleFactor);
+      } else {
+        if (lastDepth !== undefined) {
+          labelY += ((lastDepth - j) * labelTextYSpacing) / scaleFactor;
+        }
+        lastDepth = j;
       }
 
       const rect3d = rects3d[index];
@@ -379,12 +403,6 @@ class Mapper3D {
       }
       const lineStart = lineStarts[maxIndex];
 
-      if (lastDepth !== undefined) {
-        labelY +=
-          ((lastDepth - rect2d.depth) * labelTextYSpacing) / scaleFactor;
-      }
-      lastDepth = rect2d.depth;
-
       const xDiff = rightmostXPoint - lineStart.x;
 
       lineStart.x += Mapper3D.LABEL_CIRCLE_RADIUS / 2;
@@ -395,8 +413,7 @@ class Mapper3D {
         z: lineStart.z,
       };
 
-      const isHighlighted =
-        rect2d.isClickable && this.highlightedRectId === rect2d.id;
+      const isHighlighted = this.isHighlighted(rect2d);
 
       const label3d: Label3D = {
         circle: {
@@ -469,11 +486,14 @@ class Mapper3D {
       updateMinMaxCoordinates(rect.bottomRight);
     });
 
-    labels.forEach((label) => {
-      label.linePoints.forEach((point) => {
-        updateMinMaxCoordinates(point);
+    // if only selected rect label rendered, do not include in bounding box
+    if (rects.length <= Mapper3D.MAX_RENDERED_LABELS) {
+      labels.forEach((label) => {
+        label.linePoints.forEach((point) => {
+          updateMinMaxCoordinates(point);
+        });
       });
-    });
+    }
 
     const center: Point3D = {
       x: (minX + maxX) / 2,
@@ -492,6 +512,10 @@ class Mapper3D {
       center,
       diagonal: Math.sqrt(width * width + height * height + depth * depth),
     };
+  }
+
+  isHighlighted(rect: UiRect): boolean {
+    return rect.isClickable && this.highlightedRectId === rect.id;
   }
 }
 

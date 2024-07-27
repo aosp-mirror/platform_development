@@ -52,7 +52,8 @@ import {
   WinscopeEventType,
 } from 'messaging/winscope_event';
 import {WinscopeEventListener} from 'messaging/winscope_event_listener';
-import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
+import {AdbConnection} from 'trace_collection/adb_connection';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
   TraceConfigurationMap,
   TRACES,
@@ -226,6 +227,7 @@ import {UploadTracesComponent} from './upload_traces_component';
               [traceConfig]="traceConfig"
               [dumpConfig]="dumpConfig"
               [storage]="traceConfigStorage"
+              [adbConnection]="adbConnection"
               (filesCollected)="onFilesCollected($event)"></collect-traces>
 
             <upload-traces
@@ -331,7 +333,6 @@ export class AppComponent implements WinscopeEventListener {
   timelineData = new TimelineData();
   abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol: CrossToolProtocol;
-  states = ProxyState;
   dataLoaded = false;
   showDataLoadedElements = false;
   collapsedTimelineHeight = 0;
@@ -352,6 +353,7 @@ export class AppComponent implements WinscopeEventListener {
       Validators.pattern(FileUtils.DOWNLOAD_FILENAME_REGEX),
     ]),
   );
+  adbConnection: AdbConnection = new ProxyConnection();
   traceConfig: TraceConfigurationMap;
   dumpConfig: TraceConfigurationMap;
   traceConfigStorage: Storage;
@@ -598,7 +600,6 @@ export class AppComponent implements WinscopeEventListener {
     });
 
     await event.visit(WinscopeEventType.VIEWERS_UNLOADED, async (event) => {
-      proxyClient.adbData = [];
       this.dataLoaded = false;
       this.showDataLoadedElements = false;
       this.pageTitle.setTitle('Winscope');

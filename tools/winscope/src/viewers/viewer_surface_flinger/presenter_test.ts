@@ -36,7 +36,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
-class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
+class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest<UiData> {
   private traceSf: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -119,7 +119,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.SURFACE_FLINGER)
@@ -131,7 +131,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const traces = new Traces();
     const trace = assertDefined(this.traceSf);
@@ -263,7 +263,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           uiData = newData;
         };
         presenter = this.createPresenter(
-          notifyViewCallback as NotifyHierarchyViewCallbackType,
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
         );
       });
 
@@ -307,7 +307,7 @@ class PresenterSurfaceFlingerTest extends AbstractHierarchyViewerPresenterTest {
           traceSf,
           traces,
           new InMemoryStorage(),
-          notifyViewCallback as NotifyHierarchyViewCallbackType,
+          notifyViewCallback as NotifyHierarchyViewCallbackType<UiData>,
         );
 
         const firstEntry = traceSf.getEntry(0);

@@ -30,6 +30,9 @@ export class Analytics {
   private static HIERARCHY_SETTINGS = 'hierarchy_settings';
   private static NAVIGATION_ZOOM_EVENT = 'navigation_zoom';
   private static PROPERTIES_SETTINGS = 'properties_settings';
+  private static PROXY_ERROR = 'proxy_error';
+  private static PROXY_SERVER_NOT_FOUND = 'proxy_server_not_found';
+  private static PROXY_NO_FILES_FOUND = 'proxy_no_files_found';
   private static RECT_SETTINGS = 'rect_settings';
   private static REFRESH_DUMPS = 'refresh_dumps';
   private static TIME_BOOKMARK = 'time_bookmark';
@@ -49,6 +52,11 @@ export class Analytics {
         description,
       } as Gtag.CustomParams);
     }
+    static logProxyError(description: string) {
+      Analytics.doLogEvent(Analytics.PROXY_ERROR, {
+        description,
+      } as Gtag.CustomParams);
+    }
   };
 
   static Help = class {
@@ -58,17 +66,6 @@ export class Analytics {
 
     static logBuganizerOpened() {
       Analytics.doLogEvent(Analytics.BUGANIZER_OPENED);
-    }
-  };
-
-  static Settings = class {
-    static logDarkModeEnabled() {
-      Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
-    }
-    static logCrossToolSync(value: boolean) {
-      Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
-        value,
-      } as Gtag.CustomParams);
     }
   };
 
@@ -150,6 +147,27 @@ export class Analytics {
         direction,
         component,
         type,
+      } as Gtag.CustomParams);
+    }
+  };
+
+  static Proxy = class {
+    static logServerNotFound() {
+      Analytics.doLogEvent(Analytics.PROXY_SERVER_NOT_FOUND);
+    }
+
+    static logNoFilesFound() {
+      Analytics.doLogEvent(Analytics.PROXY_NO_FILES_FOUND);
+    }
+  };
+
+  static Settings = class {
+    static logDarkModeEnabled() {
+      Analytics.doLogEvent(Analytics.DARK_MODE_ENABLED);
+    }
+    static logCrossToolSync(value: boolean) {
+      Analytics.doLogEvent(Analytics.CROSS_TOOL_SYNC, {
+        value,
       } as Gtag.CustomParams);
     }
   };
