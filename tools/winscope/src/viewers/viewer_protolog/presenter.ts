@@ -22,7 +22,12 @@ import {
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
-import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {
+  LogEntry,
+  LogField,
+  LogFieldType,
+  LogFilter,
+} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
 export class Presenter extends AbstractLogViewerPresenter<UiData> {
@@ -34,7 +39,7 @@ export class Presenter extends AbstractLogViewerPresenter<UiData> {
   ];
   private isInitialized = false;
 
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<LogEntry>(true);
 
   constructor(
     trace: Trace<PropertyTreeNode>,

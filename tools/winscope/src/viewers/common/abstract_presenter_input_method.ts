@@ -44,7 +44,7 @@ import {PropertiesPresenter} from './properties_presenter';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiTreeUtils} from './ui_tree_utils';
 
-export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter {
+export abstract class AbstractPresenterInputMethod extends AbstractHierarchyViewerPresenter<ImeUiData> {
   protected getHierarchyTreeNameStrategy = (
     entry: TraceEntry<HierarchyTreeNode>,
     tree: HierarchyTreeNode,
@@ -109,7 +109,7 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Storage,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ) {
     super(
       trace,
@@ -368,13 +368,9 @@ export abstract class AbstractPresenterInputMethod extends AbstractHierarchyView
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(
-      new ImeUiData(
-        this.imeTrace.type as ImeTraceType,
-        this.hierarchyTableProperties,
-        this.additionalProperties,
-      ),
-    );
+    this.uiData.hierarchyTableProperties = this.hierarchyTableProperties;
+    this.uiData.additionalProperties = this.additionalProperties;
+    this.refreshHierarchyViewerUiData();
   }
 
   protected abstract getHierarchyTableProperties(): TableProperties;

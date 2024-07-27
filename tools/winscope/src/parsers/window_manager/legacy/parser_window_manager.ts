@@ -21,7 +21,7 @@ import {TamperedMessageType} from 'parsers/tampered_message_type';
 import {RectsComputation} from 'parsers/window_manager/computations/rects_computation';
 import {WmCustomQueryUtils} from 'parsers/window_manager/custom_query_utils';
 import {HierarchyTreeBuilderWm} from 'parsers/window_manager/hierarchy_tree_builder_wm';
-import {ParserUtils} from 'parsers/window_manager/parser_utils';
+import {PropertiesProviderFactory} from 'parsers/window_manager/properties_provider_factory';
 import root from 'protos/windowmanager/udc/json';
 import {com} from 'protos/windowmanager/udc/static';
 import {
@@ -44,7 +44,7 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
       root.lookupType('com.android.server.wm.WindowManagerTraceFileProto'),
     );
 
-  private readonly utils = new ParserUtils(TAMPERED_PROTOS_UDC);
+  private readonly factory = new PropertiesProviderFactory(TAMPERED_PROTOS_UDC);
   private realToBootTimeOffsetNs: bigint | undefined;
 
   override getTraceType(): TraceType {
@@ -116,11 +116,12 @@ export class ParserWindowManager extends AbstractParser<HierarchyTreeNode> {
   private makeHierarchyTree(
     entryProto: com.android.server.wm.IWindowManagerTraceProto,
   ): HierarchyTreeNode {
-    const containers: PropertiesProvider[] = this.utils.extractContainers(
-      assertDefined(entryProto.windowManagerService),
-    );
+    const containers: PropertiesProvider[] =
+      this.factory.makeContainerProperties(
+        assertDefined(entryProto.windowManagerService),
+      );
 
-    const entry = this.utils.makeEntryProperties(
+    const entry = this.factory.makeEntryProperties(
       assertDefined(entryProto.windowManagerService),
     );
 

@@ -27,12 +27,12 @@ import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {NotifyHierarchyViewCallbackType} from 'viewers/common/abstract_hierarchy_viewer_presenter';
 import {AbstractHierarchyViewerPresenterTest} from 'viewers/common/abstract_hierarchy_viewer_presenter_test';
 import {DiffType} from 'viewers/common/diff_type';
-import {UiDataHierarchy} from 'viewers/common/ui_data_hierarchy';
 import {UiHierarchyTreeNode} from 'viewers/common/ui_hierarchy_tree_node';
 import {UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
-class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
+class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest<UiData> {
   private trace: Trace<HierarchyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -94,7 +94,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(TraceType.WINDOW_MANAGER)
@@ -106,7 +106,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<UiData>,
   ): Presenter {
     const traces = new Traces();
     const trace = assertDefined(this.trace);
@@ -154,9 +154,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
     return assertDefined(this.selectedTreeAfterPositionUpdate);
   }
 
-  override executeChecksForPropertiesTreeAfterPositionUpdate(
-    uiData: UiDataHierarchy,
-  ) {
+  override executeChecksForPropertiesTreeAfterPositionUpdate(uiData: UiData) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(
       assertDefined(propertiesTree.getChildByName('state')).formattedValue(),
@@ -164,7 +162,7 @@ class PresenterWindowManagerTest extends AbstractHierarchyViewerPresenterTest {
   }
 
   override executeChecksForPropertiesTreeAfterSecondPositionUpdate(
-    uiData: UiDataHierarchy,
+    uiData: UiData,
   ) {
     const propertiesTree = assertDefined(uiData.propertiesTree);
     expect(

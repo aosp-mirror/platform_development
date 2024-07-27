@@ -20,9 +20,9 @@ import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
-export class LogPresenter {
-  private allEntries: LogEntry[] = [];
-  private filteredEntries: LogEntry[] = [];
+export class LogPresenter<Entry extends LogEntry> {
+  private allEntries: Entry[] = [];
+  private filteredEntries: Entry[] = [];
   private filters: LogFilter[] = [];
   private headers: LogFieldType[] = [];
   private filterValues = new Map<LogFieldType, string | string[]>();
@@ -37,7 +37,7 @@ export class LogPresenter {
     private timeOrderedEntries = true,
   ) {}
 
-  setAllEntries(value: LogEntry[]) {
+  setAllEntries(value: Entry[]) {
     this.allEntries = value;
     this.updateFilteredEntries();
   }
@@ -61,7 +61,7 @@ export class LogPresenter {
     return this.filters;
   }
 
-  getFilteredEntries(): LogEntry[] {
+  getFilteredEntries(): Entry[] {
     return this.filteredEntries;
   }
 

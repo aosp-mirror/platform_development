@@ -36,10 +36,11 @@ import {RectShowState} from './rect_show_state';
 import {UiDataHierarchy} from './ui_data_hierarchy';
 import {ViewerEvents} from './viewer_events';
 
-export type NotifyHierarchyViewCallbackType = (uiData: UiDataHierarchy) => void;
+export type NotifyHierarchyViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractHierarchyViewerPresenter
-  implements WinscopeEventEmitter
+export abstract class AbstractHierarchyViewerPresenter<
+  UiData extends UiDataHierarchy,
+> implements WinscopeEventEmitter
 {
   protected emitWinscopeEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
   protected overridePropertiesTree: PropertyTreeNode | undefined;
@@ -54,8 +55,8 @@ export abstract class AbstractHierarchyViewerPresenter
     private readonly trace: Trace<HierarchyTreeNode> | undefined,
     protected readonly traces: Traces,
     protected readonly storage: Readonly<Storage>,
-    private readonly notifyViewCallback: NotifyHierarchyViewCallbackType,
-    protected uiData: UiDataHierarchy,
+    private readonly notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
+    protected readonly uiData: UiData,
   ) {
     this.copyUiDataAndNotifyView();
   }
@@ -226,10 +227,18 @@ export abstract class AbstractHierarchyViewerPresenter
       if (entry) entries.push(entry);
     }
 
-    await this.hierarchyPresenter.applyTracePositionUpdate(
-      entries,
-      this.highlightedItem,
-    );
+    try {
+      await this.hierarchyPresenter.applyTracePositionUpdate(
+        entries,
+        this.highlightedItem,
+      );
+    } catch (e) {
+      this.hierarchyPresenter.clear();
+      this.rectsPresenter?.clear();
+      this.propertiesPresenter.clear();
+      this.refreshHierarchyViewerUiData();
+      throw e;
+    }
 
     const propertiesOpts = this.propertiesPresenter.getUserOptions();
     const hasPreviousEntry = entries.some((e) => e.getIndex() > 0);
@@ -298,8 +307,7 @@ export abstract class AbstractHierarchyViewerPresenter
     }
   }
 
-  protected refreshHierarchyViewerUiData(uiData: UiDataHierarchy) {
-    this.uiData = uiData;
+  protected refreshHierarchyViewerUiData() {
     this.uiData.highlightedItem = this.highlightedItem;
     this.uiData.pinnedItems = this.hierarchyPresenter.getPinnedItems();
     this.uiData.hierarchyUserOptions = this.hierarchyPresenter.getUserOptions();
