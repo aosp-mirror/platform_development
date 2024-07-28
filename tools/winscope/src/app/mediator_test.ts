@@ -24,7 +24,7 @@ import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
 import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
-import {NoValidFiles} from 'messaging/user_warnings';
+import {IncompleteFrameMapping, NoValidFiles} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
   AppFilesCollected,
@@ -84,7 +84,9 @@ describe('Mediator', () => {
   let appComponent: WinscopeEventListener;
   let timelineComponent: WinscopeEventEmitter & WinscopeEventListener;
   let uploadTracesComponent: ProgressListenerStub;
-  let collectTracesComponent: ProgressListenerStub & WinscopeEventListenerStub;
+  let collectTracesComponent: ProgressListenerStub &
+    WinscopeEventEmitterStub &
+    WinscopeEventListenerStub;
   let traceViewComponent: WinscopeEventEmitter & WinscopeEventListener;
   let mediator: Mediator;
   let spies: Array<jasmine.Spy<any>>;
@@ -140,8 +142,11 @@ describe('Mediator', () => {
     );
     uploadTracesComponent = new ProgressListenerStub();
     collectTracesComponent = FunctionUtils.mixin(
-      new ProgressListenerStub(),
-      new WinscopeEventListenerStub(),
+      FunctionUtils.mixin(
+        new ProgressListenerStub(),
+        new WinscopeEventListenerStub(),
+      ),
+      new WinscopeEventEmitterStub(),
     );
     traceViewComponent = FunctionUtils.mixin(
       new WinscopeEventEmitterStub(),
@@ -355,6 +360,22 @@ describe('Mediator', () => {
       new AppFilesUploaded([fileWithoutVisualization]),
     );
     await loadTraceView();
+  });
+
+  it('warns user if frame mapping fails', async () => {
+    const errorMsg = 'frame mapping failed';
+    spyOn(tracePipeline, 'buildTraces').and.throwError(errorMsg);
+    const dumpFile = await UnitTestUtils.getFixtureFile(
+      'traces/dump_WindowManager.pb',
+    );
+    await mediator.onWinscopeEvent(new AppFilesUploaded([dumpFile]));
+
+    resetSpyCalls();
+    await mediator.onWinscopeEvent(new AppTraceViewRequest());
+    await checkLoadTraceViewEvents(uploadTracesComponent);
+    expect(userNotificationsListener.onNotifications).toHaveBeenCalledWith([
+      new IncompleteFrameMapping(errorMsg),
+    ]);
   });
 
   describe('timestamp received from remote tool', () => {

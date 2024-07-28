@@ -131,6 +131,30 @@ export class CannotVisualizeAllTraces extends UserWarning {
   }
 
   getMessage(): string {
-    return `Cannot visualize all traces: ${this.errorMessage}.\nTry removing some traces.`;
+    return this.errorMessage;
+  }
+}
+
+export class IncompleteFrameMapping extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'incomplete frame mapping';
+  }
+
+  getMessage(): string {
+    return `Error occurred in frame mapping: ${this.errorMessage}`;
+  }
+}
+
+export class NoTraceTargetsSelected extends UserWarning {
+  getDescriptor(): string {
+    return 'No trace targets selected';
+  }
+
+  getMessage(): string {
+    return 'No trace targets selected.';
   }
 }
