@@ -64,7 +64,7 @@ type WindowContainerChildProto =
   | com.android.server.wm.IWindowContainerChildProto
   | perfetto.protos.IWindowContainerChildProto;
 
-export class ParserUtils {
+export class PropertiesProviderFactory {
   private readonly operationLists: WmOperationLists;
 
   constructor(tamperedProtos: TamperedProtos) {
@@ -90,7 +90,7 @@ export class ParserUtils {
       .build();
   }
 
-  extractContainers(
+  makeContainerProperties(
     entryProto: WindowManagerServiceDumpProto,
   ): PropertiesProvider[] {
     let currChildren: WindowContainerChildProto[] = assertDefined(
@@ -192,7 +192,7 @@ export class ParserUtils {
       children = child.windowContainer?.children ?? [];
     }
 
-    return children;
+    return children.filter((c) => Object.keys(c).length > 0);
   }
 
   private getContainerChildProperties(

@@ -103,6 +103,11 @@ export class Utils {
       vsyncIdOrderedByRow.push(value ?? -1n);
       curRowId++;
     }
+    while (curRowId <= maxRowId) {
+      // Handle missing table rows at the end of the trace
+      vsyncIdOrderedByRow.push(-1n);
+      curRowId++;
+    }
 
     assertTrue(
       vsyncIdOrderedByRow.length === numEntries,

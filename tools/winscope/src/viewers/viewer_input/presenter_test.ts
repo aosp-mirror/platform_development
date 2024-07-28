@@ -17,6 +17,8 @@
 import {assertDefined} from 'common/assert_utils';
 import {InMemoryStorage} from 'common/in_memory_storage';
 import {TracePositionUpdate} from 'messaging/winscope_event';
+import {Transform} from 'parsers/surface_flinger/transform_utils';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TracesBuilder} from 'test/unit/traces_builder';
 import {TraceBuilder} from 'test/unit/trace_builder';
@@ -25,6 +27,7 @@ import {CustomQueryType} from 'trace/custom_query';
 import {Parser} from 'trace/parser';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {TraceType} from 'trace/trace_type';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
@@ -156,6 +159,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
     const traces = new TracesBuilder()
       .setEntries(TraceType.INPUT_EVENT_MERGED, [])
       .build();
+    if (this.surfaceFlingerTrace !== undefined) {
+      traces.addTrace(this.surfaceFlingerTrace);
+    }
     return PresenterInputTest.createPresenterWithTraces(traces, callback);
   }
 
@@ -164,7 +170,9 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
   ): Promise<Presenter> {
     const traces = new Traces();
     traces.addTrace(assertDefined(this.trace));
-    traces.addTrace(assertDefined(this.surfaceFlingerTrace));
+    if (this.surfaceFlingerTrace !== undefined) {
+      traces.addTrace(this.surfaceFlingerTrace);
+    }
     const presenter = PresenterInputTest.createPresenterWithTraces(
       traces,
       callback,
@@ -285,10 +293,100 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
       const time30 = TimestampConverterUtils.makeRealTimestamp(30n);
       const time35 = TimestampConverterUtils.makeRealTimestamp(35n);
       const time36 = TimestampConverterUtils.makeRealTimestamp(36n);
+      const layerRect = new TraceRectBuilder()
+        .setX(0)
+        .setY(0)
+        .setWidth(1)
+        .setHeight(1)
+        .setId('layerRect')
+        .setName('layerRect')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setOpacity(1)
+        .setIsDisplay(false)
+        .setIsSpy(false)
+        .build();
+      const inputRect = new TraceRectBuilder()
+        .setX(2)
+        .setY(2)
+        .setWidth(3)
+        .setHeight(3)
+        .setId('inputRect')
+        .setName('inputRect')
+        .setCornerRadius(0)
+        .setTransform(Transform.EMPTY.matrix)
+        .setDepth(1)
+        .setGroupId(0)
+        .setIsVisible(true)
+        .setOpacity(1)
+        .setIsDisplay(false)
+        .setIsSpy(false)
+        .build();
+      const sfEntry0 = new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('root')
+        .setChildren([
+          {
+            id: 1,
+            name: 'layer1',
+            rects: [layerRect],
+            secondaryRects: [inputRect],
+          },
+        ])
+        .build();
+      const sfEntry1 = new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('root')
+        .setChildren([
+          {
+            id: 1,
+            name: 'layer1',
+            rects: [layerRect],
+            secondaryRects: [inputRect],
+            children: [
+              {
+                id: 2,
+                name: 'layer2',
+                rects: [layerRect],
+                secondaryRects: [inputRect],
+              },
+            ],
+          },
+        ])
+        .build();
+      const sfEntry2 = new HierarchyTreeBuilder()
+        .setId('LayerTraceEntry')
+        .setName('root')
+        .setChildren([
+          {
+            id: 1,
+            name: 'layer1',
+            rects: [layerRect],
+            secondaryRects: [inputRect],
+            children: [
+              {
+                id: 2,
+                name: 'layer2',
+                rects: [layerRect],
+                secondaryRects: [inputRect],
+              },
+            ],
+          },
+          {
+            id: 3,
+            name: 'layer3',
+            rects: [layerRect],
+            secondaryRects: [inputRect],
+          },
+        ])
+        .build();
 
       let uiData: UiData = UiData.createEmpty();
 
-      beforeAll(async () => {
+      beforeEach(async () => {
         uiData = UiData.createEmpty();
         await this.setUpTestEnvironment();
       });
@@ -418,6 +516,114 @@ class PresenterInputTest extends AbstractLogViewerPresenterTest<UiData> {
           TracePositionUpdate.fromTraceEntry(otherTrace.getEntry(2)),
         );
         this.expectEventPresented(uiData, 106022695, 'ACTION_MOVE');
+      });
+
+      it('no rects defined without SF trace', async () => {
+        this.surfaceFlingerTrace = undefined;
+
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.rectsToDraw).toBeUndefined();
+      });
+
+      it('empty trace no rects defined without SF trace', async () => {
+        this.surfaceFlingerTrace = undefined;
+
+        const presenter = await this.createPresenterWithEmptyTrace(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.rectsToDraw).toBeUndefined();
+      });
+
+      it('rects defined with SF trace', async () => {
+        assertDefined(this.surfaceFlingerTrace);
+        const presenter = await this.createPresenter(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.rectsToDraw).toBeDefined();
+        expect(uiData.rectsToDraw).toEqual([]);
+      });
+
+      it('empty trace rects defined with SF trace', async () => {
+        assertDefined(this.surfaceFlingerTrace);
+        const presenter = await this.createPresenterWithEmptyTrace(
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+        await presenter.onAppEvent(this.getPositionUpdate());
+        expect(uiData.rectsToDraw).toBeDefined();
+        expect(uiData.rectsToDraw).toEqual([]);
+      });
+
+      it('extracts corresponding input rects from SF trace', async () => {
+        const parser = assertDefined(this.trace).getParser();
+        const traces = new Traces();
+
+        // FRAME:         0     1   2   3
+        // INPUT(index):  0   1,2   -   3
+        // SF(index):     -     0   1   2
+        const trace = new TraceBuilder<PropertyTreeNode>()
+          .setType(TraceType.INPUT_EVENT_MERGED)
+          .setEntries([
+            await parser.getEntry(0),
+            await parser.getEntry(1),
+            await parser.getEntry(2),
+            await parser.getEntry(3),
+          ])
+          .setTimestamps([time10, time20, time25, time30])
+          .setFrame(0, 0)
+          .setFrame(1, 1)
+          .setFrame(2, 1)
+          .setFrame(3, 3)
+          .build();
+        traces.addTrace(trace);
+
+        const sfTrace = new TraceBuilder<HierarchyTreeNode>()
+          .setType(TraceType.SURFACE_FLINGER)
+          .setEntries([sfEntry0, sfEntry1, sfEntry2])
+          .setTimestamps([time0, time19, time35])
+          .setFrame(0, 1)
+          .setFrame(1, 2)
+          .setFrame(2, 3)
+          .setParserCustomQueryResult(
+            CustomQueryType.SF_LAYERS_ID_AND_NAME,
+            this.layerIdToName,
+          )
+          .build();
+        traces.addTrace(sfTrace);
+
+        const presenter = PresenterInputTest.createPresenterWithTraces(
+          traces,
+          (uiDataLog) => (uiData = uiDataLog as UiData),
+        );
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(0)),
+        );
+        expect(uiData.rectsToDraw).toEqual([]);
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(1)),
+        );
+        expect(uiData.rectsToDraw).toHaveSize(1);
+        expect(uiData.rectsToDraw?.at(0)?.id).toEqual('inputRect');
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(2)),
+        );
+        expect(uiData.rectsToDraw).toHaveSize(1);
+        expect(uiData.rectsToDraw?.at(0)?.id).toEqual('inputRect');
+
+        await presenter.onAppEvent(
+          TracePositionUpdate.fromTraceEntry(trace.getEntry(3)),
+        );
+        expect(uiData.rectsToDraw).toHaveSize(3);
+        uiData.rectsToDraw?.forEach((rect) =>
+          expect(rect.id).toEqual('inputRect'),
+        );
       });
     });
   }

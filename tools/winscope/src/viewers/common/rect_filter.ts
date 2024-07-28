@@ -24,11 +24,21 @@ export class RectFilter {
     rects: UiRect[],
     isOnlyVisibleMode: boolean,
     isIgnoreRectShowStateMode: boolean,
+    isOnlyWithContentMode: boolean,
   ): UiRect[] {
-    if (!isOnlyVisibleMode && isIgnoreRectShowStateMode) {
+    if (
+      !isOnlyVisibleMode &&
+      isIgnoreRectShowStateMode &&
+      !isOnlyWithContentMode
+    ) {
       return rects;
     }
     return rects.filter((rect) => {
+      const satisfiesHasContent = rect.hasContent || rect.isDisplay;
+      if (isOnlyWithContentMode && !satisfiesHasContent) {
+        return false;
+      }
+
       const satisfiesOnlyVisible = rect.isDisplay || rect.isVisible;
       const forceHidden = this.forcedStates.get(rect.id) === RectShowState.HIDE;
       const forceShow = this.forcedStates.get(rect.id) === RectShowState.SHOW;
