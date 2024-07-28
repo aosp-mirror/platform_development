@@ -75,7 +75,7 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
+        .setIsSpy(false)
         .build(),
     ];
 
@@ -126,8 +126,8 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(true)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -142,8 +142,8 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
+        .setIsSpy(false)
         .build(),
     ];
 

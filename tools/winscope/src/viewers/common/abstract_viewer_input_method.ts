@@ -22,7 +22,6 @@ import {AbstractPresenterInputMethod} from 'viewers/common/abstract_presenter_in
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {ViewerEvents} from 'viewers/common/viewer_events';
 import {View, Viewer} from 'viewers/viewer';
-import {NotifyHierarchyViewCallbackType} from './abstract_hierarchy_viewer_presenter';
 
 export abstract class AbstractViewerInputMethod implements Viewer {
   private readonly trace: Trace<HierarchyTreeNode>;
@@ -30,9 +29,9 @@ export abstract class AbstractViewerInputMethod implements Viewer {
   protected readonly presenter: AbstractPresenterInputMethod;
   protected abstract readonly view: View;
 
-  protected imeUiCallback = ((uiData: ImeUiData) => {
+  protected imeUiCallback = (uiData: ImeUiData) => {
     (this.htmlElement as any).inputData = uiData;
-  }) as NotifyHierarchyViewCallbackType;
+  };
 
   constructor(
     trace: Trace<HierarchyTreeNode>,
