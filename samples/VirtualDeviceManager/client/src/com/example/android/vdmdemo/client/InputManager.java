@@ -204,7 +204,7 @@ final class InputManager {
             case MotionEvent.ACTION_BUTTON_RELEASE:
                 RemoteInputEvent buttonEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseButtonEvent(
                                         RemoteKeyEvent.newBuilder()
@@ -220,7 +220,7 @@ final class InputManager {
                 setFocusedDisplayId(displayId);
                 RemoteInputEvent relativeEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseRelativeEvent(
                                         RemoteMotionEvent.newBuilder()
@@ -235,7 +235,7 @@ final class InputManager {
                 float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
                 RemoteInputEvent scrollEvent =
                         RemoteInputEvent.newBuilder()
-                                .setTimestampMs(System.currentTimeMillis())
+                                .setTimestampMs(event.getEventTime())
                                 .setDeviceType(InputDeviceType.DEVICE_TYPE_MOUSE)
                                 .setMouseScrollEvent(
                                         RemoteMotionEvent.newBuilder()
