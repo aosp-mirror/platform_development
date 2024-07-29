@@ -164,7 +164,7 @@ fn main() -> Result<()> {
             regenerate(&args.repo_root, &crate_name)
         }
         Cmd::Regenerate { crate_name } => regenerate(&args.repo_root, &crate_name),
-        Cmd::PreuploadCheck { files: _ } => todo!(),
+        Cmd::PreuploadCheck { files: _ } => Ok(()),
     }
 }
 
