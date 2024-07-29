@@ -31,29 +31,29 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
 import {UserOptions} from 'viewers/common/user_options';
 import {LogPresenter} from './log_presenter';
-import {LogFieldType, UiDataLog} from './ui_data_log';
+import {LogEntry, LogFieldType, UiDataLog} from './ui_data_log';
 import {
   LogFilterChangeDetail,
   TimestampClickDetail,
   ViewerEvents,
 } from './viewer_events';
 
-export type NotifyLogViewCallbackType = (uiData: UiDataLog) => void;
+export type NotifyLogViewCallbackType<UiData> = (uiData: UiData) => void;
 
-export abstract class AbstractLogViewerPresenter
+export abstract class AbstractLogViewerPresenter<UiData extends UiDataLog>
   implements WinscopeEventEmitter
 {
   protected emitAppEvent: EmitEvent = FunctionUtils.DO_NOTHING_ASYNC;
-  protected abstract logPresenter: LogPresenter;
+  protected abstract logPresenter: LogPresenter<LogEntry>;
   protected propertiesPresenter?: PropertiesPresenter;
   protected keepCalculated?: boolean;
 
-  constructor(
+  protected constructor(
     protected readonly trace: Trace<PropertyTreeNode>,
-    private readonly notifyViewCallback: NotifyLogViewCallbackType,
-    protected uiData: UiDataLog,
+    private readonly notifyViewCallback: NotifyLogViewCallbackType<UiData>,
+    protected readonly uiData: UiData,
   ) {
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   setEmitEvent(callback: EmitEvent) {
@@ -114,7 +114,7 @@ export abstract class AbstractLogViewerPresenter
       this.logPresenter.getCurrentIndex() ??
       this.logPresenter.getSelectedIndex();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   async onPropertiesUserOptionsChange(userOptions: UserOptions) {
@@ -125,7 +125,7 @@ export abstract class AbstractLogViewerPresenter
     this.uiData.propertiesUserOptions =
       this.propertiesPresenter.getUserOptions();
     await this.updatePropertiesTree();
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   async onLogTimestampClick(traceEntry: TraceEntry<PropertyTreeNode>) {
@@ -142,25 +142,24 @@ export abstract class AbstractLogViewerPresenter
     this.logPresenter.applyLogEntryClick(index);
     this.updateIndicesUiData();
     await this.updatePropertiesTree();
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   async onArrowDownPress() {
     this.logPresenter.applyArrowDownPress();
     this.updateIndicesUiData();
     await this.updatePropertiesTree();
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   async onArrowUpPress() {
     this.logPresenter.applyArrowUpPress();
     this.updateIndicesUiData();
     await this.updatePropertiesTree();
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
-  protected refreshUIData(uiData: UiDataLog) {
-    this.uiData = uiData;
+  protected refreshUiData() {
     this.uiData.headers = this.logPresenter.getHeaders();
     this.uiData.filters = this.logPresenter.getFilters();
     this.uiData.entries = this.logPresenter.getFilteredEntries();
@@ -191,7 +190,7 @@ export abstract class AbstractLogViewerPresenter
       this.uiData.propertiesTree = this.propertiesPresenter.getFormattedTree();
     }
 
-    this.notifyViewCallback(this.uiData);
+    this.notifyViewChanged();
   }
 
   protected async updatePropertiesTree() {
@@ -224,6 +223,10 @@ export abstract class AbstractLogViewerPresenter
       return entries[currentIndex].propertiesTree;
     }
     return undefined;
+  }
+
+  protected notifyViewChanged() {
+    this.notifyViewCallback(this.uiData);
   }
 
   protected abstract initializeIfNeeded(): Promise<void>;

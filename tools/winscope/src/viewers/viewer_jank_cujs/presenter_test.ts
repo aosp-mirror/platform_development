@@ -27,8 +27,9 @@ import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {AbstractLogViewerPresenterTest} from 'viewers/common/abstract_log_viewer_presenter_test';
 import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
-class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
+class PresenterJankCujsTest extends AbstractLogViewerPresenterTest<UiData> {
   private trace: Trace<PropertyTreeNode> | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -39,6 +40,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   override readonly shouldExecutePropertiesTests = true;
 
   override readonly totalOutputEntries = 16;
+  override readonly expectedIndexOfFirstPositionUpdate = 0;
   override readonly expectedIndexOfSecondPositionUpdate = 2;
   override readonly logEntryClickIndex = 3;
 
@@ -61,7 +63,7 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Presenter {
     const traces = new TracesBuilder()
       .setEntries(TraceType.TRANSITION, [])
@@ -71,16 +73,13 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
   }
 
   override async createPresenter(
-    callback: NotifyLogViewCallbackType,
+    callback: NotifyLogViewCallbackType<UiData>,
   ): Promise<Presenter> {
     const trace = assertDefined(this.trace);
     const traces = new Traces();
     traces.addTrace(trace);
 
-    const presenter = new Presenter(
-      trace,
-      callback as NotifyLogViewCallbackType,
-    );
+    const presenter = new Presenter(trace, callback);
     await presenter.onAppEvent(this.getPositionUpdate()); // trigger initialization
     return presenter;
   }
@@ -91,6 +90,30 @@ class PresenterJankCujsTest extends AbstractLogViewerPresenterTest {
 
   override getSecondPositionUpdate(): TracePositionUpdate {
     return assertDefined(this.secondPositionUpdate);
+  }
+
+  override executePropertiesChecksAfterPositionUpdate(uiData: UiData) {
+    const cujTypeValues = uiData.entries.map((entry) => {
+      return entry.fields[0].value;
+    });
+    expect(cujTypeValues).toEqual([
+      'CUJ_LAUNCHER_QUICK_SWITCH (11)',
+      'CUJ_LAUNCHER_APP_CLOSE_TO_HOME (9)',
+      'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      'CUJ_LAUNCHER_OPEN_ALL_APPS (25)',
+      'CUJ_LAUNCHER_CLOSE_ALL_APPS_SWIPE (67)',
+      'CUJ_LAUNCHER_APP_LAUNCH_FROM_ICON (8)',
+      'CUJ_SPLASHSCREEN_EXIT_ANIM (39)',
+      'CUJ_LAUNCHER_QUICK_SWITCH (11)',
+      'CUJ_LAUNCHER_APP_CLOSE_TO_HOME (9)',
+      'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_QS_EXPAND_COLLAPSE (5)',
+      'CUJ_NOTIFICATION_SHADE_QS_EXPAND_COLLAPSE (5)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+      'CUJ_NOTIFICATION_SHADE_EXPAND_COLLAPSE (0)',
+    ]);
   }
 }
 

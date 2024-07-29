@@ -22,10 +22,15 @@ import {
   NotifyLogViewCallbackType,
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
-import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
+import {
+  LogEntry,
+  LogField,
+  LogFieldType,
+  LogFilter,
+} from 'viewers/common/ui_data_log';
 import {ProtologEntry, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   static readonly FIELD_TYPES = [
     LogFieldType.LOG_LEVEL,
     LogFieldType.TAG,
@@ -34,13 +39,13 @@ export class Presenter extends AbstractLogViewerPresenter {
   ];
   private isInitialized = false;
 
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<LogEntry>(true);
 
   constructor(
     trace: Trace<PropertyTreeNode>,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
   protected override async initializeIfNeeded() {
@@ -71,7 +76,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

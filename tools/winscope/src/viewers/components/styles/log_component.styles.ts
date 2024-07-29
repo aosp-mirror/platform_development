@@ -20,6 +20,8 @@ export const logComponentStyles = `
     flex-direction: column;
     flex: 1;
     overflow: auto;
+    margin: 4px;
+    padding: 12px;
   }
 
   .entries .filters {
@@ -115,11 +117,16 @@ export const logComponentStyles = `
     font-size: 12px;
   }
 
+  .title-section .filters {
+    margin-top: 8px;
+  }
+
   .transition-id {
     flex: 1;
   }
 
   .entries .headers {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: row;
     font-weight: bold;
@@ -156,5 +163,32 @@ export const logComponentStyles = `
     font-size: 18px;
     width: 18px;
     height: 18px;
+  }
+
+  .input-type {
+    flex: 2;
+  }
+  .input-source {
+    flex: 3;
+  }
+  .input-action {
+    flex: 2;
+  }
+  .input-device-id {
+    flex: 1;
+  }
+  .input-display-id {
+    flex: 1;
+  }
+  .input-details {
+    flex: 4;
+  }
+  .entry .input-windows {
+    display: none;
+    flex: 0;
+  }
+  .filters .input-windows {
+    display: flex;
+    flex: 10;
   }
 `;

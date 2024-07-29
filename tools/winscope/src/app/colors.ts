@@ -29,4 +29,5 @@ export enum Color {
   CHIP_GREEN = '#00c853',
   CHIP_RED = '#ff6b6b',
   CHIP_ORANGE = '#ffaa6b',
+  CHIP_PINK = '#e198b1',
 }

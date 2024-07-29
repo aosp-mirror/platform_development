@@ -213,6 +213,7 @@ export class Canvas {
     const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
     spanText.className = 'mat-body-1';
+    spanText.style.backgroundColor = 'var(--background-color)';
 
     // Hack: transparent/placeholder text used to push the visible text towards left
     // (towards negative x) and properly align it with the label's vertical segment

@@ -262,6 +262,13 @@ class RemoteDisplay implements AutoCloseable {
             goHome();
         } else if (event.hasInputEvent()) {
             processInputEvent(event.getInputEvent());
+        } else if (event.hasDisplayRotation()) {
+            int rotation = mVirtualDisplay.getDisplay().getRotation();
+            // Change the rotation of the display. The rotation is a Surface rotation and has
+            // only 4 possible values.
+            rotation += 1;
+            rotation %= 4;
+            mVirtualDisplay.setRotation(rotation);
         } else if (event.hasStopStreaming() && event.getStopStreaming().getPause()) {
             if (mVideoManager != null) {
                 mVideoManager.stop();
@@ -456,8 +463,8 @@ class RemoteDisplay implements AutoCloseable {
     private static int displayRotationToDegrees(int displayRotation) {
         return switch (displayRotation) {
             case Surface.ROTATION_90 -> -90;
-            case Surface.ROTATION_180 -> 180;
-            case Surface.ROTATION_270 -> 90;
+            case Surface.ROTATION_180 -> -180;
+            case Surface.ROTATION_270 -> -270;
             default -> 0;
         };
     }

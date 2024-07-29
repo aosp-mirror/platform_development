@@ -73,6 +73,13 @@ export enum LogFieldType {
   CUJ_TYPE,
   START_TIME,
   END_TIME,
+  INPUT_TYPE,
+  INPUT_SOURCE,
+  INPUT_ACTION,
+  INPUT_DEVICE_ID,
+  INPUT_DISPLAY_ID,
+  INPUT_EVENT_DETAILS,
+  INPUT_DISPATCH_WINDOWS,
 }
 
 export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
@@ -96,6 +103,13 @@ export const LogFieldNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.CUJ_TYPE, 'Type'],
   [LogFieldType.START_TIME, 'Start Time'],
   [LogFieldType.END_TIME, 'End Time'],
+  [LogFieldType.INPUT_TYPE, 'Type'],
+  [LogFieldType.INPUT_SOURCE, 'Source'],
+  [LogFieldType.INPUT_ACTION, 'Action'],
+  [LogFieldType.INPUT_DEVICE_ID, 'Device'],
+  [LogFieldType.INPUT_DISPLAY_ID, 'Display'],
+  [LogFieldType.INPUT_EVENT_DETAILS, 'Details'],
+  [LogFieldType.INPUT_DISPATCH_WINDOWS, 'Target Windows'],
 ]);
 
 export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
@@ -119,4 +133,11 @@ export const LogFieldClassNames: ReadonlyMap<LogFieldType, string> = new Map([
   [LogFieldType.END_TIME, 'end-time time'],
   [LogFieldType.DURATION, 'duration'],
   [LogFieldType.STATUS, 'status'],
+  [LogFieldType.INPUT_TYPE, 'input-type'],
+  [LogFieldType.INPUT_SOURCE, 'input-source'],
+  [LogFieldType.INPUT_ACTION, 'input-action'],
+  [LogFieldType.INPUT_DEVICE_ID, 'input-device-id'],
+  [LogFieldType.INPUT_DISPLAY_ID, 'input-display-id'],
+  [LogFieldType.INPUT_EVENT_DETAILS, 'input-details'],
+  [LogFieldType.INPUT_DISPATCH_WINDOWS, 'input-windows'],
 ]);

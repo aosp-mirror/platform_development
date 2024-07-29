@@ -29,7 +29,7 @@ import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
   private static readonly FIELD_TYPES = [
     LogFieldType.TRANSACTION_ID,
     LogFieldType.VSYNC_ID,
@@ -43,7 +43,7 @@ export class Presenter extends AbstractLogViewerPresenter {
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>(true);
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
@@ -67,9 +67,9 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     readonly storage: Storage,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
   protected override async initializeIfNeeded() {
@@ -110,7 +110,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 

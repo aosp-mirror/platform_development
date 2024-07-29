@@ -28,7 +28,6 @@ export class UiRect extends Rect {
     readonly isDisplay: boolean,
     readonly id: string,
     readonly groupId: number,
-    readonly isVirtual: boolean,
     readonly isClickable: boolean,
     readonly cornerRadius: number,
     readonly transform: TransformMatrix | undefined,

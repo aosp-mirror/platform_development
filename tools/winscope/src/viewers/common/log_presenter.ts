@@ -20,9 +20,9 @@ import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
-export class LogPresenter {
-  private allEntries: LogEntry[] = [];
-  private filteredEntries: LogEntry[] = [];
+export class LogPresenter<Entry extends LogEntry> {
+  private allEntries: Entry[] = [];
+  private filteredEntries: Entry[] = [];
   private filters: LogFilter[] = [];
   private headers: LogFieldType[] = [];
   private filterValues = new Map<LogFieldType, string | string[]>();
@@ -32,9 +32,12 @@ export class LogPresenter {
   private currentIndex: number | undefined;
   private originalIndicesOfAllEntries: number[] = [];
 
-  constructor(private storeCurrentIndex: boolean) {}
+  constructor(
+    private storeCurrentIndex: boolean,
+    private timeOrderedEntries = true,
+  ) {}
 
-  setAllEntries(value: LogEntry[]) {
+  setAllEntries(value: Entry[]) {
     this.allEntries = value;
     this.updateFilteredEntries();
   }
@@ -58,7 +61,7 @@ export class LogPresenter {
     return this.filters;
   }
 
-  getFilteredEntries(): LogEntry[] {
+  getFilteredEntries(): Entry[] {
     return this.filteredEntries;
   }
 
@@ -76,6 +79,7 @@ export class LogPresenter {
 
   applyLogEntryClick(index: number) {
     if (this.selectedIndex === index) {
+      this.scrollToIndex = undefined;
       return;
     }
     this.selectedIndex = index;
@@ -143,6 +147,16 @@ export class LogPresenter {
     }
   }
 
+  private static shouldFilterBySubstring(type: LogFieldType) {
+    switch (type) {
+      case LogFieldType.FLAGS:
+      case LogFieldType.INPUT_DISPATCH_WINDOWS:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   private updateFilteredEntries() {
     this.filteredEntries = this.allEntries.filter((entry) => {
       for (const [filterType, filterValue] of this.filterValues) {
@@ -156,7 +170,10 @@ export class LogPresenter {
 
         const entryValueStr = entryValue.toString();
 
-        if (Array.isArray(filterValue) && filterType === LogFieldType.FLAGS) {
+        if (
+          Array.isArray(filterValue) &&
+          LogPresenter.shouldFilterBySubstring(filterType)
+        ) {
           if (!filterValue.some((flag) => entryValueStr.includes(flag))) {
             return false;
           }
@@ -194,12 +211,19 @@ export class LogPresenter {
       this.currentIndex = undefined;
       return;
     }
+    const target = this.currentEntry.getIndex();
 
+    if (this.timeOrderedEntries) {
+      return (
+        ArrayUtils.binarySearchFirstGreaterOrEqual(
+          this.originalIndicesOfAllEntries,
+          this.currentEntry.getIndex(),
+        ) ?? this.originalIndicesOfAllEntries.length - 1
+      );
+    }
     return (
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.originalIndicesOfAllEntries,
-        this.currentEntry.getIndex(),
-      ) ?? this.originalIndicesOfAllEntries.length - 1
+      this.originalIndicesOfAllEntries.findIndex((i) => i === target) ??
+      this.originalIndicesOfAllEntries.length - 1
     );
   }
 }

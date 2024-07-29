@@ -36,7 +36,7 @@ import {UiRect} from 'viewers/components/rects/types2d';
 import {UpdateDisplayNames} from './operations/update_display_names';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = [
     'name',
     'children',
@@ -79,7 +79,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     PersistentStoreProxy.new<UserOptions>(
       'WmRectsOptions',
       {
-        ignoreNonHidden: {
+        ignoreRectShowState: {
           name: 'Ignore',
           icon: 'visibility',
           enabled: false,
@@ -124,7 +124,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
@@ -183,6 +183,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(new UiData());
+    this.refreshHierarchyViewerUiData();
   }
 }

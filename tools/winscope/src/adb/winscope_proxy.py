@@ -41,6 +41,7 @@ from http import HTTPStatus
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from logging import DEBUG, INFO, WARNING
 from tempfile import NamedTemporaryFile
+from typing import Callable
 
 # GLOBALS #
 
@@ -60,12 +61,11 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     return parser
 
-# Keep in sync with ProxyClient#VERSION in Winscope
-VERSION = '2.2.0'
+# Keep in sync with ProxyConnection#VERSION in Winscope
+VERSION = '2.3.0'
 
 PERFETTO_TRACE_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-trace.conf'
 PERFETTO_DUMP_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy-dump.conf'
-PERFETTO_SF_CONFIG_FILE = '/data/misc/perfetto-configs/winscope-proxy.surfaceflinger.conf'
 PERFETTO_TRACE_FILE = '/data/misc/perfetto-traces/winscope-proxy-trace.perfetto-trace'
 PERFETTO_DUMP_FILE = '/data/misc/perfetto-traces/winscope-proxy-dump.perfetto-trace'
 PERFETTO_UNIQUE_SESSION_NAME = 'winscope proxy perfetto tracing'
@@ -209,7 +209,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'ViewCapture tracing (perfetto) configured to start along the other perfetto traces'
+    echo 'ViewCapture tracing (perfetto) configured to start along the other perfetto traces.'
 else
     su root settings put global view_capture_enabled 1
     echo 'ViewCapture tracing (legacy) started.'
@@ -231,12 +231,9 @@ fi
     "layers_trace": TraceTarget(
         WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
         f"""
-if is_perfetto_data_source_available android.surfaceflinger.layers; then
-    cat {PERFETTO_SF_CONFIG_FILE} >> {PERFETTO_TRACE_CONFIG_FILE}
-    echo 'SF trace (perfetto) configured to start along the other perfetto traces'
-else
+if ! is_perfetto_data_source_available android.surfaceflinger.layers; then
     su root service call SurfaceFlinger 1025 i32 1
-    echo 'SF layers trace (legacy) started'
+    echo 'SF layers trace (legacy) started.'
 fi
         """,
         """
@@ -273,10 +270,10 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces'
+    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces.'
 else
     su root service call SurfaceFlinger 1041 i32 1
-    echo 'SF transactions trace (legacy) started'
+    echo 'SF transactions trace (legacy) started.'
 fi
 """,
         """
@@ -308,7 +305,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'ProtoLog (perfetto) configured to start along the other perfetto traces'
+    echo 'ProtoLog (perfetto) configured to start along the other perfetto traces.'
 else
     su root cmd window logging start
     echo "ProtoLog (legacy) started."
@@ -335,7 +332,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'IME tracing (perfetto) configured to start along the other perfetto traces'
+    echo 'IME tracing (perfetto) configured to start along the other perfetto traces.'
 else
     su root ime tracing start
     echo "IME tracing (legacy) started."
@@ -371,7 +368,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'Transition trace (perfetto) configured to start along the other perfetto traces'
+    echo 'Transition trace (perfetto) configured to start along the other perfetto traces.'
 else
     su root cmd window shell tracing start && su root dumpsys activity service SystemUIService WMShell transitions tracing start
     echo "Transition traces (legacy) started."
@@ -402,7 +399,7 @@ EOF
 
     if is_perfetto_tracing_session_running; then
         perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
-        echo 'Stopped already-running winscope perfetto session'
+        echo 'Stopped already-running winscope perfetto session.'
     fi
 
     echo 'Concurrent Perfetto Sessions'
@@ -410,13 +407,13 @@ EOF
 
     rm -f {PERFETTO_TRACE_FILE}
     perfetto --out {PERFETTO_TRACE_FILE} --txt --config {PERFETTO_TRACE_CONFIG_FILE} --detach=WINSCOPE-PROXY-TRACING-SESSION
-    echo 'Started perfetto trace'
+    echo 'Started perfetto trace.'
 fi
 """,
         """
 if is_any_perfetto_data_source_available; then
     perfetto --attach=WINSCOPE-PROXY-TRACING-SESSION --stop
-    echo 'Stopped perfetto trace'
+    echo 'Stopped perfetto trace.'
 fi
 """,
     ),
@@ -434,7 +431,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'Input trace (perfetto) configured to start along the other perfetto traces'
+    echo 'Input trace (perfetto) configured to start along the other perfetto traces.'
 fi
         """,
         ""
@@ -442,32 +439,96 @@ fi
 }
 
 
-class SurfaceFlingerTraceConfig:
-    """Handles optional configuration for surfaceflinger traces.
+def get_shell_args(device_id: str, type: str) -> list[str]:
+    shell = ['adb', '-s', device_id, 'shell']
+    log.debug(f"Starting {type} shell {' '.join(shell)}")
+    return shell
+
+
+class TraceConfig:
+    @abstractmethod
+    def add(self, config: str, value: str | None) -> None:
+        pass
+
+    @abstractmethod
+    def is_valid(self, config: str) -> bool:
+        pass
+
+    @abstractmethod
+    def execute_command(self, server, device_id):
+        pass
+
+    def execute_config_command(self, server, device_id, shell, command, config_key, config_value):
+        process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    stdin=subprocess.PIPE, start_new_session=True)
+        log.debug(f"Changing trace config on device {device_id} {config_key}:{config_value}")
+        out, err = process.communicate(command.encode('utf-8'))
+        if process.returncode != 0:
+            raise AdbError(
+                f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
+        log.debug(f"Changing trace config finished on device {device_id}")
+        server.respond(HTTPStatus.OK, b'', "text/plain")
+
+
+class SurfaceFlingerTraceConfig(TraceConfig):
+    """Handles optional configuration for Surface Flinger traces.
     """
+    LEGACY_FLAGS_MAP = {
+        "input": 1 << 1,
+        "composition": 1 << 2,
+        "metadata": 1 << 3,
+        "hwc": 1 << 4,
+        "tracebuffers": 1 << 5,
+        "virtualdisplays": 1 << 6
+    }
+
+    PERFETTO_FLAGS_MAP = {
+        "input": "TRACE_FLAG_INPUT",
+        "composition": "TRACE_FLAG_COMPOSITION",
+        "metadata": "TRACE_FLAG_EXTRA",
+        "hwc": "TRACE_FLAG_HWC",
+        "tracebuffers": "TRACE_FLAG_BUFFERS",
+        "virtualdisplays": "TRACE_FLAG_VIRTUAL_DISPLAYS",
+    }
 
     def __init__(self) -> None:
         self.flags = []
         self.perfetto_flags = []
 
-    def add(self, config: str) -> None:
-        self.flags.append(config)
+        # defaults set for all configs
+        self.selected_configs = {
+            "sfbuffersize": "16000"
+        }
+
+    def add(self, config: str, value: str | None) -> None:
+        if config in SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP:
+            self.flags.append(config)
+        elif config in self.selected_configs:
+            self.selected_configs[config] = value
 
     def is_valid(self, config: str) -> bool:
-        return config in SF_LEGACY_FLAGS_MAP
+        return config in SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP or config in self.selected_configs
 
-    def command(self) -> str:
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "sf config")
+        self.execute_config_command(server, device_id, shell, self.__flags_command(), "sf flags", self.flags)
+        self.execute_config_command(server, device_id, shell, self.__buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
+
+    def __buffer_size_command(self) -> str:
+        return f'su root service call SurfaceFlinger 1029 i32 {self.selected_configs["sfbuffersize"]}'
+
+    def __flags_command(self) -> str:
         legacy_flags = 0
         for flag in self.flags:
-            legacy_flags |= SF_LEGACY_FLAGS_MAP[flag]
+            legacy_flags |= SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP[flag]
 
-        perfetto_flags = "\n".join([f"""trace_flags: {SF_PERFETTO_FLAGS_MAP[flag]}""" for flag in self.flags])
+        perfetto_flags = "\n".join([f"""trace_flags: {SurfaceFlingerTraceConfig.PERFETTO_FLAGS_MAP[flag]}""" for flag in self.flags])
 
         return f"""
 {PERFETTO_UTILS}
 
 if is_perfetto_data_source_available android.surfaceflinger.layers; then
-    cat << EOF > {PERFETTO_SF_CONFIG_FILE}
+    cat << EOF > {PERFETTO_TRACE_CONFIG_FILE}
 data_sources: {{
     config {{
         name: "android.surfaceflinger.layers"
@@ -481,86 +542,52 @@ EOF
     echo 'SF trace (perfetto) configured.'
 else
     su root service call SurfaceFlinger 1033 i32 {legacy_flags}
-    echo 'SF trace (legacy) configured'
+    echo 'SF trace (legacy) configured.'
 fi
 """
 
-class SurfaceFlingerTraceSelectedConfig:
-    """Handles optional selected configuration for surfaceflinger traces.
+
+class WindowManagerTraceConfig(TraceConfig):
+    """Handles optional selected configuration for Window Manager traces.
     """
 
     def __init__(self) -> None:
         # defaults set for all configs
-        self.selectedConfigs = {
-            "sfbuffersize": "16000"
-        }
-
-    def add(self, configType, configValue) -> None:
-        self.selectedConfigs[configType] = configValue
-
-    def is_valid(self, configType) -> bool:
-        return configType in CONFIG_SF_SELECTION
-
-    def setBufferSize(self) -> str:
-        return f'su root service call SurfaceFlinger 1029 i32 {self.selectedConfigs["sfbuffersize"]}'
-
-class WindowManagerTraceSelectedConfig:
-    """Handles optional selected configuration for windowmanager traces.
-    """
-
-    def __init__(self) -> None:
-        # defaults set for all configs
-        self.selectedConfigs = {
+        self.selected_configs = {
             "wmbuffersize": "16000",
             "tracinglevel": "debug",
             "tracingtype": "frame",
         }
 
-    def add(self, configType, configValue) -> None:
-        self.selectedConfigs[configType] = configValue
+    def add(self, config_type, config_value) -> None:
+        self.selected_configs[config_type] = config_value
 
-    def is_valid(self, configType) -> bool:
-        return configType in CONFIG_WM_SELECTION
+    def is_valid(self, config_type) -> bool:
+        return config_type in self.selected_configs
 
-    def setBufferSize(self) -> str:
-        return f'su root cmd window tracing size {self.selectedConfigs["wmbuffersize"]}'
+    def execute_command(self, server, device_id):
+        shell = get_shell_args(device_id, "wm config")
+        self.execute_config_command(server, device_id, shell, self.__tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
+        self.execute_config_command(server, device_id, shell, self.__tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
+        # /!\ buffer size must be configured last
+        # otherwise the other configurations might override it
+        self.execute_config_command(server, device_id, shell, self.__buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
 
-    def setTracingLevel(self) -> str:
-        return f'su root cmd window tracing level {self.selectedConfigs["tracinglevel"]}'
+    def __tracing_type_command(self) -> str:
+        return f'su root cmd window tracing {self.selected_configs["tracingtype"]}'
 
-    def setTracingType(self) -> str:
-        return f'su root cmd window tracing {self.selectedConfigs["tracingtype"]}'
+    def __tracing_level_command(self) -> str:
+        return f'su root cmd window tracing level {self.selected_configs["tracinglevel"]}'
+
+    def __buffer_size_command(self) -> str:
+        return f'su root cmd window tracing size {self.selected_configs["wmbuffersize"]}'
 
 
-SF_LEGACY_FLAGS_MAP = {
-    "input": 1 << 1,
-    "composition": 1 << 2,
-    "metadata": 1 << 3,
-    "hwc": 1 << 4,
-    "tracebuffers": 1 << 5,
-    "virtualdisplays": 1 << 6
+TRACE_CONFIG: dict[str, Callable[[], TraceConfig]] = {
+    "window_trace": lambda: WindowManagerTraceConfig(),
+    "layers_trace": lambda: SurfaceFlingerTraceConfig()
 }
 
-SF_PERFETTO_FLAGS_MAP = {
-    "input": "TRACE_FLAG_INPUT",
-    "composition": "TRACE_FLAG_COMPOSITION",
-    "metadata": "TRACE_FLAG_EXTRA",
-    "hwc": "TRACE_FLAG_HWC",
-    "tracebuffers": "TRACE_FLAG_BUFFERS",
-    "virtualdisplays": "TRACE_FLAG_VIRTUAL_DISPLAYS",
-}
-
-#Keep up to date with options in trace_collection_utils.ts
-CONFIG_SF_SELECTION = [
-    "sfbuffersize",
-]
-
-#Keep up to date with options in trace_collection_utils.ts
-CONFIG_WM_SELECTION = [
-    "wmbuffersize",
-    "tracingtype",
-    "tracinglevel",
-]
 
 class DumpTarget:
     """Defines a single parameter to trace.
@@ -602,7 +629,7 @@ data_sources: {{
     }}
 }}
 EOF
-    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces'
+    echo 'SF transactions trace (perfetto) configured to start along the other perfetto traces.'
 else
     su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}
 fi
@@ -628,7 +655,7 @@ EOF
 
     rm -f {PERFETTO_DUMP_FILE}
     perfetto --out {PERFETTO_DUMP_FILE} --txt --config {PERFETTO_DUMP_CONFIG_FILE}
-    echo 'Recorded perfetto dump'
+    echo 'Recorded perfetto dump.'
 fi
         """
     )
@@ -719,7 +746,7 @@ class RequestRouter:
 
     def __bad_token(self):
         log.info("Bad token")
-        self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorisation token!\nThis is Winscope ADB proxy.\n",
+        self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorization token!\nThis is Winscope ADB proxy.\n",
                              'text/txt')
 
     def process(self, method: RequestType):
@@ -802,7 +829,7 @@ class ListDevicesEndpoint(RequestEndpoint):
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
         devices = {m.group(1): {
-            'authorised': str(m.group(2)) != 'unauthorized',
+            'authorized': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
         self._foundDevices = devices
@@ -813,7 +840,7 @@ class ListDevicesEndpoint(RequestEndpoint):
 
 class DeviceRequestEndpoint(RequestEndpoint):
     def process(self, server, path):
-        if len(path) > 0 and re.fullmatch("[A-Za-z0-9.:\\-]+", path[0]):
+        if len(path) > 0 and re.fullmatch("[A-Za-z0-9._:\\-]+", path[0]):
             self.process_with_device(server, path[1:], path[0])
         else:
             raise BadRequest("Device id not specified")
@@ -914,9 +941,8 @@ def check_root(device_id):
 
 TRACE_THREADS = {}
 
-
 class TraceThread(threading.Thread):
-    def __init__(self, device_id, command):
+    def __init__(self, device_id: str, command: str):
         self._keep_alive_timer = None
         self.trace_command = command
         self._device_id = device_id
@@ -924,8 +950,7 @@ class TraceThread(threading.Thread):
         self.err = None,
         self._success = False
         try:
-            shell = ['adb', '-s', self._device_id, 'shell']
-            log.debug("Starting trace shell {}".format(' '.join(shell)))
+            shell = get_shell_args(self._device_id, "trace")
             self.process = subprocess.Popen(shell, stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE, stdin=subprocess.PIPE, start_new_session=True)
         except OSError as ex:
@@ -1020,9 +1045,6 @@ function stop_trace() {{
 trap stop_trace EXIT HUP INT
 echo "Signal handler registered."
 
-# Clear perfetto config file. The start commands below are going to populate it.
-rm -f {perfetto_config_file}
-
 {start_commands}
 
 # ADB shell does not handle hung up well and does not call HUP handler when a child is active in foreground,
@@ -1031,15 +1053,24 @@ while true; do sleep 0.1; done
 """
 
     def process_with_device(self, server, path, device_id):
-        requested_types = self.get_request(server)
-        log.debug(f"Client requested trace types {requested_types} for {device_id}")
-        requested_traces = []
-        for t in requested_types:
+        log.debug("Clearing perfetto config file for previous tracing session")
+        call_adb(f"shell su root rm -f {PERFETTO_TRACE_CONFIG_FILE}", device_id)
+
+        trace_requests: list[dict] = self.get_request(server)
+        trace_types = [t.get("name") for t in trace_requests]
+        log.debug(f"Client requested trace types {trace_types} for {device_id}")
+        trace_targets = []
+        for t in trace_requests:
             try:
-                requested_traces.append(TRACE_TARGETS[t])
+                trace_name = t.get("name")
+                trace_targets.append(TRACE_TARGETS[trace_name])
+                trace_config = TRACE_CONFIG.get(trace_name)
+                if trace_config is not None:
+                    self.apply_config(trace_config(), t.get("config"), server, device_id)
             except KeyError as err:
                 log.warning("Unsupported trace target\n" + str(err))
-        requested_traces = self.move_perfetto_target_to_end_of_list(requested_traces)
+        trace_targets = self.move_perfetto_target_to_end_of_list(trace_targets)
+
         if device_id in TRACE_THREADS:
             log.warning("Trace already in progress for {}", device_id)
             server.respond(HTTPStatus.OK, b'', "text/plain")
@@ -1052,17 +1083,33 @@ while true; do sleep 0.1; done
 
         command = StartTraceEndpoint.TRACE_COMMAND.format(
             perfetto_utils=PERFETTO_UTILS,
-            stop_commands='\n'.join([t.trace_stop for t in requested_traces]),
+            stop_commands='\n'.join([t.trace_stop for t in trace_targets]),
             perfetto_config_file=PERFETTO_TRACE_CONFIG_FILE,
-            start_commands='\n'.join([t.trace_start for t in requested_traces]))
+            start_commands='\n'.join([t.trace_start for t in trace_targets]))
+
         log.debug("Trace requested for {} with targets {}".format(
-            device_id, ','.join(requested_types)))
+            device_id, ','.join([t.get("name") for t in trace_requests])))
         log.debug(f"Executing command \"{command}\" on {device_id}...")
+
         TRACE_THREADS[device_id] = TraceThread(
             device_id, command.encode('utf-8'))
         TRACE_THREADS[device_id].start()
         server.respond(HTTPStatus.OK, b'', "text/plain")
 
+    def apply_config(self, trace_config: TraceConfig, requested_configs: list[dict], server, device_id):
+        for requested_config in requested_configs:
+            config_key = requested_config.get("key")
+            if not trace_config.is_valid(config_key):
+                raise BadRequest(
+                    f"Unsupported config {config_key}\n")
+            trace_config.add(config_key, requested_config.get("value"))
+
+        if device_id in TRACE_THREADS:
+            BadRequest(f"Trace in progress for {device_id}")
+        if not check_root(device_id):
+            raise AdbError(
+                f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
+        trace_config.execute_command(server, device_id)
 
 class EndTraceEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
@@ -1093,86 +1140,6 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
                 "Error tracing the device\n### Output ###\n" + out.decode(
                     "utf-8") + "\n### Command: adb -s {} shell ###\n### Input ###\n".format(device_id) + command.decode(
                     "utf-8"))
-
-
-def execute_config_command(server, device_id, shell, configType, configValue):
-    process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   stdin=subprocess.PIPE, start_new_session=True)
-    log.debug(f"Changing trace config on device {device_id} {configType}:{configValue}")
-    out, err = process.communicate(configValue.encode('utf-8'))
-    if process.returncode != 0:
-        raise AdbError(
-            f"Error executing command:\n {configValue}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-    log.debug(f"Changing trace config finished on device {device_id}")
-    server.respond(HTTPStatus.OK, b'', "text/plain")
-
-
-class ConfigTrace(DeviceRequestEndpoint):
-    def process_with_device(self, server, path, device_id):
-        try:
-            requested_configs = self.get_request(server)
-            config = SurfaceFlingerTraceConfig()
-            for requested_config in requested_configs:
-                if not config.is_valid(requested_config):
-                    raise BadRequest(
-                        f"Unsupported config {requested_config}\n")
-                config.add(requested_config)
-        except KeyError as err:
-            raise BadRequest("Unsupported trace target\n" + str(err))
-        if device_id in TRACE_THREADS:
-            BadRequest(f"Trace in progress for {device_id}")
-        if not check_root(device_id):
-            raise AdbError(
-                f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
-        command = config.command()
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug(f"Starting shell {' '.join(shell)}")
-        execute_config_command(server, device_id, shell, "sf buffer size", command)
-
-
-def add_selected_request_to_config(self, server, device_id, config):
-    try:
-        requested_configs = self.get_request(server)
-        for requested_config in requested_configs:
-            if config.is_valid(requested_config):
-                config.add(requested_config, requested_configs[requested_config])
-            else:
-                raise BadRequest(
-                        f"Unsupported config {requested_config}\n")
-    except KeyError as err:
-        raise BadRequest("Unsupported trace target\n" + str(err))
-    if device_id in TRACE_THREADS:
-        BadRequest(f"Trace in progress for {device_id}")
-    if not check_root(device_id):
-        raise AdbError(
-            f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
-    return config
-
-
-class SurfaceFlingerSelectedConfigTrace(DeviceRequestEndpoint):
-    def process_with_device(self, server, path, device_id):
-        config = SurfaceFlingerTraceSelectedConfig()
-        config = add_selected_request_to_config(self, server, device_id, config)
-        setBufferSize = config.setBufferSize()
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug(f"Starting shell {' '.join(shell)}")
-        execute_config_command(server, device_id, shell, "sf buffer size", setBufferSize)
-
-
-class WindowManagerSelectedConfigTrace(DeviceRequestEndpoint):
-    def process_with_device(self, server, path, device_id):
-        config = WindowManagerTraceSelectedConfig()
-        config = add_selected_request_to_config(self, server, device_id, config)
-        setBufferSize = config.setBufferSize()
-        setTracingType = config.setTracingType()
-        setTracingLevel = config.setTracingLevel()
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug(f"Starting shell {' '.join(shell)}")
-        execute_config_command(server, device_id, shell, "tracing type", setTracingType)
-        execute_config_command(server, device_id, shell, "tracing level", setTracingLevel)
-        # /!\ buffer size must be configured last
-        # otherwise the other configurations might override it
-        execute_config_command(server, device_id, shell, "wm buffer size", setBufferSize)
 
 
 class StatusEndpoint(DeviceRequestEndpoint):
@@ -1210,8 +1177,7 @@ rm -f {PERFETTO_DUMP_CONFIG_FILE}
 
 {dump_commands}
 """
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug("Starting dump shell {}".format(' '.join(shell)))
+        shell = get_shell_args(device_id, "dump")
         process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    stdin=subprocess.PIPE, start_new_session=True)
         log.debug("Starting dump on device {}".format(device_id))
@@ -1236,12 +1202,6 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
         self.router.register_endpoint(RequestType.POST, "start", StartTraceEndpoint())
         self.router.register_endpoint(RequestType.POST, "end", EndTraceEndpoint())
         self.router.register_endpoint(RequestType.POST, "dump", DumpEndpoint())
-        self.router.register_endpoint(
-            RequestType.POST, "configtrace", ConfigTrace())
-        self.router.register_endpoint(
-            RequestType.POST, "selectedsfconfigtrace", SurfaceFlingerSelectedConfigTrace())
-        self.router.register_endpoint(
-            RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
         self.router.register_endpoint(
             RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint(listDevicesEndpoint))
         super().__init__(request, client_address, server)

@@ -720,7 +720,7 @@ repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         const clang::CXXMethodDecl *method_decl =
             vtable_component.getFunctionDecl();
         assert(method_decl != nullptr);
-        is_pure = method_decl->isPure();
+        is_pure = method_decl->isPureVirtual();
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
             kind = repr::VTableComponentIR::Kind::FunctionPointer;
