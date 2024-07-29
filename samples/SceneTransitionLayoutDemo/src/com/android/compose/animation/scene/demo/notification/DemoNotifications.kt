@@ -18,13 +18,13 @@ package com.android.compose.animation.scene.demo.notification
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextMeasurer
+import com.android.compose.animation.scene.ContentKey
+import com.android.compose.animation.scene.ElementContentPicker
 import com.android.compose.animation.scene.ElementKey
-import com.android.compose.animation.scene.ElementScenePicker
 import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
-import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
-import com.android.compose.animation.scene.content.state.TransitionState
+import com.android.compose.animation.scene.content.state.ContentState
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
@@ -49,7 +49,7 @@ private fun notification(
         ElementKey(
             "Notification:$i",
             identity = NotificationIdentity(),
-            scenePicker = NotificationScenePicker,
+            contentPicker = NotificationContentPicker,
         ),
 ): NotificationViewModel {
     return object : NotificationViewModel {
@@ -68,16 +68,16 @@ private fun notification(
     }
 }
 
-private object NotificationScenePicker : ElementScenePicker {
+private object NotificationContentPicker : ElementContentPicker {
     private val scenes =
         setOf(Scenes.Lockscreen, Scenes.Shade, Scenes.SplitLockscreen, Scenes.SplitShade)
 
-    override fun sceneDuringTransition(
+    override fun contentDuringTransition(
         element: ElementKey,
-        transition: TransitionState.Transition,
-        fromSceneZIndex: Float,
-        toSceneZIndex: Float
-    ): SceneKey? {
+        transition: ContentState.Transition<*>,
+        fromContentZIndex: Float,
+        toContentZIndex: Float
+    ): ContentKey? {
         return when {
             transition.isTransitioning(from = Scenes.Lockscreen, to = Scenes.Shade) -> Scenes.Shade
             transition.isTransitioning(from = Scenes.Shade, to = Scenes.Lockscreen) -> {
@@ -99,7 +99,7 @@ private object NotificationScenePicker : ElementScenePicker {
                     Scenes.SplitLockscreen
                 }
             }
-            else -> pickSingleSceneIn(scenes, transition, element)
+            else -> pickSingleContentIn(scenes, transition, element)
         }
     }
 }
