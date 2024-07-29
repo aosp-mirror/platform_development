@@ -46,8 +46,8 @@ export class ProxyConnection extends AdbConnection {
   private selectedDevice: AdbDevice | undefined;
   private requestedTraces: TraceRequest[] = [];
   private adbData: File[] = [];
-  private keepTraceAliveWorker: NodeJS.Timer | undefined;
-  private refreshDevicesWorker: NodeJS.Timer | undefined;
+  private keepTraceAliveWorker: number | undefined;
+  private refreshDevicesWorker: number | undefined;
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
   private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
@@ -99,9 +99,9 @@ export class ProxyConnection extends AdbConnection {
   }
 
   onDestroy() {
-    clearInterval(this.refreshDevicesWorker);
+    window.clearInterval(this.refreshDevicesWorker);
     this.refreshDevicesWorker = undefined;
-    clearInterval(this.keepTraceAliveWorker);
+    window.clearInterval(this.keepTraceAliveWorker);
     this.keepTraceAliveWorker = undefined;
   }
 
@@ -239,7 +239,7 @@ export class ProxyConnection extends AdbConnection {
       state !== ConnectionState.STARTING_TRACE &&
       state !== ConnectionState.TRACING
     ) {
-      clearInterval(this.keepTraceAliveWorker);
+      window.clearInterval(this.keepTraceAliveWorker);
       this.keepTraceAliveWorker = undefined;
       return;
     }
@@ -250,7 +250,7 @@ export class ProxyConnection extends AdbConnection {
         if (request.text !== 'True') {
           this.endTrace();
         } else if (this.keepTraceAliveWorker === undefined) {
-          this.keepTraceAliveWorker = setInterval(
+          this.keepTraceAliveWorker = window.setInterval(
             () => this.keepTraceAlive(),
             1000,
           );
@@ -285,7 +285,7 @@ export class ProxyConnection extends AdbConnection {
       this.state !== ConnectionState.CONNECTING
     ) {
       if (this.refreshDevicesWorker !== undefined) {
-        clearInterval(this.refreshDevicesWorker);
+        window.clearInterval(this.refreshDevicesWorker);
         this.refreshDevicesWorker = undefined;
       }
       return;
@@ -307,7 +307,7 @@ export class ProxyConnection extends AdbConnection {
         };
       });
       if (this.refreshDevicesWorker === undefined) {
-        this.refreshDevicesWorker = setInterval(
+        this.refreshDevicesWorker = window.setInterval(
           () => this.requestDevices(),
           1000,
         );
