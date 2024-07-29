@@ -29,7 +29,6 @@ import {AdbConnection, OnRequestSuccessCallback} from './adb_connection';
 import {AdbDevice} from './adb_device';
 import {ConnectionState} from './connection_state';
 import {ProxyEndpoint} from './proxy_endpoint';
-import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 import {TraceRequest} from './trace_request';
 
 export class ProxyConnection extends AdbConnection {
@@ -43,7 +42,7 @@ export class ProxyConnection extends AdbConnection {
   private errorText = '';
   private securityToken = '';
   private devices: AdbDevice[] = [];
-  private selectedDevice: AdbDevice | undefined;
+  selectedDevice: AdbDevice | undefined;
   private requestedTraces: TraceRequest[] = [];
   private adbData: File[] = [];
   private keepTraceAliveWorker: number | undefined;
@@ -51,16 +50,13 @@ export class ProxyConnection extends AdbConnection {
   private detectStateChangeInUi: () => Promise<void> =
     FunctionUtils.DO_NOTHING_ASYNC;
   private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING;
-  private availableTracesChangeCallback: (
-    availableTracesConfig: TraceConfigurationMap,
-  ) => void = FunctionUtils.DO_NOTHING;
+  private availableTracesChangeCallback: (traces: string[]) => void =
+    FunctionUtils.DO_NOTHING;
 
   async initialize(
     detectStateChangeInUi: () => Promise<void>,
     progressCallback: OnProgressUpdateType,
-    availableTracesChangeCallback: (
-      availableTracesConfig: TraceConfigurationMap,
-    ) => void,
+    availableTracesChangeCallback: (traces: string[]) => void,
   ): Promise<void> {
     this.detectStateChangeInUi = detectStateChangeInUi;
     this.progressCallback = progressCallback;
@@ -182,12 +178,10 @@ export class ProxyConnection extends AdbConnection {
         return;
 
       case ConnectionState.IDLE:
-        if (this.selectedDevice) {
+        {
           const isWaylandAvailable = await this.isWaylandAvailable();
           if (isWaylandAvailable) {
-            const availableTracesConfig = TRACES['default'];
-            Object.assign(availableTracesConfig, TRACES['arc']);
-            this.availableTracesChangeCallback(availableTracesConfig);
+            this.availableTracesChangeCallback(['wayland_trace']);
           }
         }
         return;
