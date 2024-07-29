@@ -16,6 +16,7 @@
 
 import {TransformMatrix} from 'common/geometry_types';
 import {Rect} from 'common/rect';
+import {Region} from 'common/region';
 import {Item} from 'trace/item';
 
 export class TraceRect extends Rect implements Item {
@@ -34,6 +35,7 @@ export class TraceRect extends Rect implements Item {
     readonly depth: number,
     readonly opacity: number | undefined,
     readonly isSpy: boolean,
+    readonly fillRegion: Region | undefined,
   ) {
     super(x, y, w, h);
   }

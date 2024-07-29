@@ -15,6 +15,7 @@
  */
 
 import {TransformMatrix} from 'common/geometry_types';
+import {Region} from 'common/region';
 import {UiRect} from './types2d';
 
 export class UiRectBuilder {
@@ -33,6 +34,7 @@ export class UiRectBuilder {
   depth: number | undefined;
   hasContent: boolean | undefined;
   opacity: number | undefined;
+  fillRegion: Region | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -109,6 +111,11 @@ export class UiRectBuilder {
     return this;
   }
 
+  setFillRegion(region: Region | undefined) {
+    this.fillRegion = region;
+    return this;
+  }
+
   build(): UiRect {
     if (this.x === undefined) {
       throw new Error('x not set');
@@ -174,6 +181,7 @@ export class UiRectBuilder {
       this.depth,
       this.hasContent,
       this.opacity,
+      this.fillRegion,
     );
   }
 }

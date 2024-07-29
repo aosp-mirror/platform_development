@@ -44,14 +44,17 @@ export class Transform {
     const matrixNode = transformNode.getChildByName('matrix');
 
     if (matrixNode) {
-      return new Transform(transformType, {
-        dsdx: assertDefined(matrixNode.getChildByName('dsdx')).getValue(),
-        dtdx: assertDefined(matrixNode.getChildByName('dtdx')).getValue(),
-        tx: assertDefined(matrixNode.getChildByName('tx')).getValue(),
-        dtdy: assertDefined(matrixNode.getChildByName('dtdy')).getValue(),
-        dsdy: assertDefined(matrixNode.getChildByName('dsdy')).getValue(),
-        ty: assertDefined(matrixNode.getChildByName('ty')).getValue(),
-      });
+      return new Transform(
+        transformType,
+        TransformMatrix.from({
+          dsdx: assertDefined(matrixNode.getChildByName('dsdx')).getValue(),
+          dtdx: assertDefined(matrixNode.getChildByName('dtdx')).getValue(),
+          tx: assertDefined(matrixNode.getChildByName('tx')).getValue(),
+          dtdy: assertDefined(matrixNode.getChildByName('dtdy')).getValue(),
+          dsdy: assertDefined(matrixNode.getChildByName('dsdy')).getValue(),
+          ty: assertDefined(matrixNode.getChildByName('ty')).getValue(),
+        }),
+      );
     }
 
     const x = position?.getChildByName('x')?.getValue() ?? 0;
@@ -61,25 +64,21 @@ export class Transform {
       return TransformUtils.getDefaultTransform(transformType, x, y);
     }
 
-    return new Transform(transformType, {
-      dsdx: transformNode.getChildByName('dsdx')?.getValue() ?? 0,
-      dtdx: transformNode.getChildByName('dtdx')?.getValue() ?? 0,
-      tx: x,
-      dtdy: transformNode.getChildByName('dtdy')?.getValue() ?? 0,
-      dsdy: transformNode.getChildByName('dsdy')?.getValue() ?? 0,
-      ty: y,
-    });
+    return new Transform(
+      transformType,
+      TransformMatrix.from({
+        dsdx: transformNode.getChildByName('dsdx')?.getValue() ?? 0,
+        dtdx: transformNode.getChildByName('dtdx')?.getValue() ?? 0,
+        tx: x,
+        dtdy: transformNode.getChildByName('dtdy')?.getValue() ?? 0,
+        dsdy: transformNode.getChildByName('dsdy')?.getValue() ?? 0,
+        ty: y,
+      }),
+    );
   }
 }
 
 export class TransformUtils {
-  static isValidTransform(transform: Transform): boolean {
-    return (
-      transform.matrix.dsdx * transform.matrix.dsdy !==
-      transform.matrix.dtdx * transform.matrix.dtdy
-    );
-  }
-
   static isSimpleRotation(type: TransformType | undefined): boolean {
     return !(type
       ? TransformUtils.isFlagSet(type, TransformType.ROT_INVALID_VAL)
@@ -151,14 +150,17 @@ export class TransformUtils {
   ): Transform {
     // IDENTITY
     if (!type) {
-      return new Transform(type, {
-        dsdx: 1,
-        dtdx: 0,
-        tx: x,
-        dtdy: 0,
-        dsdy: 1,
-        ty: y,
-      });
+      return new Transform(
+        type,
+        TransformMatrix.from({
+          dsdx: 1,
+          dtdx: 0,
+          tx: x,
+          dtdy: 0,
+          dsdy: 1,
+          ty: y,
+        }),
+      );
     }
 
     // ROT_270 = ROT_90|FLIP_H|FLIP_V
@@ -170,14 +172,17 @@ export class TransformUtils {
           TransformType.FLIP_H_VAL,
       )
     ) {
-      return new Transform(type, {
-        dsdx: 0,
-        dtdx: -1,
-        tx: x,
-        dtdy: 1,
-        dsdy: 0,
-        ty: y,
-      });
+      return new Transform(
+        type,
+        TransformMatrix.from({
+          dsdx: 0,
+          dtdx: -1,
+          tx: x,
+          dtdy: 1,
+          dsdy: 0,
+          ty: y,
+        }),
+      );
     }
 
     // ROT_180 = FLIP_H|FLIP_V
@@ -187,26 +192,32 @@ export class TransformUtils {
         TransformType.FLIP_V_VAL | TransformType.FLIP_H_VAL,
       )
     ) {
-      return new Transform(type, {
-        dsdx: -1,
-        dtdx: 0,
-        tx: x,
-        dtdy: 0,
-        dsdy: -1,
-        ty: y,
-      });
+      return new Transform(
+        type,
+        TransformMatrix.from({
+          dsdx: -1,
+          dtdx: 0,
+          tx: x,
+          dtdy: 0,
+          dsdy: -1,
+          ty: y,
+        }),
+      );
     }
 
     // ROT_90
     if (TransformUtils.isFlagSet(type, TransformType.ROT_90_VAL)) {
-      return new Transform(type, {
-        dsdx: 0,
-        dtdx: 1,
-        tx: x,
-        dtdy: -1,
-        dsdy: 0,
-        ty: y,
-      });
+      return new Transform(
+        type,
+        TransformMatrix.from({
+          dsdx: 0,
+          dtdx: 1,
+          tx: x,
+          dtdy: -1,
+          dsdy: 0,
+          ty: y,
+        }),
+      );
     }
 
     // IDENTITY
@@ -216,14 +227,17 @@ export class TransformUtils {
         TransformType.SCALE_VAL | TransformType.ROTATE_VAL,
       )
     ) {
-      return new Transform(type, {
-        dsdx: 1,
-        dtdx: 0,
-        tx: x,
-        dtdy: 0,
-        dsdy: 1,
-        ty: y,
-      });
+      return new Transform(
+        type,
+        TransformMatrix.from({
+          dsdx: 1,
+          dtdx: 0,
+          tx: x,
+          dtdy: 0,
+          dsdy: 1,
+          ty: y,
+        }),
+      );
     }
 
     throw TransformUtils.makeUnknownTransformTypeError(type);

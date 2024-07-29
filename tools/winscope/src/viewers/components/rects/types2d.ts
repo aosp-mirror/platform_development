@@ -16,6 +16,7 @@
 
 import {TransformMatrix} from 'common/geometry_types';
 import {Rect} from 'common/rect';
+import {Region} from 'common/region';
 
 export class UiRect extends Rect {
   constructor(
@@ -34,6 +35,7 @@ export class UiRect extends Rect {
     readonly depth: number,
     readonly hasContent: boolean | undefined,
     readonly opacity: number | undefined,
+    readonly fillRegion: Region | undefined,
   ) {
     super(x, y, w, h);
   }

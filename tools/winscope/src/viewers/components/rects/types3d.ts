@@ -44,7 +44,7 @@ export interface Box3D {
   diagonal: number;
 }
 
-export interface Rect3D {
+export interface UiRect3D extends Rect3D {
   id: string;
   topLeft: Point3D;
   bottomRight: Point3D;
@@ -54,6 +54,12 @@ export interface Rect3D {
   isClickable: boolean;
   transform: TransformMatrix;
   isOversized: boolean;
+  fillRegion: Rect3D[] | undefined;
+}
+
+export interface Rect3D {
+  topLeft: Point3D;
+  bottomRight: Point3D;
 }
 
 export interface Point3D {
@@ -79,7 +85,7 @@ export interface Circle3D {
 export interface Scene3D {
   boundingBox: Box3D;
   camera: Camera;
-  rects: Rect3D[];
+  rects: UiRect3D[];
   labels: Label3D[];
 }
 
@@ -88,4 +94,16 @@ export interface Camera {
   rotationAngleY: number;
   zoomFactor: number;
   panScreenDistance: Distance2D;
+}
+
+export function transformPoint3D(
+  matrix: TransformMatrix,
+  point: Point3D,
+): Point3D {
+  const p = matrix.transformPoint(point);
+  return {
+    x: p.x,
+    y: p.y,
+    z: point.z,
+  };
 }

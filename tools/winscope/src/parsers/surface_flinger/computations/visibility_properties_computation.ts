@@ -263,10 +263,7 @@ export class VisibilityPropertiesComputation implements Computation {
       reasons.push('crop is 0x0');
     }
     const transform = layer.getEagerPropertyByName('transform');
-    if (
-      transform &&
-      !TransformUtils.isValidTransform(Transform.from(transform))
-    ) {
+    if (transform && !Transform.from(transform).matrix.isValid()) {
       reasons.push('transform is invalid');
     }
 

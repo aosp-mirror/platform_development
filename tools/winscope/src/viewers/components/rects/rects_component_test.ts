@@ -27,6 +27,7 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
+import {TransformMatrix} from 'common/geometry_types';
 import {PersistentStore} from 'common/persistent_store';
 import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
@@ -417,14 +418,16 @@ describe('RectsComponent', () => {
       .setWidth(1)
       .setHeight(1)
       .setLabel('rectangle1')
-      .setTransform({
-        dsdx: 1,
-        dsdy: 0,
-        dtdx: 0,
-        dtdy: 1,
-        tx: 0,
-        ty: 0,
-      })
+      .setTransform(
+        TransformMatrix.from({
+          dsdx: 1,
+          dsdy: 0,
+          dtdx: 0,
+          dtdy: 1,
+          tx: 0,
+          ty: 0,
+        }),
+      )
       .setIsVisible(isVisible)
       .setIsDisplay(false)
       .setId('test-id-1234')

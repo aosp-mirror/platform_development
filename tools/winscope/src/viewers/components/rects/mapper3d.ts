@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {IDENTITY_MATRIX, TransformMatrix} from 'common/geometry_types';
+import {IDENTITY_MATRIX} from 'common/geometry_types';
 import {Size, UiRect} from 'viewers/components/rects/types2d';
 import {
   Box3D,
@@ -26,6 +26,8 @@ import {
   Rect3D,
   Scene3D,
   ShadingMode,
+  transformPoint3D,
+  UiRect3D,
 } from './types3d';
 
 class Mapper3D {
@@ -194,7 +196,7 @@ class Mapper3D {
     return rects.filter((rect) => rect.groupId === this.currentGroupId);
   }
 
-  private computeRects(rects2d: UiRect[]): Rect3D[] {
+  private computeRects(rects2d: UiRect[]): UiRect3D[] {
     let visibleRectsSoFar = 0;
     let visibleRectsTotal = 0;
     let nonVisibleRectsSoFar = 0;
@@ -223,7 +225,7 @@ class Mapper3D {
     };
 
     let z = 0;
-    const rects3d = rects2d.map((rect2d, i): Rect3D => {
+    const rects3d = rects2d.map((rect2d, i): UiRect3D => {
       const j = rects2d.length - 1 - i; // rects sorted in decreasing order of depth; increment z by L - 1 - i
       z =
         this.zSpacingFactor *
@@ -238,6 +240,15 @@ class Mapper3D {
         darkFactor =
           (nonVisibleRectsTotal - nonVisibleRectsSoFar++) /
           nonVisibleRectsTotal;
+      }
+      let fillRegion: Rect3D[] | undefined;
+      if (rect2d.fillRegion) {
+        fillRegion = rect2d.fillRegion.rects.map((r) => {
+          return {
+            topLeft: {x: r.x, y: r.y, z},
+            bottomRight: {x: r.x + r.w, y: r.y + r.h, z},
+          };
+        });
       }
 
       const rect = {
@@ -258,6 +269,7 @@ class Mapper3D {
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
         transform: rect2d.transform ?? IDENTITY_MATRIX,
+        fillRegion,
       };
       return this.cropOversizedRect(rect, maxDisplaySize);
     });
@@ -307,7 +319,7 @@ class Mapper3D {
     };
   }
 
-  private cropOversizedRect(rect3d: Rect3D, maxDisplaySize: Size): Rect3D {
+  private cropOversizedRect(rect3d: UiRect3D, maxDisplaySize: Size): UiRect3D {
     // Arbitrary max size for a rect (2x the maximum display)
     let maxDimension = Number.MAX_VALUE;
     if (maxDisplaySize.height > 0) {
@@ -331,11 +343,11 @@ class Mapper3D {
     return rect3d;
   }
 
-  private computeLabels(rects2d: UiRect[], rects3d: Rect3D[]): Label3D[] {
+  private computeLabels(rects2d: UiRect[], rects3d: UiRect3D[]): Label3D[] {
     const labels3d: Label3D[] = [];
 
     const bottomRightCorners = rects3d.map((rect) =>
-      this.matMultiply(rect.transform, rect.bottomRight),
+      transformPoint3D(rect.transform, rect.bottomRight),
     );
     const lowestYPoint = Math.max(...bottomRightCorners.map((p) => p.y));
     const rightmostXPoint = Math.max(...bottomRightCorners.map((p) => p.x));
@@ -390,10 +402,10 @@ class Mapper3D {
         z: rect3d.bottomRight.z,
       };
       const lineStarts = [
-        this.matMultiply(rect3d.transform, rect3d.topLeft),
-        this.matMultiply(rect3d.transform, rect3d.bottomRight),
-        this.matMultiply(rect3d.transform, bottomLeft),
-        this.matMultiply(rect3d.transform, topRight),
+        transformPoint3D(rect3d.transform, rect3d.topLeft),
+        transformPoint3D(rect3d.transform, rect3d.bottomRight),
+        transformPoint3D(rect3d.transform, bottomLeft),
+        transformPoint3D(rect3d.transform, topRight),
       ];
       let maxIndex = 0;
       for (let i = 1; i < lineStarts.length; i++) {
@@ -436,15 +448,7 @@ class Mapper3D {
     return labels3d;
   }
 
-  private matMultiply(mat: TransformMatrix, point: Point3D): Point3D {
-    return {
-      x: mat.dsdx * point.x + mat.dtdx * point.y + mat.tx,
-      y: mat.dtdy * point.x + mat.dsdy * point.y + mat.ty,
-      z: point.z,
-    };
-  }
-
-  private computeBoundingBox(rects: Rect3D[], labels: Label3D[]): Box3D {
+  private computeBoundingBox(rects: UiRect3D[], labels: Label3D[]): Box3D {
     if (rects.length === 0) {
       return {
         width: 1,
