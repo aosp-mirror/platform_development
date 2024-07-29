@@ -33,9 +33,13 @@
     <string name="button_forward" translatable="false">Forward</string>
     <string name="button_home" translatable="false">Home</string>
 
+    <string name="custom_activity_launch_blocked_message" translatable="false">Can\'t show %s here, try on your %s</string>
+    <string name="custom_activity_launch_fallback_message" translatable="false">Launched %s on your %s</string>
+
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
     <string name="pref_enable_cross_device_clipboard" translatable="false">enable_cross_device_clipboard</string>
+    <string name="pref_enable_custom_activity_policy" translatable="false">enable_custom_activity_policy</string>
     <string name="pref_enable_client_camera" translatable="false">enable_client_camera</string>
     <string name="pref_enable_client_sensors" translatable="false">enable_client_sensors</string>
     <string name="pref_enable_client_audio" translatable="false">enable_client_audio</string>

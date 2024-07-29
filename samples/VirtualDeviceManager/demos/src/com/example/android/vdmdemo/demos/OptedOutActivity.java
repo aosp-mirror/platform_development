@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,17 @@
 package com.example.android.vdmdemo.demos;
 
 import android.os.Bundle;
-import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-/** Demo activity for testing secure content with VDM. */
-public final class SecureWindowDemoActivity extends AppCompatActivity {
+/** Activity that cannot be launched on the virtual device because it has opted out. */
+public final class OptedOutActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.text_demo_activity);
-        ((TextView) requireViewById(R.id.text)).setText(R.string.secure_text);
-        getWindow()
-                .setFlags(
-                        WindowManager.LayoutParams.FLAG_SECURE,
-                        WindowManager.LayoutParams.FLAG_SECURE);
+        ((TextView) requireViewById(R.id.text)).setText(R.string.opted_out_activity_text);
     }
 }

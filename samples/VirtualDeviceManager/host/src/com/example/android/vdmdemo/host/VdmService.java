@@ -20,12 +20,15 @@ import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_CUSTOM
 import static android.companion.virtual.VirtualDeviceParams.DEVICE_POLICY_DEFAULT;
 import static android.companion.virtual.VirtualDeviceParams.LOCK_STATE_ALWAYS_UNLOCKED;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_AUDIO;
+import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CAMERA;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_CLIPBOARD;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_RECENTS;
 import static android.companion.virtual.VirtualDeviceParams.POLICY_TYPE_SENSORS;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityOptions;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -49,11 +52,16 @@ import android.graphics.drawable.Icon;
 import android.hardware.display.DisplayManager;
 import android.media.AudioManager;
 import android.os.Binder;
+import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Display;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.os.BuildCompat;
 
 import com.example.android.vdmdemo.common.ConnectionManager;
@@ -130,6 +138,7 @@ public final class VdmService extends Hilt_VdmService {
     private Intent mPendingRemoteIntent = null;
     private @RemoteDisplay.DisplayType int mPendingDisplayType = RemoteDisplay.DISPLAY_TYPE_APP;
     private DisplayManager mDisplayManager;
+    private KeyguardManager mKeyguardManager;
     private VirtualDeviceManager mVirtualDeviceManager;
     private Consumer<Boolean> mLocalVirtualDeviceLifecycleListener;
 
@@ -158,6 +167,89 @@ public final class VdmService extends Hilt_VdmService {
                     closeVirtualDevice();
                 }
             };
+
+    private final ActivityListener mActivityListener = new ActivityListener() {
+        @Override
+        public void onActivityLaunchBlocked(
+                int displayId, @NonNull ComponentName componentName, int userId,
+                @Nullable IntentSender intentSender) {
+            Log.w(TAG, "onActivityLaunchBlocked " + displayId + ": " + componentName);
+
+            if (!mPreferenceController.getBoolean(R.string.pref_enable_custom_activity_policy)) {
+                // The system dialog is shown on the virtual display.
+                return;
+            }
+
+            if (intentSender == null || mKeyguardManager.isKeyguardLocked()) {
+                // TODO(b/333443509): Show a dialog prompting to unlock if keyguard is locked
+                showToast(displayId, componentName,
+                        R.string.custom_activity_launch_blocked_message);
+                return;
+            }
+
+            // Try to launch the activity on the default display with NEW_TASK flag.
+            Intent fillInIntent = new Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            ActivityOptions activityOptions = ActivityOptions.makeBasic()
+                    .setPendingIntentBackgroundActivityStartMode(
+                            ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+                    .setLaunchDisplayId(Display.DEFAULT_DISPLAY);
+            try {
+                startIntentSender(intentSender, fillInIntent, /* flagsMask= */ 0,
+                        /* flagsValues= */ 0, /* extraFlags= */ 0, activityOptions.toBundle());
+                showToast(displayId, componentName,
+                        R.string.custom_activity_launch_fallback_message);
+            } catch (IntentSender.SendIntentException e) {
+                Log.e(TAG, "Error while starting intent sender", e);
+                showToast(displayId, componentName,
+                        R.string.custom_activity_launch_blocked_message);
+            }
+        }
+
+        @Override
+        public void onTopActivityChanged(
+                int displayId, @NonNull ComponentName componentName) {
+            Log.w(TAG, "onTopActivityChanged " + displayId + ": " + componentName);
+            int remoteDisplayId = mDisplayRepository.getRemoteDisplayId(displayId);
+            if (remoteDisplayId == Display.INVALID_DISPLAY) {
+                return;
+            }
+            final CharSequence title = getTitle(componentName);
+            mRemoteIo.sendMessage(
+                    RemoteEvent.newBuilder()
+                            .setDisplayId(remoteDisplayId)
+                            .setDisplayChangeEvent(
+                                    DisplayChangeEvent.newBuilder().setTitle(title.toString()))
+                            .build());
+        }
+
+        @Override
+        public void onDisplayEmpty(int displayId) {
+            Log.i(TAG, "Display " + displayId + " is empty, removing");
+            mDisplayRepository.removeDisplay(displayId);
+        }
+
+        private CharSequence getTitle(ComponentName componentName) {
+            CharSequence title;
+            try {
+                ActivityInfo activityInfo =
+                        getPackageManager().getActivityInfo(componentName, 0);
+                title = activityInfo.loadLabel(getPackageManager()).toString();
+            } catch (NameNotFoundException e) {
+                Log.w(TAG, "Failed to get activity label for " + componentName);
+                title = "";
+            }
+            return title;
+        }
+
+        private void showToast(int displayId, ComponentName componentName, int resId) {
+            final CharSequence title = getTitle(componentName);
+            final CharSequence text = getString(resId, title == null ? "this" : title, Build.MODEL);
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(
+                            createDisplayContext(mDisplayManager.getDisplay(displayId)),
+                            text, Toast.LENGTH_LONG)
+                    .show());
+        }
+    };
 
     public VdmService() {
     }
@@ -222,6 +314,7 @@ public final class VdmService extends Hilt_VdmService {
         mConnectionManager.addConnectionCallback(mConnectionCallback);
         mConnectionManager.startHostSession();
 
+        mKeyguardManager = getSystemService(KeyguardManager.class);
         mDisplayManager = getSystemService(DisplayManager.class);
         Objects.requireNonNull(mDisplayManager).registerDisplayListener(mDisplayListener, null);
 
@@ -400,6 +493,11 @@ public final class VdmService extends Hilt_VdmService {
             virtualDeviceBuilder.setDevicePolicy(POLICY_TYPE_CLIPBOARD, DEVICE_POLICY_CUSTOM);
         }
 
+        if (mPreferenceController.getBoolean(R.string.pref_enable_custom_activity_policy)) {
+            virtualDeviceBuilder.setDevicePolicy(
+                    POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR, DEVICE_POLICY_CUSTOM);
+        }
+
         if (mPreferenceController.getBoolean(R.string.pref_enable_client_native_ime)) {
             virtualDeviceBuilder.setInputMethodComponent(
                     new ComponentName(this, VdmProxyIme.class));
@@ -441,41 +539,13 @@ public final class VdmService extends Hilt_VdmService {
         mVirtualDevice.setShowPointerIcon(
                 mPreferenceController.getBoolean(R.string.pref_show_pointer_icon));
 
-        mVirtualDevice.addActivityListener(
-                MoreExecutors.directExecutor(),
-                new ActivityListener() {
+        if (BuildCompat.isAtLeastV()) {
+            mVirtualDevice.addActivityPolicyExemption(new ComponentName(
+                    "com.example.android.vdmdemo.demos",
+                    "com.example.android.vdmdemo.demos.BlockedActivity"));
+        }
 
-                    @Override
-                    public void onTopActivityChanged(
-                            int displayId, @NonNull ComponentName componentName) {
-                        Log.w(TAG, "onTopActivityChanged " + displayId + ": " + componentName);
-                        int remoteDisplayId = mDisplayRepository.getRemoteDisplayId(displayId);
-                        if (remoteDisplayId == Display.INVALID_DISPLAY) {
-                            return;
-                        }
-
-                        String title = "";
-                        try {
-                            ActivityInfo activityInfo =
-                                    getPackageManager().getActivityInfo(componentName, 0);
-                            title = activityInfo.loadLabel(getPackageManager()).toString();
-                        } catch (NameNotFoundException e) {
-                            Log.w(TAG, "Failed to get activity label for " + componentName);
-                        }
-                        mRemoteIo.sendMessage(
-                                RemoteEvent.newBuilder()
-                                        .setDisplayId(remoteDisplayId)
-                                        .setDisplayChangeEvent(
-                                                DisplayChangeEvent.newBuilder().setTitle(title))
-                                        .build());
-                    }
-
-                    @Override
-                    public void onDisplayEmpty(int displayId) {
-                        Log.i(TAG, "Display " + displayId + " is empty, removing");
-                        mDisplayRepository.removeDisplay(displayId);
-                    }
-                });
+        mVirtualDevice.addActivityListener(MoreExecutors.directExecutor(), mActivityListener);
         mVirtualDevice.addActivityListener(
                 MoreExecutors.directExecutor(),
                 new RunningVdmUidsTracker(getApplicationContext(), mPreferenceController,
@@ -590,6 +660,8 @@ public final class VdmService extends Hilt_VdmService {
                 b -> updateDevicePolicy(POLICY_TYPE_RECENTS, (Boolean) b));
         observers.put(R.string.pref_enable_cross_device_clipboard,
                 b -> updateDevicePolicy(POLICY_TYPE_CLIPBOARD, (Boolean) b));
+        observers.put(R.string.pref_enable_custom_activity_policy,
+                b -> updateDevicePolicy(POLICY_TYPE_BLOCKED_ACTIVITY_BEHAVIOR, (Boolean) b));
         observers.put(R.string.pref_show_pointer_icon,
                 b -> {
                     if (mVirtualDevice != null) mVirtualDevice.setShowPointerIcon((Boolean) b);
