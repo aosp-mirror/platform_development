@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::{
+    fs::{create_dir, remove_dir_all, rename},
     path::{Path, PathBuf},
     process::Command,
     str::from_utf8,
@@ -21,8 +22,8 @@ use std::{
 use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 use crate_health::{
-    default_repo_root, maybe_build_cargo_embargo, CrateCollection, Migratable, NameAndVersionMap,
-    NamedAndVersioned, PseudoCrate, RepoPath, VersionMatch,
+    copy_dir, default_repo_root, maybe_build_cargo_embargo, CrateCollection, Migratable,
+    NameAndVersionMap, NameAndVersionRef, NamedAndVersioned, PseudoCrate, RepoPath, VersionMatch,
 };
 use semver::Version;
 
@@ -37,6 +38,10 @@ struct Cli {
     /// Rebuild cargo_embargo and bpfmt, even if they are already present in the out directory.
     #[arg(long, default_value_t = false)]
     rebuild_cargo_embargo: bool,
+
+    /// Print command output in case of error, and full diffs.
+    #[arg(long, default_value_t = false)]
+    verbose: bool,
 }
 
 #[derive(Subcommand)]
@@ -45,10 +50,6 @@ enum Cmd {
     MigrationHealth {
         /// The crate name. Also the directory name in external/rust/crates
         crate_name: String,
-
-        /// Print command output in case of error, and full diffs.
-        #[arg(long, default_value_t = false)]
-        verbose: bool,
     },
     /// Migrate a crate from external/rust/crates to the monorepo.
     Migrate {
@@ -140,11 +141,29 @@ fn main() -> Result<()> {
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
     match args.command {
-        Cmd::MigrationHealth { crate_name, verbose } => {
-            migration_health(&args.repo_root, &crate_name, verbose).map(|_| ())
+        Cmd::MigrationHealth { crate_name } => {
+            migration_health(&args.repo_root, &crate_name, args.verbose).map(|_| ())
         }
-        Cmd::Migrate { crate_name: _ } => todo!(),
-        Cmd::Regenerate { crate_name: _ } => todo!(),
+        Cmd::Migrate { crate_name } => {
+            let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
+
+            let monorepo_crate_dir = args.repo_root.join("external/rust/android-crates-io/crates");
+            if !monorepo_crate_dir.exists() {
+                create_dir(&monorepo_crate_dir)?;
+            }
+            copy_dir(
+                &args.repo_root.join("external/rust/crates").join(&crate_name),
+                &monorepo_crate_dir.join(&crate_name),
+            )?;
+            let pseudo_crate = PseudoCrate::new(RepoPath::new(
+                &args.repo_root,
+                "external/rust/android-crates-io/pseudo_crate",
+            ));
+            pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
+
+            regenerate(&args.repo_root, &crate_name)
+        }
+        Cmd::Regenerate { crate_name } => regenerate(&args.repo_root, &crate_name),
         Cmd::PreuploadCheck { files: _ } => todo!(),
     }
 }
@@ -347,4 +366,55 @@ pub fn migration_health(
     } else {
         return Err(anyhow!("Crate {} is unhealthy", crate_name));
     }
+}
+
+pub fn regenerate(repo_root: &impl AsRef<Path>, crate_name: &str) -> Result<()> {
+    let repo_root = repo_root.as_ref();
+    let android_crate_dir =
+        repo_root.join("external/rust/android-crates-io/crates").join(&crate_name);
+    if !android_crate_dir.exists() {
+        return Err(anyhow!(
+            "Crate {} not found in external/rust/android-crates-io/crates",
+            crate_name
+        ));
+    }
+
+    let pseudo_crate =
+        PseudoCrate::new(RepoPath::new(repo_root, "external/rust/android-crates-io/pseudo_crate"));
+    pseudo_crate.vendor()?;
+
+    // Source
+    let mut cc = CrateCollection::new(repo_root);
+    cc.add_from(&android_crate_dir)?;
+    cc.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
+    if cc.map_field().len() != 1 {
+        return Err(anyhow!(
+            "Expected a single crate version for {}, but found {}. Crates with multiple versions are not supported yet.",
+            crate_name,
+            cc.map_field().len()
+        ));
+    }
+
+    // Dest
+    let mut dest = CrateCollection::new(repo_root);
+    dest.add_from(&pseudo_crate.get_path().join(&"vendor").rel())?;
+
+    let mut version_match = VersionMatch::new(cc, dest)?;
+
+    version_match.stage_crates()?;
+    version_match.copy_customizations()?;
+    version_match.apply_patches()?;
+    version_match.generate_android_bps()?;
+    version_match.diff_android_bps()?;
+
+    let compatible_pairs = version_match.compatible_pairs().collect::<Vec<_>>();
+    if compatible_pairs.len() != 1 {
+        return Err(anyhow!("Couldn't find a compatible version to migrate to"));
+    }
+    let pair = compatible_pairs.first().unwrap();
+
+    remove_dir_all(&android_crate_dir)?;
+    rename(pair.dest.staging_path().abs(), &android_crate_dir)?;
+
+    Ok(())
 }
