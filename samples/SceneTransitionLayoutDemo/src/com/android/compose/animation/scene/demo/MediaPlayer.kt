@@ -53,7 +53,7 @@ import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.ElementScenePicker
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.content.state.TransitionState
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 

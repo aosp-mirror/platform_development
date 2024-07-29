@@ -17,8 +17,6 @@
 package com.android.compose.animation.scene.demo.notification
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextMeasurer
 import com.android.compose.animation.scene.ElementKey
 import com.android.compose.animation.scene.ElementScenePicker
@@ -26,7 +24,7 @@ import com.android.compose.animation.scene.MutableSceneTransitionLayoutState
 import com.android.compose.animation.scene.SceneKey
 import com.android.compose.animation.scene.SceneScope
 import com.android.compose.animation.scene.SceneTransitions
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration
 import com.android.compose.animation.scene.demo.transitions.ToShadeScrimFadeEndFraction
