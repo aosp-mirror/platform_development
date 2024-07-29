@@ -40,6 +40,10 @@ enum Cmd {
     MigrationHealth {
         /// The crate name. Also the directory name in external/rust/crates
         crate_name: String,
+
+        /// Print command output in case of error, and full diffs.
+        #[arg(long, default_value_t = false)]
+        verbose: bool,
     },
     /// Migrate a crate from external/rust/crates to the monorepo.
     Migrate {
@@ -131,7 +135,7 @@ fn main() -> Result<()> {
     maybe_build_cargo_embargo(&args.repo_root, args.rebuild_cargo_embargo)?;
 
     match args.command {
-        Cmd::MigrationHealth { crate_name } => {
+        Cmd::MigrationHealth { crate_name, verbose } => {
             if args
                 .repo_root
                 .join("external/rust/android-crates-io/crates")
@@ -163,30 +167,59 @@ fn main() -> Result<()> {
             println!("Found {} v{} in {}", krate.name(), krate.version(), krate.path());
             let migratable;
             if !krate.is_android_bp_healthy() {
+                let mut show_cargo_embargo_results = true;
                 if krate.is_migration_denied() {
                     println!("This crate is on the migration denylist");
+                    show_cargo_embargo_results = false;
                 }
                 if !krate.android_bp().abs().exists() {
                     println!("There is no Android.bp file in {}", krate.path());
+                    show_cargo_embargo_results = false;
                 }
                 if !krate.cargo_embargo_json().abs().exists() {
+                    show_cargo_embargo_results = false;
                     println!("There is no cargo_embargo.json file in {}", krate.path());
-                } else if !krate.generate_android_bp_success() {
-                    println!("cargo_embargo execution did not succeed for {}", krate.path());
-                } else if !krate.android_bp_unchanged() {
-                    println!(
-                        "Running cargo_embargo on {} produced changes to the Android.bp file:",
-                        krate.path()
-                    );
-                    println!(
-                        "{}",
-                        from_utf8(
-                            &krate
-                                .android_bp_diff()
-                                .ok_or(anyhow!("No Android.bp diff found"))?
-                                .stdout
-                        )?
-                    );
+                }
+                if show_cargo_embargo_results {
+                    if !krate.generate_android_bp_success() {
+                        println!(
+                            "cargo_embargo execution did not succeed for {}",
+                            krate.staging_path(),
+                        );
+                        if verbose {
+                            println!(
+                                "stdout:\n{}\nstderr:\n{}",
+                                from_utf8(
+                                    &krate
+                                        .generate_android_bp_output()
+                                        .ok_or(anyhow!("cargo_embargo output not found"))?
+                                        .stdout
+                                )?,
+                                from_utf8(
+                                    &krate
+                                        .generate_android_bp_output()
+                                        .ok_or(anyhow!("cargo_embargo output not found"))?
+                                        .stderr
+                                )?,
+                            );
+                        }
+                    } else if !krate.android_bp_unchanged() {
+                        println!(
+                            "Running cargo_embargo on {} produced changes to the Android.bp file",
+                            krate.path()
+                        );
+                        if verbose {
+                            println!(
+                                "{}",
+                                from_utf8(
+                                    &krate
+                                        .android_bp_diff()
+                                        .ok_or(anyhow!("No Android.bp diff found"))?
+                                        .stdout
+                                )?
+                            );
+                        }
+                    }
                 }
                 migratable = false;
             } else {
@@ -196,6 +229,7 @@ fn main() -> Result<()> {
                         PathBuf::from("external/rust/crates").join(&crate_name),
                     ),
                     RepoPath::new(args.repo_root.clone(), &"out/rust-crate-migration-report"),
+                    true,
                 )?;
                 let compatible_pairs = migration.compatible_pairs().collect::<Vec<_>>();
                 if compatible_pairs.len() != 1 {
@@ -212,27 +246,44 @@ fn main() -> Result<()> {
                 if !pair.dest.is_migratable() {
                     if !pair.dest.patch_success() {
                         println!("Patches did not apply successfully to the migrated crate");
-                        // TODO: Show errors.
+                        if verbose {
+                            for output in pair.dest.patch_output() {
+                                if !output.1.status.success() {
+                                    println!(
+                                        "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
+                                        output.0,
+                                        from_utf8(&output.1.stdout)?,
+                                        from_utf8(&output.1.stderr)?
+                                    );
+                                }
+                            }
+                        }
                     }
                     if !pair.dest.generate_android_bp_success() {
                         println!("cargo_embargo execution did not succeed for the migrated crate");
-                    } else if pair.dest.android_bp_unchanged() {
-                        println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file:");
-                        println!(
-                            "{}",
-                            from_utf8(
-                                &pair
-                                    .dest
-                                    .android_bp_diff()
-                                    .ok_or(anyhow!("No Android.bp diff found"))?
-                                    .stdout
-                            )?
-                        );
+                    } else if !pair.dest.android_bp_unchanged() {
+                        println!("Running cargo_embargo for the migrated crate produced changes to the Android.bp file");
+                        if verbose {
+                            println!(
+                                "{}",
+                                from_utf8(
+                                    &pair
+                                        .dest
+                                        .android_bp_diff()
+                                        .ok_or(anyhow!("No Android.bp diff found"))?
+                                        .stdout
+                                )?
+                            );
+                        }
                     }
                 }
 
-                let diff_status = Command::new("diff")
-                    .args(["-u", "-r", "-w", "--no-dereference"])
+                let mut diff_cmd = Command::new("diff");
+                diff_cmd.args(["-u", "-r", "-w", "--no-dereference"]);
+                if !verbose {
+                    diff_cmd.arg("-q");
+                }
+                let diff_status = diff_cmd
                     .args(IGNORED_FILES.iter().map(|ignored| format!("--exclude={}", ignored)))
                     .arg(pair.source.path().rel())
                     .arg(pair.dest.staging_path().rel())
@@ -246,20 +297,23 @@ fn main() -> Result<()> {
                         pair.dest.staging_path()
                     );
                 }
-                println!("All diffs:");
-                Command::new("diff")
-                    .args(["-u", "-r", "-w", "-q", "--no-dereference"])
-                    .arg(pair.source.path().rel())
-                    .arg(pair.dest.staging_path().rel())
-                    .current_dir(&args.repo_root)
-                    .spawn()?
-                    .wait()?;
+                if verbose {
+                    println!("All diffs:");
+                    Command::new("diff")
+                        .args(["-u", "-r", "-w", "-q", "--no-dereference"])
+                        .arg(pair.source.path().rel())
+                        .arg(pair.dest.staging_path().rel())
+                        .current_dir(&args.repo_root)
+                        .spawn()?
+                        .wait()?;
+                }
 
                 migratable = pair.dest.is_migratable() && diff_status.success()
             }
 
             println!(
-                "The crate is {}",
+                "Crate {} is {}",
+                krate.name(),
                 if krate.is_android_bp_healthy() && migratable { "healthy" } else { "UNHEALTHY" }
             );
         }
