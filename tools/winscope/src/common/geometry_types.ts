@@ -19,12 +19,18 @@ export interface Point {
   y: number;
 }
 
+// These values correspond to the values from the gui::Transform class in the platform, defined in:
+//     frameworks/native/libs/ui/include/ui/Transform.h
+// The values are listed in row-major order:
+//     [ dsdx, dtdx,  tx ]
+//     [ dtdy, dsdy,  ty ]
+//     [    0,    0,   1 ]
 export interface TransformMatrix {
   dsdx: number;
   dtdx: number;
   tx: number;
-  dsdy: number;
   dtdy: number;
+  dsdy: number;
   ty: number;
 }
 
@@ -32,7 +38,7 @@ export const IDENTITY_MATRIX = {
   dsdx: 1,
   dtdx: 0,
   tx: 0,
-  dsdy: 0,
-  dtdy: 1,
+  dtdy: 0,
+  dsdy: 1,
   ty: 0,
 };

@@ -183,16 +183,16 @@ describe('Formatters', () => {
           TreeNodeUtils.makeMatrixNode(
             IDENTITY_MATRIX.dsdx,
             IDENTITY_MATRIX.dtdx,
-            IDENTITY_MATRIX.dsdy,
             IDENTITY_MATRIX.dtdy,
+            IDENTITY_MATRIX.dsdy,
           ),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1');
       expect(
         MATRIX_FORMATTER.format(
           TreeNodeUtils.makeMatrixNode(0.4, 100, 1, 0.1232),
         ),
-      ).toEqual('dsdx: 0.400, dtdx: 100, dsdy: 1, dtdy: 0.123');
+      ).toEqual('dsdx: 0.400, dtdx: 100, dtdy: 1, dsdy: 0.123');
       expect(
         MATRIX_FORMATTER.format(TreeNodeUtils.makeMatrixNode(0, 0, 0, 0)),
       ).toEqual('null');
@@ -201,13 +201,13 @@ describe('Formatters', () => {
           TreeNodeUtils.makePropertyNode('test node', 'transform', {
             dsdx: 1,
             dtdx: 0,
-            dsdy: 0,
-            dtdy: 1,
             tx: 5,
+            dtdy: 0,
+            dsdy: 1,
             ty: 10,
           }),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1, tx: 5, ty: 10');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1, tx: 5, ty: 10');
     });
   });
 
