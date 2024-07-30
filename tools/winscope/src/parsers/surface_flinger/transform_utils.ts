@@ -48,8 +48,8 @@ export class Transform {
         dsdx: assertDefined(matrixNode.getChildByName('dsdx')).getValue(),
         dtdx: assertDefined(matrixNode.getChildByName('dtdx')).getValue(),
         tx: assertDefined(matrixNode.getChildByName('tx')).getValue(),
-        dsdy: assertDefined(matrixNode.getChildByName('dsdy')).getValue(),
         dtdy: assertDefined(matrixNode.getChildByName('dtdy')).getValue(),
+        dsdy: assertDefined(matrixNode.getChildByName('dsdy')).getValue(),
         ty: assertDefined(matrixNode.getChildByName('ty')).getValue(),
       });
     }
@@ -65,8 +65,8 @@ export class Transform {
       dsdx: transformNode.getChildByName('dsdx')?.getValue() ?? 0,
       dtdx: transformNode.getChildByName('dtdx')?.getValue() ?? 0,
       tx: x,
-      dsdy: transformNode.getChildByName('dsdy')?.getValue() ?? 0,
       dtdy: transformNode.getChildByName('dtdy')?.getValue() ?? 0,
+      dsdy: transformNode.getChildByName('dsdy')?.getValue() ?? 0,
       ty: y,
     });
   }
@@ -75,8 +75,8 @@ export class Transform {
 export class TransformUtils {
   static isValidTransform(transform: Transform): boolean {
     return (
-      transform.matrix.dsdx * transform.matrix.dtdy !==
-      transform.matrix.dtdx * transform.matrix.dsdy
+      transform.matrix.dsdx * transform.matrix.dsdy !==
+      transform.matrix.dtdx * transform.matrix.dtdy
     );
   }
 
@@ -155,8 +155,8 @@ export class TransformUtils {
         dsdx: 1,
         dtdx: 0,
         tx: x,
-        dsdy: 0,
-        dtdy: 1,
+        dtdy: 0,
+        dsdy: 1,
         ty: y,
       });
     }
@@ -174,8 +174,8 @@ export class TransformUtils {
         dsdx: 0,
         dtdx: -1,
         tx: x,
-        dsdy: 1,
-        dtdy: 0,
+        dtdy: 1,
+        dsdy: 0,
         ty: y,
       });
     }
@@ -191,8 +191,8 @@ export class TransformUtils {
         dsdx: -1,
         dtdx: 0,
         tx: x,
-        dsdy: 0,
-        dtdy: -1,
+        dtdy: 0,
+        dsdy: -1,
         ty: y,
       });
     }
@@ -203,8 +203,8 @@ export class TransformUtils {
         dsdx: 0,
         dtdx: 1,
         tx: x,
-        dsdy: -1,
-        dtdy: 0,
+        dtdy: -1,
+        dsdy: 0,
         ty: y,
       });
     }
@@ -220,8 +220,8 @@ export class TransformUtils {
         dsdx: 1,
         dtdx: 0,
         tx: x,
-        dsdy: 0,
-        dtdy: 1,
+        dtdy: 0,
+        dsdy: 1,
         ty: y,
       });
     }

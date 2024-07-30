@@ -438,8 +438,8 @@ class Mapper3D {
 
   private matMultiply(mat: TransformMatrix, point: Point3D): Point3D {
     return {
-      x: mat.dsdx * point.x + mat.dsdy * point.y + mat.tx,
-      y: mat.dtdx * point.x + mat.dtdy * point.y + mat.ty,
+      x: mat.dsdx * point.x + mat.dtdx * point.y + mat.tx,
+      y: mat.dtdy * point.x + mat.dsdy * point.y + mat.ty,
       z: point.z,
     };
   }
