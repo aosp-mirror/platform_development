@@ -111,15 +111,19 @@ export class Canvas {
       100,
     );
 
-    const rotationAngleX = (scene.camera.rotationFactor * Math.PI * 45) / 360;
-    const rotationAngleY = rotationAngleX * 1.5;
     const cameraPosition = new THREE.Vector3(
       0,
       0,
       Canvas.TARGET_SCENE_DIAGONAL,
     );
-    cameraPosition.applyAxisAngle(new THREE.Vector3(1, 0, 0), -rotationAngleX);
-    cameraPosition.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationAngleY);
+    cameraPosition.applyAxisAngle(
+      new THREE.Vector3(1, 0, 0),
+      -scene.camera.rotationAngleX,
+    );
+    cameraPosition.applyAxisAngle(
+      new THREE.Vector3(0, 1, 0),
+      scene.camera.rotationAngleY,
+    );
 
     this.camera.position.set(
       cameraPosition.x,
@@ -209,6 +213,7 @@ export class Canvas {
     const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
     spanText.className = 'mat-body-1';
+    spanText.style.backgroundColor = 'var(--background-color)';
 
     // Hack: transparent/placeholder text used to push the visible text towards left
     // (towards negative x) and properly align it with the label's vertical segment
@@ -220,6 +225,7 @@ export class Canvas {
     const div: HTMLElement = document.createElement('div');
     div.className = 'rect-label';
     div.style.display = 'inline';
+    div.style.whiteSpace = 'nowrap';
     div.appendChild(spanText);
     div.appendChild(spanPlaceholder);
 
@@ -246,11 +252,11 @@ export class Canvas {
   private static toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
     return new THREE.Matrix4().set(
       transform.dsdx,
-      transform.dsdy,
+      transform.dtdx,
       0,
       transform.tx,
-      transform.dtdx,
       transform.dtdy,
+      transform.dsdy,
       0,
       transform.ty,
       0,

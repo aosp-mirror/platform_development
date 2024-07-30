@@ -17,7 +17,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use crate_health::{
-    default_output_dir, default_repo_root, maybe_build_cargo_embargo, migrate, ReportEngine,
+    default_output_dir, default_repo_root, maybe_build_cargo_embargo, migrate, RepoPath,
+    ReportEngine,
 };
 
 /// Generate a health report for crates in external/rust/crates
@@ -38,8 +39,11 @@ fn main() -> Result<()> {
 
     maybe_build_cargo_embargo(&args.repo_root, false)?;
 
-    let migration =
-        migrate(args.repo_root, &"external/rust/crates", &"out/rust-crate-migration-report")?;
+    let migration = migrate(
+        RepoPath::new(args.repo_root.clone(), &"external/rust/crates"),
+        RepoPath::new(args.repo_root.clone(), &"out/rust-crate-migration-report"),
+        false,
+    )?;
 
     let re = ReportEngine::new()?;
 

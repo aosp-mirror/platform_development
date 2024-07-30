@@ -213,8 +213,8 @@ describe('RectsComponent', () => {
     const sceneBefore = assertDefined(spy.calls.first().args.at(0));
     const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
 
-    expect(sceneBefore.rects[1].topLeft.z).toEqual(5);
-    expect(sceneAfter.rects[1].topLeft.z).toEqual(0.3);
+    expect(sceneBefore.rects[0].topLeft.z).toEqual(200);
+    expect(sceneAfter.rects[0].topLeft.z).toEqual(12);
   });
 
   it('updates scene on rotation slider change', () => {
@@ -228,8 +228,12 @@ describe('RectsComponent', () => {
     const sceneBefore = assertDefined(spy.calls.first().args.at(0));
     const sceneAfter = assertDefined(spy.calls.mostRecent().args.at(0));
 
-    expect(sceneBefore.camera.rotationFactor).toEqual(1);
-    expect(sceneAfter.camera.rotationFactor).toEqual(0.5);
+    expect(sceneAfter.camera.rotationAngleX).toEqual(
+      sceneBefore.camera.rotationAngleX * 0.5,
+    );
+    expect(sceneAfter.camera.rotationAngleY).toEqual(
+      sceneBefore.camera.rotationAngleY * 0.5,
+    );
   });
 
   it('updates scene on shading mode change', () => {
@@ -330,14 +334,18 @@ describe('RectsComponent', () => {
     const largeRectsScene = assertDefined(spy.calls.first().args.at(0));
     const miniRectsScene = assertDefined(spy.calls.mostRecent().args.at(0));
 
-    expect(largeRectsScene.camera.rotationFactor).toEqual(0.5);
-    expect(miniRectsScene.camera.rotationFactor).toEqual(1);
+    expect(largeRectsScene.camera.rotationAngleX).toEqual(
+      miniRectsScene.camera.rotationAngleX * 0.5,
+    );
+    expect(largeRectsScene.camera.rotationAngleY).toEqual(
+      miniRectsScene.camera.rotationAngleY * 0.5,
+    );
 
     expect(largeRectsScene.rects[0].colorType).toEqual(ColorType.EMPTY);
     expect(miniRectsScene.rects[0].colorType).toEqual(ColorType.VISIBLE);
 
-    expect(largeRectsScene.rects[1].topLeft.z).toEqual(0.3);
-    expect(miniRectsScene.rects[1].topLeft.z).toEqual(5);
+    expect(largeRectsScene.rects[0].topLeft.z).toEqual(12);
+    expect(miniRectsScene.rects[0].topLeft.z).toEqual(200);
   });
 
   it('handles collapse button click', () => {
@@ -421,7 +429,6 @@ describe('RectsComponent', () => {
       .setIsDisplay(false)
       .setId('test-id-1234')
       .setGroupId(groupId)
-      .setIsVirtual(false)
       .setIsClickable(false)
       .setCornerRadius(0)
       .setDepth(0)

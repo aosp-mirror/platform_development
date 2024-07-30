@@ -33,13 +33,13 @@ export class CorruptedArchive extends UserWarning {
   }
 }
 
-export class NoInputFiles extends UserWarning {
+export class NoValidFiles extends UserWarning {
   getDescriptor(): string {
-    return 'no input';
+    return 'no valid files';
   }
 
   getMessage(): string {
-    return `Input has no valid trace files`;
+    return `No valid trace files found`;
   }
 }
 
@@ -118,5 +118,67 @@ export class InvalidPerfettoTrace extends UserWarning {
 
   getMessage(): string {
     return `${this.descriptor}: ${this.parserErrorMessages.join(', ')}`;
+  }
+}
+
+export class CannotVisualizeTraceEntry extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'cannot visualize trace entry';
+  }
+
+  getMessage(): string {
+    return this.errorMessage;
+  }
+}
+
+export class FailedToInitializeTimelineData extends UserWarning {
+  getDescriptor(): string {
+    return 'failed to initialize timeline data';
+  }
+
+  getMessage(): string {
+    return 'Cannot visualize all traces: Failed to initialize timeline data.\nTry removing some traces.';
+  }
+}
+
+export class IncompleteFrameMapping extends UserWarning {
+  constructor(private readonly errorMessage: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'incomplete frame mapping';
+  }
+
+  getMessage(): string {
+    return `Error occurred in frame mapping: ${this.errorMessage}`;
+  }
+}
+
+export class NoTraceTargetsSelected extends UserWarning {
+  getDescriptor(): string {
+    return 'No trace targets selected';
+  }
+
+  getMessage(): string {
+    return 'No trace targets selected.';
+  }
+}
+
+export class MissingVsyncId extends UserWarning {
+  constructor(private readonly tableName: string) {
+    super();
+  }
+
+  getDescriptor(): string {
+    return 'missing vsync id';
+  }
+
+  getMessage(): string {
+    return `missing vsync_id value for one or more entries in ${this.tableName}`;
   }
 }

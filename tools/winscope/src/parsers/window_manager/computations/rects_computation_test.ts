@@ -15,13 +15,21 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {com} from 'protos/windowmanager/latest/static';
+import {perfetto} from 'protos/windowmanager/latest/static';
+import {com} from 'protos/windowmanager/udc/static';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {TraceRect} from 'trace/trace_rect';
 import {TraceRectBuilder} from 'trace/trace_rect_builder';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {RectsComputation} from './rects_computation';
+
+type DisplayContentProto =
+  | com.android.server.wm.IDisplayContentProto
+  | perfetto.protos.IDisplayContentProto;
+type WindowStateProto =
+  | com.android.server.wm.IWindowStateProto
+  | perfetto.protos.IWindowStateProto;
 
 describe('RectsComputation', () => {
   let hierarchyRoot: HierarchyTreeNode;
@@ -43,7 +51,7 @@ describe('RectsComputation', () => {
               logicalWidth: 5,
               logicalHeight: 5,
             },
-          } as com.android.server.wm.IDisplayContentProto,
+          } as DisplayContentProto,
         },
       ])
       .build();
@@ -67,7 +75,7 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(true)
-        .setIsVirtual(false)
+        .setIsSpy(false)
         .build(),
     ];
 
@@ -87,7 +95,7 @@ describe('RectsComputation', () => {
       attributes: {
         alpha: 0.5,
       },
-    } as com.android.server.wm.IWindowStateProto);
+    } as WindowStateProto);
 
     state1Node.addOrReplaceChild(
       TreeNodeUtils.makeHierarchyNode({
@@ -101,7 +109,7 @@ describe('RectsComputation', () => {
         attributes: {
           alpha: 0.5,
         },
-      } as com.android.server.wm.IWindowStateProto),
+      } as WindowStateProto),
     );
     displayContent.addOrReplaceChild(state1Node);
 
@@ -118,8 +126,8 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(true)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
+        .setIsSpy(false)
         .build(),
 
       new TraceRectBuilder()
@@ -134,8 +142,8 @@ describe('RectsComputation', () => {
         .setGroupId(1)
         .setIsVisible(false)
         .setIsDisplay(false)
-        .setIsVirtual(false)
         .setOpacity(0.5)
+        .setIsSpy(false)
         .build(),
     ];
 

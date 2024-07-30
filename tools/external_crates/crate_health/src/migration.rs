@@ -15,7 +15,6 @@
 use std::{
     fs::{copy, read_link, remove_dir_all},
     os::unix::fs::symlink,
-    path::{Path, PathBuf},
     process::Output,
 };
 
@@ -24,7 +23,7 @@ use glob::glob;
 
 use crate::{
     copy_dir, crate_type::diff_android_bp, most_recent_version, CompatibleVersionPair, Crate,
-    CrateCollection, Migratable, NameAndVersionMap, PseudoCrate, VersionMatch,
+    CrateCollection, Migratable, NameAndVersionMap, PseudoCrate, RepoPath, VersionMatch,
 };
 
 static CUSTOMIZATIONS: &'static [&'static str] =
@@ -34,13 +33,14 @@ static SYMLINKS: &'static [&'static str] = &["LICENSE", "NOTICE"];
 
 impl<'a> CompatibleVersionPair<'a, Crate> {
     pub fn copy_customizations(&self) -> Result<()> {
-        let dest_dir_absolute = self.dest.root().join(self.dest.staging_path());
+        let dest_dir_absolute = self.dest.staging_path().abs();
         for pattern in CUSTOMIZATIONS {
             let full_pattern = self.source.path().join(pattern);
             for entry in glob(
                 full_pattern
+                    .abs()
                     .to_str()
-                    .ok_or(anyhow!("Failed to convert path {} to str", full_pattern.display()))?,
+                    .ok_or(anyhow!("Failed to convert path {} to str", full_pattern))?,
             )? {
                 let entry = entry?;
                 let filename = entry
@@ -51,7 +51,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
                     copy_dir(&entry, &dest_dir_absolute.join(filename)).context(format!(
                         "Failed to copy {} to {}",
                         entry.display(),
-                        dest_dir_absolute.display()
+                        self.dest.staging_path()
                     ))?;
                 } else {
                     let dest_file = dest_dir_absolute.join(&filename);
@@ -68,8 +68,8 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
         }
         for link in SYMLINKS {
             let src_path = self.source.path().join(link);
-            if src_path.is_symlink() {
-                let dest = read_link(src_path)?;
+            if src_path.abs().is_symlink() {
+                let dest = read_link(src_path.abs())?;
                 if dest.exists() {
                     return Err(anyhow!(
                         "Can't symlink {} -> {} because destination exists",
@@ -84,37 +84,38 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
     }
     pub fn diff_android_bps(&self) -> Result<Output> {
         diff_android_bp(
-            &self.source.android_bp(),
-            &self.dest.staging_path().join("Android.bp"),
-            &self.source.root(),
+            &self.source.android_bp().rel(),
+            &self.dest.staging_path().join(&"Android.bp").rel(),
+            &self.source.path().root(),
         )
         .context("Failed to diff Android.bp".to_string())
     }
 }
 
-pub fn migrate<P: Into<PathBuf>>(
-    repo_root: P,
-    source_dir: &impl AsRef<Path>,
-    pseudo_crate_dir: &impl AsRef<Path>,
+pub fn migrate(
+    source_dir: RepoPath,
+    pseudo_crate_dir: RepoPath,
+    exact_versions: bool,
 ) -> Result<VersionMatch<CrateCollection>> {
-    let mut source = CrateCollection::new(repo_root);
-    source.add_from(source_dir, None::<&&str>)?;
+    let mut source = CrateCollection::new(source_dir.root());
+    source.add_from(&source_dir.rel())?;
     source.map_field_mut().retain(|_nv, krate| krate.is_crates_io());
 
-    let pseudo_crate = PseudoCrate::new(source.repo_root().join(pseudo_crate_dir));
-    if pseudo_crate.get_path().exists() {
-        remove_dir_all(pseudo_crate.get_path())
-            .context(format!("Failed to remove {}", pseudo_crate.get_path().display()))?;
+    let pseudo_crate = PseudoCrate::new(pseudo_crate_dir);
+    if pseudo_crate.get_path().abs().exists() {
+        remove_dir_all(pseudo_crate.get_path().abs())
+            .context(format!("Failed to remove {}", pseudo_crate.get_path()))?;
     }
     pseudo_crate.init(
         source
             .filter_versions(&most_recent_version)
             .filter(|(_nv, krate)| krate.is_migration_eligible())
             .map(|(_nv, krate)| krate),
+        exact_versions,
     )?;
 
     let mut dest = CrateCollection::new(source.repo_root());
-    dest.add_from(&pseudo_crate_dir.as_ref().join("vendor"), Some(pseudo_crate_dir))?;
+    dest.add_from(&pseudo_crate.get_path().join(&"vendor").rel())?;
 
     let mut version_match = VersionMatch::new(source, dest)?;
 

@@ -28,7 +28,6 @@ export class UiRectBuilder {
   isDisplay: boolean | undefined;
   id: string | undefined;
   groupId: number | undefined;
-  isVirtual: boolean | undefined;
   isClickable: boolean | undefined;
   cornerRadius: number | undefined;
   depth: number | undefined;
@@ -85,11 +84,6 @@ export class UiRectBuilder {
     return this;
   }
 
-  setIsVirtual(value: boolean) {
-    this.isVirtual = value;
-    return this;
-  }
-
   setIsClickable(value: boolean) {
     this.isClickable = value;
     return this;
@@ -117,55 +111,51 @@ export class UiRectBuilder {
 
   build(): UiRect {
     if (this.x === undefined) {
-      throw Error('x not set');
+      throw new Error('x not set');
     }
 
     if (this.y === undefined) {
-      throw Error('y not set');
+      throw new Error('y not set');
     }
 
     if (this.w === undefined) {
-      throw Error('width not set');
+      throw new Error('width not set');
     }
 
     if (this.h === undefined) {
-      throw Error('height not set');
+      throw new Error('height not set');
     }
 
     if (this.label === undefined) {
-      throw Error('label not set');
+      throw new Error('label not set');
     }
 
     if (this.isVisible === undefined) {
-      throw Error('isVisible not set');
+      throw new Error('isVisible not set');
     }
 
     if (this.isDisplay === undefined) {
-      throw Error('isDisplay not set');
+      throw new Error('isDisplay not set');
     }
 
     if (this.id === undefined) {
-      throw Error('id not set');
+      throw new Error('id not set');
     }
 
     if (this.groupId === undefined) {
-      throw Error('groupId not set');
-    }
-
-    if (this.isVirtual === undefined) {
-      throw Error('isVirtual not set');
+      throw new Error('groupId not set');
     }
 
     if (this.isClickable === undefined) {
-      throw Error('isClickable not set');
+      throw new Error('isClickable not set');
     }
 
     if (this.cornerRadius === undefined) {
-      throw Error('cornerRadius not set');
+      throw new Error('cornerRadius not set');
     }
 
     if (this.depth === undefined) {
-      throw Error('depth not set');
+      throw new Error('depth not set');
     }
 
     return new UiRect(
@@ -178,7 +168,6 @@ export class UiRectBuilder {
       this.isDisplay,
       this.id,
       this.groupId,
-      this.isVirtual,
       this.isClickable,
       this.cornerRadius,
       this.transform,

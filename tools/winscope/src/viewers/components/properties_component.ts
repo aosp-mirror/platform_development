@@ -106,10 +106,6 @@ import {viewerCardInnerStyle} from './styles/viewer_card.styles';
         overflow-y: auto;
         padding: 0px 12px;
       }
-
-      .placeholder-text {
-        padding: 8px 12px;
-      }
     `,
     nodeStyles,
     searchBoxStyle,

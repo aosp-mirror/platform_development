@@ -17,7 +17,7 @@
 import {VIRTUAL_SCROLL_STRATEGY} from '@angular/cdk/scrolling';
 import {Directive, forwardRef} from '@angular/core';
 import {VariableHeightScrollDirective} from 'viewers/common/variable_height_scroll_directive';
-import {UiDataEntry} from 'viewers/viewer_transactions/ui_data';
+import {TransactionsEntry} from 'viewers/viewer_transactions/ui_data';
 import {TransactionsScrollStrategy} from './transactions_scroll_strategy';
 
 @Directive({
@@ -30,6 +30,6 @@ import {TransactionsScrollStrategy} from './transactions_scroll_strategy';
     },
   ],
 })
-export class TransactionsScrollDirective extends VariableHeightScrollDirective<UiDataEntry> {
+export class TransactionsScrollDirective extends VariableHeightScrollDirective<TransactionsEntry> {
   scrollStrategy = new TransactionsScrollStrategy();
 }

@@ -928,6 +928,18 @@ fn crate_to_bp_modules(
             m.props.set("host_supported", true);
         }
 
+        if module_type != "rust_proc_macro" {
+            if package_cfg.host_supported && !package_cfg.host_cross_supported {
+                m.props.set("host_cross_supported", false);
+            } else if crate_.externs.iter().any(|extern_dep| extern_dep.name == "proc_macro2") {
+                // proc_macro2 is host_cross_supported: false.
+                // If there's a dependency on it, then we shouldn't build for HostCross.
+                m.props.set("host_cross_supported", false);
+            } else if crate_.package_name == "proc-macro2" {
+                m.props.set("host_cross_supported", false);
+            }
+        }
+
         if !crate_type.is_test() && package_cfg.host_supported && package_cfg.host_first_multilib {
             m.props.set("compile_multilib", "first");
         }
@@ -1117,8 +1129,10 @@ fn crate_to_rulesmk(
         contents += "\n";
     }
 
-    // crate dependencies without lib- prefix
-    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.lib_name.clone()).collect();
+    // crate dependencies without lib- prefix. Since paths to trusty modules may
+    // contain hyphens, we generate the module path using the raw name output by
+    // cargo metadata or cargo build.
+    let mut library_deps: Vec<_> = crate_.externs.iter().map(|dep| dep.raw_name.clone()).collect();
     if package_cfg.no_std {
         contents += "MODULE_ADD_IMPLICIT_DEPS := false\n";
         library_deps.push("compiler_builtins".to_string());

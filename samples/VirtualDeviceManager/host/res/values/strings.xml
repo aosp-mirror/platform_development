@@ -50,6 +50,8 @@
     <string name="internal_pref_home_displays_supported" translatable="false">home_displays_supported</string>
     <string name="internal_pref_mirror_displays_supported" translatable="false">mirror_displays_supported</string>
     <string name="internal_pref_virtual_stylus_supported" translatable="false">virtual_stylus_supported</string>
+    <string name="internal_pref_virtual_rotary_supported" translatable="false">virtual_rotary_supported</string>
+    <string name="internal_pref_display_rotation_supported" translatable="false">display_rotation_supported</string>
 
     <string name="app_streaming" translatable="false">android.app.role.COMPANION_DEVICE_APP_STREAMING</string>
     <string name="nearby_device_streaming" translatable="false">android.app.role.COMPANION_DEVICE_NEARBY_DEVICE_STREAMING</string>

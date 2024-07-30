@@ -15,6 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
+import {TraceRect} from 'trace/trace_rect';
 import {HierarchyTreeNode} from 'trace/tree_node/hierarchy_tree_node';
 import {OperationChain} from 'trace/tree_node/operations/operation_chain';
 import {PropertiesProvider} from 'trace/tree_node/properties_provider';
@@ -85,7 +86,13 @@ export class HierarchyTreeBuilder extends TreeBuilder<
       .setChildren(child.children ?? [])
       .build();
     rootNode.addOrReplaceChild(childNode);
-    childNode.setZParent(rootNode);
+    childNode.setParent(rootNode);
+    if (child.rects !== undefined) {
+      childNode.setRects(child.rects);
+    }
+    if (child.secondaryRects !== undefined) {
+      childNode.setSecondaryRects(child.secondaryRects);
+    }
   }
 
   private makeHierarchyNodeId() {
@@ -98,4 +105,6 @@ export interface ChildHierarchy {
   name: string;
   properties?: any;
   children?: ChildHierarchy[];
+  rects?: TraceRect[];
+  secondaryRects?: TraceRect[];
 }

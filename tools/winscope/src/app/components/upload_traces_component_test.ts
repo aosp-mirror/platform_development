@@ -23,7 +23,6 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {UnitTestUtils} from 'test/unit/utils';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -98,7 +97,7 @@ describe('UploadTracesComponent', () => {
   it('can remove one of two uploaded traces', async () => {
     await loadFiles([validSfFile, validWmFile]);
     fixture.detectChanges();
-    expect(component.tracePipeline.getTraces().getSize()).toBe(2);
+    expect(component.tracePipeline?.getTraces().getSize()).toBe(2);
 
     const spy = spyOn(component, 'onOperationFinished');
     const removeButton = assertDefined(
@@ -108,7 +107,7 @@ describe('UploadTracesComponent', () => {
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.uploaded-files'));
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline.getTraces().getSize()).toBe(1);
+    expect(component.tracePipeline?.getTraces().getSize()).toBe(1);
   });
 
   it('handles removal of the only uploaded trace', async () => {
@@ -123,13 +122,13 @@ describe('UploadTracesComponent', () => {
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.drop-info'));
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline.getTraces().getSize()).toBe(0);
+    expect(component.tracePipeline?.getTraces().getSize()).toBe(0);
   });
 
   it('can remove all uploaded traces', async () => {
     await loadFiles([validSfFile, validWmFile]);
     fixture.detectChanges();
-    expect(component.tracePipeline.getTraces().getSize()).toBe(2);
+    expect(component.tracePipeline?.getTraces().getSize()).toBe(2);
 
     const spy = spyOn(component, 'onOperationFinished');
     const clearAllButton = assertDefined(
@@ -139,10 +138,10 @@ describe('UploadTracesComponent', () => {
     fixture.detectChanges();
     assertDefined(htmlElement.querySelector('.drop-info'));
     expect(spy).toHaveBeenCalled();
-    expect(component.tracePipeline.getTraces().getSize()).toBe(0);
+    expect(component.tracePipeline?.getTraces().getSize()).toBe(0);
   });
 
-  it('can triggers view traces event', async () => {
+  it('can emit view traces event', async () => {
     await loadFiles([validSfFile]);
     fixture.detectChanges();
 
@@ -153,23 +152,6 @@ describe('UploadTracesComponent', () => {
     (viewTracesButton as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
-  });
-
-  it('disables view traces button unless files with viewers uploaded', async () => {
-    const validEventlogFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog.winscope',
-    );
-    await loadFiles([validEventlogFile]);
-    fixture.detectChanges();
-
-    const viewTracesButton = assertDefined(
-      htmlElement.querySelector('.load-btn'),
-    );
-    expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
-
-    await loadFiles([validSfFile]);
-    fixture.detectChanges();
-    expect((viewTracesButton as HTMLButtonElement).disabled).toBeFalse();
   });
 
   it('shows warning elements for traces without visualization', async () => {
@@ -186,23 +168,22 @@ describe('UploadTracesComponent', () => {
     expect((viewTracesButton as HTMLButtonElement).disabled).toBeTrue();
   });
 
-  it('shows info elements for traces with upload info for the user', async () => {
-    const shellTransitionFile = await UnitTestUtils.getFixtureFile(
-      'traces/eventlog.winscope',
-    );
-    await loadFiles([shellTransitionFile]);
+  it('emits download traces event', async () => {
+    await loadFiles([validSfFile]);
     fixture.detectChanges();
 
-    expect(htmlElement.querySelector('.info-icon')).toBeTruthy();
+    const spy = spyOn(component.downloadTracesClick, 'emit');
+    const downloadTracesButton = assertDefined(
+      htmlElement.querySelector('.download-btn'),
+    );
+    (downloadTracesButton as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(spy).toHaveBeenCalled();
   });
 
   async function loadFiles(files: File[]) {
-    component.tracePipeline.clear();
-    await component.tracePipeline.loadFiles(
-      files,
-      FilesSource.TEST,
-      new UserNotificationsListenerStub(),
-      undefined,
-    );
+    const tracePipeline = assertDefined(component.tracePipeline);
+    tracePipeline.clear();
+    await tracePipeline.loadFiles(files, FilesSource.TEST, undefined);
   }
 });

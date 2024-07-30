@@ -30,9 +30,9 @@ export class TraceRectBuilder {
   groupId: number | undefined;
   isVisible: boolean | undefined;
   isDisplay: boolean | undefined;
-  isVirtual: boolean | undefined;
   depth: number | undefined;
   opacity: number | undefined;
+  isSpy: boolean | undefined;
 
   setX(value: number) {
     this.x = value;
@@ -89,11 +89,6 @@ export class TraceRectBuilder {
     return this;
   }
 
-  setIsVirtual(value: boolean) {
-    this.isVirtual = value;
-    return this;
-  }
-
   setDepth(value: number) {
     this.depth = value;
     return this;
@@ -104,53 +99,58 @@ export class TraceRectBuilder {
     return this;
   }
 
+  setIsSpy(value: boolean) {
+    this.isSpy = value;
+    return this;
+  }
+
   build(): TraceRect {
     if (this.x === undefined) {
-      throw Error('x not set');
+      throw new Error('x not set');
     }
 
     if (this.y === undefined) {
-      throw Error('y not set');
+      throw new Error('y not set');
     }
 
     if (this.w === undefined) {
-      throw Error('width not set');
+      throw new Error('width not set');
     }
 
     if (this.h === undefined) {
-      throw Error('height not set');
+      throw new Error('height not set');
     }
 
     if (this.id === undefined) {
-      throw Error('id not set');
+      throw new Error('id not set');
     }
 
     if (this.name === undefined) {
-      throw Error('name not set');
+      throw new Error('name not set');
     }
 
     if (this.cornerRadius === undefined) {
-      throw Error('cornerRadius not set');
+      throw new Error('cornerRadius not set');
     }
 
     if (this.groupId === undefined) {
-      throw Error('groupId not set');
+      throw new Error('groupId not set');
     }
 
     if (this.isVisible === undefined) {
-      throw Error('isVisible not set');
+      throw new Error('isVisible not set');
     }
 
     if (this.isDisplay === undefined) {
-      throw Error('isDisplay not set');
-    }
-
-    if (this.isVirtual === undefined) {
-      throw Error('isVirtual not set');
+      throw new Error('isDisplay not set');
     }
 
     if (this.depth === undefined) {
-      throw Error('depth not set');
+      throw new Error('depth not set');
+    }
+
+    if (this.isSpy === undefined) {
+      throw new Error('isSpy not set');
     }
 
     return new TraceRect(
@@ -165,9 +165,9 @@ export class TraceRectBuilder {
       this.groupId,
       this.isVisible,
       this.isDisplay,
-      this.isVirtual,
       this.depth,
       this.opacity,
+      this.isSpy,
     );
   }
 }

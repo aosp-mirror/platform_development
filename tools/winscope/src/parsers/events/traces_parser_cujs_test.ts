@@ -20,10 +20,13 @@ import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Parser} from 'trace/parser';
 import {TraceType} from 'trace/trace_type';
+import {
+  CUJ_TYPE_FORMATTER,
+  DEFAULT_PROPERTY_FORMATTER,
+} from 'trace/tree_node/formatters';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {CujType} from './cuj_type';
 
-describe('ParserCujs', () => {
+describe('TracesParserCujs', () => {
   let parser: Parser<PropertyTreeNode>;
 
   beforeAll(async () => {
@@ -58,26 +61,27 @@ describe('ParserCujs', () => {
       .setIsRoot(true)
       .setChildren([
         {
-          name: 'startCujType',
-          value: CujType.CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS,
+          name: 'cujType',
+          value: 66,
+          formatter: CUJ_TYPE_FORMATTER,
         },
         {
           name: 'startTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048025580000n},
-            {name: 'elapsedNanos', value: 2661012903966n},
-            {name: 'systemUptimeNanos', value: 2661012904007n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048025580000n,
+            ),
+          formatter: DEFAULT_PROPERTY_FORMATTER,
         },
         {
           name: 'endTimestamp',
-          children: [
-            {name: 'unixNanos', value: 1681207048656617000n},
-            {name: 'elapsedNanos', value: 2661643941035n},
-            {name: 'systemUptimeNanos', value: 266164394123n},
-          ],
+          value:
+            TimestampConverterUtils.TIMESTAMP_CONVERTER.makeTimestampFromNs(
+              1681207048643085000n,
+            ),
+          formatter: DEFAULT_PROPERTY_FORMATTER,
         },
-        {name: 'canceled', value: false},
+        {name: 'canceled', value: true, formatter: DEFAULT_PROPERTY_FORMATTER},
       ])
       .build();
 
