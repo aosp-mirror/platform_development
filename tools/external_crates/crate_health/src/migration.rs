@@ -95,6 +95,7 @@ impl<'a> CompatibleVersionPair<'a, Crate> {
 pub fn migrate(
     source_dir: RepoPath,
     pseudo_crate_dir: RepoPath,
+    exact_versions: bool,
 ) -> Result<VersionMatch<CrateCollection>> {
     let mut source = CrateCollection::new(source_dir.root());
     source.add_from(&source_dir.rel())?;
@@ -110,6 +111,7 @@ pub fn migrate(
             .filter_versions(&most_recent_version)
             .filter(|(_nv, krate)| krate.is_migration_eligible())
             .map(|(_nv, krate)| krate),
+        exact_versions,
     )?;
 
     let mut dest = CrateCollection::new(source.repo_root());
