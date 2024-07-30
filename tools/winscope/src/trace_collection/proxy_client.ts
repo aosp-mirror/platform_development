@@ -200,8 +200,12 @@ class ProxyRequest {
       (request: XMLHttpRequest) => {
         if (request.responseText !== 'True') {
           view.endTrace();
-        } else if (view.keep_alive_worker === null) {
-          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000, view);
+        } else if (view.keep_alive_worker === undefined) {
+          view.keep_alive_worker = window.setInterval(
+            view.keepAliveTrace,
+            1000,
+            view,
+          );
         }
       },
     );
@@ -235,8 +239,8 @@ class ProxyRequest {
       if (last && client.devices[last] && client.devices[last].authorised) {
         client.selectDevice(last);
       } else {
-        if (client.refresh_worker === null) {
-          client.refresh_worker = setInterval(client.getDevices, 1000);
+        if (client.refresh_worker === undefined) {
+          client.refresh_worker = window.setInterval(client.getDevices, 1000);
         }
         client.setState(ProxyState.DEVICES);
       }
@@ -296,7 +300,7 @@ export class ProxyClient {
   stateChangeListeners: Array<{
     (param: ProxyState, errorText: string): Promise<void>;
   }> = [];
-  refresh_worker: NodeJS.Timer | null = null;
+  refresh_worker: number | undefined;
   devices: Device = {};
   selectedDevice = '';
   errorText = '';
@@ -331,8 +335,8 @@ export class ProxyClient {
       this.state !== ProxyState.DEVICES &&
       this.state !== ProxyState.CONNECTING
     ) {
-      clearInterval(this.refresh_worker!);
-      this.refresh_worker = null;
+      window.clearInterval(this.refresh_worker);
+      this.refresh_worker = undefined;
       return;
     }
     proxyRequest.getDevices(this);
