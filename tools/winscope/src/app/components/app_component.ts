@@ -38,6 +38,7 @@ import {PersistentStore} from 'common/persistent_store';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {Timestamp} from 'common/time';
 import {UrlUtils} from 'common/url_utils';
+import {UserNotifier} from 'common/user_notifier';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {Analytics} from 'logging/analytics';
 import {
@@ -342,7 +343,6 @@ export class AppComponent implements WinscopeEventListener {
 
   isDarkModeOn = false;
   changeDetectorRef: ChangeDetectorRef;
-  snackbarOpener: SnackBarOpener;
   tracePipeline: TracePipeline;
   mediator: Mediator;
   currentTimestamp?: Timestamp;
@@ -368,13 +368,13 @@ export class AppComponent implements WinscopeEventListener {
   constructor(
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    @Inject(SnackBarOpener) snackBar: SnackBarOpener,
+    @Inject(SnackBarOpener) snackbarOpener: SnackBarOpener,
     @Inject(Title) private pageTitle: Title,
     @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatDialog) private dialog: MatDialog,
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.snackbarOpener = snackBar;
+    UserNotifier.setSnackBarOpener(snackbarOpener);
     this.tracePipeline = new TracePipeline();
     this.crossToolProtocol = new CrossToolProtocol(
       this.tracePipeline.getTimestampConverter(),
@@ -385,7 +385,6 @@ export class AppComponent implements WinscopeEventListener {
       this.abtChromeExtensionProtocol,
       this.crossToolProtocol,
       this,
-      this.snackbarOpener,
       localStorage,
     );
 

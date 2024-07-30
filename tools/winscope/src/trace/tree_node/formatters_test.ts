@@ -22,6 +22,7 @@ import {TreeNodeUtils} from 'test/unit/tree_node_utils';
 import {
   BUFFER_FORMATTER,
   COLOR_FORMATTER,
+  CUJ_TYPE_FORMATTER,
   DEFAULT_PROPERTY_FORMATTER,
   EMPTY_ARRAY_STRING,
   EMPTY_OBJ_STRING,
@@ -182,16 +183,16 @@ describe('Formatters', () => {
           TreeNodeUtils.makeMatrixNode(
             IDENTITY_MATRIX.dsdx,
             IDENTITY_MATRIX.dtdx,
-            IDENTITY_MATRIX.dsdy,
             IDENTITY_MATRIX.dtdy,
+            IDENTITY_MATRIX.dsdy,
           ),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1');
       expect(
         MATRIX_FORMATTER.format(
           TreeNodeUtils.makeMatrixNode(0.4, 100, 1, 0.1232),
         ),
-      ).toEqual('dsdx: 0.400, dtdx: 100, dsdy: 1, dtdy: 0.123');
+      ).toEqual('dsdx: 0.400, dtdx: 100, dtdy: 1, dsdy: 0.123');
       expect(
         MATRIX_FORMATTER.format(TreeNodeUtils.makeMatrixNode(0, 0, 0, 0)),
       ).toEqual('null');
@@ -200,13 +201,13 @@ describe('Formatters', () => {
           TreeNodeUtils.makePropertyNode('test node', 'transform', {
             dsdx: 1,
             dtdx: 0,
-            dsdy: 0,
-            dtdy: 1,
             tx: 5,
+            dtdy: 0,
+            dsdy: 1,
             ty: 10,
           }),
         ),
-      ).toEqual('dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1, tx: 5, ty: 10');
+      ).toEqual('dsdx: 1, dtdx: 0, dtdy: 0, dsdy: 1, tx: 5, ty: 10');
     });
   });
 
@@ -283,6 +284,30 @@ describe('Formatters', () => {
       expect(REGION_FORMATTER.format(region)).toEqual(
         'SkRegion((0, 0, 1080, 2340))',
       );
+    });
+  });
+
+  describe('CujTypeFormatter', () => {
+    it('translates known cuj type correctly', () => {
+      const cujType = new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('cujType')
+        .setValue(66)
+        .build();
+
+      expect(CUJ_TYPE_FORMATTER.format(cujType)).toEqual(
+        'CUJ_LAUNCHER_APP_SWIPE_TO_RECENTS (66)',
+      );
+    });
+
+    it('translates unknown cuj type correctly', () => {
+      const cujType = new PropertyTreeBuilder()
+        .setRootId('test node')
+        .setName('cujType')
+        .setValue(-1)
+        .build();
+
+      expect(CUJ_TYPE_FORMATTER.format(cujType)).toEqual('UNKNOWN (-1)');
     });
   });
 });

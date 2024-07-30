@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {ParserTimestampConverter} from 'common/timestamp_converter';
+import {UserNotifier} from 'common/user_notifier';
 import {ProgressListener} from 'messaging/progress_listener';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
 import {UnsupportedFileFormat} from 'messaging/user_warnings';
 import {ParserEventLog} from 'parsers/events/parser_eventlog';
 import {FileAndParser} from 'parsers/file_and_parser';
@@ -59,7 +59,6 @@ export class ParserFactory {
     traceFiles: TraceFile[],
     timestampConverter: ParserTimestampConverter,
     progressListener?: ProgressListener,
-    notificationListener?: UserNotificationsListener,
   ): Promise<FileAndParser[]> {
     const parsers = new Array<{file: TraceFile; parser: Parser<object>}>();
 
@@ -91,9 +90,7 @@ export class ParserFactory {
       }
 
       if (!hasFoundParser) {
-        notificationListener?.onNotifications([
-          new UnsupportedFileFormat(traceFile.getDescriptor()),
-        ]);
+        UserNotifier.add(new UnsupportedFileFormat(traceFile.getDescriptor()));
       }
     }
     return parsers;

@@ -42,6 +42,7 @@ fn main() -> Result<()> {
     let migration = migrate(
         RepoPath::new(args.repo_root.clone(), &"external/rust/crates"),
         RepoPath::new(args.repo_root.clone(), &"out/rust-crate-migration-report"),
+        false,
     )?;
 
     let re = ReportEngine::new()?;
