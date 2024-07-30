@@ -167,5 +167,7 @@ export class TranslateIntDef implements Operation<PropertyTreeNode> {
       'android.view.WindowInsets.Type.InsetsType',
     'InsetsSourceConsumerProto.typeNumber':
       'android.view.WindowInsets.Type.InsetsType',
+    'WindowStateProto.requestedVisibleTypes':
+      'android.view.WindowInsets.Type.InsetsType',
   };
 }

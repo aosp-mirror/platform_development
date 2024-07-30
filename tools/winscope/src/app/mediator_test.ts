@@ -22,8 +22,6 @@ import {TimestampConverter} from 'common/timestamp_converter';
 import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
 import {ProgressListener} from 'messaging/progress_listener';
 import {ProgressListenerStub} from 'messaging/progress_listener_stub';
-import {UserNotificationsListener} from 'messaging/user_notifications_listener';
-import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {IncompleteFrameMapping, NoValidFiles} from 'messaging/user_warnings';
 import {
   ActiveTraceChanged,
@@ -49,6 +47,7 @@ import {WinscopeEventListener} from 'messaging/winscope_event_listener';
 import {WinscopeEventListenerStub} from 'messaging/winscope_event_listener_stub';
 import {TimestampConverterUtils} from 'test/unit/timestamp_converter_utils';
 import {TraceBuilder} from 'test/unit/trace_builder';
+import {UserNotifierChecker} from 'test/unit/user_notifier_checker';
 import {UnitTestUtils} from 'test/unit/utils';
 import {Trace} from 'trace/trace';
 import {TracePosition} from 'trace/trace_position';
@@ -76,7 +75,6 @@ describe('Mediator', () => {
     .build();
 
   let inputFiles: File[];
-  let userNotificationsListener: UserNotificationsListener;
   let tracePipeline: TracePipeline;
   let timelineData: TimelineData;
   let abtChromeExtensionProtocol: WinscopeEventEmitter & WinscopeEventListener;
@@ -89,7 +87,8 @@ describe('Mediator', () => {
     WinscopeEventListenerStub;
   let traceViewComponent: WinscopeEventEmitter & WinscopeEventListener;
   let mediator: Mediator;
-  let spies: Array<jasmine.Spy<any>>;
+  let spies: Array<jasmine.Spy<jasmine.Func>>;
+  let userNotifierChecker: UserNotifierChecker;
 
   const viewerStub0 = new ViewerStub('Title0', undefined, traceSf);
   const viewerStub1 = new ViewerStub('Title1', undefined, traceWm);
@@ -121,11 +120,12 @@ describe('Mediator', () => {
         'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4',
       ),
     ];
+    userNotifierChecker = new UserNotifierChecker();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
+    userNotifierChecker.reset();
     jasmine.addCustomEqualityTester(tracePositionUpdateEqualityTester);
-    userNotificationsListener = new UserNotificationsListenerStub();
     tracePipeline = new TracePipeline();
     timelineData = new TimelineData();
     abtChromeExtensionProtocol = FunctionUtils.mixin(
@@ -158,7 +158,6 @@ describe('Mediator', () => {
       abtChromeExtensionProtocol,
       crossToolProtocol,
       appComponent,
-      userNotificationsListener,
       new InMemoryStorage(),
     );
     mediator.setTimelineComponent(timelineComponent);
@@ -186,7 +185,6 @@ describe('Mediator', () => {
       spyOn(traceViewComponent, 'onWinscopeEvent'),
       spyOn(uploadTracesComponent, 'onProgressUpdate'),
       spyOn(uploadTracesComponent, 'onOperationFinished'),
-      spyOn(userNotificationsListener, 'onNotifications'),
       spyOn(viewerStub0, 'onWinscopeEvent'),
       spyOn(viewerStub1, 'onWinscopeEvent'),
       spyOn(viewerOverlay, 'onWinscopeEvent'),
@@ -224,9 +222,7 @@ describe('Mediator', () => {
 
   it('handles empty collected traces from Winscope', async () => {
     await mediator.onWinscopeEvent(new AppFilesCollected([]));
-    expect(userNotificationsListener.onNotifications).toHaveBeenCalledWith([
-      new NoValidFiles(),
-    ]);
+    expect(userNotifierChecker.expectNotified([new NoValidFiles()]));
     expect(appComponent.onWinscopeEvent).not.toHaveBeenCalled();
   });
 
@@ -373,9 +369,7 @@ describe('Mediator', () => {
     resetSpyCalls();
     await mediator.onWinscopeEvent(new AppTraceViewRequest());
     await checkLoadTraceViewEvents(uploadTracesComponent);
-    expect(userNotificationsListener.onNotifications).toHaveBeenCalledWith([
-      new IncompleteFrameMapping(errorMsg),
-    ]);
+    userNotifierChecker.expectNotified([new IncompleteFrameMapping(errorMsg)]);
   });
 
   describe('timestamp received from remote tool', () => {
@@ -531,7 +525,7 @@ describe('Mediator', () => {
 
   async function loadFiles(files = inputFiles) {
     await mediator.onWinscopeEvent(new AppFilesUploaded(files));
-    expect(userNotificationsListener.onNotifications).not.toHaveBeenCalled();
+    userNotifierChecker.expectNone();
     reassignViewerStubTrace(viewerStub0);
     reassignViewerStubTrace(viewerStub1);
   }

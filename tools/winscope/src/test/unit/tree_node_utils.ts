@@ -81,8 +81,8 @@ export class TreeNodeUtils {
   static makeMatrixNode(
     dsdx: number,
     dtdx: number,
-    dsdy: number,
     dtdy: number,
+    dsdy: number,
   ): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
@@ -90,8 +90,8 @@ export class TreeNodeUtils {
       .setChildren([
         {name: 'dsdx', value: dsdx},
         {name: 'dtdx', value: dtdx},
-        {name: 'dsdy', value: dsdy},
         {name: 'dtdy', value: dtdy},
+        {name: 'dsdy', value: dsdy},
       ])
       .build();
   }

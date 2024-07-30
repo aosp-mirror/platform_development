@@ -18,6 +18,7 @@ import {Timestamp} from 'common/time';
 import {TimeDuration} from 'common/time_duration';
 import {RawDataUtils} from 'parsers/raw_data_utils';
 import {TransformUtils} from 'parsers/surface_flinger/transform_utils';
+import {CujType} from 'trace/cuj_type';
 import {PropertyTreeNode} from './property_tree_node';
 
 const EMPTY_OBJ_STRING = '{empty}';
@@ -115,8 +116,8 @@ class MatrixFormatter implements PropertyFormatter {
   format(node: PropertyTreeNode): string {
     const dsdx = formatNumber(node.getChildByName('dsdx')?.getValue() ?? 0);
     const dtdx = formatNumber(node.getChildByName('dtdx')?.getValue() ?? 0);
-    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
     const dtdy = formatNumber(node.getChildByName('dtdy')?.getValue() ?? 0);
+    const dsdy = formatNumber(node.getChildByName('dsdy')?.getValue() ?? 0);
     const tx = node.getChildByName('tx');
     const ty = node.getChildByName('ty');
     if (
@@ -129,7 +130,7 @@ class MatrixFormatter implements PropertyFormatter {
     ) {
       return 'null';
     }
-    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dsdy: ${dsdy}, dtdy: ${dtdy}`;
+    const matrix22 = `dsdx: ${dsdx}, dtdx: ${dtdx}, dtdy: ${dtdy}, dsdy: ${dsdy}`;
     if (!tx && !ty) {
       return matrix22;
     }
@@ -223,6 +224,20 @@ class TimestampNodeFormatter implements PropertyFormatter {
 }
 const TIMESTAMP_NODE_FORMATTER = new TimestampNodeFormatter();
 
+class CujTypeFormatter implements PropertyFormatter {
+  format(node: PropertyTreeNode): string {
+    const cujTypeId: string = `${node.getValue()}`;
+    let cujTypeString: string | undefined;
+    if (cujTypeId in CujType) {
+      cujTypeString = CujType[cujTypeId as keyof typeof CujType];
+    } else {
+      cujTypeString = 'UNKNOWN';
+    }
+    return `${cujTypeString} (${cujTypeId})`;
+  }
+}
+const CUJ_TYPE_FORMATTER = new CujTypeFormatter();
+
 export {
   EMPTY_OBJ_STRING,
   EMPTY_ARRAY_STRING,
@@ -240,4 +255,5 @@ export {
   FixedStringFormatter,
   TIMESTAMP_NODE_FORMATTER,
   MATRIX_FORMATTER,
+  CUJ_TYPE_FORMATTER,
 };
