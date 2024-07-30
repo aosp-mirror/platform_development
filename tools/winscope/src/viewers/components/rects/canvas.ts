@@ -252,11 +252,11 @@ export class Canvas {
   private static toMatrix4(transform: TransformMatrix): THREE.Matrix4 {
     return new THREE.Matrix4().set(
       transform.dsdx,
-      transform.dsdy,
+      transform.dtdx,
       0,
       transform.tx,
-      transform.dtdx,
       transform.dtdy,
+      transform.dsdy,
       0,
       transform.ty,
       0,
