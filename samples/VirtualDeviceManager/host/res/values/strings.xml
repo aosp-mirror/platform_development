@@ -35,6 +35,8 @@
 
     <string name="custom_activity_launch_blocked_message" translatable="false">Can\'t show %s here, try on your %s</string>
     <string name="custom_activity_launch_fallback_message" translatable="false">Launched %s on your %s</string>
+    <string name="unlock_dialog_title" translatable="false">Device locked</string>
+    <string name="unlock_dialog_message" translatable="false">Unlock your %s to continue.</string>
 
     <string name="pref_device_profile" translatable="false">device_profile</string>
     <string name="pref_hide_from_recents" translatable="false">hide_from_recents</string>
