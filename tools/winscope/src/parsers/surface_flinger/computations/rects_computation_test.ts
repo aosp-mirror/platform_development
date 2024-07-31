@@ -750,26 +750,8 @@ describe('RectsComputation', () => {
       ])
       .build();
 
-    const expectedRects = [
-      new TraceRectBuilder()
-        .setX(-50)
-        .setY(-100)
-        .setWidth(100)
-        .setHeight(200)
-        .setId('1 layer1')
-        .setName('layer1')
-        .setCornerRadius(0)
-        .setTransform(Transform.EMPTY.matrix)
-        .setDepth(1)
-        .setGroupId(0)
-        .setIsVisible(false)
-        .setIsDisplay(false)
-        .setIsSpy(false)
-        .build(),
-    ];
-
     computation.setRoot(hierarchyRoot).executeInPlace();
-    checkLayerRects(hierarchyRoot, expectedRects);
+    checkLayerRects(hierarchyRoot, []);
   });
 
   it('makes input window rects', () => {
