@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::{
-    fs::{create_dir, remove_dir_all, rename},
+    fs::{create_dir, remove_dir_all, remove_file, rename, write},
     path::{Path, PathBuf},
     process::Command,
     str::from_utf8,
@@ -25,6 +25,7 @@ use crate_health::{
     copy_dir, default_repo_root, maybe_build_cargo_embargo, CrateCollection, Migratable,
     NameAndVersionMap, NameAndVersionRef, NamedAndVersioned, PseudoCrate, RepoPath, VersionMatch,
 };
+use glob::glob;
 use semver::Version;
 
 #[derive(Parser)]
@@ -142,26 +143,41 @@ fn main() -> Result<()> {
 
     match args.command {
         Cmd::MigrationHealth { crate_name } => {
-            migration_health(&args.repo_root, &crate_name, args.verbose).map(|_| ())
+            migration_health(&args.repo_root, &crate_name, args.verbose)?;
+            Ok(())
         }
         Cmd::Migrate { crate_name } => {
             let version = migration_health(&args.repo_root, &crate_name, args.verbose)?;
+            let src_dir = args.repo_root.join("external/rust/crates").join(&crate_name);
 
             let monorepo_crate_dir = args.repo_root.join("external/rust/android-crates-io/crates");
             if !monorepo_crate_dir.exists() {
                 create_dir(&monorepo_crate_dir)?;
             }
-            copy_dir(
-                &args.repo_root.join("external/rust/crates").join(&crate_name),
-                &monorepo_crate_dir.join(&crate_name),
-            )?;
+            copy_dir(&src_dir, &monorepo_crate_dir.join(&crate_name))?;
             let pseudo_crate = PseudoCrate::new(RepoPath::new(
                 &args.repo_root,
                 "external/rust/android-crates-io/pseudo_crate",
             ));
             pseudo_crate.add(&NameAndVersionRef::new(&crate_name, &version))?;
 
-            regenerate(&args.repo_root, &crate_name)
+            regenerate(&args.repo_root, &crate_name)?;
+
+            for entry in glob(
+                src_dir
+                    .join("*.bp")
+                    .to_str()
+                    .ok_or(anyhow!("Failed to convert path *.bp to str"))?,
+            )? {
+                remove_file(entry?)?
+            }
+            remove_file(src_dir.join("cargo_embargo.json"))?;
+            write(
+                src_dir.join("Android.bp"),
+                "// This crate has been migrated to external/rust/android-crates-io.\n",
+            )?;
+
+            Ok(())
         }
         Cmd::Regenerate { crate_name } => regenerate(&args.repo_root, &crate_name),
         Cmd::PreuploadCheck { files: _ } => Ok(()),
