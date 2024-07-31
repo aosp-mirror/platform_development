@@ -30,7 +30,7 @@ import {UnitTestUtils} from 'test/unit/utils';
 import {Trace, TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
 import {LogComponent} from 'viewers/common/log_component';
-import {LogField, LogFieldName} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType} from 'viewers/common/ui_data_log';
 import {CollapsedSectionsComponent} from 'viewers/components/collapsed_sections_component';
 import {CollapsibleSectionTitleComponent} from 'viewers/components/collapsible_section_title_component';
 import {PropertiesComponent} from 'viewers/components/properties_component';
@@ -144,10 +144,10 @@ describe('ViewerTransitionsComponent', () => {
       ),
     ];
 
-    const uiData = UiData.EMPTY;
+    const uiData = UiData.createEmpty();
     uiData.entries = transitions;
     uiData.selectedIndex = 0;
-    uiData.headers = Presenter.FIELD_NAMES;
+    uiData.headers = Presenter.FIELD_TYPES;
     return uiData;
   }
 
@@ -160,31 +160,31 @@ describe('ViewerTransitionsComponent', () => {
   ): TransitionsEntry {
     const fields: LogField[] = [
       {
-        name: LogFieldName.TRANSITION_ID,
+        type: LogFieldType.TRANSITION_ID,
         value: id,
       },
       {
-        name: LogFieldName.TRANSITION_TYPE,
+        type: LogFieldType.TRANSITION_TYPE,
         value: 'TO_FRONT',
       },
       {
-        name: LogFieldName.SEND_TIME,
+        type: LogFieldType.SEND_TIME,
         value: TimestampConverterUtils.makeElapsedTimestamp(
           BigInt(sendTimeNanos),
         ),
       },
       {
-        name: LogFieldName.DISPATCH_TIME,
+        type: LogFieldType.DISPATCH_TIME,
         value: TimestampConverterUtils.makeElapsedTimestamp(
           BigInt(sendTimeNanos) + 5n,
         ),
       },
       {
-        name: LogFieldName.DURATION,
+        type: LogFieldType.DURATION,
         value: (finishTimeNanos - sendTimeNanos).toString() + 'ns',
       },
       {
-        name: LogFieldName.STATUS,
+        type: LogFieldType.STATUS,
         value: status,
         icon: 'check',
         iconColor: 'green',

@@ -32,8 +32,11 @@ export class UiData implements UiDataLog {
     public scrollToIndex: undefined | number,
   ) {}
 
-  static EMPTY = new UiData([], [], undefined, undefined, undefined);
+  static createEmpty(): UiData {
+    return new UiData([], [], undefined, undefined, undefined);
+  }
 }
+
 export class ProtologEntry implements LogEntry {
   constructor(
     public traceEntry: TraceEntry<PropertyTreeNode>,

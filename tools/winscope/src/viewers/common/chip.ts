@@ -61,11 +61,17 @@ export const HWC_CHIP = new Chip(
 export const DUPLICATE_CHIP = new Chip(
   'Duplicate',
   "Multiple layers present with this layer's id",
-  'duplicate',
+  'warn',
 );
 
 export const MISSING_Z_PARENT_CHIP = new Chip(
   'MissingZParent',
   'Is relative Z-ordered to another surface, but RelZParent is missing from hierarchy',
   'zParent',
+);
+
+export const HIDDEN_BY_POLICY_CHIP = new Chip(
+  'H',
+  'Is hidden by policy',
+  'hidden',
 );

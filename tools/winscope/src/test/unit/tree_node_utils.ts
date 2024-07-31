@@ -81,8 +81,8 @@ export class TreeNodeUtils {
   static makeMatrixNode(
     dsdx: number,
     dtdx: number,
-    dsdy: number,
     dtdy: number,
+    dsdy: number,
   ): PropertyTreeNode {
     return new PropertyTreeBuilder()
       .setRootId('test node')
@@ -90,8 +90,8 @@ export class TreeNodeUtils {
       .setChildren([
         {name: 'dsdx', value: dsdx},
         {name: 'dtdx', value: dtdx},
-        {name: 'dsdy', value: dsdy},
         {name: 'dtdy', value: dtdy},
+        {name: 'dsdy', value: dsdy},
       ])
       .build();
   }
@@ -199,6 +199,26 @@ export class TreeNodeUtils {
     if ((node as DiffNode).getDiff && (expectedNode as DiffNode).getDiff) {
       if (
         (node as DiffNode).getDiff() !== (expectedNode as DiffNode).getDiff()
+      ) {
+        return false;
+      }
+    }
+
+    if (
+      node instanceof UiHierarchyTreeNode &&
+      expectedNode instanceof UiHierarchyTreeNode
+    ) {
+      if (node.heading() !== expectedNode.heading()) {
+        return false;
+      }
+      if (node.getDisplayName() !== expectedNode.getDisplayName()) {
+        return false;
+      }
+      if (
+        !(
+          node.getChips().length === 0 && expectedNode.getChips().length === 0
+        ) &&
+        node.getChips() !== expectedNode.getChips()
       ) {
         return false;
       }

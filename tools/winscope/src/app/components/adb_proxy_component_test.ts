@@ -16,13 +16,14 @@
 import {CommonModule} from '@angular/common';
 import {NO_ERRORS_SCHEMA} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
-import {ProxyState} from 'trace_collection/proxy_client';
+import {ConnectionState} from 'trace_collection/connection_state';
 import {AdbProxyComponent} from './adb_proxy_component';
 
 describe('AdbProxyComponent', () => {
@@ -39,6 +40,7 @@ describe('AdbProxyComponent', () => {
         MatInputModule,
         BrowserAnimationsModule,
         MatButtonModule,
+        FormsModule,
       ],
       declarations: [AdbProxyComponent],
       schemas: [NO_ERRORS_SCHEMA],
@@ -46,22 +48,24 @@ describe('AdbProxyComponent', () => {
     fixture = TestBed.createComponent(AdbProxyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    component.state = ConnectionState.CONNECTING;
+    component.version = '1.1.1';
   });
 
   it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it('check correct icon and message displays if no proxy', async () => {
-    await component.client.setState(ProxyState.NO_PROXY);
+  it('correct icon and message displays if no proxy', () => {
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
     expect(
       htmlElement.querySelector('.further-adb-info-text')?.innerHTML,
     ).toContain('Launch the Winscope ADB Connect proxy');
   });
 
-  it('check correct icon and message displays if invalid proxy', async () => {
-    await component.client.setState(ProxyState.INVALID_VERSION);
+  it('correct icon and message displays if invalid proxy', () => {
+    component.state = ConnectionState.INVALID_VERSION;
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
       'Your local proxy version is incompatible with Winscope.',
@@ -69,17 +73,17 @@ describe('AdbProxyComponent', () => {
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('update');
   });
 
-  it('check correct icon and message displays if unauthorised proxy', async () => {
-    await component.client.setState(ProxyState.UNAUTH);
+  it('correct icon and message displays if unauthorized proxy', () => {
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
     expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe(
-      'Proxy authorisation required.',
+      'Proxy authorization required.',
     );
     expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('lock');
   });
 
-  it('check download proxy button downloads proxy', async () => {
-    await component.client.setState(ProxyState.NO_PROXY);
+  it('download proxy button downloads proxy', () => {
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
     const spy = spyOn(window, 'open');
     const button: HTMLButtonElement | null = htmlElement.querySelector(
@@ -91,52 +95,61 @@ describe('AdbProxyComponent', () => {
     expect(spy).toHaveBeenCalledWith(component.downloadProxyUrl, '_blank');
   });
 
-  it('check retry button if no proxy trys to reconnect proxy', async () => {
-    await component.client.setState(ProxyState.NO_PROXY);
+  it('retry button emits event', () => {
+    component.state = ConnectionState.NOT_FOUND;
     fixture.detectChanges();
+
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
     const button: HTMLButtonElement | null =
       htmlElement.querySelector('.retry');
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.click();
     fixture.detectChanges();
-    expect(component.client.state).toBe(ProxyState.CONNECTING);
+    expect(spy).toHaveBeenCalledWith('');
   });
 
-  it('check input proxy token saved as expected', async () => {
-    const spy = spyOn(component.addKey, 'emit');
-
-    await component.client.setState(ProxyState.UNAUTH);
+  it('input proxy token saved as expected', () => {
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
-    let button: HTMLButtonElement | null = htmlElement.querySelector('.retry');
-    button?.click();
+
+    const button = assertDefined(
+      htmlElement.querySelector('.retry'),
+    ) as HTMLElement;
+    button.click();
     fixture.detectChanges();
     expect(spy).not.toHaveBeenCalled();
 
-    await component.client.setState(ProxyState.UNAUTH);
-    component.proxyKeyItem = '12345';
+    const proxyTokenInput = assertDefined(
+      htmlElement.querySelector('.proxy-token-input-field input'),
+    ) as HTMLInputElement;
+    proxyTokenInput.value = '12345';
+    proxyTokenInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    button = htmlElement.querySelector('.retry');
-    button?.click();
+
+    (assertDefined(htmlElement.querySelector('.retry')) as HTMLElement).click();
     fixture.detectChanges();
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('12345');
   });
 
-  it('retries proxy connection on enter key', async () => {
-    await component.client.setState(ProxyState.UNAUTH);
+  it('emits event on enter key', () => {
+    const spy = spyOn(assertDefined(component.retryConnection), 'emit');
+    component.state = ConnectionState.UNAUTH;
     fixture.detectChanges();
-    const proxyKeyInputField = assertDefined(
-      htmlElement.querySelector('.proxy-key-input-field'),
+
+    const proxyTokenInputField = assertDefined(
+      htmlElement.querySelector('.proxy-token-input-field'),
     ) as HTMLInputElement;
-    const proxyKeyInput = assertDefined(
-      proxyKeyInputField.querySelector('input'),
+    const proxyTokenInput = assertDefined(
+      proxyTokenInputField.querySelector('input'),
     ) as HTMLInputElement;
 
-    proxyKeyInput.value = '12345';
-    proxyKeyInputField.dispatchEvent(
+    proxyTokenInput.value = '12345';
+    proxyTokenInput.dispatchEvent(new Event('input'));
+    proxyTokenInputField.dispatchEvent(
       new KeyboardEvent('keydown', {key: 'Enter'}),
     );
     fixture.detectChanges();
-    await fixture.whenStable();
-    expect(component.client.state).toBe(ProxyState.CONNECTING);
+    expect(spy).toHaveBeenCalledWith('12345');
   });
 });

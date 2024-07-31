@@ -15,7 +15,6 @@
  */
 
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
-import {INVALID_TIME_NS} from 'common/time';
 import {WinscopeEvent, WinscopeEventType} from 'messaging/winscope_event';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
@@ -37,7 +36,7 @@ import {UiRect} from 'viewers/components/rects/types2d';
 import {UpdateDisplayNames} from './operations/update_display_names';
 import {UiData} from './ui_data';
 
-export class Presenter extends AbstractHierarchyViewerPresenter {
+export class Presenter extends AbstractHierarchyViewerPresenter<UiData> {
   static readonly DENYLIST_PROPERTY_NAMES = [
     'name',
     'children',
@@ -73,22 +72,14 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     Presenter.DENYLIST_PROPERTY_NAMES,
     true,
     false,
-    (entry) => {
-      if (
-        entry.getFullTrace().lengthEntries === 1 &&
-        entry.getTimestamp().getValueNs() === INVALID_TIME_NS
-      ) {
-        return 'Dump';
-      }
-      return entry.getTimestamp().format();
-    },
+    this.getEntryFormattedTimestamp,
     [[TraceType.WINDOW_MANAGER, [new UpdateDisplayNames()]]],
   );
   protected override rectsPresenter = new RectsPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'WmRectsOptions',
       {
-        ignoreNonHidden: {
+        ignoreRectShowState: {
           name: 'Ignore',
           icon: 'visibility',
           enabled: false,
@@ -133,7 +124,7 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
     trace: Trace<HierarchyTreeNode>,
     traces: Traces,
     storage: Readonly<Storage>,
-    notifyViewCallback: NotifyHierarchyViewCallbackType,
+    notifyViewCallback: NotifyHierarchyViewCallbackType<UiData>,
   ) {
     super(trace, traces, storage, notifyViewCallback, new UiData());
   }
@@ -192,6 +183,6 @@ export class Presenter extends AbstractHierarchyViewerPresenter {
   }
 
   private refreshUIData() {
-    this.refreshHierarchyViewerUiData(new UiData());
+    this.refreshHierarchyViewerUiData();
   }
 }

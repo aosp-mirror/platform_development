@@ -44,9 +44,14 @@ enum TextFormatIR {
 
 enum CompatibilityStatusIR {
   Compatible = 0,
+  // Changing classes or enums not referenced by functions or variables.
   UnreferencedChanges = 1,
+  // Adding symbols.
+  ElfExtension = 2,
+  // Adding functions, classes, class members, etc.
   Extension = 4,
   Incompatible = 8,
+  // Removing symbols.
   ElfIncompatible = 16
 };
 
@@ -808,7 +813,7 @@ class TypeDefinition {
 
 class ModuleIR {
  public:
-  ModuleIR(const std::set<std::string> *exported_headers)
+  ModuleIR(const std::set<std::string> *exported_headers = nullptr)
       : exported_headers_(exported_headers) {}
 
   const std::string &GetCompilationUnitPath() const {
