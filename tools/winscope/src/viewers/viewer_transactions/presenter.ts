@@ -24,26 +24,26 @@ import {
 } from 'viewers/common/abstract_log_viewer_presenter';
 import {LogPresenter} from 'viewers/common/log_presenter';
 import {PropertiesPresenter} from 'viewers/common/properties_presenter';
-import {LogField, LogFieldName, LogFilter} from 'viewers/common/ui_data_log';
+import {LogField, LogFieldType, LogFilter} from 'viewers/common/ui_data_log';
 import {UserOptions} from 'viewers/common/user_options';
 import {SetRootDisplayNames} from './operations/set_root_display_name';
 import {TransactionsEntry, TransactionsEntryType, UiData} from './ui_data';
 
-export class Presenter extends AbstractLogViewerPresenter {
-  private static readonly FIELD_NAMES = [
-    LogFieldName.TRANSACTION_ID,
-    LogFieldName.VSYNC_ID,
-    LogFieldName.PID,
-    LogFieldName.UID,
-    LogFieldName.TRANSACTION_TYPE,
-    LogFieldName.LAYER_OR_DISPLAY_ID,
-    LogFieldName.FLAGS,
+export class Presenter extends AbstractLogViewerPresenter<UiData> {
+  private static readonly FIELD_TYPES = [
+    LogFieldType.TRANSACTION_ID,
+    LogFieldType.VSYNC_ID,
+    LogFieldType.PID,
+    LogFieldType.UID,
+    LogFieldType.TRANSACTION_TYPE,
+    LogFieldType.LAYER_OR_DISPLAY_ID,
+    LogFieldType.FLAGS,
   ];
   private static readonly VALUE_NA = 'N/A';
   private isInitialized = false;
 
   protected override keepCalculated = true;
-  protected override logPresenter = new LogPresenter(true);
+  protected override logPresenter = new LogPresenter<TransactionsEntry>(true);
   protected override propertiesPresenter = new PropertiesPresenter(
     PersistentStoreProxy.new<UserOptions>(
       'TransactionsPropertyOptions',
@@ -67,9 +67,9 @@ export class Presenter extends AbstractLogViewerPresenter {
   constructor(
     trace: Trace<PropertyTreeNode>,
     readonly storage: Storage,
-    notifyViewCallback: NotifyLogViewCallbackType,
+    notifyViewCallback: NotifyLogViewCallbackType<UiData>,
   ) {
-    super(trace, notifyViewCallback, UiData.EMPTY);
+    super(trace, notifyViewCallback, UiData.createEmpty());
   }
 
   protected override async initializeIfNeeded() {
@@ -80,15 +80,15 @@ export class Presenter extends AbstractLogViewerPresenter {
     const allEntries = await this.makeUiDataEntries();
     const filters: LogFilter[] = [];
 
-    for (const name of Presenter.FIELD_NAMES) {
-      if (name === LogFieldName.FLAGS) {
+    for (const type of Presenter.FIELD_TYPES) {
+      if (type === LogFieldType.FLAGS) {
         filters.push({
-          name,
+          type,
           options: this.getUniqueUiDataEntryValues(
             allEntries,
             (entry: TransactionsEntry) =>
               assertDefined(
-                entry.fields.find((f) => f.name === name)?.value as string,
+                entry.fields.find((f) => f.type === type)?.value as string,
               )
                 .split('|')
                 .map((flag) => flag.trim()),
@@ -96,12 +96,12 @@ export class Presenter extends AbstractLogViewerPresenter {
         });
       } else {
         filters.push({
-          name,
+          type,
           options: this.getUniqueUiDataEntryValues(
             allEntries,
             (entry: TransactionsEntry) =>
               assertDefined(
-                entry.fields.find((f) => f.name === name),
+                entry.fields.find((f) => f.type === type),
               ).value.toString(),
           ),
         });
@@ -110,7 +110,7 @@ export class Presenter extends AbstractLogViewerPresenter {
 
     this.logPresenter.setAllEntries(allEntries);
     this.logPresenter.setFilters(filters);
-    this.refreshUIData(UiData.EMPTY);
+    this.refreshUiData();
     this.isInitialized = true;
   }
 
@@ -152,22 +152,22 @@ export class Presenter extends AbstractLogViewerPresenter {
 
         for (const layerState of layerChanges) {
           const fields: LogField[] = [
-            {name: LogFieldName.TRANSACTION_ID, value: transactionId},
-            {name: LogFieldName.VSYNC_ID, value: vsyncId},
-            {name: LogFieldName.PID, value: pid},
-            {name: LogFieldName.UID, value: uid},
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
             {
-              name: LogFieldName.TRANSACTION_TYPE,
+              type: LogFieldType.TRANSACTION_TYPE,
               value: TransactionsEntryType.LAYER_CHANGED,
             },
             {
-              name: LogFieldName.LAYER_OR_DISPLAY_ID,
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
               value: assertDefined(
                 layerState.getChildByName('layerId'),
               ).formattedValue(),
             },
             {
-              name: LogFieldName.FLAGS,
+              type: LogFieldType.FLAGS,
               value: assertDefined(
                 layerState.getChildByName('what'),
               ).formattedValue(),
@@ -181,22 +181,22 @@ export class Presenter extends AbstractLogViewerPresenter {
         ).getAllChildren();
         for (const displayState of displayChanges) {
           const fields: LogField[] = [
-            {name: LogFieldName.TRANSACTION_ID, value: transactionId},
-            {name: LogFieldName.VSYNC_ID, value: vsyncId},
-            {name: LogFieldName.PID, value: pid},
-            {name: LogFieldName.UID, value: uid},
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
             {
-              name: LogFieldName.TRANSACTION_TYPE,
+              type: LogFieldType.TRANSACTION_TYPE,
               value: TransactionsEntryType.DISPLAY_CHANGED,
             },
             {
-              name: LogFieldName.LAYER_OR_DISPLAY_ID,
+              type: LogFieldType.LAYER_OR_DISPLAY_ID,
               value: assertDefined(
                 displayState.getChildByName('id'),
               ).formattedValue(),
             },
             {
-              name: LogFieldName.FLAGS,
+              type: LogFieldType.FLAGS,
               value: assertDefined(
                 displayState.getChildByName('what'),
               ).formattedValue(),
@@ -207,16 +207,16 @@ export class Presenter extends AbstractLogViewerPresenter {
 
         if (layerChanges.length === 0 && displayChanges.length === 0) {
           const fields: LogField[] = [
-            {name: LogFieldName.TRANSACTION_ID, value: transactionId},
-            {name: LogFieldName.VSYNC_ID, value: vsyncId},
-            {name: LogFieldName.PID, value: pid},
-            {name: LogFieldName.UID, value: uid},
+            {type: LogFieldType.TRANSACTION_ID, value: transactionId},
+            {type: LogFieldType.VSYNC_ID, value: vsyncId},
+            {type: LogFieldType.PID, value: pid},
+            {type: LogFieldType.UID, value: uid},
             {
-              name: LogFieldName.TRANSACTION_TYPE,
+              type: LogFieldType.TRANSACTION_TYPE,
               value: TransactionsEntryType.NO_OP,
             },
-            {name: LogFieldName.LAYER_OR_DISPLAY_ID, value: ''},
-            {name: LogFieldName.FLAGS, value: ''},
+            {type: LogFieldType.LAYER_OR_DISPLAY_ID, value: ''},
+            {type: LogFieldType.FLAGS, value: ''},
           ];
           entries.push(new TransactionsEntry(entry, fields, undefined));
         }
@@ -226,21 +226,21 @@ export class Presenter extends AbstractLogViewerPresenter {
         entryNode.getChildByName('addedLayers'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {name: LogFieldName.TRANSACTION_ID, value: ''},
-          {name: LogFieldName.VSYNC_ID, value: vsyncId},
-          {name: LogFieldName.PID, value: Presenter.VALUE_NA},
-          {name: LogFieldName.UID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             value: TransactionsEntryType.LAYER_ADDED,
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: assertDefined(
               layerCreationArgs.getChildByName('layerId'),
             ).formattedValue(),
           },
-          {name: LogFieldName.FLAGS, value: ''},
+          {type: LogFieldType.FLAGS, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, layerCreationArgs));
       }
@@ -249,19 +249,19 @@ export class Presenter extends AbstractLogViewerPresenter {
         entryNode.getChildByName('destroyedLayers'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {name: LogFieldName.TRANSACTION_ID, value: ''},
-          {name: LogFieldName.VSYNC_ID, value: vsyncId},
-          {name: LogFieldName.PID, value: Presenter.VALUE_NA},
-          {name: LogFieldName.UID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             value: TransactionsEntryType.LAYER_DESTROYED,
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: destroyedLayerId.formattedValue(),
           },
-          {name: LogFieldName.FLAGS, value: ''},
+          {type: LogFieldType.FLAGS, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, destroyedLayerId));
       }
@@ -270,22 +270,22 @@ export class Presenter extends AbstractLogViewerPresenter {
         entryNode.getChildByName('addedDisplays'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {name: LogFieldName.TRANSACTION_ID, value: ''},
-          {name: LogFieldName.VSYNC_ID, value: vsyncId},
-          {name: LogFieldName.PID, value: Presenter.VALUE_NA},
-          {name: LogFieldName.UID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             value: TransactionsEntryType.DISPLAY_ADDED,
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: assertDefined(
               displayState.getChildByName('id'),
             ).formattedValue(),
           },
           {
-            name: LogFieldName.FLAGS,
+            type: LogFieldType.FLAGS,
             value: assertDefined(
               displayState.getChildByName('what'),
             ).formattedValue(),
@@ -298,19 +298,19 @@ export class Presenter extends AbstractLogViewerPresenter {
         entryNode.getChildByName('removedDisplays'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {name: LogFieldName.TRANSACTION_ID, value: ''},
-          {name: LogFieldName.VSYNC_ID, value: vsyncId},
-          {name: LogFieldName.PID, value: Presenter.VALUE_NA},
-          {name: LogFieldName.UID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             value: TransactionsEntryType.DISPLAY_REMOVED,
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: removedDisplayId.formattedValue(),
           },
-          {name: LogFieldName.FLAGS, value: ''},
+          {type: LogFieldType.FLAGS, value: ''},
         ];
         entries.push(new TransactionsEntry(entry, fields, removedDisplayId));
       }
@@ -319,19 +319,19 @@ export class Presenter extends AbstractLogViewerPresenter {
         entryNode.getChildByName('destroyedLayerHandles'),
       ).getAllChildren()) {
         const fields: LogField[] = [
-          {name: LogFieldName.TRANSACTION_ID, value: ''},
-          {name: LogFieldName.VSYNC_ID, value: vsyncId},
-          {name: LogFieldName.PID, value: Presenter.VALUE_NA},
-          {name: LogFieldName.UID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.TRANSACTION_ID, value: ''},
+          {type: LogFieldType.VSYNC_ID, value: vsyncId},
+          {type: LogFieldType.PID, value: Presenter.VALUE_NA},
+          {type: LogFieldType.UID, value: Presenter.VALUE_NA},
           {
-            name: LogFieldName.TRANSACTION_TYPE,
+            type: LogFieldType.TRANSACTION_TYPE,
             value: TransactionsEntryType.LAYER_HANDLE_DESTROYED,
           },
           {
-            name: LogFieldName.LAYER_OR_DISPLAY_ID,
+            type: LogFieldType.LAYER_OR_DISPLAY_ID,
             value: destroyedLayerHandleId.formattedValue(),
           },
-          {name: LogFieldName.FLAGS, value: ''},
+          {type: LogFieldType.FLAGS, value: ''},
         ];
         entries.push(
           new TransactionsEntry(entry, fields, destroyedLayerHandleId),

@@ -18,9 +18,9 @@ import {WinscopeEvent} from 'messaging/winscope_event';
 import {EmitEvent} from 'messaging/winscope_event_emitter';
 import {Trace} from 'trace/trace';
 import {Traces} from 'trace/traces';
+import {TRACE_INFO} from 'trace/trace_info';
 import {TraceType} from 'trace/trace_type';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {NotifyLogViewCallbackType} from 'viewers/common/abstract_log_viewer_presenter';
 import {View, Viewer, ViewType} from 'viewers/viewer';
 import {Presenter} from './presenter';
 import {UiData} from './ui_data';
@@ -39,17 +39,14 @@ class ViewerProtoLog implements Viewer {
     const notifyViewCallback = (data: UiData) => {
       (this.htmlElement as any).inputData = data;
     };
-    this.presenter = new Presenter(
-      trace,
-      notifyViewCallback as NotifyLogViewCallbackType,
-    );
+    this.presenter = new Presenter(trace, notifyViewCallback);
     this.presenter.addEventListeners(this.htmlElement);
 
     this.view = new View(
       ViewType.TAB,
       this.getTraces(),
       this.htmlElement,
-      'ProtoLog',
+      TRACE_INFO[TraceType.PROTO_LOG].name,
     );
   }
 

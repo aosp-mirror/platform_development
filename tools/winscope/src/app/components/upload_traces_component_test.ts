@@ -23,7 +23,6 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {FilesSource} from 'app/files_source';
 import {TracePipeline} from 'app/trace_pipeline';
 import {assertDefined} from 'common/assert_utils';
-import {UserNotificationsListenerStub} from 'messaging/user_notifications_listener_stub';
 import {UnitTestUtils} from 'test/unit/utils';
 import {LoadProgressComponent} from './load_progress_component';
 import {UploadTracesComponent} from './upload_traces_component';
@@ -185,11 +184,6 @@ describe('UploadTracesComponent', () => {
   async function loadFiles(files: File[]) {
     const tracePipeline = assertDefined(component.tracePipeline);
     tracePipeline.clear();
-    await tracePipeline.loadFiles(
-      files,
-      FilesSource.TEST,
-      new UserNotificationsListenerStub(),
-      undefined,
-    );
+    await tracePipeline.loadFiles(files, FilesSource.TEST, undefined);
   }
 });

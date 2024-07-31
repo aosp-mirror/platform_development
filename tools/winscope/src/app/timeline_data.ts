@@ -216,6 +216,10 @@ export class TimelineData {
     return this.traces;
   }
 
+  hasTrace(trace: Trace<object>): boolean {
+    return this.traces.hasTrace(trace);
+  }
+
   getScreenRecordingVideo(): Blob | undefined {
     return this.screenRecordingVideo;
   }

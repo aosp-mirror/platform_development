@@ -15,7 +15,7 @@
  */
 
 import {assertDefined} from 'common/assert_utils';
-import {LogFieldName} from 'viewers/common/ui_data_log';
+import {LogFieldType} from 'viewers/common/ui_data_log';
 import {VariableHeightScrollStrategy} from 'viewers/common/variable_height_scroll_strategy';
 import {TransactionsEntry} from 'viewers/viewer_transactions/ui_data';
 
@@ -26,7 +26,7 @@ export class TransactionsScrollStrategy extends VariableHeightScrollStrategy {
 
   protected override predictScrollItemHeight(entry: TransactionsEntry): number {
     const flagsHeight = this.subItemHeight(
-      assertDefined(entry.fields.find((f) => f.name === LogFieldName.FLAGS))
+      assertDefined(entry.fields.find((f) => f.type === LogFieldType.FLAGS))
         .value as string,
       this.flagCharsPerRow,
     );

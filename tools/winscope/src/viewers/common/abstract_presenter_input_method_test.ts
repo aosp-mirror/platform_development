@@ -35,7 +35,7 @@ import {UiDataHierarchy} from './ui_data_hierarchy';
 import {UiHierarchyTreeNode} from './ui_hierarchy_tree_node';
 import {UiPropertyTreeNode} from './ui_property_tree_node';
 
-export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchyViewerPresenterTest {
+export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchyViewerPresenterTest<ImeUiData> {
   private traces: Traces | undefined;
   private positionUpdate: TracePositionUpdate | undefined;
   private secondPositionUpdate: TracePositionUpdate | undefined;
@@ -45,6 +45,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   override readonly shouldExecuteFlatTreeTest = true;
   override readonly shouldExecuteRectTests = false;
   override readonly shouldExecuteShowDiffTests = false;
+  override readonly shouldExecuteDumpTests = true;
   override readonly shouldExecuteSimplifyNamesTest = false;
 
   override readonly hierarchyFilterString = 'Reject all';
@@ -99,7 +100,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   }
 
   override createPresenterWithEmptyTrace(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
     const trace = new TraceBuilder<HierarchyTreeNode>()
       .setType(this.imeTraceType)
@@ -116,7 +117,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
   }
 
   override createPresenter(
-    callback: NotifyHierarchyViewCallbackType,
+    callback: NotifyHierarchyViewCallbackType<ImeUiData>,
   ): AbstractPresenterInputMethod {
     const traces = assertDefined(this.traces);
     const trace = assertDefined(traces.getTrace(this.imeTraceType));
@@ -286,7 +287,7 @@ export abstract class AbstractPresenterInputMethodTest extends AbstractHierarchy
           trace,
           traces,
           new InMemoryStorage(),
-          callback as NotifyHierarchyViewCallbackType,
+          callback as NotifyHierarchyViewCallbackType<ImeUiData>,
         );
       }
 

@@ -170,6 +170,7 @@ import {Distance2D, ShadingMode} from './types3d';
       </div>
     </div>
     <mat-divider></mat-divider>
+    <span class="mat-body-1 placeholder-text" *ngIf="rects.length===0"> No rects found. </span>
     <div class="rects-content">
       <div class="canvas-container">
         <canvas
@@ -565,6 +566,7 @@ export class RectsComponent implements OnInit, OnDestroy {
       detail: {groupId: display.groupId},
     });
     this.elementRef.nativeElement.dispatchEvent(viewerEvent);
+    event.source.close();
   }
 
   onRectClick(event: MouseEvent) {
