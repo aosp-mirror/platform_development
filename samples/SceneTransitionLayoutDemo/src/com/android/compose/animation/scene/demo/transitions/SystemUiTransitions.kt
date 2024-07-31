@@ -21,7 +21,7 @@ import androidx.compose.foundation.pager.PagerState
 import com.android.compose.animation.scene.InterruptionHandler
 import com.android.compose.animation.scene.InterruptionResult
 import com.android.compose.animation.scene.SceneKey
-import com.android.compose.animation.scene.TransitionState
+import com.android.compose.animation.scene.content.state.TransitionState
 import com.android.compose.animation.scene.demo.DemoConfiguration
 import com.android.compose.animation.scene.demo.Scenes
 import com.android.compose.animation.scene.demo.SpringConfiguration

@@ -136,7 +136,7 @@ export class TraceConfigComponent {
     this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       assertDefined(this.traceConfigStoreKey),
       assertDefined(
-        this.initialTraceConfig,
+        JSON.parse(JSON.stringify(assertDefined(this.initialTraceConfig))),
         () => 'component initialized without config',
       ),
       assertDefined(this.storage),
@@ -147,6 +147,7 @@ export class TraceConfigComponent {
         200,
       );
     }
+    this.traceConfigChange.emit(this.traceConfig);
   }
 
   ngOnDestroy() {
