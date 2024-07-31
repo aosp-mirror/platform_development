@@ -804,27 +804,9 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
             'Error executing adb command: adb {}\n{}'.format(params, repr(ex)))
 
 
-class CheckWaylandServiceEndpoint(RequestEndpoint):
-    _listDevicesEndpoint = None
-
-    def __init__(self, listDevicesEndpoint):
-      self._listDevicesEndpoint = listDevicesEndpoint
-
-    def process(self, server, path):
-        self._listDevicesEndpoint.process(server, path)
-        foundDevices = self._listDevicesEndpoint._foundDevices
-
-        if len(foundDevices) > 1:
-          res = 'false'
-        else:
-          raw_res = call_adb('shell service check Wayland')
-          res = 'false' if 'not found' in raw_res else 'true'
-        server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
-
-
 class ListDevicesEndpoint(RequestEndpoint):
     ADB_INFO_RE = re.compile("^([A-Za-z0-9._:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
-    _foundDevices = None
+    foundDevices: dict[str | int, dict[str, bool | str]] = {}
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
@@ -832,10 +814,32 @@ class ListDevicesEndpoint(RequestEndpoint):
             'authorized': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
-        self._foundDevices = devices
+        self.foundDevices = devices
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
+
+
+
+class CheckWaylandServiceEndpoint(RequestEndpoint):
+    def __init__(self, listDevicesEndpoint: ListDevicesEndpoint):
+      self._listDevicesEndpoint = listDevicesEndpoint
+
+    def process(self, server, path):
+        self._listDevicesEndpoint.process(server, path)
+        foundDevices = self._listDevicesEndpoint.foundDevices
+
+        if len(foundDevices) != 1:
+            res = 'false'
+        else:
+            device = list(foundDevices.values())[0]
+            if not device.get('authorized') or not device.get('model'):
+                res = 'false'
+            else:
+                raw_res = call_adb('shell service check Wayland')
+                res = 'false' if 'not found' in raw_res else 'true'
+        server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
+
 
 
 class DeviceRequestEndpoint(RequestEndpoint):
