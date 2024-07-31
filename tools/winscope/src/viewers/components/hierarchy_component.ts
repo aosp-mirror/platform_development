@@ -158,7 +158,7 @@ export class HierarchyComponent {
   @Input() store: PersistentStore | undefined;
   @Input() userOptions: UserOptions = {};
   @Input() rectIdToShowState?: Map<string, RectShowState>;
-  @Input() placeholderText = '';
+  @Input() placeholderText = 'No entry found.';
 
   @Output() collapseButtonClicked = new EventEmitter();
 
@@ -173,9 +173,7 @@ export class HierarchyComponent {
   }
 
   showPlaceholderText(): boolean {
-    return (
-      !this.tree && (this.subtrees?.length ?? 0) === 0 && !!this.placeholderText
-    );
+    return !this.tree && (this.subtrees?.length ?? 0) === 0;
   }
 
   onPinnedNodeClick(event: MouseEvent, pinnedItem: UiHierarchyTreeNode) {

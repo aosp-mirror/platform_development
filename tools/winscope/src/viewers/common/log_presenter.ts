@@ -18,38 +18,41 @@ import {ArrayUtils} from 'common/array_utils';
 import {Timestamp} from 'common/time';
 import {TraceEntry} from 'trace/trace';
 import {PropertyTreeNode} from 'trace/tree_node/property_tree_node';
-import {LogEntry, LogFieldName, LogFilter} from './ui_data_log';
+import {LogEntry, LogFieldType, LogFilter} from './ui_data_log';
 
-export class LogPresenter {
-  private allEntries: LogEntry[] = [];
-  private filteredEntries: LogEntry[] = [];
+export class LogPresenter<Entry extends LogEntry> {
+  private allEntries: Entry[] = [];
+  private filteredEntries: Entry[] = [];
   private filters: LogFilter[] = [];
-  private headers: LogFieldName[] = [];
-  private filterValues = new Map<LogFieldName, string | string[]>();
+  private headers: LogFieldType[] = [];
+  private filterValues = new Map<LogFieldType, string | string[]>();
   private currentEntry: TraceEntry<PropertyTreeNode> | undefined;
   private selectedIndex: number | undefined;
   private scrollToIndex: number | undefined;
   private currentIndex: number | undefined;
   private originalIndicesOfAllEntries: number[] = [];
 
-  constructor(private storeCurrentIndex: boolean) {}
+  constructor(
+    private storeCurrentIndex: boolean,
+    private timeOrderedEntries = true,
+  ) {}
 
-  setAllEntries(value: LogEntry[]) {
+  setAllEntries(value: Entry[]) {
     this.allEntries = value;
     this.updateFilteredEntries();
   }
 
-  setHeaders(headers: LogFieldName[]) {
+  setHeaders(headers: LogFieldType[]) {
     this.headers = headers;
   }
 
-  getHeaders(): LogFieldName[] {
+  getHeaders(): LogFieldType[] {
     return this.headers;
   }
 
   setFilters(filters: LogFilter[]) {
     this.filters = filters;
-    this.filterValues = new Map<LogFieldName, string | string[]>();
+    this.filterValues = new Map<LogFieldType, string | string[]>();
     this.updateFilteredEntries();
     this.resetIndices();
   }
@@ -58,7 +61,7 @@ export class LogPresenter {
     return this.filters;
   }
 
-  getFilteredEntries(): LogEntry[] {
+  getFilteredEntries(): Entry[] {
     return this.filteredEntries;
   }
 
@@ -76,6 +79,7 @@ export class LogPresenter {
 
   applyLogEntryClick(index: number) {
     if (this.selectedIndex === index) {
+      this.scrollToIndex = undefined;
       return;
     }
     this.selectedIndex = index;
@@ -109,11 +113,11 @@ export class LogPresenter {
     this.resetIndices();
   }
 
-  applyFilterChange(name: LogFieldName, value: string[] | string) {
+  applyFilterChange(type: LogFieldType, value: string[] | string) {
     if (value.length > 0) {
-      this.filterValues.set(name, value);
+      this.filterValues.set(type, value);
     } else {
-      this.filterValues.delete(name);
+      this.filterValues.delete(type);
     }
     this.updateFilteredEntries();
     if (this.storeCurrentIndex) {
@@ -143,11 +147,21 @@ export class LogPresenter {
     }
   }
 
+  private static shouldFilterBySubstring(type: LogFieldType) {
+    switch (type) {
+      case LogFieldType.FLAGS:
+      case LogFieldType.INPUT_DISPATCH_WINDOWS:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   private updateFilteredEntries() {
     this.filteredEntries = this.allEntries.filter((entry) => {
-      for (const [filterName, filterValue] of this.filterValues) {
+      for (const [filterType, filterValue] of this.filterValues) {
         const entryValue = entry.fields.find(
-          (f) => f.name === filterName,
+          (f) => f.type === filterType,
         )?.value;
 
         if (entryValue === undefined || entryValue instanceof Timestamp) {
@@ -156,7 +170,10 @@ export class LogPresenter {
 
         const entryValueStr = entryValue.toString();
 
-        if (Array.isArray(filterValue) && filterName === LogFieldName.FLAGS) {
+        if (
+          Array.isArray(filterValue) &&
+          LogPresenter.shouldFilterBySubstring(filterType)
+        ) {
           if (!filterValue.some((flag) => entryValueStr.includes(flag))) {
             return false;
           }
@@ -194,12 +211,19 @@ export class LogPresenter {
       this.currentIndex = undefined;
       return;
     }
+    const target = this.currentEntry.getIndex();
 
+    if (this.timeOrderedEntries) {
+      return (
+        ArrayUtils.binarySearchFirstGreaterOrEqual(
+          this.originalIndicesOfAllEntries,
+          this.currentEntry.getIndex(),
+        ) ?? this.originalIndicesOfAllEntries.length - 1
+      );
+    }
     return (
-      ArrayUtils.binarySearchFirstGreaterOrEqual(
-        this.originalIndicesOfAllEntries,
-        this.currentEntry.getIndex(),
-      ) ?? this.originalIndicesOfAllEntries.length - 1
+      this.originalIndicesOfAllEntries.findIndex((i) => i === target) ??
+      this.originalIndicesOfAllEntries.length - 1
     );
   }
 }

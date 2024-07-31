@@ -44,6 +44,11 @@ import {Title} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {assertDefined} from 'common/assert_utils';
 import {FileUtils} from 'common/file_utils';
+import {UserNotifier} from 'common/user_notifier';
+import {
+  FailedToInitializeTimelineData,
+  NoValidFiles,
+} from 'messaging/user_warnings';
 import {
   AppRefreshDumpsRequest,
   ViewersLoaded,
@@ -61,6 +66,7 @@ import {
 } from './bottomnav/bottom_drawer_component';
 import {CollectTracesComponent} from './collect_traces_component';
 import {ShortcutsComponent} from './shortcuts_component';
+import {SnackBarComponent} from './snack_bar_component';
 import {MiniTimelineComponent} from './timeline/mini-timeline/mini_timeline_component';
 import {TimelineComponent} from './timeline/timeline_component';
 import {TraceConfigComponent} from './trace_config_component';
@@ -111,6 +117,7 @@ describe('AppComponent', () => {
         ViewerSurfaceFlingerComponent,
         WebAdbComponent,
         ShortcutsComponent,
+        SnackBarComponent,
       ],
     })
       .overrideComponent(AppComponent, {
@@ -162,7 +169,13 @@ describe('AppComponent', () => {
     goToTraceView();
     checkTraceViewPage();
 
-    (htmlElement.querySelector('.upload-new') as HTMLButtonElement).click();
+    (
+      assertDefined(
+        htmlElement.querySelector('.upload-new'),
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     await fixture.whenStable();
     checkHomepage();
@@ -177,7 +190,13 @@ describe('AppComponent', () => {
       component.mediator,
       'onWinscopeEvent',
     ).and.callThrough();
-    (htmlElement.querySelector('.refresh-dumps') as HTMLButtonElement).click();
+    (
+      assertDefined(
+        htmlElement.querySelector('.refresh-dumps'),
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
     await fixture.whenStable();
     checkHomepage();
@@ -287,6 +306,41 @@ describe('AppComponent', () => {
     shortcutsButton.click();
     fixture.detectChanges();
     expect(document.querySelector('shortcuts-panel')).toBeTruthy();
+  });
+
+  it('sets snackbar opener to global user notifier', () => {
+    expect(document.querySelector('snack-bar')).toBeFalsy();
+    UserNotifier.add(new NoValidFiles());
+    UserNotifier.notify();
+    expect(document.querySelector('snack-bar')).toBeTruthy();
+  });
+
+  it('does not open new snackbar until existing snackbar has been dismissed', async () => {
+    expect(document.querySelector('snack-bar')).toBeFalsy();
+    const firstMessage = new NoValidFiles();
+    UserNotifier.add(firstMessage);
+    UserNotifier.notify();
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+    let snackbar = assertDefined(document.querySelector('snack-bar'));
+    expect(snackbar.textContent).toContain(firstMessage.getMessage());
+
+    const secondMessage = new FailedToInitializeTimelineData();
+    UserNotifier.add(secondMessage);
+    UserNotifier.notify();
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+    snackbar = assertDefined(document.querySelector('snack-bar'));
+    expect(snackbar.textContent).toContain(firstMessage.getMessage());
+
+    const closeButton = assertDefined(
+      snackbar.querySelector('.snack-bar-action'),
+    ) as HTMLElement;
+    closeButton.click();
+    fixture.detectChanges();
+    await fixture.whenRenderingDone();
+    snackbar = assertDefined(document.querySelector('snack-bar'));
+    expect(snackbar.textContent).toContain(secondMessage.getMessage());
   });
 
   function goToTraceView() {

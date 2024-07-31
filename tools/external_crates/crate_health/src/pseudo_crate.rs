@@ -48,6 +48,7 @@ impl PseudoCrate {
     pub fn init<'a>(
         &self,
         crates: impl Iterator<Item = &'a (impl NamedAndVersioned + 'a)>,
+        exact_version: bool,
     ) -> Result<()> {
         if self.path.abs().exists() {
             return Err(anyhow!("Can't init pseudo-crate because {} already exists", self.path));
@@ -62,13 +63,17 @@ impl PseudoCrate {
             if krate.name() != "libsqlite3-sys" {
                 deps.push(Dep {
                     name: krate.name().to_string(),
-                    version: if krate.name() == "remove_dir_all"
-                        && krate.version().to_string() == "0.7.1"
-                    {
-                        "0.7.0".to_string()
-                    } else {
-                        krate.version().to_string()
-                    },
+                    version: format!(
+                        "{}{}",
+                        if exact_version { "=" } else { "" },
+                        if krate.name() == "remove_dir_all"
+                            && krate.version().to_string() == "0.7.1"
+                        {
+                            "0.7.0".to_string()
+                        } else {
+                            krate.version().to_string()
+                        }
+                    ),
                 });
             }
         }
@@ -99,6 +104,19 @@ impl PseudoCrate {
             .context("Failed to wait on 'cargo add'")?;
         if !status.success() {
             return Err(anyhow!("Failed to run 'cargo add {}@{}'", krate.name(), krate.version()));
+        }
+        Ok(())
+    }
+    pub fn remove(&self, krate: &impl NamedAndVersioned) -> Result<()> {
+        let status = Command::new("cargo")
+            .args(["remove", krate.name()])
+            .current_dir(self.path.abs())
+            .spawn()
+            .context("Failed to spawn 'cargo remove'")?
+            .wait()
+            .context("Failed to wait on 'cargo remove'")?;
+        if !status.success() {
+            return Err(anyhow!("Failed to run 'cargo remove {}'", krate.name()));
         }
         Ok(())
     }

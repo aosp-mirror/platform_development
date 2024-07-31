@@ -38,7 +38,7 @@ pub struct Crate {
 
     path: RepoPath,
 
-    patch_output: Vec<Output>,
+    patch_output: Vec<(String, Output)>,
     generate_android_bp_output: Option<Output>,
     android_bp_diff: Option<Output>,
 }
@@ -165,7 +165,7 @@ impl Crate {
             && self.android_bp_unchanged()
     }
     pub fn patch_success(&self) -> bool {
-        self.patch_output.iter().all(|output| output.status.success())
+        self.patch_output.iter().all(|output| output.1.status.success())
     }
     pub fn generate_android_bp_success(&self) -> bool {
         self.generate_android_bp_output.as_ref().is_some_and(|output| output.status.success())
@@ -238,15 +238,10 @@ impl Crate {
                     .arg(&entry_path)
                     .current_dir(self.staging_path().abs())
                     .output()?;
-                if !output.status.success() {
-                    println!(
-                        "Failed to apply {}\nstdout:\n{}\nstderr:\n:{}",
-                        entry_path.display(),
-                        from_utf8(&output.stdout)?,
-                        from_utf8(&output.stderr)?
-                    );
-                }
-                self.patch_output.push(output);
+                self.patch_output.push((
+                    String::from_utf8_lossy(entry.file_name().as_encoded_bytes()).to_string(),
+                    output,
+                ));
             }
         }
         Ok(())
@@ -264,8 +259,11 @@ impl Crate {
     pub fn set_diff_output(&mut self, diff_output: Output) {
         self.android_bp_diff.replace(diff_output);
     }
-    pub fn set_patch_output(&mut self, patch_output: Vec<Output>) {
+    pub fn set_patch_output(&mut self, patch_output: Vec<(String, Output)>) {
         self.patch_output = patch_output;
+    }
+    pub fn patch_output(&self) -> &Vec<(String, Output)> {
+        &self.patch_output
     }
 }
 
