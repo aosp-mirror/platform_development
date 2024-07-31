@@ -120,11 +120,13 @@ WINSCOPE_EXT = ".winscope"
 WINSCOPE_EXT_LEGACY = ".pb"
 WINSCOPE_EXTS = [WINSCOPE_EXT, WINSCOPE_EXT_LEGACY]
 
-# Winscope traces directory
+# Winscope traces directories
 WINSCOPE_DIR = "/data/misc/wmtrace/"
-
-# Previous Winscope session directory
 WINSCOPE_BACKUP_DIR = "/data/local/tmp/last_winscope_tracing_session/"
+
+# Tracing handlers
+SIGNAL_HANDLER_LOG = "/data/local/tmp/winscope_signal_handler.log"
+WINSCOPE_STATUS = "/data/local/tmp/winscope_status"
 
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
@@ -511,13 +513,13 @@ class SurfaceFlingerTraceConfig(TraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "sf config")
-        self.execute_config_command(server, device_id, shell, self.__flags_command(), "sf flags", self.flags)
-        self.execute_config_command(server, device_id, shell, self.__buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
+        self.execute_config_command(server, device_id, shell, self._flags_command(), "sf flags", self.flags)
+        self.execute_config_command(server, device_id, shell, self._buffer_size_command(), "sf buffer size", self.selected_configs["sfbuffersize"])
 
-    def __buffer_size_command(self) -> str:
+    def _buffer_size_command(self) -> str:
         return f'su root service call SurfaceFlinger 1029 i32 {self.selected_configs["sfbuffersize"]}'
 
-    def __flags_command(self) -> str:
+    def _flags_command(self) -> str:
         legacy_flags = 0
         for flag in self.flags:
             legacy_flags |= SurfaceFlingerTraceConfig.LEGACY_FLAGS_MAP[flag]
@@ -567,19 +569,19 @@ class WindowManagerTraceConfig(TraceConfig):
 
     def execute_command(self, server, device_id):
         shell = get_shell_args(device_id, "wm config")
-        self.execute_config_command(server, device_id, shell, self.__tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
-        self.execute_config_command(server, device_id, shell, self.__tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
+        self.execute_config_command(server, device_id, shell, self._tracing_type_command(), "tracing type", self.selected_configs["tracingtype"])
+        self.execute_config_command(server, device_id, shell, self._tracing_level_command(), "tracing level", self.selected_configs["tracinglevel"])
         # /!\ buffer size must be configured last
         # otherwise the other configurations might override it
-        self.execute_config_command(server, device_id, shell, self.__buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
+        self.execute_config_command(server, device_id, shell, self._buffer_size_command(), "wm buffer size", self.selected_configs["wmbuffersize"])
 
-    def __tracing_type_command(self) -> str:
+    def _tracing_type_command(self) -> str:
         return f'su root cmd window tracing {self.selected_configs["tracingtype"]}'
 
-    def __tracing_level_command(self) -> str:
+    def _tracing_level_command(self) -> str:
         return f'su root cmd window tracing level {self.selected_configs["tracinglevel"]}'
 
-    def __buffer_size_command(self) -> str:
+    def _buffer_size_command(self) -> str:
         return f'su root cmd window tracing size {self.selected_configs["wmbuffersize"]}'
 
 
@@ -734,17 +736,17 @@ class RequestRouter:
     def register_endpoint(self, method: RequestType, name: str, endpoint: RequestEndpoint):
         self.endpoints[(method, name)] = endpoint
 
-    def __bad_request(self, error: str):
+    def _bad_request(self, error: str):
         log.warning("Bad request: " + error)
         self.request.respond(HTTPStatus.BAD_REQUEST, b"Bad request!\nThis is Winscope ADB proxy.\n\n"
                              + error.encode("utf-8"), 'text/txt')
 
-    def __internal_error(self, error: str):
+    def _internal_error(self, error: str):
         log.error("Internal error: " + error)
         self.request.respond(HTTPStatus.INTERNAL_SERVER_ERROR,
                              error.encode("utf-8"), 'text/txt')
 
-    def __bad_token(self):
+    def _bad_token(self):
         log.info("Bad token")
         self.request.respond(HTTPStatus.FORBIDDEN, b"Bad Winscope authorization token!\nThis is Winscope ADB proxy.\n",
                              'text/txt')
@@ -752,21 +754,21 @@ class RequestRouter:
     def process(self, method: RequestType):
         token = self.request.headers[WINSCOPE_TOKEN_HEADER]
         if not token or token != secret_token:
-            return self.__bad_token()
+            return self._bad_token()
         path = self.request.path.strip('/').split('/')
         if path and len(path) > 0:
             endpoint_name = path[0]
             try:
                 return self.endpoints[(method, endpoint_name)].process(self.request, path[1:])
             except KeyError:
-                return self.__bad_request("Unknown endpoint /{}/".format(endpoint_name))
+                return self._bad_request("Unknown endpoint /{}/".format(endpoint_name))
             except AdbError as ex:
-                return self.__internal_error(str(ex))
+                return self._internal_error(str(ex))
             except BadRequest as ex:
-                return self.__bad_request(str(ex))
+                return self._bad_request(str(ex))
             except Exception as ex:
-                return self.__internal_error(repr(ex))
-        self.__bad_request("No endpoint specified")
+                return self._internal_error(repr(ex))
+        self._bad_request("No endpoint specified")
 
 
 def call_adb(params: str, device: str = None, stdin: bytes = None):
@@ -1003,9 +1005,9 @@ class TraceThread(threading.Thread):
         log.debug("Trace ended on {}, waiting for cleanup".format(self._device_id))
         time.sleep(0.2)
         for i in range(50):
-            if call_adb("shell su root cat /data/local/tmp/winscope_status", device=self._device_id) == 'TRACE_OK\n':
+            if call_adb(f"shell su root cat {WINSCOPE_STATUS}", device=self._device_id) == 'TRACE_OK\n':
                 call_adb(
-                    "shell su root rm /data/local/tmp/winscope_status", device=self._device_id)
+                    f"shell su root rm {WINSCOPE_STATUS}", device=self._device_id)
                 log.debug("Trace finished successfully on {}".format(
                     self._device_id))
                 self._success = True
@@ -1030,20 +1032,20 @@ set -e
 {perfetto_utils}
 
 echo "Starting trace..."
-echo "TRACE_START" > /data/local/tmp/winscope_status
+echo "TRACE_START" > {winscope_status}
 
 # Do not print anything to stdout/stderr in the handler
 function stop_trace() {{
-  echo "start" >/data/local/tmp/winscope_signal_handler.log
+  echo "start" >{signal_handler_log}
 
   # redirect stdout/stderr to log file
-  exec 1>>/data/local/tmp/winscope_signal_handler.log
-  exec 2>>/data/local/tmp/winscope_signal_handler.log
+  exec 1>>{signal_handler_log}
+  exec 2>>{signal_handler_log}
 
   set -x
   trap - EXIT HUP INT
   {stop_commands}
-  echo "TRACE_OK" > /data/local/tmp/winscope_status
+  echo "TRACE_OK" > {winscope_status}
 }}
 
 trap stop_trace EXIT HUP INT
@@ -1063,7 +1065,7 @@ while true; do sleep 0.1; done
         trace_requests: list[dict] = self.get_request(server)
         trace_types = [t.get("name") for t in trace_requests]
         log.debug(f"Client requested trace types {trace_types} for {device_id}")
-        trace_targets = []
+        trace_targets: list[TraceTarget] = []
         for t in trace_requests:
             try:
                 trace_name = t.get("name")
@@ -1087,13 +1089,15 @@ while true; do sleep 0.1; done
 
         command = StartTraceEndpoint.TRACE_COMMAND.format(
             perfetto_utils=PERFETTO_UTILS,
+            winscope_status=WINSCOPE_STATUS,
+            signal_handler_log=SIGNAL_HANDLER_LOG,
             stop_commands='\n'.join([t.trace_stop for t in trace_targets]),
             perfetto_config_file=PERFETTO_TRACE_CONFIG_FILE,
             start_commands='\n'.join([t.trace_start for t in trace_targets]))
 
         log.debug("Trace requested for {} with targets {}".format(
             device_id, ','.join([t.get("name") for t in trace_requests])))
-        log.debug(f"Executing command \"{command}\" on {device_id}...")
+        log.debug(f"Executing start command on {device_id}...")
 
         TRACE_THREADS[device_id] = TraceThread(
             device_id, command.encode('utf-8'))
@@ -1115,6 +1119,7 @@ while true; do sleep 0.1; done
                 f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
         trace_config.execute_command(server, device_id)
 
+
 class EndTraceEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         if device_id not in TRACE_THREADS:
@@ -1124,7 +1129,7 @@ class EndTraceEndpoint(DeviceRequestEndpoint):
 
         success = TRACE_THREADS[device_id].success()
 
-        signal_handler_log = call_adb("shell su root cat /data/local/tmp/winscope_signal_handler.log", device=device_id).encode('utf-8')
+        signal_handler_log = call_adb(f"shell su root cat {SIGNAL_HANDLER_LOG}", device=device_id).encode('utf-8')
 
         out = b"### Shell script's stdout - start\n" + \
             TRACE_THREADS[device_id].out + \
@@ -1187,7 +1192,7 @@ rm -f {PERFETTO_DUMP_CONFIG_FILE}
         log.debug("Starting dump on device {}".format(device_id))
         out, err = process.communicate(command.encode('utf-8'))
         if process.returncode != 0:
-            raise AdbError("Error executing command:\n" + command + "\n\n### OUTPUT ###" + out.decode('utf-8') + "\n"
+            raise AdbError("Error executing dump command." + "\n\n### OUTPUT ###" + out.decode('utf-8') + "\n"
                            + err.decode('utf-8'))
         log.debug("Dump finished on device {}".format(device_id))
         server.respond(HTTPStatus.OK, b'', "text/plain")
